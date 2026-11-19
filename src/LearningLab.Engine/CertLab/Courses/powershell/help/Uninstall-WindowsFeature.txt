@@ -1,0 +1,13 @@
+SYNOPSIS: Removes roles and features from Windows Server.
+DESCRIPTION:
+Uninstall-WindowsFeature removes a role or feature and its sub-features. Their services are removed. Most roles ask for a restart to finish.
+PARAMETER Name:
+The features to remove. Position 0, takes pipeline input.
+PARAMETER IncludeManagementTools:
+Also removes the management tools.
+PARAMETER Remove:
+Also deletes the installation files (the feature becomes Removed).
+PARAMETER Restart:
+Restarts at once when needed.
+EXAMPLE: Uninstall-WindowsFeature -Name Web-Server
+RELATED: Install-WindowsFeature, Get-WindowsFeature

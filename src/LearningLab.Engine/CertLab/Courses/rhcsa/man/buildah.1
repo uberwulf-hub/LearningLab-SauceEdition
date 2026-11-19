@@ -1,0 +1,41 @@
+NAME
+       buildah - build container images
+
+SYNOPSIS
+       buildah build [-t NAME[:TAG]] [-f FILE] [DIRECTORY]
+       buildah images
+
+DESCRIPTION
+       buildah builds OCI container images. It shares its image store with
+       podman (for root in /var/lib/containers, for a normal user in
+       ~/.local/share/containers), so an image built with buildah is
+       listed by podman images and the other way round.
+
+       buildah build (also called buildah bud, "build using dockerfile")
+       reads a Containerfile (or Dockerfile) in DIRECTORY and runs its steps,
+       just like podman build, which uses the same code.
+
+       It comes with the container-tools package.
+
+OPTIONS
+       -t NAME[:TAG], --tag NAME[:TAG]
+              Name the new image.
+
+       -f FILE, --file FILE
+              Use FILE instead of DIRECTORY/Containerfile.
+
+EXAMPLES
+       Build an image from the Containerfile in the current directory:
+
+           buildah build -t myweb:1.0 .
+
+       List the images:
+
+           buildah images
+
+NOTES
+       Cert Lab includes buildah build and buildah images; for everything else
+       use podman.
+
+SEE ALSO
+       podman(1), podman-build(1), skopeo(1)

@@ -1,0 +1,83 @@
+# Lab: lab-08 | Modules and profiles | u08 | 35
+Four jobs with modules and profiles: turn functions into a script module that loads by itself, give it a manifest, use a module kept outside the usual folders, and set up a profile on the Windows 11 client, where scripts are not allowed yet.
+
+@vars
+mod = SiteTools | OpsTools | DeskTools
+site = North | South | Harbour
+ver = 1.1.0 | 2.0.1 | 3.2.0
+author = Ada Lovelace | Grace Hopper | Alan Turing
+tool = Inventory | Backup | Patching
+alias = procs | plist | tasks
+@endvars
+
+@setup WIN-SRV1
+New-Item C:\Tools\Modules\{tool} -ItemType Directory -Force | Out-Null
+Set-Content C:\Tools\Modules\{tool}\{tool}.psm1 -Value 'function Get-ToolStatus { "{tool} is ready" }'
+
+@task t01 | Modules | 10 | WIN-SRV1
+Create a script module named **{mod}** for the administrator on WIN-SRV1, saved where it auto-loads. It holds two functions: `Get-LabInfo`, which returns the text `Lab {site}`, and a helper `Format-LabText` (it may do anything). Only `Get-LabInfo` may be shared.
+@check WIN-SRV1 | the module file is in the per-user module folder
+Test-Path "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psm1"
+@check WIN-SRV1 | Get-LabInfo auto-loads and returns Lab {site}
+Remove-Module {mod} -ErrorAction SilentlyContinue; (Get-LabInfo) -eq 'Lab {site}'
+@check WIN-SRV1 | the module has Format-LabText but shares only Get-LabInfo
+Import-Module {mod} -Force; ((Get-Content "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psm1" -Raw) -match 'function\s+Format-LabText') -and ((@((Get-Module {mod}).ExportedCommands.Keys) -join ',') -eq 'Get-LabInfo')
+@hint The file is $HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psm1 (folder and file share the name). End it with Export-ModuleMember -Function Get-LabInfo.
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path "$HOME\Documents\WindowsPowerShell\Modules\{mod}" -Force | Out-Null
+Set-Content -Path "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psm1" -Value @'
+function Format-LabText([string]$Text) { $Text.Trim() }
+function Get-LabInfo { Format-LabText ' Lab {site} ' }
+Export-ModuleMember -Function Get-LabInfo
+'@
+Get-LabInfo
+@explain
+A module auto-loads when its file sits in a folder of the same name inside one of the $env:PSModulePath folders; Documents\WindowsPowerShell\Modules is the one for you only. Without Export-ModuleMember every function would be shared; with it, Format-LabText stays a private helper that Get-LabInfo can still call.
+@endtask
+
+@task t02 | Modules | 10 | WIN-SRV1
+Give the module **{mod}** a manifest, `{mod}.psd1` next to `{mod}.psm1`: RootModule `{mod}.psm1`, version **{ver}**, author **{author}**, and only `Get-LabInfo` in FunctionsToExport.
+@check WIN-SRV1 | the manifest is valid, with version {ver} and author {author}
+$m = Test-ModuleManifest "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psd1" -ErrorAction Stop; "$($m.Version)" -eq '{ver}' -and $m.Author -eq '{author}'
+@check WIN-SRV1 | the module now reports version {ver} and still works
+Import-Module {mod} -Force; "$((Get-Module {mod}).Version)" -eq '{ver}' -and (Get-LabInfo) -eq 'Lab {site}'
+@hint New-ModuleManifest -Path ...\{mod}\{mod}.psd1 -RootModule {mod}.psm1 -ModuleVersion {ver} -Author '{author}' -FunctionsToExport Get-LabInfo
+@solution WIN-SRV1
+New-ModuleManifest -Path "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psd1" -RootModule {mod}.psm1 -ModuleVersion {ver} -Author '{author}' -FunctionsToExport Get-LabInfo
+Test-ModuleManifest "$HOME\Documents\WindowsPowerShell\Modules\{mod}\{mod}.psd1"
+@explain
+Once {mod}.psd1 exists, PowerShell loads the module through it: the manifest supplies the version and author, RootModule says which file holds the code, and FunctionsToExport lists what is shared. Without RootModule the manifest would load no code at all. Test-ModuleManifest is the quick way to check the file.
+@endtask
+
+@task t03 | Modules | 10 | WIN-SRV1
+A colleague keeps the module **{tool}** in `C:\Tools\Modules\{tool}`, which is not one of the module folders. For **this session**, add `C:\Tools\Modules` to the end of the module search path (keep the folders already there), then load {tool} by name.
+@check WIN-SRV1 | C:\Tools\Modules is in PSModulePath, with the usual folders kept
+$p = $env:PSModulePath -split ';'; ($p -contains 'C:\Tools\Modules') -and ($p -contains 'C:\Program Files\WindowsPowerShell\Modules')
+@check WIN-SRV1 | the module {tool} is loaded
+$null -ne (Get-Module {tool})
+@hint $env:PSModulePath += ';C:\Tools\Modules', then Import-Module {tool}
+@solution WIN-SRV1
+$env:PSModulePath += ';C:\Tools\Modules'
+Import-Module {tool}
+Get-ToolStatus
+@explain
+PSModulePath is an ordinary environment variable: folders separated by semicolons. Adding to it with += keeps the existing folders, and from then on the module is found by name and its commands auto-load. A change made with $env: lasts only for this session; to keep it, put the line in your profile (or change the variable for the user or machine).
+@endtask
+
+@task t04 | Modules | 10 | WIN-CL1
+On WIN-CL1, create your profile for **all PowerShell programs** (the CurrentUserAllHosts one) with a line that makes the alias **{alias}** for `Get-Process`. Make sure the profile can actually run: allow scripts for **your account only** with RemoteSigned (the policy for everyone stays as it is).
+@check WIN-CL1 | the CurrentUserAllHosts profile exists
+Test-Path $PROFILE.CurrentUserAllHosts
+@check WIN-CL1 | scripts are allowed for this account only
+"$(Get-ExecutionPolicy -Scope CurrentUser)" -eq 'RemoteSigned' -and "$(Get-ExecutionPolicy -Scope LocalMachine)" -eq 'Undefined'
+@check WIN-CL1 | running the profile creates the alias {alias}
+. $PROFILE.CurrentUserAllHosts; (Get-Alias {alias}).Definition -eq 'Get-Process'
+@hint The path is in $PROFILE.CurrentUserAllHosts (Documents\WindowsPowerShell\profile.ps1). New-Item -Force creates it; Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force allows it to run.
+@solution WIN-CL1
+New-Item -ItemType File -Path $PROFILE.CurrentUserAllHosts -Force | Out-Null
+Add-Content -Path $PROFILE.CurrentUserAllHosts -Value 'Set-Alias -Name {alias} -Value Get-Process'
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+. $PROFILE.CurrentUserAllHosts
+@explain
+$PROFILE alone is CurrentUserCurrentHost (this console only); CurrentUserAllHosts, profile.ps1 in the same folder, also runs in the ISE and other hosts. A profile is a script, so on Windows 11, where the default policy is Restricted, it would be refused when a new window opens. Setting RemoteSigned for CurrentUser fixes that for this account without an effect on anyone else.
+@endtask

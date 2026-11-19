@@ -1,0 +1,12 @@
+SYNOPSIS: Empties an item's value without deleting the item (variables, environment variables, registry keys).
+DESCRIPTION:
+Clear-Item sets a variable to $null, removes an environment variable's value (which removes the variable) and removes all values of a registry key. The file system does not support it; use Clear-Content to empty a file.
+PARAMETER Path:
+The items to clear. Wildcards are allowed.
+PARAMETER LiteralPath:
+The items, taken exactly as typed.
+PARAMETER Force:
+Clears read-only items too.
+EXAMPLE: Clear-Item Variable:result
+Sets $result to $null.
+RELATED: Set-Item, Clear-Content, Clear-ItemProperty

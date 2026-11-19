@@ -1,0 +1,23 @@
+# Deck: updates | Windows updates | Updates
+The two kinds of Windows updates :: Quality updates (monthly cumulative) and feature updates (new Windows versions)
+The day the monthly cumulative update comes out :: The second Tuesday of the month (Patch Tuesday)
+Quality update deferral range in an update ring :: 0 to 30 days
+Feature update deferral range in an update ring :: 0 to 365 days
+Deadline range for quality and feature updates :: 0 to 30 days
+Grace period range :: 0 to 7 days, counted when a device that missed the deadline comes back
+The longest active hours range :: 18 hours
+How many update rings should target one device :: One: two rings on a device conflict
+Stop a ring's devices from installing new monthly updates for now :: Pause quality updates on the ring (it ends by itself after 35 days unless extended)
+The deferral values a ring wrote on the PC :: `Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update`
+Keep PCs on Windows 11 23H2 although a newer version is out :: A feature updates policy for Windows 11, version 23H2
+Feature updates, quality (expedite) and driver policies are assigned to... :: Device groups
+What a feature updates policy for Windows 11 does on a PC that can't run it :: Nothing: the PC isn't offered Windows 11 and the policy shows it as not applicable
+Windows 11 hardware requirements most often missing on old PCs :: TPM 2.0, Secure Boot (UEFI) and a supported processor
+Windows 10's end of support :: 14 October 2025: no more monthly updates without Extended Security Updates
+Install one urgent monthly update now, ignoring the ring's deferral :: An expedited quality updates policy
+Restart deadline choices of an expedited update :: 0 to 2 days
+The two approval methods of a driver updates policy :: Manually approve and deploy, or automatically approve recommended drivers
+What the Windows update reports need :: The tenant's Windows diagnostic data connector, and devices sending at least Required diagnostic data
+The service that runs update rings and waves for you (by default Test, Ring1, Ring2, Ring3, Last) :: Windows Autopatch
+Peer-to-peer sharing of update downloads :: Delivery Optimization (download modes HTTP only, LAN, Group, Internet, Simple, Bypass)
+The installed updates on a PC :: `Get-HotFix`

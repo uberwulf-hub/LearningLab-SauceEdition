@@ -1,0 +1,17 @@
+1. Only one way in. nmap -sn 10.10.7.0/24 shows just jump01 (10.10.7.20) besides your
+   box. The inside network 10.10.72.0/24 does not answer: your box has no route to it.
+
+2. Foothold. jump01's FTP allows anonymous access; pub/handover.txt gives the pilot
+   password. ssh pilot@10.10.7.20 for the jump-host flag.
+
+3. See the second network. On jump01, ip addr shows a second address, 10.10.72.1:
+   the jump host sits on both networks. From there, nmap -sn 10.10.72.0/24 finds
+   store01 at 10.10.72.10, which your own box still cannot reach.
+
+4. Pivot. The pilot password is reused on store01. From the jump host:
+   ssh pilot@10.10.72.10 and read the inside flag. (A real pivot would also tunnel
+   traffic through the jump host; here you run ssh from it directly.)
+
+How to fix it: a jump host should not hand out credentials in an anonymous share, and
+the same password should not open every box. Separate accounts and per-host keys stop
+one foothold from becoming the whole inside network.

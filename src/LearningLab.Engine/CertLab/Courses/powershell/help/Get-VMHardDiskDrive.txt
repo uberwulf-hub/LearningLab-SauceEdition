@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the virtual hard disks attached to a VM.
+DESCRIPTION:
+Get-VMHardDiskDrive shows each disk drive of a VM: ControllerType (IDE or SCSI), ControllerNumber, ControllerLocation and Path (the disk file). Pipe the result to Get-VHD for sizes and types.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMHardDiskDrive -VMName APP-OLD -ComputerName HV1
+APP-OLD boots from an IDE disk, as Generation 1 VMs do.
+EXAMPLE: Get-VMHardDiskDrive -VMName APP-OLD | Get-VHD
+The details of its disk file.
+RELATED: Add-VMHardDiskDrive, Get-VHD, Get-VM

@@ -1,0 +1,17 @@
+SYNOPSIS: Lists the module repositories that PowerShellGet knows about.
+DESCRIPTION:
+A repository is a place that Find-Module and Install-Module download modules from. Windows PowerShell 5.1 knows one repository out of the box: PSGallery, the public PowerShell Gallery.
+
+Each repository has a source address (SourceLocation) and an installation policy. Untrusted means Install-Module asks before installing from it; Trusted means it installs without asking. PSGallery starts as Untrusted.
+
+Companies often register an internal repository, for example a file share or an internal web server, and trust it.
+PARAMETER Name:
+The repository name. Wildcards work. Without it, every repository is listed.
+EXAMPLE: Get-PSRepository
+Lists the repositories with their installation policy and source address.
+EXAMPLE: Get-PSRepository -Name PSGallery | Format-List *
+Shows every property of the PowerShell Gallery repository, including its publish address.
+NOTES:
+The practice network has no internet, so the PowerShell Gallery cannot be reached from the lab machines even though it is listed.
+PowerShell 7.4 and later include PSResourceGet, whose Get-PSResourceRepository does the same job for Find-PSResource and Install-PSResource.
+RELATED: Set-PSRepository, Register-PSRepository, Unregister-PSRepository, Find-Module, Install-Module

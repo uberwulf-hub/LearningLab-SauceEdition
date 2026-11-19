@@ -1,0 +1,32 @@
+NAME
+       losetup - set up and list loop devices (a file used as a disk)
+
+SYNOPSIS
+       losetup [-a]
+       losetup -f --show FILE
+       losetup -d LOOPDEVICE
+
+DESCRIPTION
+       A loop device (/dev/loop0, /dev/loop1...) makes a regular file look
+       like a block device, so you can partition it, make a file system on
+       it, or mount a disk image. mount -o loop FILE DIR sets one up for you.
+
+OPTIONS
+       -a, --all
+              List the loop devices in use and their files (also the default
+              without arguments).
+
+       -f, --find
+              Use the first free loop device. With --show, print its name.
+
+       -d     Detach a loop device from its file.
+
+EXAMPLES
+           losetup -a
+
+NOTES
+       Cert Lab does not simulate loop devices: only the listing works. Use
+       the spare disks /dev/vdb and /dev/vdc for practice instead.
+
+SEE ALSO
+       mount(8), lsblk(8)

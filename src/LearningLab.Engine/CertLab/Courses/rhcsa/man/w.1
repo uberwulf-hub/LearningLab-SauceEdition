@@ -1,0 +1,24 @@
+NAME
+       w - show who is logged in and what they are doing
+
+SYNOPSIS
+       w [-h] [-s] [USER]
+
+DESCRIPTION
+       w starts with the same line as uptime (time, time up, users, load
+       average), then lists each login session: user name, terminal (TTY),
+       where the user came from (FROM: an address for ssh logins), when they
+       logged in, how long they have been idle, the CPU time used, and the
+       command they run now (WHAT). With USER, only that user's sessions.
+
+OPTIONS
+       -h     Leave out the header lines.
+
+       -s     Short format: leave out the login time and CPU columns.
+
+EXAMPLES
+           w
+           w student
+
+SEE ALSO
+       who(1), uptime(1), users(1), last(1)

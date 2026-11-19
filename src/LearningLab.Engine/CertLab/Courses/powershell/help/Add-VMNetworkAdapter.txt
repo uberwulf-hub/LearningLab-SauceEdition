@@ -1,0 +1,14 @@
+SYNOPSIS: Adds another network adapter to a virtual machine.
+DESCRIPTION:
+Add-VMNetworkAdapter gives a VM an extra virtual adapter, for example one for a separate storage or management network. On Generation 2 VMs (and current Generation 1 configuration versions) it can be added while the VM runs.
+
+Without -SwitchName the adapter is not connected; use Connect-VMNetworkAdapter later.
+PARAMETER VMName:
+The VM. Position 0.
+PARAMETER Name:
+A name for the adapter, for example Backup.
+PARAMETER SwitchName:
+The switch to connect it to.
+EXAMPLE: Add-VMNetworkAdapter -VMName WEB-TEST -Name Isolated -SwitchName Isolated -ComputerName HV1
+WEB-TEST gets a second adapter on the Isolated switch.
+RELATED: Get-VMNetworkAdapter, Connect-VMNetworkAdapter, Set-VMNetworkAdapter, Get-VMSwitch

@@ -1,0 +1,14 @@
+1. siem alerts: "VPN sign-in outside working hours" for {{LATE}} and for {{VICT}}, then "Large upload".
+2. siem search host=VPN01 event=4624: in the morning both people connected from home - {{LATE}} from {{HOMEIP}},
+   {{VICT}} from {{VHOME}}. In the evening {{LATE}} connected from {{HOMEIP}} again and opened three of their own
+   report files: a person finishing their work. False alarm.
+   {{VICT}} connected from {{ATKIP}}, an address the account had never used. Real.
+3. VPN01 gave that connection the address {{NET}}.{{PV}}. From it, someone signed in by remote desktop
+   (logon_type=10) to WS-{{HV}}, {{VICT}}'s own desktop.
+4. From WS-{{HV}}, {{NFILES}} files of the Finance share were opened in a few minutes, starting at {{T0}}
+   (--count-by user on the 5145 events).
+5. Then 7z.exe packed the copied folder into {{ARCH}}, a DNS lookup found {{UPDOM}}, and the firewall let 700 MB out
+   to it: the finance folder uploaded to a file-sharing site.
+
+Next steps: disable {{VICT}}'s account and reset it, require a second sign-in step on the VPN, block {{UPDOM}} and
+{{UPIP}}, ask the file-sharing site to remove the upload, and tell the people who look after the finance data.

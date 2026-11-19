@@ -1,0 +1,42 @@
+TOPIC
+    about_Try_Catch_Finally
+
+SHORT DESCRIPTION
+    Handling terminating errors with try, catch and finally.
+
+LONG DESCRIPTION
+        try {
+            # commands that may fail
+        }
+        catch [System.IO.IOException] {
+            # this kind of error; $_ is the ErrorRecord
+        }
+        catch {
+            # any other terminating error
+        }
+        finally {
+            # always runs, error or not
+        }
+
+    catch only sees TERMINATING errors: throw, failing .NET methods,
+    parameter errors, and any error when -ErrorAction Stop or
+    $ErrorActionPreference = 'Stop' is in force. A cmdlet's normal
+    (non-terminating) error passes catch by unless you add
+    -ErrorAction Stop to that command.
+
+    The catch blocks are tried from the top; the first whose type matches
+    the exception (or one of its base types) runs. Put specific types first.
+
+    Inside catch:
+        $_.Exception.Message              the text
+        $_.Exception.GetType().FullName   the type to name in catch [ ]
+        $_.InvocationInfo.ScriptLineNumber where it happened
+        throw                             (alone) passes the error on
+
+    finally runs after try and catch, even when they end with an error,
+    return or break. Use it for clean-up.
+
+SEE ALSO
+    about_Throw
+    about_Preference_Variables
+    Write-Error

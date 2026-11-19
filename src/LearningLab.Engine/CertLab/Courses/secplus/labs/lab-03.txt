@@ -1,0 +1,97 @@
+# Lab: lab-03 | Least privilege with file permissions | u07 | 35
+Least privilege means every person and program gets the access its job needs, and nothing more. A quick review of server1 found the usual problems: files anyone can change, a team folder that is either too open or unusable, a program that runs as root for everyone, and an auditor who was given far too much. Fix them on server1 without breaking what people legitimately need.
+
+@vars
+team = designers | editors | planners
+auditor = kim | lars | noor
+@endvars
+
+@setup server1
+groupadd {team}
+groupadd finance
+useradd -G {team} ana
+useradd -G {team} ben
+useradd carl
+useradd -G finance fay
+useradd {auditor}
+mkdir -p /opt/inventory/bin /opt/inventory/data /srv/finance
+printf '#!/bin/bash\necho "stock report"\n' > /opt/inventory/bin/report.sh
+printf '#!/bin/bash\nfind /opt/inventory/data -name "*.tmp" -delete\n' > /opt/inventory/bin/cleanup.sh
+printf 'sku,qty\nA100,12\nB200,4\n' > /opt/inventory/data/stock.csv
+printf 'db_user=inventory\ndb_pass=Spring-Tulip-81\n' > /opt/inventory/data/db.conf
+chmod 777 /opt/inventory/bin/cleanup.sh
+chmod 755 /opt/inventory/bin/report.sh
+chmod 666 /opt/inventory/data/stock.csv
+chmod 646 /opt/inventory/data/db.conf
+printf 'quarter,revenue\nQ3,184000\n' > /srv/finance/q3-report.csv
+chown root:finance /srv/finance /srv/finance/q3-report.csv
+chmod 750 /srv/finance
+chmod 640 /srv/finance/q3-report.csv
+chmod u+s /usr/bin/find
+
+@task t01 | Threats, vulnerabilities and mitigations | 15 | server1
+Some files under /opt/inventory can be changed by every user on the system. Remove write permission for "others" from every regular file under /opt/inventory, and change nothing else about their permissions.
+@check server1 | no file under /opt/inventory is writable by others
+test -z "$(find /opt/inventory -type f -perm -o+w)"
+@check server1 | the other permission bits are unchanged
+test "$(stat -c %a /opt/inventory/bin/cleanup.sh /opt/inventory/data/stock.csv /opt/inventory/data/db.conf | tr '\n' ' ')" = "775 664 644 "
+@hint find /opt/inventory -type f -perm -o+w lists them; -exec chmod o-w {} + fixes them all.
+@solution server1
+find /opt/inventory -type f -perm -o+w -ls
+find /opt/inventory -type f -perm -o+w -exec chmod o-w {} +
+find /opt/inventory -type f -perm -o+w
+@explain
+-perm -o+w matches files that have at least the "others may write" bit. A world-writable script is especially dangerous: anyone can add a line, and the next time an administrator or a cron job runs it, that line runs with their privileges. chmod o-w removes only that one bit; chmod 755 would also have changed the group's rights. db.conf holds a password and could arguably be 640 or 600; the task only asked for the world-writable bit.
+@endtask
+
+@task t02 | Threats, vulnerabilities and mitigations | 15 | server1
+Create the shared folder /srv/{team} for the group `{team}` (members ana and ben). Members must be able to create and change files there, new files must automatically belong to the group `{team}`, and users outside the group (such as carl) must have no access at all.
+@check server1 | /srv/{team} belongs to the group {team} with mode 2770
+test "$(stat -c '%G %a' /srv/{team})" = "{team} 2770"
+@check server1 | a file ana creates belongs to {team}
+su - ana -c 'touch /srv/{team}/lab-check' && test "$(stat -c %G /srv/{team}/lab-check)" = {team}
+@check server1 | carl cannot list the folder
+! su - carl -c 'ls /srv/{team}' >/dev/null 2>&1
+@hint chgrp the folder, then chmod 2770: the 2 is the set-GID bit, which makes new files inherit the folder's group.
+@solution server1
+mkdir -p /srv/{team}
+chgrp {team} /srv/{team}
+chmod 2770 /srv/{team}
+ls -ld /srv/{team}
+@explain
+Giving the group rwx and others nothing is least privilege for a team folder. Without the set-GID bit, files would belong to each creator's own private group and the rest of the team could not change them, which tempts people to "fix" it with chmod 777. Access through a group is also easier to review and to remove than access given to people one by one.
+@endtask
+
+@task t03 | Threats, vulnerabilities and mitigations | 15 | server1
+Someone set the set-UID bit on /usr/bin/find. With it, every user can run find with root's privileges (find can run other commands with -exec). Remove that bit. Programs that need set-UID, such as /usr/bin/passwd, must keep it.
+@check server1 | /usr/bin/find is not set-UID
+! test -u /usr/bin/find
+@check server1 | /usr/bin/find still runs for ordinary users, and passwd keeps its set-UID bit
+test -x /usr/bin/find && test -u /usr/bin/passwd
+@hint find / -perm -4000 -type f lists set-UID files. chmod u-s removes the bit.
+@solution server1
+find /usr/bin -perm -4000 -type f
+ls -l /usr/bin/find
+chmod u-s /usr/bin/find
+ls -l /usr/bin/find /usr/bin/passwd
+@explain
+A set-UID program runs as its owner (here root) whoever starts it. passwd needs that to write /etc/shadow, and it only lets you change your own password. find has no such need, and because it can run any command with -exec, a set-UID find is a ready-made privilege escalation. Keeping a list of the expected set-UID files and checking it regularly is a good hardening habit.
+@endtask
+
+@task t04 | Threats, vulnerabilities and mitigations | 15 | server1
+The auditor `{auditor}` must be able to read /srv/finance/q3-report.csv and nothing else in /srv/finance, without joining the group `finance`. Use ACLs: {auditor} gets read access to the file, and only the search (execute) permission on the folder /srv/finance so that the file can be reached. {auditor} must not be able to change the file.
+@check server1 | {auditor} can read the report
+su - {auditor} -c 'cat /srv/finance/q3-report.csv' | grep -q revenue
+@check server1 | {auditor} cannot change it, cannot list the folder, and is not in finance
+! su - {auditor} -c 'echo x >> /srv/finance/q3-report.csv' 2>/dev/null && ! su - {auditor} -c 'ls /srv/finance' >/dev/null 2>&1 && ! id -nG {auditor} | grep -qw finance
+@check server1 | the access comes from ACL entries
+getfacl /srv/finance/q3-report.csv 2>/dev/null | grep -q '^user:{auditor}:r--' && getfacl /srv/finance 2>/dev/null | grep -q '^user:{auditor}:--x'
+@hint setfacl -m u:{auditor}:r on the file and setfacl -m u:{auditor}:x on the folder. getfacl shows the result.
+@solution server1
+setfacl -m u:{auditor}:r /srv/finance/q3-report.csv
+setfacl -m u:{auditor}:x /srv/finance
+getfacl /srv/finance /srv/finance/q3-report.csv
+su - {auditor} -c 'cat /srv/finance/q3-report.csv'
+@explain
+Adding {auditor} to finance would have given read access to every finance file, now and in future. A named ACL entry gives exactly one person exactly one right on one file. The x bit on a folder lets you pass through it to a file whose name you know, without letting you list what else is there.
+@endtask

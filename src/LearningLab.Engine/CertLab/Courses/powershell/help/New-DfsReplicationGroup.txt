@@ -1,0 +1,18 @@
+SYNOPSIS: Creates a DFS Replication group.
+DESCRIPTION:
+DFS Replication (DFSR) keeps folders on several servers in step, copying only the changed parts of files. Its setup has steps, each with its own command:
+1. New-DfsReplicationGroup: the group.
+2. New-DfsReplicatedFolder: the folders it replicates.
+3. Add-DfsrMember: the servers.
+4. Add-DfsrConnection: who replicates with whom.
+5. Set-DfsrMembership: the local path on each server, and the primary member for the first sync.
+The settings are stored in Active Directory; servers pick them up when they next poll AD.
+PARAMETER GroupName:
+The group's name, for example Sales-Replication. Position 0.
+PARAMETER Description:
+A description.
+PARAMETER DomainName:
+The domain to store the group in.
+EXAMPLE: New-DfsReplicationGroup -GroupName Sales-Replication
+Step 1 for keeping the Sales folder on FS1 and SRV1 in step.
+RELATED: New-DfsReplicatedFolder, Add-DfsrMember, Add-DfsrConnection, Set-DfsrMembership, Get-DfsReplicationGroup

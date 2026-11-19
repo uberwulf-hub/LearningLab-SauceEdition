@@ -1,0 +1,20 @@
+SYNOPSIS: Removes registry-based policy settings from a Group Policy Object.
+DESCRIPTION:
+Remove-GPRegistryValue deletes values (or, without -ValueName, every value under the key) from a GPO. For real policy settings under a Policies key, computers and users drop the setting at their next refresh.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Key:
+The registry key, starting with HKLM\ or HKCU\.
+PARAMETER ValueName:
+The values to remove.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-GPRegistryValue "Sales Desktop" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop" -ValueName ScreenSaveTimeOut
+Removes the screen saver setting from the GPO.
+EXAMPLE: Remove-GPRegistryValue "Sales Desktop" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop"
+Removes every value the GPO sets under that key.
+RELATED: Set-GPRegistryValue, Get-GPRegistryValue

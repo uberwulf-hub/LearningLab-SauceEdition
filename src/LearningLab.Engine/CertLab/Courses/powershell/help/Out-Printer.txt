@@ -1,0 +1,18 @@
+SYNOPSIS: Prints output on a printer (there are no printers in Cert Lab).
+DESCRIPTION:
+Out-Printer formats objects as text, the way they look on screen, and sends that text to a printer. Without -Name it uses the default printer.
+
+Cert Lab's practice machines have no printers, so Out-Printer only shows a warning there.
+PARAMETER Name:
+The printer to use, as Windows names it (Get-Printer lists them on a real PC). Position 0.
+PARAMETER InputObject:
+What to print. Usually it comes through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Table Name, Office | Out-Printer
+On a real PC, prints the table on the default printer.
+EXAMPLE: 'Hello' | Out-Printer -Name 'Microsoft Print to PDF'
+On a real PC, "prints" to the PDF printer, which asks where to save the file.
+NOTES:
+Out-Printer exists only in Windows PowerShell; PowerShell 7 does not have it.
+
+Long lines are cut off at the page width. For tidy printouts, choose fewer columns first.
+RELATED: Out-File, Out-Host, Format-Table

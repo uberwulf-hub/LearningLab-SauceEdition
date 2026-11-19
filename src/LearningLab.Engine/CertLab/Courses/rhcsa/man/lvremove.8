@@ -1,0 +1,33 @@
+NAME
+       lvremove - delete logical volumes
+
+SYNOPSIS
+       lvremove [-f] [-y] LV|VG...
+
+DESCRIPTION
+       lvremove deletes a logical volume and gives its space back to the
+       volume group. Everything stored on it is lost. Given a VG name instead
+       of an LV, it removes every LV in that VG.
+
+       An LV whose file system is mounted (or a swap LV in use) cannot be
+       removed: unmount it (or swapoff) first, and remove its line from
+       /etc/fstab, or the next boot will fail waiting for it.
+
+       For an active LV, lvremove asks before it deletes.
+
+OPTIONS
+       -f, --force
+              Do not ask for confirmation.
+
+       -y, --yes
+              Answer yes to the question.
+
+EXAMPLES
+       Retire the LV old in VG vgdata:
+
+           umount /old
+           vi /etc/fstab        (delete the /old line)
+           lvremove -y /dev/vgdata/old
+
+SEE ALSO
+       lvcreate(8), vgremove(8), umount(8), lvm(8)

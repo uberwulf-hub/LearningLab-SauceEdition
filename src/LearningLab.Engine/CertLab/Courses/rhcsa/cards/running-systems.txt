@@ -1,0 +1,32 @@
+# Deck: running-systems | Running systems | Running systems
+Reboot the machine cleanly, now :: `systemctl reboot`
+Power the machine off cleanly, now :: `systemctl poweroff`
+Reboot in 10 minutes, warning the logged-in users :: `shutdown -r +10`
+Cancel a planned shutdown :: `shutdown -c`
+Show which target the machine boots into :: `systemctl get-default`
+Make the machine boot into text mode from now on :: `systemctl set-default multi-user.target`
+Switch the running system to the graphical target now :: `systemctl isolate graphical.target`
+Which target has a root shell, local file systems and no network? :: rescue.target (emergency.target has even less: only / read-only)
+At the GRUB menu, what do you add to the linux line to boot into the emergency target once? :: systemd.unit=emergency.target (press e to edit, Ctrl+X to boot)
+At the GRUB menu, what do you add to the linux line to stop in the initramfs and reset root's password? :: rd.break
+In the rd.break shell, make the real root file system writable :: `mount -o remount,rw /sysroot`
+In the rd.break shell, enter the real system before running passwd :: `chroot /sysroot`
+After changing root's password at rd.break, which file must you create, and why? :: /.autorelabel, so the next boot relabels the new /etc/shadow for SELinux
+List the processes with the biggest CPU users first :: `ps aux --sort=-%cpu | head`
+List the processes with the biggest memory users first :: `ps aux --sort=-%mem | head`
+In top, which keys sort by CPU and by memory, and which kills? :: P sorts by CPU, M by memory, k kills (it asks for the PID), q quits
+Ask the process 1234 to end cleanly :: `kill 1234`
+Force the process 1234 to stop at once :: `kill -9 1234`
+What are signals 15 and 9 called? :: 15 is SIGTERM (please stop, the default) and 9 is SIGKILL (stop now, cannot be caught)
+Stop every process of the user lisa :: `pkill -u lisa`
+List the PIDs and names of the processes of the user lisa :: `pgrep -u lisa -l`
+Archive /home into /root/home.tar.gz with nice value 10 :: `nice -n 10 tar -czf /root/home.tar.gz /home`
+Change the nice value of the running process 1234 to 5 :: `renice -n 5 -p 1234`
+What range do nice values have, and which gets the least CPU? :: -20 to 19; 19 is the nicest and gets the least CPU when the machine is busy
+Show the tuning profile in use :: `tuned-adm active`
+Show the tuning profile tuned recommends for this machine :: `tuned-adm recommend`
+Switch to the tuning profile throughput-performance :: `tuned-adm profile throughput-performance`
+Start httpd now and make it start at every boot :: `systemctl enable --now httpd`
+Print just active or inactive for sshd :: `systemctl is-active sshd`
+Copy /root/report.txt to /tmp on server2 as the user student :: `scp /root/report.txt student@server2:/tmp/`
+In GRUB's entry editor, which key boots with your changes, and which throws them away? :: Ctrl+X (or F10) boots; Esc goes back to the menu without them

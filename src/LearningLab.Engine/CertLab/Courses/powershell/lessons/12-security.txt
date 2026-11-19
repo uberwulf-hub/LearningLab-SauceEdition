@@ -1,0 +1,522 @@
+# Unit: u12 | 12. Security | Security
+
+This unit covers the safety features PowerShell itself has: the execution policy that decides which scripts may run, the mark Windows puts on downloaded files, signing scripts so that changes are noticed, handling passwords without writing them down in plain text, and Just Enough Administration (JEA), which lets people do one admin job without being administrators.
+
+## Lesson: l1201 | Execution policy
+
+The **execution policy** decides whether PowerShell runs script files (`.ps1`, and also modules, profiles and format files). Commands typed at the prompt are never affected.
+
+| Policy | What it allows |
+|---|---|
+| `Restricted` | no scripts at all, only typed commands. Default on Windows 10 and 11 |
+| `AllSigned` | only scripts signed by a publisher you trust |
+| `RemoteSigned` | your own scripts; downloaded scripts only if signed. Default on Windows Server |
+| `Unrestricted` | every script; asks before running a downloaded one |
+| `Bypass` | everything, with no questions or warnings |
+| `Undefined` | not set at this scope |
+
+On the Windows 11 client WIN-CL1 a script is refused until the policy changes. Setting it for **CurrentUser** needs no administrator and changes nothing for other people:
+
+```terminal
+#setup WIN-CL1:New-Item C:\Scripts -ItemType Directory | Out-Null; Set-Content C:\Scripts\hello.ps1 "'Hello from a script'"
+#machine WIN-CL1
+PS C:\Windows\system32> Get-ExecutionPolicy
+Restricted
+PS C:\Windows\system32> C:\Scripts\hello.ps1
+C:\Scripts\hello.ps1 : File C:\Scripts\hello.ps1 cannot be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:1
++ C:\Scripts\hello.ps1
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+
+PS C:\Windows\system32> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+PS C:\Windows\system32> C:\Scripts\hello.ps1
+Hello from a script
+PS C:\Windows\system32> Get-ExecutionPolicy -List
+
+        Scope ExecutionPolicy
+        ----- ---------------
+MachinePolicy       Undefined
+   UserPolicy       Undefined
+      Process       Undefined
+  CurrentUser    RemoteSigned
+ LocalMachine       Undefined
+```
+
+### Scopes
+
+A policy can be set at five **scopes**. PowerShell checks them from the top of `Get-ExecutionPolicy -List` down, and the **first one that is not Undefined wins**:
+
+1. **MachinePolicy** and **UserPolicy**: set by Group Policy. They beat everything and cannot be changed with Set-ExecutionPolicy.
+2. **Process**: this PowerShell process only; gone when it closes.
+3. **CurrentUser**: you, on this computer (kept in your part of the registry).
+4. **LocalMachine**: everyone on this computer (needs an administrator). This is the default scope of Set-ExecutionPolicy.
+
+Setting a scope that a higher one overrides works, but has no effect, and PowerShell tells you so:
+
+```terminal
+PS C:\Windows\system32> Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+PS C:\Windows\system32> Set-ExecutionPolicy -ExecutionPolicy Restricted -Force
+Set-ExecutionPolicy : Windows PowerShell updated your execution policy successfully, but the setting is overridden by a policy defined at a more specific scope.  Due to the override, your shell will retain its current effective execution policy of Bypass. Type "Get-ExecutionPolicy -List" to view your execution policy settings. For more information please see "Get-Help Set-ExecutionPolicy".
+At line:1 char:1
++ Set-ExecutionPolicy -ExecutionPolicy Restricted -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (:) [Set-ExecutionPolicy], SecurityException
+    + FullyQualifiedErrorId : ExecutionPolicyOverride,Microsoft.PowerShell.Commands.SetExecutionPolicyCommand
+```
+
+Without `-Force`, Set-ExecutionPolicy asks you to confirm the change:
+
+```text
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Execution Policy Change
+The execution policy helps protect you from scripts that you do not trust. ...
+[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "N"):
+```
+
+### A safety guard, not a security boundary
+
+The execution policy protects you from running a script **by accident**. It does not stop a person who wants to run one: they can type the commands, paste the script's text, or start PowerShell with another policy for one run:
+
+```text
+powershell.exe -ExecutionPolicy Bypass -File C:\Scripts\nightly.ps1
+```
+
+`-ExecutionPolicy` on the command line sets the **Process** scope of that one PowerShell, which is how scheduled tasks often run scripts. Only a Group Policy setting overrides it. Real protection comes from permissions, signing with AllSigned, and application control (AppLocker, App Control for Business).
+
+> PowerShell 7 keeps its own setting, separate from 5.1's, and its default on Windows is RemoteSigned on clients too. On Linux and macOS it does not apply at all.
+
+@try machines=2
+@setup WIN-CL1
+New-Item C:\Scripts -ItemType Directory | Out-Null
+Set-Content C:\Scripts\check.ps1 "'scripts run'"
+
+@task t1 | Security | 10 | WIN-CL1
+On WIN-CL1, let **your account only** run local scripts and signed downloaded ones (RemoteSigned), so that `C:\Scripts\check.ps1` runs. The policy for everyone on WIN-CL1 must stay Restricted.
+@check WIN-CL1 | CurrentUser is RemoteSigned
+"$(Get-ExecutionPolicy -Scope CurrentUser)" -eq 'RemoteSigned'
+@check WIN-CL1 | LocalMachine is still not set (Undefined)
+"$(Get-ExecutionPolicy -Scope LocalMachine)" -eq 'Undefined'
+@hint Set-ExecutionPolicy with -Scope CurrentUser (and -Force to skip the question).
+@solution WIN-CL1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+C:\Scripts\check.ps1
+@endtask
+@end
+
+@quiz
+? What is the default execution policy of Windows PowerShell 5.1 on Windows 11?
++ Restricted
+- RemoteSigned
+- Unrestricted
+! Windows Server's default is RemoteSigned.
+? The policy is RemoteSigned for LocalMachine and Bypass for Process. Which one is in force?
+- RemoteSigned, because LocalMachine covers everyone
++ Bypass, because Process comes before LocalMachine
+- The stricter one
+! The first scope (from the top of Get-ExecutionPolicy -List) that is not Undefined wins.
+? Why is the execution policy not a security boundary?
+- It only works for administrators
++ Anyone can still run the commands another way, for example with powershell.exe -ExecutionPolicy Bypass
+- It can only be set by Group Policy
+! It prevents accidents; permissions and application control are the real protection.
+@end
+
+## Lesson: l1202 | Downloaded files and Unblock-File
+
+When a browser or mail program saves a file from the internet, Windows adds a small hidden **alternate data stream** named `Zone.Identifier` to it, the "mark of the web". It records the zone the file came from: `ZoneId=3` is the Internet (0 is this computer, 1 the local intranet, 2 trusted sites, 4 restricted sites).
+
+Under **RemoteSigned**, a script with that mark (zone 3 or 4) must be signed. The administrator downloaded a script on WIN-SRV1:
+
+```terminal
+PS C:\Windows\system32> Get-Item C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream * | Select-Object Stream, Length
+
+Stream          Length
+------          ------
+:$DATA             123
+Zone.Identifier    143
+
+
+PS C:\Windows\system32> Get-Content C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream Zone.Identifier
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=http://intranet.lab.example.com/tools/
+HostUrl=http://intranet.lab.example.com/tools/Get-Inventory.ps1
+PS C:\Windows\system32> C:\Users\Administrator\Downloads\Get-Inventory.ps1
+C:\Users\Administrator\Downloads\Get-Inventory.ps1 : File C:\Users\Administrator\Downloads\Get-Inventory.ps1 cannot be loaded. The file C:\Users\Administrator\Downloads\Get-Inventory.ps1 is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+At line:1 char:1
++ C:\Users\Administrator\Downloads\Get-Inventory.ps1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+```
+
+Every file has its main stream, `:$DATA`; this one also has `Zone.Identifier`. Once you have **read the script and trust it**, `Unblock-File` removes the mark, and it runs like a script you wrote:
+
+```terminal
+PS C:\Windows\system32> Unblock-File -Path C:\Users\Administrator\Downloads\Get-Inventory.ps1
+PS C:\Windows\system32> Get-Item C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream * | Select-Object Stream, Length
+
+Stream Length
+------ ------
+:$DATA    123
+
+
+PS C:\Windows\system32> C:\Users\Administrator\Downloads\Get-Inventory.ps1
+
+CSName   Caption                                  Version
+------   -------                                  -------
+WIN-SRV1 Microsoft Windows Server 2022 Datacenter 10.0.20348
+```
+
+- To unblock a whole folder (for example a module you unzipped): `Get-ChildItem C:\Tools -Recurse | Unblock-File`.
+- `Unblock-File` is the same as ticking **Unblock** in the file's Properties in File Explorer.
+- Unzipping a marked .zip with Windows' own tools marks every file inside, so unblocking the .zip before unzipping saves work.
+
+> Unblocking does not make a file safe. It only says "I checked this one". Read a downloaded script before you unblock or run it.
+
+@try machines=1
+@setup WIN-SRV1
+New-Item C:\Users\Administrator\Downloads\Tools -ItemType Directory -Force | Out-Null
+Set-Content C:\Users\Administrator\Downloads\Tools\Get-DiskReport.ps1 "'disk report'"
+Set-Content C:\Users\Administrator\Downloads\Tools\Get-UserReport.ps1 "'user report'"
+Set-Content C:\Users\Administrator\Downloads\Tools\Get-DiskReport.ps1 -Stream Zone.Identifier -Value '[ZoneTransfer]', 'ZoneId=3'
+Set-Content C:\Users\Administrator\Downloads\Tools\Get-UserReport.ps1 -Stream Zone.Identifier -Value '[ZoneTransfer]', 'ZoneId=3'
+
+@task t1 | Security | 10 | WIN-SRV1
+You have checked the two scripts in `C:\Users\Administrator\Downloads\Tools` and trust them. Remove the download mark from **every** file in that folder, so that both run under RemoteSigned.
+@check WIN-SRV1 | no file in the folder has a Zone.Identifier stream
+@(Get-ChildItem C:\Users\Administrator\Downloads\Tools -File | Where-Object { Get-Item -LiteralPath $_.FullName -Stream Zone.Identifier -ErrorAction SilentlyContinue }).Count -eq 0
+@check WIN-SRV1 | the scripts are still there
+@(Get-ChildItem C:\Users\Administrator\Downloads\Tools -Filter *.ps1).Count -eq 2
+@hint Get-ChildItem the folder and pipe the files to Unblock-File.
+@solution WIN-SRV1
+Get-ChildItem C:\Users\Administrator\Downloads\Tools | Unblock-File
+C:\Users\Administrator\Downloads\Tools\Get-DiskReport.ps1
+@endtask
+@end
+
+@quiz
+? Where does Windows record that a file was downloaded from the internet?
+- In the file's name
++ In an alternate data stream named Zone.Identifier
+- In the registry under HKCU:\Downloads
+! Get-Item FILE -Stream * shows the streams; Unblock-File removes that one.
+? Under RemoteSigned, which script needs a signature?
+- Every script
+- A script you wrote yourself on this computer
++ A script that has the internet zone mark
+! Local scripts run without a signature under RemoteSigned.
+? What does Unblock-File do?
++ Removes the Zone.Identifier stream from the file
+- Checks the file for viruses
+- Signs the file
+! It only removes the mark; it says nothing about whether the file is safe.
+@end
+
+## Lesson: l1203 | Signing scripts
+
+A **digital signature** says who published a script and proves it has not changed since it was signed. Signing needs a **code signing certificate** with its private key. Companies get one from their own certificate authority or a public one; for practice, a self-signed certificate does the job.
+
+```terminal
+PS C:\Windows\system32> $cert = New-SelfSignedCertificate -Subject 'CN=Lab Code Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+PS C:\Windows\system32> Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert
+
+
+   PSParentPath: Microsoft.PowerShell.Security\Certificate::CurrentUser\My
+
+Thumbprint                                Subject
+----------                                -------
+AA359E56E0273444DBDA696D4C80CD1BE077EE01  CN=Lab Code Signing
+
+
+PS C:\Windows\system32> New-Item C:\Scripts -ItemType Directory | Out-Null
+PS C:\Windows\system32> Set-Content C:\Scripts\hello.ps1 "'hello'"
+PS C:\Windows\system32> Set-AuthenticodeSignature -FilePath C:\Scripts\hello.ps1 -Certificate $cert
+
+
+    Directory: C:\Scripts
+
+
+SignerCertificate                         Status                                 Path
+-----------------                         ------                                 ----
+AA359E56E0273444DBDA696D4C80CD1BE077EE01  UnknownError                           hello.ps1
+```
+
+`Set-AuthenticodeSignature` adds a signature block of comment lines at the end of the script (`# SIG # Begin signature block`). Its **Status** is UnknownError because Windows does not trust a certificate it has never seen: a self-signed certificate is its own root.
+
+### Trusting the certificate
+
+Two certificate stores matter:
+
+- **Trusted Root Certification Authorities** (`Root`): makes the certificate's chain trusted, so the status becomes Valid.
+- **Trusted Publishers** (`TrustedPublisher`): lets scripts from this publisher run under AllSigned (and signed downloads under RemoteSigned) without asking each time.
+
+Export the public part of the certificate (never the private key) and import it into both, here for the whole computer:
+
+```terminal
+#setup $cert = New-SelfSignedCertificate -Subject 'CN=Lab Code Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+#setup New-Item C:\Scripts -ItemType Directory | Out-Null; Set-Content C:\Scripts\hello.ps1 "'hello'"; Set-AuthenticodeSignature C:\Scripts\hello.ps1 $cert | Out-Null
+PS C:\Windows\system32> $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert
+PS C:\Windows\system32> Export-Certificate -Cert $cert -FilePath C:\Scripts\codesign.cer | Out-Null
+PS C:\Windows\system32> Import-Certificate -FilePath C:\Scripts\codesign.cer -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+PS C:\Windows\system32> Import-Certificate -FilePath C:\Scripts\codesign.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher | Out-Null
+PS C:\Windows\system32> Get-AuthenticodeSignature C:\Scripts\hello.ps1
+
+
+    Directory: C:\Scripts
+
+
+SignerCertificate                         Status                                 Path
+-----------------                         ------                                 ----
+AA359E56E0273444DBDA696D4C80CD1BE077EE01  Valid                                  hello.ps1
+
+
+PS C:\Windows\system32> Add-Content C:\Scripts\hello.ps1 "'one more line'"
+PS C:\Windows\system32> (Get-AuthenticodeSignature C:\Scripts\hello.ps1).Status
+HashMismatch
+```
+
+The statuses you will meet:
+
+- **Valid**: signed, unchanged, by a certificate whose chain is trusted.
+- **NotSigned**: no signature.
+- **HashMismatch**: the script changed after it was signed. Sign it again after every edit.
+- **UnknownError**: signed, but the certificate chain is not trusted (the usual result with a self-signed certificate that is not in Root).
+
+### AllSigned
+
+With `Set-ExecutionPolicy AllSigned`, every script must be signed, even your own, and the first time a publisher that is not in Trusted Publishers is met, PowerShell asks whether to run its scripts (Never, Do not run, Run once, Always run). Changed or unsigned scripts do not run at all.
+
+> `-TimestampServer` adds a time stamp from a time stamp service, so the signature stays valid after the certificate expires. The practice network has no internet, so it is left out here.
+
+> Importing into `Cert:\CurrentUser\Root` makes Windows show a security warning to confirm; the LocalMachine stores need an administrator but do not ask.
+
+@try machines=1
+@setup WIN-SRV1
+New-Item C:\Scripts -ItemType Directory -Force | Out-Null
+Set-Content C:\Scripts\report.ps1 "Get-Date"
+
+@task t1 | Security | 10 | WIN-SRV1
+Sign `C:\Scripts\report.ps1` with a new self-signed code signing certificate whose subject is `CN=Lab Signer` (in your personal store, `Cert:\CurrentUser\My`), and make this computer trust that certificate so that `Get-AuthenticodeSignature` reports **Valid**.
+@check WIN-SRV1 | the signature is Valid
+"$((Get-AuthenticodeSignature C:\Scripts\report.ps1).Status)" -eq 'Valid'
+@check WIN-SRV1 | it was signed by CN=Lab Signer
+(Get-AuthenticodeSignature C:\Scripts\report.ps1).SignerCertificate.Subject -eq 'CN=Lab Signer'
+@hint New-SelfSignedCertificate -Type CodeSigningCert, Set-AuthenticodeSignature, then Export-Certificate and Import-Certificate into Cert:\LocalMachine\Root.
+@solution WIN-SRV1
+$c = New-SelfSignedCertificate -Subject 'CN=Lab Signer' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+Set-AuthenticodeSignature -FilePath C:\Scripts\report.ps1 -Certificate $c
+Export-Certificate -Cert $c -FilePath C:\Scripts\signer.cer
+Import-Certificate -FilePath C:\Scripts\signer.cer -CertStoreLocation Cert:\LocalMachine\Root
+Get-AuthenticodeSignature C:\Scripts\report.ps1
+@endtask
+@end
+
+@quiz
+? You signed a script, then fixed a typo in it. What does Get-AuthenticodeSignature report?
+- Valid
++ HashMismatch
+- NotSigned
+! The signature covers the exact text; sign again after every change.
+? A script is signed with a self-signed certificate that is only in Cert:\CurrentUser\My. What is its status?
+- Valid
+- NotSigned
++ UnknownError
+! The chain ends in a root Windows does not trust. Import the certificate into Root.
+? Under AllSigned, what is needed for a signed script to run without a question?
++ Its publisher's certificate in Trusted Publishers (and its chain trusted)
+- Only the certificate in your personal store
+- The -Force parameter
+! Otherwise PowerShell asks whether to trust that publisher.
+@end
+
+## Lesson: l1204 | Passwords, SecureString and credentials
+
+A password typed into a script as plain text can be read by anyone who opens the script, and it ends up in backups, copies and source control. **Never put passwords in scripts.** PowerShell has two types to carry secrets:
+
+- **SecureString**: text kept encrypted in memory. It prints as `System.Security.SecureString`, not as the text.
+- **PSCredential**: a user name plus a SecureString password. Every `-Credential` parameter takes one.
+
+Ask a person for a password without showing it, or for a whole credential:
+
+```text
+$pw = Read-Host -Prompt 'Password' -AsSecureString
+Password: ********
+$cred = Get-Credential -UserName 'LAB\svc_backup' -Message 'Backup account'
+```
+
+In Windows PowerShell 5.1, `Get-Credential` opens a small sign-in window; PowerShell 7 asks in the console.
+
+`ConvertTo-SecureString -AsPlainText -Force` turns plain text into a SecureString. It is meant for test labs: the text is still in your script or history. `-Force` is required, as a reminder of that.
+
+```terminal
+PS C:\Windows\system32> $pw = ConvertTo-SecureString 'Lab-Pass1!' -AsPlainText -Force
+PS C:\Windows\system32> $pw
+System.Security.SecureString
+PS C:\Windows\system32> $cred = New-Object System.Management.Automation.PSCredential('LAB\svc_backup', $pw)
+PS C:\Windows\system32> $cred
+
+UserName       Password
+--------       --------
+LAB\svc_backup System.Security.SecureString
+
+
+PS C:\Windows\system32> $cred.GetNetworkCredential().Password
+Lab-Pass1!
+```
+
+`GetNetworkCredential().Password` gives the plain text back, so a SecureString hides a password from casual eyes; it does not hide it from your own code.
+
+### Saving a password for later
+
+`ConvertFrom-SecureString` turns a SecureString into encrypted text you can save in a file; `ConvertTo-SecureString` (without -AsPlainText) reads it back.
+
+```terminal
+PS C:\Windows\system32> $pw = ConvertTo-SecureString 'Lab-Pass1!' -AsPlainText -Force
+PS C:\Windows\system32> New-Item C:\Secure -ItemType Directory | Out-Null
+PS C:\Windows\system32> ConvertFrom-SecureString $pw | Set-Content C:\Secure\backup.txt
+PS C:\Windows\system32> (Get-Content C:\Secure\backup.txt).Substring(0, 40) + '...'
+01000000d08c9ddf0115d1118c7a00c04fc297eb...
+PS C:\Windows\system32> $saved = Get-Content C:\Secure\backup.txt | ConvertTo-SecureString
+PS C:\Windows\system32> $cred = New-Object System.Management.Automation.PSCredential('LAB\svc_backup', $saved)
+```
+
+- Without a key, the text is protected by Windows' **Data Protection API (DPAPI)** with **your account on this computer**. Only the same user on the same computer can read it back. A scheduled task that reads the file must run as the account that wrote it.
+- With `-Key` (16, 24 or 32 bytes), the text is encrypted with AES and that key, so it works for other users and computers, but anyone with the key can read it: the key then needs protecting itself.
+
+> PowerShell 7 adds `ConvertFrom-SecureString -AsPlainText`, and its `ConvertTo-SecureString -AsPlainText` no longer needs `-Force`. For secrets shared by a team, the SecretManagement module (from the PowerShell Gallery) stores them in a vault.
+
+@try machines=1
+@task t1 | Security | 10 | WIN-SRV1
+Save the password `Report-2026!` for later use in `C:\Secure\report.txt`, encrypted for your account (DPAPI). The file must **not** contain the password as plain text, and reading it back with `Get-Content | ConvertTo-SecureString` must give the password. Ask for it with `Read-Host -AsSecureString` instead of typing it into a command.
+@check WIN-SRV1 | the file does not hold the plain text
+(Test-Path C:\Secure\report.txt) -and -not ((Get-Content C:\Secure\report.txt -Raw) -match 'Report')
+@check WIN-SRV1 | it reads back as the password
+$s = Get-Content C:\Secure\report.txt | ConvertTo-SecureString; (New-Object System.Management.Automation.PSCredential('x', $s)).GetNetworkCredential().Password -eq 'Report-2026!'
+@check WIN-SRV1 | the password was not typed into a command
+-not (($CertLabHistory -join ' ') -match 'Report-2026!')
+@hint $pw = Read-Host -AsSecureString, type the password, then ConvertFrom-SecureString $pw | Set-Content C:\Secure\report.txt (create the folder first).
+@solution WIN-SRV1
+New-Item C:\Secure -ItemType Directory -Force | Out-Null
+$pw = Read-Host -Prompt 'Password' -AsSecureString
+Report-2026!
+ConvertFrom-SecureString $pw | Set-Content C:\Secure\report.txt
+@endtask
+@end
+
+@quiz
+? A script saved a password with `ConvertFrom-SecureString` (no key). Who can read it back?
+- Every administrator of the domain
++ Only the same user on the same computer
+- Anyone who has the file
+! Without -Key it is protected by DPAPI for that user on that computer.
+? What does a PSCredential object hold?
++ A user name and a SecureString password
+- A user name and a plain text password
+- A certificate
+! -Credential parameters take a PSCredential; Get-Credential makes one.
+? Why must ConvertTo-SecureString -AsPlainText be given -Force?
+- To overwrite an existing password
++ As a reminder that the plain text is not protected (it is in the script or history)
+- Because it needs an administrator
+! It is meant for tests, not for real passwords.
+@end
+
+## Lesson: l1205 | Just Enough Administration (JEA)
+
+**JEA** lets a person do one administrative job over PowerShell remoting without being an administrator. The help desk can restart the print spooler, but cannot stop other services, read files or run anything else. It is built from three pieces:
+
+1. A **role capability file** (`.psrc`): what a role may run. `VisibleCmdlets` can allow whole cmdlets, or a cmdlet with only some parameters and values.
+2. A **session configuration file** (`.pssc`): the endpoint. `SessionType = 'RestrictedRemoteServer'` starts from almost nothing, `RunAsVirtualAccount` runs the commands as a temporary local administrator, and `RoleDefinitions` maps users or groups to roles.
+3. **Registering** the endpoint with WinRM, so people can connect to it by name.
+
+The role capability file must sit in a folder named `RoleCapabilities` inside a module folder in `PSModulePath`; its file name (without `.psrc`) is the role's name.
+
+```terminal
+PS C:\Windows\system32> $mod = 'C:\Program Files\WindowsPowerShell\Modules\LabJEA'
+PS C:\Windows\system32> New-Item "$mod\RoleCapabilities" -ItemType Directory -Force | Out-Null
+PS C:\Windows\system32> New-ModuleManifest -Path "$mod\LabJEA.psd1"
+PS C:\Windows\system32> New-PSRoleCapabilityFile -Path "$mod\RoleCapabilities\SpoolerAdmin.psrc" -VisibleCmdlets 'Get-Service', @{ Name = 'Restart-Service'; Parameters = @{ Name = 'Name'; ValidateSet = 'Spooler' } }
+PS C:\Windows\system32> New-Item C:\JEA -ItemType Directory | Out-Null
+PS C:\Windows\system32> New-PSSessionConfigurationFile -Path C:\JEA\PrintDesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\alice' = @{ RoleCapabilities = 'SpoolerAdmin' } }
+PS C:\Windows\system32> Test-PSSessionConfigurationFile C:\JEA\PrintDesk.pssc
+True
+PS C:\Windows\system32> Register-PSSessionConfiguration -Name PrintDesk -Path C:\JEA\PrintDesk.pssc -Force | Out-Null
+WARNING: Register-PSSessionConfiguration may need to restart the WinRM service if a configuration using this name has recently been unregistered, certain system data structures may still be cached. In that case, a restart of WinRM may be required.
+PS C:\Windows\system32> Get-PSSessionConfiguration -Name PrintDesk | Select-Object Name, Permission
+
+Name      Permission
+----      ----------
+PrintDesk LAB\alice AccessAllowed
+```
+
+Registering needs an administrator and a running WinRM service (so on a Windows client, `Enable-PSRemoting` first), and it restarts WinRM, which drops open remote sessions (the warning it prints is normal). In real use the role is usually given to a group (`'LAB\HelpDesk'`) rather than to one person.
+
+### Checking and using the endpoint
+
+`Get-PSSessionCapability` shows what a user would be able to run, without connecting. The few commands every RestrictedRemoteServer session has (Get-Command, Get-Help, Exit-PSSession, Select-Object, Measure-Object...) come first, then the role's:
+
+```terminal
+#setup $mod = 'C:\Program Files\WindowsPowerShell\Modules\LabJEA'; New-Item "$mod\RoleCapabilities" -ItemType Directory -Force | Out-Null; New-ModuleManifest -Path "$mod\LabJEA.psd1"
+#setup New-PSRoleCapabilityFile -Path "$mod\RoleCapabilities\SpoolerAdmin.psrc" -VisibleCmdlets 'Get-Service', @{ Name = 'Restart-Service'; Parameters = @{ Name = 'Name'; ValidateSet = 'Spooler' } }
+#setup New-Item C:\JEA -ItemType Directory | Out-Null; New-PSSessionConfigurationFile -Path C:\JEA\PrintDesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\alice' = @{ RoleCapabilities = 'SpoolerAdmin' } }
+#setup Register-PSSessionConfiguration -Name PrintDesk -Path C:\JEA\PrintDesk.pssc -Force -WarningAction SilentlyContinue | Out-Null
+PS C:\Windows\system32> $can = (Get-PSSessionCapability -ConfigurationName PrintDesk -Username LAB\alice).Name
+PS C:\Windows\system32> $can -contains 'Restart-Service'
+True
+PS C:\Windows\system32> $can -contains 'Stop-Service'
+False
+```
+
+Alice connects from her own PC by naming the endpoint: `Enter-PSSession -ComputerName WIN-SRV1 -ConfigurationName PrintDesk`. Inside, it looks like this:
+
+```text
+[WIN-SRV1]: PS> Restart-Service -Name Spooler
+[WIN-SRV1]: PS> Stop-Service -Name WinRM
+The term 'Stop-Service' is not recognized as the name of a cmdlet, ...
+```
+
+Inside, only the allowed commands exist, `Restart-Service` accepts only `Spooler`, and the language is limited (by default NoLanguage mode: she cannot set variables or write script blocks of her own). `Unregister-PSSessionConfiguration -Name PrintDesk` removes the endpoint.
+
+> Keep JEA roles small, and avoid giving roles commands that can start other programs or change permissions (Start-Process, Invoke-Expression, Set-Acl...): those let a user step outside the role.
+
+@try machines=1
+@setup WIN-SRV1
+New-Item 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities' -ItemType Directory -Force | Out-Null
+New-ModuleManifest -Path 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\LabJEA.psd1'
+New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities\ServiceViewer.psrc' -VisibleCmdlets 'Get-Service'
+New-Item C:\JEA -ItemType Directory -Force | Out-Null
+
+@task t1 | Security | 10 | WIN-SRV1
+The role **ServiceViewer** already exists (in the LabJEA module). Create the session configuration file `C:\JEA\Viewers.pssc` (RestrictedRemoteServer, virtual account) that gives the user `LAB\bob` that role, and register it as the endpoint **Viewers**.
+@check WIN-SRV1 | the endpoint Viewers is registered
+$null -ne (Get-PSSessionConfiguration -Name Viewers -ErrorAction SilentlyContinue)
+@check WIN-SRV1 | LAB\bob can run Get-Service there, but not Stop-Service
+$n = (Get-PSSessionCapability -ConfigurationName Viewers -Username LAB\bob).Name; ($n -contains 'Get-Service') -and -not ($n -contains 'Stop-Service')
+@hint New-PSSessionConfigurationFile -Path C:\JEA\Viewers.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\bob' = @{ RoleCapabilities = 'ServiceViewer' } }, then Register-PSSessionConfiguration -Name Viewers -Path ... -Force
+@solution WIN-SRV1
+New-PSSessionConfigurationFile -Path C:\JEA\Viewers.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\bob' = @{ RoleCapabilities = 'ServiceViewer' } }
+Register-PSSessionConfiguration -Name Viewers -Path C:\JEA\Viewers.pssc -Force
+@endtask
+@end
+
+@quiz
+? Where must a JEA role capability file be saved?
+- Anywhere, as long as the .pssc names its full path
++ In a RoleCapabilities folder inside a module folder in PSModulePath
+- In C:\Windows\System32\JEA
+! The role's name is the file name without .psrc.
+? What does `SessionType = 'RestrictedRemoteServer'` do?
++ Starts the session with only a few basic commands, so the roles add what is allowed
+- Lets only administrators connect
+- Turns off remoting for everyone else
+! JEA endpoints use it so that nothing is visible unless a role allows it.
+? How does a user connect to the JEA endpoint PrintDesk on WIN-SRV1?
+- Enter-PSSession -ComputerName WIN-SRV1 -Role PrintDesk
++ Enter-PSSession -ComputerName WIN-SRV1 -ConfigurationName PrintDesk
+- Connect-JEA WIN-SRV1 PrintDesk
+! -ConfigurationName picks the endpoint; without it you get the default endpoint, which only administrators and members of Remote Management Users may use.
+@end

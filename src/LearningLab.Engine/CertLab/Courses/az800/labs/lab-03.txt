@@ -1,0 +1,68 @@
+# Lab: lab-03 | The branch site and the operations masters | u03 | 40
+DC2 stands in the branch office (10.20.0.0/24), joined to head office by a VPN, but Active Directory still has it in the HQ site, so the two DCs replicate as if they shared a LAN and branch PCs pick any DC. Last month the PDC emulator and RID master roles were moved to DC2 for a test, and nobody moved them back.
+
+@vars
+cost = 50 | 75 | 100
+interval = 15 | 30
+@endvars
+
+@setup admin
+fsmo transfer PDCEmulator DC2
+fsmo transfer RIDMaster DC2
+
+@task t01 | AD DS | 30 | admin
+Model the branch in Active Directory: a site **Branch** with the subnet **10.20.0.0/24**, a site link **HQ-Branch** between HQ and Branch with cost **{cost}** that replicates every **{interval}** minutes, and DC2 in the Branch site.
+@check admin | the site, its subnet and DC2
+subnet["10.20.0.0/24"].site == Branch
+dc["DC2"].site == Branch
+@check admin | the site link
+sitelink["HQ-Branch"].sites has HQ
+sitelink["HQ-Branch"].sites has Branch
+sitelink["HQ-Branch"].cost == {cost}
+sitelink["HQ-Branch"].interval == {interval}
+@solution admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+new sitelink name=HQ-Branch sites=HQ,Branch cost={cost} interval={interval}
+move dc DC2 Branch
+@explain
+Without a subnet object, computers at the branch have no site. Without a site link that includes Branch, DC2 would have no path to replicate on (DEFAULTIPSITELINK has only HQ).
+@endtask
+
+@task t02 | AD DS | 25 | DC1
+Grace Kim (`gkim`) has become **HR lead**. Change her title on **DC1**, then let the replication schedule (not a forced replication) bring the change to DC2 at the branch: skip time until DC2 has it.
+@check admin | DC2 has the new title
+@DC2 user["gkim"].title == "HR lead"
+@check admin | DC1 made the change
+@DC1 user["gkim"].title == "HR lead"
+@hint Set-ADUser gkim -Title 'HR lead' on DC1. Between sites the change waits for the next interval of HQ-Branch (counted from midnight): at most {interval} minutes.
+@solution DC1
+Set-ADUser gkim -Title 'HR lead'
+#wait 1800
+@explain
+Inside a site this would take about 15 seconds. Between sites, changes wait for the site link's interval, so the shorter the interval, the sooner the branch sees changes, at the cost of more WAN traffic.
+@endtask
+
+@task t03 | AD DS | 25 | DC1
+Move the **PDC emulator** and **RID master** roles back to **DC1** at head office. Both DCs are running.
+@check admin | DC1 has both roles
+fsmo.PDCEmulator == DC1
+fsmo.RIDMaster == DC1
+@hint Both holders are up, so this is a transfer: Move-ADDirectoryServerOperationMasterRole without -Force (-Confirm:$false answers the question).
+@solution DC1
+Move-ADDirectoryServerOperationMasterRole -Identity DC1 -OperationMasterRole PDCEmulator,RIDMaster -Confirm:$false
+@explain
+A transfer is a clean hand-over between two running DCs. Seizing (-Force) is only for a holder that is gone for good.
+@endtask
+
+@task t04 | AD DS | 20 | DC2
+A new branch employee, **Sam Ito** (`sito`, password `Harbor#2026`), must be created on **DC2** in `Staff/Sales`, and head office needs the account straight away for a mailbox: make DC1 have it now, without waiting for the schedule.
+@check admin | the account exists on DC2 and has reached DC1
+@DC2 user["sito"].enabled == Yes
+@DC1 user["sito"].enabled == Yes
+@hint New-ADUser on DC2, then Replicate Now on DC1's connection from DC2 (replicate DC1 from=DC2) or repadmin /syncall on DC2.
+@solution DC2
+New-ADUser -Name 'Sam Ito' -SamAccountName sito -Path 'OU=Sales,OU=Staff,DC=corp,DC=example' -AccountPassword (ConvertTo-SecureString 'Harbor#2026' -AsPlainText -Force) -Enabled $true
+@solution admin
+replicate DC1 from=DC2
+@endtask

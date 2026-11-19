@@ -1,0 +1,18 @@
+A shared account hides an intruder among friends: the trick is knowing what normal looks like.
+
+1. Normal. /etc/ops-desks.txt: {{A_FULL}}, {{B_FULL}} and {{C_FULL}} use ops from 10.10.27.21-23, on
+   the day shift. grep Accepted /var/log/secure shows those desks between 07:00 and 19:00 - and one
+   sign-in at {{ODD}} on 8 April from {{ATKIP}}, which is neither a desk nor the day shift. Later the same
+   address signs in with "publickey": it no longer needs the password.
+
+2. The key. /home/ops/.ssh/authorized_keys has a key ending in {{KEYCMT}} that nobody on the team added.
+
+3. The job. Jobs can hide in an account's own crontab (/var/spool/cron/ops), which ls /etc/cron.d never
+   shows. crontab -l -u ops lists one running /home/ops/.local/share/{{DIR}}/{{JOB}} every 20 minutes,
+   copying the order book into that hidden folder. The flag is in .note there.
+
+4. Clean up. Remove the key line, crontab -r -u ops, rm the script, and change the shared password
+   (echo 'ops:NEW' | chpasswd). Locking the account would also stop the three colleagues working.
+
+For real: shared accounts are the problem - give each person their own account (then "who" is never a
+question), allow sign-in only from the office, and alert on sign-ins outside working hours.

@@ -1,0 +1,36 @@
+[
+    {
+        "Id": "c0ffee26",
+        "Name": "Theo",
+        "Grade": 6,
+        "Age": 11,
+        "Color": "#3B82F6",
+        "Stars": 58,
+        "Created": "2026-10-20",
+        "Rewards": { "Points": 47 },
+        "Skills": {
+            "longdiv": { "Level": 3, "Attempts": 12, "Correct": 8, "Streak": 1, "Misses": 0, "Recent": [1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0], "Last": "2026-10-24" },
+            "pctwhole": { "Level": 2, "Attempts": 6, "Correct": 5, "Streak": 3, "Misses": 0, "Recent": [1, 1, 0, 1, 1, 1], "Last": "2026-10-23" },
+            "fracdiv": { "Level": 1, "Attempts": 4, "Correct": 2, "Streak": 0, "Misses": 1, "Recent": [1, 0, 1, 0] }
+        },
+        "Days": { "2026-10-24": { "Done": 22, "Right": 17 } },
+        "Mistakes": [ { "When": "2026-10-24 17:05", "Skill": "longdiv", "Text": "4567 ÷ 34 (Workshop)", "Answer": "4567 ÷ 34 = 134 R 11", "Given": "3 slips" } ],
+        "Best": { "longdiv": 90 }
+    },
+    {
+        "Id": "c0ffee02",
+        "Name": "Lily",
+        "Grade": 2,
+        "Age": 7,
+        "Color": "#22C55E",
+        "Stars": 21,
+        "Created": "2026-10-20",
+        "Rewards": { "Points": 130 },
+        "Skills": {
+            "regroup": { "Level": 2, "Attempts": 9, "Correct": 7, "Streak": 2, "Misses": 0, "Recent": [1, 1, 0, 1, 1, 0, 1, 1, 1], "Last": "2026-10-24" }
+        },
+        "Days": {},
+        "Mistakes": [],
+        "Best": {}
+    }
+]

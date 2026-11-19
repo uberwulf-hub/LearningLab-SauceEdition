@@ -1,0 +1,14 @@
+## connect to the PC
+winrm-shell -i 10.10.24.30 -u Administrator -p {{ADMPW}}
+## the failures: a few for every account, all from one address
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } | Format-List TimeCreated, Message
+## the one that worked, and what it did next
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624,4698 } | Format-List TimeCreated, Id, Message
+Get-ScheduledTask
+(Get-ScheduledTask -TaskName {{TASK}}).Actions
+Get-ChildItem C:\ProgramData\{{TASK}}
+Get-Content C:\ProgramData\{{TASK}}\readme.txt
+## clean up: the account and the task
+Disable-LocalUser -Name {{VIC}}
+Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false
+exit

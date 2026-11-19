@@ -1,0 +1,17 @@
+SYNOPSIS: Restarts the computer (or other computers).
+DESCRIPTION:
+Restart-Computer restarts Windows. Programs are closed and the console's session ends; on the practice network the machine comes back at once with a new PowerShell window. At the restart services with start type Automatic start again, Manual ones stay stopped, scheduled tasks with a startup trigger run, a pending computer name takes effect, and the System log records the shutdown (1074, 6006) and the start (6005, 12).
+
+If other people are signed in, PowerShell refuses unless you add -Force.
+PARAMETER ComputerName:
+The computers to restart (this one by default). Position 0.
+PARAMETER Force:
+Restarts even if other users are signed in.
+PARAMETER Wait:
+Waits until the other computer is back (PowerShell 3 and later).
+PARAMETER Credential:
+Another account.
+EXAMPLE: Restart-Computer -Force
+EXAMPLE: Restart-Computer -ComputerName WIN-CL1 -Force
+Restarts another computer.
+RELATED: Stop-Computer, Rename-Computer

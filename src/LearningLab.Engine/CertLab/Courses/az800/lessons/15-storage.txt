@@ -1,0 +1,209 @@
+# Unit: u15 | 15. Storage Spaces and Data Deduplication | File and storage
+
+FS1 has four empty 100 GB disks (numbers 3 to 6) and an archive volume, E:, full of reports that are mostly copies of each other. This unit turns plain disks into resilient virtual disks with **Storage Spaces**, introduces the clustered and replicated versions of the same ideas (**Storage Spaces Direct** and **Storage Replica**), and shrinks the archive with **Data Deduplication**.
+
+## Lesson: l1501 | Storage pools and virtual disks
+
+**Storage Spaces** groups physical disks into a **storage pool** and carves **virtual disks** (also called storage spaces) out of it. Windows then sees each virtual disk as an ordinary disk to partition and format. The steps:
+
+1. Find the disks that can be pooled: `Get-PhysicalDisk -CanPool $true` (empty, no partitions, not the system disk).
+2. `New-StoragePool` from those disks.
+3. `New-VirtualDisk` with a **resiliency** and a **provisioning type**.
+4. Initialize, partition and format it, or do steps 3 and 4 in one go with `New-Volume`.
+
+```terminal
+#machine FS1
+PS C:\Windows\system32> Get-PhysicalDisk -CanPool $true
+
+Number FriendlyName           SerialNumber MediaType CanPool OperationalStatus HealthStatus Usage            Size
+------ ------------           ------------ --------- ------- ----------------- ------------ -----            ----
+     3 Lumen SAS HDD 100GB    LMN04183     HDD       True    OK                Healthy      Auto-Select    100 GB
+     4 Lumen SAS HDD 100GB    LMN04184     HDD       True    OK                Healthy      Auto-Select    100 GB
+     5 Lumen SAS HDD 100GB    LMN04185     HDD       True    OK                Healthy      Auto-Select    100 GB
+     6 Lumen SAS HDD 100GB    LMN04186     HDD       True    OK                Healthy      Auto-Select    100 GB
+
+
+PS C:\Windows\system32> New-StoragePool -FriendlyName Pool1 -StorageSubSystemFriendlyName 'Windows Storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+
+FriendlyName OperationalStatus HealthStatus IsPrimordial IsReadOnly      Size AllocatedSize
+------------ ----------------- ------------ ------------ ----------      ---- -------------
+Pool1        OK                Healthy      False        False         399 GB           0 B
+```
+
+### Resiliency
+
+- **Simple**: data striped over the disks, no copy. Fastest and uses all the space, but one failed disk loses the virtual disk. At least 1 disk.
+- **Mirror**: every piece of data written to 2 disks (**two-way mirror**, survives 1 failed disk, at least **2** disks, uses half the space) or 3 disks (**three-way mirror**, survives 2 failed disks, at least **5** disks in a stand-alone pool, uses a third of the space).
+- **Parity**: data plus parity information, like RAID 5. Survives 1 failed disk, at least **3** disks; good for archives, slow for writes. **Dual parity** survives 2 failures and needs at least 7 disks.
+
+### Provisioning
+
+- **Fixed**: the whole size is taken from the pool at once.
+- **Thin**: the virtual disk takes space from the pool only as data is written, so you can promise more than the pool has (overprovisioning). Watch the pool's free space and add disks in time.
+
+### File system: NTFS or ReFS
+
+**ReFS** (Resilient File System) checks the integrity of its data and metadata, repairs damaged data from a mirror copy automatically, and makes some operations on huge files very fast (block cloning: Hyper-V checkpoints merge quickly). It is the recommended file system for Storage Spaces Direct and Hyper-V storage. It can't be the boot volume and lacks some NTFS features (EFS encryption, disk quotas). NTFS remains the general choice and the one that every tool supports (Azure File Sync, for example, needs NTFS).
+
+@try
+@task t1 | File and storage | 10 | FS1
+Pool FS1's four empty disks into a pool called **Pool1**. In it, create a **two-way mirror**, **thin**-provisioned virtual disk called **Data** of **150 GB**, formatted as **ReFS** with the drive letter **F**.
+@check admin | the pool has the four disks
+pool["Pool1"].disks == 4
+@check admin | the virtual disk is a thin two-way mirror
+vdisk["Data"].resiliency == Mirror
+vdisk["Data"].copies == 2
+vdisk["Data"].provisioning == Thin
+@check admin | F: is ReFS
+volume(FS1, F).fs == ReFS
+@hint New-StoragePool with (Get-PhysicalDisk -CanPool $true), then New-Volume -ResiliencySettingName Mirror -ProvisioningType Thin -FileSystem ReFS -DriveLetter F -Size 150GB.
+@solution FS1
+New-StoragePool -FriendlyName Pool1 -StorageSubSystemFriendlyName 'Windows Storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+New-Volume -StoragePoolFriendlyName Pool1 -FriendlyName Data -ResiliencySettingName Mirror -ProvisioningType Thin -FileSystem ReFS -DriveLetter F -Size 150GB
+@explain
+A mirror makes two copies by default. Thin provisioning takes nothing from the pool until data is written, which is why the pool still shows almost all of its space free.
+@endtask
+@end
+
+@quiz
+? A virtual disk must survive two disks failing at the same time in a stand-alone pool. What is the fewest disks for a three-way mirror?
+- 3
+- 4
++ 5
+! A three-way mirror in a stand-alone Storage Spaces pool needs at least five physical disks.
+? Which resiliency gives the most usable space while surviving one failed disk, at the cost of slow writes?
+- Simple
+- Two-way mirror
++ Parity
+! Parity stores data plus one column of parity, so only one disk's worth of space goes to protection.
+? A 500 GB thin virtual disk is created in a pool with 400 GB free. What happens?
++ It is created; space is taken from the pool only as data is written
+- It fails: thin disks can't be larger than the free space
+- It is created as a fixed disk of 400 GB
+! Thin provisioning allows overprovisioning; keep an eye on the pool's free space.
+@end
+
+## Lesson: l1502 | Storage Spaces Direct and Storage Replica
+
+### Storage Spaces Direct (S2D)
+
+**Storage Spaces Direct** builds one storage pool from the **local disks of several servers** in a failover cluster: no shared SAN. It needs Windows Server **Datacenter**, 2 to 16 servers, and a fast network between them (10 GbE or better, ideally RDMA). The fastest drives (NVMe or SSD) become a **cache** in front of the others. Volumes are **Cluster Shared Volumes** (CSV), usually ReFS. It is enabled with `Enable-ClusterStorageSpacesDirect` on a validated cluster.
+
+- **Hyperconverged**: the same servers run Hyper-V VMs and S2D storage.
+- **Converged** (disaggregated): the S2D cluster serves storage over SMB 3 (Scale-Out File Server) to separate compute servers.
+
+Resiliency counts **servers** instead of disks: a two-way mirror needs 2 servers, a three-way mirror 3, dual parity 4.
+
+### Storage Replica
+
+**Storage Replica** copies a **volume** block by block to another server or cluster, for disaster recovery:
+
+- **Synchronous**: a write completes only when both sides have it (no data loss); needs low latency between the sites (about 5 ms round trip).
+- **Asynchronous**: writes are copied shortly afterwards (possible small data loss), for longer distances.
+
+Each replicated data volume needs a **log volume** on each side; source and destination data volumes must be the same size. The destination volume is not mounted (not usable) while it is a replica. Test a design with `Test-SRTopology`, create a partnership with `New-SRPartnership`. Windows Server **Standard** supports one partnership with one volume of up to 2 TB; Datacenter has no such limit.
+
+@try
+@setup FS1
+New-StoragePool -FriendlyName Pool1 -StorageSubSystemFriendlyName 'Windows Storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+@task t1 | File and storage | 10 | FS1
+The scanned documents archive is written once and then only read. In **Pool1**, create a **parity**, **fixed**-provisioned virtual disk called **Scans** of **100 GB**, formatted as **NTFS** with the drive letter **G**. Then look at how much of the pool it takes.
+@check admin | a fixed parity space on G:
+vdisk["Scans"].resiliency == Parity
+vdisk["Scans"].provisioning == Fixed
+volume(FS1, G).fs == NTFS
+@hint New-Volume -ResiliencySettingName Parity -ProvisioningType Fixed; Get-VirtualDisk shows the footprint on the pool.
+@solution FS1
+New-Volume -StoragePoolFriendlyName Pool1 -FriendlyName Scans -ResiliencySettingName Parity -ProvisioningType Fixed -FileSystem NTFS -DriveLetter G -Size 100GB
+Get-VirtualDisk
+@explain
+Parity spends one column of every stripe on parity information, so with four disks 100 GB takes about 133 GB of the pool (FootprintOnPool): much less than the 200 GB of a two-way mirror. Fixed provisioning takes that space at once.
+@endtask
+@end
+
+@quiz
+? What does Storage Spaces Direct use instead of shared storage?
++ The local disks of each server in a failover cluster
+- An iSCSI SAN
+- Azure managed disks
+! S2D pools the internal disks of the cluster's servers.
+? A replica must lose no data and the two sites are 2 ms apart. Which mode?
++ Synchronous replication
+- Asynchronous replication
+- DFS Replication
+! Synchronous replication completes each write on both sides; it needs low latency, which 2 ms gives.
+? Which edition limits Storage Replica to one partnership with a single volume of up to 2 TB?
+- Datacenter
++ Standard
+- Datacenter: Azure Edition
+! Windows Server Standard has a limited Storage Replica; Datacenter has the full feature.
+@end
+
+## Lesson: l1503 | Data Deduplication
+
+**Data Deduplication** finds identical chunks of data across the files of a volume and stores each chunk once. Files keep working as usual; reading an optimized file puts it back together from the chunk store. It is a role service (`FS-Data-Deduplication`) enabled **per volume**.
+
+- **Usage types**: **Default** (general file servers: documents, archives, software), **HyperV** (VDI virtual hard disks), **Backup** (virtualized backup software). Each sets sensible defaults.
+- **Minimum file age**: files are optimized only after they haven't changed for that many days (3 by default; 0 = every file). Files under 32 KB are never optimized.
+- **Jobs**: **Optimization** (runs in the background, and on a schedule), **Garbage collection** (frees chunks no file uses any more, weekly), **Scrubbing** (checks the chunk store for corruption and repairs it, weekly), and Unoptimization (undo everything). Run one now with `Start-DedupJob`.
+- It can't be enabled on the **system or boot volume**. Since Windows Server 2019 it works on ReFS as well as NTFS.
+- Good candidates: archives, installation media, user folders, VDI. Poor ones: files that are always open or change constantly (running VMs other than VDI, databases).
+
+```terminal
+#machine FS1
+#setup FS1:Install-WindowsFeature FS-Data-Deduplication
+PS C:\Windows\system32> Enable-DedupVolume -Volume C:
+Enable-DedupVolume : Data Deduplication can't be enabled on the system or boot volume.
+At line:1 char:1
++ Enable-DedupVolume -Volume C:
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (C::String) [Enable-DedupVolume], CimException
+    + FullyQualifiedErrorId : StorageWMI,Enable-DedupVolume
+```
+
+@try
+@task t1 | File and storage | 10 | FS1
+E: holds three years of reports with many copies. Install Data Deduplication on FS1, enable it on **E:** for a general file server, and run an optimization job now instead of waiting for the background job. Check how much space it saved.
+@check admin | deduplication is on for E: and saved space
+dedup(FS1, E).enabled == Yes
+dedup(FS1, E).usage == Default
+dedup(FS1, E).savedgb > 5
+@hint Install-WindowsFeature FS-Data-Deduplication, Enable-DedupVolume -UsageType Default, Start-DedupJob -Type Optimization -Wait, Get-DedupStatus.
+@solution FS1
+Install-WindowsFeature FS-Data-Deduplication
+Enable-DedupVolume -Volume E: -UsageType Default
+Start-DedupJob -Volume E: -Type Optimization -Wait
+Get-DedupStatus
+@explain
+The archive's files are months old, so the default minimum age of 3 days doesn't hold any of them back. The copies of the same report and the three ISO files are stored once.
+@endtask
+@task t2 | File and storage | 10 | FS1
+New scans arrive on E: every day and are never edited. Make deduplication optimize files on E: regardless of their age.
+@check admin | the minimum file age is 0 days
+dedup(FS1, E).minage == 0
+@hint Set-DedupVolume -MinimumFileAgeDays.
+@solution FS1
+Set-DedupVolume -Volume E: -MinimumFileAgeDays 0
+@explain
+0 days means every file is optimized at the next job. Keep the default for files that are edited for a few days after they are created.
+@endtask
+@end
+
+@quiz
+? Where can't Data Deduplication be enabled?
++ On the system or boot volume
+- On a data volume formatted with ReFS
+- On a volume shared over SMB
+! Deduplication is for data volumes; the system and boot volume are excluded.
+? Which usage type fits a volume that stores the virtual hard disks of a VDI deployment?
+- Default
++ HyperV
+- Backup
+! The HyperV usage type is tuned for VDI's open VHDX files.
+? Which deduplication job frees the space of chunks that no file uses any more?
+- Optimization
++ Garbage collection
+- Scrubbing
+! Garbage collection removes unreferenced chunks; scrubbing checks the chunk store for corruption.
+@end
+

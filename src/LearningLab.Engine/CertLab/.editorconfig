@@ -1,0 +1,5 @@
+# Cert Lab (Learning Lab): App Hub ran it on .NET Framework, where StartsWith / EndsWith / IndexOf with a string compared
+# with Windows' own rules; .NET 10 uses ICU, which ignores control characters there ("abc".StartsWith("\u0001") is true).
+# Every such call says StringComparison.Ordinal; this keeps new ones from slipping in.
+[*.cs]
+dotnet_diagnostic.CA1310.severity = warning

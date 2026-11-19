@@ -1,0 +1,16 @@
+SYNOPSIS: Shows the Windows Firewall profiles: Domain, Private and Public.
+DESCRIPTION:
+Windows Firewall has three profiles, one per kind of network: Domain, Private and Public. Only the profile of the network the computer is on applies (see Get-NetConnectionProfile); the lab machines use Domain.
+
+Get-NetFirewallProfile shows each profile: Enabled (is the firewall on for it), DefaultInboundAction and DefaultOutboundAction (what happens to traffic no rule matches; NotConfigured means the Windows default: block inbound, allow outbound), and the logging settings.
+PARAMETER Name:
+Domain, Private or Public. Also accepted as -Profile.
+PARAMETER All:
+Shows every profile (the same as no parameter).
+EXAMPLE: Get-NetFirewallProfile | Format-Table Name, Enabled, DefaultInboundAction
+Is the firewall on, and what does it do with unmatched inbound traffic?
+EXAMPLE: Get-NetFirewallProfile -Name Domain
+Every setting of the Domain profile.
+NOTES:
+CIM-based command from the NetSecurity module, Windows only.
+RELATED: Set-NetFirewallProfile, Get-NetConnectionProfile, Get-NetFirewallRule

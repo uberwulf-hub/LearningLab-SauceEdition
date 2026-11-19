@@ -1,0 +1,332 @@
+# Unit: u14 | 14. PowerShell gotchas | Language
+
+Every PowerShell user meets these surprises sooner or later. Some of them cost the people who wrote this app real debugging time in their own scripts (App Hub runs on Windows PowerShell 5.1), so this unit collects them with their fixes. Each one makes sense once you know the rule behind it, and every rule here has come up earlier in the course.
+
+## Lesson: l1401 | Collections that fall apart
+
+PowerShell sends output down the pipeline one object at a time. When a function or a statement outputs a collection, PowerShell **unrolls** it: the items go out one by one, and whoever collects them builds a new array. Three things follow from that.
+
+### 1. One item comes back as a single object, not an array
+
+```terminal
+PS C:\Windows\system32> function Get-One { 'only' }
+PS C:\Windows\system32> $r = Get-One
+PS C:\Windows\system32> $r.GetType().Name
+String
+PS C:\Windows\system32> $r = @(Get-One)
+PS C:\Windows\system32> $r.GetType().Name
+Object[]
+```
+
+If your code needs an array (to index it or to call array methods), wrap the call in `@( )`. `@( )` always gives an array, with zero, one or many items.
+
+### 2. Your special list type comes back as a plain array
+
+```terminal
+PS C:\Windows\system32> function Get-List { $l = New-Object System.Collections.Generic.List[string]; $l.Add('x'); $l.Add('y'); return $l }
+PS C:\Windows\system32> (Get-List).GetType().Name
+Object[]
+PS C:\Windows\system32> function Get-WholeList { $l = New-Object System.Collections.Generic.List[string]; $l.Add('x'); $l.Add('y'); return , $l }
+PS C:\Windows\system32> (Get-WholeList).GetType().Name
+List`1
+```
+
+`return $l` unrolled the list into two strings, and the caller got them back as an `Object[]`. The unary comma in `return , $l` wraps the list in a one-item array; the unrolling removes only that wrapper, so the list arrives intact.
+
+> The same happens with `$x = if ($ok) { $list } else { ... }`: the `if` statement outputs the items, so `$x` is an `Object[]`, not your list. Assign inside the branches instead: `if ($ok) { $x = $list }`.
+
+### 3. A loop over a command gets what the command output
+
+```terminal
+PS C:\Windows\system32> function Get-WholeList { $l = New-Object System.Collections.Generic.List[string]; $l.Add('x'); $l.Add('y'); return , $l }
+PS C:\Windows\system32> foreach ($item in Get-WholeList) { "item: $item" }
+item: x y
+```
+
+`foreach ($item in COMMAND)` walks the objects the command wrote. Here the command wrote one object, the whole list, so the loop ran once and `"$item"` joined the list's two strings with a space. Use `, $list` only when the caller really wants one object.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Define a function `Get-Servers` that reads `C:\LabFiles\servers.txt` and always returns an **array**, even if the file has a single line. Then, in the same console, store `@(Get-Servers)` in `$servers`.
+@check WIN-SRV1 | Get-Servers exists
+(Get-Command Get-Servers -ErrorAction SilentlyContinue) -ne $null
+@check WIN-SRV1 | $servers is an array of the four names
+$servers -is [array] -and $servers.Count -eq 4 -and $servers[0] -eq 'WIN-SRV1'
+@hint [System.IO.File]::ReadAllLines() returns all lines; the caller makes sure of the array with @( ).
+@solution WIN-SRV1
+function Get-Servers { [System.IO.File]::ReadAllLines('C:\LabFiles\servers.txt') }
+$servers = @(Get-Servers)
+@endtask
+@end
+
+@quiz
+? A function ends with `return $list`, where `$list` is a List[string] with 3 items. What does the caller get?
+- The same List[string] object
++ An Object[] with the 3 strings (the list was unrolled)
+- Only the first string
+! Output is unrolled: the three strings go down the pipeline one by one and the caller collects them into a new Object[]. Write `return , $list` to keep the list.
+? What does `@(Get-One)` give when Get-One outputs a single string?
+- The string itself
++ An array with one item
+- $null
+! @( ) always makes an array, whatever the number of items.
+? Why is `$x = if ($ok) { $list } else { $other }` a trap?
++ The if statement outputs the list's items, so $x becomes a new Object[]
+- An if statement cannot be assigned to a variable
+- $x gets $true or $false
+! Statements like if, foreach and switch can be assigned, but what they produce is their output, which is unrolled like any other.
+@end
+
+## Lesson: l1402 | Methods that talk too much
+
+Anything a statement returns and you do not capture becomes output. Some .NET methods return a value you never asked for.
+
+```terminal
+PS C:\Windows\system32> $list = New-Object System.Collections.ArrayList
+PS C:\Windows\system32> $list.Add('a')
+0
+PS C:\Windows\system32> $list.Add('b')
+1
+PS C:\Windows\system32> $sb = New-Object System.Text.StringBuilder
+PS C:\Windows\system32> $sb.Append('Hi')
+
+Capacity MaxCapacity Length
+-------- ----------- ------
+      16  2147483647      2
+```
+
+`ArrayList.Add` returns the index of the new item, and `StringBuilder.Append` returns the builder itself, so both print something. Inside a function that output becomes part of what the function returns, which is a classic way to get a mysterious `0 1 2` in front of your real result.
+
+### Four ways to keep it quiet
+
+- `[void]$list.Add('c')` throws the result away.
+- `$null = $list.Add('c')` does the same (an assignment to `$null` is allowed and discards).
+- `$list.Add('c') | Out-Null` works too, but it is the slowest of the three.
+- Or use a type whose `Add` returns nothing: `System.Collections.Generic.List[string]`.
+
+```terminal
+PS C:\Windows\system32> $list = New-Object System.Collections.ArrayList
+PS C:\Windows\system32> [void]$list.Add('a'); $null = $list.Add('b'); $list.Add('c') | Out-Null
+PS C:\Windows\system32> $list.Count
+3
+PS C:\Windows\system32> $names = New-Object System.Collections.Generic.List[string]
+PS C:\Windows\system32> $names.Add('quiet')
+PS C:\Windows\system32> $names.Count
+1
+```
+
+> A plain array cannot grow at all: `$a = 1, 2; $a.Add(3)` fails with "Collection was of a fixed size." `$a += 3` works because it builds a new, longer array (fine for a few items, slow for thousands).
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Write a function `Get-Evens` that collects the even numbers from 1 to 10 into an ArrayList and returns **only** the numbers (2, 4, 6, 8, 10), with no stray index numbers in the output.
+@check WIN-SRV1 | Get-Evens returns exactly 2 4 6 8 10
+(@(Get-Evens) -join ',') -eq '2,4,6,8,10'
+@hint Inside the loop, write [void]$list.Add($n) or $null = $list.Add($n).
+@solution WIN-SRV1
+function Get-Evens { $list = New-Object System.Collections.ArrayList; foreach ($n in 1..10) { if ($n % 2 -eq 0) { [void]$list.Add($n) } }; $list }
+Get-Evens
+@endtask
+@end
+
+@quiz
+? A function adds 3 items with `$list.Add($x)` (ArrayList) and then outputs `$list`. What does the caller receive?
+- The 3 items
++ 0, 1, 2 and then the 3 items
+- Only the ArrayList's count
+! Each Add returned an index, which went to the function's output before the list itself.
+? Which line does NOT discard ArrayList.Add's return value?
+- [void]$l.Add(1)
+- $null = $l.Add(1)
++ $l.Add(1); $l
+- $l.Add(1) | Out-Null
+! The third one still outputs the index (and then the list).
+@end
+
+## Lesson: l1403 | Constructors that split your array
+
+`New-Object TYPE (ARGS)` looks like a method call, but it is a cmdlet with positional parameters: the parentheses only group, and an array there becomes the `-ArgumentList` parameter, **one constructor argument per item**.
+
+```terminal
+PS C:\Windows\system32> $numbers = 1, 2, 3
+PS C:\Windows\system32> New-Object System.Collections.ArrayList($numbers)
+New-Object : Cannot find an overload for "ArrayList" and the argument count: "3".
+At line:1 char:1
++ New-Object System.Collections.ArrayList($numbers)
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [New-Object], MethodException
+    + FullyQualifiedErrorId : ConstructorInvokedThrowException,Microsoft.PowerShell.Commands.NewObjectCommand
+
+PS C:\Windows\system32> [System.Collections.ArrayList]::new($numbers).Count
+3
+PS C:\Windows\system32> (New-Object System.Collections.ArrayList -ArgumentList (, $numbers)).Count
+3
+```
+
+PowerShell looked for an ArrayList constructor taking three numbers and found none. `[Type]::new($list)` (PowerShell 5 and later) is a real method call, so the array is one argument. With New-Object, wrap the array with the unary comma so that it stays one argument.
+
+> In the App Hub code this rule is written down as: never pass a collection to `New-Object Type($list)`; use `[Type]::new($list)`.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Create `$queue` as a `System.Collections.ArrayList` that starts with the three items `'red'`, `'green'`, `'blue'` (built from the array `$colors = 'red', 'green', 'blue'`).
+@check WIN-SRV1 | $queue is an ArrayList with red, green, blue
+$queue -is [System.Collections.ArrayList] -and ($queue -join ',') -eq 'red,green,blue'
+@hint [System.Collections.ArrayList]::new($colors)
+@solution WIN-SRV1
+$colors = 'red', 'green', 'blue'
+$queue = [System.Collections.ArrayList]::new($colors)
+@endtask
+@end
+
+@quiz
+? Why does `New-Object System.Collections.ArrayList($a)` fail when `$a` holds three numbers?
+- ArrayList cannot hold numbers
++ The array is passed as three separate constructor arguments
+- New-Object needs -TypeName
+! New-Object's -ArgumentList takes an array of arguments; your array became the list of arguments.
+@end
+
+## Lesson: l1404 | Names that bite
+
+### $Input is taken
+
+`$input` is an automatic variable: the pipeline input of a function. A parameter you call `$Input` is overwritten by it, and the value you passed silently disappears.
+
+```terminal
+PS C:\Windows\system32> function Show-Input($Input) { "Input is [$Input]" }
+PS C:\Windows\system32> Show-Input 'hello'
+Input is []
+PS C:\Windows\system32> function Show-Text($Text) { "Text is [$Text]" }
+PS C:\Windows\system32> Show-Text 'hello'
+Text is [hello]
+```
+
+Other names to avoid for your own variables: `$_`, `$args`, `$this`, `$matches`, `$error`, `$host`, `$home`, `$pid`, `$profile`.
+
+### Aliases come first
+
+When a name is both an alias and a function or program, the **alias wins**. In Windows PowerShell 5.1 `sc` is an alias of Set-Content, so `sc query spooler` does not run the service tool: type `sc.exe`. In the same way `h` is Get-History, `curl` and `wget` are Invoke-WebRequest (PowerShell 7 removed those two).
+
+```terminal
+PS C:\Windows\system32> Get-Alias sc, h, curl
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           sc -> Set-Content
+Alias           h -> Get-History
+Alias           curl -> Invoke-WebRequest
+```
+
+### $null becomes an empty string
+
+A parameter typed `[string]` never holds `$null`: PowerShell converts `$null` to `''`. A check like `if ($null -eq $Text)` then never fires; test `[string]::IsNullOrEmpty($Text)` instead. The same conversion happens when you pass `$null` to a .NET method that takes a string.
+
+```terminal
+PS C:\Windows\system32> function Test-Text([string]$Text) { $null -eq $Text }
+PS C:\Windows\system32> Test-Text $null
+False
+PS C:\Windows\system32> function Test-Text2([string]$Text) { [string]::IsNullOrEmpty($Text) }
+PS C:\Windows\system32> Test-Text2 $null
+True
+```
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Write a function `Format-Name` with one parameter (do **not** call it `$Input`) that returns the text it was given in capital letters, so that `Format-Name 'ada'` returns `ADA`.
+@check WIN-SRV1 | Format-Name 'ada' returns ADA
+(Format-Name 'ada') -ceq 'ADA'
+@check WIN-SRV1 | the parameter is not called Input
+-not ((Get-Command Format-Name).ScriptBlock.ToString() -match '\$Input\b')
+@hint function Format-Name($Name) { $Name.ToUpper() }
+@solution WIN-SRV1
+function Format-Name($Name) { $Name.ToUpper() }
+Format-Name 'ada'
+@endtask
+@end
+
+@quiz
+? A function has `param($Input)`. What does `$Input` hold inside it when you call it with a value?
+- The value you passed
++ The (empty) pipeline input enumerator, not your value
+- $null always
+! $input is automatic: it holds the function's pipeline input and overwrites a parameter with the same name.
+? On Windows PowerShell 5.1, what does `sc query spooler` run?
++ Set-Content (sc is its alias)
+- The service control program sc.exe
+- Get-Service
+! Aliases are found before programs. Type sc.exe to run the program.
+? `function T([string]$s) { $null -eq $s }; T $null` prints...
+- True
++ False
+- An error
+! The [string] parameter turned $null into an empty string.
+@end
+
+## Lesson: l1405 | Overloads, Split and $null on the left
+
+### Which overload did PowerShell pick?
+
+When a .NET method has several versions (overloads), PowerShell chooses one from the number and types of your arguments. If one of them takes `params object[]`, a call with extra arguments can land there and pack your arguments into an array you did not expect. App Hub met this with WPF's `Dispatcher.BeginInvoke([Action]{...}, 'Input')`: PowerShell chose the `(Delegate, params object[])` overload, the string became an *argument for the action*, and WPF failed later with "Parameter count mismatch". The fix was to put the typed priority first: `BeginInvoke([System.Windows.Threading.DispatcherPriority]::Input, [Action]{...})`. The lesson: when a method has many overloads, cast the arguments to the exact types you mean.
+
+`String.Split` shows the same thing on a smaller scale. In Windows PowerShell 5.1 (.NET Framework) there is no `Split(string)`, so a string argument is converted to a character array and **every character** is a separator. PowerShell 7 (.NET) has `Split(string)` and gives a different answer.
+
+```terminal
+PS C:\Windows\system32> 'a--b'.Split('--')
+a
+
+b
+PS C:\Windows\system32> 'a--b' -split '--'
+a
+b
+```
+
+Prefer the `-split` operator: it takes a regular expression and works the same in 5.1 and 7.
+
+### $null on the left
+
+With an array on the left, `-eq` filters the array instead of answering true or false. So `$list -eq $null` gives the null items (often nothing, which reads as false), never a clear answer. Put `$null` on the left:
+
+```terminal
+PS C:\Windows\system32> $list = 1, $null, 2
+PS C:\Windows\system32> if ($list -eq $null) { 'has a null' } else { 'no null?' }
+no null?
+PS C:\Windows\system32> $null -eq $list
+False
+PS C:\Windows\system32> $list -contains $null
+True
+```
+
+`$list -eq $null` returned an array holding one `$null`, and an array with one null item is false. `$null -eq $list` asks "is the list itself null?" (no), and `-contains` asks "is there a null item?" (yes).
+
+> One more 5.1 trap from App Hub: `@($list)` on some generic lists throws "Argument types do not match". `$list.ToArray()` always works.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Store in `$parts` the pieces of the string `'2026--03--02'` split at the two-character separator `--`, so that `$parts` holds exactly `2026`, `03` and `02` (three items, no empty strings).
+@check WIN-SRV1 | $parts is 2026, 03, 02
+$parts.Count -eq 3 -and ($parts -join '|') -eq '2026|03|02'
+@hint '2026--03--02'.Split('--') gives empty strings in Windows PowerShell 5.1. The -split operator uses the whole separator.
+@solution WIN-SRV1
+$parts = '2026--03--02' -split '--'
+@endtask
+@end
+
+@quiz
+? In Windows PowerShell 5.1, how many items does `'a--b'.Split('--')` return?
+- 2
++ 3 (a, an empty string, b)
+- 1
+! Without a Split(string) overload in .NET Framework, the string becomes a char array and each '-' splits.
+? `$list = 1, $null, 2; [bool]($list -eq $null)` is...
+- True, because the list contains $null
++ False: -eq filtered the list to one $null, and that one-item array counts as false
+- An error
+! With a collection on the left, comparison operators filter. Use $null -eq $list or $list -contains $null.
+? A .NET method call behaves strangely and the method has many overloads. What helps most?
++ Cast each argument to the exact type of the overload you want
+- Add more parentheses
+- Call it with Invoke-Expression
+! PowerShell picks an overload from the argument types; exact types remove the guesswork.
+@end
+

@@ -1,0 +1,36 @@
+NAME
+       setenforce - switch SELinux between enforcing and permissive
+
+SYNOPSIS
+       setenforce Enforcing|Permissive|1|0
+
+DESCRIPTION
+       setenforce changes the SELinux mode of the running system. In
+       enforcing mode (1) the policy blocks what it does not allow and logs
+       it. In permissive mode (0) nothing is blocked, but the denials are
+       still logged, which helps find out whether SELinux is the cause of a
+       problem.
+
+       The change lasts until the next reboot. To change the mode at boot,
+       set SELINUX=enforcing or SELINUX=permissive in /etc/selinux/config
+       (or add enforcing=0 to the kernel command line for one boot).
+
+       setenforce cannot enable or disable SELinux. When SELinux is
+       disabled, it fails; enabling it again needs the config file and a
+       reboot (with a full relabel). Only root can run it.
+
+EXAMPLES
+       Find out whether SELinux blocks a service, then switch back:
+
+           setenforce 0
+           getenforce
+           systemctl restart httpd
+           setenforce 1
+
+       Make enforcing mode stay after reboots:
+
+           vi /etc/selinux/config      (SELINUX=enforcing)
+           sestatus
+
+SEE ALSO
+       getenforce(8), sestatus(8), selinux(8)

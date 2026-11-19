@@ -1,0 +1,65 @@
+# Sheet: ports | Ports and protocols | Security architecture
+## File transfer
+20, 21/TCP FTP :: file transfer (20 data, 21 control); passwords in clear text, replace with SFTP or FTPS
+22/TCP SFTP and SCP :: file transfer inside SSH; the usual secure replacement for FTP
+990/TCP FTPS (implicit) :: FTP over TLS from the start; explicit FTPS upgrades on port 21 with AUTH TLS
+69/UDP TFTP :: trivial file transfer, no sign-in at all; only for network boot and device configs on trusted networks
+445/TCP SMB :: Windows file and printer sharing; block it at the internet edge, use SMB 3 with encryption, turn off SMBv1
+2049/TCP NFS :: Unix and Linux network file system; limit exports to known hosts
+## Remote access and administration
+22/TCP SSH :: encrypted remote command line; use keys, turn off root and password sign-in where possible
+23/TCP Telnet :: remote command line in clear text; replace with SSH
+3389/TCP RDP :: Windows Remote Desktop; reach it through a VPN or jump server, never straight from the internet
+5900/TCP VNC :: remote screen sharing; weak by default, tunnel it over SSH or a VPN
+5985, 5986/TCP WinRM :: PowerShell remoting over HTTP and HTTPS; prefer 5986 (HTTPS)
+## Email
+25/TCP SMTP :: mail between servers; add STARTTLS
+587/TCP SMTP submission :: clients sending mail, with sign-in and STARTTLS
+465/TCP SMTPS :: mail submission over implicit TLS
+110/TCP POP3 :: download mail in clear text; replace with POP3S
+995/TCP POP3S :: POP3 over TLS
+143/TCP IMAP :: read mail on the server in clear text; replace with IMAPS
+993/TCP IMAPS :: IMAP over TLS
+## Web
+80/TCP HTTP :: web in clear text; redirect to HTTPS and add HSTS
+443/TCP HTTPS :: web over TLS; also used by many VPNs and DNS over HTTPS
+8080/TCP HTTP alternate :: common for proxies and test web servers
+## Name, address and time services
+53/UDP and TCP DNS :: name lookups on UDP; TCP for zone transfers and large replies; restrict transfers, sign with DNSSEC
+853/TCP DNS over TLS :: encrypted DNS lookups
+67, 68/UDP DHCP :: 67 server, 68 client; protect with DHCP snooping on switches
+123/UDP NTP :: time sync; accurate time matters for logs, certificates and Kerberos
+## Directory and authentication
+88/TCP and UDP Kerberos :: Windows domain sign-in tickets
+389/TCP LDAP :: directory queries, clear text unless upgraded with StartTLS
+636/TCP LDAPS :: LDAP over TLS
+1812, 1813/UDP RADIUS :: 1812 authentication, 1813 accounting (older gear used 1645 and 1646)
+49/TCP TACACS+ :: device administration AAA; encrypts the whole payload
+500/UDP IKE :: sets up IPsec VPNs; 4500/UDP carries IPsec through NAT
+1701/UDP L2TP :: VPN tunnel, normally inside IPsec
+1723/TCP PPTP :: old VPN with broken security; do not use
+## Network management and logging
+161/UDP SNMP :: polling devices; use SNMPv3 for sign-in and encryption
+162/UDP SNMP traps :: alerts sent from devices to the manager
+514/UDP syslog :: log messages in clear text
+6514/TCP syslog over TLS :: encrypted, reliable log delivery
+2055/UDP NetFlow :: a common port for flow records sent to a collector (it is configurable)
+## Databases
+1433/TCP Microsoft SQL Server :: keep it off the internet; encrypt connections
+1521/TCP Oracle database :: default listener port
+3306/TCP MySQL and MariaDB :: database; bind to internal addresses only
+5432/TCP PostgreSQL :: database; require TLS and strong sign-in
+## Voice and video
+5060/TCP and UDP SIP :: sets up VoIP calls in clear text
+5061/TCP SIP over TLS :: encrypted call setup
+16384-32767/UDP RTP and SRTP :: a common range for the voice and video streams (it varies by vendor)
+## Secure replacements at a glance
+Telnet 23 -> SSH 22 :: remote command line
+FTP 20, 21 -> SFTP 22 or FTPS 990 :: file transfer
+HTTP 80 -> HTTPS 443 :: web
+POP3 110 -> POP3S 995 :: mail download
+IMAP 143 -> IMAPS 993 :: mail access
+LDAP 389 -> LDAPS 636 :: directory
+SNMPv1/v2c 161 -> SNMPv3 161 :: same port, but v3 adds authentication and encryption
+Syslog 514 -> syslog over TLS 6514 :: log delivery
+SIP 5060 -> SIP over TLS 5061; RTP -> SRTP :: voice and video

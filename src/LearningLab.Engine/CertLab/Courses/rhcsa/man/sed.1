@@ -1,0 +1,107 @@
+NAME
+       sed - stream editor: change text line by line with commands
+
+SYNOPSIS
+       sed [-n] [-E] [-i[SUFFIX]] SCRIPT [FILE...]
+       sed [-n] [-E] [-i[SUFFIX]] -e SCRIPT [-e SCRIPT]... [FILE...]
+       sed [-n] -f SCRIPTFILE [FILE...]
+
+DESCRIPTION
+       sed reads its input (the files, or standard input) one line at a
+       time, applies the commands of SCRIPT to each line and prints the
+       result. The files themselves are not changed unless you add -i. It is
+       the usual tool for replacing text in configuration files from the
+       command line or a script.
+
+       A command can be preceded by an address that chooses the lines it
+       applies to; without one it applies to every line. Quote the script
+       with single quotes so the shell leaves $, * and \ alone.
+
+   Addresses
+       N            line number N
+       $            the last line
+       /REGEX/      lines that match the regular expression
+       A,B          from address A to address B (B may be +N: N more lines)
+       ADDR!        every line except those
+
+   Commands
+       s/REGEX/REPLACEMENT/FLAGS
+              Substitute. Flags: g every match on the line (not only the
+              first), i ignore case, p print the line if a change was made,
+              N only the Nth match. In REPLACEMENT, & is the whole match
+              and \1 to \9 are the groups. Another character can replace
+              the slashes: s|/old/path|/new/path|.
+
+       d      Delete the line (do not print it).
+
+       p      Print the line (useful with -n).
+
+       a TEXT, i TEXT, c TEXT
+              Append a line after, insert a line before, or change the line
+              to TEXT.
+
+       y/ABC/XYZ/
+              Replace characters one for one, like tr.
+
+       q      Quit (after printing the current line).
+
+       =      Print the line number.
+
+       Several commands are separated by ; or given with several -e.
+
+OPTIONS
+       -n, --quiet
+              Do not print every line automatically; print only what p asks
+              for.
+
+       -e, --expression SCRIPT
+              Add SCRIPT to the commands (repeatable).
+
+       -f, --file FILE
+              Read the commands from FILE.
+
+       -i[SUFFIX], --in-place[=SUFFIX]
+              Edit the files in place. With SUFFIX, keep a backup copy
+              (-i.bak keeps FILE.bak). Write the suffix right after -i.
+
+       -E, -r, --regexp-extended
+              Use extended regular expressions (+, ?, | and ( ) without
+              backslashes), as grep -E does.
+
+       -s, --separate
+              Treat each file separately (line numbers and $ per file).
+
+       -z, --null-data
+              Lines end with NUL bytes instead of newlines.
+
+EXAMPLES
+       Print lines 5 to 10 of a file:
+
+           sed -n '5,10p' /etc/passwd
+
+       Replace every "http" with "https" in a file, keeping a backup:
+
+           sed -i.bak 's/http:/https:/g' /etc/myapp.conf
+
+       Turn SELinux to permissive in the config file:
+
+           sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+
+       Delete comment lines and empty lines, as a quick view of a config:
+
+           sed -e '/^#/d' -e '/^$/d' /etc/chrony.conf
+
+       Swap the first two fields of colon-separated lines:
+
+           sed -E 's/^([^:]*):([^:]*)/\2:\1/' data.txt
+
+       Add a line after the line that matches:
+
+           sed -i '/^\[main\]/a gpgcheck=1' /etc/dnf/dnf.conf
+
+NOTES
+       Test a change without -i first, look at the output, then add -i. For
+       one-off edits of a few lines an editor is often safer.
+
+SEE ALSO
+       grep(1), awk(1), tr(1), vim(1), regex(7)

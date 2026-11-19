@@ -1,0 +1,26 @@
+NAME
+       watch - run a command again and again and show its output full screen
+
+SYNOPSIS
+       watch [-n SECONDS] [-d] COMMAND
+
+DESCRIPTION
+       watch runs COMMAND every 2 seconds and shows its latest output on a
+       cleared screen, with a header showing the interval, the command, the
+       host name and the time. Use it to see something change while you work
+       in another terminal, such as a service starting or a file growing.
+       Press Ctrl+C to stop. Quote COMMAND when it contains a pipe.
+
+OPTIONS
+       -n, --interval=SECONDS
+              Run the command every SECONDS seconds.
+
+       -d, --differences
+              Highlight what changed since the last run.
+
+EXAMPLES
+           watch -n 1 'ls -l /var/log/messages'
+           watch 'systemctl is-active httpd'
+
+SEE ALSO
+       top(1), tail(1), sleep(1)

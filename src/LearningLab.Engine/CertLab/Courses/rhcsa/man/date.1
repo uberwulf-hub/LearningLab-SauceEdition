@@ -1,0 +1,69 @@
+NAME
+       date - print or set the system date and time
+
+SYNOPSIS
+       date [-u] [-d TEXT] [+FORMAT]
+       date -s TEXT
+       date -I | -R
+
+DESCRIPTION
+       date prints the current date and time in the local time zone:
+
+           Mon Mar  2 04:00:00 AM EST 2026
+
+       With +FORMAT it prints exactly the format you give, which is how
+       scripts make time stamps and dated file names. With -d it shows
+       another date instead of now. Only root can set the clock with -s; on
+       a machine that uses NTP (chronyd), the clock is normally left to it.
+
+       The time zone comes from /etc/localtime; change it with timedatectl
+       set-timezone.
+
+   Format codes
+       %Y year (2026)          %m month (01-12)       %d day (01-31)
+       %H hour (00-23)         %M minute              %S second
+       %F same as %Y-%m-%d     %T same as %H:%M:%S    %D same as %m/%d/%y
+       %a weekday (Mon)        %A weekday (Monday)    %b month (Mar)
+       %B month (March)        %e day, space-padded   %j day of the year
+       %u weekday, 1 = Monday  %w weekday, 0 = Sunday %s seconds since 1970
+       %Z time zone (EST)      %p AM or PM            %I hour (01-12)
+       %y year (26)            %R same as %H:%M       %c date and time
+       %% a literal %
+
+OPTIONS
+       -d TEXT, --date=TEXT
+              Show TEXT instead of now. TEXT may be a date (2026-03-05), a
+              date and time, or words such as tomorrow, yesterday, "next
+              monday", "3 days ago", "+2 weeks", or @SECONDS.
+
+       -s TEXT, --set=TEXT
+              Set the clock to TEXT (root only).
+
+       -u, --utc, --universal
+              Use UTC instead of the local time zone.
+
+       -I, --iso-8601
+              Print the date as YYYY-MM-DD.
+
+       -R, --rfc-email
+              Print the date as in e-mail headers.
+
+EXAMPLES
+       A time stamp for a file name:
+
+           cp /etc/hosts /root/hosts-$(date +%F).bak
+
+       The weekday of a date:
+
+           date -d 2026-12-25 +%A
+
+       The time in UTC:
+
+           date -u
+
+       In a crontab line, write % as \%:
+
+           0 1 * * * tar -czf /root/etc-$(date +\%F).tar.gz /etc
+
+SEE ALSO
+       timedatectl(1), chronyc(1), hwclock(8), at(1)

@@ -1,0 +1,17 @@
+SYNOPSIS: Lists the Active Directory sites.
+DESCRIPTION:
+A site is a group of well-connected networks, usually one office. Sites decide which domain controller clients use (one in their own site) and how replication runs: fast and often inside a site, on the site link schedule between sites.
+A new forest has one site, Default-First-Site-Name; in this lab it was renamed HQ (head office, Portland).
+PARAMETER Identity:
+One site, by name. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search, such as *.
+PARAMETER Properties:
+Extra properties to return.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADReplicationSite -Filter * | Select-Object Name, Description
+Every site.
+EXAMPLE: Get-ADReplicationSite HQ
+The head office site.
+RELATED: New-ADReplicationSite, Get-ADReplicationSubnet, Get-ADReplicationSiteLink, Move-ADDirectoryServer

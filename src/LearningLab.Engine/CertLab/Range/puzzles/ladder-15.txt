@@ -1,0 +1,47 @@
+title: Step 15: Spot the difference
+level: Advanced
+category: ladder
+login: step15
+kind: Comparing files
+teaser: two long lists that are the same except for one line
+points: 40
+order: 15
+answer: {{PW}}
+var: PW = hex:10
+var: SALT = hex:6
+var: L = num:30-170
+var: OLD = hex:10
+
+@intro
+You are step15. passwords.old and passwords.new are two lists of 200 codes each. They
+are identical except for a single line that was changed. The password for step 16 is
+the changed line in passwords.new.
+
+@setup
+useradd -m step16
+echo 'step16:{{PW}}' | chpasswd
+for i in $(seq 1 200); do printf '%s\n' "{{SALT}}/$i" | md5sum | cut -c1-10; done > /root/base.txt
+(head -n $(({{L}} - 1)) /root/base.txt; printf '%s\n' '{{OLD}}'; tail -n +$(({{L}} + 1)) /root/base.txt) > /home/step15/passwords.old
+(head -n $(({{L}} - 1)) /root/base.txt; printf '%s\n' '{{PW}}'; tail -n +$(({{L}} + 1)) /root/base.txt) > /home/step15/passwords.new
+rm -f /root/base.txt
+chown step15: /home/step15/passwords.old /home/step15/passwords.new
+
+@solution
+wc -l passwords.old passwords.new
+diff passwords.old passwords.new
+
+@walkthrough
+diff compares two files line by line and prints only what differs:
+
+    diff passwords.old passwords.new
+
+The output reads like "{{L}}c{{L}}" (line {{L}} was changed), then "< " and the line
+from the first file, "---", and "> " and the line from the second file. The line after
+">" is the new password. People use diff every day to see what changed between two
+versions of a settings file or a program.
+
+@hint 10
+Comparing 200 lines by eye is slow and easy to get wrong. The command diff takes two files and prints only the lines that are different.
+
+@hint 18
+Type: diff passwords.old passwords.new - the line starting with > comes from the second file, passwords.new. That code is the answer.

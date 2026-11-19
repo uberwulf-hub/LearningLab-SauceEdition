@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the addresses a DHCP server has leased to clients.
+DESCRIPTION:
+Get-DhcpServerv4Lease shows each lease: IPAddress, ScopeId, ClientId (MAC address), HostName, AddressState (Active, or ActiveReservation for a reserved address) and LeaseExpiryTime.
+
+It is the quickest way to find which device has an address, or the MAC address you need for a reservation. -AllLeases also shows leases in other states, such as declined or expired ones.
+PARAMETER ScopeId:
+Shows the leases of this scope. Position 0.
+PARAMETER IPAddress:
+Shows the lease of this address.
+PARAMETER ClientId:
+Shows the lease of this MAC address.
+PARAMETER AllLeases:
+Includes leases in every state.
+EXAMPLE: Get-DhcpServerv4Lease -ScopeId 10.10.0.0 -ComputerName SRV1
+The HQ leases: CL1, the printer PRN-HQ-01 and the tablet TAB-SALES-01.
+EXAMPLE: Get-DhcpServerv4Lease -ScopeId 10.10.0.0 | Where-Object HostName -like "PRN*"
+Finds the printers.
+RELATED: Get-DhcpServerv4Scope, Get-DhcpServerv4ScopeStatistics, Add-DhcpServerv4Reservation

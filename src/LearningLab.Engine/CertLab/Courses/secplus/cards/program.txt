@@ -1,0 +1,41 @@
+# Deck: program | Governance, risk and compliance | Security program management and oversight
+Policy vs standard vs procedure vs guideline :: Policy says what and why; a standard sets required specifics; a procedure gives step-by-step how; a guideline is optional advice
+Document users sign that lists what they may and may not do on company systems :: AUP (acceptable use policy)
+Who decides how a data set is classified and who may use it? :: The data owner (a senior business person)
+Who looks after data day to day, such as backups and permissions? :: The data custodian (or steward)
+GDPR: controller vs processor :: The controller decides why and how personal data is used; the processor handles it on the controller's behalf
+GDPR right to have your personal data deleted :: Right to be forgotten (right to erasure)
+The person whose personal data is being processed :: Data subject
+Consequences of non-compliance :: Fines, sanctions, reputational damage, loss of license and contract problems
+Due diligence vs due care :: Due diligence is investigating and understanding the risks; due care is acting responsibly on them
+SLE formula :: SLE = asset value x exposure factor
+ALE formula :: ALE = SLE x ARO
+Server worth 20,000; a flood would destroy 25 percent of it. SLE? :: 5,000 (20,000 x 0.25)
+SLE is 5,000 and a flood is expected once every 10 years. ALE? :: 500 per year (5,000 x 0.1)
+When is a control worth buying in a quantitative analysis? :: When it lowers the ALE by more than it costs per year
+Qualitative vs quantitative risk analysis :: Qualitative uses ratings such as high, medium, low; quantitative uses money and numbers
+Buying cyber insurance is which risk strategy? :: Transfer
+Stopping the risky activity altogether :: Avoid
+Adding controls to make a risk smaller :: Mitigate (reduce)
+Formally deciding to live with a risk :: Accept (an exemption or exception is a form of acceptance)
+Risk appetite vs risk tolerance :: Appetite is how much risk the organization is willing to pursue overall; tolerance is the acceptable variation around it for a given risk
+Expansionary, conservative and neutral describe what? :: Risk appetite
+Document that lists risks with owners, ratings and responses :: Risk register
+Metric that warns when a risk is getting worse :: Key risk indicator (KRI)
+Maximum acceptable downtime for a system :: RTO (recovery time objective)
+Backups every 4 hours mean the business accepts losing up to how much data? :: About 4 hours of data; that is the RPO
+MTBF vs MTTR :: MTBF is average time between failures (higher is better); MTTR is average time to repair (lower is better)
+Agreement that guarantees 99.9 percent uptime with penalties :: SLA (service-level agreement)
+Non-binding statement of shared goals between two parties :: MOU (memorandum of understanding)
+Framework contract whose terms apply to all later work orders :: MSA (master service agreement)
+Describes the deliverables, schedule and price for one project :: SOW (statement of work) or work order
+Agreement to keep shared information secret :: NDA (non-disclosure agreement)
+Contract clause that lets you inspect a vendor's security :: Right-to-audit clause
+Rules of engagement in a pen test :: What may be tested, when, how, who to contact and what is off limits, agreed in writing
+Audit report on a service provider's controls over a period of months :: SOC 2 Type II (Type I is a single point in time)
+Pen test reconnaissance using only public sources, without touching the target :: Passive reconnaissance (active recon probes the target)
+Team that attacks vs team that defends vs both working together :: Red team attacks, blue team defends, purple team combines them
+A user forwards a suspicious email to the security team. What should happen? :: Thank them, analyse it, and remove or block it if malicious; reporting must be easy and encouraged
+Fake phishing emails sent to staff to measure and train them :: Phishing campaign (simulation)
+US law that protects patients' health information :: HIPAA
+US law for public companies' financial reporting and its controls :: SOX (Sarbanes-Oxley Act)

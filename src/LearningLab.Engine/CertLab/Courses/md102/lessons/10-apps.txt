@@ -1,0 +1,295 @@
+# Unit: u10 | 10. Deploying apps | Apps
+
+People need their apps on day one, the same version everywhere, and updates without anyone clicking through an installer. Intune deploys apps to Windows from several sources: your own installers wrapped as **Win32 apps**, the **Microsoft Store**, and **Microsoft 365 Apps**. This unit follows the Win32 workflow from packaging to detection, then the store and Office apps, the assignment intents, Company Portal, and how to find out why an install failed.
+
+## Lesson: l1001 | App types and the Win32 workflow
+
+**Apps > All apps > Add** offers, for Windows:
+
+- **Windows app (Win32)**: any installer (`.exe`, `.msi`, a script) wrapped in a `.intunewin` file. The most flexible type: install and uninstall commands, requirements, detection rules, dependencies, supersedence.
+- **Line-of-business app**: a single `.msi`, `.appx` or `.msix` file uploaded as it is. Simpler, with fewer options; don't mix LOB MSI and Win32 apps in the same Autopilot setup.
+- **Microsoft Store app (new)**: an app from the Store, installed through the Windows Package Manager (winget); see lesson 3.
+- **Microsoft 365 Apps (Windows 10 and later)**: Word, Excel, Outlook, Teams and the rest; lesson 3.
+- **Microsoft Edge**, and **Web link** (a shortcut to a web site).
+
+### Packaging with the Win32 Content Prep Tool
+
+You don't upload a Win32 installer directly. First, run Microsoft's **Win32 Content Prep Tool** (`IntuneWinAppUtil.exe`) on your admin PC: it takes the folder with the setup and everything it needs (`-c` source folder), the setup file (`-s`), and an output folder (`-o`), and writes one compressed, encrypted `.intunewin` file. You upload that file.
+
+> Cert Lab has a few ready `.intunewin` packages: 7-Zip (`7z2301-x64.intunewin`), Notepad++, the Riverbend Runtime, Riverbend Expenses 2.4 and 3.0 (MSI installers that need the runtime), Riverbend VPN and a label printer tool. Their installers behave like real ones: they need their silent switch, some need Windows 11, the VPN returns 3010.
+
+### The program page
+
+- **Install command** and **Uninstall command**: they must be **silent**, because nobody sees the installer (Intune runs it in the background). Every installer has its own switch: `/S` for many NSIS installers such as 7-Zip, `/quiet` or `/qn` for MSI (`msiexec /i setup.msi /qn`), `/silent` or `/verysilent` for others. Without it, the installer waits for a click that never comes, and the install times out.
+- **Install behavior**: **System** installs for all users with administrator rights (the usual choice for anything that goes to Program Files); **User** installs in the user's context, without admin rights.
+- **Device restart behavior**, and **return codes**: what the installer's exit code means. The defaults are 0 and 1707 = success, **3010 = soft reboot** (success, restart needed), **1641 = hard reboot**, 1618 = retry (another installation is running). Add your own if a vendor uses others.
+
+### What happens on the PC
+
+The **Intune Management Extension** downloads the package, runs the install command as SYSTEM, then checks the **detection rule** (lesson 2) to decide whether the app is really there. Everything goes into its log:
+
+```terminal
+#setup portal:create app name=7-Zip type="Windows app (Win32)" publisher="Igor Pavlov" package=7z2301-x64.intunewin installCmd="7z2301-x64.exe /S" uninstallCmd="\"C:\Program Files\7-Zip\Uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\7-Zip" detectName=7z.exe
+#setup portal:assign app 7-Zip "Windows devices" intent=required
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-ChildItem 'C:\Program Files\7-Zip'
+
+
+    Directory: C:\Program Files\7-Zip
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         3/2/2026   9:00 AM        1843200 7z.exe
+
+
+PS C:\Windows\system32> Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 2
+2026-03-02 09:00  Check-in with Intune.
+2026-03-02 09:00  Win32 app '7-Zip' installed (required).
+```
+
+@try
+@task t1 | Apps | 15 | portal
+Add **7-Zip** as a Win32 app from `7z2301-x64.intunewin` (publisher Igor Pavlov). Its setup is `7z2301-x64.exe` and its silent switch is `/S`; it installs into `C:\Program Files\7-Zip` (uninstall: `"C:\Program Files\7-Zip\Uninstall.exe" /S`). Install as **System**, x64, Windows 10 1607 or later, and detect it by the file `7z.exe` in that folder. Make it **Required** for **Windows devices** and sync **RB-LT-001**.
+@check portal | 7-Zip is installed on RB-LT-001
+app["7-Zip"].type == "Windows app (Win32)"
+device["RB-LT-001"].app["7-Zip"] == Installed
+@check RB-LT-001 | the program is on the PC
+Test-Path 'C:\Program Files\7-Zip\7z.exe'
+@hint Apps > All apps > Add > Windows app (Win32). Install command 7z2301-x64.exe /S; detection rule File: path C:\Program Files\7-Zip, file 7z.exe.
+@solution portal
+create app name=7-Zip type="Windows app (Win32)" publisher="Igor Pavlov" package=7z2301-x64.intunewin installCmd="7z2301-x64.exe /S" uninstallCmd="\"C:\Program Files\7-Zip\Uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\7-Zip" detectName=7z.exe
+assign app 7-Zip "Windows devices" intent=required
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? What does the Win32 Content Prep Tool produce?
+- An .msi file
++ An .intunewin file to upload to Intune
+- A provisioning package
+! IntuneWinAppUtil.exe wraps the setup folder into one .intunewin file, which you upload as a Windows app (Win32).
+? An installer returns 3010. What does Intune make of it by default?
+- The installation failed
++ It succeeded and a soft restart is needed
+- It must be retried
+! 3010 is the default return code for a soft reboot: the app is installed, the PC needs a restart to finish.
+? A Win32 app install never finishes and finally times out on every PC. What is the most likely cause?
+- The install behavior is System
++ The install command lacks the installer's silent switch
+- The app isn't in Company Portal
+! Without a silent switch the installer waits for someone to click in a window nobody sees, until Intune gives up.
+@end
+
+## Lesson: l1002 | Requirements, detection rules, dependencies and supersedence
+
+### Requirements: should the app even try?
+
+**Requirements** are checked before anything is downloaded: the **operating system architecture** (x64, x86, ARM64), the **minimum operating system**, and optionally disk space, memory, number of processors, processor speed, and your own rules (a file, a registry value, or a script). A device that doesn't meet them reports **Not applicable**, which is clearer than an installer that fails with an error on a PC it doesn't support.
+
+### Detection rules: is the app there?
+
+After the install (and before it, to skip devices that already have the app), the IME uses the **detection rule**:
+
+- **MSI**: the MSI **product code** (a GUID in braces, for example `{6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41}`), optionally with a version check. The usual choice for MSI installers.
+- **File**: a file or folder exists (or has a date, a version or a size).
+- **Registry**: a key or value exists (or has a value), for example the app's key under `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`.
+- **Custom script**: a PowerShell script; the app counts as detected when it exits 0 and writes something to the output.
+
+A wrong rule is a classic trap: the installer works, but the IME can't find the app and reports **"The application was not detected after installation completed successfully" (0x87D1041C)**. Check the rule against a PC where the app is installed:
+
+```terminal
+#setup portal:create app name="Riverbend Runtime" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendRuntime-1.0.intunewin installCmd="rbruntime.exe /quiet" uninstallCmd="rbruntime.exe /uninstall /quiet" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Riverbend\Runtime" detectName=rbrt.dll
+#setup portal:create app name="Riverbend Expenses" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendExpenses-2.4.intunewin installCmd="msiexec /i RiverbendExpenses-2.4.msi /qn" uninstallCmd="msiexec /x {6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41} /qn" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=MSI msiCode={6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41} dependsOn="Riverbend Runtime"
+#setup portal:assign app "Riverbend Expenses" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41}' | Select-Object DisplayName, DisplayVersion, Publisher
+
+DisplayName        DisplayVersion Publisher
+-----------        -------------- ---------
+Riverbend Expenses 2.4            Riverbend IT
+
+
+PS C:\Windows\system32> Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 2
+2026-03-02 09:00  Win32 app 'Riverbend Runtime' installed (dependency).
+2026-03-02 09:00  Win32 app 'Riverbend Expenses' installed (required).
+```
+
+### Dependencies: install this first
+
+Riverbend Expenses needs the Riverbend Runtime. Without it, its MSI fails with **1603** (a fatal error during installation). A **dependency** tells Intune to install the Runtime first; with **Automatically install** on (the default), the dependency doesn't need its own assignment. Dependencies must be Win32 apps.
+
+### Supersedence: this version replaces that one
+
+When Expenses 3.0 comes out, add it as a new Win32 app and set **Supersedence** to Expenses 2.4. With **Uninstall previous version = Yes**, the IME removes 2.4 before installing 3.0 (needed when the new version can't install on top of the old). With No, 3.0 is installed over it (an in-place update). Assign 3.0 to the groups that should get it: a device that is targeted by 3.0 and has 2.4 gets 2.4 replaced. The old app stays in the portal for reference.
+
+@try
+@setup portal
+create app name="Riverbend Runtime" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendRuntime-1.0.intunewin installCmd="rbruntime.exe /quiet" uninstallCmd="rbruntime.exe /uninstall /quiet" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Riverbend\Runtime" detectName=rbrt.dll
+create app name="Riverbend Expenses" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendExpenses-2.4.intunewin installCmd="msiexec /i RiverbendExpenses-2.4.msi /qn" uninstallCmd="msiexec /x {6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41} /qn" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=MSI msiCode={6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41}
+assign app "Riverbend Expenses" Finance intent=required
+remote sync RB-DT-010
+@task t1 | Apps | 15 | portal
+**Riverbend Expenses** is required for Finance, but on Sam's desktop **RB-DT-010** it fails with error 1603. The app needs **Riverbend Runtime**, which is already in the portal but not assigned. Fix the app so the runtime installs first, and sync RB-DT-010.
+@check portal | both apps are installed on Sam's desktop
+app["Riverbend Expenses"].dependsOn == "Riverbend Runtime"
+device["RB-DT-010"].app["Riverbend Expenses"] == Installed
+device["RB-DT-010"].app["Riverbend Runtime"] == Installed
+@hint Open Riverbend Expenses > Properties > Dependencies > Add Riverbend Runtime (automatically install). No assignment for the runtime is needed.
+@solution portal
+set app "Riverbend Expenses" dependsOn="Riverbend Runtime"
+remote sync RB-DT-010
+@endtask
+@end
+
+@quiz
+? An app's installer works, but Intune reports 0x87D1041C on every PC. What do you check first?
+- The install command's silent switch
++ The detection rule
+- The assignment intent
+! 0x87D1041C means the app wasn't detected after a successful install: the detection rule looks for the wrong product code, file or key.
+? A Win32 app must not even try to install on Windows 10. Where do you set that?
++ Requirements: minimum operating system
+- Detection rules
+- Supersedence
+! Requirements are checked first; devices below the minimum OS report Not applicable instead of a failed install.
+? Expenses 3.0 can't be installed over 2.4: the old version must be removed first. How do you set up the new app?
+- Make 2.4 a dependency of 3.0
++ Supersede 2.4 with Uninstall previous version = Yes
+- Assign 2.4 with the Uninstall intent to the same group at the same time
+! Supersedence with "Uninstall previous version" removes the old app before installing the new one, on the devices the new app is assigned to.
+@end
+
+## Lesson: l1003 | Microsoft Store apps and Microsoft 365 Apps
+
+### Microsoft Store app (new)
+
+The **Microsoft Store app (new)** type searches the Store from the portal: you pick the app and Intune keeps its **package identifier** (a 12-character Store ID, or a winget ID). On the device, the Windows Package Manager (winget) installs it, and the Store keeps it up to date. You choose **Install behavior** System (for every user of the PC) or User. It replaced the old "Microsoft Store for Business" apps, which are retired.
+
+> Cert Lab's pretend store has a few Microsoft apps (Company Portal, Windows Terminal, Microsoft To Do, Whiteboard, Power BI Desktop, PowerToys), each with a made-up ID like 9PRCL0000001. Pick an app by its name and the portal fills in the ID.
+
+### Microsoft 365 Apps
+
+The **Microsoft 365 Apps (Windows 10 and later)** type installs the Office suite through the Office Deployment Tool's cloud service. You configure it in the portal (or paste an XML configuration file):
+
+- **Apps to include**: Word, Excel, PowerPoint, Outlook, Teams, OneDrive, OneNote, Access, Publisher...
+- **Architecture**: 64-bit (the default and the usual choice) or 32-bit.
+- **Update channel**: **Current Channel** (new features every month), **Monthly Enterprise Channel** (once a month, on a known day), **Semi-Annual Enterprise Channel** (features twice a year, for organisations that test add-ins and macros carefully).
+- **Remove other versions**: removes older MSI-based Office versions first; the click-to-run suite and MSI Office don't live together well.
+- **Accept the license terms for users**, and **Use shared computer activation**: for PCs that several people share (kiosks, shift workers, Azure Virtual Desktop). Each user's licence is checked when they sign in, so the PC doesn't use up one person's activations.
+
+@try
+@task t1 | Apps | 10 | portal
+Add **Company Portal** from the Microsoft Store as a **Microsoft Store app (new)** (publisher Microsoft Corporation, install behavior **System**), make it **Required** for **All devices**, and sync **RB-LT-001**.
+@check portal | Company Portal is installed from the store
+app["Company Portal"].type == "Microsoft Store app (new)"
+device["RB-LT-001"].app["Company Portal"] == Installed
+@hint Apps > All apps > Add > Microsoft Store app (new) > Search the Microsoft Store app (new): Company Portal.
+@solution portal
+create app name="Company Portal" type="Microsoft Store app (new)" publisher="Microsoft Corporation" storeId="Company Portal" installBehavior=System
+assign app "Company Portal" "All devices" intent=required
+remote sync RB-LT-001
+@endtask
+@task t2 | Apps | 15 | portal
+Deploy the Office suite: a **Microsoft 365 Apps** app called **Microsoft 365 Apps** (publisher Microsoft) with Word, Excel, PowerPoint, Outlook and Teams, **64-bit**, the **Monthly Enterprise Channel**, removing older MSI versions. Make it **Required** for **Windows devices** and sync **RB-LT-001**.
+@check portal | the suite is installed with the right channel
+app["Microsoft 365 Apps"].channel == "Monthly Enterprise Channel"
+app["Microsoft 365 Apps"].removeMsi == Yes
+device["RB-LT-001"].app["Microsoft 365 Apps"] == Installed
+@check RB-LT-001 | Word is on the PC
+Test-Path 'C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE'
+@hint Apps > All apps > Add > Microsoft 365 Apps: Configure app suite (apps, architecture, update channel, remove other versions).
+@solution portal
+create app name="Microsoft 365 Apps" type="Microsoft 365 Apps (Windows 10 and later)" publisher=Microsoft suiteApps="Word,Excel,PowerPoint,Outlook,Teams" officeArch=64-bit channel="Monthly Enterprise Channel" removeMsi=Yes
+assign app "Microsoft 365 Apps" "Windows devices" intent=required
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? Which update channel gives Microsoft 365 Apps new features twice a year, for organisations that test add-ins carefully?
+- Current Channel
+- Monthly Enterprise Channel
++ Semi-Annual Enterprise Channel
+! Semi-Annual Enterprise Channel brings features in January and July; security fixes still come every month.
+? A shop PC is used by ten shift workers who each have their own Microsoft 365 licence. Which option do you turn on?
++ Use shared computer activation
+- Remove other versions
+- 32-bit architecture
+! Shared computer activation checks each person's licence when they sign in, instead of activating the PC with one person's licence.
+? How does a Microsoft Store app (new) get installed on the PC?
+- Through Group Policy
++ Through the Windows Package Manager (winget), and the Store keeps it updated
+- The user downloads it from the Store web site
+! The new Store app type uses winget on the device; updates come from the Store automatically.
+@end
+
+## Lesson: l1004 | Assignments, Company Portal and install status
+
+### Assignment intents
+
+- **Required**: installs on its own. To **user groups** (on every enrolled device of those users) or **device groups**.
+- **Available for enrolled devices**: shown in **Company Portal** for people to install when they want. Normally to **user groups**: it's the user who chooses. (Real Intune also lets you offer Win32 apps to device groups; Cert Lab accepts only user groups.)
+- **Uninstall**: removes the app from the devices of those groups (it uses the uninstall command and the detection rule).
+- **Excluded** groups, and filters, work as for profiles (unit 7).
+
+If one device gets the same app as Required and Available, it is installed (Required) and also stays in Company Portal. If Required and Uninstall meet, Required wins; if Available and Uninstall meet in groups of the same kind, Uninstall wins. Avoid giving one device conflicting intents.
+
+### Company Portal
+
+**Company Portal** (the Store app) is the user's side of Intune: it lists Available apps to install, shows the device's compliance and why it fails, lets the user sync, and shows the IT department's contact details (**Tenant administration > Customization**). Install it on every Windows device as a Required Store app.
+
+### When an install fails
+
+- **Apps > All apps > the app > Device install status / User install status**: each device with its state (Installed, Failed, Not applicable, Pending...) and the error.
+- **The device page > Managed Apps**: every app for that device.
+- **On the PC**: the IME logs in `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs`. `IntuneManagementExtension.log` is the main one (newer IME versions also write app work to `AppWorkload.log`). Search them for the app's name.
+
+```terminal
+#setup portal:create app name=Notepad++ type="Windows app (Win32)" publisher="Notepad++ Team" package=npp.8.6.Installer.x64.intunewin installCmd="npp.8.6.Installer.x64.exe" uninstallCmd="\"C:\Program Files\Notepad++\uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Notepad++" detectName=notepad++.exe
+#setup portal:assign app Notepad++ "Windows devices" intent=required
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log | Select-String 'Notepad'
+
+2026-03-02 09:00  Win32 app 'Notepad++': installer timed out (not silent).
+```
+
+Here the install command has no `/S`, so the installer waited for a click and timed out.
+
+@try
+@setup portal
+create app name=Notepad++ type="Windows app (Win32)" publisher="Notepad++ Team" package=npp.8.6.Installer.x64.intunewin installCmd="npp.8.6.Installer.x64.exe /S" uninstallCmd="\"C:\Program Files\Notepad++\uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Notepad++" detectName=notepad++.exe
+@task t1 | Apps | 15 | portal
+Notepad++ is in the portal but not assigned. Not everyone in Sales wants it, so offer it to the **Sales** users in **Company Portal** rather than forcing it. Sync **RB-LT-001**, then (as Jordan, on RB-LT-001) install it from Company Portal.
+@check portal | the app is offered to Sales and Jordan installed it
+app["Notepad++"].available has Sales
+device["RB-LT-001"].app["Notepad++"] == Installed
+@hint Assignment intent Available for enrolled devices, to the user group Sales. Then on RB-LT-001: #portal install Notepad++ (Company Portal > Apps > Notepad++ > Install).
+@solution portal
+assign app Notepad++ Sales intent=available
+remote sync RB-LT-001
+@solution RB-LT-001
+#portal install Notepad++
+@endtask
+@end
+
+@quiz
+? You want people to choose whether to install an app. Which intent and which kind of group?
+- Required, to a device group
++ Available for enrolled devices, to a user group
+- Available for enrolled devices, to a device group
+! Available apps appear in Company Portal for the user to pick, so they are normally assigned to user groups.
+? Where on a Windows PC do you look for the details of a failed Win32 app install?
+- C:\Windows\Logs\CBS
++ C:\ProgramData\Microsoft\IntuneManagementExtension\Logs
+- HKLM\SOFTWARE\Microsoft\PolicyManager
+! The Intune Management Extension installs Win32 apps and writes its logs (IntuneManagementExtension.log, AppWorkload.log) there.
+? An app is assigned Required to a device group and Uninstall to a user group, and one PC is in both. What should you do?
+- Nothing: Uninstall always wins
++ Avoid it: give each device one clear intent, because Required wins here
+- Add the app to a third group
+! Conflicting intents are confusing; Intune resolves them (Required beats Uninstall), but a clean design gives each device one intent.
+@end
+
+

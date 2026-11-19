@@ -1,0 +1,85 @@
+# Lab: lab-05 | Windows Autopilot from start to finish | u05 | 40
+A new laptop, RB-LT-003, has arrived and sits at its first setup screen. Register it for Autopilot, make sure it gets the right profile through a group tag, and deploy it to its new owner. Then hand an old laptop over to someone else without re-imaging it.
+
+@vars
+tag = Field | Store | Sales
+prefix = RB | RV | RO
+who = priya | jordan
+@endvars
+
+@task t01 | Deployment | 20 | RB-LT-003
+On **RB-LT-003**, save the hardware hash to `C:\HWID\rb-lt-003.csv`, then import it in the portal with the group tag **{tag}**.
+@check RB-LT-003 | the hash file exists
+Test-Path C:\HWID\rb-lt-003.csv
+@check portal | the laptop is registered with the group tag
+autopilot["LB14-55821"].groupTag == {tag}
+@hint Get-WindowsAutopilotInfo -OutputFile; then Windows Autopilot > Devices > Import (the group tag can be given there or in the file).
+@solution RB-LT-003
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\rb-lt-003.csv
+@solution portal
+import autopilot "RB-LT-003" "C:\HWID\rb-lt-003.csv" groupTag={tag}
+@explain
+Get-WindowsAutopilotInfo writes the serial number, product ID and hardware hash; the import registers the device in Autopilot and creates its placeholder object in Microsoft Entra ID, where dynamic groups can see it. The group tag becomes [OrderID]:{tag} in the device's physical IDs.
+@endtask
+
+@task t02 | Deployment | 20 | portal
+Create a dynamic device group **Autopilot - {tag}** that holds every Autopilot device with the group tag **{tag}**.
+@check portal | the group holds RB-LT-003 through its tag
+group["Autopilot - {tag}"].membership == "Dynamic device"
+device["LB14-55821"].groups has "Autopilot - {tag}"
+group["Autopilot - {tag}"].rule contains "[OrderID]:{tag}"
+@hint device.devicePhysicalIds with -any and _ -eq "[OrderID]:{tag}".
+@solution portal
+create group name="Autopilot - {tag}" type=Security membership="Dynamic device" rule="(device.devicePhysicalIds -any (_ -eq \"[OrderID]:{tag}\"))"
+@explain
+-any tests each value of a property that holds several values. A rule with -startsWith "[ZTDid]" would take every Autopilot device instead, which is too wide when teams need different profiles.
+@endtask
+
+@task t03 | Deployment | 25 | portal
+Create a user-driven, Entra joined Autopilot profile **{tag} laptops**: standard users, licence terms and privacy settings hidden, device names **{prefix}-** followed by the serial number. Assign it to **Autopilot - {tag}**, together with an Enrollment Status Page **{tag} setup** that shows the progress and blocks the device until all apps are installed.
+@check portal | the profile's settings
+autopilotProfile["{tag} laptops"].mode == User-driven
+autopilotProfile["{tag} laptops"].userType == Standard
+autopilotProfile["{tag} laptops"].nameTemplate == {prefix}-%SERIAL%
+autopilotProfile["{tag} laptops"].include has "Autopilot - {tag}"
+@check portal | the Enrollment Status Page
+esp["{tag} setup"].showProgress == Yes
+esp["{tag} setup"].include has "Autopilot - {tag}"
+@hint Name template {prefix}-%SERIAL% (15 characters at most: the serial LB14-55821 is 10).
+@solution portal
+create autopilotProfile name="{tag} laptops" mode=User-driven joinType="Microsoft Entra joined" userType=Standard eula=Hide privacy=Hide nameTemplate={prefix}-%SERIAL%
+assign autopilotProfile "{tag} laptops" "Autopilot - {tag}"
+create esp name="{tag} setup" showProgress=Yes blockUntil=All
+assign esp "{tag} setup" "Autopilot - {tag}"
+@explain
+Autopilot profiles and Enrollment Status Pages are assigned to device groups. A name template keeps to Windows' rules: at most 15 characters, letters, digits and hyphens, with one %SERIAL% or %RAND:x%.
+@endtask
+
+@task t04 | Deployment | 20 | RB-LT-003
+Wait until the profile is **Assigned** to RB-LT-003, then set the laptop up as **{who}**.
+@check portal | the laptop was deployed by Autopilot
+device["LB14-55821"].name == {prefix}-LB14-55821
+device["LB14-55821"].enrollmentProfile == "{tag} laptops"
+device["LB14-55821"].ownership == Corporate
+device["LB14-55821"].user == {who}
+@hint Profile assignment takes about 15 minutes: use Skip time, then check the Autopilot device's profile status before you start setup.
+@solution portal
+#wait 900
+@solution RB-LT-003
+#oobe {who}
+@explain
+If setup starts while the profile status still says Assigning, the device gets the ordinary out-of-box experience without the profile's settings, and a DESKTOP-xxxx name (Cert Lab also shows it as personal). Devices deployed by Autopilot are corporate.
+@endtask
+
+@task t05 | Deployment | 15 | portal
+**RB-LT-001** passes from Jordan to a new colleague. Remove Jordan's files, apps and settings but keep the laptop **joined and enrolled**, with no re-imaging.
+@check portal | the laptop has no user any more and is still managed
+device["RB-LT-001"].user == ""
+device["RB-LT-001"].managed == Intune
+device["RB-LT-001"].join == "Entra joined"
+@hint One remote action on the device.
+@solution portal
+remote autopilot-reset "RB-LT-001"
+@explain
+Autopilot Reset keeps the Entra join and the Intune enrolment and reapplies the policies and apps. A wipe would reset the laptop to factory settings and send it through setup again; retire would remove it from management.
+@endtask

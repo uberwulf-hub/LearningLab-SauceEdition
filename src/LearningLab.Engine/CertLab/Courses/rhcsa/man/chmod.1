@@ -1,0 +1,101 @@
+NAME
+       chmod - change the permission bits of files
+
+SYNOPSIS
+       chmod [OPTION...] MODE[,MODE...] FILE...
+       chmod [OPTION...] OCTAL-MODE FILE...
+       chmod [OPTION...] --reference=RFILE FILE...
+
+DESCRIPTION
+       chmod sets who may read, write and run each FILE. Only the file's owner
+       and root may change its mode.
+
+       Every file has three sets of permissions: for the owner (u), the group
+       (g) and everybody else (o). Each set has read (r), write (w) and
+       execute (x). On a directory, r lets you list the names, w lets you
+       create, delete and rename entries, and x lets you enter the directory
+       and reach the files in it.
+
+   Symbolic modes
+       A symbolic mode is WHO, an operator and PERMISSIONS:
+
+       WHO          u (owner), g (group), o (others), a (all three).
+                    Without WHO, a is used, minus the bits the umask hides.
+       OPERATOR     + adds, - removes, = sets exactly (clears the rest).
+       PERMISSIONS  r, w, x; X (execute only for directories, or for files
+                    that already have an execute bit); s (set-user-ID with u,
+                    set-group-ID with g); t (sticky).
+
+       Join several changes with commas: u+rwx,g=rx,o=.
+
+   Octal modes
+       An octal mode adds up r=4, w=2, x=1 for each set: 750 is rwxr-x---.
+       A fourth digit in front sets the special bits: 4 set-user-ID,
+       2 set-group-ID, 1 sticky. 2770 is rwxrws---.
+
+   Special bits
+       set-user-ID (u+s, 4000)
+              A program runs with its owner's rights (passwd uses this).
+
+       set-group-ID (g+s, 2000)
+              On a directory, new files and subdirectories get the
+              directory's group instead of the creator's primary group. This
+              is how shared team directories work.
+
+       sticky (o+t, 1000)
+              On a directory, only a file's owner (or the directory's owner,
+              or root) may delete or rename it, as in /tmp.
+
+       ls -l shows these bits as s or t in the execute position; a capital S
+       or T means the bit is set but the execute bit under it is not.
+
+OPTIONS
+       -R, --recursive
+              Change the files and directories inside each directory too.
+
+       -v, --verbose
+              Report every file processed.
+
+       -c, --changes
+              Report only the files that really changed.
+
+       -f, --silent, --quiet
+              Do not print most error messages.
+
+       --reference=RFILE
+              Copy the mode of RFILE instead of giving a MODE.
+
+EXAMPLES
+       Let the owner run a script:
+
+           chmod u+x /root/backup.sh
+
+       Owner full access, group read and enter, nothing for others:
+
+           chmod 750 /srv/reports
+
+       A shared directory for the group devs: members can create files, new
+       files belong to devs, and nobody else can look inside:
+
+           chgrp devs /shared/devs
+           chmod 2770 /shared/devs
+
+       The same with symbolic modes:
+
+           chmod u=rwx,g=rwxs,o= /shared/devs
+
+       Let only owners delete their own files in a public drop folder:
+
+           chmod 1777 /srv/dropbox
+
+       Give everyone read access to a tree, adding x only on directories:
+
+           chmod -R a+rX /var/www/html
+
+NOTES
+       chmod never changes symbolic links themselves; it changes the file the
+       link points to. Permissions are only part of the answer: ACLs (see
+       getfacl(1)) and SELinux can also allow or refuse access.
+
+SEE ALSO
+       chown(1), chgrp(1), ls(1), umask (in bash(1)), getfacl(1), setfacl(1)

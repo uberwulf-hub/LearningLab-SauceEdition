@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the roles and features of Windows Server.
+DESCRIPTION:
+Windows Server adds abilities as roles (Web Server (IIS), DNS Server, DHCP Server...), role services and features (Telnet Client, Windows Server Backup...). Get-WindowsFeature shows them as a tree, with [X] for installed ones and the Name to use with Install-WindowsFeature.
+PARAMETER Name:
+Feature names; wildcards are allowed. Position 0.
+PARAMETER ComputerName:
+Another server.
+EXAMPLE: Get-WindowsFeature
+The whole tree.
+EXAMPLE: Get-WindowsFeature | Where-Object Installed
+What is installed.
+EXAMPLE: Get-WindowsFeature Web-*
+The parts of IIS.
+NOTES:
+Only on Windows Server (ServerManager module): Windows 10 and 11 have Get-WindowsOptionalFeature instead.
+RELATED: Install-WindowsFeature, Uninstall-WindowsFeature

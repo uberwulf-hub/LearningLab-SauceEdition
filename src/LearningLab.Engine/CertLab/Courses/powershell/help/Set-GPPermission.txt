@@ -1,0 +1,28 @@
+SYNOPSIS: Gives a user, group or computer a permission level on a Group Policy Object.
+DESCRIPTION:
+Set-GPPermission is how you delegate editing of a GPO, and how you do security filtering: to apply a GPO only to one group, give that group GpoApply and take Authenticated Users down to GpoRead.
+Keep Read for Authenticated Users (or Domain Computers): since a 2016 security update, computers must be able to read every GPO that applies to their users, or the user settings are skipped.
+By default the cmdlet won't lower an existing level; -Replace allows that.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER TargetName:
+The user, group or computer.
+PARAMETER TargetType:
+User, Group, Computer or WellKnownGroup (for example Authenticated Users).
+PARAMETER PermissionLevel:
+GpoRead, GpoApply, GpoEdit, GpoEditDeleteModifySecurity or None.
+PARAMETER Replace:
+Replaces the current level, even with a lower one.
+PARAMETER All:
+Applies the change to every GPO.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-GPPermission "Sales Desktop" -TargetName Sales -TargetType Group -PermissionLevel GpoApply; Set-GPPermission "Sales Desktop" -TargetName "Authenticated Users" -TargetType WellKnownGroup -PermissionLevel GpoRead -Replace
+Security filtering: the GPO now applies only to the Sales group.
+EXAMPLE: Set-GPPermission "Sales Desktop" -TargetName Helpdesk -TargetType Group -PermissionLevel GpoEdit
+Lets the help desk edit this GPO.
+RELATED: Get-GPPermission, Get-GPResultantSetOfPolicy

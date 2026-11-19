@@ -1,0 +1,6 @@
+SYNOPSIS: Shows the computer's Trusted Platform Module (TPM).
+DESCRIPTION:
+Get-Tpm tells whether a TPM is present and ready (TpmPresent, TpmReady, TpmEnabled, TpmActivated, TpmOwned) and its maker and version. BitLocker without a startup PIN, Windows Hello for Business and Autopilot self-deploying mode rely on the TPM; Windows 11 needs TPM 2.0.
+EXAMPLE: Get-Tpm | Select-Object TpmPresent, TpmReady, ManufacturerVersionFull20
+Is there a usable TPM, and is it version 2.0 ("Not Supported" means it isn't)?
+RELATED: Get-BitLockerVolume, Confirm-SecureBootUEFI

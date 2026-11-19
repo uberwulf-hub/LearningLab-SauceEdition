@@ -1,0 +1,16 @@
+SYNOPSIS: Replaces a DNS server's forwarder list and settings.
+DESCRIPTION:
+Set-DnsServerForwarder sets the whole forwarder list at once: the addresses you give replace the old ones (use Add-DnsServerForwarder to append instead). It also changes UseRootHint and Timeout.
+
+Turning UseRootHint off means the server gives up when the forwarders fail, which some companies want so that all outside lookups go through a filtering service.
+PARAMETER IPAddress:
+The new list of forwarders, in the order they should be tried.
+PARAMETER UseRootHint:
+$true falls back to root hints when the forwarders don't answer; $false doesn't.
+PARAMETER Timeout:
+Seconds to wait for each forwarder.
+EXAMPLE: Set-DnsServerForwarder -IPAddress 203.0.113.53, 198.51.100.53 -ComputerName DC1
+DC1 now forwards to these two servers, in this order.
+EXAMPLE: Set-DnsServerForwarder -UseRootHint $false
+Outside names are resolved only through the forwarders.
+RELATED: Get-DnsServerForwarder, Add-DnsServerForwarder, Remove-DnsServerForwarder, Set-DnsServerRecursion

@@ -1,0 +1,29 @@
+{
+    "id": "deeper-in",
+    "title": "Deeper In",
+    "level": "Advanced",
+    "order": 7,
+    "summary": "The flag you want is on a machine you can't reach. The way to it runs through a server that sits on two networks. Own the first, then use it to see the second.",
+    "story": "Thornfield Freight (made up) keeps its real server on an inside network, 10.10.72.0/24, that your box can't reach. Between you and it is a jump host, jump01, with one foot on your network (10.10.7.0/24) and one foot inside. You start on scout.",
+    "goal": "Capture the flag on the jump host and the flag on the inside server, store01.",
+    "skills": "pivoting, dual-homed hosts, scanning from a foothold, ssh through a jump host, reused credentials",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 50,
+    "vars": { "JPW": "word", "SPW": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.7.5/24" ] },
+        { "name": "jump01", "os": "linux", "hostname": "jump01.thornfield.example", "role": "jump host (two networks)", "nics": [ "10.10.7.20/24", "10.10.72.1/24" ], "packages": [ "vsftpd", "nmap" ], "setup": "jump01.sh",
+          "versions": { "21": "vsftpd 3.0.5" } },
+        { "name": "store01", "os": "linux", "hostname": "store01.thornfield.example", "role": "inside server", "nics": [ "10.10.72.10/24" ], "setup": "store01.sh" }
+    ],
+    "flags": [
+        { "id": "jump", "name": "Jump host flag", "points": 130, "machine": "jump01", "path": "/home/pilot/flag.txt", "owner": "pilot", "mode": "600", "level": "user" },
+        { "id": "inside", "name": "Inside server flag", "points": 170, "machine": "store01", "path": "/home/pilot/flag.txt", "owner": "pilot", "mode": "600", "level": "user" }
+    ],
+    "hints": [
+        { "text": "Scan your network: nmap -sn 10.10.7.0/24 finds jump01 at 10.10.7.20. It runs FTP (21) that allows anonymous access; read the files in pub.", "cost": 15 },
+        { "text": "A note in FTP gives the pilot password. ssh pilot@10.10.7.20 for the first flag. Then run ip addr on jump01: it is also on 10.10.72.0/24, a network your box can't see.", "cost": 30 },
+        { "text": "From jump01, scan the inside network (nmap -sn 10.10.72.0/24) and reach store01 at 10.10.72.10. The pilot password is reused there: ssh pilot@10.10.72.10.", "cost": 45 }
+    ]
+}

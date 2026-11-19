@@ -1,0 +1,71 @@
+# Sheet: crypto | Cryptography and PKI | General security concepts
+## Symmetric ciphers
+AES :: block cipher, 128-bit blocks, 128/192/256-bit keys; strong, the standard choice
+AES-GCM :: AES that encrypts and authenticates at once; strong, the usual TLS 1.2 and 1.3 choice
+ChaCha20-Poly1305 :: stream cipher with built-in authentication, 256-bit key; strong, fast on phones without AES hardware
+3DES :: DES three times, 64-bit blocks, 112-bit effective strength; legacy, deprecated
+DES :: 56-bit key, 64-bit blocks; broken (brute forced in hours)
+RC4 :: stream cipher used in WEP and old TLS; broken
+Blowfish / Twofish :: Blowfish 64-bit blocks (legacy); Twofish 128-bit blocks, up to 256-bit keys (strong but rarely used)
+IDEA :: 128-bit key, 64-bit blocks; legacy
+ECB mode :: each block encrypted alone, patterns show; never use for real data
+CBC / CTR / GCM modes :: CBC chains blocks with an IV; CTR turns a block cipher into a stream; GCM adds authentication
+## Asymmetric and key exchange
+RSA :: encryption and signatures; 2048-bit minimum, 3072 or more for long-term use
+ECC (ECDSA, EdDSA) :: signatures with short keys; 256-bit curve is about as strong as 3072-bit RSA
+Diffie-Hellman (DH) :: key agreement over an open channel; use 2048-bit groups or more
+DHE / ECDHE :: ephemeral key exchange, new keys per session; gives perfect forward secrecy (required in TLS 1.3)
+DSA :: older digital signature standard; being phased out in favour of ECDSA and EdDSA
+Post-quantum (ML-KEM, ML-DSA) :: NIST's 2024 quantum-resistant standards for key exchange and signatures, now being rolled out
+## Hashing and key stretching
+MD5 :: 128-bit digest; broken (collisions), only for non-security checksums
+SHA-1 :: 160-bit digest; broken for collisions, no longer trusted for signatures
+SHA-2 (SHA-256, SHA-384, SHA-512) :: 256/384/512-bit digests; strong, the common choice
+SHA-3 :: different internal design (Keccak), 224 to 512-bit digests; strong
+RIPEMD-160 :: 160-bit digest; still unbroken but uncommon outside some cryptocurrencies
+HMAC :: hash plus a secret key; proves integrity and that a key holder sent it
+PBKDF2 :: many rounds of HMAC with a salt; key stretching for passwords
+Bcrypt :: slow, salted password hash based on Blowfish with a tunable cost
+Argon2 :: modern memory-hard password hash; resists GPU cracking, a strong choice
+Salt :: random value stored with each password hash; makes rainbow tables useless
+Pepper :: a secret value added to all passwords and kept apart from the database
+## Hashing vs encryption vs encoding
+Hashing :: one-way, fixed-size output, no key; for integrity and password storage
+Encryption :: two-way with a key; for confidentiality
+Encoding (Base64, hex) :: two-way with no key; changes the format only, gives no security
+Obfuscation :: makes code or data hard to read (steganography, tokenization, masking); not real protection on its own
+Digital signature :: hash of the data encrypted with the signer's private key; gives integrity, authentication and non-repudiation
+## Where data is encrypted
+Full disk / partition / volume :: everything on the drive, partition or volume (BitLocker, LUKS); protects a lost or stolen device
+File / folder :: single files (EFS); stays protected when copied within the system
+Database / record :: whole database (transparent data encryption) or just sensitive columns or rows
+Transport :: data in transit (TLS, IPsec, SSH)
+## Key storage and tools
+TPM :: chip in the computer that stores keys and checks the boot process
+HSM :: tamper-resistant hardware that holds and uses keys for servers and CAs
+KMS :: service that creates, stores, rotates and retires keys (cloud KMS)
+Secure enclave :: protected area of a processor that keeps keys and biometric data apart from the OS
+Key escrow :: a trusted third party keeps copies of keys for recovery
+## Certificate types
+DV / OV / EV :: domain validated (proves control of the name) / organization validated / extended validation (strictest checks)
+Wildcard (*.example.com) :: covers one level of names under the domain, not the domain itself
+SAN certificate :: lists several names, which may be in different domains
+Self-signed :: signed by its own key; not trusted by browsers, fine for labs and internal tests
+Code signing :: proves who published software and that it wasn't changed
+Email (S/MIME) / user / machine :: sign and encrypt mail / identify a person / identify a device for VPN or 802.1X
+Root / intermediate :: the root CA is trusted directly and usually kept offline; intermediates issue day-to-day certificates
+## Certificate file formats
+PEM (.pem, .crt, .cer, .key) :: Base64 text between -----BEGIN and -----END lines; the common Linux format
+DER (.der, .cer) :: the same data in binary
+PFX / P12 (.pfx, .p12) :: PKCS #12, binary, password protected; holds certificate, chain and private key
+P7B (.p7b) :: PKCS #7, holds certificates and the chain but never the private key
+CSR (.csr) :: PKCS #10 request with your public key and details, signed by your private key
+## PKI terms
+CA / RA :: the CA signs certificates; the RA checks identities for the CA
+Chain of trust :: server certificate -> intermediate CA -> root CA in the trust store
+CRL :: signed list of revoked certificate serial numbers, published by the CA
+OCSP :: real-time status check for one certificate
+OCSP stapling :: the server attaches a fresh signed OCSP answer to its TLS handshake
+Certificate pinning :: an app trusts only a specific certificate or public key for a server
+Certificate transparency :: public logs of every issued certificate so fake ones can be spotted
+Key length vs algorithm :: longer keys are stronger within one algorithm; compare across algorithms by security level, not bits

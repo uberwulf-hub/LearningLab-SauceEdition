@@ -1,0 +1,28 @@
+SYNOPSIS: Sets the DNS servers a network adapter uses.
+DESCRIPTION:
+Set-DnsClientServerAddress replaces the list of DNS servers on an adapter. Give the addresses in the order they should be asked: the first is preferred, the others are only tried when it does not answer.
+
+-ResetServerAddresses clears the list so the adapter gets its DNS servers from DHCP again (with a fixed address and no DHCP, the list then stays empty).
+
+In an Active Directory domain, members must use the domain's DNS server (10.0.10.10 in the lab), never a public one, or they cannot find the domain controller.
+PARAMETER InterfaceAlias:
+The adapter, for example Ethernet.
+PARAMETER InterfaceIndex:
+The ifIndex of the adapter.
+PARAMETER ServerAddresses:
+The DNS server addresses, separated by commas.
+PARAMETER ResetServerAddresses:
+Removes the addresses set by hand, so DHCP's are used.
+PARAMETER InputObject:
+An adapter piped from Get-NetAdapter.
+PARAMETER PassThru:
+Outputs the new settings.
+EXAMPLE: Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10
+Points the adapter at DC01.
+EXAMPLE: Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10, 10.0.10.11 -PassThru
+Two servers; the second is a fallback. Shows the result.
+EXAMPLE: Set-DnsClientServerAddress -InterfaceAlias Ethernet -ResetServerAddresses
+Goes back to the DNS servers from DHCP.
+NOTES:
+An address that is not an IP address gives "The parameter is incorrect". Cert Lab keeps only the IPv4 servers. After a change, run Clear-DnsClientCache and test with Resolve-DnsName. CIM-based command from the DnsClient module, Windows only. Needs an administrator on a real PC.
+RELATED: Get-DnsClientServerAddress, Resolve-DnsName, Clear-DnsClientCache

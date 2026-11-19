@@ -1,0 +1,21 @@
+# Deck: scripting | Scripting | Scripting
+Run the script Hello.ps1 in the current folder :: `.\Hello.ps1`
+Run Tools.ps1 so that its functions stay in your session :: `. .\Tools.ps1`
+The folder of the running script :: `$PSScriptRoot`
+Give a script or function the parameters $Name (text) and $Count (number, default 1) :: `param([string]$Name, [int]$Count = 1)`
+A parameter that is on only when named, like -Force :: `[switch]$Force`
+Make a parameter mandatory :: `[Parameter(Mandatory)]`
+Let a parameter take whole objects from the pipeline :: `[Parameter(ValueFromPipeline)]`
+Allow only the values Small, Medium and Large :: `[ValidateSet('Small','Medium','Large')]`
+Allow only numbers from 1 to 10 :: `[ValidateRange(1, 10)]`
+Which block of an advanced function runs once per pipeline object? :: process
+Give a function -Verbose, -ErrorAction and the other common parameters :: `[CmdletBinding()]`
+Give a function -WhatIf and -Confirm :: `[CmdletBinding(SupportsShouldProcess)]`
+Inside such a function, ask before changing something :: `$PSCmdlet.ShouldProcess($target, 'Delete')`
+How do you call function Add($a, $b) with 2 and 3? :: `Add 2 3` (not Add(2, 3), which passes one array)
+Repeat a block for every item of $list :: `foreach ($item in $list) { $item }`
+Count down from 3 to 1 :: `for ($i = 3; $i -gt 0; $i--) { $i }`
+Compare $file with wildcard cases in a switch :: `switch -Wildcard ($file) { '*.csv' { 'table' } default { 'other' } }`
+Leave a loop early / skip to the next round :: break / continue
+Pass the hashtable $params as parameters to a command :: `Get-Variable @params`
+Which comment keyword holds the one-line summary of a function's help? :: .SYNOPSIS

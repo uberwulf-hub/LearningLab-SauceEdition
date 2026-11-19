@@ -1,0 +1,19 @@
+NAME
+       pwconv - move passwords into the shadow file
+
+SYNOPSIS
+       pwconv
+
+DESCRIPTION
+       pwconv creates or updates /etc/shadow from /etc/passwd: password
+       hashes found in /etc/passwd are moved to /etc/shadow and replaced by x.
+       RHEL uses shadow passwords from installation, so it is needed only
+       after someone edited the files by hand. pwunconv does the reverse;
+       grpconv does the same for groups.
+
+EXAMPLES
+           pwconv
+           pwck -r
+
+SEE ALSO
+       pwck(8), grpconv(8), shadow(5)

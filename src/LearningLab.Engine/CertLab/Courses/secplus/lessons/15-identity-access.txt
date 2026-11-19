@@ -1,0 +1,193 @@
+# Unit: u15 | 15. Identity and access management | Security operations
+
+Identity and access management (IAM) decides who someone is, what they may do, and keeps that true from their first day to their last. This unit covers the account life cycle, federation and single sign-on, access control models, multifactor authentication, passwords and passwordless sign-in, and privileged access management.
+
+## Lesson: l1501 | Accounts, federation and single sign-on
+
+### The account life cycle
+
+- **Provisioning**: creating an account when someone joins, with the access their role needs. Ideally automatic, driven by the HR system, so nobody is forgotten or given extra.
+- **Permission assignment**: give rights through groups or roles, not to individuals one by one, and follow least privilege. Watch for **privilege creep**: people who change jobs keep old rights and slowly collect too many. Regular access reviews fix this.
+- **De-provisioning**: disabling (then later deleting) accounts as soon as someone leaves, and removing their access everywhere, including cloud apps and shared passwords. Leftover accounts of departed staff are a classic way in.
+- **Identity proofing**: checking that a person really is who they claim to be before giving them an identity, for example by checking a government ID in person or through a verification service, or by confirming details already known.
+- **Attestation**: a periodic formal confirmation, usually by managers or resource owners, that each person's access is still correct ("I confirm these 12 people still need access to the finance share").
+
+### Federation and SSO
+
+**Single sign-on** (SSO): sign in once and use many applications without signing in again. **Federation** extends trust across organizations or domains: an **identity provider** (IdP) authenticates the user, and **service providers** (relying parties) accept the IdP's statement about who the user is. Your company's IdP can let you into a partner's or a SaaS provider's app without an account there. **Interoperability** means these systems use common standards so different vendors' products work together.
+
+- **SAML** (Security Assertion Markup Language): XML-based. The IdP sends a signed **assertion** about the user to the service provider, usually through the browser. Common for enterprise web SSO.
+- **OAuth 2.0**: an **authorization** framework. A user lets an application access resources on their behalf (for example, "allow this calendar app to read my contacts") and the app receives an **access token**, without ever seeing the user's password. OAuth on its own is about permission, not about proving identity.
+- **OpenID Connect** (OIDC): an **authentication** layer on top of OAuth 2.0. Adds an **ID token** (a JSON Web Token, JWT) saying who the user is. Behind many "Sign in with..." buttons.
+- **LDAP** (Lightweight Directory Access Protocol): queries and updates a directory such as Active Directory, port 389 (LDAPS over TLS: 636). Many applications check credentials against the directory over LDAP, giving users one set of credentials.
+- **Kerberos**: the ticket-based authentication protocol of Windows domains (port 88). The user authenticates to the Key Distribution Center (on the domain controller) and gets a **ticket-granting ticket** (TGT), then uses it to get **service tickets** for each server, so the password isn't sent across the network. It needs closely synchronized clocks (by default within 5 minutes).
+
+> OAuth: authorization (what an app may do for you). OIDC: authentication (who you are), built on OAuth. SAML: XML assertions for web SSO.
+
+### RADIUS and TACACS+
+
+Both are AAA protocols for network access:
+
+- **RADIUS**: used for Wi-Fi (802.1X), VPN and network sign-ins. Uses UDP (1812 authentication, 1813 accounting) and encrypts only the password in the request.
+- **TACACS+**: used mostly for administrators signing in to network devices. Uses TCP 49, encrypts the whole packet body, and separates authentication, authorization and accounting so each command can be authorized individually.
+
+@quiz
+? A user signs in at work and then opens a partner company's supplier portal without signing in again. The portal trusts the company's identity provider. What is this?
++ Federation
+- Privilege creep
+- Attestation
+- Identity proofing
+! Federation lets a service provider accept identities vouched for by another organization's IdP.
+? A photo printing website asks for permission to read pictures from your cloud storage, and you approve it without giving it your password. Which standard is typically used?
+- LDAP
+- Kerberos
++ OAuth 2.0
+- TACACS+
+! OAuth grants an application limited access through a token; the app never sees your password.
+? An employee moved from Sales to HR two years ago and still has access to the sales CRM. What problem does this show, and what process catches it?
+- Identity proofing; provisioning
++ Privilege creep; regular access reviews (attestation)
+- Federation; SSO
+- Password reuse; password expiration
+! Old rights pile up as people change roles; periodic reviews remove what is no longer needed.
+? A network team wants each command typed on routers to be authorized and logged per administrator, with the whole session data encrypted. Which protocol fits best?
+- RADIUS
++ TACACS+
+- LDAP
+- SAML
+! TACACS+ separates the three A's, authorizes per command and encrypts the full payload; RADIUS encrypts only the password.
+@end
+
+## Lesson: l1502 | Access control models
+
+- **Mandatory access control** (MAC): the system enforces access using **labels**. Objects get a classification (for example Confidential, Secret, Top Secret) and users get a clearance; users can't change the labels or share access. Used in military and government systems; SELinux is a MAC system.
+- **Discretionary access control** (DAC): the **owner** of a resource decides who gets access, for example the creator of a file setting its permissions. Flexible, but users may share too widely. Default file permissions in Windows and Linux are DAC.
+- **Role-based access control** (RBAC): permissions are given to **roles** (Nurse, Payroll Clerk, Help Desk) and users get roles matching their job. Easy to manage in large organizations; moving a person to a new job means changing roles.
+- **Rule-based access control**: access decided by **rules** set by an administrator that apply to everyone, such as firewall rules or "no access from outside the country". (Don't confuse with role-based; both shorten to RBAC.)
+- **Attribute-based access control** (ABAC): decisions combine many **attributes** of the user (department, clearance), the resource (classification, owner), the action and the environment (time, location, device health). Very fine-grained: "managers in Finance may approve invoices under 10,000 from a company device during working hours".
+- **Time-of-day restrictions**: allow sign-in or access only during set hours, for example blocking shift workers' accounts outside their shifts.
+- **Least privilege**: whatever the model, give each person and service only the access needed for their task, for only as long as it is needed.
+
+> Labels and clearances: MAC. Owner decides: DAC. Job title: role-based. Administrator rules for everyone: rule-based. Many attributes combined: ABAC.
+
+@quiz
+? In a government system, a user with Secret clearance can't open a Top Secret document, and nobody can change that except the security office. Which model is this?
++ Mandatory access control
+- Discretionary access control
+- Role-based access control
+- Rule-based access control
+! Labels and clearances enforced by the system, not by owners, are the mark of MAC.
+? Doctors, nurses and receptionists each get a predefined set of permissions matching their job. Which model is this?
+- DAC
+- MAC
++ Role-based access control
+- Time-of-day restrictions
+! Permissions attached to job roles define RBAC.
+? A policy allows access to patient records only to clinicians in the same department as the patient, from a hospital device, during their shift. Which model can express all of this?
+- DAC
+- Rule-based only
++ ABAC
+- MAC
+! ABAC combines attributes of the user, resource and environment in one decision.
+? A user shares a folder she created with two colleagues by editing its permissions herself. Which model allows this?
++ Discretionary access control
+- Mandatory access control
+- Attribute-based access control
+- Rule-based access control
+! In DAC the owner decides who may access the resource.
+@end
+
+## Lesson: l1503 | Multifactor authentication and passwords
+
+### Factors
+
+Authentication factors are different kinds of proof:
+
+- **Something you know**: password, PIN, answers to questions.
+- **Something you have**: phone, hardware token, smart card, security key.
+- **Something you are**: biometrics such as fingerprint, face, iris, voice.
+- **Somewhere you are**: location, such as the network you connect from, GPS or the country of your IP address.
+
+**Multifactor authentication** (MFA) means factors of **different kinds**. A password and a PIN are both something you know, so together they are not MFA.
+
+### MFA implementations
+
+- **Biometrics**: convenient, can't be forgotten, but can't be changed if stolen. Judged by the **false acceptance rate** (FAR: impostors let in), **false rejection rate** (FRR: real users refused) and the **crossover error rate** (CER: where FAR equals FRR; lower is better).
+- **Hard tokens**: physical devices that show one-time codes, or smart cards.
+- **Soft tokens**: an authenticator app on a phone that generates codes.
+  - **TOTP** (time-based one-time password): the code is computed from a shared secret and the current time, and changes every 30 seconds or so.
+  - **HOTP** (HMAC-based one-time password): the code comes from the secret and a counter that moves on each use; a code stays valid until used.
+- SMS codes are better than nothing but weak: SIM swapping and interception can steal them. **Push notifications** are convenient, but attackers send many prompts hoping the user taps Approve (MFA fatigue); number matching helps.
+- **Security keys**: hardware devices (USB, NFC) using **FIDO2** / **WebAuthn**. The key signs a challenge with a private key that never leaves it, and checks the website's real address, so it **resists phishing**.
+
+### Passwords
+
+Good password practice today:
+
+- **Length** matters most: long passphrases are stronger and easier to remember than short complex strings.
+- **Complexity** rules (mixed character types) help a little but push people to predictable patterns.
+- **Reuse**: never reuse passwords across sites; one breach then unlocks many accounts (credential stuffing). Check new passwords against lists of breached passwords.
+- **Expiration**: forcing changes every few weeks leads to weak, predictable passwords; current guidance (such as NIST's) is to change passwords when there is evidence of compromise rather than on a fixed schedule. Know the setting anyway.
+- **Age**: a **minimum age** stops users from changing the password several times in a row to get back to an old one (used with **password history**); a **maximum age** is the expiration.
+- **Password managers** generate and store a unique strong password for every site, protected by one master password (plus MFA). They also refuse to fill in passwords on look-alike sites.
+- **Passwordless**: sign-in with no password at all, for example **passkeys** (FIDO2 credentials stored on a device or synced through a password manager and unlocked with a fingerprint, face or PIN), Windows Hello, or security keys. Nothing to phish or reuse.
+
+> MFA needs different factor types. Phishing-resistant MFA: FIDO2 security keys and passkeys.
+
+@quiz
+? A bank asks users for a password and then for their mother's maiden name. Is this multifactor authentication?
+- Yes, because there are two steps
++ No, because both are something you know
+- Yes, because one of them is a biometric
+- No, because MFA requires three factors
+! MFA needs factors of different types; two knowledge factors are single-factor.
+? An attacker builds a perfect copy of the company sign-in page. Which method would stop the stolen credentials from working even if the user types them in?
+- SMS one-time codes
+- TOTP codes from an app
++ A FIDO2 security key
+- A longer password
+! A FIDO2 key checks the site's real origin and won't sign for the fake site; typed codes can be relayed by the attacker.
+? An authenticator app shows a 6-digit code that changes every 30 seconds. Which method is it?
++ TOTP
+- HOTP
+- Kerberos
+- SAML
+! Time-based one-time passwords are computed from a shared secret and the current time.
+? Users change their passwords five times in a row right after a forced change so they can reuse their favourite one. Which setting stops this?
+- Maximum password age
++ Minimum password age together with password history
+- Account lockout threshold
+- Complexity requirements
+! Password history remembers old passwords; a minimum age stops users cycling through history quickly.
+@end
+
+## Lesson: l1504 | Privileged access management
+
+Administrator and service accounts can do the most damage, so they get extra controls. **Privileged access management** (PAM) tools manage them:
+
+- **Just-in-time permissions** (JIT): admins don't hold permanent rights. They request elevated access for a task, it is approved (sometimes automatically) and granted for a limited time, then removed. Fewer standing privileges means less to steal.
+- **Password vaulting**: privileged passwords are stored in a secure vault. Admins check a password out (often without even seeing it, as the tool injects it into the session), every use is logged, and the vault can change the password after each use.
+- **Ephemeral credentials**: short-lived credentials created for one session or task and that expire on their own, such as temporary cloud access keys or certificates valid for hours. Even if stolen, they quickly become useless.
+- PAM tools also often **record sessions** and require MFA for privileged access.
+- Admins should have a separate privileged account and use their normal account for email and browsing.
+
+@quiz
+? A database administrator receives admin rights for two hours after her request is approved, and the rights disappear automatically. Which concept is this?
++ Just-in-time permissions
+- Password vaulting
+- Federation
+- Discretionary access control
+! JIT grants privileges only for the time they are needed.
+? Shared admin passwords for network devices are stored in a tool that logs each checkout and changes the password after use. What is this?
+- Single sign-on
++ Password vaulting
+- Identity proofing
+- Attestation
+! A password vault controls, logs and rotates privileged credentials.
+? A build server gets cloud access keys that are valid for 15 minutes for each deployment. What is the main security benefit?
+- The keys are easier to remember
++ Stolen keys stop working quickly because they are ephemeral
+- They remove the need for logging
+- They allow the keys to be shared by all developers
+! Ephemeral credentials limit how long a stolen credential is useful.
+@end

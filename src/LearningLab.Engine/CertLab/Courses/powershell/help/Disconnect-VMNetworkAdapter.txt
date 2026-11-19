@@ -1,0 +1,12 @@
+SYNOPSIS: Unplugs a VM's network adapter from its switch.
+DESCRIPTION:
+Disconnect-VMNetworkAdapter leaves the adapter in the VM but connected to nothing, like pulling the cable. Handy to isolate an infected or misbehaving VM quickly while keeping it running.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Name:
+Only this adapter.
+EXAMPLE: Disconnect-VMNetworkAdapter -VMName APP-OLD -ComputerName HV1
+APP-OLD is cut off from the network.
+EXAMPLE: Connect-VMNetworkAdapter -VMName APP-OLD -SwitchName LAN
+Plugs it back in.
+RELATED: Connect-VMNetworkAdapter, Get-VMNetworkAdapter

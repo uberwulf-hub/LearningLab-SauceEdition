@@ -1,0 +1,74 @@
+NAME
+       df - show how much space mounted file systems have left
+
+SYNOPSIS
+       df [-h] [-H] [-T] [-i] [-t TYPE] [-x TYPE] [--output[=FIELDS]] [FILE...]
+
+DESCRIPTION
+       df lists every mounted file system with its size, the space used and
+       free, the percentage used, and where it is mounted:
+
+           Filesystem            1K-blocks    Used Available Use% Mounted on
+           /dev/mapper/rhel-root  17756160 2098764  15657396  12% /
+           /dev/vda1               1038336  233268    805068  23% /boot
+
+       With FILE arguments it shows only the file systems that hold those
+       files, which tells you where a directory really lives.
+
+       Sizes are in 1024-byte blocks unless -h or -H is given. The numbers are
+       about the file system, not the device: use lsblk to see disks and
+       partitions that are not mounted.
+
+OPTIONS
+       -h, --human-readable
+              Sizes such as 2.0G and 512M, in powers of 1024.
+
+       -H, --si
+              The same in powers of 1000.
+
+       -T, --print-type
+              Add a Type column (xfs, ext4, vfat, nfs4, tmpfs...).
+
+       -i, --inodes
+              Show inodes (how many files can still be created) instead of
+              blocks.
+
+       -t TYPE, --type=TYPE
+              Show only file systems of this type.
+
+       -x TYPE, --exclude-type=TYPE
+              Leave out file systems of this type (for example -x tmpfs).
+
+       -l, --local
+              Only local file systems (no NFS).
+
+       -a, --all
+              Include pseudo file systems such as proc and sysfs.
+
+       -P, --portability
+              One line per file system, in the POSIX format.
+
+       --output[=FIELDS]
+              Choose the columns, separated by commas: source, fstype,
+              size, used, avail, pcent, target, itotal, iused, iavail,
+              ipcent, file.
+
+EXAMPLES
+       Readable sizes and the file system types:
+
+           df -hT
+
+       Which file system holds /var/log, and how full is it?
+
+           df -h /var/log
+
+       Check that a new file system is mounted with the right size:
+
+           df -h /data
+
+       Only the mount points and free space:
+
+           df --output=target,avail
+
+SEE ALSO
+       du(1), lsblk(8), findmnt(8), mount(8)

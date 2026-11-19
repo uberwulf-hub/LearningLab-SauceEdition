@@ -1,0 +1,36 @@
+NAME
+       ssh-add - give private keys to the ssh agent
+
+SYNOPSIS
+       ssh-add [-l] [-L] [-d FILE] [-D] [FILE...]
+
+DESCRIPTION
+       ssh-add loads private keys into a running ssh-agent, so that you type
+       each key's passphrase once and later ssh logins use the key without
+       asking. Without a FILE it adds the default keys (~/.ssh/id_ed25519,
+       ~/.ssh/id_rsa and the others that exist). ssh-add finds the agent
+       through the SSH_AUTH_SOCK environment variable; without an agent it
+       says it could not open a connection to your authentication agent.
+
+OPTIONS
+       -l     List the fingerprints of the keys the agent holds.
+
+       -L     List the public keys the agent holds.
+
+       -d FILE
+              Remove this key from the agent.
+
+       -D     Remove all keys from the agent.
+
+EXAMPLES
+       Start an agent in this shell and add your key:
+
+           eval $(ssh-agent)
+           ssh-add ~/.ssh/id_ed25519
+
+NOTES
+       The RHCSA tasks usually ask for keys without a passphrase, which need
+       no agent at all.
+
+SEE ALSO
+       ssh-agent(1), ssh-keygen(1), ssh(1)

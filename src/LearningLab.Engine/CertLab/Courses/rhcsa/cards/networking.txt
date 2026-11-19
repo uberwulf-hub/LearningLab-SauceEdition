@@ -1,0 +1,31 @@
+# Deck: networking | Networking | Networking
+Show every interface with its addresses, one line each :: `ip -br addr`
+Show the devices and the profile active on each :: `nmcli device`
+List the connection profiles :: `nmcli connection show`
+Show only the IPv4 addresses saved in the profile enp1s0 :: `nmcli -g ipv4.addresses connection show enp1s0`
+What is a NetworkManager connection profile? :: a saved set of network settings (addresses, gateway, DNS) that is put onto a device when it is activated
+Where does RHEL 9 save connection profiles? :: as keyfiles in /etc/NetworkManager/system-connections (NAME.nmconnection, mode 600, owned by root)
+Set the static address 192.168.50.20/24 on the profile enp1s0 (replacing the old ones) :: `nmcli con mod enp1s0 ipv4.addresses 192.168.50.20/24`
+Add 192.168.50.21/24 as an extra address to the profile enp1s0 :: `nmcli con mod enp1s0 +ipv4.addresses 192.168.50.21/24`
+Make the profile enp1s0 use fixed addresses instead of DHCP :: `nmcli con mod enp1s0 ipv4.method manual`
+Set the gateway 192.168.50.254 on the profile enp1s0 :: `nmcli con mod enp1s0 ipv4.gateway 192.168.50.254`
+Apply the changed profile enp1s0 to its device :: `nmcli con up enp1s0`
+Create the profile lab on enp1s0 with 10.0.0.5/24 and the gateway 10.0.0.1 :: `nmcli con add con-name lab type ethernet ifname enp1s0 ipv4.method manual ipv4.addresses 10.0.0.5/24 ipv4.gateway 10.0.0.1`
+Keep the profile lab from being activated at boot :: `nmcli con mod lab connection.autoconnect no`
+Give the profile enp1s0 the fixed IPv6 address fd00:50::11/64 :: `nmcli con mod enp1s0 ipv6.method manual ipv6.addresses fd00:50::11/64`
+Write fd00:0000:0000:0000:0000:0000:0000:0011 in short form :: fd00::11 (one run of zero groups becomes ::, leading zeros are dropped)
+What is an IPv6 address that starts with fe80? :: a link-local address the interface makes for itself; it works only on the local segment
+Set the host name to web1.lab.example.com so that it survives a reboot :: `hostnamectl set-hostname web1.lab.example.com`
+Which file decides whether /etc/hosts or DNS is asked first? :: /etc/nsswitch.conf (the hosts: line, normally files dns myhostname)
+Set the DNS server 192.168.50.254 on the profile enp1s0 :: `nmcli con mod enp1s0 ipv4.dns 192.168.50.254`
+Set the search domain lab.example.com on the profile enp1s0 :: `nmcli con mod enp1s0 ipv4.dns-search lab.example.com`
+Why not edit /etc/resolv.conf by hand? :: NetworkManager writes it from the active profiles and overwrites it at the next activation
+Look up a name the way programs do (/etc/hosts, then DNS) :: `getent hosts server2.lab.example.com`
+Ask the DNS server for a name's address, short output (bind-utils) :: `dig +short server2.lab.example.com`
+Show TCP and UDP ports that are listening, with numbers :: `ss -tuln`
+Show the default firewall zone and everything it allows :: `firewall-cmd --list-all`
+Allow the http service now and after a reboot (two commands) :: `firewall-cmd --permanent --add-service=http` then firewall-cmd --reload
+Allow port 8080/tcp in the saved firewall configuration :: `firewall-cmd --permanent --add-port=8080/tcp`
+Load the saved firewall configuration into the running firewall :: `firewall-cmd --reload`
+Send everything from 10.1.1.0/24 to the drop zone (saved) :: `firewall-cmd --permanent --zone=drop --add-source=10.1.1.0/24`
+Refuse ssh from 192.168.50.12 only (saved) :: `firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.12" service name="ssh" reject'`

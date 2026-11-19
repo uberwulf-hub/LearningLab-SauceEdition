@@ -1,0 +1,100 @@
+NAME
+       rpm - query, install and check RPM packages
+
+SYNOPSIS
+       rpm -q [-a | -f FILE | -p PACKAGE-FILE] [-i] [-l] [-c] [-d] [-R]
+              [--scripts] [--changelog] [NAME...]
+       rpm {-i | -U | -F} [-v] [-h] [--nodeps] [--test] PACKAGE-FILE...
+       rpm -e [--nodeps] NAME...
+       rpm -V NAME...
+       rpm -K PACKAGE-FILE...
+       rpm --import KEYFILE
+
+DESCRIPTION
+       rpm is the low-level package tool of RHEL. It keeps the database of
+       installed packages in /var/lib/rpm and can install a package file,
+       but it does not download anything and does not resolve dependencies.
+       For installing and updating, use dnf, which uses rpm underneath; rpm
+       is mostly used to ask questions.
+
+   Query (-q)
+       rpm -q NAME prints the full name (name-version-release.arch) of an
+       installed package, or "package NAME is not installed". What to show
+       and which packages to ask about can be combined:
+
+       -a          every installed package
+       -f FILE     the package that owns FILE
+       -p FILE     a package file (.rpm) instead of an installed package
+       -i          information: version, size, summary, description
+       -l          the files in the package
+       -c          only its configuration files
+       -d          only its documentation files
+       -R          what it requires
+       --scripts   the scripts it runs at install and removal
+       --changelog the change history
+
+       --whatprovides WHAT and --whatrequires WHAT find the installed
+       packages that provide or need WHAT.
+
+OPTIONS
+       -i, --install FILE
+              Install a package file. Fails if dependencies are missing.
+
+       -U, --upgrade FILE
+              Install or upgrade.
+
+       -F, --freshen FILE
+              Upgrade only if an older version is installed.
+
+       -v, -h Verbose output and a progress bar of # signs (-ivh, -Uvh).
+
+       --nodeps
+              Skip the dependency checks (rarely a good idea).
+
+       --test Check only, install nothing.
+
+       -e, --erase NAME
+              Remove a package.
+
+       -V, --verify NAME
+              Compare the installed files with the package: each changed file
+              gets a line of letters (S size, 5 checksum, M mode, T time...).
+
+       -K, --checksig FILE
+              Check a package file's digests and signature.
+
+       --import KEYFILE
+              Import a GPG public key, so that packages signed with it are
+              trusted. Red Hat's key is in /etc/pki/rpm-gpg/.
+
+EXAMPLES
+       Is httpd installed, and which version?
+
+           rpm -q httpd
+
+       Which package owns a file, and what else is in it:
+
+           rpm -qf /etc/chrony.conf
+           rpm -ql chrony
+
+       Configuration files and documentation of a package:
+
+           rpm -qc openssh-server
+           rpm -qd openssh-server
+
+       Information about a package file before installing it, then install
+       it with dnf (which brings the dependencies):
+
+           rpm -qip /mnt/BaseOS/Packages/tree-*.rpm
+           dnf install /mnt/BaseOS/Packages/tree-*.rpm
+
+       Trust Red Hat's signing key:
+
+           rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+       Count the installed packages:
+
+           rpm -qa | wc -l
+
+SEE ALSO
+       dnf(8), rpmkeys(8), yum(8)

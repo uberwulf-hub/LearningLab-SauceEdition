@@ -1,0 +1,12 @@
+SYNOPSIS: Shows the share permissions of a share.
+DESCRIPTION:
+Get-SmbShareAccess lists the share permission entries: AccountName, AccessControlType (Allow or Deny) and AccessRight (Full, Change, Read or Custom).
+
+These are only the share permissions; the NTFS permissions on the folder (Get-Acl) also count, and the more restrictive wins.
+PARAMETER Name:
+The share or shares. Position 0.
+EXAMPLE: Get-SmbShareAccess -Name Sales
+On FS1, Sales gives Everyone Full: the real control is in NTFS.
+EXAMPLE: Get-SmbShareAccess -Name HR
+CORP\HR has Change and the administrators Full.
+RELATED: Grant-SmbShareAccess, Revoke-SmbShareAccess, Block-SmbShareAccess, Get-Acl

@@ -1,0 +1,26 @@
+SYNOPSIS: Deletes files, folders, registry keys, variables and other items.
+DESCRIPTION:
+Remove-Item (del, rm, ri) deletes the items at a path; piped items from Get-ChildItem bind by their PSPath. A folder or key that still has items inside asks for confirmation unless you add -Recurse. Read-only, hidden and system files need -Force. Deleting a file here does not use the Recycle Bin: it is gone.
+PARAMETER Path:
+The items to delete. Wildcards are allowed.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Recurse:
+Also deletes everything inside, without asking.
+PARAMETER Force:
+Also deletes read-only, hidden and system files.
+PARAMETER Include:
+Only deletes names that match these patterns (inside the folder when the path is a folder).
+PARAMETER Exclude:
+Keeps names that match these patterns.
+PARAMETER Filter:
+A file name pattern for the names to delete.
+PARAMETER Stream:
+Deletes an alternate data stream of a file (for example Zone.Identifier) instead of the file.
+EXAMPLE: Remove-Item C:\LabFiles\Archive -Recurse -WhatIf
+Shows what would be deleted without deleting it.
+EXAMPLE: Get-ChildItem C:\LabFiles -Filter *.tmp | Remove-Item
+Deletes the files a listing found.
+EXAMPLE: Remove-Item HKCU:\Software\Lab -Recurse
+Deletes a registry key and its subkeys.
+RELATED: New-Item, Clear-Content, Remove-ItemProperty

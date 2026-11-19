@@ -1,0 +1,15 @@
+SYNOPSIS: Runs a WMI method (Windows PowerShell 5.1 only).
+DESCRIPTION:
+The WMI way to call a method such as Win32_Process Create. Arguments are a list in the method's order rather than a hashtable. The result is a __PARAMETERS object with ReturnValue and the method's outputs.
+PARAMETER Class:
+The class. Position 0.
+PARAMETER Name:
+The method. Position 1.
+PARAMETER ArgumentList:
+The arguments, in order. Position 2.
+PARAMETER InputObject:
+A WMI object from Get-WmiObject.
+EXAMPLE: Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList notepad.exe
+NOTES:
+Not in PowerShell 7; use Invoke-CimMethod.
+RELATED: Invoke-CimMethod, Get-WmiObject

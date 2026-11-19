@@ -1,0 +1,82 @@
+# Practice: pbq-risk | Risk calculations
+Work out the numbers (SLE = asset value x exposure factor; ALE = SLE x ARO), type them without the $ sign if you like, then answer the questions.
+@vars
+av = 200000 | 300000 | 450000
+@endvars
+
+@risk r01 | Security program management and oversight | 6
+Bluewater Ferries sells all its tickets through an online booking system. The system, the sales it brings in during an outage and the work to recover are valued at ${av}. The security team estimates that a large denial-of-service (DDoS) attack would cost about 30% of that value each time, and expects one about once every two years. A provider offers a DDoS protection (traffic scrubbing) service for $15,000 per year, which would cut the expected attacks that succeed to about once every ten years.
+calc sle | Single loss expectancy (SLE), in dollars | = {av} * 0.3
+calc ale | Annualized loss expectancy (ALE) today, in dollars per year | = {av} * 0.3 * 0.5
+calc net | Net yearly saving from the service (the ALE it removes minus its yearly cost), in dollars | = ({av} * 0.3 * 0.5) - ({av} * 0.3 * 0.1) - 15000
+? worth | Is the DDoS protection service worth buying?
++ Yes: the ALE it removes each year is larger than its $15,000 yearly cost
+- No: a control is only worth it when it brings the ALE to zero
+- No: the SLE is larger than the service's yearly cost
+- It can't be judged without knowing the attacker's name
+? strategy | Buying the DDoS protection service is which risk strategy?
+- Transference
+- Acceptance
++ Mitigation
+- Avoidance
+! SLE = asset value x exposure factor = ${av} x 0.3. Once every two years is an ARO of 0.5, so ALE = SLE x 0.5. With the service the ARO falls to 0.1 (once every ten years), so the new ALE is SLE x 0.1. The yearly saving is the old ALE minus the new ALE, which is 0.4 x SLE; take away the $15,000 the service costs and the result is the net saving, which is positive, so the service is worth it. A control doesn't have to remove all risk to pay for itself, and comparing the SLE with a yearly cost mixes a one-time loss with a yearly figure. The service lowers the chance that an attack succeeds, which is mitigation; insurance would be transference.
+
+@risk r02 | Security program management and oversight | 6
+Greyfield Surveys has 300 laptops that staff take to building sites. Each lost or stolen laptop costs the whole of its value: $1,200 for the hardware plus about $3,800 for handling a possible data breach (finding out what was on it, telling the people affected), $5,000 in all. Records show about 6 laptops are lost or stolen each year. Full-disk encryption with remote wipe, managed through an MDM, would cost $10,000 per year; with it, a lost laptop would cost only its hardware, because the data can't be read.
+calc sle | Single loss expectancy (SLE) for one laptop today, in dollars | = 5000 * 1.0
+calc ale | Annualized loss expectancy (ALE) today, in dollars per year | = 5000 * 1.0 * 6
+calc ale2 | ALE with full-disk encryption and remote wipe, in dollars per year | = 1200 * 6
+? worth | Is the encryption and MDM worth $10,000 a year?
+- No: it doesn't stop laptops from being lost, so the ALE stays the same
++ Yes: it removes $22,800 of expected loss a year for $10,000, saving about $12,800 a year
+- Yes, but only because it brings the ALE to zero
+- No: an ARO above 1 means the risk can't be calculated
+? transfer | For the remaining hardware loss, the company adds the laptops to its insurance policy. Which strategy is that?
+- Avoidance
++ Transference
+- Mitigation
+- Acceptance
+! SLE = asset value x exposure factor = $5,000 x 1.0 = $5,000, because a lost laptop is lost completely (EF 100%). The ARO is 6 (an ARO can be above 1 when something happens several times a year), so ALE = $5,000 x 6 = $30,000 a year. With encryption the breach handling falls away and each loss costs $1,200, so the ALE becomes $1,200 x 6 = $7,200. The control removes $22,800 a year and costs $10,000, a net saving of $12,800, even though the same number of laptops still go missing and the ALE doesn't reach zero. Insurance moves the money impact of the remaining loss to the insurer, which is transference.
+
+@risk r03 | Security program management and oversight | 6
+Redfern Council's business impact analysis (BIA) for its payroll system says: payroll staff can re-enter at most 4 hours of lost work, and the system must be running again within 8 hours of a failure. Today the system has a full backup every night at 23:00. In its last 6,000 hours of operation the server failed 3 times, and the three repairs took 2, 3 and 4 hours.
+calc mtbf | Mean time between failures (MTBF), in hours | = 6000 / 3
+calc mttr | Mean time to repair (MTTR), in hours | = (2 + 3 + 4) / 3
+? rpo | The limit "at most 4 hours of lost work" is which value?
+- Recovery time objective (RTO)
++ Recovery point objective (RPO)
+- Mean time to repair (MTTR)
+- Mean time between failures (MTBF)
+? backups | Do the nightly backups meet that limit?
+- Yes, because every night's backup is a full backup
++ No: a failure late in the afternoon would lose most of a day's work, so the data must be backed up or replicated at least every 4 hours
+- Yes, as long as the backups are encrypted
+- No, because full backups are never allowed for payroll data
+? rto | The 8-hour limit is the recovery time objective (RTO). How does the MTTR compare with it?
++ The average repair fits well inside the RTO, though the team should still plan for a repair that takes longer than average
+- The MTTR is longer than the RTO, so the system can never meet it
+- The MTTR and the RTO measure the same thing, so they must be equal
+- The RTO only matters for systems with an MTBF under 100 hours
+! MTBF = operating time / number of failures = 6,000 / 3 = 2,000 hours: on average the server runs that long between failures. MTTR = total repair time / number of repairs = (2 + 3 + 4) / 3 = 3 hours. RPO is how much data (measured in time) the business can afford to lose, so "4 hours of lost work" is the RPO; the RTO is how long the system may be down. Backups: with one backup a night, a failure just before 23:00 loses almost 24 hours of entries, far more than the RPO allows, whether the backup is full or encrypted; backups, snapshots or replication every 4 hours or more often are needed. RTO: an average repair of 3 hours is inside the 8-hour RTO, but an average hides slow cases (one repair took 4 hours, and a bad one could take longer), so the recovery plan must cover them too.
+
+@risk r04 | Security program management and oversight | 6
+Saltmarsh Brewery's risk register has two entries to compare. Risk A: its online shop is knocked offline by attacks about 3 times a year, and each time clean-up and lost sales cost about $8,000. Risk B: a fire in the warehouse, where the building and stock are valued at $2,000,000; a fire would destroy about half of that, and the fire service estimates one about once every 100 years.
+calc ale1 | ALE of risk A (shop outages), in dollars per year | = 8000 * 3
+calc sle2 | SLE of risk B (warehouse fire), in dollars | = 2000000 * 0.5
+calc ale2 | ALE of risk B, in dollars per year | = 2000000 * 0.5 * 0.01
+? higher | Based only on ALE, which risk costs the brewery more per year on average?
++ Risk A, the shop outages
+- Risk B, the warehouse fire, because its SLE is larger
+- They cost the same each year
+- ALE can't compare two different kinds of risk
+? fire | The brewery can't afford to lose $1,000,000 at once, so it buys fire insurance for the warehouse. Which strategy is that?
+- Acceptance
+- Avoidance
++ Transference
+- Mitigation
+? accept | After moving the shop to a better host, the remaining shop risk is about $2,000 a year, below the brewery's risk threshold. Management signs off on it and records it in the risk register with an owner. Which strategy is that?
++ Acceptance
+- Transference
+- Avoidance
+- Mitigation
+! Risk A: the SLE is $8,000 and the ARO is 3, so ALE = $8,000 x 3 = $24,000 a year. Risk B: SLE = $2,000,000 x 0.5 = $1,000,000; once every 100 years is an ARO of 0.01, so ALE = $1,000,000 x 0.01 = $10,000 a year. On ALE alone, the frequent small loss (A) costs more each year than the rare large one (B), even though B's single loss is far bigger; that one large loss is why the brewery still deals with B. Insurance moves the money impact to the insurer: transference. Knowingly keeping a risk that is below the threshold, with sign-off and an owner in the register, is acceptance; moving to a better host was the mitigation that came before it.

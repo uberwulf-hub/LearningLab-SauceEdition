@@ -1,0 +1,27 @@
+NAME
+       grpconv - move group passwords into /etc/gshadow
+
+SYNOPSIS
+       grpconv
+       grpunconv
+
+DESCRIPTION
+       grpconv creates or updates /etc/gshadow from /etc/group: any group
+       password still kept in /etc/group is moved to /etc/gshadow and replaced
+       by an "x" in /etc/group. Entries in /etc/gshadow for groups that no
+       longer exist are removed. grpunconv does the opposite and is almost
+       never wanted.
+
+       RHEL 9 installs with shadow group files already in use, so grpconv is
+       only needed after someone has edited the files by hand and broken the
+       pairing. pwconv does the same job for /etc/passwd and /etc/shadow.
+
+EXAMPLES
+              # grpconv
+              # grpck -r
+
+FILES
+       /etc/group, /etc/gshadow
+
+SEE ALSO
+       grpck(8), pwconv(8), group(5), gshadow(5)

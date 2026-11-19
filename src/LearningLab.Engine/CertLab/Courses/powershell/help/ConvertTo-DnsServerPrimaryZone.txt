@@ -1,0 +1,18 @@
+SYNOPSIS: Turns a secondary or stub zone (or a file-backed primary) into a primary zone.
+DESCRIPTION:
+ConvertTo-DnsServerPrimaryZone makes this server's copy of a zone writable. It is used when the old master is gone for good, or to move a file-backed zone into Active Directory.
+
+With -ReplicationScope the zone is stored in AD and replicates with it, so it only works on a domain controller. With -ZoneFile it stays a file.
+
+Before converting a secondary, make sure its copy is current (Start-DnsServerZoneTransfer), because from now on this server is the source of truth.
+PARAMETER Name:
+The zone to convert.
+PARAMETER ReplicationScope:
+Forest, Domain, Legacy or Custom: where the converted zone lives in AD.
+PARAMETER ZoneFile:
+The file to keep the zone in, when it stays file-backed.
+PARAMETER Force:
+Converts without asking.
+EXAMPLE: ConvertTo-DnsServerPrimaryZone -Name tidewater.example -ReplicationScope Forest -Force
+The secondary copy becomes an AD-integrated primary zone that every DC in the forest gets.
+RELATED: Add-DnsServerSecondaryZone, Add-DnsServerStubZone, Start-DnsServerZoneTransfer, Get-DnsServerZone

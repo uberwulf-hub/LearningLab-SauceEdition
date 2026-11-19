@@ -1,0 +1,69 @@
+TOPIC
+    about_DesiredStateConfiguration
+
+SHORT DESCRIPTION
+    Describing how a machine should be set up and letting Windows keep it
+    that way (DSC in Windows PowerShell 5.1).
+
+LONG DESCRIPTION
+    Desired State Configuration (DSC) is declarative: instead of writing the
+    steps, you write down the end result (this feature installed, this
+    folder present, this service running) and DSC works out what to change.
+
+  The parts
+    Configuration  A PowerShell block, written with the Configuration
+                   keyword, that lists Node blocks and resources.
+    Resource       Knows how to check and set one kind of thing: File,
+                   WindowsFeature, Service, Registry and others in the
+                   PSDesiredStateConfiguration module. Get-DscResource
+                   lists them.
+    MOF file       Running a configuration does not change anything; it
+                   writes one NODENAME.mof file per node.
+    LCM            The Local Configuration Manager, the engine on each
+                   machine that reads the MOF and applies it.
+
+        Configuration WebBase {
+            Import-DscResource -ModuleName PSDesiredStateConfiguration
+            Node 'WIN-SRV1' {
+                WindowsFeature IIS {
+                    Name   = 'Web-Server'
+                    Ensure = 'Present'
+                }
+                File LabFolder {
+                    DestinationPath = 'C:\LabFiles'
+                    Type            = 'Directory'
+                    Ensure          = 'Present'
+                }
+            }
+        }
+        WebBase -OutputPath C:\LabFiles\DSC
+
+  Push mode
+    In push mode you send the MOF to the machines yourself:
+
+        Start-DscConfiguration -Path C:\LabFiles\DSC -Wait -Verbose
+        Test-DscConfiguration -ComputerName WIN-SRV1
+        Get-DscConfiguration -CimSession WIN-SRV1
+
+    Start-DscConfiguration applies it, Test-DscConfiguration returns $true
+    when the machine still matches, and Get-DscConfiguration shows the
+    current values. In pull mode the LCM fetches its configuration from a
+    pull server instead.
+
+  The LCM settings
+    Get-DscLocalConfigurationManager shows how the LCM behaves, such as
+    ConfigurationMode: ApplyOnly, ApplyAndMonitor (the default: report
+    drift) or ApplyAndAutoCorrect (fix drift). The LCM is set with a
+    configuration marked [DSCLocalConfigurationManager()].
+
+  PowerShell 7
+    PowerShell 7 does not include this LCM or the built-in resources.
+    Newer DSC versions are separate downloads that work differently.
+
+SEE ALSO
+    Start-DscConfiguration
+    Test-DscConfiguration
+    Get-DscConfiguration
+    Get-DscLocalConfigurationManager
+    Get-DscResource
+    Import-DscResource

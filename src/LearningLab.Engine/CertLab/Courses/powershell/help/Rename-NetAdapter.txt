@@ -1,0 +1,22 @@
+SYNOPSIS: Gives a network adapter a new name.
+DESCRIPTION:
+Rename-NetAdapter changes the name of an adapter, for example from "Ethernet" to "LAN". Administrators rename adapters on servers with several cards so that each name says what the card is for (LAN, Backup, Storage).
+
+The name is also the interface alias, so after a rename every command that uses -InterfaceAlias needs the new name.
+PARAMETER Name:
+The current name of the adapter.
+PARAMETER NewName:
+The new name (required). It is the second positional parameter.
+PARAMETER InputObject:
+An adapter object, usually piped from Get-NetAdapter.
+PARAMETER PassThru:
+Outputs the renamed adapter.
+EXAMPLE: Rename-NetAdapter -Name Ethernet -NewName LAN
+Renames the adapter to LAN.
+EXAMPLE: Get-NetAdapter -InterfaceIndex 6 | Rename-NetAdapter -NewName LAN -PassThru
+Renames the adapter with ifIndex 6 and shows the result.
+EXAMPLE: Rename-NetAdapter LAN Ethernet
+Puts the old name back (both parameters by position).
+NOTES:
+Lab tasks and examples in Cert Lab expect the adapter to be called "Ethernet": rename it back when you are done. CIM-based command, Windows only. Needs an administrator on a real PC.
+RELATED: Get-NetAdapter, Get-NetIPAddress

@@ -1,0 +1,29 @@
+NAME
+       vgdisplay - show the details of LVM volume groups
+
+SYNOPSIS
+       vgdisplay [-s] [-v] [-C] [VG...]
+
+DESCRIPTION
+       vgdisplay prints a block of details for each volume group: its name,
+       status, number of LVs and PVs, total size, the extent size (PE Size),
+       the total number of extents, and how many extents are allocated and
+       free (Alloc PE / Size, Free PE / Size). Those last lines are what you
+       need before lvcreate -l or lvextend.
+
+OPTIONS
+       -s, --short
+              One short line per volume group.
+
+       -v, --verbose
+              Also show the LVs and PVs of each group.
+
+       -C, --columns
+              Print a table like vgs.
+
+EXAMPLES
+           vgdisplay vgdata
+           vgdisplay vgdata | grep -e 'PE Size' -e Free
+
+SEE ALSO
+       vgs(8), pvdisplay(8), lvdisplay(8), vgcreate(8)

@@ -1,0 +1,22 @@
+SYNOPSIS: Changes the current location (cd): a folder, a registry key, or another drive.
+DESCRIPTION:
+Set-Location moves you to another container. Relative paths start from where you are, .. goes up one level and \ goes to the root of the current drive. Any drive works: cd HKLM:\SOFTWARE walks into the registry, cd Env: into the environment variables, cd Cert:\LocalMachine\My into the certificate store.
+
+Typing just a drive name (C: or HKLM:) returns to that drive's own current location. In Windows PowerShell 5.1, cd with no path does nothing; cd - and cd + (going back and forward) arrived in PowerShell 6.2.
+PARAMETER Path:
+Where to go. Wildcards are allowed if they match exactly one container.
+PARAMETER LiteralPath:
+Where to go, taken exactly as typed (no wildcards), for names with [ ] in them.
+PARAMETER PassThru:
+Also outputs the new location as a PathInfo object.
+PARAMETER StackName:
+Without a path, makes this stack the default one for Push-Location and Pop-Location.
+EXAMPLE: Set-Location C:\LabFiles
+Goes to the lab files folder (cd and sl are aliases).
+EXAMPLE: cd ..
+Goes up one folder. cd.. (without the space) also works: it is a small function.
+EXAMPLE: cd HKCU:\Software
+Works the same way in the registry.
+NOTES:
+A path that does not exist gives "Cannot find path ... because it does not exist." and leaves you where you were.
+RELATED: Get-Location, Push-Location, Pop-Location, about_Providers

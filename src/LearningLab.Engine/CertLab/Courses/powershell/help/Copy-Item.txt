@@ -1,0 +1,30 @@
+SYNOPSIS: Copies files, folders or registry keys.
+DESCRIPTION:
+Copy-Item copies each item to -Destination. When the destination is an existing folder the copy goes inside it with the same name; otherwise the destination is the new name. An existing file is replaced. A folder is copied with its contents only with -Recurse; without it you get an empty folder.
+PARAMETER Path:
+What to copy. Wildcards are allowed; piped items bind by PSPath.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Destination:
+Where the copy goes (the current folder if left out).
+PARAMETER Recurse:
+Copies a folder's or key's contents too.
+PARAMETER Force:
+Replaces a read-only file at the destination.
+PARAMETER PassThru:
+Outputs the new copies.
+PARAMETER Include:
+Only copies names that match these patterns.
+PARAMETER Exclude:
+Skips names that match these patterns.
+PARAMETER Filter:
+A file name pattern for what to copy.
+PARAMETER Container:
+Keeps the folder structure (on by default).
+EXAMPLE: Copy-Item C:\LabFiles\Reports C:\Backup -Recurse
+Copies a folder with its files.
+EXAMPLE: Get-ChildItem *.csv | Copy-Item -Destination C:\Backup
+Copies the files a listing found.
+NOTES:
+Running the same Copy-Item -Recurse twice nests the second copy inside the first (C:\Backup\Reports), because the destination now exists. Copying to and from a remote session (-ToSession, -FromSession) is not simulated by Cert Lab's practice console yet.
+RELATED: Move-Item, Rename-Item, Get-ChildItem

@@ -1,0 +1,17 @@
+SYNOPSIS: Shows the settings and state of this computer's Local Configuration Manager (LCM), the DSC engine.
+DESCRIPTION:
+The LCM is the part of Windows that applies and checks DSC configurations. Get-DscLocalConfigurationManager shows how it is set up. The settings you meet most often:
+
+RefreshMode: PUSH (you send configurations with Start-DscConfiguration) or PULL (the computer fetches them from a pull server).
+ConfigurationMode: ApplyOnly, ApplyAndMonitor (the default: apply once, then only report drift) or ApplyAndAutoCorrect (fix drift by itself).
+ConfigurationModeFrequencyMins: how often it checks for drift, 15 minutes by default.
+RebootNodeIfNeeded: whether it may restart the computer when a resource needs it.
+LCMState: Idle, or Busy while a configuration is being applied.
+EXAMPLE: Get-DscLocalConfigurationManager
+Shows all LCM settings of this computer.
+EXAMPLE: Get-DscLocalConfigurationManager | Select-Object RefreshMode, ConfigurationMode, LCMState
+Shows just the mode and state.
+NOTES:
+On a real PC, LCM settings are changed with a meta-configuration ([DSCLocalConfigurationManager()]) applied by Set-DscLocalConfigurationManager; in Cert Lab the LCM keeps its default settings.
+PowerShell 7 and DSC 3 have no LCM.
+RELATED: Start-DscConfiguration, Get-DscConfigurationStatus, Test-DscConfiguration

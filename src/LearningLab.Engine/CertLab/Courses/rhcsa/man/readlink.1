@@ -1,0 +1,31 @@
+NAME
+       readlink - print where a symbolic link points, or a full path
+
+SYNOPSIS
+       readlink [-f | -e | -m] [-n] FILE...
+
+DESCRIPTION
+       Without options, readlink prints the target stored in a symbolic link
+       (exactly as written when the link was made). It prints nothing and
+       fails when FILE is not a symbolic link.
+
+OPTIONS
+       -f, --canonicalize
+              Follow every link on the way and print the full, absolute path
+              of the final file. All parts but the last must exist.
+
+       -e, --canonicalize-existing
+              The same, but every part must exist.
+
+       -m, --canonicalize-missing
+              The same, with no part required to exist.
+
+       -n, --no-newline
+              Do not print a newline at the end.
+
+EXAMPLES
+           readlink /etc/localtime
+           readlink -f /usr/bin/vi
+
+SEE ALSO
+       realpath(1), ln(1), ls(1), namei(1)

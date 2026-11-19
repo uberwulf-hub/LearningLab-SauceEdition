@@ -1,0 +1,13 @@
+SYNOPSIS: Deletes a group from Active Directory.
+DESCRIPTION:
+Remove-ADGroup deletes a group object. The members themselves are not deleted, but they lose whatever access the group gave them. A group's SID can't be recreated, so a new group with the same name gets none of the old permissions.
+The cmdlet asks for confirmation unless you add -Confirm:$false. Built-in groups (Domain Admins and the like) can't be deleted.
+PARAMETER Identity:
+The group to delete. Position 0, and takes pipeline input.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-ADGroup "FS-Public-Read"
+Deletes the group after asking.
+EXAMPLE: Get-ADGroup -Filter "Name -like 'Temp-*'" | Remove-ADGroup -Confirm:$false
+Deletes every group whose name starts with Temp-.
+RELATED: Get-ADGroup, New-ADGroup, Restore-ADObject

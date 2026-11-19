@@ -1,0 +1,63 @@
+title: Step 6: Find it by its size
+level: Intermediate
+category: ladder
+login: step6
+kind: Finding files
+teaser: forty-odd files in ten folders: let find pick the one with the right size
+points: 30
+order: 6
+answer: {{PW}}
+var: PW = hex:10
+var: DECOY = hex:10
+var: W = num:600-990
+var: D = num:0-9
+var: F = num:1-5
+
+@intro
+You are step6. The folder inhere holds ten folders (maybe0 to maybe9) with several
+files each. The password for step 7 is in the one file that is:
+
+    - exactly {{W}} bytes in size
+    - not executable (not a program you could run)
+
+Opening every file would take ages. Ask the computer to search instead.
+
+@setup
+useradd -m step7
+echo 'step7:{{PW}}' | chpasswd
+for d in 0 1 2 3 4 5 6 7 8 9; do
+  mkdir -p /home/step6/inhere/maybe$d
+  for f in 1 2 3 4 5; do
+    printf '%-'$((100 + d * 31 + f * 7))'s' "nothing here ($d$f)" > /home/step6/inhere/maybe$d/file$f
+  done
+done
+printf '%-{{W}}s' 'password for step 7: {{PW}}' > /home/step6/inhere/maybe{{D}}/file{{F}}
+printf '%-{{W}}s' 'not this one: {{DECOY}}' > /home/step6/inhere/maybe{{D}}/.runme
+chmod 755 /home/step6/inhere/maybe{{D}}/.runme
+chown -R step6: /home/step6/inhere
+
+@solution
+find inhere -type f -size {{W}}c
+find inhere -type f -size {{W}}c ! -executable
+cat inhere/maybe{{D}}/file{{F}}
+echo
+
+@walkthrough
+find walks through folders and lists the files that match every test you give it:
+
+    find inhere -type f -size {{W}}c ! -executable
+
+-type f means ordinary files, -size {{W}}c means exactly {{W}} bytes (c is for
+characters, that is bytes; without it find counts in 512-byte blocks), and
+! -executable means "not executable" (the ! turns a test around). Two files are
+{{W}} bytes, but one of them is a hidden program. The one that is left is
+inhere/maybe{{D}}/file{{F}}: cat it.
+
+@hint 5
+What to think about first: you know two facts about the file (its size and that it isn't a program). The find command searches folders for files that match facts like those. Start with find inhere -type f to see it list every ordinary file, then add more tests.
+
+@hint 8
+find's size test is -size followed by a number and a letter: c means bytes (characters). So -size {{W}}c means "exactly {{W}} bytes". Try find inhere -type f -size {{W}}c and see how many files are left.
+
+@hint 12
+Two files have that size. One is executable (look at ls -la: an x in the permissions). Add ! -executable to the find command: the ! means "not". Then cat the file it prints.

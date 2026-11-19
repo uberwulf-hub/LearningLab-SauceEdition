@@ -1,0 +1,34 @@
+SYNOPSIS: Lists the Windows services of a computer and whether they are running.
+DESCRIPTION:
+A service is a program Windows starts in the background, usually without anyone signed in: the print spooler, the time service, remote management. Get-Service returns one ServiceController object per service with its Status (Running, Stopped, Paused), its short Name, its DisplayName and its StartType (Automatic, Manual, Disabled).
+
+The default table shows only Status, Name and DisplayName. Pipe to Format-List * or Select-Object * to see every property, for example StartType or the services a service depends on.
+
+Names accept wildcards. A name with no wildcard that matches no service is an error; a wildcard that matches nothing simply returns nothing.
+PARAMETER Name:
+The short service names (or display names) to get. Wildcards are allowed. Position 0, and it takes strings from the pipeline, both as values and from a Name property.
+PARAMETER DisplayName:
+Finds services by their long display name, for example 'Print Spooler'. Wildcards are allowed.
+PARAMETER InputObject:
+Service objects to get again (fresh), usually from the pipeline.
+PARAMETER DependentServices:
+Instead of the services themselves, returns the services that need them to run.
+PARAMETER RequiredServices:
+Instead of the services themselves, returns the services they need (alias ServicesDependedOn).
+PARAMETER Include:
+Keeps only the services whose names match these patterns.
+PARAMETER Exclude:
+Leaves out the services whose names match these patterns.
+PARAMETER ComputerName:
+Reads the services of another computer (Windows PowerShell 5.1 only; it uses RPC, not remoting).
+EXAMPLE: Get-Service -Name Win*
+Every service whose name starts with Win.
+EXAMPLE: Get-Service | Where-Object Status -eq 'Running' | Sort-Object DisplayName
+The running services in display-name order.
+EXAMPLE: Get-Service LanmanWorkstation -DependentServices
+The services that stop working if the Workstation service stops.
+EXAMPLE: Get-Service Spooler | Select-Object Name, StartType, Status
+Shows the start type, which the default table hides.
+NOTES:
+The object keeps the status it had when you got it: call its Refresh() method, or run Get-Service again, to see a change. PowerShell 7 removed -ComputerName from Get-Service; use Invoke-Command there.
+RELATED: Start-Service, Stop-Service, Set-Service, Get-CimInstance

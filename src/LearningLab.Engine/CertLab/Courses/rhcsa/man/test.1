@@ -1,0 +1,102 @@
+NAME
+       test, [ - check file types and compare values
+
+SYNOPSIS
+       test EXPRESSION
+       [ EXPRESSION ]
+       [[ EXPRESSION ]]   (bash only)
+
+DESCRIPTION
+       test checks a condition and sets the exit status: 0 when it is true,
+       1 when it is false. It prints nothing. It is what if, while and &&
+       look at in shell scripts:
+
+           if [ -f /etc/hosts ]; then echo "found"; fi
+
+       [ is another name for test that needs a closing ]. The brackets are
+       a command, not punctuation, so they need spaces around them and around
+       every operator: [ "$a" = "$b" ], never ["$a"="$b"].
+
+       Quote variables inside [ ]: an empty or unset variable otherwise
+       disappears and breaks the expression ("unary operator expected").
+
+       bash's own [[ ]] works like [ ] but is safer and stronger: variables
+       need no quotes, && and || can be used inside, == compares with a
+       pattern ([[ $f == *.conf ]]) and =~ with a regular expression.
+
+       test and [ are bash builtins (see builtins(1)); /usr/bin/test and
+       /usr/bin/[ also exist as programs.
+
+EXPRESSIONS
+   Files
+       -e FILE    FILE exists (any kind)
+       -f FILE    exists and is a regular file
+       -d FILE    exists and is a directory
+       -L FILE, -h FILE
+                  exists and is a symbolic link
+       -b FILE    a block device;  -c FILE  a character device
+       -p FILE    a named pipe;    -S FILE  a socket
+       -s FILE    exists and is not empty
+       -r FILE    the current user may read it
+       -w FILE    the current user may write it
+       -x FILE    the current user may run it (or enter the directory)
+       -u FILE    has the set-user-ID bit
+       -g FILE    has the set-group-ID bit
+       -k FILE    has the sticky bit
+       -O FILE    is owned by the current user
+       -G FILE    belongs to the current user's group
+       F1 -nt F2  F1 is newer than F2 (modification time)
+       F1 -ot F2  F1 is older than F2
+       F1 -ef F2  F1 and F2 are the same file (hard links)
+
+   Strings
+       -z STRING  the string is empty
+       -n STRING  the string is not empty
+       S1 = S2    the strings are equal (== works too)
+       S1 != S2   the strings differ
+
+   Numbers (whole numbers only)
+       N1 -eq N2  equal            N1 -ne N2  not equal
+       N1 -lt N2  less than        N1 -le N2  less or equal
+       N1 -gt N2  greater than     N1 -ge N2  greater or equal
+
+       Do not use < and > for numbers: inside [ ] they are redirections,
+       and inside [[ ]] they compare as text.
+
+   Combining
+       ! EXPR     true when EXPR is false
+       EXPR1 -a EXPR2, EXPR1 -o EXPR2
+                  and, or (inside [ ]; prefer two tests joined with && or
+                  || outside the brackets)
+       \( EXPR \) grouping
+
+   Shell variables
+       -v NAME    the variable NAME is set
+
+EXAMPLES
+       Stop a script when it was not given an argument:
+
+           if [ $# -lt 1 ]; then echo "usage: $0 FILE"; exit 1; fi
+
+       Act only on directories:
+
+           for d in /home/*; do [ -d "$d" ] && echo "$d"; done
+
+       Compare a user's input:
+
+           if [ "$1" = "start" ]; then systemctl start httpd; fi
+
+       Make a test that a checker can run:
+
+           test -x /usr/local/bin/backup.sh && echo ok
+
+       Check a number from a command:
+
+           if [ "$(wc -l < /root/list.txt)" -gt 10 ]; then echo "long list"; fi
+
+       Pattern match with bash's [[ ]]:
+
+           [[ $HOSTNAME == server* ]] && echo "a lab server"
+
+SEE ALSO
+       builtins(1), bash(1), expr(1)

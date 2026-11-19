@@ -1,0 +1,165 @@
+NAME
+       systemctl - control systemd: start, stop, enable and inspect services and targets
+
+SYNOPSIS
+       systemctl [OPTIONS] COMMAND [UNIT...]
+
+DESCRIPTION
+       systemd is the first program the kernel starts (PID 1). It starts and
+       watches everything else, described in units: services (sshd.service),
+       targets that group units (multi-user.target), timers, mounts, sockets
+       and others. systemctl is how you talk to it.
+
+       Two separate questions matter for every service:
+
+       Is it running now?        start, stop, restart change that;
+                                 is-active answers it.
+       Does it start at boot?    enable, disable change that;
+                                 is-enabled answers it.
+
+       Enabling does not start a service, and starting does not enable it.
+       Use enable --now to do both, which is what most tasks want.
+
+       The .service suffix may be left out: systemctl status sshd works.
+
+       Unit files come from packages in /usr/lib/systemd/system. Your own
+       units and changes go in /etc/systemd/system, which wins over the
+       package directory. After adding or editing a unit file, run
+       systemctl daemon-reload so systemd reads it again.
+
+COMMANDS
+   Services
+       start, stop, restart UNIT...
+              Start, stop, or stop and start again.
+
+       reload UNIT...
+              Ask the service to read its configuration again without
+              stopping (only services that support it).
+
+       try-restart UNIT..., reload-or-restart UNIT...
+              Restart only if running; reload if possible, else restart.
+
+       status [UNIT...]
+              Show whether the unit is loaded, enabled and active, its main
+              PID, and its latest log lines.
+
+       enable [--now] UNIT..., disable [--now] UNIT...
+              Start, or stop, the unit at boot (by creating or removing links
+              in /etc/systemd/system/*.wants). --now also starts or stops it.
+
+       mask UNIT..., unmask UNIT...
+              Make a unit impossible to start, even by hand or as a
+              dependency (it is linked to /dev/null), or undo that.
+
+       is-active, is-enabled, is-failed UNIT...
+              Print the state and set the exit status (0 = yes). Good for
+              scripts and tests.
+
+       kill UNIT
+              Send a signal to the unit's processes.
+
+       reset-failed
+              Forget units in the failed state.
+
+   Looking around
+       list-units [--type=TYPE] [--state=STATE] [--all]
+              Units systemd has in memory (by default the active ones).
+
+       list-unit-files [--type=TYPE]
+              Every installed unit file and whether it is enabled.
+
+       list-timers [--all]
+              Timers with their next and last run.
+
+       list-dependencies [UNIT]
+              The units a target or unit pulls in.
+
+       cat UNIT
+              Print the unit file and its drop-in files.
+
+       show UNIT [-p PROPERTY]
+              Print the unit's properties as NAME=VALUE.
+
+       edit UNIT [--full]
+              Create a drop-in file (override.conf) for the unit and open it in
+              an editor; --full edits a copy of the whole unit file.
+
+       daemon-reload
+              Read all unit files again.
+
+   Targets and the system
+       get-default, set-default TARGET
+              Show, or set, the target the system boots into.
+
+       isolate TARGET
+              Switch to TARGET now, stopping what it does not need.
+
+       rescue, emergency
+              Switch to the rescue or emergency target.
+
+       reboot, poweroff, halt
+              Restart or switch off the machine.
+
+OPTIONS
+       -t, --type=TYPE
+              Only units of this type: service, target, timer, socket, mount.
+
+       -a, --all
+              Include inactive units.
+
+       --state=STATE
+              Only units in this state, such as failed, running or enabled.
+
+       --now  With enable or disable: also start or stop.
+
+       --user Talk to the user's own systemd (rootless podman services, user
+              timers) instead of the system one.
+
+       -p, --property=NAME, --value
+              With show: only these properties; --value prints just the value.
+
+       -q, --quiet
+              Print nothing; only set the exit status.
+
+       --no-pager, -l, --full
+              Do not page the output; do not cut long lines.
+
+       -f, --force
+              With enable or set-default: replace existing links.
+
+EXAMPLES
+       Install and start a web server now and at every boot:
+
+           systemctl enable --now httpd
+           systemctl is-active httpd; systemctl is-enabled httpd
+
+       Find services that failed:
+
+           systemctl --failed
+
+       Boot into the text console from now on:
+
+           systemctl set-default multi-user.target
+
+       Make sure a service can never start:
+
+           systemctl mask --now cups
+
+       Reload units after writing /etc/systemd/system/backup.service:
+
+           systemctl daemon-reload
+           systemctl start backup
+
+FILES
+       /etc/systemd/system/
+              Your units, overrides (UNIT.d/*.conf) and enable links.
+
+       /usr/lib/systemd/system/
+              Units installed by packages.
+
+       ~/.config/systemd/user/
+              A user's own units (systemctl --user).
+
+SEE ALSO
+       systemd.unit(5), systemd.service(5), systemd.timer(5), journalctl(1),
+       systemd-analyze(1), loginctl(1)

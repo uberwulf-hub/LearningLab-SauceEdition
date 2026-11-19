@@ -1,0 +1,55 @@
+NAME
+       sshd - the OpenSSH server, which accepts ssh logins
+
+SYNOPSIS
+       sshd [-t] [-T] [-D] [-f config_file]
+       systemctl start|stop|restart|reload sshd
+
+DESCRIPTION
+       sshd listens for connections from ssh clients (port 22 by default),
+       checks who is connecting (public keys, passwords) and starts a login
+       shell for them. On RHEL 9 it runs as the service sshd.service; you do
+       not start it by hand. Its settings are in /etc/ssh/sshd_config and in
+       the files /etc/ssh/sshd_config.d/*.conf, which the main file includes
+       near its top. For every setting the FIRST value sshd reads wins, so a
+       drop-in file whose name sorts early (00-mine.conf) beats a later one.
+
+       After changing a setting, test the files with sshd -t and then run
+       systemctl reload sshd (or restart). A file with a mistake stops sshd
+       from starting again, so always test first, especially when you are
+       logged in through ssh yourself.
+
+OPTIONS
+       -t     Test mode: read the configuration and the host keys, report
+              errors and exit. No output and exit status 0 mean the files
+              are fine.
+
+       -T     Extended test mode: print every setting with the value that is
+              in effect, one per line, names in lower case.
+
+       -D     Do not detach (what the service uses).
+
+       -f FILE
+              Read FILE instead of /etc/ssh/sshd_config.
+
+EXAMPLES
+       Forbid root logins and check before reloading:
+              echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/00-lab.conf
+              sshd -t && systemctl reload sshd
+
+       Which value is in effect?
+              sshd -T | grep -i permitrootlogin
+
+FILES
+       /etc/ssh/sshd_config, /etc/ssh/sshd_config.d/*.conf
+       /etc/ssh/ssh_host_*_key   the server's host keys
+       ~/.ssh/authorized_keys    the public keys allowed to log in as a user
+
+NOTES
+       Settings are read again for every new connection, but changes reach
+       the running service reliably only after reload or restart. SELinux
+       allows sshd to listen only on ports labelled ssh_port_t (see
+       semanage-port(8)); the firewall must allow the port too.
+
+SEE ALSO
+       sshd_config(5), ssh(1), ssh-keygen(1), semanage-port(8)

@@ -1,0 +1,15 @@
+## connect to the PC as its administrator
+winrm-shell -i 10.10.21.30 -u Administrator -p {{ADMPW}}
+## who are the administrators, and which accounts exist
+Get-LocalGroupMember -Group Administrators
+Get-LocalUser | Format-Table Name, Enabled, Description
+## who made it: account created (4720), added to a group (4732), and the remote sign-in before
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4720,4732 } | Format-List TimeCreated, Message
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } | Format-List TimeCreated, Message
+## the flag on its desktop
+Get-ChildItem C:\Users\{{ROGUE}}\Desktop
+Get-Content C:\Users\{{ROGUE}}\Desktop\todo.txt
+## take its powers away
+Remove-LocalGroupMember -Group Administrators -Member {{ROGUE}}
+Disable-LocalUser -Name {{ROGUE}}
+exit

@@ -1,0 +1,26 @@
+SYNOPSIS: Creates a primary DNS zone, stored in Active Directory or in a file.
+DESCRIPTION:
+A primary zone is the writable copy of a zone. Add-DnsServerPrimaryZone creates one either in Active Directory (give -ReplicationScope) or in a text file under %SystemRoot%\System32\dns (give -ZoneFile). You must pick one of the two.
+
+An AD-integrated zone exists only on domain controllers and replicates with the directory: Forest sends it to every DC that runs DNS in the forest, Domain to those of the domain, Legacy to every DC of the domain (the Windows 2000 way). Each of those DCs holds a writable copy, so there is no single master.
+
+For a reverse lookup zone, give -NetworkId (10.30.0.0/24) instead of -Name; the zone name 0.30.10.in-addr.arpa is worked out for you.
+
+Dynamic updates: Secure (only domain members may register, AD-integrated zones only), NonsecureAndSecure (anyone may, risky) or None.
+PARAMETER Name:
+The zone name, for example branch.corp.example.
+PARAMETER NetworkId:
+For a reverse zone: the network in the form 10.30.0.0/24.
+PARAMETER ReplicationScope:
+Forest, Domain, Legacy or Custom (a directory partition named by -DirectoryPartitionName). Makes the zone AD-integrated.
+PARAMETER ZoneFile:
+The zone file name, for example lab.example.dns. Makes a file-backed zone.
+PARAMETER DynamicUpdate:
+None, Secure or NonsecureAndSecure.
+PARAMETER DirectoryPartitionName:
+The custom application partition to store the zone in, with -ReplicationScope Custom.
+EXAMPLE: Add-DnsServerPrimaryZone -Name branch.corp.example -ReplicationScope Domain -DynamicUpdate Secure -ComputerName DC1
+An AD-integrated zone on DC1 that every DNS server in the domain gets, with secure updates.
+EXAMPLE: Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 -ReplicationScope Forest
+A reverse lookup zone (0.20.10.in-addr.arpa) for the branch subnet, replicated to the whole forest.
+RELATED: Get-DnsServerZone, Set-DnsServerPrimaryZone, Add-DnsServerSecondaryZone, Remove-DnsServerZone, Add-DnsServerResourceRecordA

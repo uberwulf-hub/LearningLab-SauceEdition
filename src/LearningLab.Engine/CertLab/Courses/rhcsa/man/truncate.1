@@ -1,0 +1,28 @@
+NAME
+       truncate - shrink or grow a file to a given size
+
+SYNOPSIS
+       truncate [-c] -s SIZE FILE...
+
+DESCRIPTION
+       truncate sets the size of each FILE. Data past the new size is thrown
+       away; when the file grows, the new part reads as zero bytes and takes
+       no disk space (a sparse file). A missing FILE is created.
+
+       truncate -s 0 empties a log file while a program still has it open,
+       which deleting it would not do.
+
+OPTIONS
+       -s, --size=SIZE
+              The new size, with units K, M, G (powers of 1024). +SIZE grows
+              by that much, -SIZE shrinks by that much.
+
+       -c, --no-create
+              Do not create missing files.
+
+EXAMPLES
+           truncate -s 0 /var/log/myapp.log
+           truncate -s 100M /root/test.img
+
+SEE ALSO
+       dd(1), fallocate(1), du(1)

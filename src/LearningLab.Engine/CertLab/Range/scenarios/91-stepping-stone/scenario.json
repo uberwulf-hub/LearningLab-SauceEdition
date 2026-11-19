@@ -1,0 +1,70 @@
+{
+    "id": "stepping-stone",
+    "title": "Stepping Stone",
+    "category": "blue",
+    "level": "Expert",
+    "order": 7,
+    "summary": "The intruder never meant to stay on the web server: it was a stepping stone. A file they planted read a password from the site's settings, and that password opened the Windows database server. Follow the trail across and close it on both sides.",
+    "story": "{{CO}} (made up): web (Linux, 10.10.31.10) runs the order site; WIN-DB (Windows, 10.10.31.40) keeps the orders. You are at soc. web: ssh itadmin (password {{ITPW}}, may use sudo). WIN-DB: Administrator / {{ADMPW}} over winrm-shell.",
+    "goal": "Find the planted file and what it read, the account and address used on WIN-DB and the service left there; capture both flags; remove the planted file and the service and switch the account off before the service exports the orders.",
+    "skills": "web access logs, web shells, secrets in config files, following a password to another machine, services (7045, sc.exe)",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 55,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "export the orders",
+    "goalPoints": 100,
+    "vars": {
+        "CO": "company",
+        "ITPW": "word", "ADMPW": "word", "WEBPW": "word",
+        "ATKIP": "ip",
+        "KIND": "pick:a|b|c",
+        "SVC": "pick:SqlTelemetry|DbHealthAgent|BackupBridge"
+    },
+    "variants": {
+        "KIND": {
+            "a": { "SHELL": "thumb.php", "P": "c" },
+            "b": { "SHELL": "avatar.php", "P": "run" },
+            "c": { "SHELL": "resize.php", "P": "q" } },
+        "SVC": {
+            "SqlTelemetry": { "SVC_DISP": "SQL Telemetry Service" },
+            "DbHealthAgent": { "SVC_DISP": "Database Health Agent" },
+            "BackupBridge": { "SVC_DISP": "Backup Bridge" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.31.5/24" ] },
+        { "name": "web", "os": "linux", "hostname": "web.{{CO_DOMAIN}}", "role": "order website (yours)", "nics": [ "10.10.31.10/24" ], "packages": [ "httpd" ], "motd": "{{CO}} web.", "setup": "web.sh" },
+        { "name": "WIN-DB", "os": "windows", "hostname": "win-db.{{CO_DOMAIN}}", "role": "order database server (yours)", "nics": [ "10.10.31.40/24" ],
+          "ports": [ 135, 445, 1433, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "svc_web", "password": "{{WEBPW}}", "admin": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "30h", "repeat": 4, "every": 3600, "message": "An account was successfully logged on. Account Name: svc_web Source Network Address: 10.10.31.10 Logon Type: 3" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "34000s", "message": "An account was successfully logged on. Account Name: svc_web Source Network Address: {{ATKIP}} Logon Type: 3 Process: wsmprovhost (remote PowerShell)" }
+          ],
+          "setup": "db.ps1" }
+    ],
+    "flags": [
+        { "id": "shell", "name": "The flag inside the planted file", "points": 60, "machine": "web", "path": "/var/www/html/uploads/{{SHELL}}", "owner": "apache", "mode": "644", "level": "user" },
+        { "id": "svc", "name": "The flag in the service's folder", "points": 60, "machine": "WIN-DB", "path": "C:\\ProgramData\\{{SVC}}\\id.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "shell", "ask": "What is the planted file on the web server (under /uploads)?", "answer": "{{SHELL}}", "accept": [ "/uploads/{{SHELL}}", "/var/www/html/uploads/{{SHELL}}" ], "points": 40, "explain": "Uploaded by {{ATKIP}} and then called with commands in ?{{P}}=." },
+        { "id": "cfg", "ask": "Which file did it read to get a password?", "answer": "config.php", "accept": [ "/var/www/html/config.php", "../config.php" ], "points": 40, "explain": "The access log: ?{{P}}=cat+../config.php. It holds svc_web's password for WIN-DB." },
+        { "id": "acct", "ask": "Which account was then used on WIN-DB?", "answer": "svc_web", "points": 40, "explain": "A 4624 for svc_web from {{ATKIP}}, an outside address - normally it only comes from the web server." },
+        { "id": "svc", "ask": "What service was left on WIN-DB?", "answer": "{{SVC}}", "points": 40, "explain": "System event 7045 and Get-Service: \"{{SVC_DISP}}\"." }
+    ],
+    "tasks": [
+        { "id": "shell", "name": "Remove the planted file from the web server", "machine": "web", "check": "test ! -e /var/www/html/uploads/{{SHELL}}", "points": 40, "explain": "rm -f /var/www/html/uploads/{{SHELL}}" },
+        { "id": "svc", "name": "Delete the service on WIN-DB", "machine": "WIN-DB", "check": "if (Get-Service -Name '{{SVC}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 40, "explain": "sc.exe delete {{SVC}}" },
+        { "id": "acct", "name": "Switch off svc_web on WIN-DB (its password is known outside)", "machine": "WIN-DB", "check": "if ((Get-LocalUser -Name 'svc_web').Enabled) { exit 1 } else { exit 0 }", "points": 30, "explain": "Disable-LocalUser -Name svc_web (then give it a new password and update config.php)" }
+    ],
+    "attacker": [
+        { "at": "330s", "machine": "WIN-DB", "run": "New-Item -ItemType Directory -Path 'C:\\ProgramData\\{{SVC}}\\out' -Force | Out-Null; Copy-Item 'C:\\Data\\Orders\\*' 'C:\\ProgramData\\{{SVC}}\\out' -ErrorAction SilentlyContinue", "unless": "if (Get-Service -Name '{{SVC}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "note": "The service on WIN-DB exported the orders into its folder, ready to be taken.", "goal": true }
+    ],
+    "hints": [
+        { "text": "What did the planted file read? The access log's query strings say. Then look for that secret being used somewhere it shouldn't be.", "cost": 30 },
+        { "text": "On WIN-DB: 4624 from an address that isn't the web server, then System event 7045. sc.exe delete removes a service.", "cost": 40 }
+    ]
+}

@@ -1,0 +1,30 @@
+SYNOPSIS: Removes an IP address from a network adapter.
+DESCRIPTION:
+Remove-NetIPAddress deletes one or more IP addresses. Pick them with -IPAddress, -InterfaceAlias or -InterfaceIndex, or pipe them from Get-NetIPAddress. Without any of these nothing is removed.
+
+Removing an address is a big change, so PowerShell asks you to confirm each one. Answer Y (or A for all), or add -Confirm:$false.
+
+If you remove the only address of the adapter, the computer drops off the network.
+PARAMETER IPAddress:
+The address to remove, for example 10.0.10.12.
+PARAMETER InterfaceAlias:
+Removes the addresses of this adapter (add -AddressFamily IPv4 to keep the IPv6 ones).
+PARAMETER InterfaceIndex:
+Removes the addresses of the interface with this ifIndex.
+PARAMETER AddressFamily:
+IPv4 or IPv6.
+PARAMETER DefaultGateway:
+Also removes this default gateway.
+PARAMETER InputObject:
+Address objects piped from Get-NetIPAddress.
+PARAMETER PassThru:
+Outputs each removed address.
+EXAMPLE: Remove-NetIPAddress -IPAddress 10.0.10.12 -Confirm:$false
+Removes the extra address without asking.
+EXAMPLE: Get-NetIPAddress -InterfaceAlias Ethernet -AddressFamily IPv4 | Remove-NetIPAddress -DefaultGateway 10.0.10.1
+Removes the adapter's IPv4 addresses and its gateway, after asking.
+EXAMPLE: Remove-NetIPAddress -InterfaceAlias Ethernet -AddressFamily IPv4 -WhatIf
+Shows which addresses the filter catches without removing them.
+NOTES:
+CIM-based command from the NetTCPIP module, Windows only. Needs an administrator on a real PC.
+RELATED: New-NetIPAddress, Get-NetIPAddress, Remove-NetRoute

@@ -1,0 +1,10 @@
+## the alerts
+siem alerts
+## who made each scheduled task
+siem search source=proclog image=*schtasks* --fields time,host,user,parent,cmdline
+## the bad one's family, from the start
+siem search source=proclog host={{BADH}} --since {{T0}} --fields time,user,image,parent
+siem search source=proclog host={{BADH}} image~wscript --since {{T0}} --fields time,cmdline
+siem search source=proclog host={{BADH}} image~reg.exe --fields time,cmdline
+## where it calls home, and how often
+siem search source=firewall src={{BADIP}} --since {{T0}} --count-by dst

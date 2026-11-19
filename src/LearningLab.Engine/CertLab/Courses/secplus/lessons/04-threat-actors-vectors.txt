@@ -1,0 +1,223 @@
+# Unit: u04 | 4. Threat actors, vectors and social engineering | Threats, vulnerabilities and mitigations
+
+To defend well you need to know who might attack, why, and how they get in. This unit describes the kinds of **threat actors**, the attributes that set them apart and what drives them; the **threat vectors** and **attack surfaces** they use, from email to open ports to suppliers; and the **social engineering** tricks that target people rather than machines.
+
+A **threat actor** is the person or group behind an attack. A **threat vector** (or attack vector) is the path they use to get in. The **attack surface** is the sum of every possible way in: the smaller it is, the fewer chances an attacker has.
+
+## Lesson: l0401 | Threat actors and their motivations
+
+### Attributes used to compare actors
+
+- **Internal or external**: is the actor inside the organization (an employee, contractor) or outside it? Insiders already have access and knowledge.
+- **Resources and funding**: from a lone person with a laptop to a government agency with large budgets and teams.
+- **Level of sophistication and capability**: from running ready-made tools to writing custom malware and using unknown (zero-day) vulnerabilities.
+
+### The actors
+
+- **Nation-state**: a government or a group it sponsors. Very well funded and highly skilled; patient, long-term operations, often called an **advanced persistent threat** (APT) because they stay hidden in a network for months. Aims: espionage, war, disruption of another country's infrastructure, sometimes money or influence.
+- **Unskilled attacker** (once called a "script kiddie"): little skill, uses tools and scripts others wrote. Limited resources, but can still do real harm with easy targets. Often driven by curiosity, bragging or chaos.
+- **Hacktivist**: attacks to promote a cause, political or social. Typical methods: defacing websites, leaking documents, denial-of-service. Skill and funding vary.
+- **Insider threat**: a current or former employee, contractor or partner who misuses their access, on purpose (revenge, money) or by accident. Hard to spot because their access looks normal.
+- **Organized crime**: criminal groups in it for money: ransomware, fraud, stolen data sold online. Well funded and skilled, run like businesses.
+- **Shadow IT**: staff using hardware, software or cloud services without IT's approval, such as a team storing customer files in a personal cloud account. Usually not malicious, but it creates unmanaged, unprotected systems: an internal actor that adds risk.
+
+> Most funded and most patient: nation-state (APT). Least skill: unskilled attacker. A cause: hacktivist. Money: organized crime.
+
+### Motivations
+
+- **Data exfiltration**: stealing data to sell or use.
+- **Espionage**: spying for a government or a competitor.
+- **Service disruption**: taking systems offline.
+- **Blackmail**: threatening to publish data or keep systems locked unless paid (as in ransomware with data leak threats).
+- **Financial gain**: direct profit through fraud, ransom or theft.
+- **Philosophical or political beliefs**: the hacktivist's cause.
+- **Ethical**: "white hat" hackers who find flaws to get them fixed, ideally with permission or through a disclosure program.
+- **Revenge**: a fired or unhappy employee hitting back.
+- **Disruption or chaos**: causing damage just to cause it.
+- **War**: cyber attacks as part of military conflict, such as attacks on power grids or communications.
+
+@quiz
+? Investigators find custom malware that hid in a defence contractor's network for 18 months, quietly copying design documents. Which actor is most likely responsible?
+- An unskilled attacker
+- A hacktivist
++ A nation-state
+- Shadow IT
+! Long-term, stealthy, well-resourced espionage with custom tools is typical of a nation-state APT.
+? A marketing team signs up for a free online file-sharing service and uploads customer lists without telling IT. What is this?
+- Hacktivism
++ Shadow IT
+- A watering hole attack
+- Organized crime
+! Using services IT hasn't approved is shadow IT; it isn't usually malicious but leaves data unmanaged.
+? A group defaces a fishing company's website with messages protesting its environmental record. What is the most likely motivation?
+- Financial gain
+- Espionage
++ Philosophical or political beliefs
+- War
+! Attacks to promote a cause are the work of hacktivists.
+? Which attribute most separates an insider threat from external actors?
++ They already have legitimate access and knowledge of the organization
+- They always have more funding
+- They always use zero-day exploits
+- They only act for political reasons
+! Insiders start with access and inside knowledge, so their actions can look normal.
+@end
+
+## Lesson: l0402 | Threat vectors and attack surfaces
+
+### Message-based vectors
+
+- **Email**: the most common way in: malicious links, attachments, fake invoices.
+- **SMS** (text messages) and **instant messaging** (chat apps, workplace chat): links and requests that look urgent, often on phones with fewer protections.
+
+### Image-based and file-based vectors
+
+- **Image-based**: malicious code or links hidden in images (for example a QR code leading to a fake site, or an image file crafted to exploit a viewer bug). Steganography can hide data in images too.
+- **File-based**: documents with malicious macros, PDFs exploiting reader flaws, archives containing malware, script files disguised as documents.
+
+### Voice call
+
+Phone calls (and VoIP) used to trick people into giving information or access: vishing (next lesson). Caller ID can be faked.
+
+### Removable devices
+
+USB drives left in a car park ("baiting"), malicious USB cables or devices that act like keyboards. Removable media can also carry data out. Defences: block or control USB storage, disable autorun, train staff not to plug in found devices.
+
+### Vulnerable software
+
+- **Client-based** software needs an agent or program installed on the device (for example a VPN client or a management agent); a flaw in it puts every device that runs it at risk, and each copy must be patched.
+- **Agentless** approaches use no installed client (for example a web browser to reach a web app, or scanning without an agent). There is less installed software to attack, but the server side and the browser are still targets.
+
+Security+ uses "client-based vs agentless" mainly to describe where the vulnerable code lives and what has to be maintained.
+
+### Unsupported systems and applications
+
+Software past its **end of life** gets no more security patches. Every new flaw found in it stays open forever. Replace it, or isolate it with compensating controls.
+
+### Unsecure networks
+
+- **Wireless**: open or weakly protected Wi-Fi (WEP, WPA with weak passphrases), rogue access points, evil twins.
+- **Wired**: unused network ports left active in public areas let anyone plug in; use 802.1X and disable unused ports.
+- **Bluetooth**: discoverable devices can be targeted (bluejacking: sending unwanted messages; bluesnarfing: stealing data); keep devices non-discoverable and patched.
+
+### Open service ports
+
+Every listening service is a door. Services that aren't needed, or that are exposed to the internet when they needn't be (remote desktop, database ports, old file-sharing protocols), widen the attack surface. Close unused ports and limit the rest with firewalls.
+
+### Default credentials
+
+Devices and applications often ship with known usernames and passwords (`admin` / `admin`). Lists of defaults are public, so attackers try them first, especially on routers, cameras and IoT devices. Change them before the device goes live.
+
+### Supply chain
+
+Attackers may go through a trusted partner instead of attacking you directly:
+
+- **Managed service providers (MSPs)**: they often have remote admin access to many customers at once, so one breached MSP can open many doors.
+- **Vendors**: software or hardware vendors can ship compromised updates or products.
+- **Suppliers**: companies that supply parts, services or materials can be the weak link (for example a heating contractor with network access).
+
+> Shrinking the attack surface: remove unused software and services, close ports, change defaults, replace unsupported systems, control removable media.
+
+@quiz
+? A security team finds that several new IP cameras still accept the username and password printed in their manual. Which vector is this?
+- Unsupported systems
++ Default credentials
+- Watering hole
+- Image-based
+! Known factory usernames and passwords are a default credentials weakness; change them before deployment.
+? Attackers break into a company that remotely manages IT for 200 small businesses and then push ransomware to its clients. What type of vector did they use?
+- Removable device
+- Bluetooth
++ Supply chain through a managed service provider
+- Open service ports on each client
+! The MSP's trusted access to many customers was the path in: a supply chain attack.
+? A help desk computer still runs an operating system that no longer receives security updates. Why is it a risk?
++ New vulnerabilities in it will never be patched
+- It can't use TLS at all
+- It can't connect to Wi-Fi
+- It must use default credentials
+! Unsupported (end-of-life) systems stay vulnerable to every newly found flaw.
+? Employees find USB drives labelled "Salaries 2026" in the company car park. What should training tell them to do?
+- Plug them in to find the owner
+- Copy the files to a network share and then open them
++ Hand them to IT or security without plugging them in
+- Format them before use
+! Dropped USB drives are a removable-device vector (baiting); they should never be plugged in.
+@end
+
+## Lesson: l0403 | Social engineering and human vectors
+
+**Social engineering** manipulates people into giving up information, money or access. It works by using trust, fear, urgency, authority, helpfulness and curiosity. Technical controls help, but awareness training is the main defence.
+
+### Phishing and its variants
+
+- **Phishing**: fraudulent messages (usually email) that try to get the reader to click a link, open an attachment or hand over credentials. Mass phishing goes to many people; **spear phishing** targets a specific person or group with personal details; **whaling** targets senior executives.
+- **Vishing** (voice phishing): the same tricks by phone. "This is the bank's fraud team, please confirm your card number."
+- **Smishing** (SMS phishing): by text message. "Your parcel is held, pay the fee here."
+
+### Pretending to be someone
+
+- **Impersonation**: the attacker poses as someone trusted: a colleague, IT support, a manager, a delivery driver.
+- **Pretexting**: the attacker builds a believable story (the pretext) to justify the request. "I'm from the auditors, and I need the vendor list before the meeting at 3." Pretexting is the scenario; impersonation is often part of it.
+- **Business email compromise (BEC)**: the attacker takes over, or convincingly imitates, a real business email account (often an executive's or a supplier's) and asks for payments or sensitive data. Because the message comes from a real or very familiar address, it often has no malware or bad link at all, which helps it pass filters. Classic example: "Please change our bank details for the next invoice."
+- **Brand impersonation**: messages and sites copying a well-known brand's logos and style to win trust.
+
+### Fake places and fake information
+
+- **Typosquatting** (URL hijacking): registering domain names that are easy typos or look-alikes of real ones, such as `examp1e.com` for `example.com`, to catch people who mistype or don't look closely.
+- **Watering hole attack**: instead of attacking the target directly, the attacker compromises a website the target group often visits (a trade association site, a local forum) and plants malware there, then waits for victims to come.
+- **Misinformation**: false information spread without the intent to deceive (people simply believe it). **Disinformation**: false information spread on purpose to deceive or cause harm, for example a fake announcement to move a share price or damage a reputation.
+
+> BEC often has no link or attachment: just a convincing request from a real or look-alike account. Verify payment changes by phoning a known number.
+
+```file
+From: "Dana Whitlock (CFO)" <dana.whitlock@examp1e-corp.com>
+To: accounts@example-corp.com
+Subject: Urgent - supplier payment today
+
+Hi, I'm in meetings all afternoon. Please wire 48,500 to the new account
+below for Lakeside Supplies before 4pm and keep this between us for now.
+```
+
+The look-alike domain (`examp1e-corp.com`, with the digit 1), the urgency, the secrecy and the change of payment details are all warning signs.
+
+### Defences
+
+- Security awareness training and phishing simulations.
+- Verify unusual requests through a separate, known channel (call back on a number you already have).
+- Email security: filtering, warnings on external mail, SPF, DKIM and DMARC.
+- MFA, so stolen passwords alone are not enough.
+- Clear processes for payment changes and password resets that can't be skipped "because it's urgent".
+
+@quiz
+? An accounts clerk receives an email from the real mailbox of a supplier's sales manager asking for future payments to go to a new bank account. The supplier's mailbox had been taken over. What is this attack?
+- Typosquatting
+- Smishing
++ Business email compromise
+- Watering hole
+! A real business email account was compromised and used to redirect payments: that is BEC.
+? Attackers infect a website about local engineering news that staff at a target company often read. Which attack is this?
++ Watering hole
+- Whaling
+- Vishing
+- Pretexting
+! A watering hole attack compromises a site the targets already visit and waits for them.
+? Someone calls staff claiming to be from IT, saying a security audit is underway and that each person must read out the code from their MFA app. What is the main technique?
+- Typosquatting
+- Disinformation
++ Vishing with a pretext
+- Brand impersonation
+! It's a phone-based attack (vishing) built on a believable story (pretext); no legitimate IT team asks for MFA codes.
+? A user types `www.exmaple.com` by mistake and lands on a convincing copy of the real site that asks for her password. What is this called?
+- Watering hole
++ Typosquatting
+- Smishing
+- Misinformation
+! Registering look-alike or misspelled domains to catch typing mistakes is typosquatting.
+? A rival group spreads a fake press release saying a company's product is being recalled, knowing it is false. What is this?
+- Misinformation
++ Disinformation
+- Pretexting
+- Impersonation of IT
+! Disinformation is false information spread deliberately; misinformation is false information spread without intent to deceive.
+@end

@@ -1,0 +1,15 @@
+Same domain chain as A Domain of Cards, but the domain controller is watched.
+
+1. Start off the watched box. The open share on WIN-APP01 (the file server, not watched) gives you a first
+   domain account. winrm to WIN-APP01 for the first flag.
+
+2. Tickets, then crack offline. One ticket-request to the DC is a normal, expected request. Crack the
+   returned service tickets offline with hashcrack - that makes no network noise at all. A weak service
+   password falls, and that account turns out to be a Domain Admin.
+
+3. One clean login to the DC. winrm to WIN-DC01 as the cracked Domain Admin and read the flag. A single
+   successful sign-in looks normal.
+
+Why the noisy way fails: a full scan of the DC and a run of wrong Administrator sign-ins against it are
+exactly what the watcher flags. It raises the alarm and blocks your address (and a quick defender resets
+the password you used), so your connections time out. Crack offline; sign in once with the right account.

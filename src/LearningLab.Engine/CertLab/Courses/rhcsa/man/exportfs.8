@@ -1,0 +1,35 @@
+NAME
+       exportfs - manage the list of directories an NFS server shares
+
+SYNOPSIS
+       exportfs -r
+       exportfs -v
+
+DESCRIPTION
+       An NFS server shares (exports) the directories listed in /etc/exports
+       and in files ending .exports in /etc/exports.d/. Each line names a
+       directory, then the clients and their options:
+
+           /exports/shared   192.168.50.0/24(rw,sync)
+
+       exportfs makes the running NFS server use the list after you change
+       it, and shows what is exported now. The server itself is the
+       nfs-server service.
+
+       On the RHCSA you are an NFS client: mount exports with mount -t nfs
+       or autofs. This page is here to help you understand the other side.
+
+OPTIONS
+       -r     Re-export everything: read /etc/exports again.
+
+       -v     Show what is exported, with the options.
+
+       -a     Export everything in the lists.
+
+EXAMPLES
+           echo "/srv/share 192.168.50.0/24(rw)" >> /etc/exports
+           exportfs -r
+           exportfs -v
+
+SEE ALSO
+       exports(5), showmount(8), mount.nfs(8), nfs(5)

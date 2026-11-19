@@ -1,0 +1,28 @@
+SYNOPSIS: Switches Windows Firewall rules off without deleting them.
+DESCRIPTION:
+Disable-NetFirewallRule turns rules off. The rule stays in the list with Enabled False and can be turned on again later with Enable-NetFirewallRule, so this is safer than Remove-NetFirewallRule for built-in rules.
+
+Disabling an Allow rule closes what it opened; disabling a Block rule stops it blocking.
+PARAMETER Name:
+The rule's Name (id). Wildcards are allowed.
+PARAMETER DisplayName:
+The display name. Wildcards are allowed.
+PARAMETER DisplayGroup:
+Every rule of one group.
+PARAMETER Group:
+The group as Windows stores it.
+PARAMETER Direction:
+Only the Inbound or only the Outbound rules of what you picked.
+PARAMETER InputObject:
+Rules piped from Get-NetFirewallRule.
+PARAMETER PassThru:
+Outputs each rule after the change.
+EXAMPLE: Disable-NetFirewallRule -DisplayGroup 'Remote Desktop'
+Stops Remote Desktop connections coming in.
+EXAMPLE: Disable-NetFirewallRule -Name FPS-ICMP4-ERQ-In -WhatIf
+Shows what would change.
+EXAMPLE: Get-NetFirewallRule -DisplayName 'Block RDP*' | Disable-NetFirewallRule -PassThru
+Switches off your own block rules and shows them.
+NOTES:
+Disabling the WinRM rules on a server you manage remotely cuts off your PowerShell session to it. Needs an administrator on a real PC. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Enable-NetFirewallRule, Remove-NetFirewallRule, Get-NetFirewallRule

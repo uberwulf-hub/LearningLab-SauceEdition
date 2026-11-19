@@ -1,0 +1,17 @@
+SYNOPSIS: Changes settings of an Active Directory forest, such as its UPN suffixes.
+DESCRIPTION:
+The most common use of Set-ADForest is adding a UPN suffix. Users can then sign in as name@harborline.example instead of name@corp.example, which matters before syncing to Microsoft Entra ID: the cloud sign-in name should be a domain the company really owns and has verified.
+After adding the suffix, give it to users with Set-ADUser -UserPrincipalName.
+PARAMETER Identity:
+The forest, such as corp.example. Position 0.
+PARAMETER UPNSuffixes:
+A hash table that adds or removes suffixes: @{Add="harborline.example"} or @{Remove="old.example"}.
+PARAMETER PassThru:
+Returns the forest after the change.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-ADForest corp.example -UPNSuffixes @{Add="harborline.example"}
+Adds the company's public domain as a UPN suffix.
+EXAMPLE: Get-ADUser bcole | Set-ADUser -UserPrincipalName bcole@harborline.example
+Gives Bianca Cole the new sign-in name.
+RELATED: Get-ADForest, Set-ADUser, Start-ADSyncSyncCycle

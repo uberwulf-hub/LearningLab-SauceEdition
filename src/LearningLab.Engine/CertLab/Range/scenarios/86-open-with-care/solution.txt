@@ -1,0 +1,19 @@
+winrm-shell -i 10.10.26.30 -u Administrator -p {{ADMPW}}
+## the attachment: a script with a document's name
+Get-ChildItem C:\Users\{{VIC}}\Downloads
+Get-Content C:\Users\{{VIC}}\Downloads\{{ATT}}
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4688 } | Format-List TimeCreated, Message
+## the service it installed
+Get-WinEvent -FilterHashtable @{ LogName='System'; Id=7045 } | Format-List TimeCreated, Message
+Get-Service -Name {{SVC}}
+sc.exe qc {{SVC}}
+## its folder: the agent and the flag
+Get-ChildItem C:\ProgramData\{{SVC}}
+Get-Content C:\ProgramData\{{SVC}}\agent.ps1
+Get-Content C:\ProgramData\{{SVC}}\id.txt
+## pull it all out
+Stop-Service -Name {{SVC}}
+sc.exe delete {{SVC}}
+Remove-Item C:\ProgramData\{{SVC}}\agent.ps1
+Remove-Item C:\Users\{{VIC}}\Downloads\{{ATT}}
+exit

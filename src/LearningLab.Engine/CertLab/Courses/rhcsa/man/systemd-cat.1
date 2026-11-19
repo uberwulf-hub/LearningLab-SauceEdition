@@ -1,0 +1,26 @@
+NAME
+       systemd-cat - send text or a program's output to the journal
+
+SYNOPSIS
+       systemd-cat [-t IDENTIFIER] [-p PRIORITY] [COMMAND...]
+
+DESCRIPTION
+       systemd-cat writes into the systemd journal. Without a command it
+       stores each line it reads on standard input as a journal message; with
+       a command it runs it and stores the command's output. Scripts use it so
+       their messages can be searched with journalctl.
+
+OPTIONS
+       -t, --identifier=NAME
+              The name the messages are filed under (journalctl -t NAME).
+
+       -p, --priority=LEVEL
+              The priority: emerg, alert, crit, err, warning, notice, info
+              (default) or debug.
+
+EXAMPLES
+           echo "backup finished" | systemd-cat -t backup
+           journalctl -t backup
+
+SEE ALSO
+       journalctl(1), logger(1)

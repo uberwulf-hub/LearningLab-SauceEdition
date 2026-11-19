@@ -1,0 +1,23 @@
+SYNOPSIS: Gets any kind of object from Active Directory.
+DESCRIPTION:
+Get-ADObject works with every object class: users, groups, OUs, containers, contacts, sites, and objects that have no cmdlet of their own. It returns only Name, ObjectClass, DistinguishedName and ObjectGUID unless you ask for -Properties.
+With -IncludeDeletedObjects it also finds deleted objects (they have Deleted = True and live in the Deleted Objects container). That's the first step of a restore from the AD Recycle Bin.
+PARAMETER Identity:
+One object, by distinguished name or GUID. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search in the PowerShell filter language, such as "ObjectClass -eq 'contact'".
+PARAMETER Properties:
+Extra properties, or * for all.
+PARAMETER SearchBase:
+Only searches below this container.
+PARAMETER SearchScope:
+Base, OneLevel or Subtree (the default).
+PARAMETER IncludeDeletedObjects:
+Also returns deleted objects.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADObject -Filter "Deleted -eq `$true -and ObjectClass -eq 'user'" -IncludeDeletedObjects
+Deleted user accounts that can still be restored.
+EXAMPLE: Get-ADObject -Filter * -SearchBase "OU=Groups,DC=corp,DC=example" | Select-Object Name, ObjectClass
+Everything in the Groups OU and what kind of object each is.
+RELATED: Set-ADObject, Restore-ADObject, Move-ADObject, Remove-ADObject

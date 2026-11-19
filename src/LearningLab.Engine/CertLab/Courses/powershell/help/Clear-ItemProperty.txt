@@ -1,0 +1,14 @@
+SYNOPSIS: Empties a registry value's data but keeps the value.
+DESCRIPTION:
+Clear-ItemProperty sets text values to empty and numbers to 0. The value and its type stay.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The value to clear.
+PARAMETER PassThru:
+Outputs the cleared value.
+EXAMPLE: Clear-ItemProperty HKCU:\Software\Lab -Name Mode
+Leaves Mode empty.
+RELATED: Remove-ItemProperty, Set-ItemProperty

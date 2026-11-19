@@ -1,0 +1,32 @@
+NAME
+       basename - print a path without its directories (and suffix)
+
+SYNOPSIS
+       basename PATH [SUFFIX]
+       basename -a [-s SUFFIX] PATH...
+
+DESCRIPTION
+       basename removes everything up to the last slash from PATH and prints
+       what is left: the name of the file itself. If SUFFIX is given and the
+       name ends with it, the suffix is removed too. It only works on the
+       text; the file does not need to exist.
+
+       In scripts it is often used as $(basename "$f") inside a loop.
+
+OPTIONS
+       -a, --multiple
+              Treat every argument as a PATH.
+
+       -s SUFFIX, --suffix=SUFFIX
+              Remove this suffix (implies -a).
+
+EXAMPLES
+           basename /etc/sysconfig/network     prints network
+           basename /root/report.csv .csv      prints report
+
+       Copy every .conf file to a .bak copy with a new name:
+
+           for f in /etc/*.conf; do cp "$f" /tmp/$(basename "$f" .conf).bak; done
+
+SEE ALSO
+       dirname(1), realpath(1)

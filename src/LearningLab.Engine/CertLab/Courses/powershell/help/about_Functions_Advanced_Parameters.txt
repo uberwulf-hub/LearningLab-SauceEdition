@@ -1,0 +1,63 @@
+TOPIC
+    about_Functions_Advanced_Parameters
+
+SHORT DESCRIPTION
+    Attributes that make function parameters behave like cmdlet ones.
+
+LONG DESCRIPTION
+    Add [CmdletBinding()] before param() and the function becomes an
+    advanced function: it gets the common parameters (-Verbose,
+    -ErrorAction and the rest) and can use the [Parameter()] attribute.
+
+        function Get-DiskSpace {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory = $true,
+                           ValueFromPipeline = $true)]
+                [string[]]$ComputerName
+            )
+            process {
+                foreach ($c in $ComputerName) {
+                    Write-Verbose "Asking $c"
+                    Get-CimInstance Win32_LogicalDisk -ComputerName $c
+                }
+            }
+        }
+        'WIN-SRV1', 'WIN-CL1' | Get-DiskSpace -Verbose
+
+  The Parameter attribute
+    Mandatory                        Ask for a value if none is given.
+    Position = 0                     Allow the value without the name.
+    ValueFromPipeline                Take whole objects from the pipe.
+    ValueFromPipelineByPropertyName  Take the property of the same name.
+    ParameterSetName = 'ByName'      Put it in a parameter set.
+    HelpMessage = 'text'             Text shown at the Mandatory prompt.
+
+  Aliases
+    [Alias('CN', 'Server')] lets callers use a shorter or older name. It
+    also helps pipeline binding by property name.
+
+  Checking values
+    Validation attributes reject bad values before your code runs:
+
+        [ValidateSet('Running', 'Stopped')]
+        [ValidateRange(1, 10)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^WIN-')]
+        [ValidateScript({ Test-Path $_ })]
+        [ValidateCount(1, 5)]
+        [ValidateLength(1, 15)]
+
+  Changing things safely
+    [CmdletBinding(SupportsShouldProcess = $true)] adds -WhatIf and
+    -Confirm. Wrap each change in a check:
+
+        if ($PSCmdlet.ShouldProcess($Path, 'Delete')) {
+            Remove-Item -Path $Path
+        }
+
+SEE ALSO
+    about_Functions
+    about_CommonParameters
+    about_Splatting
+    about_Pipelines

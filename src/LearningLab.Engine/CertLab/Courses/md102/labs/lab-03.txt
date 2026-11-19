@@ -1,0 +1,75 @@
+# Lab: lab-03 | Compliance policies | u03 | 35
+Riverbend is getting ready for Conditional Access, which will only let compliant devices in. First the company needs compliance policies that say what "compliant" means for Windows and iPhones, a sensible grace period, and tenant settings that don't let unchecked devices through.
+
+@vars
+pol = Windows baseline | Corporate Windows health | Windows device health
+days = 2 | 3 | 5
+ios = 17.5 | 17.6
+valid = 14 | 20 | 21
+@endvars
+
+@task t01 | Compliance | 30 | portal
+Create a Windows compliance policy called **{pol}** that requires Secure Boot, code integrity, antivirus, real-time protection and at least OS version **10.0.26100**. Assign it to **Corporate Windows devices**. Sync **RB-DT-010** (still on Windows 10) and **RB-LT-001**.
+@check portal | the policy has the rules
+compliance["{pol}"].secureBoot == Require
+compliance["{pol}"].codeIntegrity == Require
+compliance["{pol}"].antivirus == Require
+compliance["{pol}"].rtp == Require
+compliance["{pol}"].minOs == 10.0.26100
+@check portal | it is assigned to Corporate Windows devices
+compliance["{pol}"].include has "Corporate Windows devices"
+@check portal | RB-DT-010 fails on its version, RB-LT-001 passes
+device["RB-DT-010"].compliance == "Not compliant"
+device["RB-DT-010"].reasons contains "older than the minimum"
+device["RB-LT-001"].compliance == Compliant
+@hint Real-time protection is in the Defender section; Minimum OS version in Device Properties.
+@solution portal
+create compliance name="{pol}" platform="Windows 10 and later" secureBoot=Require codeIntegrity=Require antivirus=Require rtp=Require minOs=10.0.26100
+assign compliance "{pol}" "Corporate Windows devices"
+remote sync "RB-DT-010"
+remote sync "RB-LT-001"
+@explain
+Windows 11 24H2 is build 26100, and Windows 11 still reports itself as version 10.0, so the minimum is 10.0.26100. RB-DT-010 runs Windows 10 22H2 (build 19045) and fails until it is upgraded (unit 6). The policy only reports this; it can't upgrade the desktop.
+@endtask
+
+@task t02 | Compliance | 20 | portal
+People need time to fix what they can. Change **{pol}** so that devices are marked noncompliant only **{days}** days after they fail, and the user gets an email on day **0**.
+@check portal | grace period and email
+compliance["{pol}"].noncompliantDays == {days}
+compliance["{pol}"].emailDays == 0
+@hint Actions for noncompliance.
+@solution portal
+set compliance "{pol}" noncompliantDays={days} emailDays=0
+@explain
+"Mark device noncompliant" after N days is the grace period; during it the device shows In grace period and Conditional Access still treats it as compliant. In a real tenant the email needs a notification message template too.
+@endtask
+
+@task t03 | Compliance | 25 | portal
+Create an iOS/iPadOS compliance policy called **iPhone basics** that blocks jailbroken devices and requires at least iOS **{ios}**. Assign it to **Sales**, then sync **Jordan's iPhone**.
+@check portal | the policy is right and assigned to Sales
+compliance["iPhone basics"].jailbreak == Block
+compliance["iPhone basics"].minOs == {ios}
+compliance["iPhone basics"].include has Sales
+@check portal | Jordan's iPhone (iOS 17.4) fails on its version
+device["Jordan's iPhone"].compliance == "Not compliant"
+device["Jordan's iPhone"].reasons contains "{ios}"
+@hint Platform iOS/iPadOS. The phone's name has an apostrophe: put it in quotes.
+@solution portal
+create compliance name="iPhone basics" platform=iOS/iPadOS jailbreak=Block minOs={ios}
+assign compliance "iPhone basics" Sales
+remote sync "Jordan's iPhone"
+@explain
+The policy is assigned to a user group, so it reaches the devices of the people in Sales. Jordan's iPhone runs 17.4, older than the minimum, so it is noncompliant until Jordan updates it.
+@endtask
+
+@task t04 | Compliance | 25 | portal
+Change the tenant's compliance settings: devices **without** a compliance policy must count as **Not compliant**, and a device that hasn't checked in for **{valid}** days must become noncompliant.
+@check portal | the tenant's compliance settings
+tenant.noPolicyMark == "Not compliant"
+tenant.validityDays == {valid}
+@hint Tenant administration > Settings, section Compliance policy settings (Devices > Compliance > Compliance settings in Intune).
+@solution portal
+tenant noPolicyMark="Not compliant" validityDays={valid}
+@explain
+With the default (Compliant), a device that no policy targets passes a "require compliant device" rule without ever being checked. The validity period makes devices that stopped checking in (lost, switched off, broken) noncompliant instead of trusting an old result.
+@endtask

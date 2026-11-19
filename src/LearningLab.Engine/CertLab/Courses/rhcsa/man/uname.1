@@ -1,0 +1,42 @@
+NAME
+       uname - print the kernel name, version and machine type
+
+SYNOPSIS
+       uname [OPTION]...
+
+DESCRIPTION
+       uname prints facts about the running kernel and the machine. Without
+       options it prints the kernel name (Linux).
+
+OPTIONS
+       -a, --all
+              Everything below, on one line.
+
+       -s, --kernel-name
+              The kernel name.
+
+       -n, --nodename
+              The host name.
+
+       -r, --kernel-release
+              The kernel release, such as 5.14.0-503.11.1.el9_5.x86_64. This
+              is the version that grubby and /boot file names use.
+
+       -v, --kernel-version
+              The build date of the kernel.
+
+       -m, --machine
+              The hardware type, such as x86_64.
+
+       -p, -i The processor and hardware platform.
+
+       -o, --operating-system
+              The operating system (GNU/Linux).
+
+EXAMPLES
+       Check which kernel runs after an update and reboot:
+
+           uname -r
+
+SEE ALSO
+       hostname(1), hostnamectl(1), grubby(8)

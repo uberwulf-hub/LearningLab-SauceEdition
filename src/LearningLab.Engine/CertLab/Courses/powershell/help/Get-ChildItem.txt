@@ -1,0 +1,42 @@
+SYNOPSIS: Lists the items in a folder or other container: files, registry keys, environment variables...
+DESCRIPTION:
+Get-ChildItem (dir, ls, gci) shows what a container holds. On the disk the output is grouped under "Directory:" headers with Mode, LastWriteTime, Length and Name; folders come first. In the registry it lists subkeys under "Hive:" headers with their values in the Property column. On Env:, Variable:, Alias:, Function: and Cert: it lists those items.
+
+Hidden and system files are left out unless you add -Force (or -Hidden to see only them).
+PARAMETER Path:
+What to list. Wildcards are allowed: dir *.log. With a wildcard, matching folders are listed themselves rather than their contents.
+PARAMETER LiteralPath:
+A path taken exactly as typed, for names with [ ] in them.
+PARAMETER Filter:
+A file name pattern handled by the file system, such as *.log. Only the FileSystem provider supports it.
+PARAMETER Include:
+Keeps only names that match these patterns. In Windows PowerShell 5.1 it works only with -Recurse or a wildcard in the path (C:\LabFiles\*); otherwise it returns nothing.
+PARAMETER Exclude:
+Leaves out names that match these patterns.
+PARAMETER Recurse:
+Also lists everything in the subfolders (or subkeys), folder by folder.
+PARAMETER Depth:
+How many levels of subfolders -Recurse goes down; 0 means only this folder.
+PARAMETER Force:
+Also shows hidden and system items.
+PARAMETER Name:
+Outputs only the names as strings (relative paths with -Recurse).
+PARAMETER File:
+Only files.
+PARAMETER Directory:
+Only folders.
+PARAMETER Hidden:
+Only hidden items.
+PARAMETER CodeSigningCert:
+On Cert: drives: only certificates that can sign code.
+EXAMPLE: Get-ChildItem C:\LabFiles -Filter *.csv -Recurse
+Every CSV file in the folder and its subfolders.
+EXAMPLE: Get-ChildItem C:\LabFiles -File | Sort-Object Length -Descending
+Files only, largest first.
+EXAMPLE: Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
+Subkeys of a registry key, with their values.
+EXAMPLE: Get-ChildItem Env:
+All environment variables.
+NOTES:
+Items from a folder listing turn into just their name inside a string ("$_") in Windows PowerShell 5.1; use $_.FullName for the full path. Cert Lab lists environment variables in alphabetical order (Windows PowerShell 5.1 shows them unsorted).
+RELATED: Get-Item, Get-Location, Where-Object, about_Providers

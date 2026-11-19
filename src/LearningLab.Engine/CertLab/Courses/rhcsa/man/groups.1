@@ -1,0 +1,30 @@
+NAME
+       groups - print the groups a user belongs to
+
+SYNOPSIS
+       groups [USER]...
+
+DESCRIPTION
+       groups prints the names of the groups a user is a member of: first the
+       primary group, then the supplementary groups. With no USER it shows the
+       groups of the current shell. With one or more USER names it prints each
+       name, a colon and that user's groups, as read from /etc/passwd and
+       /etc/group.
+
+       Group changes (usermod -aG) do not reach a shell that is already running.
+       "groups student" reads the files and shows the new list at once, while a
+       plain "groups" in student's old shell still shows the old list until
+       student logs in again (or runs newgrp).
+
+EXAMPLES
+       Show your own groups:
+              $ groups
+              student wheel
+
+       Check that a new membership was written:
+              # usermod -aG wheel student
+              # groups student
+              student : student wheel
+
+SEE ALSO
+       id(1), usermod(8), group(5), newgrp(1)

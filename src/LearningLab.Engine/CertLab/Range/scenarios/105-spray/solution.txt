@@ -1,0 +1,10 @@
+## the two alerts
+siem alerts
+## who the failed sign-ins come from
+siem search source=winsec event=4625 --count-by src_ip
+## the inside address: one account, every five minutes, from a server
+siem search source=winsec event=4625 user={{SVC}} --limit 3 --fields time,host,user,src_ip,workstation
+## the outside address: how many accounts, and did one work?
+siem search src_ip={{SPRAYIP}} source=winsec --count-by user
+siem search src_ip={{SPRAYIP}} event=4624
+siem search src_ip={{SPRAYIP}} --limit 1 --fields time,host,user,event

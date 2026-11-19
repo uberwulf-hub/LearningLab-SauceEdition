@@ -1,0 +1,71 @@
+NAME
+       chown - change the owner and group of files
+
+SYNOPSIS
+       chown [OPTION...] [OWNER][:[GROUP]] FILE...
+       chown [OPTION...] --reference=RFILE FILE...
+
+DESCRIPTION
+       chown sets the user who owns each FILE, its group, or both. Only root
+       may give a file to another user. A normal user who owns a file may use
+       chown (or chgrp) to change its group to one of their own groups.
+
+       The first argument says what to change:
+
+       OWNER          change only the owner
+       OWNER:GROUP    change the owner and the group
+       OWNER:         change the owner, and set the group to the owner's
+                      login group
+       :GROUP         change only the group (the same as chgrp GROUP)
+
+       Names or numbers (UIDs and GIDs) both work. An older form with a dot
+       (OWNER.GROUP) is still accepted, but the colon is the standard.
+
+       When root changes the owner of a program, its set-user-ID and
+       set-group-ID bits are cleared for safety.
+
+OPTIONS
+       -R, --recursive
+              Change the files and directories inside each directory too.
+
+       -v, --verbose
+              Report every file processed.
+
+       -c, --changes
+              Report only the files that really changed.
+
+       -f, --silent, --quiet
+              Do not print most error messages.
+
+       -h, --no-dereference
+              Change a symbolic link itself instead of the file it points to.
+
+       --from=OWNER[:GROUP]
+              Change only files whose current owner (and group) match.
+
+       --reference=RFILE
+              Use RFILE's owner and group.
+
+EXAMPLES
+       Give a file to student:
+
+           chown student /home/student/report.txt
+
+       Give a directory tree to the user and group apache:
+
+           chown -R apache:apache /var/www/html/app
+
+       Set the owner to student and the group to student's login group:
+
+           chown student: /srv/project
+
+       Change only the group:
+
+           chown :devs /shared/devs
+
+       Hand over everything that still belongs to a removed account (UID 1005):
+
+           chown -R --from=1005 student /home/olduser
+
+SEE ALSO
+       chgrp(1), chmod(1), ls(1), find(1), id(1)

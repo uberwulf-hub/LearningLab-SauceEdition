@@ -1,0 +1,28 @@
+NAME
+       modprobe - load or unload kernel modules
+
+SYNOPSIS
+       modprobe [-r] [-v] MODULE [PARAMETER=VALUE...]
+
+DESCRIPTION
+       Kernel modules are drivers and features that the kernel loads when it
+       needs them (file systems, network cards, USB devices). modprobe loads a
+       module by name, together with the modules it depends on. Usually this
+       happens automatically; you need modprobe only for special cases.
+
+       Settings for modules go in files under /etc/modprobe.d/; modules to
+       load at every boot in /etc/modules-load.d/*.conf.
+
+OPTIONS
+       -r, --remove
+              Unload the module (and unused modules it depended on).
+
+       -v, --verbose
+              Show what is done.
+
+EXAMPLES
+           modprobe -v xfs
+           lsmod | grep xfs
+
+SEE ALSO
+       modinfo(8), lsmod(8)

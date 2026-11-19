@@ -1,0 +1,28 @@
+NAME
+       grub2-set-default - choose the GRUB menu entry that boots by default
+
+SYNOPSIS
+       grub2-set-default MENU_ENTRY
+
+DESCRIPTION
+       grub2-set-default stores MENU_ENTRY as saved_entry in the GRUB environment
+       block (/boot/grub2/grubenv). From the next boot on GRUB starts that entry
+       when nobody picks another one. MENU_ENTRY is either a number (0 is the
+       first entry of the menu, normally the newest kernel) or the id of an
+       entry, which on RHEL 9 is the name of its file in /boot/loader/entries
+       without ".conf".
+
+       This works because RHEL 9 sets GRUB_DEFAULT=saved in /etc/default/grub.
+       grubby --set-default does the same job and accepts a kernel path, which
+       is usually easier.
+
+EXAMPLES
+       Boot the second entry (often the previous kernel) from now on:
+              # grub2-set-default 1
+              # grub2-editenv list | grep saved_entry
+
+FILES
+       /boot/grub2/grubenv, /boot/loader/entries/*.conf
+
+SEE ALSO
+       grubby(8), grub2-editenv(1), grub2-mkconfig(8)

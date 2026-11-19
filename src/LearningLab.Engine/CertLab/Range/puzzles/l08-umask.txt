@@ -1,0 +1,64 @@
+title: Behind the mask
+level: Intermediate
+kind: Permissions
+topic: Linux
+teaser: what permissions will the report get?
+points: 55
+order: 67
+answer: {{MODE}}
+var: MASK = pick:027|077|007|002|022
+
+@vars MASK=027
+MODE = 640
+@vars MASK=077
+MODE = 600
+@vars MASK=007
+MODE = 660
+@vars MASK=002
+MODE = 664
+@vars MASK=022
+MODE = 644
+
+@intro
+The script /opt/reports/make-report.sh writes report.txt every night. Before
+anyone relies on it, work out what permissions the new report will have, as a
+three-digit number like 755. (New files start from 666 - read and write for everyone -
+and the umask takes permissions away.)
+
+@setup
+mkdir -p /opt/reports
+cat > /opt/reports/make-report.sh <<'SH'
+#!/bin/bash
+# nightly report - keep the output private enough
+umask {{MASK}}
+cd /var/reports || exit 1
+date > report.txt
+SH
+chmod 755 /opt/reports/make-report.sh
+
+@solution
+cat /opt/reports/make-report.sh
+umask {{MASK}}
+touch /tmp/try-mask.txt
+stat -c '%a %n' /tmp/try-mask.txt
+umask 022
+
+@walkthrough
+The script runs umask {{MASK}} before it writes the file. A umask lists the permission
+bits to take away: a new file starts from 666 (rw-rw-rw-), and each digit of the umask
+removes bits from owner, group and others.
+
+    666 minus {{MASK}} (bit by bit) = {{MODE}}
+
+You can check it safely in your own shell: umask {{MASK}}; touch /tmp/try-mask.txt;
+stat -c %a /tmp/try-mask.txt prints {{MODE}}. (Folders start from 777 instead.) A umask
+of 027 or 077 keeps reports from being read by everyone on the machine.
+
+@hint 5
+Find the line in the script that sets the umask. A umask doesn't give permissions; it takes them away from the starting point 666.
+
+@hint 10
+Work digit by digit: owner 6, group 6, others 6, minus the umask's digits (7 takes everything, 2 takes write, 0 takes nothing).
+
+@hint 15
+Try it: umask {{MASK}}, then touch /tmp/try-mask.txt and stat -c %a /tmp/try-mask.txt. The number it prints is the answer.

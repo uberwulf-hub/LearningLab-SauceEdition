@@ -1,0 +1,65 @@
+# Lab: lab-15 | Storage on FS1 | u15 | 35
+FS1 has four empty 100 GB disks (numbers 3 to 6) waiting to be used, and its archive volume E: is filling up with copies of the same reports. Build resilient storage for a new share and reclaim space on the archive.
+
+@vars
+pool = Pool1 | DataPool | FilePool
+vd = Projects | Media | Shared
+age = 5 | 7 | 10
+@endvars
+
+@task t01 | File and storage | 30 | FS1
+Create the storage pool **{pool}** from all four empty disks. In it, create a **two-way mirror**, **fixed**-provisioned virtual disk **{vd}** of **100 GB**, formatted **ReFS** as drive **F**.
+@check admin | the pool and the mirror
+pool["{pool}"].disks == 4
+vdisk["{vd}"].resiliency == Mirror
+vdisk["{vd}"].copies == 2
+vdisk["{vd}"].provisioning == Fixed
+@check admin | F: is ReFS
+volume(FS1, F).fs == ReFS
+@hint New-StoragePool with (Get-PhysicalDisk -CanPool $true), then New-Volume -ResiliencySettingName Mirror -ProvisioningType Fixed -FileSystem ReFS.
+@solution FS1
+New-StoragePool -FriendlyName {pool} -StorageSubSystemFriendlyName 'Windows Storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+New-Volume -StoragePoolFriendlyName {pool} -FriendlyName {vd} -ResiliencySettingName Mirror -ProvisioningType Fixed -FileSystem ReFS -DriveLetter F -Size 100GB
+@explain
+A fixed two-way mirror takes twice its size from the pool at once (200 GB here) and survives one failed disk. ReFS repairs damaged data from the other copy by itself.
+@endtask
+
+@task t02 | File and storage | 20 | FS1
+The video team wants scratch space that may be lost at any time but should look big. In **{pool}**, create a **simple**, **thin** virtual disk **Scratch** of **250 GB**, formatted **NTFS** as drive **T**.
+@check admin | a thin simple space on T:
+vdisk["Scratch"].resiliency == Simple
+vdisk["Scratch"].provisioning == Thin
+volume(FS1, T).fs == NTFS
+@hint New-Volume -ResiliencySettingName Simple -ProvisioningType Thin.
+@solution FS1
+New-Volume -StoragePoolFriendlyName {pool} -FriendlyName Scratch -ResiliencySettingName Simple -ProvisioningType Thin -FileSystem NTFS -DriveLetter T -Size 250GB
+@explain
+Thin provisioning lets the disk be larger than the pool's free space; it only takes space as data is written. Simple has no copy: one failed disk loses everything on it.
+@endtask
+
+@task t03 | File and storage | 25 | FS1
+Turn on Data Deduplication for the archive volume **E:** as a general file server, optimizing files once they haven't changed for **{age} days**.
+@check admin | deduplication on E: with the right settings
+dedup(FS1, E).enabled == Yes
+dedup(FS1, E).usage == Default
+dedup(FS1, E).minage == {age}
+@hint Install-WindowsFeature FS-Data-Deduplication, Enable-DedupVolume -UsageType Default, Set-DedupVolume -MinimumFileAgeDays.
+@solution FS1
+Install-WindowsFeature FS-Data-Deduplication
+Enable-DedupVolume -Volume E: -UsageType Default
+Set-DedupVolume -Volume E: -MinimumFileAgeDays {age}
+@explain
+The minimum file age keeps files that are still being edited out of the chunk store; the archive's reports are months old, so they all qualify.
+@endtask
+
+@task t04 | File and storage | 25 | FS1
+Don't wait for the background job: optimize E: now and check that it saved space.
+@check admin | the optimization saved more than 5 GB
+dedup(FS1, E).savedgb > 5
+@hint Start-DedupJob -Type Optimization -Wait, then Get-DedupStatus.
+@solution FS1
+Start-DedupJob -Volume E: -Type Optimization -Wait
+Get-DedupStatus
+@explain
+The copies of the same quarterly report and the three identical ISO files are now stored once in the chunk store. Garbage collection and scrubbing run weekly on their own.
+@endtask

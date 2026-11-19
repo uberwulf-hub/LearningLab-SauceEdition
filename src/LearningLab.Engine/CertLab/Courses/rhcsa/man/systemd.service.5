@@ -1,0 +1,92 @@
+NAME
+       systemd.service - the [Service] section of service unit files
+
+SYNOPSIS
+       NAME.service
+
+DESCRIPTION
+       A service unit starts and watches a program: a long-running server
+       (a daemon such as sshd) or a job that runs once and ends. Besides the
+       [Unit] and [Install] sections (see systemd.unit(5)), it has a
+       [Service] section, described here.
+
+       Programs in Exec lines need their full path. They are not run by a
+       shell: pipes, redirections and wildcards do not work unless you
+       write ExecStart=/bin/bash -c '...'.
+
+THE [Service] SECTION
+       Type=simple|exec|forking|oneshot|notify
+              How systemd knows the service has started.
+              simple (the default): as soon as the program is started; the
+              program stays in the foreground.
+              exec: once the program has really been run.
+              forking: the program starts a background copy and exits (old
+              style daemons; use PIDFile=).
+              oneshot: the program does a job and exits; the unit counts as
+              started when it has finished. Good for scripts and timers.
+              notify: the program tells systemd itself when it is ready.
+
+       ExecStart=COMMAND
+              The command to run. oneshot services may have several.
+
+       ExecStartPre=, ExecStartPost=, ExecStop=, ExecReload=
+              Commands run before or after starting, to stop, or to reload.
+
+       Restart=no|on-failure|always|on-abnormal
+              Whether to start the program again when it ends. on-failure
+              restarts after a crash or a non-zero exit.
+
+       RestartSec=TIME
+              How long to wait before restarting (100ms by default).
+
+       User=NAME, Group=NAME
+              Run as this user and group instead of root.
+
+       WorkingDirectory=DIR
+              The current directory for the program.
+
+       Environment=NAME=VALUE, EnvironmentFile=FILE
+              Set environment variables, or read them from a file.
+
+       RemainAfterExit=yes
+              With oneshot: count as active after the program ended.
+
+       TimeoutStartSec=TIME, TimeoutStopSec=TIME
+              How long starting or stopping may take.
+
+       Nice=N
+              The nice value of the program (-20 to 19).
+
+       PIDFile=PATH
+              With forking: where the daemon writes its process ID.
+
+EXAMPLES
+       A service that runs a script at boot and then counts as active:
+
+           [Unit]
+           Description=Write a boot note
+
+           [Service]
+           Type=oneshot
+           ExecStart=/usr/local/bin/bootnote.sh
+           RemainAfterExit=yes
+
+           [Install]
+           WantedBy=multi-user.target
+
+       A small server that should come back when it crashes, running as a
+       normal user:
+
+           [Service]
+           ExecStart=/usr/bin/python3 -m http.server 8000
+           User=student
+           Restart=on-failure
+
+       After saving it as /etc/systemd/system/NAME.service:
+
+           systemctl daemon-reload
+           systemctl enable --now NAME.service
+           systemctl status NAME.service
+
+SEE ALSO
+       systemd.unit(5), systemd.timer(5), systemctl(1), journalctl(1)

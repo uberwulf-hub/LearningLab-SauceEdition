@@ -1,0 +1,16 @@
+SYNOPSIS: Leaves an interactive remote session and returns to your own computer.
+DESCRIPTION:
+Exit-PSSession ends what Enter-PSSession started. The prompt loses the [computer name] part and your commands run on your own computer again.
+
+If you entered by computer name, the temporary session closes. If you entered a session made with New-PSSession, the session stays open (Get-PSSession still lists it) and keeps its variables for next time; Remove-PSSession closes it.
+
+Typing exit inside a remote session does the same thing.
+EXAMPLE: Exit-PSSession
+Leaves the remote session.
+EXAMPLE: Enter-PSSession -ComputerName localhost; Exit-PSSession
+Goes in and straight back out again.
+NOTES:
+Outside a remote session, Exit-PSSession does nothing.
+
+On your own console, exit closes the whole PowerShell window. Inside a remote session, it only takes you back.
+RELATED: Enter-PSSession, Remove-PSSession, Get-PSSession, about_Remote

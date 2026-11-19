@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the zones a DNS server hosts.
+DESCRIPTION:
+Get-DnsServerZone shows every zone on the DNS server, or only the ones you name. The columns tell you the kind of zone (ZoneType: Primary, Secondary, Stub or Forwarder), whether it is stored in Active Directory (IsDsIntegrated), whether it is a reverse lookup zone and whether it is signed with DNSSEC.
+
+More properties are there with Format-List: DynamicUpdate (None, Secure or NonsecureAndSecure), ReplicationScope (Forest, Domain, Legacy or None for file-backed zones), SecureSecondaries and MasterServers.
+
+Without -ComputerName it asks the DNS server on this machine; from a server without the DNS role, add -ComputerName DC1.
+PARAMETER Name:
+The zone or zones to show, for example corp.example. Position 0. A zone that doesn't exist is an error.
+PARAMETER ComputerName:
+The DNS server to ask, for example DC1. Default: this machine.
+EXAMPLE: Get-DnsServerZone -ComputerName DC1
+Lists the zones on DC1: corp.example, _msdcs.corp.example and the reverse zone 0.10.10.in-addr.arpa, all stored in AD.
+EXAMPLE: Get-DnsServerZone corp.example | Format-List ZoneName, DynamicUpdate, ReplicationScope, SecureSecondaries
+Shows how the company zone accepts updates, where it replicates and who may copy it.
+RELATED: Add-DnsServerPrimaryZone, Remove-DnsServerZone, Set-DnsServerPrimaryZone, Get-DnsServerResourceRecord

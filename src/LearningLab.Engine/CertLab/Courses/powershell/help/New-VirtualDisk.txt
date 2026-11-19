@@ -1,0 +1,28 @@
+SYNOPSIS: Creates a virtual disk (storage space) from a storage pool.
+DESCRIPTION:
+New-VirtualDisk carves a disk out of a pool. It shows up as a new raw disk that you then initialize, partition and format (or use New-Volume, which does everything).
+
+Resiliency: Simple stripes over the disks with no protection (one failed disk loses everything). Mirror keeps two copies (needs 2 disks) or three (-NumberOfDataCopies 3, needs 5). Parity is like RAID 5: less space lost, slower writes, needs 3 disks.
+
+Provisioning: Fixed takes the full size from the pool now; Thin takes space only as data is written, so the pool can be overcommitted and must be watched.
+PARAMETER StoragePoolFriendlyName:
+The pool to use.
+PARAMETER FriendlyName:
+The new disk's name.
+PARAMETER ResiliencySettingName:
+Simple, Mirror or Parity.
+PARAMETER NumberOfDataCopies:
+2 or 3 for a mirror.
+PARAMETER Size:
+The size, for example 100GB.
+PARAMETER UseMaximumSize:
+Uses all the free space.
+PARAMETER ProvisioningType:
+Thin or Fixed.
+PARAMETER NumberOfColumns:
+How many disks each write is striped across.
+EXAMPLE: New-VirtualDisk -StoragePoolFriendlyName Data -FriendlyName Mirror1 -ResiliencySettingName Mirror -Size 100GB -ProvisioningType Thin
+A two-way mirror of 100 GB that uses pool space only as it fills.
+EXAMPLE: Get-VirtualDisk -FriendlyName Mirror1 | Get-Disk | Initialize-Disk -PartitionStyle GPT
+Prepares the new disk for a partition.
+RELATED: Get-VirtualDisk, Remove-VirtualDisk, New-Volume, New-StoragePool, Initialize-Disk

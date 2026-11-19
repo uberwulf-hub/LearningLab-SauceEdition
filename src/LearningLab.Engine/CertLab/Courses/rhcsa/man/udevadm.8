@@ -1,0 +1,25 @@
+NAME
+       udevadm - control udev, the service that names devices
+
+SYNOPSIS
+       udevadm settle
+       udevadm trigger
+       udevadm info DEVICE
+
+DESCRIPTION
+       udev creates the device files in /dev and the links under
+       /dev/disk/by-uuid, by-label and by-path when the kernel finds hardware
+       or a new partition. udevadm talks to it.
+
+       settle waits until udev has handled every pending event, so that new
+       device names exist before the next command uses them (useful right
+       after making partitions in a script). trigger asks udev to go through
+       all devices again. info prints what udev knows about a device.
+
+EXAMPLES
+           parted -s /dev/vdb mkpart data xfs 1MiB 1GiB
+           udevadm settle
+           ls -l /dev/disk/by-partlabel/
+
+SEE ALSO
+       lsblk(8), blkid(8), partprobe(8)

@@ -1,0 +1,48 @@
+NAME
+       lvresize - change the size of a logical volume, up or down
+
+SYNOPSIS
+       lvresize {-L [+|-]SIZE | -l [+|-]EXTENTS} [-r] [-f] LV [PV...]
+
+DESCRIPTION
+       lvresize changes the size of a logical volume in either direction. A
+       plus sign grows the LV by that much, a minus sign shrinks it, and a
+       size without a sign sets the new total. Growing works the same way as
+       lvextend, shrinking the same way as lvreduce.
+
+       With -r the file system is resized together with the LV: grown after
+       the LV grows, shrunk before the LV shrinks. XFS file systems can only
+       grow; an LV holding XFS cannot be made smaller without losing the
+       data.
+
+OPTIONS
+       -L, --size [+|-]SIZE
+              The new size or the change, with a unit K, M, G or T.
+
+       -l, --extents [+|-]N
+              The same in extents, or a percentage: 100%FREE, 50%VG.
+
+       -r, --resizefs
+              Resize the file system as well (XFS grow, ext4 grow or shrink).
+
+       -f, --force
+              Do not ask before shrinking.
+
+       -y, --yes
+              Answer yes to the questions (for example, unmounting an ext4
+              file system that must be shrunk).
+
+       -t, --test
+              Show what would happen without changing anything.
+
+EXAMPLES
+       Grow the LV web and its file system by 1 GiB:
+
+           lvresize -r -L +1G /dev/vgweb/web
+
+       Shrink an ext4 LV to 600 MiB, file system first:
+
+           lvresize -r -L 600M /dev/vgdata/archive
+
+SEE ALSO
+       lvextend(8), lvreduce(8), lvs(8), resize2fs(8), xfs_growfs(8), lvm(8)

@@ -1,0 +1,32 @@
+NAME
+       info - read documentation in Info format
+
+SYNOPSIS
+       info [TOPIC]
+
+DESCRIPTION
+       info reads the GNU project's manuals, which are written as Info
+       documents: long, book-like texts split into nodes joined by menus and
+       links. The Info manual of a GNU tool (coreutils, bash, sed, grep, tar)
+       is often fuller than its man page and has more examples. With no
+       TOPIC, info opens the directory node, a menu of every Info manual.
+
+       Moving around in the real info reader: Space and Backspace page,
+       Tab jumps to the next link, Enter follows it, n and p go to the next
+       and previous node, u goes up, l goes back, s searches, q quits. When a
+       topic has no Info manual, info shows its man page instead. The pinfo
+       program (not installed by default) is a friendlier reader.
+
+       Cert Lab shows the topic's manual page under info.
+
+EXAMPLES
+              $ info
+              $ info ls
+              $ info coreutils
+
+FILES
+       /usr/share/info
+              The installed Info documents.
+
+SEE ALSO
+       man(1), /usr/share/doc

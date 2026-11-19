@@ -1,0 +1,52 @@
+title: The page they came back for
+level: Advanced
+kind: Log hunting
+points: 70
+order: 24
+answer: {{PAGE}}
+var: PAGE = pick:/admin/console|/backup/db.sql|/private/keys.txt|/old/config.bak
+
+@intro
+~/access.log is a web server's log. Most lines are ordinary pages answered with 200.
+One visitor poked at many pages that returned 404 (not found), then found one hidden
+page that returned 200. Which path is that hidden page? (Give the path, e.g. /thing.)
+
+@setup
+log=/home/player/access.log
+: > $log
+ip=198.51.100.23
+n=1
+for p in / /index.html /about /contact /style.css /logo.png /news /help; do
+  printf '203.0.113.%d - - [02/Mar/2026:09:%02d:00 +0000] "GET %s HTTP/1.1" 200 %d\n' $((n*17%200+1)) $((n%60)) "$p" $((n*311%4000+200)) >> $log
+  n=$((n+1))
+done
+for p in /admin /login /backup /config /secret /.git /old /dev /test /files /private /console; do
+  printf '%s - - [02/Mar/2026:10:%02d:00 +0000] "GET %s HTTP/1.1" 404 199\n' "$ip" $((n%60)) "$p" >> $log
+  n=$((n+1))
+done
+printf '%s - - [02/Mar/2026:10:30:00 +0000] "GET %s HTTP/1.1" 200 5120\n' "$ip" '{{PAGE}}' >> $log
+sort -R $log -o $log 2>/dev/null || true
+chown player: $log
+chmod 644 $log
+
+@solution
+grep ' 404 ' access.log | grep -oE '^[0-9.]+' | sort | uniq -c | sort -rn | head
+grep '198.51.100.23' access.log | grep ' 200 '
+
+@walkthrough
+First find who was probing: the address with the most 404s.
+
+    grep ' 404 ' access.log | grep -oE '^[0-9.]+' | sort | uniq -c | sort -rn
+
+Then look at that same address's successful (200) requests:
+
+    grep '198.51.100.23' access.log | grep ' 200 '
+
+The one 200 among all its 404s is the hidden page it found.
+
+@hint 12
+Find the address with the most 404 responses, then look at what it fetched with a
+200.
+
+@hint 18
+grep '198.51.100.23' access.log | grep ' 200 '  shows the page it found.

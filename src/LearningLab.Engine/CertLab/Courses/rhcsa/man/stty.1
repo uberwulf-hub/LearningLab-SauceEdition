@@ -1,0 +1,30 @@
+NAME
+       stty - show or change the settings of the terminal
+
+SYNOPSIS
+       stty [-a]
+       stty SETTING...
+
+DESCRIPTION
+       stty shows or changes how the terminal treats what you type: which key
+       erases a character, which key interrupts a program (Ctrl+C), whether
+       typed characters are echoed, and the size of the window. Scripts use
+       "stty -echo" to hide what is typed (a password) and "stty echo" to
+       turn echoing back on.
+
+       If a program left the terminal in a strange state (nothing you type
+       shows up), typing "stty sane" and pressing Enter usually fixes it.
+
+OPTIONS
+       -a     Print all current settings.
+
+       echo, -echo
+              Show, or hide, the characters you type.
+
+       sane   Reset the settings to reasonable values.
+
+EXAMPLES
+           stty -echo; read -r secret; stty echo
+
+SEE ALSO
+       tty(1), tput(1), reset(1)

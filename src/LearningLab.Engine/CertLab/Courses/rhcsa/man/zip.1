@@ -1,0 +1,29 @@
+NAME
+       zip - pack files into a .zip archive
+
+SYNOPSIS
+       zip [-r] [-q] [-v] [-9] ARCHIVE.zip FILE...
+
+DESCRIPTION
+       zip creates ARCHIVE.zip (or adds to it) with the FILEs compressed
+       inside. The .zip format is the one Windows and macOS open directly,
+       so it is handy for sharing with other systems; for backups on Linux,
+       tar keeps owners and permissions better. Directories are only
+       included with -r. zip is in its own package, which is not installed
+       by default.
+
+OPTIONS
+       -r     Include directories with everything in them.
+
+       -q     Quiet.
+
+       -v     Verbose.
+
+       -9     Compress as much as possible (slower).
+
+EXAMPLES
+           zip -r /root/site.zip /var/www/html
+           unzip -l /root/site.zip
+
+SEE ALSO
+       unzip(1), tar(1), gzip(1)

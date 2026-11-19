@@ -1,0 +1,15 @@
+SYNOPSIS: Lists the trusts between this domain and other domains or forests.
+DESCRIPTION:
+A trust lets accounts of one domain use resources in another. Get-ADTrust shows each trust's partner (Target), Direction (Inbound, Outbound or BiDirectional), whether it is transitive, and its type (forest, external, realm...).
+Domains in the same forest trust each other automatically (two-way, transitive). Trusts to other forests are created on purpose, for example after a merger. The direction can confuse: the trusting domain holds the resources, and the trusted domain holds the accounts.
+PARAMETER Identity:
+One trust, by the partner's name. Position 0.
+PARAMETER Filter:
+A search, such as *.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADTrust -Filter * | Select-Object Name, Direction, ForestTransitive, IntraForest
+Every trust of the domain.
+EXAMPLE: Get-ADTrust -Filter "Direction -eq 'BiDirectional'"
+Only the two-way trusts.
+RELATED: Get-ADDomain, Get-ADForest

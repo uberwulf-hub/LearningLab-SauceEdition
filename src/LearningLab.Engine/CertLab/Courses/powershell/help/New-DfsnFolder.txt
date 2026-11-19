@@ -1,0 +1,18 @@
+SYNOPSIS: Adds a folder to a DFS namespace that points to a share.
+DESCRIPTION:
+New-DfsnFolder adds a folder under a namespace, with its first target: the share users reach when they open it. More targets (for example a copy on another server, kept in step by DFS Replication) are added with New-DfsnFolderTarget.
+
+Users browsing \\corp.example\Files\Sales are sent to \\FS1\Sales without seeing the server name.
+PARAMETER Path:
+The folder's path in the namespace, for example \\corp.example\Files\Sales.
+PARAMETER TargetPath:
+The share it leads to, for example \\FS1\Sales.
+PARAMETER Description:
+A description.
+PARAMETER State:
+Online (default) or Offline.
+EXAMPLE: New-DfsnFolder -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales
+\\corp.example\Files\Sales now leads to the Sales share on FS1.
+EXAMPLE: Get-DfsnFolder -Path "\\corp.example\Files\*"
+Lists the namespace's folders.
+RELATED: Get-DfsnFolder, New-DfsnFolderTarget, Remove-DfsnFolder, New-DfsnRoot

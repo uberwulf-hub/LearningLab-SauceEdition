@@ -1,0 +1,243 @@
+# Unit: u06 | 6. Provisioning, imaging and upgrades | Deployment
+
+Autopilot is not the only way to get Windows onto company devices. Some devices are set up in bulk without the internet at hand, some old PCs need upgrading rather than replacing, and some users don't need a physical PC at all. This unit covers provisioning packages and Windows Configuration Designer, the choice between in-place upgrades, wipe-and-load and Autopilot, moving from Windows 10 to Windows 11, getting from Pro to Enterprise with subscription activation or an edition upgrade profile, and, for awareness, Windows 365 Cloud PCs and Azure Virtual Desktop.
+
+## Lesson: l0601 | Provisioning packages and Windows Configuration Designer
+
+A **provisioning package** (a `.ppkg` file) is a bundle of settings that Windows applies in one go: a device name, Wi-Fi, apps, certificates and, most usefully here, a **bulk enrolment**: the package joins the device to Microsoft Entra ID and enrols it in Intune with no user signing in. You build packages with **Windows Configuration Designer** (free, from the Microsoft Store), using the *Provision desktop devices* wizard:
+
+- set up the device: a **name** (with `%SERIAL%` or `%RAND:x%`, as in Autopilot), and optionally remove preinstalled software;
+- set up the network;
+- account management: **Enroll in Microsoft Entra ID**, which signs in once and gets a **bulk token**. The token has an **expiry date** (at most 180 days after you get it): a package with an expired token fails, so you build a new one;
+- add applications and certificates.
+
+Bulk enrolment needs automatic enrolment on, and the account that requested the bulk token must be in the MDM user scope (unit 2); with the scope set to **All** that is always true. Cert Lab simplifies here and enrols bulk devices only when the scope is All. To get a token, the account needs the Cloud Device Administrator, Intune Administrator or Password Administrator role. The package signs in with a hidden `package_...` account, which can't do MFA, so Conditional Access MFA policies must exclude it. The devices count as **corporate**, and because no user signs in, only the **default** enrolment restriction applies.
+
+To apply a package, double-click it, put it on a USB stick during the OOBE (Windows offers to install it), or run PowerShell as an administrator:
+
+```terminal
+#machine RB-LT-003
+#setup RB-LT-003:Set-Content C:\Users\Public\Riverbend-Bulk.ppkg -Value "DeviceName=RB-BULK-%RAND:3%`nTokenExpires=2026-08-31"
+PS C:\Windows\system32> Install-ProvisioningPackage -PackagePath C:\Users\Public\Riverbend-Bulk.ppkg -QuietInstall
+
+PackageId   : 73c9c4de-490c-4c1d-b2e8-8d2c71133ad9
+PackageName : Riverbend-Bulk
+PackagePath : C:\Users\Public\Riverbend-Bulk.ppkg
+IsInstalled : True
+Rank        : 1
+
+
+PS C:\Windows\system32> dsregcmd /status | Select-String 'AzureAdJoined|Device Name'
+
+             AzureAdJoined : YES
+               Device Name : RB-BULK-832
+```
+
+> In Cert Lab a package is a small text file standing in for the real `.ppkg` that Windows Configuration Designer builds: lines `DeviceName=...` and `TokenExpires=yyyy-mm-dd`. You can open one with Get-Content to see what it would do.
+
+@try
+@setup RB-LT-003
+Set-Content C:\Users\Public\Bulk-January.ppkg -Value "DeviceName=RB-BULK-%RAND:3%`nTokenExpires=2026-01-31"
+Set-Content C:\Users\Public\Bulk-March.ppkg -Value "DeviceName=RB-BULK-%RAND:3%`nTokenExpires=2026-08-31"
+@task t1 | Deployment | 10 | RB-LT-003
+Two provisioning packages are in `C:\Users\Public` on RB-LT-003. One of them was built in December and its bulk token has expired. Find the one that still works and install it, so that the laptop joins Entra ID and enrols.
+@check portal | the laptop was bulk enrolled by the package
+device["LB14-55821"].join == "Entra joined"
+device["LB14-55821"].managed == Intune
+device["LB14-55821"].name like RB-BULK-*
+device["LB14-55821"].ownership == Corporate
+@hint Get-Content shows each package's token expiry date (today is 2 March 2026). Then Install-ProvisioningPackage -PackagePath ... -QuietInstall.
+@solution RB-LT-003
+Get-Content C:\Users\Public\Bulk-January.ppkg
+Get-Content C:\Users\Public\Bulk-March.ppkg
+Install-ProvisioningPackage -PackagePath C:\Users\Public\Bulk-March.ppkg -QuietInstall
+@endtask
+@end
+
+@quiz
+? A provisioning package that worked in the spring now fails to join devices. What is the most likely cause?
++ Its bulk token has expired: build a new package
+- The devices have no TPM
+- The package needs a Conditional Access exclusion
+! Bulk tokens expire; a package with an expired token can't join devices.
+? Devices take a provisioning package and join Entra ID, but never enrol in Intune. The token is still valid. What do you check?
+- That the devices have TPM 2.0
+- That the Company Portal app is in the package
++ The MDM user scope: it must include the account that got the bulk token (All covers it)
+! Bulk enrolment uses automatic enrolment, so the token's account must be in the MDM user scope.
+? Which tool builds a provisioning package?
+- Get-WindowsAutopilotInfo
++ Windows Configuration Designer
+- The Microsoft Deployment Toolkit's task sequence editor
+! Windows Configuration Designer's wizards make .ppkg files.
+@end
+
+
+## Lesson: l0602 | Upgrade, wipe-and-load or Autopilot, and moving to Windows 11
+
+There are three broad ways to get a device onto the Windows you want:
+
+- **In-place upgrade**: the new version installs over the old one and keeps apps, settings and files. This is how Windows 10 PCs move to Windows 11 today, through a **feature update** (Windows Update for Business, an Intune feature updates policy, or Configuration Manager). Least disruption for users.
+- **Wipe-and-load** (traditional imaging): the disk is wiped and a company image is installed with a tool such as Configuration Manager's task sequences or the Microsoft Deployment Toolkit; user data is backed up and restored around it. Used when the hardware, the disk layout or the old installation can't be kept, or to change from 32-bit to 64-bit, or BIOS to UEFI.
+- **Windows Autopilot**: keep the Windows the manufacturer installed and transform it with policies (unit 5). The modern choice for new devices, and with a reset for existing ones.
+
+### Windows 10 end of support
+
+**Windows 10 reached the end of support on 14 October 2025**: no more security updates for normal editions, unless the organisation buys **Extended Security Updates** (ESU) for a limited time. Devices should move to Windows 11. In Cert Lab, RB-DT-010 and RB-DT-007 still run Windows 10 22H2, and their monthly updates stopped at October 2025.
+
+### Windows 11's hardware requirements
+
+Windows 11 needs, among others: a 64-bit processor with 2 or more cores at 1 GHz or faster that is on Microsoft's supported list (roughly Intel 8th generation, AMD Ryzen 2000 series or newer, or a supported Arm chip), **4 GB of RAM** or more, **64 GB of storage** or more, **UEFI firmware, Secure Boot capable**, and **TPM 2.0**. A PC that fails a requirement can't take the Windows 11 feature update; Intune's **Windows feature update device readiness** report (and Endpoint analytics' Work from anywhere report) and the PC Health Check app show which devices are ready.
+
+```terminal
+#machine RB-DT-010
+PS C:\Windows\system32> Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version
+
+Caption                         Version
+-------                         -------
+Microsoft Windows 10 Enterprise 10.0.19045
+
+
+PS C:\Windows\system32> Get-Tpm | Select-Object TpmPresent, ManufacturerVersionFull20
+
+TpmPresent ManufacturerVersionFull20
+---------- -------------------------
+True       600.18.0.0
+
+
+PS C:\Windows\system32> Confirm-SecureBootUEFI
+True
+```
+
+RB-DT-010 has TPM 2.0 and Secure Boot, so it can move to Windows 11. RB-DT-007's TPM 1.2 (unit 5) keeps it on Windows 10: replace it, or keep it on Windows 10 with ESU for now.
+
+An Intune **feature updates policy** (Devices > Windows updates > Feature updates, assigned to **device groups**) offers a chosen Windows 11 version to Windows 10 devices. Devices that can't run Windows 11 aren't offered it: they stay on Windows 10 22H2, and Intune's reports show that they can't take it (Cert Lab shows them as Not applicable). Unit 8 covers Windows updates in depth.
+
+@try
+@task t1 | Deployment | 10 | portal
+Move the Windows 10 desktops to Windows 11. Create an assigned device group **Windows 10 desktops** with **RB-DT-010** and **RB-DT-007**, and a feature updates policy **Windows 11 24H2** for *Windows 11, version 24H2*. Assign it to the group and sync both desktops.
+@check portal | RB-DT-010 is on Windows 11 24H2
+device["RB-DT-010"].featureVersion == 24H2
+device["RB-DT-010"].osVersion like 10.0.26100.*
+@check portal | RB-DT-007 stays on Windows 10 (not applicable)
+device["RB-DT-007"].featureVersion == 22H2
+device["RB-DT-007"].policy["Windows 11 24H2"] == "Not applicable"
+@hint Feature update policies take device groups.
+@solution portal
+create group name="Windows 10 desktops" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+create featureUpdate name="Windows 11 24H2" version="Windows 11, version 24H2"
+assign featureUpdate "Windows 11 24H2" "Windows 10 desktops"
+remote sync "RB-DT-010"
+remote sync "RB-DT-007"
+@endtask
+@end
+
+@quiz
+? Users' Windows 10 PCs meet Windows 11's requirements. How do you upgrade them while keeping their apps and files, with the least work?
++ An in-place upgrade through a feature update
+- Wipe-and-load with a new image
+- Autopilot Reset
+! A feature update upgrades in place and keeps apps, settings and files.
+? Which device can't run Windows 11?
+- 8 GB of RAM, TPM 2.0, UEFI with Secure Boot
++ 8 GB of RAM, TPM 1.2, UEFI with Secure Boot
+- 16 GB of RAM, TPM 2.0, UEFI with Secure Boot, 256 GB disk
+! Windows 11 needs TPM 2.0.
+? A PC must change from BIOS to UEFI and from 32-bit to 64-bit Windows. Which method?
+- In-place upgrade
++ Wipe-and-load
+- A feature updates policy
+! Those changes can't be made in place; the disk is wiped and a new installation goes on.
+@end
+
+## Lesson: l0603 | From Pro to Enterprise: subscription activation and edition upgrades
+
+Many PCs arrive with **Windows Pro**, while companies want **Enterprise** features. There are two ways to step up without reinstalling:
+
+### Subscription activation
+
+With **subscription activation**, a device running Windows 10/11 **Pro** steps up to **Enterprise** by itself when a user with a **Windows Enterprise E3 or E5** licence (on its own or in Microsoft 365 E3/E5) signs in. Requirements: the device is Microsoft Entra joined or hybrid joined, the user signs in with their Entra account, and Pro is activated (a firmware-embedded key is enough). Nothing is reinstalled and there is no restart; the change happens soon after sign-in. Entra registered and workgroup devices can't use it. One user's licence covers up to five devices. Devices renew the licence about every 30 days; if the licence is removed, the device goes back to Pro when its current licence period runs out. Schools work the same way: a device running **Windows Pro Education** steps up to **Windows Education** (plain Pro doesn't step up to Education).
+
+Microsoft 365 Business Premium works differently: it includes Windows Business, which keeps devices on Pro (it gives upgrade rights from older Windows Pro, not Enterprise). A Business Premium company that wants Enterprise buys Windows Enterprise E3 or E5 as well.
+
+> Cert Lab doesn't simulate subscription activation: its devices keep the edition they have when a licensed user signs in. Learn it here, and practise the edition upgrade profile below.
+
+### The edition upgrade profile
+
+An Intune configuration profile of the type **Edition upgrade and mode switch** (in Templates) upgrades the edition directly, for example from Pro to Enterprise or Education, using a product key or a licence file. Use it when you have volume licence keys rather than per-user subscriptions. The same template also switches a device out of **S mode**.
+
+@try
+@task t1 | Deployment | 10 | portal
+Priya's laptop RB-LT-002 runs Windows **Pro** and needs Enterprise features. Riverbend has volume licences, so use a configuration profile: create **Upgrade to Enterprise** (Windows 10 and later, Edition upgrade and mode switch, Windows 10/11 Enterprise), assign it to **Pilot devices** and sync RB-LT-002.
+@check portal | RB-LT-002 now runs Enterprise
+device["RB-LT-002"].edition == Enterprise
+device["RB-LT-002"].policy["Upgrade to Enterprise"] == Succeeded
+@hint Devices > Configuration > Create, platform Windows 10 and later, profile type Edition upgrade and mode switch.
+@solution portal
+create config name="Upgrade to Enterprise" platform="Windows 10 and later" type="Edition upgrade and mode switch" edition="Windows 10/11 Enterprise"
+assign config "Upgrade to Enterprise" "Pilot devices"
+remote sync "RB-LT-002"
+@endtask
+@end
+
+@quiz
+? An Entra joined PC runs Windows 11 Pro. Its user gets a Microsoft 365 E3 licence. What happens at the user's next sign-in?
++ Windows steps up to Enterprise through subscription activation
+- Nothing until the PC is re-imaged
+- The PC is upgraded to Windows 11 Education
+! Microsoft 365 E3 includes Windows Enterprise E3, which activates Enterprise on Pro devices.
+? A company has volume licence keys for Windows Enterprise, not user subscriptions. How does Intune upgrade Pro devices?
+- A compliance policy
++ An Edition upgrade and mode switch configuration profile
+- A feature updates policy
+! The edition upgrade profile applies a product key or licence file.
+? The Windows Enterprise E3 licence is removed from a user. What happens to their subscription-activated PC?
+- It is wiped
++ It returns to Pro after a grace period
+- It stays on Enterprise forever
+! Subscription activation lasts only while the user is licensed.
+@end
+
+
+## Lesson: l0604 | Cloud PCs: Windows 365 and Azure Virtual Desktop
+
+Sometimes the best device for a user is a PC that runs in Microsoft's cloud. Two services do this. The exam asks about them at the level of "what is it and what does it need", and Cert Lab doesn't simulate them.
+
+### Windows 365
+
+**Windows 365** gives each user a **Cloud PC**: a full Windows 11 (or 10) desktop that runs in Microsoft's datacentres, reached from any device through the Windows App or a browser (the older Remote Desktop client is being replaced by the Windows App). It is sold per user at a fixed monthly price, with a choice of size (processors, memory, storage).
+
+- **Windows 365 Enterprise** is managed in the **Intune admin center** (Devices > Windows 365). Cloud PCs are enrolled in Intune like any other device, so compliance policies, configuration profiles, apps and updates apply to them as usual.
+- A **provisioning policy** says how Cloud PCs are made: the **join type** (Microsoft Entra join, or hybrid join, which needs an **Azure network connection** to reach the domain), the network (Microsoft-hosted or your own virtual network), the **image** (a Microsoft gallery image or your own), and the region and language. It is assigned to a **user group**; licensed users in the group get a Cloud PC.
+- Each user needs a **Windows 365 licence** (plus the usual Windows, Intune and Entra ID P1 licences, as in Microsoft 365 E3).
+- **Windows 365 Business** is a simpler version for small companies, managed without the full Intune setup.
+- **Windows 365 Frontline** shares Cloud PCs between shift workers who don't use them at the same time.
+
+### Azure Virtual Desktop
+
+**Azure Virtual Desktop** (AVD) is the more flexible service: you build **host pools** of virtual machines in your own Azure subscription, pay for the Azure resources you use, and can let **several users share one machine** at the same time (multi-session Windows 11 Enterprise, which only AVD offers). It also publishes single apps (RemoteApp) instead of full desktops. It needs more Azure skills: you look after the virtual machines, their scaling and their images. Session hosts can be enrolled in Intune too.
+
+### Choosing
+
+- Fixed price per user, simple, a personal desktop each: **Windows 365**.
+- Many users per machine, published apps, full control over cost and scaling in Azure: **Azure Virtual Desktop**.
+- Contractors who need company apps for three months on their own laptops, a call centre with shared shifts, users in another country who need fast access: both can fit; the questions usually turn on per-user price versus multi-session and control.
+
+@quiz
+? Riverbend wants each contractor to have a personal Windows 11 desktop in the cloud, at a fixed monthly price per user, managed in Intune. What fits?
++ Windows 365 Enterprise Cloud PCs
+- Azure Virtual Desktop with multi-session host pools
+- Windows Autopilot self-deploying mode
+! Windows 365 gives each user a Cloud PC for a fixed per-user price and is managed from the Intune admin center.
+? What decides the join type, network and image of new Cloud PCs?
+- An Autopilot deployment profile
++ A Windows 365 provisioning policy
+- A Domain Join configuration profile
+! The provisioning policy, assigned to a user group, says how Cloud PCs are created.
+? Which service lets several users work on the same Windows 11 virtual machine at the same time?
+- Windows 365 Enterprise
++ Azure Virtual Desktop
+- Windows 365 Business
+! Windows 11 Enterprise multi-session is available on Azure Virtual Desktop.
+@end
+

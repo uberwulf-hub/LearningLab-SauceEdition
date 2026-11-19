@@ -1,0 +1,240 @@
+# Unit: u08 | 8. Architecture models | Security architecture
+
+Every architecture choice changes the security picture. Moving a server to the cloud changes who patches it; splitting an application into microservices adds many small doors; a factory controller may never be patchable at all. This unit covers the main architecture models (cloud, infrastructure as code, serverless, microservices, network designs, on-premises, centralized and decentralized, containers and virtual machines, IoT, industrial control systems, real-time and embedded systems, high availability) and the **considerations** used to compare them.
+
+## Lesson: l0801 | Cloud models and shared responsibility
+
+### Service models
+
+- **IaaS** (infrastructure as a service): the provider gives you virtual machines, storage and networks. You manage the operating system, patches, applications and data. Example: renting cloud VMs.
+- **PaaS** (platform as a service): the provider also runs the operating system and the platform (runtime, database engine, web server). You deploy your code and manage your data and its access.
+- **SaaS** (software as a service): a finished application used over the internet (email, office suites, CRM). The provider runs almost everything; you manage your users, their access, your data and the settings you choose.
+
+### Deployment models
+
+- **Public cloud**: shared infrastructure run by a provider for many customers (tenants).
+- **Private cloud**: cloud-style infrastructure used by one organization, on its own premises or hosted.
+- **Community cloud**: shared by several organizations with common needs (for example several government agencies).
+- **Hybrid cloud**: a mix, usually on-premises or private systems connected to public cloud.
+
+### The shared responsibility model and the responsibility matrix
+
+In every cloud model, security is split between provider and customer. A **responsibility matrix** spells out who does what for each layer.
+
+- The provider is always responsible for the physical data centers, hardware and the core cloud infrastructure.
+- The customer is always responsible for its **data**, its **user accounts and access**, and how it configures the services it uses.
+- The middle layers shift: in IaaS the customer patches the OS; in PaaS and SaaS the provider does.
+
+```file
+Layer                    IaaS       PaaS       SaaS
+Data and access          Customer   Customer   Customer
+Application              Customer   Customer   Provider
+OS and runtime           Customer   Provider   Provider
+Virtualization/network   Provider   Provider   Provider
+Physical data center     Provider   Provider   Provider
+```
+
+> Whatever the model, your data and who can access it are your responsibility. Most cloud breaches come from customer-side misconfigurations.
+
+### Hybrid considerations
+
+- Identity must work across both sides (for example directory synchronisation and single sign-on).
+- Connections between on-premises and cloud must be secured (site-to-site VPN or private links).
+- Policies, logging and monitoring must cover both, or gaps appear between them.
+- Data may move between locations, which raises data sovereignty questions (unit 10).
+
+### Third-party vendors
+
+Cloud services often depend on other suppliers (a SaaS app built on another company's cloud). Review the vendor's security, contracts (SLAs, right to audit), certifications and incident notification terms, and know which of their sub-processors touch your data.
+
+### Infrastructure as code (IaC)
+
+**Infrastructure as code** describes servers, networks and settings in text files (templates) that tools use to build the environment automatically. Benefits: every deployment is the same, changes go through version control and review, mistakes can be found by scanning the templates, and environments can be rebuilt quickly. Risks: one bad template spreads a misconfiguration everywhere, and secrets must not be stored in the templates.
+
+### Serverless
+
+With **serverless** computing (functions as a service) you upload code that runs when an event triggers it; the provider runs and scales the servers. You never manage an operating system. Security focus moves to the code, its permissions (give each function only what it needs), its inputs, and its dependencies.
+
+### Microservices
+
+A **microservices** architecture builds an application from many small, independent services that talk through APIs. Each can be updated and scaled separately, and a failure in one needn't stop the others. But there are many more APIs to secure, service-to-service authentication becomes vital, and monitoring is harder. API gateways and mutual TLS are common protections. The opposite is a **monolithic** application built as one large unit.
+
+@quiz
+? A company runs its web app on cloud virtual machines it built itself. Who must patch the VMs' operating system?
++ The customer, because this is IaaS
+- The cloud provider, because it owns the hardware
+- Nobody: cloud VMs patch themselves
+- The certificate authority
+! In IaaS the customer manages the OS and everything above it.
+? A business uses a SaaS email service. Which of these remains the business's responsibility?
+- Patching the mail servers
+- Physical security of the data center
++ Managing user accounts, MFA and access to its data
+- Replacing failed disks
+! In SaaS the provider runs the application, but customers always own their data, users and access settings.
+? A team wants every new test environment to be built identically from reviewed templates stored in version control. What approach is this?
+- Serverless
+- Shadow IT
++ Infrastructure as code
+- A monolithic application
+! IaC defines infrastructure in versioned files that tools deploy the same way every time.
+? An application is split into dozens of small services that call each other through APIs. Which new security concern grows most?
+- Physical security of the data center
++ Securing and authenticating the many service-to-service APIs
+- Full disk encryption on laptops
+- Default credentials on printers
+! Microservices multiply the number of APIs and internal connections that must be protected.
+@end
+
+## Lesson: l0802 | Networks, on-premises, containers and virtualization
+
+### Network infrastructure
+
+- **Physical isolation (air-gapped)**: a network with no physical or wireless connection to any other network. Used for the most sensitive systems (some military and industrial networks). Data moves only by removable media, which then becomes the risk to control.
+- **Logical segmentation**: dividing one physical network into separate zones in software: VLANs, subnets, firewall rules, ACLs. Cheaper and more flexible than physical separation, but a configuration mistake can join zones together.
+- **Software-defined networking (SDN)**: separates the **control plane** (decisions about where traffic goes, made by a central controller) from the **data plane** (the switches and routers that forward traffic), plus a **management plane** for configuration. The network can be programmed and changed centrally and quickly, which helps segmentation and response, but the controller becomes a high-value target that must be protected.
+
+### On-premises
+
+Systems in your own building or data center. You control everything and are responsible for everything: power, cooling, physical security, hardware, patching. Good for strict control or data location needs; costs more up front and is slower to scale than cloud.
+
+### Centralized versus decentralized
+
+- **Centralized**: one main place makes decisions or holds systems (one data center, one identity provider, one security team). Easier to manage and keep consistent, but a **single point of failure** and a single big target.
+- **Decentralized**: control and systems spread across many locations or owners (branch offices running their own systems, blockchain). More resilient to one failure, but harder to keep consistent and to monitor.
+
+### Virtualization
+
+A **hypervisor** runs several virtual machines on one physical host, each with its own operating system.
+
+- **Type 1** (bare metal) hypervisors run directly on the hardware: used in data centers.
+- **Type 2** hypervisors run as an application on a normal operating system: used on desktops for testing.
+- Security points: patch the hypervisor and each guest, guard against VM escape and resource reuse, control VM sprawl, and protect the management console.
+
+### Containerization
+
+A **container** packages an application with its libraries and settings, but shares the host's operating system kernel instead of running a full OS of its own. Containers are small and start in seconds; many run on one host.
+
+- Isolation is weaker than between VMs, since all containers share one kernel: a kernel flaw affects all of them.
+- Use trusted, scanned **images** from known registries; keep them small and patched by rebuilding.
+- Don't run containers as root or with more privileges than needed; keep secrets out of images.
+- Orchestration platforms (such as Kubernetes) need their own access control and hardening.
+
+> VM = its own full operating system on a hypervisor. Container = shares the host's kernel, lighter but less isolated.
+
+@quiz
+? A design team wants network paths to be changed from one central controller, separating forwarding from decision-making. What technology fits?
++ Software-defined networking
+- An air gap
+- A Type 2 hypervisor
+- A wildcard certificate
+! SDN separates the control plane (central decisions) from the data plane (forwarding devices).
+? Why is isolation between containers considered weaker than between virtual machines?
+- Containers can't be patched
++ Containers on a host share the same operating system kernel
+- Containers always run as root
+- Containers can't use encryption
+! VMs each have their own OS on a hypervisor; containers share the host kernel, so a kernel flaw affects them all.
+? A nuclear plant's control network has no connection at all to any other network. What is this?
+- Logical segmentation
+- Microsegmentation
++ Physical isolation (air gap)
+- A screened subnet
+! An air-gapped network is physically separated from all other networks.
+? Which is a key weakness of a centralized architecture?
+- It is hard to keep consistent
++ It can be a single point of failure
+- It can't be monitored
+- It can't use encryption
+! Centralizing makes management easier but concentrates risk in one place.
+@end
+
+## Lesson: l0803 | IoT, industrial and embedded systems
+
+### Internet of Things (IoT)
+
+Network-connected everyday devices: cameras, thermostats, smart speakers, door locks, sensors. Typical weaknesses: default or hard-coded passwords, rare or no firmware updates, weak encryption, and many unneeded services. Put them on a separate network segment, change default credentials, update firmware and buy from makers that support their products.
+
+### Industrial control systems and SCADA
+
+**Industrial control systems** (ICS) run physical processes: factories, power, water, pipelines. **SCADA** (supervisory control and data acquisition) systems monitor and control equipment spread over large areas, using controllers such as **PLCs** (programmable logic controllers) out in the field and an **HMI** (human-machine interface) for operators.
+
+- Availability and safety come first: stopping a process to patch it may be impossible or dangerous.
+- Many were designed long ago for closed networks and use protocols with no authentication or encryption.
+- Systems often run for decades, so legacy and unpatchable equipment is common.
+- Protect them with strong segmentation (separate from the business network, with tightly controlled connections), monitoring designed for industrial protocols, and strict control of remote access.
+
+### Real-time operating systems (RTOS)
+
+An **RTOS** guarantees that tasks happen within strict time limits; it is used where a late answer is a failure: car braking systems, medical devices, industrial controllers, aircraft systems. They are often small and specialised, with few security features, and hard to patch. Security depends on design, isolation and the vendor's updates.
+
+### Embedded systems
+
+An **embedded system** is a computer built into a larger device to do one job: printers, ATMs, cars, medical pumps, smart TVs. They often have limited CPU, memory and power, run firmware that is rarely updated, and can't run normal security agents. Some can't be patched at all, so compensating controls (segmentation, monitoring) are used.
+
+### High availability
+
+**High availability** (HA) means designing systems to keep running despite failures, usually measured as a percentage of uptime (for example "five nines", 99.999 percent, is about five minutes of downtime a year). It is achieved with redundancy: several servers behind load balancers, clustered systems that fail over, spare power and network links, and copies in more than one location. Unit 11 goes deeper into resilience.
+
+> ICS/SCADA: availability and safety first, legacy protocols, segment heavily. Embedded and RTOS: limited resources, hard to patch.
+
+@quiz
+? A water utility's pump controllers use an old protocol with no authentication and can't be taken offline to patch. What is the best protection?
++ Strongly segment the control network from the business network and tightly control access to it
+- Install a desktop antivirus on each controller
+- Move the controllers to a public cloud
+- Turn on automatic updates for all controllers
+! ICS equipment often can't be patched or run agents, so segmentation and controlled access are the main defences.
+? Which system is designed to guarantee that tasks complete within strict time limits, as in an anti-lock braking system?
+- SaaS
++ A real-time operating system
+- A Type 2 hypervisor
+- A container
+! An RTOS is built for predictable, guaranteed response times.
+? Smart cameras in an office still use their factory passwords and haven't had a firmware update in three years. What is the best first step?
+- Replace the office firewall
++ Change the passwords, update the firmware and place the cameras on their own network segment
+- Encrypt the file servers
+- Remove the cameras from the asset inventory
+! IoT devices need default credentials changed, firmware kept current and segmentation to limit their reach.
+@end
+
+## Lesson: l0804 | Comparing architectures: the considerations
+
+When choosing between architectures (on-premises or cloud, VMs or containers, one site or several), weigh these considerations. Exam questions often ask which one a scenario is about.
+
+- **Availability**: how much of the time the system is up and usable. Cloud regions and redundant designs raise it; a single server lowers it.
+- **Resilience**: how well the system resists and recovers from failures and attacks: does it keep working when a part breaks?
+- **Cost**: purchase and running costs, including staff, power, licences and cloud bills. Cloud shifts spending from up-front capital to ongoing operating costs.
+- **Responsiveness**: how quickly the system answers users (performance, latency).
+- **Scalability**: how easily it can grow (or shrink) with demand. Cloud and containers scale quickly; on-premises hardware takes time to buy.
+- **Ease of deployment**: how fast and simply it can be set up or changed. IaC, containers and SaaS help.
+- **Risk transference**: moving some risk to someone else, for example to a cloud provider through contracts and SLAs, or to an insurer. Responsibility for your data never transfers completely.
+- **Ease of recovery**: how quickly the system can be restored after a failure: snapshots, IaC rebuilds, backups.
+- **Patch availability**: whether the vendor still provides patches, and how fast. Vendors that patch quickly lower risk.
+- **Inability to patch**: some systems (ICS, embedded, medical, legacy) can't be patched, which calls for compensating controls.
+- **Power**: how much electricity the design needs, and whether it can be kept running (UPS, generators); very important for remote and embedded devices with batteries.
+- **Compute**: how much processing capacity is available. Small devices may not be able to run strong encryption or security agents.
+
+> Trade-offs are normal: more resilience usually costs more; a small embedded device saves power and money but limits security features.
+
+@quiz
+? A start-up expects its traffic to grow tenfold within months and wants to add capacity in minutes. Which consideration matters most?
++ Scalability
+- Inability to patch
+- Power
+- Risk transference
+! Being able to grow quickly with demand is scalability.
+? A hospital signs a contract under which a cloud provider pays penalties if a service is down for more than an agreed time. Which consideration does this address?
+- Compute
+- Responsiveness
++ Risk transference
+- Patch availability
+! Contracts and SLAs move part of the financial risk to the provider: risk transference.
+? A battery-powered field sensor can't run strong encryption without draining its battery in days. Which considerations limit the design?
+- Scalability and ease of deployment
++ Power and compute
+- Risk transference and cost
+- Availability and resilience
+! Small devices have limited power and processing capacity, which restricts security features.
+@end

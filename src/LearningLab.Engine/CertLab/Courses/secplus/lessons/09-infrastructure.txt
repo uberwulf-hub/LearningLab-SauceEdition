@@ -1,0 +1,231 @@
+# Unit: u09 | 9. Securing enterprise infrastructure | Security architecture
+
+This unit turns principles into a network design. It covers where to place devices and how to divide the network into **security zones**, what happens when a security device fails (**fail-open** or **fail-closed**), the difference between **inline** and **monitoring** devices, the main **network appliances** (jump servers, proxies, IDS/IPS, load balancers, sensors), **port security** with 802.1X, the **firewall** types, and the ways to connect people and sites securely: **VPNs**, **TLS** and **IPsec** tunnels, **SD-WAN** and **SASE**. It ends with how to pick the right control for a situation.
+
+## Lesson: l0901 | Zones, placement and failure modes
+
+### Security zones
+
+A **security zone** is a part of the network whose systems share a trust level and the same rules. Typical zones:
+
+- **Internet** (untrusted): everything outside.
+- **Screened subnet** (formerly called a DMZ): holds public-facing servers such as web, mail relay and DNS. Firewalls allow the internet in to these servers only, and tightly limit what they can reach inside.
+- **Internal / trusted** network: staff workstations and internal servers.
+- **Restricted** zones for the most sensitive systems: payment systems, HR databases, management networks.
+- **Guest** and **IoT** zones: separated from everything internal.
+
+Traffic between zones passes through a firewall or similar control, so the rules can be enforced and logged.
+
+### Device placement and attack surface
+
+- Put security devices at the boundaries between zones, where traffic must pass through them: a firewall between the internet and the screened subnet, another between the screened subnet and the internal network.
+- Put an IPS where it can see the traffic that matters (often just inside the perimeter firewall); place IDS sensors on key segments.
+- Put a load balancer in front of the servers it shares the work between, and a WAF in front of web applications.
+- Every new connection, service or device adds to the **attack surface**; good placement keeps sensitive systems far from untrusted networks.
+
+### Connectivity
+
+Think about how every zone connects: which links exist, which are redundant, how branch offices and cloud resources join, and which traffic must be encrypted. Fewer, well-controlled connections are easier to protect than many ad hoc ones.
+
+### Failure modes
+
+What should a security device do if it fails?
+
+- **Fail-open**: traffic keeps flowing without inspection. Availability is kept, security is lost for the duration.
+- **Fail-closed**: all traffic stops. Security is kept, availability is lost.
+
+The choice depends on what matters most. A firewall protecting payment systems usually fails closed. An inline IPS in front of a hospital's critical system might fail open so care isn't interrupted. For physical security, doors on fire exits usually fail open (unlocked) for life safety, while a vault fails closed (secure).
+
+> Fail-open favours availability; fail-closed favours confidentiality and integrity. Life safety always comes first for doors.
+
+### Device attributes: active or passive, inline or tap
+
+- **Active** devices can act on traffic: block, drop, reset connections (firewall, IPS).
+- **Passive** devices only watch and report (IDS, network monitor).
+- **Inline** devices sit in the traffic path; everything passes through them, so they can block, but they add a little latency and can become a point of failure.
+- **Tap / monitor** devices get a copy of traffic from a network **tap** or a switch **port mirror** (SPAN port). They can't block, but they can't break the network either.
+
+An IPS is usually active and inline; an IDS is usually passive and connected through a tap or mirror port.
+
+@quiz
+? A company's public web server must be reachable from the internet but must not sit on the internal network. Where should it go?
+- On the internal network next to the file servers
++ In a screened subnet between two firewalls
+- In the guest Wi-Fi zone
+- Outside every firewall with no protection
+! A screened subnet holds public-facing servers and limits what they can reach inside.
+? An inline IPS protecting an online shop crashes. The business would rather keep selling, unprotected, than stop all traffic. Which failure mode does it want?
++ Fail-open
+- Fail-closed
+- Passive mode
+- Port mirroring
+! Fail-open lets traffic flow when the device fails, keeping availability at the cost of inspection.
+? A security analyst wants to watch all traffic to the data center without any chance of blocking it or slowing it down. How should the sensor be connected?
+- Inline between the core switch and the servers
++ Through a network tap or a switch mirror port
+- As the default gateway
+- In fail-closed mode
+! A tap or mirror port gives a passive copy of the traffic, so the sensor can't disrupt it.
+? Which pair best describes a typical IDS?
+- Active and inline
++ Passive and monitoring a copy of traffic
+- Active and fail-closed
+- Inline and fail-open only
+! An IDS detects and alerts; it usually sees a copy of traffic and doesn't block.
+@end
+
+## Lesson: l0902 | Network appliances, port security and firewalls
+
+### Network appliances
+
+- **Jump server** (jump box, bastion host): a hardened, closely monitored server that administrators connect to first, and from which they reach the systems they manage. Admin access to sensitive zones is allowed only from it, so there is one controlled, logged entry point.
+- **Proxy server**: makes requests on behalf of clients. A **forward proxy** sits in front of users going out to the internet (filtering, caching, logging). A **reverse proxy** sits in front of servers, receiving requests from the internet (load sharing, TLS offload, hiding the servers, a WAF function). A **transparent** proxy intercepts traffic without the client being configured; an explicit one needs client settings.
+- **IDS / IPS**: an **intrusion detection system** watches traffic and alerts; an **intrusion prevention system** also blocks. Detection methods: **signature-based** (matches known attack patterns; can't see new ones), **anomaly/behaviour-based** (compares to a learned normal baseline; finds new attacks but gives more false positives).
+- **Load balancer**: spreads requests across several servers for performance and availability, checks server health and stops sending to failed ones. **Active/active**: all servers take traffic; **active/passive**: standby servers take over on failure. Load balancers can also offload TLS and keep a user on the same server (persistence/affinity).
+- **Sensors**: devices or software that collect data for monitoring: network sensors feeding an IDS or SIEM, NetFlow exporters, environmental sensors.
+
+### Port security and 802.1X
+
+Unused or open switch ports let anyone plug in. Defences:
+
+- Disable unused ports.
+- **Port security** (MAC filtering) limits a switch port to known MAC addresses, or to a set number of them. Easy to set up, but MAC addresses can be faked.
+- **IEEE 802.1X** (port-based network access control) blocks a port (wired or wireless) until the device authenticates. Three roles:
+  - **Supplicant**: the device or software asking to join.
+  - **Authenticator**: the switch or wireless access point, which passes the messages on.
+  - **Authentication server**: usually a **RADIUS** server, which checks the credentials and says allow or deny.
+- **EAP** (Extensible Authentication Protocol) carries the authentication inside 802.1X. Common types:
+  - **EAP-TLS**: certificates on both the server and the client. Very strong; needs a PKI for clients.
+  - **PEAP**: the server has a certificate and builds a TLS tunnel; the user then signs in with a password inside it.
+  - **EAP-TTLS**: similar to PEAP, a server-certificate tunnel with various sign-in methods inside.
+  - **EAP-FAST**: uses a protected credential instead of certificates to build the tunnel.
+
+### Firewall types
+
+- **Layer 4 firewall** (stateful packet filtering): decides by IP addresses, ports and protocols, and tracks connection state so replies to allowed connections get back in. Fast, but can't see what the traffic actually contains.
+- **Layer 7 firewall** (application-layer): understands applications and protocols, so it can allow web browsing but block file uploads, or spot an application on an unusual port.
+- **NGFW** (next-generation firewall): a layer 7 firewall that adds application awareness, user identity, intrusion prevention, TLS inspection and threat intelligence in one device.
+- **WAF** (web application firewall): protects web applications specifically, inspecting HTTP/HTTPS requests to block SQL injection, XSS and similar attacks. It sits in front of web servers, often as a reverse proxy.
+- **UTM** (unified threat management): an all-in-one appliance combining firewall, IPS, antivirus, web and content filtering, VPN and more; popular in small and medium offices. Simpler to manage, but one device does everything (a single point of failure and a possible performance limit).
+
+```file
+WAF event  rule=SQLI-014 (SQL injection)  action=BLOCK
+  client 203.0.113.80  host shop.example.com
+  request: POST /account/login  param user=' OR '1'='1
+```
+
+> WAF = web application attacks. NGFW = application-aware network firewall with IPS. UTM = many functions in one box for smaller sites.
+
+@quiz
+? Administrators may manage servers in the restricted zone only after connecting to one hardened, heavily logged host first. What is that host?
++ A jump server
+- A forward proxy
+- A load balancer
+- A honeypot
+! A jump server is the single controlled entry point for administration of a sensitive zone.
+? In 802.1X, what role does the wireless access point play?
+- Supplicant
++ Authenticator
+- Authentication server
+- Certificate authority
+! The access point is the authenticator: it relays messages between the supplicant (the device) and the RADIUS server.
+? A company wants Wi-Fi authentication where both the network and each laptop prove themselves with certificates. Which EAP type fits?
+- PEAP
++ EAP-TLS
+- EAP-FAST
+- Port security with MAC filtering
+! EAP-TLS uses certificates on both client and server; PEAP uses a server certificate and a password.
+? Which device is designed specifically to block SQL injection and cross-site scripting aimed at a web application?
+- A layer 4 firewall
+- A load balancer
++ A web application firewall
+- A network tap
+! A WAF inspects HTTP requests to web applications for attacks such as SQLi and XSS.
+? A small office wants one appliance providing firewall, VPN, antivirus scanning and web filtering. What is it called?
+- A jump server
++ A UTM appliance
+- A reverse proxy
+- A passive IDS
+! Unified threat management combines many security functions in one device.
+@end
+
+## Lesson: l0903 | Secure communication and remote access
+
+### VPNs and remote access
+
+A **VPN** (virtual private network) creates an encrypted tunnel across an untrusted network such as the internet.
+
+- **Remote access VPN**: a single user's device connects to the company network (with a VPN client, or through a browser for some TLS VPNs).
+- **Site-to-site VPN**: two networks (head office and a branch) are joined permanently through gateways at each end; users don't do anything.
+- **Full tunnel**: all the user's traffic goes through the VPN, so company security controls see everything. **Split tunnel**: only company traffic goes through the VPN; internet traffic goes straight out. Split tunnelling saves bandwidth but leaves internet traffic outside company protection.
+- Other remote access: remote desktop through a gateway, SSH for administration, and zero trust access brokers that connect users to individual applications instead of the whole network.
+
+### Tunneling with TLS
+
+**TLS** (Transport Layer Security) secures web traffic (HTTPS on port 443) and many other protocols. Some VPNs use TLS too, which works through most firewalls because it looks like normal HTTPS. Use TLS 1.2 or 1.3 only.
+
+### IPsec
+
+**IPsec** secures IP traffic at the network layer and is the usual choice for site-to-site VPNs.
+
+- **AH** (Authentication Header, IP protocol 51): proves integrity and the origin of each packet but does **not** encrypt. It also doesn't work well through NAT, because NAT changes the header it protects.
+- **ESP** (Encapsulating Security Payload, IP protocol 50): **encrypts** and also provides integrity and authentication. ESP is what most IPsec VPNs use.
+- **Transport mode**: protects only the payload; the original IP header stays. Used between two hosts.
+- **Tunnel mode**: protects the whole original packet, header included, and wraps it in a new IP header. Used between gateways (site-to-site) and for most remote access.
+- **IKE** (Internet Key Exchange, UDP port 500; UDP 4500 when NAT traversal is needed) sets up the tunnel: the two sides authenticate each other (with certificates or a pre-shared key), agree on algorithms and create the keys (security associations). IKEv2 is the current version.
+
+> Need encryption? ESP. AH alone only authenticates. Gateway-to-gateway? Tunnel mode.
+
+```file
+IPsec SA  peer 198.51.100.10  mode=tunnel  protocol=ESP
+  encryption=AES-256-GCM  integrity=(GCM)  DH group 20 (ECDH P-384)
+  IKEv2 authenticated by certificate CN=vpn-branch2.corp.example
+  local 10.10.0.0/16  <->  remote 10.40.0.0/24
+```
+
+### SD-WAN
+
+**SD-WAN** (software-defined wide area network) manages links between sites (broadband, cellular, MPLS) centrally, sending each kind of traffic over the best link and failing over automatically. It often connects branches directly to cloud services instead of sending everything through head office. Security: the links usually run encrypted tunnels, and the central controller and policies must be protected; SD-WAN itself is about connectivity, so security services are often added on top.
+
+### SASE
+
+**SASE** (secure access service edge) combines networking and security in a cloud service delivered close to the users, wherever they are. It typically bundles SD-WAN with cloud security functions: secure web gateway, cloud access security broker (CASB), firewall as a service and zero trust network access (ZTNA). Users at home, in branches or travelling get the same protection without sending traffic back to a central office.
+
+### Selecting effective controls
+
+Match the control to the need:
+
+- Public web application under attack: WAF (and a reverse proxy, a CDN or DDoS protection for floods).
+- Admins reaching a restricted zone: jump server plus MFA.
+- Stop unknown devices plugging in: 802.1X with NAC; disable unused ports.
+- Join a branch to head office: site-to-site IPsec VPN (tunnel mode, ESP), or SD-WAN.
+- Staff working from anywhere using cloud apps: SASE or ZTNA.
+- Watch traffic without risk of disruption: passive IDS on a tap.
+- Block known attacks in real time: inline IPS or NGFW.
+
+@quiz
+? A company needs to join a branch office to head office permanently, encrypting all traffic between the two networks. Which setup fits best?
+- IPsec transport mode with AH
++ A site-to-site IPsec VPN in tunnel mode with ESP
+- A split-tunnel remote access VPN on each PC
+- An unencrypted SD-WAN link
+! Gateway-to-gateway encryption of whole packets is IPsec tunnel mode with ESP. AH doesn't encrypt.
+? Which IPsec protocol gives integrity and origin authentication but no confidentiality?
++ AH
+- ESP
+- IKE
+- TLS
+! AH authenticates packets without encrypting them; ESP provides encryption.
+? A company with many remote workers and branches wants web filtering, CASB, firewalling and zero trust access delivered from the cloud close to each user. What should it adopt?
+- A UTM in head office
+- A Type 1 hypervisor
++ SASE
+- A forward proxy in each home
+! SASE combines networking (SD-WAN) and security services delivered from the cloud at the edge.
+? A VPN is set so that only traffic for company networks goes through the tunnel, while web browsing goes straight to the internet. What is this called?
+- Full tunnel
++ Split tunnel
+- Transport mode
+- Fail-open
+! Split tunnelling sends only company traffic through the VPN; a full tunnel sends everything.
+@end

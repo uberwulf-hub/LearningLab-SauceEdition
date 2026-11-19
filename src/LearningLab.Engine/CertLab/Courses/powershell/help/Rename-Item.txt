@@ -1,0 +1,20 @@
+SYNOPSIS: Gives one item a new name in the same place.
+DESCRIPTION:
+Rename-Item changes the name of a file, folder, registry key or environment variable. -NewName is only a name: to put the item somewhere else use Move-Item.
+PARAMETER Path:
+The item to rename (one item).
+PARAMETER LiteralPath:
+The item, taken exactly as typed.
+PARAMETER NewName:
+The new name.
+PARAMETER Force:
+Renames even read-only items.
+PARAMETER PassThru:
+Outputs the renamed item.
+EXAMPLE: Rename-Item C:\LabFiles\notes.txt notes-old.txt
+Renames a file.
+EXAMPLE: Get-ChildItem *.txt | Rename-Item -NewName { $_.Name -replace '\.txt$', '.bak' }
+Renames many files with a script block (it runs once per file).
+NOTES:
+A name that already exists gives "Cannot create a file when that file already exists."
+RELATED: Move-Item, Copy-Item

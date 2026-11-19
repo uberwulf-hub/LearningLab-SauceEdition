@@ -1,0 +1,30 @@
+SYNOPSIS: Changes the Windows Firewall profiles: on or off, default actions and logging.
+DESCRIPTION:
+Set-NetFirewallProfile changes the settings of one or more profiles. Pick them with -Name (Domain, Private, Public, or several separated by commas), -All, or pipe them from Get-NetFirewallProfile.
+
+Turning a profile off (-Enabled False) lets all traffic in while that profile is active. It is sometimes done to rule out the firewall while troubleshooting, but turn it back on straight away: the right fix is a rule.
+PARAMETER Name:
+The profile or profiles to change. Also accepted as -Profile.
+PARAMETER All:
+Changes all three profiles.
+PARAMETER Enabled:
+True turns the firewall on for the profile, False turns it off.
+PARAMETER DefaultInboundAction:
+Allow, Block or NotConfigured: what happens to inbound traffic that no rule matches.
+PARAMETER DefaultOutboundAction:
+Allow, Block or NotConfigured, for outbound traffic.
+PARAMETER LogAllowed:
+True writes allowed connections to the firewall log.
+PARAMETER LogBlocked:
+True writes dropped packets to the firewall log.
+PARAMETER PassThru:
+Outputs each profile after the change.
+EXAMPLE: Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
+Makes sure the firewall is on everywhere.
+EXAMPLE: Set-NetFirewallProfile -All -DefaultInboundAction Block -DefaultOutboundAction Allow
+The usual safe defaults, written out.
+EXAMPLE: Set-NetFirewallProfile -Name Domain -LogBlocked True -PassThru
+Logs what the firewall drops on the domain profile.
+NOTES:
+On a real PC the firewall log is %systemroot%\system32\LogFiles\Firewall\pfirewall.log. Needs an administrator on a real PC. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Get-NetFirewallProfile, Get-NetFirewallRule, Get-NetConnectionProfile

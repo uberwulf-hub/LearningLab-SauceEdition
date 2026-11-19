@@ -1,0 +1,14 @@
+SYNOPSIS: Names a group of client networks for use in DNS policies.
+DESCRIPTION:
+A client subnet is a named list of networks, for example Branch for 10.20.0.0/24. DNS policies then refer to the name: "when the question comes from Branch, answer from this zone scope". It is the first step of a location-based (split-brain or geo) DNS setup.
+
+The usual order: Add-DnsServerClientSubnet, Add-DnsServerZoneScope, add records with -ZoneScope, then Add-DnsServerQueryResolutionPolicy.
+PARAMETER Name:
+The name for the group, for example Branch.
+PARAMETER IPv4Subnet:
+One or more networks, for example 10.20.0.0/24.
+EXAMPLE: Add-DnsServerClientSubnet -Name Branch -IPv4Subnet 10.20.0.0/24 -ComputerName DC1
+Questions from the branch network can now be matched by name.
+EXAMPLE: Get-DnsServerClientSubnet -ComputerName DC1
+Lists the client subnets.
+RELATED: Get-DnsServerClientSubnet, Add-DnsServerZoneScope, Add-DnsServerQueryResolutionPolicy

@@ -1,0 +1,64 @@
+TOPIC
+    about_Objects
+
+SHORT DESCRIPTION
+    What PowerShell output really is: objects with properties and methods.
+
+LONG DESCRIPTION
+    Commands in PowerShell do not return lines of text. They return
+    objects: bundles of data with names. A service object knows its Name,
+    its Status and its DisplayName, and it knows how to Start() and Stop().
+    The table you see on the screen is only a picture of those objects.
+
+  Properties and methods
+    A property is a piece of data; a method is something the object can
+    do. Read a property with a dot; call a method with a dot and
+    parentheses:
+
+        $svc = Get-Service -Name Spooler
+        $svc.Status
+        $svc.DisplayName
+        $svc.Refresh()
+
+        $file = Get-Item C:\LabFiles\notes.txt
+        $file.Length
+        $file.LastWriteTime.AddDays(7)
+
+  Finding out what is there
+    Get-Member lists an object's type, properties and methods. It is the
+    most useful command for learning about new output:
+
+        Get-Service | Get-Member
+        Get-Service | Get-Member -MemberType Property
+
+    Format-List * shows every property with its value:
+
+        Get-Service Spooler | Format-List *
+
+  Working with objects
+    Because output is objects, the next command in a pipeline can use any
+    property by name:
+
+        Get-Process | Where-Object WS -gt 100MB |
+            Sort-Object WS -Descending |
+            Select-Object -First 5 Name, Id, WS
+
+  Making your own
+    A hashtable cast to [pscustomobject] becomes an object:
+
+        [pscustomobject]@{ Computer = 'WIN-SRV1'; Online = $true }
+
+    Add-Member adds a property to an existing object, and New-Object
+    creates .NET objects such as System.Collections.ArrayList.
+
+  Collections
+    Many commands return several objects; stored in a variable they become
+    an array. $list.Count gives how many, $list[0] the first.
+
+SEE ALSO
+    Get-Member
+    Select-Object
+    Add-Member
+    New-Object
+    about_Pipelines
+    about_Calculated_Properties

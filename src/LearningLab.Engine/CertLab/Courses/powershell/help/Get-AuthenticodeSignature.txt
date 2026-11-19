@@ -1,0 +1,24 @@
+SYNOPSIS: Checks the digital signature of a script or other file.
+DESCRIPTION:
+Get-AuthenticodeSignature tells you whether a file is signed, who signed it and whether the signature is still good. The Status property is the answer:
+
+Valid: signed, unchanged since signing, and the certificate chain ends in a trusted root.
+NotSigned: there is no signature.
+HashMismatch: the file was changed after it was signed (even one character). Sign it again.
+UnknownError: for example the signing certificate is not trusted on this computer (it is not in a Root store), or the file type cannot carry a signature.
+
+StatusMessage explains the status in words, and SignerCertificate shows the certificate used.
+PARAMETER FilePath:
+The file or files to check. Wildcards work.
+PARAMETER LiteralPath:
+A path used exactly as written, with no wildcards.
+EXAMPLE: Get-AuthenticodeSignature C:\Users\Administrator\Downloads\Get-Inventory.ps1
+Shows the signer's thumbprint, the status and the file name.
+EXAMPLE: Get-AuthenticodeSignature C:\LabFiles\*.ps1 | Where-Object Status -ne 'Valid'
+Lists the scripts whose signature is missing or broken.
+EXAMPLE: (Get-AuthenticodeSignature C:\Users\Administrator\Downloads\Get-Inventory.ps1).StatusMessage
+Explains why a signature is not valid.
+NOTES:
+Windows' own files show Valid with SignatureType Catalog: they are signed through catalog files rather than a block inside the file.
+In Cert Lab the signature block is a stand-in made for the course: it behaves like a real one but protects nothing.
+RELATED: Set-AuthenticodeSignature, New-SelfSignedCertificate, Import-Certificate, about_Signing

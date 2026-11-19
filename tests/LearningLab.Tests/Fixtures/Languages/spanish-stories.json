@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "stories": [
+    {
+      "id": "test-morning",
+      "level": 1,
+      "title": "Buenos días, Sofía",
+      "titleEn": "Good morning, Sofía",
+      "after": "hello",
+      "lines": [
+        { "es": "Es la mañana.", "en": "It is morning." },
+        { "es": "Sofía dice: «¡Buenos días, papá!»", "en": "Sofía says: \"Good morning, Dad!\"" },
+        { "es": "Papá dice: «Hola, Sofía. ¿Cómo estás?»", "en": "Dad says: \"Hi, Sofía. How are you?\"" },
+        { "es": "Sofía dice: «Muy bien, gracias.»", "en": "Sofía says: \"Very well, thanks.\"" },
+        { "es": "El perro se ríe.", "en": "The dog laughs." },
+        { "es": "¡Hasta luego, papá!", "en": "See you later, Dad!" }
+      ],
+      "words": { "es": "is (ser)", "mañana": "morning", "dice": "says (decir)", "papá": "dad", "se ríe": "laughs (reírse)", "perro": "dog", "sofía": "Sofía (a name)" },
+      "questions": [
+        { "q": "When does the story happen?", "answer": "In the morning", "wrong": ["At night", "At lunch"] },
+        { "q": "How is Sofía?", "answer": "Very well", "wrong": ["Tired", "Sad"] }
+      ]
+    },
+    {
+      "id": "test-later",
+      "level": 2,
+      "title": "La familia de Lucas",
+      "titleEn": "Lucas's family",
+      "after": "family",
+      "lines": [
+        { "es": "Lucas tiene una familia grande.", "en": "Lucas has a big family." },
+        { "es": "Tiene dos hermanas.", "en": "He has two sisters." },
+        { "es": "Tiene un hermano.", "en": "He has a brother." },
+        { "es": "Su abuela vive con ellos.", "en": "His grandma lives with them." },
+        { "es": "La abuela cocina muy bien.", "en": "Grandma cooks very well." },
+        { "es": "¡Lucas está feliz!", "en": "Lucas is happy!" }
+      ],
+      "words": { "tiene": "has (tener)" },
+      "questions": [ { "q": "Who lives with them?", "answer": "His grandma", "wrong": ["His uncle", "His cousin"] } ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+SYNOPSIS: Saves objects to a CSV file, one line per object.
+DESCRIPTION:
+Export-Csv turns objects into comma-separated text and writes it to a file that Excel, other programs and Import-Csv can read. Each property becomes a column, and the first line holds the column names.
+
+The columns come from the first object. Choose them, and their order, with Select-Object before Export-Csv.
+
+In Windows PowerShell 5.1 the file starts with a #TYPE line naming the object type, unless you add -NoTypeInformation. Most people add it every time.
+PARAMETER Path:
+The file to write. Position 0. An existing file is replaced unless you use -Append.
+PARAMETER InputObject:
+The objects to save. Usually they come through the pipeline. Required.
+PARAMETER NoTypeInformation:
+Leaves out the #TYPE line. Its alias is -NTI.
+PARAMETER Append:
+Adds the new lines to the end of an existing file, without a second header line.
+PARAMETER Delimiter:
+The character between values when it should not be a comma, for example ';'. Position 1.
+PARAMETER Encoding:
+The text encoding of the file, for example UTF8 or Unicode. In 5.1 the default is ASCII, so letters such as e with an accent turn into question marks; use -Encoding UTF8 for names in other languages.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object Name, Office | Export-Csv C:\LabFiles\offices.csv -NoTypeInformation
+Saves two columns of the employee list to a new file.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Where-Object Office -eq 'Seattle' | Select-Object Name, Office | Export-Csv C:\LabFiles\offices.csv -Append -NoTypeInformation
+Adds the Seattle employees to the end of the same file.
+EXAMPLE: Import-Csv C:\LabFiles\offices.csv | Select-Object -First 2
+Reads the saved file back as objects.
+NOTES:
+Never pipe Format-Table or Format-List into Export-Csv: the file would contain formatting objects, not your data. Use Select-Object to choose columns.
+
+Export-Csv supports -WhatIf and -Confirm. On a real PC it also has -NoClobber (never replace an existing file) and -Force (overwrite a read-only file; with -Append, allow objects whose properties differ from the file's columns, which is otherwise an error).
+
+PowerShell 7 leaves out the #TYPE line by default, writes UTF-8 without a byte order mark by default, and adds -UseQuotes and -QuoteFields.
+
+A property that holds an array is saved as its type name (System.Object[]), not its contents. Join it into one string first.
+
+Export-Csv writes objects; Out-File writes the text you would see on screen. They are not the same thing.
+RELATED: Import-Csv, ConvertTo-Csv, ConvertFrom-Csv, Select-Object, Out-File

@@ -1,0 +1,23 @@
+SYNOPSIS: Finds domain controllers and shows their roles and site.
+DESCRIPTION:
+Get-ADDomainController returns a domain controller with its site, IP address, operating system, whether it's a global catalog (IsGlobalCatalog), whether it's read-only (IsReadOnly) and which operations master roles it holds.
+Without parameters it returns the domain controller your computer is using. -Filter * lists them all. -Discover asks DC Locator, the same process Windows uses at sign-in, to find a suitable one, optionally in a given site or with a given service.
+PARAMETER Identity:
+A domain controller, such as DC1. Position 0.
+PARAMETER Filter:
+A search, such as * or "IsGlobalCatalog -eq `$true".
+PARAMETER Discover:
+Finds a domain controller through DC Locator.
+PARAMETER Service:
+With -Discover: what it must offer, such as GlobalCatalog, PrimaryDC or KDC.
+PARAMETER SiteName:
+With -Discover: the site to look in.
+PARAMETER DomainName:
+With -Discover: the domain to look in.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADDomainController -Filter * | Select-Object Name, Site, IPv4Address, IsGlobalCatalog, OperationMasterRoles
+Every domain controller with its site and roles.
+EXAMPLE: Get-ADDomainController -Discover -Service PrimaryDC
+Finds the PDC emulator.
+RELATED: Get-ADDomain, Move-ADDirectoryServer, Move-ADDirectoryServerOperationMasterRole, Install-ADDSDomainController

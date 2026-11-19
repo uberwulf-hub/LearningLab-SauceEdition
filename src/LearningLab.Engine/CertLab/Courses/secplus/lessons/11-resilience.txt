@@ -1,0 +1,208 @@
+# Unit: u11 | 11. Resilience and recovery | Security architecture
+
+Availability is one of the three parts of the CIA triad, and it is the one people notice first when it fails. This unit is about keeping services running when parts break, and about getting them back quickly when something bigger goes wrong: high availability, backup sites, platform diversity, capacity planning, testing your plans, backups of every kind, and power.
+
+Security+ asks you to pick the right resilience method for a scenario, so pay attention to the differences: load balancing versus clustering, hot versus warm versus cold sites, and full versus incremental versus differential backups.
+
+## Lesson: l1101 | High availability, sites and diversity
+
+**High availability** (HA) means a service keeps running even when a component fails. The usual tools are redundancy (more than one of everything that matters) and automatic **failover** (traffic moves to a working copy without a person stepping in). HA is often measured in "nines": 99.9 percent uptime allows about 8.8 hours of downtime a year, 99.999 percent (five nines) about 5 minutes.
+
+### Load balancing versus clustering
+
+Both use several servers, but they solve the problem differently:
+
+- **Load balancing**: a load balancer spreads incoming requests across a group of servers that each can answer on their own (for example, a pool of web servers). If one server fails its health check, the balancer stops sending it traffic. Load balancing improves both capacity and availability.
+- **Clustering**: several servers work together as one logical system, usually sharing storage or state. In an **active/passive** cluster one node does the work and another waits to take over; in an **active/active** cluster all nodes serve at once. Clusters suit things that keep state, such as a database.
+
+> Many identical web servers behind one address: load balancing. Two database servers that share storage and take over from each other: clustering.
+
+### Site considerations
+
+A **recovery site** is somewhere you can run the business if the main site is lost. The three classic types trade cost against speed:
+
+- **Hot site**: fully equipped, with current data (often replicated in near real time) and running systems. You can switch over in minutes to hours. Most expensive.
+- **Warm site**: has power, network and some or all hardware, but data and software need to be loaded or brought up to date. Ready in hours to days. Medium cost.
+- **Cold site**: space, power and cooling, and little else. You bring the hardware and restore from backups. Weeks to be ready. Cheapest.
+
+**Geographic dispersion** means placing sites (or cloud regions) far enough apart that one event, such as a flood, hurricane, wildfire or regional power cut, can't take out both. A backup data center across the street doesn't help with a regional disaster.
+
+### Platform diversity and multi-cloud
+
+- **Platform diversity**: using different operating systems, vendors or technologies for the same job, so one flaw or one bad update doesn't hit everything. For example, two firewall layers from different vendors, or a mix of Linux and Windows servers.
+- **Multi-cloud systems**: running workloads across more than one cloud provider. This avoids depending on one provider (a provider-wide outage or "vendor lock-in"), at the cost of more complexity and more skills to manage.
+
+### Continuity of operations and capacity planning
+
+**Continuity of operations** (COOP) is about keeping the essential functions of the organization going during and after a disruption, even in a reduced form: knowing which functions come first, who does them, and where.
+
+**Capacity planning** makes sure you have enough resources for normal demand, for growth, and for a crisis. Security+ splits it three ways:
+
+- **People**: enough trained staff, cross-training, and someone who can step in when a key person is away (avoid a single point of failure in a person).
+- **Technology**: enough server, storage and application capacity, including the ability to scale up during peaks.
+- **Infrastructure**: buildings, network links, power and cooling that can carry the load.
+
+@quiz
+? Northwind Clinic's patient portal runs on six identical web servers. The team wants requests spread across them and a failed server skipped automatically. What should they deploy?
++ A load balancer with health checks
+- An active/passive cluster
+- A cold site
+- Platform diversity
+! A load balancer spreads requests over independent servers and stops sending to one that fails its health check; clustering is for systems that share state.
+? A company needs a recovery site it can switch to within an hour, with data no more than a few minutes old. Cost is a secondary concern. Which site type fits?
+- Cold site
+- Warm site
++ Hot site
+- Mobile site with backups restored on arrival
+! A hot site has running systems and current data, so failover is fast; a warm site needs data and software brought up to date first.
+? Why would an organization use two firewall layers from different vendors?
+- To reduce licensing costs
++ So that one vendor's flaw or bad update doesn't defeat both layers
+- Because load balancers require it
+- To meet the definition of a hot site
+! This is platform diversity: different products don't share the same vulnerabilities.
+? The main data center and the backup data center are in the same coastal town. What resilience concept does this design neglect?
+- Capacity planning for people
+- Clustering
++ Geographic dispersion
+- Journaling
+! One hurricane or flood could hit both sites; dispersion places them far enough apart to avoid a shared disaster.
+@end
+
+## Lesson: l1102 | Testing resilience plans
+
+A plan nobody has tested is a guess. Security+ names four kinds of tests, from the least disruptive to the most:
+
+- **Tabletop exercise**: the people involved sit around a table (or a video call) and talk through a scenario step by step. "The file server is encrypted by ransomware at 09:00. Who do you call? What do you check first?" Nothing technical is touched. Cheap and safe, and good for finding gaps in roles and communication.
+- **Simulation**: a more realistic practice event that acts out a scenario, for example a fake phishing campaign or a staged outage in a test environment, so people actually perform their tasks. Production is usually not affected.
+- **Parallel processing**: the recovery systems are brought up and run the same work as the main systems at the same time, and the results are compared. Production keeps running on the main systems, so a problem with the backup doesn't hurt the business.
+- **Failover test**: the main system is actually switched off (or traffic moved away from it) and the backup takes over for real. This is the most convincing test and also the riskiest, so it is planned for a maintenance window with a way back.
+
+> Talk only: tabletop. Act it out: simulation. Run both side by side: parallel processing. Really switch: failover.
+
+### What to look for in a test
+
+- Did the recovery meet the time and data targets (RTO and RPO, covered in the risk unit)?
+- Did people know their roles, and could they reach each other?
+- Were the backups actually restorable, and complete?
+- What went wrong, and what changes go into the plan? Every test ends with a written review and updates.
+
+```file
+Exercise: Ransomware at the main office (tabletop)
+Date: 2026-03-12   Facilitator: K. Osei
+Finding 1: Help desk didn't know who can approve taking the file server offline.
+Finding 2: Offsite backup restore steps refer to an old storage system.
+Action: Update the call tree and the restore runbook by 2026-04-01.
+```
+
+@quiz
+? The IT manager gathers department heads for two hours to talk through how they would respond to a week-long loss of the main office. No systems are touched. What kind of test is this?
++ Tabletop exercise
+- Failover test
+- Parallel processing
+- Penetration test
+! Talking through a scenario without touching systems is a tabletop exercise.
+? A bank runs its backup payment system alongside the main one for a day, feeding both the same transactions, and compares the results. Which test is this?
+- Simulation
++ Parallel processing
+- Failover
+- Tabletop exercise
+! Both systems run the same work at once while production stays on the main system: parallel processing.
+? Which test gives the most confidence that the backup site really works, but carries the most risk to the business?
+- Tabletop exercise
+- Simulation
++ Failover test
+- Document review
+! A failover test actually moves production to the backup, which proves it works but can cause an outage if it doesn't.
+@end
+
+## Lesson: l1103 | Backups and replication
+
+Backups protect against data loss from hardware failure, mistakes, ransomware and disasters. The questions are always the same: what type, how often, where kept, how protected, and can you restore it?
+
+### Full, incremental and differential
+
+The **archive bit** (or a change log) marks files changed since they were last backed up.
+
+- **Full**: copies everything. Slowest to back up and needs the most space, but the fastest and simplest to restore (one set).
+- **Incremental**: copies only what changed since the **last backup of any kind** (full or incremental), then clears the marker. Fast and small each day, but a restore needs the last full plus **every** incremental since, in order.
+- **Differential**: copies everything that changed since the **last full** backup, and does not clear the marker. Each day's differential grows, but a restore needs only the last full plus the **latest** differential.
+
+Example: a full backup runs on Sunday and the server fails on Thursday morning.
+
+- With nightly incrementals (Mon, Tue, Wed): restore Sunday full + Mon + Tue + Wed = four sets.
+- With nightly differentials: restore Sunday full + Wednesday's differential = two sets.
+
+> Incremental: quick backups, slow restores. Differential: slower backups as the week goes on, quicker restores.
+
+### Snapshots, replication and journaling
+
+- **Snapshot**: a point-in-time image of a volume, virtual machine or storage system, usually taken in seconds. Good for rolling back a bad update. A snapshot kept on the same storage is not a full backup: if that storage fails, the snapshot goes with it.
+- **Replication**: copying data to another system or site continuously or on a schedule. **Synchronous** replication writes to both places before confirming (no data lost, but needs a fast, short link); **asynchronous** replication sends changes shortly after (works over distance, may lose the last few seconds). Note that replication copies mistakes and ransomware encryption too, so it doesn't replace backups.
+- **Journaling**: recording every change in a log (journal) before or as it is applied. After a crash, the system replays or rolls back the journal to reach a consistent state, and some backup systems use journals to restore to any point in time.
+
+### Where, how often, and how protected
+
+- **Onsite** backups restore quickly; **offsite** backups survive a fire or flood at the main site. Use both. A common rule of thumb is **3-2-1**: three copies of the data, on two different kinds of media, with one copy offsite. Keeping one copy offline or immutable (can't be changed or deleted for a set time) protects against ransomware.
+- **Frequency** follows how much data the business can afford to lose (the recovery point objective). A system that can lose at most one hour of data needs backups or replication at least hourly.
+- **Encryption**: backups hold the same sensitive data as production, so encrypt them, at rest and in transit, and protect the keys separately. A stolen unencrypted backup tape is a data breach.
+- **Recovery**: test restores regularly. A backup that has never been restored is not proven.
+
+@quiz
+? Full backups run every Sunday and incremental backups every other night. The server fails on Friday morning. What do you need to restore?
+- Sunday's full backup and Thursday's incremental only
++ Sunday's full backup and every incremental from Monday to Thursday
+- Thursday's incremental only
+- Sunday's full backup only
+! Each incremental holds only the changes since the previous backup, so every one since the full is needed, in order.
+? An administrator wants the fastest possible restore while still not running a full backup every night. Which scheme fits best?
+- Full weekly plus incremental nightly
++ Full weekly plus differential nightly
+- Snapshots kept on the same disk
+- Asynchronous replication only
+! A differential restore needs just the full plus the latest differential: two sets.
+? Ransomware encrypts the file server, and within seconds the encrypted files appear on the replica in the second data center. What does this show?
++ Replication copies bad changes too, so it doesn't replace point-in-time backups
+- Synchronous replication is always safer than backups
+- The replica should have used journaling instead of encryption
+- Offsite backups are unnecessary when replication is used
+! Replication faithfully copies whatever is written, including encrypted files; you need separate, ideally offline or immutable, backups.
+? A backup tape with customer records is lost in transit to the offsite store. Which control would have prevented this from being a data breach?
+- Differential backups
++ Encrypting the backup
+- Taking a snapshot first
+- Geographic dispersion
+! Encrypted backups are unreadable without the key, which should be stored separately.
+@end
+
+## Lesson: l1104 | Power
+
+Nothing runs without power, so power is part of resilience planning.
+
+- **UPS** (uninterruptible power supply): batteries that take over instantly when the mains power drops, and smooth out spikes, sags and brownouts. A UPS typically lasts minutes, not hours: long enough to ride out a short blip, to start a generator, or to shut servers down cleanly.
+- **Generator**: an engine (usually diesel or natural gas) that produces power for hours or days while fuel lasts. It takes some seconds to start and stabilize, which is why a UPS covers the gap. An **automatic transfer switch** moves the load to the generator when mains power fails.
+- **Power distribution units** (PDUs) spread power to the equipment in a rack; servers with **dual power supplies** can be fed from two separate circuits or PDUs so one failure doesn't stop them.
+- Test generators regularly under load and keep fuel stocked; a generator that won't start is no help.
+
+> The UPS bridges the first seconds and minutes; the generator runs the site for the long outage.
+
+@quiz
+? The power fails at a data center. Which device keeps the servers running during the seconds before the backup generator is ready?
++ UPS
+- Automatic transfer switch
+- Load balancer
+- PDU
+! The UPS batteries take over instantly; the generator needs time to start and stabilize.
+? A hospital must keep its systems running through a two-day regional power cut. What is the main control it needs?
+- A larger UPS battery
++ A generator with enough fuel, fed through a transfer switch
+- Dual network cards
+- A cold site
+! A UPS lasts minutes; a generator can run for days as long as it has fuel.
+? Why do servers often have two power supplies connected to different PDUs?
+- To double the server's processing power
++ So the failure of one power supply or circuit doesn't stop the server
+- Because a UPS requires two inputs
+- To allow parallel processing tests
+! Dual power supplies on separate circuits remove a single point of failure in the power path.
+@end

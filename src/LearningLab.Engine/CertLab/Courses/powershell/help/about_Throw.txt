@@ -1,0 +1,57 @@
+TOPIC
+    about_Throw
+
+SHORT DESCRIPTION
+    Stopping a script on purpose with an error that can be caught.
+
+LONG DESCRIPTION
+    The throw keyword raises a terminating error. The current script or
+    function stops at once, unless a try/catch block (or a trap) around it
+    catches the error.
+
+        function Get-LabFile {
+            param([string]$Name)
+            $path = Join-Path C:\LabFiles $Name
+            if (-not (Test-Path $path)) {
+                throw "The file $Name is not in C:\LabFiles."
+            }
+            Get-Item $path
+        }
+
+    You can throw a string (as above), an exception object, or an
+    ErrorRecord. A string becomes a RuntimeException with that message.
+    throw with nothing after it gives the message "ScriptHalted"; inside a
+    catch block it passes the current error on.
+
+  Catching it
+        try {
+            Get-LabFile -Name missing.txt
+        }
+        catch {
+            "Problem: $($_.Exception.Message)"
+        }
+
+  Throwing a specific exception
+    A specific type lets callers catch exactly that kind of problem:
+
+        throw [System.IO.FileNotFoundException]::new('notes.txt is missing')
+
+        try { ... }
+        catch [System.IO.FileNotFoundException] { 'Not found' }
+
+  throw or Write-Error?
+    Write-Error reports a non-terminating error by default: the command
+    carries on with the next item. Use it when one bad item should not
+    stop the rest. Use throw when going on makes no sense. In an advanced
+    function, $PSCmdlet.ThrowTerminatingError() is the tidy way to stop
+    with an ErrorRecord.
+
+  A required parameter trick
+    Older scripts write param($Name = $(throw 'Name is required')).
+    [Parameter(Mandatory = $true)] is the better way now.
+
+SEE ALSO
+    about_Try_Catch_Finally
+    Write-Error
+    about_Preference_Variables
+    about_Functions_Advanced_Parameters

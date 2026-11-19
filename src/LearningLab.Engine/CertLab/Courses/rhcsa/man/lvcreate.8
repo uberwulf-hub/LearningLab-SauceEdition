@@ -1,0 +1,103 @@
+NAME
+       lvcreate - create a logical volume in a volume group
+
+SYNOPSIS
+       lvcreate -n NAME -L SIZE VG [PV...]
+       lvcreate -n NAME -l EXTENTS VG [PV...]
+       lvcreate -s -n NAME -L SIZE VG/ORIGIN
+
+DESCRIPTION
+       LVM builds storage in three layers: physical volumes (PVs, disks or
+       partitions prepared with pvcreate) are pooled into a volume group (VG,
+       made with vgcreate), and logical volumes (LVs) are carved out of a VG.
+       An LV is used like a partition (mkfs, mount, swap), but it can be
+       grown later and can span several disks.
+
+       lvcreate makes a new LV and its device files:
+
+           /dev/VG/NAME   and   /dev/mapper/VG-NAME
+
+       Both names point to the same device; either may be used in /etc/fstab
+       (or use the file system's UUID).
+
+   Sizes and extents
+       A VG is divided into physical extents (PEs), 4 MiB each unless the VG
+       was made with vgcreate -s. Every LV is a whole number of extents, so a
+       size is rounded up to the next multiple of the extent size, and
+       lvcreate says so ("Rounding up size to full physical extent").
+
+       -L takes a size with a unit: 500M, 2G, 1.5G (k, m, g, t; capitals
+       mean the same). -l takes a number of extents, or a percentage:
+
+       -l 100         100 extents (400 MiB with 4 MiB extents)
+       -l 100%FREE    all the free space in the VG
+       -l 50%VG       half the size of the VG
+
+       When a task asks for an LV of N extents, use -l; when it asks for a
+       size, use -L. vgdisplay shows "PE Size" and "Free PE / Size".
+
+OPTIONS
+       -n NAME, --name NAME
+              The LV's name.
+
+       -L SIZE, --size SIZE
+              The size, with a unit.
+
+       -l N, --extents N
+              The size in extents, or a percentage of FREE, VG or PVS.
+
+       -s, --snapshot
+              Make a snapshot of the LV ORIGIN: a copy of how it looks now,
+              which needs only room for the changes made afterwards.
+
+       --type TYPE
+              The kind of LV: linear (the default), striped, raid1...
+
+       -y, --yes
+              Answer yes, for example to wiping an old signature found where
+              the LV is made.
+
+       -W y|n, --wipesignatures y|n
+              Wipe (or keep) old file system signatures in the new space.
+
+       -Z y|n, --zero y|n
+              Zero the start of the new LV.
+
+EXAMPLES
+       Make a 1 GiB LV and an xfs file system on it, mounted at boot:
+
+           pvcreate /dev/vdb1
+           vgcreate vgdata /dev/vdb1
+           lvcreate -n lvdata -L 1G vgdata
+           mkfs.xfs /dev/vgdata/lvdata
+           mkdir /data
+           echo "/dev/vgdata/lvdata /data xfs defaults 0 0" >> /etc/fstab
+           mount -a
+
+       A VG with 8 MiB extents and an LV of exactly 50 extents (400 MiB):
+
+           vgcreate -s 8M vgapp /dev/vdc1
+           lvcreate -n lvapp -l 50 vgapp
+
+       Use all the free space left in the VG:
+
+           lvcreate -n lvrest -l 100%FREE vgdata
+
+       An LV for swap:
+
+           lvcreate -n lvswap -L 512M vgdata
+           mkswap /dev/vgdata/lvswap
+           echo "/dev/vgdata/lvswap none swap defaults 0 0" >> /etc/fstab
+           swapon -a
+
+       Check the result:
+
+           lvs vgdata
+
+NOTES
+       To make an LV bigger later, use lvextend -r (it grows the file system
+       too); xfs can grow but never shrink.
+
+SEE ALSO
+       lvm(8), pvcreate(8), vgcreate(8), lvextend(8), lvs(8), lvdisplay(8),
+       lvremove(8)

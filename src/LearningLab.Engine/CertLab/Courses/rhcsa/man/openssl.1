@@ -1,0 +1,91 @@
+NAME
+       openssl - OpenSSL command line tool for certificates, digests and random data
+
+SYNOPSIS
+       openssl x509 -in FILE [-noout] [-text] [-subject] [-issuer] [-dates]
+                    [-startdate] [-enddate] [-serial] [-fingerprint [-sha256]]
+                    [-ext NAME] [-checkend SECONDS]
+       openssl verify [-CAfile FILE] CERTFILE...
+       openssl dgst [-sha256 | -sha512 | -sha1 | -md5] [FILE...]
+       openssl rand -hex | -base64 NUM
+       openssl version
+
+DESCRIPTION
+       openssl is a toolbox for cryptography. Each job is a subcommand. On the
+       practice servers these subcommands are available (the others say they
+       are not simulated). The certificates in the Security+ labs are made for
+       practice: their fields can be read, but they hold no real keys.
+
+       x509 reads a certificate in PEM form (the text between BEGIN
+       CERTIFICATE and END CERTIFICATE lines) and prints its parts: who it was
+       issued to (the subject), who signed it (the issuer), when it is valid,
+       its key size and its extensions (Subject Alternative Name, Key Usage,
+       Extended Key Usage, Basic Constraints, where to check revocation).
+
+       verify checks a certificate the way a client would: is it within its
+       dates, and does it chain to a certificate you trust (the -CAfile)? It
+       prints FILE: OK, or the error and "verification failed".
+
+       dgst prints the message digest (hash) of files, like sha256sum.
+
+       rand prints NUM random bytes as hexadecimal or base64 (for keys, salts
+       and passwords).
+
+OPTIONS
+       -in FILE
+              The certificate file to read (x509).
+
+       -noout Do not print the certificate itself, only what was asked for.
+
+       -text  Print every field in full.
+
+       -subject, -issuer
+              Print the subject or the issuer name.
+
+       -dates, -startdate, -enddate
+              Print the validity dates (notBefore, notAfter).
+
+       -serial
+              Print the serial number.
+
+       -fingerprint [-sha256]
+              Print the certificate's fingerprint (SHA-1 unless -sha256).
+
+       -ext NAME
+              Print one extension: subjectAltName, basicConstraints or
+              extendedKeyUsage.
+
+       -checkend SECONDS
+              Say whether the certificate expires within SECONDS; the exit
+              status is 1 if it will, 0 if it will not.
+
+       -CAfile FILE
+              The trusted CA certificate(s) for verify.
+
+       -sha256, -sha512, -sha1, -md5
+              The digest algorithm for dgst (SHA-256 by default).
+
+EXIT STATUS
+       0 when the command worked (verify: the certificate is good); not 0
+       otherwise.
+
+EXAMPLES
+       Who is this certificate for, and until when?
+
+           openssl x509 -in /etc/pki/tls/certs/web.pem -noout -subject -enddate
+
+       Does it chain to our CA?
+
+           openssl verify -CAfile /root/ca.pem /etc/pki/tls/certs/web.pem
+
+       Will it expire in the next 30 days?
+
+           openssl x509 -in web.pem -noout -checkend 2592000
+
+       A SHA-256 digest and 16 random bytes:
+
+           openssl dgst -sha256 /root/report.pdf
+           openssl rand -hex 16
+
+SEE ALSO
+       sha256sum(1), ssh-keygen(1), update-crypto-policies(8)

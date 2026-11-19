@@ -1,0 +1,42 @@
+[
+    {
+        "Id": "5a3e0002",
+        "Name": "Sam",
+        "Grade": 2,
+        "Age": 7,
+        "Color": "#22C55E",
+        "Stars": 12,
+        "Created": "2026-11-01",
+        "Rewards": { "Points": 40 },
+        "Skills": {
+            "add20": { "Level": 4, "Attempts": 20, "Correct": 18, "Streak": 2, "Misses": 0, "Recent": [1, 1, 1, 0, 1, 1, 1, 1, 1, 1], "Last": "2026-11-10" }
+        },
+        "Mastery": {
+            "add20": { "Score": 85, "Answered": 20, "Right": 18, "Seconds": 240, "Last": "2026-11-10", "Medal": "silver" },
+            "evenodd": { "Score": 100, "Answered": 16, "Right": 15, "Seconds": 120, "Last": "2026-11-09", "MasteredOn": "2026-11-09" }
+        },
+        "Days": { "2026-11-10": { "Done": 20, "Right": 18 } },
+        "Mistakes": [],
+        "Best": {}
+    },
+    {
+        "Id": "5a3e0006",
+        "Name": "Riley",
+        "Grade": 6,
+        "Age": 11,
+        "Color": "#3B82F6",
+        "Stars": 30,
+        "Created": "2026-11-01",
+        "Rewards": { "Points": 75 },
+        "Skills": {},
+        "Mastery": {
+            "ratio": { "Score": 55, "Answered": 6, "Right": 5, "Seconds": 150, "Last": "2026-11-10" },
+            "percent": { "Score": 85, "Answered": 12, "Right": 11, "Seconds": 300, "Last": "2026-11-10" },
+            "fracdiv": { "Score": 100, "Answered": 18, "Right": 17, "Seconds": 420, "Last": "2026-11-08", "MasteredOn": "2026-11-08" }
+        },
+        "Days": {},
+        "Mistakes": [],
+        "Best": {},
+        "Avatar": { "Kind": "fox" }
+    }
+]

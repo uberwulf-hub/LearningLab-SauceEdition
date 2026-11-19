@@ -1,0 +1,17 @@
+NAME
+       unlink - remove one file name
+
+SYNOPSIS
+       unlink FILE
+
+DESCRIPTION
+       unlink removes exactly one file name (a link) with no options and no
+       questions, like a bare rm FILE. The file's data is freed when its last
+       hard link is gone and no program has it open. unlink does not remove
+       directories.
+
+EXAMPLES
+           unlink /tmp/oldlink
+
+SEE ALSO
+       rm(1), ln(1)

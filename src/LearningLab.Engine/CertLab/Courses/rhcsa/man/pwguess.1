@@ -1,0 +1,42 @@
+NAME
+       pwguess - try passwords against a login service (Cyber Range)
+
+SYNOPSIS
+       pwguess (-l USER | -L USERFILE) (-p PASSWORD | -P WORDFILE) ssh://HOST
+       pwguess (-l USER | -L USERFILE) (-p PASSWORD | -P WORDFILE) ftp://HOST
+       pwguess (-l USER | -L USERFILE) (-p PASSWORD | -P WORDFILE) http-form://HOST/PATH
+
+DESCRIPTION
+       pwguess signs in again and again with each user name and each password
+       until one works (an online guessing attack). It is slow and very loud:
+       every failed attempt ends up in the server's log, and in the range it
+       makes the loudest noise there is. Real servers often lock accounts or
+       block the address after a few failures.
+
+       With http-form://HOST/PATH it posts user=NAME&pass=PASSWORD to a web
+       sign-in page. A page that answers with a status from 200 to 399 took the
+       password; 401 or 403 means it was wrong. A page that answers 429 (too
+       many requests) is limiting guesses, and pwguess stops. Guessing only
+       works against a page that never slows down or locks the account - the
+       "no rate limit" mistake.
+
+       Use it only on the range, and try quieter ways first (notes, backups,
+       reused passwords).
+
+OPTIONS
+       -l USER       one user name
+       -L USERFILE   a file with a user name on each line
+       -p PASSWORD   one password
+       -P WORDFILE   a file with a password on each line, such as
+                     /usr/share/wordlists/range-common.txt
+
+EXAMPLES
+       pwguess -l dana -P /usr/share/wordlists/range-common.txt ssh://10.10.1.20
+       pwguess -l manager -P /usr/share/wordlists/range-common.txt http-form://copperleaf.example/login
+
+NOTES
+       Guessing passwords on systems you don't own, or without written
+       permission, is against the law in most countries.
+
+SEE ALSO
+       hashcrack(1), ssh(1), journalctl(1), curl(1)

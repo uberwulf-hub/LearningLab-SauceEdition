@@ -1,0 +1,44 @@
+# How read aloud says the tech words of this course (Engine\ReadText.cs, Pronounce). One rule a line:
+#   written => said        whole words, case matters, the longest first
+#   spell: WORD word       said letter by letter
+#   word: WORD             in capitals, but said as a word (not spelt)
+# Every acronym on the cards of the acronym decks (cards\acronyms-*.txt) is spelt letter by letter, unless it is listed
+# below as a word or with its own way of saying it.
+3DES => triple DES
+AES-256 => A E S 256
+ATT&CK => attack
+SY0-701 => S Y zero 701
+802.1X => eight oh two dot one X
+802.11 => eight oh two dot eleven
+SHA-256 => shah 256
+SHA => shah
+MD5 => M D five
+X.509 => X dot five oh nine
+IPsec => I P sec
+SOAR => soar
+SCADA => skay-da
+RAID => raid
+NAT => nat
+DLP => D L P
+CASB => cas-B
+WAF => waff
+SIEM => sim
+STIX => sticks
+TAXII => taxi
+CAPTCHA => captcha
+ACME => acme
+BASH => bash
+DNSSEC => D N S sec
+SASE => sassy
+OAuth => oh auth
+SAML => sam-el
+LDAP => L-dap
+RADIUS => radius
+TACACS+ => tack-axe plus
+PKI => P K I
+CRL => C R L
+OCSP => O C S P
+HSM => H S M
+TPM => T P M
+VPN => V P N
+word: RADIUS SCADA SOAR NAT RAID ACME BASH

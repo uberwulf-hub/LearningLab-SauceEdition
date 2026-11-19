@@ -1,0 +1,379 @@
+# Unit: u01 | 1. Getting started and help | Help
+
+PowerShell is Windows' command shell and scripting language. Its commands are called **cmdlets** (say "command-lets") and they all have names of the form **Verb-Noun**: Get-Service, Stop-Process, New-Item. This unit shows how to find commands, read their help and look inside what they return. With these four skills (Get-Command, Get-Help, Get-Member and the about_ topics) you can work out almost anything else yourself.
+
+The practice consoles run **Windows PowerShell 5.1**, the version built into Windows 10, Windows 11 and Windows Server. PowerShell 7 is a newer, separate install; the course points out where it behaves differently.
+
+## Lesson: l0101 | The console and the Verb-Noun names
+
+The prompt shows where you are: `PS C:\Windows\system32>`. An administrator's console starts in C:\Windows\system32, a normal user's in their home folder. Type a command and press Enter.
+
+```terminal
+PS C:\Windows\system32> Get-Date
+Monday, March 2, 2026 9:00:00 AM
+PS C:\Windows\system32> $PSVersionTable.PSVersion
+
+Major  Minor  Build  Revision
+-----  -----  -----  --------
+5      1      20348  2849
+
+
+PS C:\Windows\system32> Get-Verb -Verb Get, Set, New, Remove
+
+Verb   Group
+----   -----
+Get    Common
+New    Common
+Remove Common
+Set    Common
+```
+
+### Names you can guess
+
+Verbs come from a fixed list (`Get-Verb` shows it), so once you know the noun you can guess the rest: if there is a `Get-Service`, there is probably a `Start-Service`, `Stop-Service` and `Set-Service`.
+
+- **Get** reads, **Set** changes, **New** creates, **Remove** deletes, **Start** / **Stop**, **Enable** / **Disable**, **Import** / **Export**, **ConvertTo** / **ConvertFrom**.
+- Names are **not case-sensitive**: `get-service` works too.
+- Parameters start with a dash: `Get-Service -Name Spooler`. You may shorten a parameter name as long as it stays unique (`-Na` for `-Name`), and some parameters are **positional**, so `Get-Service Spooler` works as well.
+
+### Keys that help
+
+- **Tab** completes command names, parameter names (`Get-Service -Di` Tab) and paths. Press it again for the next match (Shift+Tab goes back); **Ctrl+Space** lists all the choices.
+- **Up / Down** bring back earlier commands; `Get-History` lists them.
+- **Ctrl+C** stops a command that runs too long.
+
+> In a real Windows console you would open PowerShell "as administrator" (right-click > Run as administrator) for system changes. The practice consoles already run as the administrator.
+
+@try machines=1
+@task t1 | Help | 10 | WIN-SRV1
+Show the version of PowerShell on WIN-SRV1 with `$PSVersionTable`, then show today's date with the cmdlet that **gets** the **date**.
+@check WIN-SRV1 | you showed $PSVersionTable
+($CertLabHistory -join "`n") -match '\$PSVersionTable'
+@check WIN-SRV1 | you ran Get-Date
+($CertLabHistory -join "`n") -match 'Get-Date'
+@hint Verb Get, noun Date.
+@solution WIN-SRV1
+$PSVersionTable
+Get-Date
+@endtask
+@end
+
+@quiz
+? Which name follows PowerShell's naming rule?
++ Get-Process
+- ProcessList
+- process-get
+! Cmdlets are Verb-Noun with an approved verb first.
+? Is `GET-DATE` the same command as `Get-Date`?
++ Yes, command names are not case-sensitive
+- No, it is an error
+- Only in PowerShell 7
+! Commands, parameters and variable names ignore case.
+? You know Get-Service exists. Which command most likely stops a service?
+- End-Service
++ Stop-Service
+- Kill-Service
+! Stop is the approved verb that pairs with Start.
+@end
+
+## Lesson: l0102 | Finding commands: Get-Command
+
+`Get-Command` lists the commands PowerShell knows: cmdlets, functions, aliases and programs. Filter with wildcards or by verb and noun.
+
+```terminal
+PS C:\Windows\system32> Get-Command -Noun Service
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Get-Service                                        3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          New-Service                                        3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Restart-Service                                    3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Resume-Service                                     3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Set-Service                                        3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Start-Service                                      3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Stop-Service                                       3.1.0.0    Microsoft.PowerShell.Management
+Cmdlet          Suspend-Service                                    3.1.0.0    Microsoft.PowerShell.Management
+
+
+PS C:\Windows\system32> Get-Command *-Job
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Debug-Job                                          3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Get-Job                                            3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Receive-Job                                        3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Remove-Job                                         3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Resume-Job                                         3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Start-Job                                          3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Stop-Job                                           3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Suspend-Job                                        3.0.0.0    Microsoft.PowerShell.Core
+Cmdlet          Wait-Job                                           3.0.0.0    Microsoft.PowerShell.Core
+
+
+PS C:\Windows\system32> Get-Command -Verb Export
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Export-Certificate                                 1.0.0.0    PKI
+Cmdlet          Export-Csv                                         3.1.0.0    Microsoft.PowerShell.Utility
+Cmdlet          Export-ModuleMember                                3.0.0.0    Microsoft.PowerShell.Core
+
+
+PS C:\Windows\system32> Get-Command Get-Process -Syntax
+
+Get-Process [[-Name] <string[]>] [-ComputerName <string[]>] [-FileVersionInfo] [-Module] [<CommonParameters>]
+
+
+Get-Process [[-Name] <string[]>] [-ComputerName <string[]>] [-IncludeUserName] [-FileVersionInfo] [-Module] [<CommonParameters>]
+
+
+Get-Process -Id <int[]> [-ComputerName <string[]>] [-FileVersionInfo] [-Module] [<CommonParameters>]
+
+
+Get-Process -Id <int[]> [-ComputerName <string[]>] [-IncludeUserName] [-FileVersionInfo] [-Module] [<CommonParameters>]
+
+
+Get-Process -InputObject <Process[]> [-ComputerName <string[]>] [-FileVersionInfo] [-Module] [<CommonParameters>]
+
+
+Get-Process -InputObject <Process[]> [-ComputerName <string[]>] [-IncludeUserName] [-FileVersionInfo] [-Module] [<CommonParameters>]
+```
+
+- **CommandType** tells what it is: Cmdlet (built into a module), Function (written in PowerShell), Alias (another name) or Application (a program such as ping.exe).
+- **Source** is the module the command comes from. Modules load by themselves the first time you use one of their commands.
+- `-Syntax` prints just the command's syntax, the quickest reminder of its parameters.
+
+### Aliases
+
+Aliases are short names for cmdlets, many of them familiar from cmd.exe and Linux: `dir` and `ls` for Get-ChildItem, `cd` for Set-Location, `cls` for Clear-Host. They are handy at the prompt; in scripts write the full name so others can read it.
+
+```terminal
+PS C:\Windows\system32> Get-Alias dir, cd, gsv, %
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           dir -> Get-ChildItem
+Alias           cd -> Set-Location
+Alias           gsv -> Get-Service
+Alias           % -> ForEach-Object
+
+
+PS C:\Windows\system32> Get-Alias -Definition Get-ChildItem
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           dir -> Get-ChildItem
+Alias           gci -> Get-ChildItem
+Alias           ls -> Get-ChildItem
+```
+
+@try machines=1
+@task t1 | Help | 10 | WIN-SRV1
+Store in `$jobCmds` the commands whose **noun** is `Job` (use Get-Command), so that `$jobCmds.Name` lists the nine of them, from Debug-Job to Wait-Job.
+@check WIN-SRV1 | $jobCmds holds the Job cmdlets
+($jobCmds.Name | Sort-Object) -join ',' -eq 'Debug-Job,Get-Job,Receive-Job,Remove-Job,Resume-Job,Start-Job,Stop-Job,Suspend-Job,Wait-Job'
+@hint Get-Command -Noun Job
+@solution WIN-SRV1
+$jobCmds = Get-Command -Noun Job
+$jobCmds
+@endtask
+@end
+
+@quiz
+? Which command lists the cmdlets whose noun is Service?
++ Get-Command -Noun Service
+- Get-Help Service
+- Get-Service -List
+! Get-Command filters by -Verb, -Noun, -Module or a wildcard name.
+? What does `dir` run in PowerShell?
+- cmd.exe's dir
++ Get-ChildItem (dir is an alias)
+- Get-Directory
+! Get-Alias dir shows dir -> Get-ChildItem.
+@end
+
+## Lesson: l0103 | Reading help: Get-Help
+
+Every cmdlet has a help page. `Get-Help NAME` shows the short form; `-Examples`, `-Detailed`, `-Full` and `-Parameter NAME` show more. `help` is a shortcut function.
+
+```terminal
+PS C:\Windows\system32> Get-Help Get-Help
+
+NAME
+    Get-Help
+
+SYNOPSIS
+    Shows help for commands and for PowerShell's concepts (the about_ topics).
+
+
+SYNTAX
+    Get-Help [[-Name] <string>] [-Path <string>] [-Category <string[]>] [-Component <string[]>] [-Functionality <string[]>] [-Role <string[]>] [-Detailed] [-Full] [-Examples] [-Parameter <string>] [-Online] [-ShowWindow] [<CommonParameters>]
+
+
+DESCRIPTION
+    Get-Help shows what a command does, how to type it (the SYNTAX section, one line per parameter set) and examples. Use it before searching the web: the help on the machine matches the version you run.
+
+    Square brackets in the syntax mean "optional": [-Name] means you may leave out the parameter name and give the value by position, [-Name <string>] means the whole parameter is optional. <string[]> means you may give several values separated by commas.
+
+    Get-Help with a word that is not a command name lists every command and about_ topic whose name contains it, so Get-Help *service* is a quick way to find commands.
+
+
+RELATED LINKS
+    Get-Command
+    Get-Member
+    about_Command_Syntax
+
+REMARKS
+    To see the examples, type: "get-help Get-Help -examples".
+    For more information, type: "get-help Get-Help -detailed".
+    For technical information, type: "get-help Get-Help -full".
+```
+
+### Reading the SYNTAX
+
+The syntax lines are a compact map of the parameters. Each line is one **parameter set**: a group of parameters that work together.
+
+- `[-Name] <string[]>`: the parameter name is optional (positional), the value is a list of strings.
+- `[[-Name] <string[]>]`: the whole parameter is optional.
+- `-Path <string>` without brackets around it: mandatory.
+- `[-Force]` without a type: a switch, on when named.
+- `[<CommonParameters>]`: the parameters every cmdlet has (-Verbose, -ErrorAction, -WarningAction...).
+
+```terminal
+PS C:\Windows\system32> Get-Help Get-Random -Parameter Maximum
+
+-Maximum <Object>
+    The upper limit; results are always below it. Position 0, so Get-Random 10 gives 0 to 9.
+
+    Required?                    false
+    Position?                    0
+    Default value
+    Accept pipeline input?       False
+    Accept wildcard characters?  false
+    Aliases                      Max
+
+PS C:\Windows\system32> Get-Help *sleep*
+
+Name        Category Module                       Synopsis
+----        -------- ------                       --------
+Start-Sleep Cmdlet   Microsoft.PowerShell.Utility Waits for a number of seconds or milliseconds.
+```
+
+### about_ topics
+
+Concepts have help too, in pages named about_SOMETHING: `Get-Help about_Comparison_Operators`, `about_Pipelines`, `about_Quoting_Rules`, `about_Hash_Tables`. `Get-Help about_*` lists them.
+
+> On a new Windows PC most help pages are only short stubs. Run `Update-Help` once, as an administrator with internet, to download the full pages (the practice machines already have their help).
+
+@try machines=1
+@task t1 | Help | 10 | WIN-SRV1
+Use Get-Help to show **only the examples** of `Get-Random`.
+@check WIN-SRV1 | the examples of Get-Random were shown
+($CertLabHistory -join "`n") -match '(Get-Help|help)\s+Get-Random.*-Ex'
+@hint Get-Help NAME -Examples
+@solution WIN-SRV1
+Get-Help Get-Random -Examples
+@endtask
+@end
+
+@quiz
+? In the syntax `Get-Service [[-Name] <string[]>]`, what do the outer brackets mean?
++ The parameter is optional
+- The parameter is mandatory
+- The value must be in brackets
+! Outer brackets: optional parameter; inner brackets around -Name: the name may be left out (positional).
+? Which shows everything, including whether a parameter takes pipeline input?
+- Get-Help X -Examples
++ Get-Help X -Full
+- Get-Help X -Short
+! -Full lists, per parameter, Required, Position, Default value and Accept pipeline input.
+? Where do you read about a concept such as comparison operators?
++ Get-Help about_Comparison_Operators
+- Get-Command Comparison
+- Get-Member -Operators
+! Concepts live in about_ help topics.
+@end
+
+## Lesson: l0104 | Looking inside objects: Get-Member
+
+Cmdlets output **objects**, not text: each has a type, **properties** (values) and **methods** (actions). `Get-Member` (alias `gm`) shows them. Pipe any output to it.
+
+```terminal
+PS C:\Windows\system32> Get-Date | Get-Member -MemberType Property
+
+
+   TypeName: System.DateTime
+
+Name        MemberType Definition
+----        ---------- ----------
+Date        Property   datetime Date {get;}
+Day         Property   int Day {get;}
+DayOfWeek   Property   System.DayOfWeek DayOfWeek {get;}
+DayOfYear   Property   int DayOfYear {get;}
+Hour        Property   int Hour {get;}
+Kind        Property   System.DateTimeKind Kind {get;}
+Millisecond Property   int Millisecond {get;}
+Minute      Property   int Minute {get;}
+Month       Property   int Month {get;}
+Second      Property   int Second {get;}
+Ticks       Property   long Ticks {get;}
+TimeOfDay   Property   timespan TimeOfDay {get;}
+Year        Property   int Year {get;}
+
+
+PS C:\Windows\system32> (Get-Date).DayOfWeek
+Monday
+PS C:\Windows\system32> (Get-Date).AddDays(30).ToString('yyyy-MM-dd')
+2026-04-01
+```
+
+- **TypeName** at the top says what kind of object it is (System.DateTime). Search the web for that name to learn more about it.
+- **Property**: a value you read with a dot: `(Get-Date).Year`.
+- **Method**: an action you call with parentheses: `.AddDays(30)`.
+- **NoteProperty**, **AliasProperty**, **ScriptProperty**: properties PowerShell adds to objects (for example `Name` on a service is an alias of `ServiceName`).
+
+What you see on the screen is only a **selection** of the properties. Get-Member shows them all, and `Select-Object *` or `Format-List *` shows all their values (unit 3).
+
+```terminal
+PS C:\Windows\system32> 'PowerShell' | Get-Member -Name Length, ToUpper, Replace
+
+
+   TypeName: System.String
+
+Name    MemberType Definition
+----    ---------- ----------
+Replace Method     string Replace(char oldChar, char newChar), string Replace(string oldValue, string newValue)
+ToUpper Method     string ToUpper(), string ToUpper(cultureinfo culture)
+Length  Property   int Length {get;}
+
+
+PS C:\Windows\system32> 'PowerShell'.ToUpper()
+POWERSHELL
+```
+
+@try machines=1
+@task t1 | Help | 10 | WIN-SRV1
+Use Get-Member to find the property of a DateTime object that holds the **day of the year** (1 to 366), and store today's value of it in `$doy`.
+@check WIN-SRV1 | $doy is today's day of the year
+$doy -eq (Get-Date).DayOfYear
+@check WIN-SRV1 | you used Get-Member
+($CertLabHistory -join "`n") -match '(Get-Member|\| *gm\b)'
+@hint Get-Date | Get-Member -MemberType Property, then (Get-Date).THATPROPERTY
+@solution WIN-SRV1
+Get-Date | Get-Member -MemberType Property
+$doy = (Get-Date).DayOfYear
+@endtask
+@end
+
+@quiz
+? What does Get-Member show?
++ The type, properties and methods of the objects piped to it
+- The members of a group
+- The commands of a module
+! Pipe any output to Get-Member to see what you can do with it.
+? How do you call a method?
+- (Get-Date).AddDays 30
++ (Get-Date).AddDays(30)
+- AddDays (Get-Date) 30
+! Methods need parentheses right after the name, with the arguments inside.
+@end

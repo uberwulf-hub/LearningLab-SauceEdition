@@ -1,0 +1,22 @@
+SYNOPSIS: Creates a DFS namespace: one path that leads to shares on many servers.
+DESCRIPTION:
+A DFS namespace gives users one tidy path, such as \\corp.example\Files, whose folders point to real shares on any server. Servers can be replaced without changing the path users know.
+
+A domain-based namespace (-Type DomainV2, or the older DomainV1) is stored in Active Directory and named after the domain; it can have several namespace servers for availability. DomainV2 also allows access-based enumeration and very many folders. A Standalone namespace is named after one server and lives in its registry.
+
+The root share (-TargetPath) must exist on the namespace server first, and the server needs the DFS Namespaces role service.
+PARAMETER Path:
+The namespace path, for example \\corp.example\Files.
+PARAMETER TargetPath:
+The share that holds the root, for example \\FS1\Files.
+PARAMETER Type:
+DomainV2, DomainV1 or Standalone.
+PARAMETER Description:
+A description.
+PARAMETER EnableAccessBasedEnumeration:
+$true to hide folders a user can't open.
+EXAMPLE: New-SmbShare -Name Files -Path D:\DfsRoots\Files -ReadAccess Everyone
+The root share on FS1 first (the folder must exist).
+EXAMPLE: New-DfsnRoot -Path \\corp.example\Files -TargetPath \\FS1\Files -Type DomainV2
+A domain-based namespace hosted on FS1.
+RELATED: Get-DfsnRoot, New-DfsnFolder, New-SmbShare

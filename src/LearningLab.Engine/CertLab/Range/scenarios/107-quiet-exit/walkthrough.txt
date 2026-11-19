@@ -1,0 +1,14 @@
+1. siem alerts: "Large upload outside working hours" in the night, and "Many lookups of one unusual domain" today.
+2. siem search host=BACKUP01: the backup program csbackup.exe ran its nightly job, looked up vault.coldstore.example
+   (the backup provider) and sent 2 GB there. That is what backups do: a false alarm (worth a rule exception).
+3. siem search source=dns --count-by host: {{BADH}} makes far more lookups than anyone. Its names look like
+   d1x{{HX}}4e616d...{{TUN}}: a new, long, meaningless name every 7 seconds, all under {{TUN}}, type TXT. The long
+   part is data written as hex (4e616d6573 is "Names" in text) - each lookup carries a piece of a file out to
+   whoever runs the name server for {{TUN}}. This is called DNS tunnelling. Real.
+4. --count-by image shows one program made all {{NQ}} lookups: C:\Users\{{BADU}}\AppData\Local\{{TOOL}}, a name chosen
+   to look like part of Windows, in a folder where programs don't belong.
+5. Its parent is wscript.exe (Windows' script host), which ran {{VBS}} from {{BADU}}'s Startup folder - so it starts
+   again every time they sign in.
+
+Block {{TUN}} at the company's DNS server (and its address {{TUNIP}}), isolate {{BADH}}, delete the startup script and
+the program, and find out what data it was carrying.

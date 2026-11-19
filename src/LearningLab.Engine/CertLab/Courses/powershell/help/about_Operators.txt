@@ -1,0 +1,66 @@
+TOPIC
+    about_Operators
+
+SHORT DESCRIPTION
+    The symbols and words that calculate, compare and combine values.
+
+LONG DESCRIPTION
+    An operator works on one or two values and gives a result. PowerShell
+    has symbol operators (+ = |) and word operators that start with a
+    dash (-eq -like -split).
+
+  Arithmetic
+    + - * / %       Add, subtract, multiply, divide, remainder.
+                    + also joins strings and arrays; * repeats them.
+    1KB 1MB 1GB     Size suffixes: 1MB is 1048576.
+
+        (Get-Item C:\LabFiles\big.log).Length / 1MB
+        'ab' * 3                     # ababab
+
+  Assignment
+    = += -= *= /= %=  and ++ --
+
+        $count = 0; $count += 5; $count++
+
+  Comparison and matching
+    -eq -ne -gt -ge -lt -le, -like and -match, -contains and -in. They
+    ignore case; add c for case-sensitive (-ceq). See
+    about_Comparison_Operators.
+
+  Logical
+    -and -or -xor -not (also !). They stop early: in A -and B, B is not
+    worked out when A is false.
+
+  Text and lists
+    -split -join   Split a string into parts, or join parts into one.
+    -replace       Replace by a regular expression.
+    -f             Format: '{0} has {1} GB' -f 'WIN-SRV1', 64
+    ..             Range: 1..10
+
+        'WIN-SRV1,WIN-CL1' -split ','
+        ('a', 'b', 'c') -join '; '
+
+  Type operators
+    -is -isnot -as, and casts in brackets: [int]'42'.
+
+  Special operators
+    & 'C:\LabFiles\run.ps1'   Call operator: run a command or script
+                              whose name is in a string or has spaces.
+    . .\tools.ps1             Dot-source: run a script in this scope.
+    $( )  @( )                Subexpression, and array subexpression
+                              (the result is always an array).
+    [math]::Round(2.5)        Static member of a type.
+    |                         Pipeline.
+    > >> 2>&1                 Redirection (see about_Redirection).
+
+  PowerShell 7
+    The ternary operator (a ? b : c), the null operators ?? and ??=, the
+    ?. member access and the pipeline chain operators && and || exist
+    only in PowerShell 7. In 5.1 use if/else instead.
+
+SEE ALSO
+    about_Comparison_Operators
+    about_Regular_Expressions
+    about_Redirection
+    about_Pipelines
+    about_Variables

@@ -1,0 +1,41 @@
+title: Thirteen steps around
+level: Beginner
+kind: Decoding
+points: 40
+order: 2
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/scrambled.txt holds a word with every letter moved 13 places along the alphabet
+(a becomes n, b becomes o, and so on). Moving another 13 places brings it back.
+What is the word?
+
+@setup
+printf '%s' '{{SECRET}}' | tr 'A-Za-z' 'N-ZA-Mn-za-m' > /home/player/scrambled.txt
+chown player: /home/player/scrambled.txt
+
+@solution
+cat scrambled.txt
+echo
+tr 'A-Za-z' 'N-ZA-Mn-za-m' < scrambled.txt
+echo
+
+@walkthrough
+This is ROT13: each letter steps 13 places along the 26-letter alphabet. Because 13
++ 13 = 26, the same step undoes it. tr swaps one set of characters for another:
+
+    tr 'A-Za-z' 'N-ZA-Mn-za-m' < scrambled.txt
+
+@hint 2
+What to think about first: this is one of the oldest tricks there is, a shift cipher. Each letter has been replaced by the letter a fixed number of places further along the alphabet. If you know the number, you can count back. Here the number is 13. Start by reading the scrambled word: cat scrambled.txt
+
+@hint 3
+Why 13 is special: the alphabet has 26 letters, so moving 13 places twice brings you back where you started. That means the same step both scrambles and unscrambles. People call it ROT13 ("rotate by 13"). You could do it by hand on paper: a<->n, b<->o, c<->p, and so on.
+
+@hint 5
+The Linux command tr ("translate") swaps characters: tr 'abc' 'xyz' turns every a into x, b into y and c into z. Ranges work too, so you can give it "the whole alphabet" and "the whole alphabet starting at n".
+
+@hint 8
+Run: tr 'A-Za-z' 'N-ZA-Mn-za-m' < scrambled.txt
+The first list is every letter; the second is the same letters starting 13 places along. The < feeds the file into tr. The word it prints is the answer.

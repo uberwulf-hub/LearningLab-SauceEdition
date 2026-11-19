@@ -1,0 +1,23 @@
+SYNOPSIS: Signs a script with a code signing certificate.
+DESCRIPTION:
+Set-AuthenticodeSignature adds a signature block (lines starting with # SIG #) to the end of a script. The signature records who signed it and a hash of its content, so any later change shows up as HashMismatch. Signing again replaces the old block.
+
+The certificate must be a code signing certificate with its private key, for example one made by New-SelfSignedCertificate -Type CodeSigningCert.
+
+Under AllSigned, and for downloaded scripts under RemoteSigned, a signed script runs only if its certificate is trusted. The first time a script from a new publisher runs, PowerShell asks: [V] Never run, [D] Do not run, [R] Run once, [A] Always run. Always run adds the certificate to Trusted Publishers; Never run adds it to Untrusted Certificates.
+PARAMETER FilePath:
+The script or scripts to sign. Wildcards work.
+PARAMETER Certificate:
+The code signing certificate (the object New-SelfSignedCertificate returned) or its thumbprint.
+PARAMETER TimestampServer:
+A time stamp server address. A time stamp keeps the signature valid after the certificate expires.
+PARAMETER Force:
+Signs read-only files too.
+EXAMPLE: $cert = New-SelfSignedCertificate -Subject 'CN=LAB Script Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+Makes a code signing certificate to practise with.
+EXAMPLE: Set-AuthenticodeSignature -FilePath C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Certificate $cert
+Signs the script and shows its signature status: UnknownError until the certificate is imported into Cert:\LocalMachine\Root, then Valid.
+NOTES:
+The practice network has no internet, so in Cert Lab a -TimestampServer cannot be reached: the script is signed without a time stamp and a warning says so.
+Edit the script and you must sign it again.
+RELATED: Get-AuthenticodeSignature, New-SelfSignedCertificate, Import-Certificate, Set-ExecutionPolicy, about_Signing

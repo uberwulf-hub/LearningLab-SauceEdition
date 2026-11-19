@@ -1,0 +1,17 @@
+SYNOPSIS: Shows the result of the latest DSC configuration run, or of all runs.
+DESCRIPTION:
+Each time the LCM applies a configuration it records the run. Get-DscConfigurationStatus shows the latest one: Status (Success or Failure), when it started, its Type (Initial for the first run, Reconfiguration afterwards), Mode (PUSH) and how many resources it handled.
+
+The object also lists ResourcesInDesiredState and ResourcesNotInDesiredState, which help when a run failed.
+PARAMETER All:
+Shows every recorded run, newest first, instead of only the latest.
+EXAMPLE: Get-DscConfigurationStatus
+Shows whether the last Start-DscConfiguration succeeded.
+EXAMPLE: Get-DscConfigurationStatus -All
+Lists the history of runs on this computer.
+EXAMPLE: (Get-DscConfigurationStatus).ResourcesNotInDesiredState
+Shows the resources of a failed run.
+NOTES:
+Before any configuration was applied, it reports that there is no status to show.
+PowerShell 7 has no Get-DscConfigurationStatus and no LCM.
+RELATED: Start-DscConfiguration, Test-DscConfiguration, Get-DscLocalConfigurationManager

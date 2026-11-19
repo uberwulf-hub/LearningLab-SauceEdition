@@ -1,0 +1,563 @@
+# Unit: u10 | 10. Administration: users, CIM and networking | Administration
+
+The second administration unit: local user accounts and groups, the CIM cmdlets that read almost anything about a computer (and work across the network), the network settings of a Windows computer, testing connections, and the Windows firewall.
+
+## Lesson: l1001 | Local users and groups
+
+Every Windows computer has its own **local** accounts, kept on that computer, besides the domain accounts of an organisation. The LocalAccounts module manages them: `Get-LocalUser`, `New-LocalUser`, `Set-LocalUser`, `Enable-LocalUser`, `Disable-LocalUser`, `Rename-LocalUser`, `Remove-LocalUser`, and the same for groups (`Get-LocalGroup`, `New-LocalGroup`...) and group members.
+
+```terminal
+PS C:\Windows\system32> Get-LocalUser
+
+Name               Enabled Description
+----               ------- -----------
+Administrator      True    Built-in account for administering the computer/domain
+DefaultAccount     False   A user account managed by the system.
+Guest              False   Built-in account for guest access to the computer/domain
+WDAGUtilityAccount False   A user account managed and used by the system for Windows Defender Application Guard scen...
+
+
+PS C:\Windows\system32> Get-LocalGroupMember Administrators
+
+ObjectClass Name                   PrincipalSource
+----------- ----                   ---------------
+User        WIN-SRV1\Administrator Local
+Group       LAB\Domain Admins      ActiveDirectory
+```
+
+### Passwords are SecureStrings
+
+`New-LocalUser -Password` does not take plain text; it wants a **SecureString**, text that PowerShell keeps encrypted in memory. Two ways to make one:
+
+- `$pw = Read-Host -AsSecureString 'Password'` asks for it and shows stars while you type. Best at the console: the password never appears on screen or in the history.
+- `$pw = ConvertTo-SecureString 'Spr1ng-Day!' -AsPlainText -Force` turns text into one. Handy in a lab or a test, but the password is now in your history (and in the script, if you save it). `-Force` is required with `-AsPlainText`, as a reminder of that.
+
+```terminal
+PS C:\Windows\system32> $pw = ConvertTo-SecureString 'Spr1ng-Day!' -AsPlainText -Force
+PS C:\Windows\system32> New-LocalUser -Name kim -Password $pw -FullName 'Kim Lee' -Description 'Help desk'
+
+Name Enabled Description
+---- ------- -----------
+kim  True    Help desk
+
+
+PS C:\Windows\system32> Set-LocalUser -Name kim -PasswordNeverExpires $true
+PS C:\Windows\system32> Get-LocalUser kim | Select-Object Name, Enabled, FullName, PasswordExpires
+
+Name Enabled FullName PasswordExpires
+---- ------- -------- ---------------
+kim  True    Kim Lee
+```
+
+Other useful parameters: `-NoPassword` (an account without a password), `-AccountExpires` (a date), `-UserMayNotChangePassword`. Note that `Set-LocalUser -PasswordNeverExpires` takes `$true` or `$false`.
+
+### Group membership, disabling and removing
+
+```terminal
+#setup New-LocalUser -Name kim -NoPassword | Out-Null
+PS C:\Windows\system32> Add-LocalGroupMember -Group 'Remote Desktop Users' -Member kim
+PS C:\Windows\system32> Get-LocalGroupMember 'Remote Desktop Users'
+
+ObjectClass Name         PrincipalSource
+----------- ----         ---------------
+User        WIN-SRV1\kim Local
+
+
+PS C:\Windows\system32> Remove-LocalGroupMember -Group 'Remote Desktop Users' -Member kim
+PS C:\Windows\system32> Disable-LocalUser kim
+PS C:\Windows\system32> Get-LocalUser kim
+
+Name Enabled Description
+---- ------- -----------
+kim  False
+
+
+PS C:\Windows\system32> Remove-LocalUser kim
+```
+
+`-Member` also takes domain accounts and groups (`LAB\jdoe`, `'LAB\Domain Admins'`). Disabling is often better than removing: the account keeps its files and settings and can come back with `Enable-LocalUser`, while a removed account is gone for good (a new one with the same name gets a new SID, the security identifier that permissions refer to).
+
+> The LocalAccounts module is 64-bit only: on 64-bit Windows, the 32-bit "Windows PowerShell (x86)" console does not have these cmdlets. PowerShell 7 has them only on Windows. Domain accounts are managed with the ActiveDirectory module (`New-ADUser` and friends), not covered here.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+On WIN-SRV1, create the local user `ops1` with the full name `Operator One` and a password of your choice, and make it a member of the **Remote Desktop Users** group.
+@check WIN-SRV1 | ops1 exists, enabled, with the full name
+$u = Get-LocalUser ops1 -ErrorAction SilentlyContinue; $u.Enabled -and $u.FullName -eq 'Operator One'
+@check WIN-SRV1 | ops1 is in Remote Desktop Users
+@(Get-LocalGroupMember 'Remote Desktop Users' | Where-Object Name -like '*\ops1').Count -eq 1
+@hint $pw = ConvertTo-SecureString '...' -AsPlainText -Force; New-LocalUser -Name ops1 -Password $pw -FullName 'Operator One'; Add-LocalGroupMember -Group 'Remote Desktop Users' -Member ops1
+@solution WIN-SRV1
+$pw = ConvertTo-SecureString 'Op3rator-One!' -AsPlainText -Force
+New-LocalUser -Name ops1 -Password $pw -FullName 'Operator One'
+Add-LocalGroupMember -Group 'Remote Desktop Users' -Member ops1
+Get-LocalGroupMember 'Remote Desktop Users'
+@endtask
+@end
+
+@quiz
+? What type does `New-LocalUser -Password` want?
+- String
++ SecureString
+- PSCredential
+! Make one with Read-Host -AsSecureString or ConvertTo-SecureString -AsPlainText -Force.
+? Why is `Read-Host -AsSecureString` better than `ConvertTo-SecureString 'text' -AsPlainText -Force` at the console?
++ The password never appears on screen or in the command history
+- It makes a stronger password
+- ConvertTo-SecureString does not work with New-LocalUser
+! Both give a SecureString; with -AsPlainText the password is part of the command you typed.
+? A user leaves for three months and comes back. What keeps the account and its settings but stops sign-ins?
+- Remove-LocalUser
++ Disable-LocalUser
+- Remove-LocalGroupMember -Group Users
+! Enable-LocalUser brings it back. A removed and re-created account gets a new SID.
+@end
+
+## Lesson: l1002 | CIM: asking Windows about itself
+
+**CIM** (the Common Information Model, Microsoft's version is called **WMI**) is a huge catalogue of classes that describe a Windows computer: `Win32_OperatingSystem`, `Win32_ComputerSystem`, `Win32_LogicalDisk`, `Win32_Service`, `Win32_Process`, `Win32_BIOS` and hundreds more. `Get-CimInstance -ClassName` reads them.
+
+```terminal
+PS C:\Windows\system32> Get-CimInstance -ClassName Win32_LogicalDisk
+
+DeviceID DriveType ProviderName VolumeName         Size    FreeSpace
+-------- --------- ------------ ----------         ----    ---------
+C:               3                         135758377984 104817332224
+D:               5
+
+
+PS C:\Windows\system32> Get-CimInstance Win32_BIOS
+
+SMBIOSBIOSVersion : Hyper-V UEFI Release v4.1
+Manufacturer      : Microsoft Corporation
+Name              : Hyper-V UEFI Release v4.1
+SerialNumber      : 5675-6507-5460-3442-4004-7636-44
+Version           : VRTUAL - 4001
+```
+
+### -Filter
+
+`-Filter` takes a condition in **WQL**, the WMI query language, and lets WMI do the filtering. It is not PowerShell syntax: the operators are `=`, `<>`, `<`, `>`, `AND`, `OR`, `LIKE` (with `%` as the wildcard), and text goes in single quotes, so the whole filter is usually in double quotes.
+
+```terminal
+PS C:\Windows\system32> Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3" | Select-Object DeviceID, @{ n = 'FreeGB'; e = { [math]::Round($_.FreeSpace / 1GB, 1) } }, @{ n = 'SizeGB'; e = { [math]::Round($_.Size / 1GB, 1) } }
+
+DeviceID FreeGB SizeGB
+-------- ------ ------
+C:         97.6  126.4
+
+
+PS C:\Windows\system32> Get-CimInstance Win32_Service -Filter "Name = 'Spooler'" | Select-Object Name, StartMode, StartName, PathName
+
+Name    StartMode StartName   PathName
+----    --------- ---------   --------
+Spooler Auto      LocalSystem C:\Windows\System32\spoolsv.exe
+```
+
+DriveType 3 is a local disk (5 is a CD/DVD drive). Sizes are in bytes; PowerShell's `1GB` and `1MB` constants turn them into something readable.
+
+### Methods: Invoke-CimMethod
+
+Many classes have methods. `Invoke-CimMethod` calls them, with the arguments in a hash table. A **ReturnValue** of 0 means it worked.
+
+```terminal
+PS C:\Windows\system32> Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = 'notepad.exe' }
+
+ProcessId ReturnValue PSComputerName
+--------- ----------- --------------
+    15695           0
+
+
+PS C:\Windows\system32> Get-CimInstance Win32_Process -Filter "Name = 'notepad.exe'" | Invoke-CimMethod -MethodName Terminate
+
+ReturnValue PSComputerName
+----------- --------------
+          0
+```
+
+A method of the class (Create) is called with `-ClassName`; a method of one object (Terminate) is called on instances piped in.
+
+### Other computers: -ComputerName and CIM sessions
+
+CIM cmdlets talk to other computers over **WinRM**, the same service as PowerShell remoting, so the other computer must have it running (Windows 11 needs `Enable-PSRemoting` first). For several queries, open a **CIM session** once and reuse it:
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+#setup WIN-CL1:Start-Service WinRM
+PS C:\Windows\system32> $cs = New-CimSession -ComputerName WIN-CL1
+PS C:\Windows\system32> Get-CimInstance -CimSession $cs -ClassName Win32_OperatingSystem | Select-Object PSComputerName, Caption, LastBootUpTime
+
+PSComputerName Caption                         LastBootUpTime
+-------------- -------                         --------------
+WIN-CL1        Microsoft Windows 11 Enterprise 3/2/2026 7:59:00 AM
+
+
+PS C:\Windows\system32> Remove-CimSession $cs
+```
+
+Many other cmdlets are built on CIM and also take `-CimSession`: `Get-NetAdapter`, `Get-NetIPAddress`, `Get-ScheduledTask`, `Get-NetFirewallRule` and more.
+
+### Get-WmiObject, the older way
+
+`Get-WmiObject` (and `Invoke-WmiMethod`) did the same job before PowerShell 3. They use DCOM rather than WinRM to reach other computers, which firewalls often block. You will see them in old scripts; write new ones with the CIM cmdlets.
+
+> PowerShell 7 has no Get-WmiObject or other *-Wmi* cmdlets. Get-CimInstance works in both.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Store in `$freeGB` the free space of drive **C:** on WIN-SRV1, in gigabytes, rounded to **one decimal** (a number such as 12.3). Read it with `Get-CimInstance`.
+@check WIN-SRV1 | $freeGB is the free space of C: in GB
+$want = [math]::Round((Get-CimInstance Win32_LogicalDisk -Filter "DeviceID = 'C:'").FreeSpace / 1GB, 1); $freeGB -is [double] -and $freeGB -eq $want
+@check WIN-SRV1 | it used Get-CimInstance
+($CertLabHistory -join ' ') -match 'Get-CimInstance'
+@hint (Get-CimInstance Win32_LogicalDisk -Filter "DeviceID = 'C:'").FreeSpace is in bytes; divide by 1GB and use [math]::Round(..., 1).
+@solution WIN-SRV1
+$c = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID = 'C:'"
+$freeGB = [math]::Round($c.FreeSpace / 1GB, 1)
+$freeGB
+@endtask
+@end
+
+@quiz
+? Which -Filter finds the local disks in Win32_LogicalDisk?
++ "DriveType = 3"
+- { $_.DriveType -eq 3 }
+- "DriveType -eq 3"
+! -Filter takes WQL, which uses = and not -eq, and a string rather than a script block.
+? What do the CIM cmdlets need on another computer to work with -ComputerName?
+- DCOM and the RPC ports
++ The WinRM service, as for PowerShell remoting
+- Nothing: CIM always works
+! Get-WmiObject used DCOM; the CIM cmdlets use WinRM by default.
+? A script uses Get-WmiObject and must run in PowerShell 7. What do you change it to?
+- Get-WmiObject -Cim
++ Get-CimInstance
+- Invoke-WmiMethod
+! The *-Wmi* cmdlets are not in PowerShell 7.
+@end
+
+## Lesson: l1003 | IP configuration
+
+The NetTCPIP, NetAdapter and DnsClient modules replace most of what `ipconfig` and `netsh` used to do, and give objects instead of text.
+
+```terminal
+PS C:\Windows\system32> Get-NetIPConfiguration
+
+InterfaceAlias       : Ethernet
+InterfaceIndex       : 6
+InterfaceDescription : Microsoft Hyper-V Network Adapter
+NetProfile.Name      : lab.example.com
+IPv4Address          : 10.0.10.11
+IPv6DefaultGateway   :
+IPv4DefaultGateway   : 10.0.10.1
+DNSServer            : 10.0.10.10
+
+
+PS C:\Windows\system32> Get-NetAdapter
+
+Name                      InterfaceDescription                    ifIndex Status       MacAddress             LinkSpeed
+----                      --------------------                    ------- ------       ----------             ---------
+Ethernet                  Microsoft Hyper-V Network Adapter             6 Up           00-15-5D-0A-0A-0B        10 Gbps
+
+
+PS C:\Windows\system32> Get-NetIPAddress -AddressFamily IPv4 | Select-Object InterfaceAlias, IPAddress, PrefixLength, PrefixOrigin
+
+InterfaceAlias              IPAddress  PrefixLength PrefixOrigin
+--------------              ---------  ------------ ------------
+Ethernet                    10.0.10.11           24 Manual
+Loopback Pseudo-Interface 1 127.0.0.1             8 WellKnown
+
+
+PS C:\Windows\system32> Get-DnsClientServerAddress -InterfaceAlias Ethernet -AddressFamily IPv4
+
+InterfaceAlias               Interface Address ServerAddresses
+                             Index     Family
+--------------               --------- ------- ---------------
+Ethernet                             6 IPv4    {10.0.10.10}
+```
+
+- **Get-NetIPConfiguration** (alias `gip`) is the quick overview: address, gateway and DNS servers per adapter.
+- **Get-NetAdapter** shows the network cards: name (the **InterfaceAlias** other commands use), status, MAC address, speed.
+- **Get-NetIPAddress** lists every address; **PrefixLength** is the subnet mask written as a number of bits (24 means 255.255.255.0).
+
+### Changing the settings
+
+```terminal
+PS C:\Windows\system32> New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.12 -PrefixLength 24 | Select-Object IPAddress, PrefixLength, PolicyStore
+
+IPAddress  PrefixLength PolicyStore
+---------  ------------ -----------
+10.0.10.12           24 ActiveStore
+10.0.10.12           24 PersistentStore
+
+
+PS C:\Windows\system32> Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10, 10.0.10.11
+PS C:\Windows\system32> Get-DnsClientServerAddress -InterfaceAlias Ethernet -AddressFamily IPv4
+
+InterfaceAlias               Interface Address ServerAddresses
+                             Index     Family
+--------------               --------- ------- ---------------
+Ethernet                             6 IPv4    {10.0.10.10, 10.0.10.11}
+
+
+PS C:\Windows\system32> Remove-NetIPAddress -IPAddress 10.0.10.12 -Confirm:$false
+```
+
+- **New-NetIPAddress** adds an address (`-DefaultGateway` sets the gateway at the same time). It prints the new address twice: once for the settings in use now (ActiveStore) and once for the saved settings that survive a restart (PersistentStore).
+- **Set-DnsClientServerAddress -ServerAddresses** sets the DNS servers in order; `-ResetServerAddresses` goes back to the ones DHCP gives.
+- **Set-NetIPInterface -InterfaceAlias Ethernet -Dhcp Enabled** switches an adapter back to DHCP.
+- **Remove-NetIPAddress** removes an address.
+
+> Changing the address of the computer you are connected to over the network can cut you off in the middle. Do it at the console, or add the new address before you remove the old one.
+
+> PowerShell 7: these modules work the same on Windows (they are part of Windows, not of PowerShell).
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Give WIN-SRV1's `Ethernet` adapter a **second** IPv4 address, `10.0.10.15` with a /24 prefix, keeping the address it has.
+@check WIN-SRV1 | 10.0.10.15/24 is on Ethernet
+$a = Get-NetIPAddress -IPAddress 10.0.10.15 -ErrorAction SilentlyContinue | Select-Object -First 1; $a.InterfaceAlias -eq 'Ethernet' -and $a.PrefixLength -eq 24
+@check WIN-SRV1 | the old address is still there
+@(Get-NetIPAddress -IPAddress 10.0.10.11 -ErrorAction SilentlyContinue).Count -gt 0
+@hint New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.15 -PrefixLength 24
+@solution WIN-SRV1
+New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.15 -PrefixLength 24
+@endtask
+@end
+
+@quiz
+? What does PrefixLength 24 mean?
++ The subnet mask 255.255.255.0
+- 24 addresses in the subnet
+- The address expires in 24 hours
+! The first 24 bits are the network part.
+? Which cmdlet sets the DNS servers an adapter uses?
+- Set-NetIPAddress
++ Set-DnsClientServerAddress
+- Set-DnsClient
+! Give the servers in order with -ServerAddresses.
+? Why does New-NetIPAddress show the new address twice?
+- It added it twice by mistake
++ Once for the settings in use now and once for the saved settings
+- Once for IPv4 and once for IPv6
+! ActiveStore is what runs now; PersistentStore is what is kept for the next start.
+@end
+
+## Lesson: l1004 | Testing connections
+
+When something "cannot connect", test step by step: does the name resolve, does the computer answer, does the port answer?
+
+### Names: Resolve-DnsName
+
+```terminal
+PS C:\Windows\system32> Resolve-DnsName WEB01
+
+Name                                           Type   TTL   Section    IPAddress
+----                                           ----   ---   -------    ---------
+web01.lab.example.com                          A      1200  Answer     10.0.10.50
+
+
+PS C:\Windows\system32> Resolve-DnsName nosuch.lab.example.com
+Resolve-DnsName : nosuch.lab.example.com : DNS name does not exist
+At line:1 char:1
++ Resolve-DnsName nosuch.lab.example.com
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceUnavailable: (nosuch.lab.example.com:String) [Resolve-DnsName], Win32Exception
+    + FullyQualifiedErrorId : DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName
+```
+
+`-Type MX` (or A, AAAA, CNAME, PTR...) asks for another kind of record; `-Server 10.0.10.10` asks a particular DNS server.
+
+### Ports: Test-NetConnection
+
+`Test-NetConnection` (alias `tnc`) pings, and with `-Port` tries to open a TCP connection to that port, which is what really matters for a web server or remoting:
+
+```terminal
+PS C:\Windows\system32> Test-NetConnection WEB01 -Port 80
+
+ComputerName     : WEB01
+RemoteAddress    : 10.0.10.50
+RemotePort       : 80
+InterfaceAlias   : Ethernet
+SourceAddress    : 10.0.10.11
+TcpTestSucceeded : True
+
+
+PS C:\Windows\system32> Test-NetConnection WEB01 -Port 443 -InformationLevel Quiet
+True
+```
+
+`-InformationLevel Quiet` returns just True or False, which is what a script wants.
+
+### Ping: Test-Connection
+
+`Test-Connection` sends pings (ICMP echo requests). `-Count` sets how many, and `-Quiet` returns True or False:
+
+```terminal
+PS C:\Windows\system32> Test-Connection DC01 -Count 1
+
+Source        Destination     IPV4Address      IPV6Address                              Bytes    Time(ms)
+------        -----------     -----------      -----------                              -----    --------
+WIN-SRV1      DC01            10.0.10.10                                                32       0
+
+
+PS C:\Windows\system32> Test-Connection WIN-CL1 -Count 1 -Quiet
+False
+```
+
+WIN-CL1 does not answer: the Windows 11 firewall blocks incoming pings by default (the next lesson opens it). A failed ping does not prove a computer is down; a successful port test proves it is up.
+
+The old tools still work and are fine for a quick look: `ipconfig /all`, `ping`, `nslookup`, `tracert`. They return text, not objects.
+
+```terminal
+PS C:\Windows\system32> ping -n 1 DC01
+
+Pinging DC01.lab.example.com [10.0.10.10] with 32 bytes of data:
+Reply from 10.0.10.10: bytes=32 time<1ms TTL=128
+
+Ping statistics for 10.0.10.10:
+    Packets: Sent = 1, Received = 1, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+```
+
+> PowerShell 7 rewrote Test-Connection: the output looks different, the main parameter is called -TargetName (-ComputerName still works as an alias) and it can test TCP ports with -TcpPort. Test-NetConnection and Resolve-DnsName are the same in both.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Store in `$webUp` **True or False** (a Boolean, nothing else): whether WEB01 accepts connections on TCP port **443**. Use Test-NetConnection.
+@check WIN-SRV1 | $webUp is the Boolean answer
+$webUp -is [bool] -and $webUp -eq (Test-NetConnection WEB01 -Port 443 -InformationLevel Quiet)
+@check WIN-SRV1 | it used Test-NetConnection
+($CertLabHistory -join ' ') -match 'Test-NetConnection|tnc'
+@hint Test-NetConnection WEB01 -Port 443 -InformationLevel Quiet
+@solution WIN-SRV1
+$webUp = Test-NetConnection WEB01 -Port 443 -InformationLevel Quiet
+$webUp
+@endtask
+@end
+
+@quiz
+? A web server does not answer pings. Which test tells you whether its web site can be reached?
+- Test-Connection web01 -Count 4
++ Test-NetConnection web01 -Port 443
+- Resolve-DnsName web01
+! Firewalls often block pings; a TCP test of the port is what counts.
+? Which parameter makes Test-Connection return just True or False?
+- -InformationLevel Quiet
++ -Quiet
+- -Count 1
+! -InformationLevel Quiet is Test-NetConnection's way of saying the same thing.
+? What does Resolve-DnsName check?
++ That a name turns into an address
+- That a computer answers pings
+- That a port is open
+! It asks DNS, nothing more.
+@end
+
+## Lesson: l1005 | The Windows firewall
+
+Windows Defender Firewall has three **profiles**: **Domain** (the network of your organisation's domain), **Private** (home, trusted) and **Public** (cafes, untrusted). The network you are on decides which one applies. Each profile can be on or off and has a default action; **rules** then allow or block traffic.
+
+```terminal
+PS C:\Windows\system32> Get-NetFirewallProfile | Select-Object Name, Enabled
+
+Name    Enabled
+----    -------
+Domain  True
+Private True
+Public  True
+
+
+PS C:\Windows\system32> Get-NetFirewallRule -DisplayGroup 'File and Printer Sharing' | Select-Object Name, DisplayName, Enabled
+
+Name                  DisplayName                                          Enabled
+----                  -----------                                          -------
+FPS-ICMP4-ERQ-In      File and Printer Sharing (Echo Request - ICMPv4-In)  True
+FPS-ICMP4-ERQ-Out     File and Printer Sharing (Echo Request - ICMPv4-Out) True
+FPS-SMB-In-TCP        File and Printer Sharing (SMB-In)                    True
+FPS-NB_Session-In-TCP File and Printer Sharing (NB-Session-In)             True
+```
+
+### Name and DisplayName
+
+A rule has a **Name**, its unique identifier, and a **DisplayName**, the text you see in the Windows firewall window. Windows' own rules have readable names (`FPS-ICMP4-ERQ-In`); a rule you create without `-Name` gets a long GUID as its name, so give your rules a name.
+
+### Turning rules on and off
+
+```terminal
+#machine WIN-CL1
+PS C:\Windows\system32> Get-NetFirewallRule -Name FPS-ICMP4-ERQ-In | Select-Object Name, Enabled, Direction, Action
+
+Name             Enabled Direction Action
+----             ------- --------- ------
+FPS-ICMP4-ERQ-In False   Inbound   Allow
+
+
+PS C:\Windows\system32> Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In
+PS C:\Windows\system32> Get-NetFirewallRule -Name FPS-ICMP4-ERQ-In | Select-Object Name, Enabled, Direction, Action
+
+Name             Enabled Direction Action
+----             ------- --------- ------
+FPS-ICMP4-ERQ-In True    Inbound   Allow
+```
+
+That one rule lets WIN-CL1 answer pings. `Enable-NetFirewallRule -DisplayGroup 'File and Printer Sharing'` would turn on the whole group, file sharing included: open only what you need. `Disable-NetFirewallRule` turns a rule off and `Remove-NetFirewallRule` deletes it.
+
+### New rules
+
+```terminal
+PS C:\Windows\system32> New-NetFirewallRule -Name LabWeb8080 -DisplayName 'Lab web 8080' -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow -Profile Domain | Select-Object Name, Enabled, Profile, Direction, Action
+
+Name      : LabWeb8080
+Enabled   : True
+Profile   : Domain
+Direction : Inbound
+Action    : Allow
+
+
+PS C:\Windows\system32> Get-NetFirewallRule -Name LabWeb8080 | Get-NetFirewallPortFilter
+
+Protocol      : TCP
+LocalPort     : 8080
+RemotePort    : Any
+IcmpType      : Any
+DynamicTarget : Any
+```
+
+The port and protocol are not properties of the rule object itself: they live in its **port filter**, which `Get-NetFirewallPortFilter` shows (likewise `Get-NetFirewallAddressFilter` for addresses). `Set-NetFirewallRule` changes a rule, for example `-RemoteAddress 10.0.10.0/24` to allow only the lab network.
+
+> Never turn a firewall profile off to "fix" a connection (`Set-NetFirewallProfile -Enabled False`). Find the rule that is missing and add or enable that one.
+
+> PowerShell 7: the NetSecurity cmdlets are the same on Windows.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+On WIN-SRV1, create an **inbound** firewall rule named `LabApp8443` (DisplayName `Lab app 8443`) that **allows** TCP port **8443** on the **Domain** profile only.
+@check WIN-SRV1 | the rule exists, enabled, inbound, allow, Domain only
+$r = Get-NetFirewallRule -Name LabApp8443 -ErrorAction SilentlyContinue; "$($r.Enabled)" -eq 'True' -and "$($r.Direction)" -eq 'Inbound' -and "$($r.Action)" -eq 'Allow' -and "$($r.Profile)" -eq 'Domain' -and $r.DisplayName -eq 'Lab app 8443'
+@check WIN-SRV1 | it is for TCP port 8443
+$f = Get-NetFirewallRule -Name LabApp8443 -ErrorAction SilentlyContinue | Get-NetFirewallPortFilter; "$($f.Protocol)" -eq 'TCP' -and "$($f.LocalPort)" -eq '8443'
+@hint New-NetFirewallRule -Name LabApp8443 -DisplayName 'Lab app 8443' -Direction Inbound -Protocol TCP -LocalPort 8443 -Action Allow -Profile Domain
+@solution WIN-SRV1
+New-NetFirewallRule -Name LabApp8443 -DisplayName 'Lab app 8443' -Direction Inbound -Protocol TCP -LocalPort 8443 -Action Allow -Profile Domain
+@endtask
+@end
+
+@quiz
+? Which firewall profile applies on a company network where the computer can reach its domain controller?
++ Domain
+- Private
+- Public
+! Windows picks Domain when it can reach the domain the computer belongs to.
+? You need TCP 8080 open for a test web site. What is the right fix?
+- Set-NetFirewallProfile -Enabled False
++ New-NetFirewallRule -DisplayName 'Web 8080' -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow
+- Enable-NetFirewallRule -DisplayGroup 'File and Printer Sharing'
+! Open only what is needed; turning a profile off opens everything.
+? Where do you find the port number of a firewall rule?
+- In the rule's Port property
++ In its port filter: Get-NetFirewallRule ... | Get-NetFirewallPortFilter
+- In Get-NetFirewallProfile
+! Ports, protocols and addresses are kept in filters attached to the rule.
+@end

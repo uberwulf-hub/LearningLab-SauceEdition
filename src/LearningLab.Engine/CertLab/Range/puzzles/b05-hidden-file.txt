@@ -1,0 +1,44 @@
+title: A file that hides
+level: Beginner
+kind: File forensics
+points: 40
+order: 5
+answer: flag
+
+@intro
+There is a flag somewhere in your home folder, but ls doesn't show it. Names that
+start with a dot are hidden from an ordinary listing. Find the file, and note that
+what is in it is base64, so decode it to get the flag.
+
+@setup
+printf '%s' '{{FLAG}}' | base64 > /home/player/.secret
+chown player: /home/player/.secret
+echo 'Nothing to see here.' > /home/player/readme.txt
+chown player: /home/player/readme.txt
+
+@solution
+ls
+ls -a
+base64 -d .secret
+echo
+
+@walkthrough
+ls -a shows every file, including the ones whose names begin with a dot (ls alone
+hides them). Here that is .secret. Its contents are base64, so:
+
+    base64 -d .secret
+
+prints the flag.
+
+@hint 2
+What to think about first: on Linux, a file is "hidden" simply because its name starts with a dot. It isn't protected at all; ordinary listings just skip it to keep things tidy (your settings files are named like that). So the question is how to make the listing show everything.
+
+@hint 3
+ls lists the files in a folder. ls -a shows all of them, including names that start with a dot (the . and .. entries are the folder itself and its parent). Try both and compare.
+
+@hint 5
+Once you see the hidden file, look inside it with cat. The text is base64: letters, digits, + and / and maybe = at the end. base64 is a way to write data as plain text, not a lock, and the command base64 -d turns it back.
+
+@hint 8
+Run: ls -a, then base64 -d .secret
+The FLAG{...} it prints is the answer; copy the whole thing, braces included.

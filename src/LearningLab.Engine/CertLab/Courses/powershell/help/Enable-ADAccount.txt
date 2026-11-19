@@ -1,0 +1,13 @@
+SYNOPSIS: Turns on a disabled user, computer or service account.
+DESCRIPTION:
+Enable-ADAccount clears the "account is disabled" flag so the account can sign in again.
+A user account without a password that meets the domain's policy can't be enabled; set one first with Set-ADAccountPassword -Reset.
+PARAMETER Identity:
+The account: a user, a computer (CL1$) or a service account. Position 0, and takes pipeline input.
+PARAMETER PassThru:
+Returns the account after the change.
+EXAMPLE: Enable-ADAccount bcole
+Turns Bianca Cole's account back on.
+EXAMPLE: Search-ADAccount -AccountDisabled -UsersOnly -SearchBase "OU=Sales,OU=Staff,DC=corp,DC=example" | Enable-ADAccount
+Enables every disabled user in the Sales OU.
+RELATED: Disable-ADAccount, Unlock-ADAccount, Set-ADAccountPassword, Search-ADAccount

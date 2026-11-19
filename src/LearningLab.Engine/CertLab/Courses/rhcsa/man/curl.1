@@ -1,0 +1,100 @@
+NAME
+       curl - transfer data from or to a URL (web pages, files, APIs)
+
+SYNOPSIS
+       curl [OPTION...] URL...
+
+DESCRIPTION
+       curl fetches each URL and writes what it gets to standard output. It
+       speaks HTTP and HTTPS (and FTP and a few more). On the RHCSA it is the
+       quickest way to check that a web server, a container's published port
+       or a repository answers, and to download a file.
+
+       By default curl shows a progress meter when output goes to a file or
+       pipe; -s turns it off. It does not follow redirects unless you add -L.
+       An HTTP error page (404, 403...) is still a successful transfer for
+       curl, with exit status 0, unless you use -f.
+
+OPTIONS
+       -o FILE, --output FILE
+              Save to FILE instead of standard output.
+
+       -O, --remote-name
+              Save to a file in the current directory named like the last part
+              of the URL.
+
+       -s, --silent
+              No progress meter and no error messages.
+
+       -S, --show-error
+              With -s, still print error messages.
+
+       -f, --fail
+              Exit with status 22 (and no output) when the server answers
+              with an HTTP error.
+
+       -L, --location
+              Follow redirects (3xx answers) to the new address.
+
+       -I, --head
+              Ask only for the headers and print them.
+
+       -i, --include
+              Print the response headers before the body.
+
+       -v, --verbose
+              Show the whole conversation: the request lines start with >,
+              the answer's headers with <.
+
+       -w FORMAT, --write-out FORMAT
+              Print FORMAT after the transfer. %{http_code} is the status
+              number, %{size_download} the bytes received, %{content_type} the
+              type; \n is a new line.
+
+       -k, --insecure
+              Accept an HTTPS certificate that cannot be verified.
+
+       -u USER:PASSWORD, --user USER:PASSWORD
+              Log in with this name and password.
+
+       -H "NAME: VALUE", --header "NAME: VALUE"
+              Send an extra request header.
+
+       -X METHOD, --request METHOD
+              Use another HTTP method, such as PUT or DELETE.
+
+       -d DATA, --data DATA
+              Send DATA in a POST request.
+
+       -m SECONDS, --max-time SECONDS
+              Give up after this long.
+
+       --connect-timeout SECONDS
+              Give up connecting after this long.
+
+EXAMPLES
+       Check a web server on server2:
+
+           curl http://server2.lab.example.com/
+
+       Print only the HTTP status code (200 means OK):
+
+           curl -s -o /dev/null -w '%{http_code}\n' http://server1:8080/
+
+       Download a file into /root:
+
+           curl -o /root/users.txt http://utility.lab.example.com/files/users.txt
+
+       Look at the headers the server sends:
+
+           curl -I http://repo.lab.example.com/BaseOS/
+
+NOTES
+       When curl prints "Connection refused", nothing listens on that port:
+       check the service with systemctl status and ss -tlnp. "No route to
+       host" from another machine usually means the firewall rejects the
+       port. A 403 for a file that exists often means SELinux or the file
+       permissions keep the web server out.
+
+SEE ALSO
+       wget(1), ss(8), firewall-cmd(1)

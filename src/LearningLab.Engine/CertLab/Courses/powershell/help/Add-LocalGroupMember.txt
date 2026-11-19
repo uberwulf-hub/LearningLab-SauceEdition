@@ -1,0 +1,15 @@
+SYNOPSIS: Adds users or groups to a local group.
+DESCRIPTION:
+Members can be local users (alice or WIN-SRV1\alice), domain users and groups (LAB\jdoe, LAB\Helpdesk), or SIDs. Adding someone who is already a member is an error. Windows logs event 4732.
+PARAMETER Name:
+The group name. Position 0 (or use -Group).
+PARAMETER Group:
+The group, by name or as a LocalGroup object.
+PARAMETER SID:
+The group by security identifier.
+PARAMETER Member:
+The members to add. Position 1, takes pipeline input.
+EXAMPLE: Add-LocalGroupMember -Group Administrators -Member alice
+EXAMPLE: Add-LocalGroupMember -Group 'Remote Management Users' -Member 'LAB\Helpdesk'
+Lets the help desk use PowerShell remoting here.
+RELATED: Get-LocalGroupMember, Remove-LocalGroupMember

@@ -1,0 +1,65 @@
+TOPIC
+    about_Modules
+
+SHORT DESCRIPTION
+    Packages of commands, and how PowerShell finds and loads them.
+
+LONG DESCRIPTION
+    A module is a folder of commands that belong together, such as
+    NetTCPIP (Get-NetIPAddress and friends) or ScheduledTasks. Most
+    commands you use come from a module.
+
+  Kinds of modules
+    Script module    A .psm1 file with functions written in PowerShell.
+    Binary module    A .dll with compiled cmdlets.
+    Manifest         A .psd1 file that describes a module: its version,
+                     author, the files it loads, what it exports and what
+                     it needs. New-ModuleManifest creates one.
+
+  Where modules are found
+    $env:PSModulePath lists the folders PowerShell searches. In 5.1 they
+    usually are:
+
+        Documents\WindowsPowerShell\Modules        (just you)
+        C:\Program Files\WindowsPowerShell\Modules (everyone)
+        C:\Windows\System32\WindowsPowerShell\v1.0\Modules (Windows)
+
+    A module must be in a folder of the same name: Modules\LabTools\
+    LabTools.psm1.
+
+  Loading
+    Since version 3, a module loads by itself the first time you use one
+    of its commands (auto-loading). You can also load one by hand:
+
+        Get-Module                     # loaded now
+        Get-Module -ListAvailable      # all that can be found
+        Import-Module NetTCPIP
+        Get-Command -Module NetTCPIP
+        Remove-Module NetTCPIP
+
+    Import-Module also takes a path, such as C:\LabFiles\LabTools.psm1.
+
+  Writing a script module
+    Put functions in a .psm1 file. Export-ModuleMember chooses which of
+    them callers see; the rest stay private helpers.
+
+        function Get-LabInfo { 'Lab ready' }
+        Export-ModuleMember -Function Get-LabInfo
+
+  Getting modules from a gallery
+    PowerShellGet's Find-Module, Install-Module and Update-Module work with
+    repositories such as the PowerShell Gallery. Install-Module -Scope
+    CurrentUser needs no administrator.
+
+  PowerShell 7
+    PowerShell 7 uses its own folders (Documents\PowerShell\Modules) and
+    can load many 5.1 modules through Windows PowerShell compatibility.
+
+SEE ALSO
+    Import-Module
+    Get-Module
+    Remove-Module
+    Export-ModuleMember
+    New-ModuleManifest
+    Install-Module
+    Find-Module

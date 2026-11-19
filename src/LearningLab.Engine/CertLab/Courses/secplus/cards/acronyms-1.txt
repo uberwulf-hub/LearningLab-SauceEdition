@@ -1,0 +1,104 @@
+# Deck: acronyms-1 | Acronyms A-D | General security concepts
+3DES :: Triple Data Encryption Standard: runs DES three times over each block; legacy and deprecated, replace it with AES
+AAA :: Authentication, authorization and accounting: prove who you are, decide what you may do, and record what you did
+ABAC :: Attribute-based access control: decisions use attributes of the user, resource and situation (department, device, time), very fine-grained
+ACL :: Access control list: an ordered list of allow and deny rules on a router, firewall, file or folder
+ACME :: Automatic Certificate Management Environment: protocol that lets servers request and renew certificates from a CA without a person
+AD :: Active Directory: Microsoft's directory of users, computers and groups; attackers aim for its admin accounts
+AEAD :: Authenticated encryption with associated data: modes such as AES-GCM that give secrecy and tamper detection together
+AES :: Advanced Encryption Standard: today's standard symmetric block cipher; 128-bit blocks with 128, 192 or 256-bit keys
+AES-256 :: AES with a 256-bit key: the largest AES key size, common for data at rest and VPNs
+AH :: Authentication Header: IPsec protocol that proves packets are unchanged and from the right peer, but does not encrypt
+AI :: Artificial intelligence: software that learns or reasons; helps defenders spot attacks and helps attackers write convincing phishing and deepfakes
+AIS :: Automated Indicator Sharing: a US CISA service that swaps threat indicators between government and companies using STIX and TAXII
+ALE :: Annualized loss expectancy: the expected yearly loss from one risk; ALE = SLE x ARO
+AP :: Access point: connects wireless clients to the wired network; a rogue AP is one nobody approved
+API :: Application programming interface: a defined way for programs to talk; needs authentication, rate limits and input checks
+APT :: Advanced persistent threat: a skilled, well-funded attacker (often a nation-state) that hides in a network for a long time
+ARO :: Annualized rate of occurrence: how often a risk is expected per year (0.5 means once every two years)
+ARP :: Address Resolution Protocol: finds the MAC address for an IPv4 address on a LAN; ARP poisoning enables on-path attacks
+ASLR :: Address space layout randomization: loads program memory at random places so memory exploits are hard to aim
+ATT&CK :: Adversarial Tactics, Techniques and Common Knowledge: MITRE's knowledge base of real attacker behaviour, grouped by tactic
+AUP :: Acceptable use policy: the rules people agree to before using company systems, networks and data
+AV (antivirus) :: Antivirus: software that finds and removes malware using signatures and behaviour
+AV (asset value) :: Asset value: what an asset is worth in money; the start of SLE = AV x EF
+BASH :: Bourne Again Shell: the usual Linux command shell; scripts automate work and are also abused by attackers
+BCP :: Business continuity plan: how the organization keeps its critical work going during and after a disruption
+BEC :: Business email compromise: fraud from a real or faked business mailbox that tricks staff into paying or sending data
+BGP :: Border Gateway Protocol: routes traffic between the networks of the internet; BGP hijacking can redirect traffic
+BIA :: Business impact analysis: finds the critical functions and what losing them costs; sets RTO and RPO
+BIOS :: Basic Input/Output System: older PC start-up firmware; replaced by UEFI, which adds Secure Boot
+BLE :: Bluetooth Low Energy: low-power Bluetooth for wearables and IoT; weak pairing can leak data or allow tracking
+BPA :: Business partners agreement: sets out how partners share profits, duties and decisions in a joint venture
+BPDU :: Bridge protocol data unit: a spanning tree message between switches; BPDU guard shuts a user port that receives one
+BYOD :: Bring your own device: staff use their own phones and laptops for work; MDM or containers keep work data apart
+C2 :: Command and control: the channel attackers use to give orders to malware and collect stolen data
+CA :: Certificate authority: a trusted organization that checks identities and signs digital certificates
+CAC :: Common Access Card: the US Department of Defense smart card for identification and sign-in
+CAPTCHA :: Completely Automated Public Turing test to tell Computers and Humans Apart: a challenge that keeps bots out of forms
+CAR :: Corrective action report: records a problem, its root cause and the steps taken to fix it
+CASB :: Cloud access security broker: sits between users and cloud apps to give visibility and enforce policy and DLP
+CBC :: Cipher block chaining: block mode where each block is mixed (XOR) with the previous ciphertext; needs an unpredictable IV
+CBT :: Computer-based training: self-paced courses, often used for security awareness
+CCMP :: Counter Mode with Cipher Block Chaining Message Authentication Code Protocol: the AES-based encryption used by WPA2
+CCTV :: Closed-circuit television: security cameras that deter and record; a detective and deterrent physical control
+CERT :: Computer emergency response team: a group that handles incidents and publishes security advisories
+CFB :: Cipher feedback: block mode that makes a block cipher act like a stream cipher
+CHAP :: Challenge-Handshake Authentication Protocol: proves you know the password by answering a challenge, never sending the password
+CI/CD :: Continuous integration and continuous delivery (or deployment): automated build, test and release; security scans belong in the pipeline
+CIA :: Confidentiality, integrity and availability: the three main goals of information security
+CIO :: Chief information officer: the executive in charge of IT
+CIRT :: Computer incident response team: the people who respond to security incidents (also called CSIRT)
+CIS :: Center for Internet Security: publishes the CIS Controls and the CIS Benchmarks for hardening
+CMDB :: Configuration management database: a record of assets and how they connect, used for changes and incidents
+CMS :: Content management system: software that runs websites and blogs; old plugins are a frequent way in
+COOP :: Continuity of operations plan: keeps essential functions running in an emergency (a US government term)
+COPE :: Corporate owned, personally enabled: the company owns the device and also lets staff use it personally
+COTS :: Commercial off-the-shelf: ready-made software or hardware bought from a vendor; you depend on the vendor's patches
+CP :: Contingency planning: preparing other ways to keep working when systems fail
+CPS :: Certification practice statement: a CA's document describing how it issues and manages certificates
+CPU :: Central processing unit: the processor; hardware flaws such as side channels can leak data
+CRC :: Cyclic redundancy check: catches accidental data errors; not a security hash, because it is easy to forge
+CRL :: Certificate revocation list: a CA's signed list of certificates cancelled before they expire
+CSF :: Cybersecurity Framework: NIST's framework with the functions Govern, Identify, Protect, Detect, Respond and Recover
+CSIRT :: Computer security incident response team: the same idea as a CIRT
+CSO :: Chief security officer: the executive responsible for security, often both physical and information security
+CSP :: Cloud service provider: a company that sells IaaS, PaaS or SaaS
+CSPM :: Cloud security posture management: tools that check cloud settings for risky misconfigurations
+CSR :: Certificate signing request: your public key and details, signed with your private key and sent to a CA
+CSRF :: Cross-site request forgery: makes a signed-in browser send a request the user never meant; stop it with anti-CSRF tokens and SameSite cookies
+CSU :: Channel service unit: equipment that connects a digital leased line to the customer's network, usually with a DSU
+CTI :: Cyber threat intelligence: knowledge about attackers, their tools and indicators, used to defend
+CTM :: Counter mode: block mode that encrypts a counter to make a key stream; fast and parallel (also written CTR)
+CTO :: Chief technology officer: the executive who leads technology strategy
+CVE :: Common Vulnerabilities and Exposures: the public list of known vulnerabilities, each with an ID in the form CVE-year-number
+CVSS :: Common Vulnerability Scoring System: rates how severe a vulnerability is from 0.0 to 10.0
+CWE :: Common Weakness Enumeration: a catalogue of kinds of software weakness, such as missing input validation
+CYOD :: Choose your own device: staff pick from a list of approved company-owned devices
+DAC :: Discretionary access control: the owner of a file or resource decides who may use it (like NTFS permissions)
+DAST :: Dynamic application security testing: tests a running application from outside, the way an attacker would
+DBA :: Database administrator: looks after databases; a powerful role to limit and watch
+DDoS :: Distributed denial of service: many machines, often a botnet, flood a target until real users can't reach it
+DEP :: Data Execution Prevention: marks data areas of memory as not runnable, so injected code fails
+DES :: Data Encryption Standard: old symmetric cipher with a 56-bit key; broken by brute force, never use it
+DFIR :: Digital forensics and incident response: investigating incidents and handling them, as one discipline
+DH :: Diffie-Hellman: key exchange that lets two parties agree on a shared secret over an open network
+DHCP :: Dynamic Host Configuration Protocol: hands out IP settings; rogue servers and starvation attacks are stopped by DHCP snooping
+DHE :: Diffie-Hellman Ephemeral: Diffie-Hellman with new keys for every session, giving perfect forward secrecy
+DKIM :: DomainKeys Identified Mail: signs outgoing mail so receivers can check the domain sent it and nothing changed
+DLL :: Dynamic-link library: a Windows code library; DLL injection and DLL hijacking run an attacker's code inside a program
+DLP :: Data loss prevention: finds sensitive data and stops it leaving by email, web, USB or cloud
+DMARC :: Domain-based Message Authentication, Reporting and Conformance: tells receivers what to do when SPF and DKIM fail, and sends reports
+DMZ :: Demilitarized zone: the older name for a screened subnet, where public-facing servers live
+DNAT :: Destination network address translation: rewrites the destination address, for example to forward a public port to an inside server
+DNS :: Domain Name System: turns names into IP addresses; attacked by cache poisoning, hijacking and tunneling
+DNSSEC :: Domain Name System Security Extensions: signs DNS records so answers can be checked as genuine
+DoH :: DNS over HTTPS: hides DNS lookups inside HTTPS on port 443
+DoS :: Denial of service: an attack that makes a system or service unavailable
+DoT :: DNS over TLS: encrypts DNS lookups with TLS on port 853
+DPI :: Deep packet inspection: looks inside packet contents, not just headers, to find threats or identify apps
+DPO :: Data protection officer: the role (required by GDPR for some organizations) that oversees personal data protection
+DR :: Disaster recovery: getting IT systems back after a major outage
+DRP :: Disaster recovery plan: the written steps for restoring IT systems after a disaster
+DSA :: Digital Signature Algorithm: a US standard algorithm for digital signatures
+DSL :: Digital subscriber line: internet access over telephone wires

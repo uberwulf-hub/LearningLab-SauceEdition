@@ -1,0 +1,18 @@
+SYNOPSIS: Turns a disabled network adapter back on.
+DESCRIPTION:
+Enable-NetAdapter switches an adapter on again after Disable-NetAdapter. Its status goes back to Up and the computer's addresses, routes and DNS settings on that adapter work again; nothing is lost while an adapter is off.
+PARAMETER Name:
+The adapter to turn on, for example Ethernet. Wildcards are allowed.
+PARAMETER InputObject:
+An adapter object, usually piped from Get-NetAdapter.
+PARAMETER PassThru:
+Outputs the adapter after the change.
+EXAMPLE: Enable-NetAdapter -Name Ethernet
+Turns the Ethernet adapter on again.
+EXAMPLE: Get-NetAdapter | Where-Object Status -eq 'Disabled' | Enable-NetAdapter -PassThru
+Turns on every disabled adapter and shows them.
+EXAMPLE: Enable-NetAdapter Ethernet; Test-NetConnection 10.0.10.1
+Turns the adapter on and checks that the gateway answers again.
+NOTES:
+CIM-based command from the NetAdapter module, Windows only (also in PowerShell 7 on Windows). Needs an administrator on a real PC.
+RELATED: Disable-NetAdapter, Restart-NetAdapter, Get-NetAdapter

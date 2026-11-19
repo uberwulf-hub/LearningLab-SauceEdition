@@ -1,0 +1,231 @@
+# Practice: pbq-cert | Certificates and PKI
+Read the certificate as openssl x509 -noout -text prints it, then answer the questions about it.
+
+@cert c01 | General security concepts | 6
+Ashwood Architects' staff open the admin page of the office storage server at https://nas01.corp.ashwood.example. Every browser shows "Your connection is not private", and the office manager has been telling people to click Continue. The storage server is used only inside the office, by about 30 company-managed PCs. The administrator exports the certificate the page presents.
+@exhibit openssl x509 -noout -text -in nas01.crt
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            5c:02:e7:91:3a:4d:b0:16
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = US, O = StorageBox, CN = nas01.corp.ashwood.example
+        Validity
+            Not Before: Mar  3 08:00:00 2024 GMT
+            Not After : Mar  1 08:00:00 2034 GMT
+        Subject: C = US, O = StorageBox, CN = nas01.corp.ashwood.example
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:b1:4c:7e:20:9d:63:f5:0a:c8:31:e7:5b:92:6d:
+                    44:af:08:13:de:7c:51:b9:e2:66:0f:3d:a4:87:15:
+                    ...
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:nas01.corp.ashwood.example
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment, Certificate Sign
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+    Signature Algorithm: sha256WithRSAEncryption
+@endexhibit
+? problem | Why does every browser warn about this certificate?
+- The certificate has expired
+- The name nas01.corp.ashwood.example is missing from the Subject Alternative Name
++ It is self-signed: the Issuer is the same as the Subject, so no certificate authority the browsers trust vouches for it
+- A 2048-bit RSA key is too short
+? fix | What is the BEST fix for this internal-only server?
+- Keep telling staff to click Continue, since the server is inside the office
+- Buy an extended validation (EV) certificate from a public CA for nas01.corp.ashwood.example
++ Issue a certificate for nas01.corp.ashwood.example from the company's internal CA, whose root certificate is pushed to the managed PCs (for example by Group Policy)
+- Turn off HTTPS on the admin page so the warning goes away
+? risk | Why is "just click Continue" dangerous even inside the office?
++ Staff get used to ignoring the warning and can't tell this certificate from one an on-path attacker presents to steal the admin password
+- Clicking Continue sends the server's private key to the browser
+- Clicking Continue turns off encryption for the session
+- It makes the certificate expire sooner
+? ca | The certificate says CA:TRUE and allows Certificate Sign. Why should a web server's certificate not have this?
+- CA:TRUE makes the connection use weaker encryption
++ It lets the certificate's key sign other certificates; if someone trusted it and its key were stolen, the attacker could create certificates they would accept
+- Browsers need CA:TRUE to show the padlock, so it is correct as it is
+- CA:TRUE means the certificate can be revoked by anyone
+! Problem: Issuer and Subject are identical, which marks a self-signed certificate (typical of an appliance's built-in one). It has not expired (2034), the name is in the SAN and 2048-bit RSA with SHA-256 is fine. Fix: for a server that only company-managed PCs use, the usual answer is a certificate from the company's own internal CA, whose root the PCs trust because it is deployed to them through Group Policy or MDM; EV only adds stricter checks of the company's legal identity, and costs more, which an internal-only server doesn't need. Turning off HTTPS would send the admin password in clear text. Risk: warning fatigue means people click through every warning, including the one an on-path attacker's fake certificate would cause; nothing about the session's encryption or the private key changes. CA: a server (leaf) certificate should say CA:FALSE and not allow Certificate Sign; only CA certificates should be able to sign other certificates.
+
+@cert c02 | General security concepts | 6
+Tamworth Freight's mail server still uses a certificate issued in 2025, with old settings, by the company's own issuing CA. A security review flags it, and newer mail clients now refuse to connect.
+@exhibit openssl x509 -noout -text -in mail.crt
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            1f:6a:03:c2:99:84:7e:20:51:bb
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: DC = example, DC = tamworth, CN = Tamworth Issuing CA 1
+        Validity
+            Not Before: Feb 10 00:00:00 2025 GMT
+            Not After : Feb  9 23:59:59 2027 GMT
+        Subject: C = GB, O = Tamworth Freight, CN = mail.tamworth.example
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:d4:19:a7:6e:30:8b:f2:c5:47:1d:90:ee:3a:62:
+                    ...
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:mail.tamworth.example, DNS:autodiscover.tamworth.example
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage:
+                TLS Web Server Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 CRL Distribution Points:
+                Full Name:
+                  URI:http://pki.tamworth.example/crl/issuing1.crl
+            Authority Information Access:
+                OCSP - URI:http://pki.tamworth.example/ocsp
+    Signature Algorithm: sha1WithRSAEncryption
+@endexhibit
+?? weak | Which TWO things in this certificate are too weak today? (Choose two.)
++ The signature algorithm uses SHA-1
++ The RSA key is only 1024 bits long
+- The certificate is valid for two years
+- Basic Constraints says CA:FALSE
+- It lists two names in the Subject Alternative Name
+? csr | How should the administrator get a replacement certificate?
+- Ask the CA to email both the new private key and the certificate
+- Copy the old private key into a new request, since only the signature needs changing
++ Generate a new key pair (RSA 3072 bits, or ECC P-256) on the server, send the CA a certificate signing request (CSR) with the public key and the names, and keep the private key on the server
+- Edit the old certificate's Signature Algorithm line to sha256WithRSAEncryption
+? escrow | The company also issues S/MIME certificates so staff can encrypt email. Policy says encrypted mail must still be readable after an employee leaves. Which practice meets this?
+- Certificate pinning
+- OCSP stapling
++ Key escrow: a protected copy of each encryption private key is kept by a trusted key recovery service
+- A wildcard certificate for *.tamworth.example
+! Weak: SHA-1 has practical collision attacks, so certificates signed with it are no longer trusted; use SHA-256 or better. A 1024-bit RSA key can be broken with enough computing power; 2048 bits is the minimum today and 3072 or ECC is better. Two years of validity, CA:FALSE (right for a server) and two SAN names are all fine. CSR: the server makes a new key pair and sends only a CSR (the public key, the names, signed with the new private key to prove it holds it); the private key never leaves the server. Reusing the weak 1024-bit key would keep the problem, and a certificate can't be edited, because that breaks the CA's signature. Escrow: keeping a recoverable copy of encryption keys is key escrow (often through a key recovery agent); pinning, stapling and wildcards don't help anyone decrypt old mail.
+
+@cert c03 | General security concepts | 6
+Pinebrook Software deployed a new API server at https://api.pinebrook.example. Its mobile app and partners' systems refuse to connect with the error "certificate not valid for the requested usage". The developer who requested the certificate shows the team what was installed.
+@exhibit openssl x509 -noout -text -in api.crt
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            0b:7e:44:a1:c9:30:5f:82:6d:e2:19:04:b5:73:aa:10
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C = US, O = Example Trust Services, CN = Example Trust ECC CA 3
+        Validity
+            Not Before: Sep 29 00:00:00 2026 GMT
+            Not After : Mar 30 23:59:59 2027 GMT
+        Subject: C = US, O = Pinebrook Software, CN = api.pinebrook.example
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:6a:1e:c3:58:90:2f:7d:b4:e1:05:9c:38:af:62:
+                    ...
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:api.pinebrook.example
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage:
+                TLS Web Client Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 CRL Distribution Points:
+                Full Name:
+                  URI:http://crl.trust.example/ecc3.crl
+            Authority Information Access:
+                OCSP - URI:http://ocsp.trust.example
+                CA Issuers - URI:http://certs.trust.example/ecc3.crt
+@endexhibit
+? problem | Why do the clients refuse this certificate?
+- A 256-bit key is far too short
+- ecdsa-with-SHA256 is not accepted for TLS
++ Its Extended Key Usage allows only TLS client authentication, but a server must present a certificate for TLS server authentication
+- The certificate is not valid yet
+? staple | Once the right certificate is installed, the team wants clients to learn its revocation status quickly, without every client contacting the CA's OCSP responder. What should the server use?
+- A certificate revocation list (CRL) copied into the app
++ OCSP stapling: the server fetches a signed, time-stamped OCSP answer from the CA and sends it during the TLS handshake
+- Certificate pinning
+- A self-signed certificate
+? crl | What does a client get from the CRL distribution point listed in the certificate?
+- A yes or no answer about this one certificate
+- The CA's private key
++ A list, signed by the CA and published at intervals, of the serial numbers of certificates it has revoked
+- A new certificate when the old one expires
+? stolen | Months later, the API server is breached and its private key may have been copied. What should the team do?
+- Nothing, because the certificate is still within its validity dates
++ Ask the CA to revoke the certificate, then install a new certificate with a newly generated key pair
+- Renew the certificate with the same key pair
+- Change the Subject's organization name
+! Problem: the Extended Key Usage says what the certificate may be used for. "TLS Web Client Authentication" is for a client proving who it is (for example in mutual TLS); a server needs "TLS Web Server Authentication". A 256-bit ECC key on the P-256 curve is roughly as strong as RSA 3072, ECDSA with SHA-256 is standard, and the dates are valid now. Stapling: with OCSP stapling the server attaches the CA's signed OCSP answer to the handshake, so clients get fresh status without their own request (faster, and the CA doesn't learn who visits the site). A CRL baked into an app goes out of date, and pinning is about which key to trust, not revocation. CRL: the distribution point serves the CA's signed list of revoked serial numbers, updated on a schedule; the yes or no answer for one certificate comes from OCSP. Stolen key: revoke at once (the dates don't matter: a thief could impersonate the server until expiry) and replace it with a certificate for a new key; renewing with the old key keeps the stolen key in use.
+
+@cert c04 | General security concepts | 6
+Alderbrook Gardens uses one certificate on several web servers. The company has just bought a second domain, alderbrook-outdoor.example, and its mobile app pins the public key of this certificate. Read the certificate, then answer the questions.
+@exhibit openssl x509 -noout -text -in star.crt
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            62:d9:0e:17:b4:a8:3c:55:f1:2a:09:6e:c7:41:d0:8b
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = US, O = Example Trust Services, CN = Example Trust TLS CA R2
+        Validity
+            Not Before: Apr 14 00:00:00 2026 GMT
+            Not After : Apr 13 23:59:59 2027 GMT
+        Subject: C = US, O = Alderbrook Gardens, CN = *.alderbrook.example
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:9a:3f:c1:57:e8:20:6b:d4:11:8e:f0:2c:73:b5:
+                    ...
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:*.alderbrook.example
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage:
+                TLS Web Server Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 CRL Distribution Points:
+                Full Name:
+                  URI:http://crl.trust.example/tlsr2.crl
+            Authority Information Access:
+                OCSP - URI:http://ocsp.trust.example
+                CA Issuers - URI:http://certs.trust.example/tlsr2.crt
+    Signature Algorithm: sha256WithRSAEncryption
+@endexhibit
+?? covers | Which TWO addresses does this certificate cover? (Choose two.)
++ www.alderbrook.example
++ pay.alderbrook.example
+- alderbrook.example
+- eu.shop.alderbrook.example
+- www.alderbrook-outdoor.example
+? newdomain | The company wants one certificate for its sites on both domains. Which kind fits BEST?
+- A second wildcard: *.*.alderbrook.example
++ A SAN (multi-domain) certificate that lists the names in both domains, for example *.alderbrook.example and *.alderbrook-outdoor.example
+- A code signing certificate
+- A self-signed certificate made on each web server
+? pin | At renewal next April the team plans to create a new key pair. What will happen to the mobile app that pins the current public key?
+- Nothing: pinning checks only the domain name
+- The app will accept the new key, because the same CA signs it
++ The app will refuse to connect unless an app update with the new key's pin (or a backup pin) reaches users before the switch
+- The CA will update the pin inside the app automatically
+? risk | What is the main security drawback of using this one wildcard certificate on many servers?
+- Wildcard certificates can't be revoked
+- Wildcard certificates always use weaker encryption
++ The same private key sits on every server, so stealing it from any one of them lets an attacker impersonate every name under alderbrook.example
+- Wildcard certificates can't use OCSP
+! Covers: a wildcard covers exactly one label in place of the *, so www and pay are covered, but the bare domain alderbrook.example (no label) and eu.shop (two labels) are not, and neither is another domain. Wildcards with two stars are not allowed. New domain: a SAN (Subject Alternative Name, multi-domain) certificate can list several names, wildcard entries included, across different domains. Code signing is for software, and self-signed certificates would make every browser warn. Pin: a pinned app trusts only the key it knows, whoever signed the new certificate; ship the new pin (or keep a backup pin in the app) before changing keys, or every user is locked out. Risk: one key copied to many servers widens the damage of one breach to every subdomain; wildcards can be revoked and checked with OCSP like any other certificate, and their encryption is the same.

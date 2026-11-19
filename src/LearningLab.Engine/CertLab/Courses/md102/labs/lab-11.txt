@@ -1,0 +1,74 @@
+# Lab: lab-11 | Mobile apps and app protection | u11 | 30
+Sales work from their phones: Jordan on his iPhone, Priya on her Android Pixel with a work profile. Give them the apps, protect the data inside those apps, set the apps up, and make sure work data can only be reached through protected apps.
+
+@vars
+pinlen = 4 | 6 | 8
+wipedays = 30 | 60 | 90
+@endvars
+
+@setup portal
+create appProtection name="Sales iOS apps" platform=iOS/iPadOS targetApps="Microsoft Outlook,Microsoft Teams" backup=Block
+assign appProtection "Sales iOS apps" Sales
+
+@task t01 | Apps | 20 | portal
+Priya needs Microsoft Teams in her work profile. Add **Teams for Android** as a **Managed Google Play app** (publisher Microsoft Corporation, package `com.microsoft.teams`), make it **Required** for **Sales**, and sync **Priya's Pixel**.
+@check portal | Teams is installed on Priya's phone
+device["Priya's Pixel"].app["Teams for Android"] == Installed
+app["Teams for Android"].type == "Managed Google Play app"
+@hint Apps > All apps > Add > Managed Google Play app; assign Required to Sales; Sync the phone.
+@solution portal
+create app name="Teams for Android" type="Managed Google Play app" publisher="Microsoft Corporation" gplay=com.microsoft.teams
+assign app "Teams for Android" Sales intent=required
+remote sync "Priya's Pixel"
+@explain
+On an Android Enterprise phone with a work profile, managed Google Play apps install into the work profile. The Microsoft Store and Apple's App Store don't apply here.
+@endtask
+
+@task t02 | Apps | 30 | portal
+Create an **Android** app protection policy **Sales Android apps** for **Microsoft Outlook** and **Microsoft Teams**: org data only to **policy managed apps**, no saving copies, cut/copy/paste only between **policy managed apps**, a **numeric PIN** of at least **{pinlen}** digits, **wipe** org data on a **rooted** device, and wipe org data after **{wipedays}** days offline. Assign it to **Sales**.
+@check portal | data protection
+appProtection["Sales Android apps"].platform == Android
+appProtection["Sales Android apps"].sendData == "Policy managed apps"
+appProtection["Sales Android apps"].saveCopies == Block
+appProtection["Sales Android apps"].cutCopy == "Policy managed apps"
+@check portal | access requirements, conditional launch and assignment
+appProtection["Sales Android apps"].pinLength == {pinlen}
+appProtection["Sales Android apps"].jailbreak == "Wipe data"
+appProtection["Sales Android apps"].offlineWipe == {wipedays}
+appProtection["Sales Android apps"].include has Sales
+@hint Data protection: send org data, save copies, cut/copy/paste. Access requirements: PIN. Conditional launch: rooted devices, offline grace period (wipe data, days).
+@solution portal
+create appProtection name="Sales Android apps" platform=Android targetApps="Microsoft Outlook,Microsoft Teams" sendData="Policy managed apps" saveCopies=Block cutCopy="Policy managed apps" pin=Require pinType=Numeric pinLength={pinlen} jailbreak="Wipe data" offlineWipe={wipedays}
+assign appProtection "Sales Android apps" Sales
+@explain
+These settings live in the apps and follow Priya's work account, so they work whether or not the phone is enrolled. The offline grace period makes the app wipe the org data if it hasn't been able to check in with Intune for {wipedays} days, for example on a lost phone.
+@endtask
+
+@task t03 | Apps | 20 | portal
+On the **enrolled** iPhones, Outlook must know which work account to use, so the app protection policy applies to it. Create an app configuration policy **Outlook account** for **managed devices**, platform **iOS/iPadOS**, targeting **Microsoft Outlook**, with the setting `IntuneMAMUPN={{userprincipalname}}`, and assign it to **Sales**.
+@check portal | the policy goes through MDM to Outlook on iOS
+appConfig["Outlook account"].enrollment == "Managed devices"
+appConfig["Outlook account"].platform == iOS/iPadOS
+appConfig["Outlook account"].settings contains "IntuneMAMUPN"
+appConfig["Outlook account"].include has Sales
+@hint Apps > App configuration policies > Add > Managed devices; platform iOS/iPadOS; targeted app Microsoft Outlook.
+@solution portal
+create appConfig name="Outlook account" enrollment="Managed devices" platform=iOS/iPadOS targetApp="Microsoft Outlook" settings="IntuneMAMUPN={{userprincipalname}}"
+assign appConfig "Outlook account" Sales
+@explain
+The managed devices channel sends key and value pairs to an app Intune deployed on an enrolled device. The {{userprincipalname}} token is filled in with each user's sign-in name.
+@endtask
+
+@task t04 | Apps | 30 | portal
+Now make the protection count. Create a Conditional Access policy **Phones need protected apps** for **Sales**, target **Office 365**, device platforms **iOS** and **Android**, granting access only with an **app protection policy**, and turn it **On**. The iOS policy for Sales already exists (setup); together with your Android policy, Priya must get in with Outlook on her Pixel, and nobody with an unprotected app.
+@check portal | protected apps get in, unprotected ones don't
+signin(user=priya, device="Priya's Pixel", client=mobile, clientApp="Microsoft Outlook", mfa=yes) == Allowed
+signin(user=priya, device="Priya's Pixel", client=mobile, clientApp="Microsoft Word", mfa=yes) == Blocked
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Teams", mfa=yes) == Allowed
+@hint Grant: Require app protection policy. Conditions: device platforms iOS, Android.
+@solution portal
+create ca name="Phones need protected apps" usersInclude=Sales apps="Office 365" platforms="iOS,Android" grant="Grant access" controls="Require app protection policy" state=On
+@explain
+Require app protection policy is satisfied only by an app that an app protection policy covers for that user on that platform: Outlook and Teams on both phones, not Word. Limiting the policy to iOS and Android keeps Windows sign-ins out of it.
+@endtask
+

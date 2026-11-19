@@ -1,0 +1,22 @@
+NAME
+       timeout - run a command with a time limit
+
+SYNOPSIS
+       timeout [-s SIGNAL] DURATION COMMAND [ARGUMENT]...
+
+DESCRIPTION
+       timeout starts COMMAND and stops it if it is still running after
+       DURATION (seconds, or a number with s, m, h or d). It exits with the
+       command's own status, or with 124 when the time ran out. Scripts use
+       it so that a command that hangs (a network test, for example) cannot
+       block them forever.
+
+OPTIONS
+       -s, --signal=SIGNAL
+              The signal sent when the time is up (TERM by default).
+
+EXAMPLES
+           timeout 5 curl -s http://server2/
+
+SEE ALSO
+       sleep(1), kill(1)

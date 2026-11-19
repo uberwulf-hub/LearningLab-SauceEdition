@@ -1,0 +1,27 @@
+NAME
+       last - list recent logins and reboots (also lastb, failed logins)
+
+SYNOPSIS
+       last
+       lastb
+
+DESCRIPTION
+       last reads /var/log/wtmp and lists who logged in, from where (the
+       terminal and, for ssh, the remote host), when, and for how long,
+       newest first. "still logged in" marks sessions that are open now. The
+       reboot lines show each boot, with the kernel version. The last line
+       says when the file starts.
+
+       lastb shows failed login attempts from /var/log/btmp, and only root
+       may run it. Many failures for one account can mean someone is
+       guessing passwords.
+
+EXAMPLES
+           last
+           last | grep student
+
+FILES
+       /var/log/wtmp, /var/log/btmp
+
+SEE ALSO
+       lastlog(8), who(1), w(1), journalctl(1)

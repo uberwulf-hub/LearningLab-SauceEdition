@@ -1,0 +1,41 @@
+NAME
+       sftp - copy files over SSH interactively
+
+SYNOPSIS
+       sftp [-P PORT] [-i KEYFILE] [USER@]HOST
+
+DESCRIPTION
+       sftp logs in to HOST through SSH and gives an sftp> prompt where you
+       browse and copy files with short commands. It needs nothing on the
+       server beyond sshd.
+
+COMMANDS
+       ls, cd, pwd
+              List, change and show the remote directory.
+
+       lls, lcd, lpwd
+              The same for the local directory.
+
+       get FILE [LOCAL]
+              Download a file (get -r for a directory).
+
+       put FILE [REMOTE]
+              Upload a file (put -r for a directory).
+
+       mkdir, rm, rename
+              Change files on the server.
+
+       bye, exit
+              Leave.
+
+EXAMPLES
+           sftp student@server2
+           sftp> put report.txt
+           sftp> get /etc/motd
+           sftp> bye
+
+NOTES
+       Cert Lab does not simulate sftp: use scp to copy files there.
+
+SEE ALSO
+       scp(1), ssh(1)

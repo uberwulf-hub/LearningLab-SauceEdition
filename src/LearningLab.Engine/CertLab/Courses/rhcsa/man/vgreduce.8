@@ -1,0 +1,31 @@
+NAME
+       vgreduce - remove physical volumes from a volume group
+
+SYNOPSIS
+       vgreduce VG PV...
+       vgreduce -a VG
+       vgreduce --removemissing VG
+
+DESCRIPTION
+       vgreduce takes physical volumes out of a volume group. A PV can leave
+       only when none of its extents are used; move the data off it first
+       with pvmove (when the other PVs have room). Afterwards the device is
+       still a PV but belongs to no group; pvremove clears it.
+
+OPTIONS
+       -a, --all
+              Remove every PV that has no used extents.
+
+       --removemissing
+              Forget PVs whose disk has disappeared.
+
+       -f, --force
+              Go ahead without some checks.
+
+EXAMPLES
+           pvmove /dev/vdc1
+           vgreduce vgdata /dev/vdc1
+           pvremove /dev/vdc1
+
+SEE ALSO
+       vgextend(8), pvmove(8), pvremove(8), pvs(8)

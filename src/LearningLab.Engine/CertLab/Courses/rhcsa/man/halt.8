@@ -1,0 +1,29 @@
+NAME
+       halt - stop the system
+
+SYNOPSIS
+       halt [OPTIONS]...
+
+DESCRIPTION
+       halt stops every service, unmounts the file systems and stops the
+       machine. On RHEL 9 halt, poweroff and reboot are small front ends to
+       systemd: "halt" is the same as "systemctl halt", which stops the system
+       but leaves the power on (the console then says the system is halted).
+       Use poweroff (or systemctl poweroff) to switch the machine off, and
+       reboot to start it again. Only root can run them.
+
+OPTIONS
+       -p, --poweroff
+              Switch the power off, as poweroff does, instead of only halting.
+
+       -f, --force
+              Stop at once without asking systemd to stop the services in
+              order. Needed only where systemd is not running yet, such as
+              the rd.break emergency shell.
+
+EXAMPLES
+              # halt -p
+              # systemctl poweroff
+
+SEE ALSO
+       shutdown(8), systemctl(1), reboot(8)

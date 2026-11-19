@@ -1,0 +1,16 @@
+SYNOPSIS: Shows who may do what with a file, folder or registry key (its access control list).
+DESCRIPTION:
+Get-Acl returns the item's security descriptor: the Owner, the Access rules (who, Allow or Deny, which rights, inherited or not) and the same in SDDL text. The table shows the first rule followed by ...; look at .Access for the whole list.
+PARAMETER Path:
+The items to read (the current folder if left out). Wildcards are allowed.
+PARAMETER LiteralPath:
+An item, taken exactly as typed.
+PARAMETER Audit:
+Also reads the auditing rules (empty on the practice machines).
+EXAMPLE: (Get-Acl C:\LabFiles).Access | Format-Table IdentityReference, FileSystemRights, AccessControlType
+Every rule of a folder as a table.
+EXAMPLE: (Get-Acl C:\LabFiles\app.log).Owner
+Who owns a file.
+NOTES:
+The practice machines give every item the usual inherited rules (SYSTEM and Administrators: full control; Users: read and execute). Cert Lab does not simulate Set-Acl.
+RELATED: Get-Item

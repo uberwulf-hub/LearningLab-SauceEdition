@@ -1,0 +1,20 @@
+NAME
+       e2label - show or change the label of an ext2/3/4 file system
+
+SYNOPSIS
+       e2label DEVICE [NEW-LABEL]
+
+DESCRIPTION
+       With only DEVICE, e2label prints the file system's label. With
+       NEW-LABEL it sets the label (up to 16 characters). A label lets
+       /etc/fstab name the file system as LABEL=NAME instead of by device
+       or UUID. tune2fs -L does the same.
+
+       For xfs use xfs_admin -L, for vfat fatlabel.
+
+EXAMPLES
+           e2label /dev/vdb1 BACKUP
+           echo "LABEL=BACKUP /backup ext4 defaults 0 0" >> /etc/fstab
+
+SEE ALSO
+       tune2fs(8), blkid(8), xfs_admin(8), fatlabel(8)

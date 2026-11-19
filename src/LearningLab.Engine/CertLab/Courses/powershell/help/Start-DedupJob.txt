@@ -1,0 +1,22 @@
+SYNOPSIS: Runs a Data Deduplication job now.
+DESCRIPTION:
+Deduplication works through scheduled background jobs. Start-DedupJob starts one right away:
+Optimization deduplicates files (the one that makes savings).
+GarbageCollection frees chunks that no file uses any more, after many files were deleted.
+Scrubbing checks the chunk store for damage and repairs what it can.
+Unoptimization turns optimized files back into normal ones, before turning deduplication off.
+
+-Wait waits until the job finishes; -Full runs a full garbage collection or scrub.
+PARAMETER Volume:
+The volume or volumes. Position 0.
+PARAMETER Type:
+Optimization, GarbageCollection, Scrubbing or Unoptimization.
+PARAMETER Wait:
+Waits for the job to finish.
+PARAMETER Full:
+A full GarbageCollection or Scrubbing run.
+EXAMPLE: Start-DedupJob -Volume E: -Type Optimization -Wait
+Optimizes the archive now.
+EXAMPLE: Start-DedupJob -Volume E: -Type GarbageCollection -Full
+Reclaims space after a large clean-up.
+RELATED: Enable-DedupVolume, Get-DedupStatus, Get-DedupVolume, Disable-DedupVolume

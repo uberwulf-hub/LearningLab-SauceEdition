@@ -1,0 +1,8 @@
+## the two alerts and the visitors they are about
+siem alerts --fields time,rule,client
+## what each visitor asked for
+siem search source=web client={{BOTIP}} --fields time,path,status,agent
+siem search source=web client={{SCANIP}} --fields time,path,status,agent
+## the scanner's one request that worked
+siem search source=web client={{SCANIP}} --count-by status
+siem search source=web client={{SCANIP}} status=200

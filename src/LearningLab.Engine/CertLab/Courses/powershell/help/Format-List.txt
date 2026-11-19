@@ -1,0 +1,28 @@
+SYNOPSIS: Shows each object as a list, one property per line.
+DESCRIPTION:
+Format-List writes every object as a block of lines in the form Name : Value, with a blank line between objects. It is the best way to read all the details of one or a few objects, because nothing is cut off to fit a column.
+
+Without -Property, you see the properties chosen by the type's default list view (for many types only a few). Format-List * shows every property, and is the quickest way to find out what an object can tell you.
+
+Format-List outputs formatting objects for the screen, not your data. Put it last in a pipeline: after it, Sort-Object, Export-Csv and the rest no longer see the original objects.
+PARAMETER Property:
+The properties to show, in order. Position 0. Wildcards work (Format-List N*), * shows all of them, and a hash table makes a calculated property: @{ Name = 'Pay'; Expression = { $_.Salary * 2 } }.
+PARAMETER GroupBy:
+Starts a new group, with a heading, each time this property changes. Sort by the same property first, or the same group appears several times.
+PARAMETER InputObject:
+The object to show. Usually it comes through the pipeline.
+PARAMETER Force:
+Also shows error objects and other details normally hidden.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -First 1 | Format-List *
+Shows every property of the first employee.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -First 1 | Format-List Name, @{ n = 'Pay'; e = { [int]$_.Salary * 2 } }
+Shows the name and a calculated Pay value. n and e are short for Name and Expression.
+EXAMPLE: Get-Variable PSVersionTable | Format-List
+Shows one variable's details as a list.
+NOTES:
+The alias is fl. People often type a command | fl * to see everything.
+
+Objects with five or more properties are shown as a list anyway when their type has no view; Format-List forces the list layout for any object.
+
+A long collection inside a property is shortened to its first 4 items followed by ... ($FormatEnumerationLimit is 4). Raise $FormatEnumerationLimit to see more.
+RELATED: Format-Table, Format-Wide, Format-Custom, Select-Object, about_Calculated_Properties, about_Format.ps1xml

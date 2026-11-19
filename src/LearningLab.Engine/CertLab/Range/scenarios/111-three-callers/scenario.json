@@ -1,0 +1,58 @@
+{
+    "id": "three-callers",
+    "title": "Three Callers",
+    "category": "soc",
+    "level": "Expert",
+    "order": 2,
+    "summary": "Three computers keep calling the same outside address like clockwork. Two of them are doing their job. One is checking in with someone who shouldn't be there.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). A new rule looks for 'beaconing': a computer connecting to the same outside address at regular intervals, the way a hidden program checks in for orders. On its first day it fired on three computers. Lots of honest software does the same.",
+    "goal": "Find the one computer that is really infected, the program, the address it calls, how often, the account and when it began.",
+    "skills": "beaconing, regular connections, network events per program, telling honest background software from a hidden program",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 35,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "UB": "person:flast", "UC": "person:flast", "O1": "person:flast",
+        "HA": "num:10-29", "HB": "num:30-49", "HC": "num:50-69", "H4": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:9-14",
+        "C2IP": "ip", "TIMEIP": "ip", "UPDIP": "ip",
+        "INT": "pick:30|45|90|120",
+        "DLL": "pick:thumbcache.dll|fontsvc.dll|winsync.dll|mscache.dll",
+        "REAL": "pick:a|b|c"
+    },
+    "variants": {
+        "REAL": {
+            "a": { "BADH": "WS-{{HA}}", "BADU": "{{UA}}", "BADIP": "{{NET}}.{{HA}}", "TIMEH": "WS-{{HB}}", "TIMEHIP": "{{NET}}.{{HB}}", "UPDH": "WS-{{HC}}", "UPDHIP": "{{NET}}.{{HC}}", "VA": "real" },
+            "b": { "BADH": "WS-{{HB}}", "BADU": "{{UB}}", "BADIP": "{{NET}}.{{HB}}", "TIMEH": "WS-{{HC}}", "TIMEHIP": "{{NET}}.{{HC}}", "UPDH": "WS-{{HA}}", "UPDHIP": "{{NET}}.{{HA}}", "VA": "false alarm" },
+            "c": { "BADH": "WS-{{HC}}", "BADU": "{{UC}}", "BADIP": "{{NET}}.{{HC}}", "TIMEH": "WS-{{HA}}", "TIMEHIP": "{{NET}}.{{HA}}", "UPDH": "WS-{{HB}}", "UPDHIP": "{{NET}}.{{HB}}", "VA": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 230, "from": "-2h", "to": "+50m",
+            "hosts": [ "WS-{{HA}}", "WS-{{HB}}", "WS-{{HC}}", "WS-{{H4}}" ],
+            "users": [ "{{UA}}", "{{UB}}", "{{UC}}", "{{O1}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{HB}}", "{{NET}}.{{HC}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}"
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The beaconing alert on WS-{{HA}}: real attack or false alarm? (one try)", "answer": "{{VA}}", "tries": 1, "points": 50,
+          "explain": "{{TIMEH}} syncs its clock with ntp.clockwork.example (the time service, port 123) and {{UPDH}} asks wu.osvendor.example for updates, both through svchost.exe. {{BADH}} connects to a bare address on port 443 from rundll32.exe, loading a DLL from a user's Temp folder." },
+        { "id": "host", "ask": "Which computer is really infected?", "answer": "{{BADH}}", "accept": [ "{{BADIP}}" ], "tries": 2, "points": 40, "explain": "The one whose connections come from rundll32.exe and go to an address no name lookup explains." },
+        { "id": "prog", "ask": "Which program makes its connections?", "answer": "rundll32.exe", "accept": [ "rundll32", "C:\\Windows\\System32\\rundll32.exe" ], "points": 30, "explain": "image= on the network events (event=3) for that address." },
+        { "id": "addr", "ask": "Which address does it call?", "answer": "{{C2IP}}", "points": 30, "explain": "dst= of those connections." },
+        { "id": "interval", "ask": "How many seconds apart are its calls?", "answer": "{{INT}}", "accept": [ "{{INT}}s", "{{INT}} seconds" ], "derived": true, "points": 40, "explain": "The difference between the times of one call and the next." },
+        { "id": "user", "ask": "Which account is it running as?", "answer": "{{BADU}}", "points": 30, "explain": "user= of rundll32.exe's events." },
+        { "id": "first", "ask": "At what time (HH:MM:SS) did it first call that address?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The first connection to {{C2IP}}." }
+    ],
+    "hints": [
+        { "text": "Regular isn't the same as bad. For each computer, ask which program connects, to which name (is there a DNS lookup for that address?) and on which port. Process events with event=3 record network connections per program.", "cost": 30 }
+    ]
+}

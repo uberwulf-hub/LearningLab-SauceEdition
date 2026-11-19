@@ -1,0 +1,33 @@
+NAME
+       head - print the first lines of files
+
+SYNOPSIS
+       head [OPTION]... [FILE]...
+
+DESCRIPTION
+       head prints the first 10 lines of each FILE (or of standard input when
+       there is no FILE or FILE is -). With more than one file, each part is
+       preceded by a header line "==> FILE <==". It is handy for a quick look
+       at the start of a log or a big output: ps aux --sort=-%cpu | head.
+
+OPTIONS
+       -n, --lines=N
+              Print the first N lines instead of 10. With -n -N, print every
+              line except the last N. The old form -N (head -5) also works.
+
+       -c, --bytes=N
+              Print the first N bytes.
+
+       -q, --quiet, --silent
+              Never print the headers.
+
+       -v, --verbose
+              Always print the headers.
+
+EXAMPLES
+              $ head -n 3 /etc/passwd
+              $ ps aux --sort=-%mem | head -5
+              $ head -n 20 /var/log/messages | tail -n 5   (lines 16 to 20)
+
+SEE ALSO
+       tail(1), less(1), sed(1)

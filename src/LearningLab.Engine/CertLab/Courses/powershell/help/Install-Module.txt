@@ -1,0 +1,25 @@
+SYNOPSIS: Downloads a module from a repository and installs it on the computer.
+DESCRIPTION:
+Install-Module finds a module in a registered repository (the PowerShell Gallery by default), downloads it and puts it in a modules folder, so Import-Module and automatic loading can find it.
+
+Where it goes depends on -Scope. AllUsers puts it in C:\Program Files\WindowsPowerShell\Modules and needs an administrator; CurrentUser puts it in your Documents\WindowsPowerShell\Modules folder.
+
+If the repository is Untrusted, Install-Module asks before installing. Only install modules from sources you trust: a module is code that runs with your rights.
+PARAMETER Name:
+The module to install.
+PARAMETER Scope:
+AllUsers or CurrentUser.
+PARAMETER Repository:
+Installs from this repository only.
+PARAMETER RequiredVersion:
+Installs exactly this version instead of the newest.
+PARAMETER Force:
+Installs even if the module is already installed, and skips some questions.
+EXAMPLE: Install-Module -Name PSScriptAnalyzer -Scope CurrentUser
+On a real PC, installs the module for you only, without needing an administrator.
+EXAMPLE: Install-Module -Name LabTools -Repository LabRepo -Scope AllUsers
+Installs a module from an internal repository for everyone on the computer.
+NOTES:
+The practice network has no internet, so in Cert Lab Install-Module warns that the package source cannot be reached and installs nothing. Copy the module folder into C:\Program Files\WindowsPowerShell\Modules instead, then check it with Get-Module -ListAvailable.
+In PowerShell 7.4 and later, PSResourceGet's Install-PSResource is the newer command; its default scope is CurrentUser.
+RELATED: Find-Module, Save-Module, Update-Module, Get-InstalledModule, Get-PSRepository

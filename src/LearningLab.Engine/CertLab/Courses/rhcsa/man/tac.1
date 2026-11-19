@@ -1,0 +1,16 @@
+NAME
+       tac - print lines in reverse order, last line first
+
+SYNOPSIS
+       tac [FILE]...
+
+DESCRIPTION
+       tac is cat backwards: it prints the lines of each file (or standard
+       input) starting with the last one. Handy for log files, where the
+       newest lines are at the end.
+
+EXAMPLES
+           tac /var/log/messages | head -20
+
+SEE ALSO
+       cat(1), tail(1), sort(1)

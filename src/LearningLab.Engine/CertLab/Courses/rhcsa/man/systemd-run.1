@@ -1,0 +1,28 @@
+NAME
+       systemd-run - run a command as a temporary systemd unit
+
+SYNOPSIS
+       systemd-run [--unit=NAME] [--on-calendar=WHEN] [--user] COMMAND...
+
+DESCRIPTION
+       systemd-run starts COMMAND in the background as a transient service: a
+       unit that exists only while it runs and needs no unit file. Its output
+       goes to the journal and it can be watched with systemctl status. With
+       a timer option it creates a transient timer instead, which runs the
+       command later. Nothing created this way survives a reboot.
+
+OPTIONS
+       --unit=NAME
+              The unit's name (otherwise one like run-u123.service is made up).
+
+       --on-calendar=WHEN, --on-active=TIME
+              Run the command at a calendar time, or after a delay.
+
+       --user Use the user's own systemd.
+
+EXAMPLES
+           systemd-run --unit=cleanup rm -rf /tmp/oldfiles
+           systemctl status cleanup
+
+SEE ALSO
+       systemctl(1), systemd.timer(5), at(1)

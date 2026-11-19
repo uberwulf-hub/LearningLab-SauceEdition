@@ -1,0 +1,34 @@
+NAME
+       ticket-request - ask a Windows domain for service tickets (Cyber Range)
+
+SYNOPSIS
+       ticket-request -d DOMAIN -u USER [-p PASSWORD] DOMAIN-CONTROLLER
+
+DESCRIPTION
+       In a Windows domain any signed-in account may ask the domain controller
+       (TCP port 88) for a ticket to a service, such as a database that runs
+       under a service account. Part of the ticket is protected with that
+       service account's password. ticket-request lists the domain's service
+       accounts and prints a ticket for each in the range's own format:
+
+           $rangetgs$svc_sql$5f0c...
+
+       hashcrack(1) can try a word list against those tickets offline, without
+       touching the domain again. That only works when the service account has
+       a weak password: long, random service passwords (or managed service
+       accounts, which change theirs by themselves) defeat it.
+
+       This is a simplified, pretend version of the real protocol: it only
+       works on the range's pretend domain.
+
+OPTIONS
+       -d DOMAIN     the domain (its DNS name or short name)
+       -u USER       any domain account you know the password of
+       -p PASSWORD   its password (ticket-request asks if it is left out)
+
+EXAMPLES
+       ticket-request -d corp.example -u jlee -p sunshine 10.10.20.10 > tickets.txt
+       hashcrack tickets.txt
+
+SEE ALSO
+       hashcrack(1), winrm-shell(1), smbclient(1)

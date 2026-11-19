@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the virtual machines on a Hyper-V host.
+DESCRIPTION:
+Get-VM shows each virtual machine with its State (Running, Off, Saved, Paused), CPUUsage, MemoryAssigned, Uptime, Status and Version (the configuration version). Format-List * shows much more: Generation, Path, CheckpointType, AutomaticStartAction, Notes and so on.
+
+The objects can be piped into most other Hyper-V commands, for example Get-VM APP-OLD | Stop-VM.
+
+On HV1 the lab has three VMs: APP-OLD (an old Generation 1 machine, running), WEB-TEST and LAB-HOST.
+PARAMETER Name:
+The VM or VMs to show; wildcards work. Also -VMName. Position 0.
+PARAMETER ComputerName:
+The Hyper-V host to ask, for example HV1.
+EXAMPLE: Get-VM -ComputerName HV1
+Lists the VMs on HV1 and their state.
+EXAMPLE: Get-VM | Where-Object State -eq Running
+Only the running VMs.
+EXAMPLE: Get-VM APP-OLD | Format-List Name, Generation, Version, CheckpointType, Notes
+The details of one VM.
+RELATED: New-VM, Set-VM, Start-VM, Stop-VM, Remove-VM, Get-VMHost

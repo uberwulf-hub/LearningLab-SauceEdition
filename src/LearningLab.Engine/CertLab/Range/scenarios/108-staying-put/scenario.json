@@ -1,0 +1,61 @@
+{
+    "id": "staying-put",
+    "title": "Staying Put",
+    "category": "soc",
+    "level": "Advanced",
+    "order": 2,
+    "summary": "New scheduled tasks on two computers. One came with a printer driver IT pushed out. The other came from a script someone opened - and it brought a way to come back every time they sign in.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). Intruders don't want to break in twice, so after getting in they set up a way to start again by themselves: a program in the registry's Run key, a scheduled task, a service. Installers do the same thing for honest reasons. The rule \"New scheduled task\" fired on two computers.",
+    "goal": "Decide which alert is real, then trace it: the account, the file that was opened, when it started, the Run key value and the scheduled task it left, and the address it calls home to.",
+    "skills": "persistence (Run keys, scheduled tasks), process trees, beacon timing in firewall logs",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 30,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "UB": "person:flast", "O1": "person:flast", "O2": "person:flast",
+        "HA": "num:10-29", "HB": "num:30-49", "H3": "num:50-69", "H4": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:9-15",
+        "ZIP": "pick:Tracking_Info.zip|Scan_0031.zip|Voicemail_Message.zip|Delivery_Failed.zip",
+        "JS": "pick:Tracking_Info.js|Scan_0031.js|Voicemail.js|Delivery_Note.js",
+        "BIN": "pick:tray.exe|audiohost.exe|syncsvc.exe|displayagent.exe",
+        "RUNNAME": "pick:TrayHelper|AudioHost|SyncService|DisplayAgent",
+        "TASK": "pick:CacheCleanup|SysCheck|UpdateTask2|HealthMonitor",
+        "C2IP": "ip",
+        "REAL": "pick:a|b"
+    },
+    "variants": {
+        "REAL": {
+            "a": { "BADH": "WS-{{HA}}", "BADU": "{{UA}}", "BADIP": "{{NET}}.{{HA}}", "GOODH": "WS-{{HB}}", "VA": "real" },
+            "b": { "BADH": "WS-{{HB}}", "BADU": "{{UB}}", "BADIP": "{{NET}}.{{HB}}", "GOODH": "WS-{{HA}}", "VA": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 200, "from": "-4h", "to": "+50m",
+            "hosts": [ "WS-{{HA}}", "WS-{{HB}}", "WS-{{H3}}", "WS-{{H4}}" ],
+            "users": [ "{{UA}}", "{{UB}}", "{{O1}}", "{{O2}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{HB}}", "{{NET}}.{{H3}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}"
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The \"New scheduled task\" alert on WS-{{HA}}: real attack or false alarm? (one try)", "answer": "{{VA}}", "tries": 1, "points": 60,
+          "explain": "On {{GOODH}} the task was made by the Inkwell printer driver's installer, run as SYSTEM by the deployment tool, pointing into Program Files. On {{BADH}} it was made by a program downloaded seconds earlier by a script from a zip file." },
+        { "id": "user", "ask": "Which account was signed in on the attacked computer?", "answer": "{{BADU}}", "points": 20, "explain": "user= on its process events." },
+        { "id": "file", "ask": "Which file did the person open that started it all?", "answer": "{{JS}}", "accept": [ "{{ZIP}}\\{{JS}}", "C:\\Users\\{{BADU}}\\Downloads\\{{ZIP}}\\{{JS}}" ], "points": 30, "explain": "wscript.exe's cmdline: a script inside a downloaded zip." },
+        { "id": "first", "ask": "At what time (HH:MM:SS) was it opened?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The wscript.exe event." },
+        { "id": "run", "ask": "Which value was added to the registry's Run key (its name)?", "answer": "{{RUNNAME}}", "points": 30, "explain": "reg.exe add ...\\CurrentVersion\\Run /v {{RUNNAME}}" },
+        { "id": "task", "ask": "What is the scheduled task it created called (without the backslash)?", "answer": "{{TASK}}", "accept": [ "\\{{TASK}}" ], "points": 30, "explain": "schtasks.exe /create /tn \\{{TASK}}" },
+        { "id": "c2", "ask": "Which outside address does it call home to?", "answer": "{{C2IP}}", "accept": [ "{{C2IP}}:8443" ], "points": 40, "explain": "The download came from it, and the firewall shows a connection to it every five minutes since." }
+    ],
+    "hints": [
+        { "text": "Compare who made each task: siem search source=proclog image=*schtasks* shows the parent of each schtasks.exe. Then follow the bad one's family upwards (what started its parent?) until you reach the first program.", "cost": 10 },
+        { "text": "The program that set up the tasks also used reg.exe. Its cmdline shows the Run key value. For calling home, siem search source=firewall src=ADDRESS --count-by dst shows where the computer connects again and again; no DNS lookup is needed when a program uses a bare address.", "cost": 18 }
+    ]
+}

@@ -1,0 +1,20 @@
+SYNOPSIS: Creates a new, empty Group Policy Object.
+DESCRIPTION:
+New-GPO creates a GPO in the domain. It is empty and not linked anywhere, so it affects nobody yet. Add settings (Set-GPRegistryValue or the Group Policy Management Editor) and link it (New-GPLink).
+A shortcut: pipe it straight into New-GPLink. -StarterGpoName starts it from a Starter GPO's administrative template settings.
+Creating GPOs needs Domain Admins or Group Policy Creator Owners membership.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Comment:
+A note about what it is for.
+PARAMETER StarterGpoName:
+A Starter GPO to copy settings from.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to create it on.
+EXAMPLE: New-GPO "Sales Desktop" -Comment "Wallpaper and mapped drive for Sales"
+Creates an empty GPO.
+EXAMPLE: New-GPO "Kiosk Lockdown" | New-GPLink -Target "OU=Kiosks,OU=Workstations,DC=corp,DC=example"
+Creates a GPO and links it to an OU in one line.
+RELATED: Get-GPO, New-GPLink, Set-GPRegistryValue, Copy-GPO, Remove-GPO

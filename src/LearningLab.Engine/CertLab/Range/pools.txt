@@ -1,0 +1,150 @@
+# Cyber Range's pools of made-up details. A scenario or puzzle variable "pool:NAME" picks one line of the
+# "@NAME" list below (see FORMAT.md). Every person and company here is made up; first and last names are
+# combined at random, so no combination stands for a real person. Domains always end in .example.
+
+@first
+Avery
+Blake
+Casey
+Dana
+Devon
+Emery
+Finley
+Harper
+Jordan
+Kendall
+Logan
+Morgan
+Parker
+Quinn
+Reese
+Riley
+Rowan
+Sawyer
+Skyler
+Taylor
+Wren
+Alex
+Bailey
+Cameron
+Drew
+Elliot
+Frankie
+Gray
+Hayden
+Jamie
+Jesse
+Kai
+Lane
+Micah
+Noel
+Oakley
+Peyton
+Robin
+Sage
+Tatum
+
+@last
+Abbott
+Barrow
+Calder
+Dalton
+Ellis
+Farrow
+Garner
+Hale
+Ingram
+Jarvis
+Keller
+Lowry
+Marsh
+Nolan
+Osborne
+Pryor
+Quill
+Rourke
+Sutter
+Thorne
+Upton
+Vance
+Waller
+Yates
+Ashby
+Brook
+Crane
+Dunmore
+Everly
+Fenwick
+
+@company
+Northwind Books
+Larkspur Studios
+Pinecone Logistics
+Marigold Media
+Juniper Health
+Sagebrush Clinic
+Bluebird Bakery
+Copperline Freight
+Harbor Lane Dental
+Willow Creek Vets
+Redfern Architects
+Silverbirch Insurance
+Lantern Hill Hotel
+Kestrel Cycles
+Foxglove Florists
+Granite Peak Outfitters
+Meadowbrook School
+Ironwood Joinery
+Quarry Road Garage
+Saltmarsh Fisheries
+
+@server
+atlas
+orion
+maple
+cedar
+falcon
+harbor
+juniper
+lumen
+nimbus
+pebble
+quartz
+raven
+summit
+tundra
+vesper
+willow
+zephyr
+beacon
+comet
+delta
+
+@dept
+finance
+sales
+support
+hr
+design
+warehouse
+legal
+marketing
+reception
+payroll
+
+@project
+bluebell
+copperhead
+driftwood
+evergreen
+foxtrot
+glacier
+hazel
+ironclad
+jetstream
+kingfisher
+lighthouse
+moonstone
+nightjar
+outpost
+paperclip

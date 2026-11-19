@@ -1,0 +1,12 @@
+SYNOPSIS: Stops sharing a folder.
+DESCRIPTION:
+Remove-SmbShare removes the share. The folder and its files stay on the disk; only network access through that name ends. Users who have it open lose their connection.
+
+It asks for confirmation; -Force skips it.
+PARAMETER Name:
+The share or shares. Position 0.
+PARAMETER Force:
+Removes without asking.
+EXAMPLE: Remove-SmbShare -Name Projects -Force
+D:\Shares\Projects is no longer shared.
+RELATED: Get-SmbShare, New-SmbShare

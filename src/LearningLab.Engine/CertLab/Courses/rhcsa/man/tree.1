@@ -1,0 +1,34 @@
+NAME
+       tree - show a directory and everything under it as a tree
+
+SYNOPSIS
+       tree [-a] [-d] [-f] [-L LEVEL] [-p] [-u] [-g] [-D] [-i] [DIRECTORY]...
+
+DESCRIPTION
+       tree draws the contents of DIRECTORY (the current directory by default)
+       with lines that show which file is inside which directory, and ends
+       with a count of directories and files. It is in the tree package,
+       which is not installed by default.
+
+OPTIONS
+       -a     Include hidden files (names starting with a dot).
+
+       -d     Show directories only.
+
+       -f     Print the full path of each entry.
+
+       -L LEVEL
+              Go at most LEVEL directories deep.
+
+       -p, -u, -g
+              Show each entry's permissions, owner, group.
+
+       -D     Show the modification time.
+
+       -i     Do not draw the tree lines.
+
+EXAMPLES
+           tree -L 2 /etc/systemd
+
+SEE ALSO
+       ls(1), find(1)

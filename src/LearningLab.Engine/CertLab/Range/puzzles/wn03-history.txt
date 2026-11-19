@@ -1,0 +1,52 @@
+title: What the last person typed
+level: Intermediate
+kind: Windows
+topic: Windows
+teaser: PowerShell keeps a diary of commands
+points: 60
+order: 52
+host: windows
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+You are on a pretend Windows computer. PowerShell quietly saves the commands people
+type into a history file, so the next person can see them. Someone before you typed a
+command with a password in it. Read the history file and find the password.
+
+@winsetup
+$h = "C:\Users\player\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+New-Item -ItemType Directory -Path (Split-Path $h) -Force | Out-Null
+Set-Content -Path $h -Value @('Get-ChildItem C:\Share', 'Copy-Item report.docx C:\Backup', '$cred = ConvertTo-SecureString "{{SECRET}}" -AsPlainText -Force', 'net use Z: \\fileserver\data /user:svc_backup {{SECRET}}', 'Clear-Host')
+
+@solution
+$h = "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+Get-Content $h
+Select-String -Path $h -Pattern 'password|/user:|SecureString'
+
+@walkthrough
+PowerShell's PSReadLine saves every command line to a history file in the user's
+profile, so it survives after the window closes. It lives at
+%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt. Read it:
+
+    Get-Content "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+
+One line maps a drive with /user:svc_backup and the password right after it; another
+builds a secure string from the same word. Either gives the answer.
+
+The lesson: never type a password on a command line - it lands in the history, in
+logs and in the process list. Use Get-Credential (which prompts) instead.
+
+@hint 5
+What to think about first: PowerShell remembers past commands in a text file in the
+user's profile folder. The variable $env:APPDATA points at that profile's Roaming
+folder, which is where the history lives.
+
+@hint 9
+Read the history file:
+Get-Content "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
+Look for a line that signs in or maps a drive.
+
+@hint 14
+One line is: net use Z: \\fileserver\data /user:svc_backup WORD - the word after the
+user name is the password, and the answer.

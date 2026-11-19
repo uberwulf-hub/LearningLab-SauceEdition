@@ -1,0 +1,13 @@
+# Locked Out or Broken In? - what happened (offsets from {{T0}}; the background noise is added by the engine)
+{{if REAL=guess}}
+-2h host=RDGW01 source=winsec event=4624 user={{O2}} logon_type=10 src_ip={{NET}}.{{H3}} workstation=WS-{{H3}} note="An account signed in over remote desktop"
++0 x{{NFAIL}}/10s host=RDGW01 source=winsec event=4625 user={{U}} logon_type=10 src_ip={{ATKIP}} status=0xC000006A note="A sign-in failed: wrong password"
++300s host=RDGW01 source=winsec event=4624 user={{U}} logon_type=10 src_ip={{ATKIP}} note="An account signed in over remote desktop"
++301s host=RDGW01 source=alert severity=high rule="Sign-in after many failures" user={{U}} note="Many failed sign-ins for one account, then a sign-in that worked"
++330s host=RDGW01 source=proclog event=1 user={{U}} image=C:\Windows\explorer.exe parent=C:\Windows\System32\userinit.exe cmdline="explorer.exe"
+{{else}}
+-25m host=DC01 source=winsec event=4723 user={{U}} src_ip={{NET}}.{{H1}} note="An account changed its own password"
++0 x{{NFAIL}}/10s host=FILE01 source=winsec event=4625 user={{U}} logon_type=3 src_ip={{NET}}.{{H1}} workstation=WS-{{H1}} status=0xC000006A note="A sign-in failed: wrong password"
++300s host=FILE01 source=winsec event=4624 user={{U}} logon_type=3 src_ip={{NET}}.{{H1}} workstation=WS-{{H1}} note="An account signed in over the network"
++301s host=FILE01 source=alert severity=high rule="Sign-in after many failures" user={{U}} note="Many failed sign-ins for one account, then a sign-in that worked"
+{{end}}

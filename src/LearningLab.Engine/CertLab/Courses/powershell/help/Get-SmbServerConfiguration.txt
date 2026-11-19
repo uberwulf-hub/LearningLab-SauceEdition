@@ -1,0 +1,12 @@
+SYNOPSIS: Shows the SMB server settings of this computer.
+DESCRIPTION:
+Get-SmbServerConfiguration shows the server-wide SMB settings. The ones to know: EnableSMB1Protocol (the old, insecure SMB 1; not installed by default on Windows Server 2022), EncryptData (encrypt every share), RejectUnencryptedAccess (refuse clients that can't encrypt when encryption is required), RequireSecuritySignature (SMB signing) and AuditSmb1Access.
+
+These settings cover the whole server; a single share can still require encryption with Set-SmbShare -EncryptData. The client side has its own settings, separate from these.
+PARAMETER CimSession:
+Runs the command on another computer through a CIM session.
+EXAMPLE: Get-SmbServerConfiguration | Format-List EnableSMB1Protocol, EncryptData, RequireSecuritySignature
+The security settings in one look.
+EXAMPLE: Invoke-Command -ComputerName FS1 { Get-SmbServerConfiguration | Select-Object EnableSMB1Protocol }
+Checks SMB 1 on the file server from another machine.
+RELATED: Set-SmbServerConfiguration, Get-SmbShare

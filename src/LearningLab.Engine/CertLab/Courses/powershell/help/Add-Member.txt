@@ -1,0 +1,46 @@
+SYNOPSIS: Adds a property or a method to an object you already have.
+DESCRIPTION:
+Add-Member puts a new member on an existing object: a note property (a plain value), an alias property (a second name for a property that is already there), a script property (a value worked out by a script block each time you read it) or a script method (a script block you call like a method).
+
+The object changes in place. Add-Member writes nothing to the pipeline unless you add -PassThru, so a common pattern is to change an object first and look at it afterwards, or to use -PassThru in the middle of a pipeline.
+
+Inside a script property or script method, $this is the object the member belongs to.
+PARAMETER InputObject:
+The object to change. Usually it comes through the pipeline. This parameter is required.
+PARAMETER MemberType:
+The kind of member: NoteProperty, AliasProperty, ScriptProperty or ScriptMethod. Position 0, so Add-Member NoteProperty Color Red works.
+PARAMETER Name:
+The name of the new member. Position 1.
+PARAMETER Value:
+The value: the data for a NoteProperty, the name of the existing property for an AliasProperty, or a script block for a ScriptProperty or ScriptMethod. Position 2.
+PARAMETER SecondValue:
+For a ScriptProperty, a second script block that runs when someone sets the property.
+PARAMETER NotePropertyName:
+A shorter way to add one note property: give the name here and the value in -NotePropertyValue. You do not need -MemberType.
+PARAMETER NotePropertyValue:
+The value for -NotePropertyName.
+PARAMETER NotePropertyMembers:
+A hash table of names and values: every entry becomes a note property in one go.
+PARAMETER PassThru:
+Writes the changed object to the pipeline. Without it, Add-Member writes nothing.
+PARAMETER Force:
+Replaces a member that already has the same name. Without it, you get an error.
+PARAMETER TypeName:
+Adds a type name to the front of the object's type names (what Get-Member shows as TypeName).
+EXAMPLE: $p = [pscustomobject]@{ Name = 'Ada'; Age = 36 }; $p | Add-Member -NotePropertyName City -NotePropertyValue London; $p
+Adds a City property to the object, then shows it with all three properties.
+EXAMPLE: $p | Add-Member -NotePropertyMembers @{ Team = 'Blue'; Level = 3 } -PassThru | Format-List
+Adds two note properties at once and, thanks to -PassThru, sends the object on to Format-List.
+EXAMPLE: $p | Add-Member -MemberType AliasProperty -Name Years -Value Age; $p.Years
+Years is now another name for Age, so $p.Years shows 36.
+EXAMPLE: $p | Add-Member -MemberType ScriptMethod -Name Hello -Value { "Hi, " + $this.Name }; $p.Hello()
+Adds a method. Calling it returns "Hi, Ada": $this is the object itself.
+NOTES:
+Adding a member twice with the same name fails unless you use -Force.
+
+For a brand new object, [pscustomobject]@{ ... } is simpler than New-Object followed by many Add-Member calls.
+
+Members you add live only on that object in this session. They are not saved anywhere, and objects that come back from a job or a remote computer lose script methods.
+
+Real PowerShell has more member types (CodeProperty, PropertySet and others); Cert Lab supports the four above.
+RELATED: Get-Member, New-Object, Select-Object, about_Objects

@@ -1,0 +1,15 @@
+SYNOPSIS: Moves a domain controller's server object to another Active Directory site.
+DESCRIPTION:
+A domain controller belongs to the site where its server object is. Move-ADDirectoryServer moves that object, for example after a DC was promoted while its subnet wasn't yet assigned and it landed in the wrong site.
+Clients pick nearby domain controllers by site, and replication between sites follows the site links, so the site should match where the server really is (its subnet).
+PARAMETER Identity:
+The domain controller, such as DC2. Position 0.
+PARAMETER Site:
+The site to move it to. Position 1.
+PARAMETER PassThru:
+Returns the server after the move.
+EXAMPLE: Move-ADDirectoryServer -Identity DC2 -Site Seattle
+Moves DC2 into the Seattle site.
+EXAMPLE: Get-ADDomainController -Filter * | Select-Object Name, Site
+Checks which site each domain controller is in.
+RELATED: Get-ADReplicationSite, New-ADReplicationSite, Get-ADReplicationSubnet, Get-ADDomainController

@@ -1,0 +1,23 @@
+NAME
+       newusers - create or update many users from a file
+
+SYNOPSIS
+       newusers [FILE]
+
+DESCRIPTION
+       newusers reads lines in the format of /etc/passwd, with the password
+       field holding the clear-text password:
+
+           NAME:PASSWORD:UID:GID:COMMENT:HOME:SHELL
+
+       and creates each user (or updates an existing one). An empty UID or
+       GID lets newusers pick one; a GID that is a name creates that group
+       when needed. Without FILE it reads standard input. Only root can run
+       it. Keep the input file safe and delete it afterwards: it holds
+       passwords.
+
+EXAMPLES
+           newusers /root/new-accounts.txt
+
+SEE ALSO
+       useradd(8), chpasswd(8), passwd(5)

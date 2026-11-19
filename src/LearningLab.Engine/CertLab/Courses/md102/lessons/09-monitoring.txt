@@ -1,0 +1,185 @@
+# Unit: u09 | 9. Monitoring, remote actions and administration | Monitoring
+
+Managing devices is also looking after them: seeing which ones are healthy, helping a user whose laptop misbehaves, cleaning up a device that leaves the company, and deciding which admins may do what. This unit covers the reports and the device page, the remote actions and when to use each, Endpoint analytics, and role-based access control in Intune and Microsoft Entra ID.
+
+## Lesson: l0901 | Reports and the device page
+
+### The device page
+
+**Devices > All devices > a device** is where most troubleshooting starts. It shows:
+
+- **Overview**: the primary user, the join type, ownership, the OS version, compliance, the last check-in, and the remote action buttons across the top.
+- **Device compliance**, **Device configuration**: every compliance policy and profile with its state (Succeeded, Error, Conflict, Not applicable...). Click one to see each setting.
+- **Managed Apps** (apps and their install state), **Recovery keys** (BitLocker), **Local admin password** (LAPS), **Device diagnostics**, **Hardware** (serial number, TPM, storage), **Discovered apps**.
+
+### Reports
+
+- **Devices > Monitor** and the **Reports** blade: device compliance, noncompliant devices and the settings that fail, configuration profile errors and conflicts, app install status, Windows updates, antivirus and firewall status. Many can be exported to CSV.
+- **Devices > All devices** itself can be filtered (for example by compliance or OS) and exported.
+- Devices that haven't checked in for a long time show up in compliance as failing the **compliance status validity period** (unit 3). **Device clean-up rules** (Devices > Device clean-up rules) can remove devices that haven't checked in for a number of days.
+
+> Cert Lab's portal shows the states on each device page and in the policy lists; it doesn't draw the report charts.
+
+### Collect diagnostics
+
+The **Collect diagnostics** remote action asks a Windows device to gather its logs (event logs, the Intune Management Extension logs, MDM and Autopilot information, some registry keys) into a zip file that you download from the device's **Device diagnostics** page. It saves asking the user to run tools themselves. On the device you can see the agents involved:
+
+```terminal
+PS C:\Windows\system32> Get-Service IntuneManagementExtension, dmwappushservice | Select-Object Name, Status, StartType
+
+Name                      Status  StartType
+----                      ------  ---------
+IntuneManagementExtension Running Automatic
+dmwappushservice          Running Automatic
+```
+
+The **dmwappushservice** receives the push that tells the device to check in when you click **Sync**; the **IntuneManagementExtension** runs Win32 apps, scripts and remediations.
+
+### Endpoint analytics
+
+**Reports > Endpoint analytics** scores the user experience: **startup performance** (boot and sign-in times), **application reliability** (crashes), **Work from anywhere** (cloud readiness: Entra join, Intune, Autopilot) and resource performance. It needs Intune enrolled (or co-managed) devices and its own data collection policy, which Intune creates when you start Endpoint analytics; the tenant's Windows diagnostic data connector (unit 8) isn't one of its requirements. Advanced Analytics is part of the Intune Suite. Cert Lab doesn't simulate the scores.
+
+@try
+@task t1 | Monitoring | 10 | portal
+Priya says her laptop **RB-LT-002** is slow and Intune apps fail now and then. Before you call her, ask the device to gather its logs with **Collect diagnostics**.
+@check portal | the device collected its diagnostics
+device["RB-LT-002"].diagnostics like "DiagLogs-RB-LT-002-*"
+@hint Devices > All devices > RB-LT-002 > Collect diagnostics. The zip appears under Device diagnostics.
+@solution portal
+remote collect-diagnostics RB-LT-002
+@endtask
+@end
+
+@quiz
+? Where do you see every configuration profile that reached one device, with its state?
+- Devices > Configuration > Create
++ The device's page, under Device configuration
+- Tenant administration > Filters
+! The device page lists each profile and policy that targets the device and whether it succeeded, failed or conflicts.
+? What does the Collect diagnostics remote action do?
++ The device gathers its logs into a zip you download from the device page
+- It runs a Defender full scan
+- It sends the user an email with instructions
+! Collect diagnostics gathers event logs, IME logs, MDM information and more without involving the user.
+? Which reports need Windows diagnostic data turned on in the tenant?
+- The list of Autopilot devices
++ The Windows update reports (feature, expedited and driver updates)
+- The members of a group
+! The Windows update reports are built from Windows diagnostic data, so the tenant must allow its use (Tenant administration > Connectors and tokens > Windows data).
+@end
+
+## Lesson: l0902 | Remote actions
+
+The buttons on a device page send **remote actions**. Most reach the device at once through a push; a device that is off gets them when it comes back. Know what each one keeps and what it removes:
+
+- **Sync**: check in now, instead of waiting up to 8 hours.
+- **Restart**: restart the device. The user isn't warned first and may lose unsaved work.
+- **Retire**: removes what the company put there (managed apps, their data, profiles, Wi-Fi and VPN settings) and takes the device out of Intune. **Personal data stays.** The right choice for a personal phone or PC when someone leaves.
+- **Wipe**: resets the device to factory settings; everything is gone. For Windows you can tick **Retain enrollment state and user account** (the PC comes back enrolled) and **Wipe device, and continue to wipe even if devices lose power**. The right choice for a lost or stolen company device.
+- **Fresh Start**: removes the apps that came with the PC (the manufacturer's extra software) and resets Windows. Good for a new PC full of trial apps. With **Retain user data**, the PC stays Microsoft Entra joined, keeps the user's home folder and enrols again when the user signs in; without it, the PC goes back to a clean Windows (a personal device also leaves Entra ID and Intune).
+- **Autopilot Reset**: removes personal files, apps and settings but keeps the device **Microsoft Entra joined and enrolled**, so it is ready for the next person in minutes; policies and apps come back at check-in. It needs Windows' recovery environment and works for Entra joined devices.
+- **Rename device**: a new name (up to 15 characters), applied after a restart. Hybrid joined devices need extra setup to be renamed from Intune.
+- **BitLocker key rotation** and **Rotate local admin password**: new recovery key, new LAPS password (unit 13).
+- **Quick scan**, **Full scan**, **Update Windows Defender security intelligence**: Microsoft Defender Antivirus actions.
+- **Collect diagnostics** (lesson 1), **Remote lock** (phones and tablets: lock the screen now).
+- **Delete**: removes the device's record from Intune at once. For Windows, iOS and macOS it also sends a **Retire**, so the device drops the company's apps and settings and leaves management when it next checks in (corporate Android devices get a Wipe). It leaves the device object in Microsoft Entra ID. (Cert Lab simplifies: its Delete only removes the record.)
+
+> Several actions can be sent to many devices at once with **Bulk device actions** (Devices > All devices > Bulk device actions).
+
+@try
+@task t1 | Monitoring | 10 | portal
+Jordan is leaving Riverbend. His own iPhone, **Jordan's iPhone**, has company email and Teams on it. Remove the company's apps and data and take the phone out of Intune, without touching Jordan's own photos and apps.
+@check portal | the phone is no longer managed, and nothing personal was reset
+device["Jordan's iPhone"].managed == None
+device["Jordan's iPhone"].join == "Entra registered"
+@hint A personal device: Retire, not Wipe.
+@solution portal
+remote retire "Jordan's iPhone"
+@endtask
+@task t2 | Monitoring | 10 | portal
+Priya's laptop **RB-LT-002** should follow the Sales naming rule: rename it to **RB-SALES-02**.
+@check portal | the device has its new name
+device["RB-SALES-02"].originalName == RB-LT-002
+@hint Device page > ... > Rename device. Names: up to 15 letters, digits and hyphens.
+@solution portal
+remote rename RB-LT-002 RB-SALES-02
+@endtask
+@end
+
+@quiz
+? A company laptop was stolen. What do you send?
+- Retire
++ Wipe
+- Rename device
+! Wipe resets the device to factory settings, so nothing of the company's (or anyone's) is left. Retire would leave personal data.
+? A shared PC in the warehouse goes to a new person. It must stay Entra joined and enrolled, but the old user's files and apps must go. Which action?
+- Fresh Start
+- Delete
++ Autopilot Reset
+! Autopilot Reset removes personal files, apps and settings but keeps the Entra join and the Intune enrolment, so the device is ready again quickly.
+? What does Delete do to a Windows device?
+- It wipes the device to factory settings
++ It removes the device record from Intune and retires the device at its next check-in
+- It removes the device from Microsoft Entra ID and Intune at once
+! For Windows, Delete hides the device in Intune and sends a Retire (company apps and settings go, personal data stays). The Entra ID object stays until you delete it there too.
+@end
+
+## Lesson: l0903 | Who may do what: Intune roles and Microsoft Entra roles
+
+Not every admin should be able to wipe every device. Two systems decide what an admin may do.
+
+### Microsoft Entra roles
+
+Directory roles give rights across the tenant. The ones that matter here:
+
+- **Global Administrator**: everything. Keep it for a few accounts (and an emergency account).
+- **Intune Administrator**: everything in Intune, plus Intune-related things in Entra (devices, groups).
+- **Cloud Device Administrator**: enable, disable and delete devices in Microsoft Entra ID, and read BitLocker recovery keys and LAPS passwords.
+- **Global Reader**: can read almost everything (BitLocker keys too), change nothing. It can't read LAPS passwords.
+- **Helpdesk Administrator**: resets passwords of non-admins, and can read BitLocker keys and see LAPS details (not the password). It gives **no** rights in Intune.
+
+### Intune role-based access control (RBAC)
+
+**Tenant administration > Roles** has **built-in roles**: **Help Desk Operator** (remote actions, viewing devices and users), **Policy and Profile Manager** (compliance and configuration), **Application Manager** (apps), **Endpoint Security Manager** (security policies), **Read Only Operator**, **Intune Role Administrator** (manages roles), **School Administrator**. You can also make **custom roles** with exactly the permissions you want.
+
+A role does nothing until you add a **role assignment**, which has three parts:
+
+- **Members (admin groups)**: who gets the role.
+- **Scope (groups)**: which users and devices they may manage. A device is in scope when the device, or its primary user, is in one of the scope groups.
+- **Scope tags**: which objects (devices, policies, apps) they **see**. Objects with no tag have **Default**. Give an object a tag on its properties page.
+
+So "the Denver help desk may run remote actions only on Denver's devices" is: role Help Desk Operator, members = the Denver help desk group, scope = the Denver users or devices, and (optionally) a Denver scope tag on those devices.
+
+> Cert Lab's `canmanage(user, device)` check answers "may this admin run remote actions on this device?" from the Entra roles and the role assignments.
+
+@try
+@task t1 | Monitoring | 15 | portal
+Chen (help desk) has the Entra role Helpdesk Administrator, which gives no rights in Intune. Chen must be able to run remote actions on the **Sales** people's devices, and only theirs. Create a role assignment **Sales help desk** with the built-in role **Help Desk Operator**, the **IT Admins** group as members, and **Sales** as the scope group.
+@check portal | Chen manages the Sales laptops and nothing else
+canmanage(chen, RB-LT-002) == yes
+canmanage(chen, RB-LT-001) == yes
+canmanage(chen, RB-DT-010) == no
+@hint Tenant administration > Roles > Help Desk Operator > Assignments > Assign: members IT Admins, scope groups Sales.
+@solution portal
+create roleAssignment name="Sales help desk" role="Help Desk Operator" admins="IT Admins" scopeGroups=Sales
+@endtask
+@end
+
+@quiz
+? In an Intune role assignment, what do the scope groups decide?
+- Who gets the role
++ Which users and devices the admins may manage
+- Which policies the admins can see
+! Members are who gets the role; scope groups are what they manage; scope tags limit which objects they see.
+? A help desk worker with only the Entra role Helpdesk Administrator tries to wipe a PC in Intune. What happens?
++ It fails: Helpdesk Administrator gives no Intune rights
+- It works, because help desk roles include wipe
+- It works only for devices of the same department
+! Helpdesk Administrator is about passwords in Entra ID. In Intune the person needs an Intune role assignment (or Intune Administrator).
+? Which Entra role can read a device's LAPS password without being able to change Intune policies?
+- Global Reader
++ Cloud Device Administrator
+- Helpdesk Administrator
+! Cloud Device Administrator manages device objects in Entra ID and can read LAPS passwords (and BitLocker keys), but has no rights to change Intune policies. Global Reader can't read LAPS passwords, and Helpdesk Administrator sees only when the password changed, not the password.
+@end
+

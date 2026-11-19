@@ -1,0 +1,105 @@
+title: Not linked, not hidden
+category: web
+level: Beginner
+kind: Web
+topic: Access control
+teaser: the shop's staff page isn't linked anywhere - is that enough?
+points: 40
+order: 1
+packages: httpd
+answer: flag
+var: HIDDEN = pick:staff-corner|manage-shop|backoffice|team-only|owners
+var: HX = hex:4
+var: HIDDENPATH = {{HIDDEN}}-{{HX}}
+var: WHERE = pick:robots|comment|script
+var: ROBOTS =
+var: COMMENT =
+var: APPJS =
+@vars WHERE=robots
+ROBOTS = User-agent: *\nDisallow: /{{HIDDENPATH}}
+@vars WHERE=comment
+COMMENT = note for the team: the staff page is at /{{HIDDENPATH}} until we add a proper sign-in
+@vars WHERE=script
+APPJS = // Copperleaf Market scripts\nfunction openStaff() {\n  // only staff know about this button\n  location.href = '/{{HIDDENPATH}}';\n}
+
+@intro
+Welcome to the Web Security Lab! Every challenge here uses the same pretend online
+shop, Copperleaf Market, at http://copperleaf.example/ (it runs on this box).
+
+The shop has a staff page that isn't linked from any menu. The owner thinks that
+keeps it safe: "nobody can click a link that isn't there". But the address of the
+page has slipped out somewhere the shop itself gives away. Find the page and the
+staff code on it (the flag).
+
+Tools: curl ADDRESS prints a page's source; browse ADDRESS shows it as a person sees
+it.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "hidden": "{{HIDDENPATH}}", "robots": "{{ROBOTS}}", "comment": "{{COMMENT}}", "appjs": "{{APPJS}}" } } ]
+
+@solution
+browse http://copperleaf.example/
+{{if WHERE=robots}}
+curl -s http://copperleaf.example/robots.txt
+{{end}}
+{{if WHERE=comment}}
+curl -s http://copperleaf.example/ | grep '<!--'
+{{end}}
+{{if WHERE=script}}
+curl -s http://copperleaf.example/ | grep script
+curl -s http://copperleaf.example/static/app.js
+{{end}}
+curl -s http://copperleaf.example/{{HIDDENPATH}}
+
+@walkthrough
+A page that isn't linked is not a secret: its address only has to leak once. The
+shop leaked it in a file it hands to everyone.
+{{if WHERE=robots}}
+robots.txt is a file sites keep for search engines, listing the places they should
+not visit. It is public, so it doubles as a list of interesting places:
+
+    curl -s http://copperleaf.example/robots.txt
+
+It says Disallow: /{{HIDDENPATH}}.
+{{end}}
+{{if WHERE=comment}}
+The home page's source has a comment (<!-- ... -->) a browser never shows, but
+anyone can read with curl:
+
+    curl -s http://copperleaf.example/ | grep '<!--'
+
+It names /{{HIDDENPATH}}.
+{{end}}
+{{if WHERE=script}}
+The home page loads a script, /static/app.js. Scripts are sent to every visitor,
+so anything written in them is public:
+
+    curl -s http://copperleaf.example/ | grep script
+    curl -s http://copperleaf.example/static/app.js
+
+The script sends staff to /{{HIDDENPATH}}.
+{{end}}
+Open it:
+
+    curl -s http://copperleaf.example/{{HIDDENPATH}}
+
+and the staff code is on the page. The fix: a staff page needs a real sign-in and
+a check that the person is staff ("broken access control" is the top web mistake
+on most lists for a reason).
+
+@hint 2
+What to think about first: a web page you can't see a link to can still have an address, and addresses leak. Where does a website itself write down addresses? Think about the files every website hands to every visitor - the page's own source (what curl shows), the small extra files a page loads, and a well-known file meant for search engines.
+
+@hint 3
+Start by looking at the home page two ways: browse http://copperleaf.example/ shows it the way a person sees it, and curl -s http://copperleaf.example/ prints its source - the raw text the browser receives. The source can hold things a browser never shows, like comments (<!-- like this -->) and the names of script files the page loads.
+
+@hint 4
+Three classic places give away "hidden" addresses: robots.txt (a public list of places search engines are asked not to visit - try curl -s http://copperleaf.example/robots.txt), comments in the page source, and script files such as /static/app.js. Check each one.
+
+@hint 6
+Near step by step: run curl -s http://copperleaf.example/robots.txt, then curl -s http://copperleaf.example/ | grep -i -e '<!--' -e script, and if a script is named, curl it too. One of them names a page starting with a slash, like /something-1a2b. Open it with curl -s http://copperleaf.example/ followed by that name, and copy the staff code that starts with FLAG{.

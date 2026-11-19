@@ -1,0 +1,23 @@
+NAME
+       sleep - wait for a number of seconds
+
+SYNOPSIS
+       sleep NUMBER[SUFFIX]...
+
+DESCRIPTION
+       sleep does nothing for the time given, then exits. Scripts use it to
+       wait between two steps. NUMBER may have a decimal point (sleep 0.5).
+       The suffix is s for seconds (the default), m for minutes, h for hours or
+       d for days. When several times are given, sleep waits for their total.
+
+EXAMPLES
+       Wait two seconds, then check a service again:
+
+           sleep 2; systemctl is-active httpd
+
+       Wait one and a half minutes:
+
+           sleep 1m 30s
+
+SEE ALSO
+       timeout(1), watch(1)

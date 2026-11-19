@@ -1,0 +1,13 @@
+SYNOPSIS: Turns a scheduled task off without deleting it.
+DESCRIPTION:
+A disabled task keeps its settings but its triggers do nothing and it cannot be started until it is enabled again. The command outputs the task.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER InputObject:
+Task objects from the pipeline.
+EXAMPLE: Disable-ScheduledTask -TaskName Nightly
+EXAMPLE: Get-ScheduledTask -TaskPath \Lab\ | Disable-ScheduledTask
+Disables every task in a folder.
+RELATED: Enable-ScheduledTask, Unregister-ScheduledTask

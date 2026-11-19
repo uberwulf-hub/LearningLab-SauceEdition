@@ -1,0 +1,91 @@
+NAME
+       usermod - change an existing user account
+
+SYNOPSIS
+       usermod [OPTIONS] LOGIN
+
+DESCRIPTION
+       usermod changes the settings of the account LOGIN in /etc/passwd,
+       /etc/shadow and /etc/group: its groups, shell, home directory, name,
+       UID, expiry date, or whether it is locked.
+
+       The most common use is adding a user to a group. Be careful: -G alone
+       REPLACES the list of supplementary groups, so the user leaves every
+       group you did not name. Add -a (append) to keep the existing ones:
+       usermod -aG wheel student.
+
+       Group changes take effect at the user's next login; a running session
+       keeps its old groups (check with id USER, which reads the files).
+
+OPTIONS
+       -a, --append
+              With -G: add the groups, keep the existing ones.
+
+       -G, --groups GROUP1[,GROUP2...]
+              Set the supplementary groups (comma separated, no spaces).
+
+       -g, --gid GROUP
+              Change the primary group.
+
+       -s, --shell SHELL
+              Change the login shell, for example to /sbin/nologin.
+
+       -c, --comment TEXT
+              Change the comment (full name) field.
+
+       -d, --home DIR
+              Change the home directory. Add -m to move the old one's
+              contents there.
+
+       -m, --move-home
+              With -d: move the home directory's contents.
+
+       -l, --login NEWNAME
+              Rename the account (the home directory keeps its name unless you
+              also use -d and -m).
+
+       -u, --uid UID
+              Change the UID. Files in the home directory are given the new
+              number; files elsewhere must be fixed by hand.
+
+       -L, --lock
+              Lock the password (puts a ! in front of it in /etc/shadow).
+
+       -U, --unlock
+              Unlock the password.
+
+       -e, --expiredate YYYY-MM-DD
+              The date the account stops working. -e '' removes the date;
+              -e 1 (or a past date) disables the account at once.
+
+       -f, --inactive DAYS
+              Days after the password expires before the account is disabled.
+
+       -p, --password HASH
+              Set an already encrypted password.
+
+       -o, --non-unique
+              With -u, allow a UID another account already has.
+
+EXAMPLES
+       Give student full sudo rights by adding him to wheel:
+
+           usermod -aG wheel student
+           id student
+
+       Change a user's shell so he can no longer log in:
+
+           usermod -s /sbin/nologin harry
+
+       Make an account expire at the end of the year:
+
+           usermod -e 2026-12-31 natasha
+
+       Lock and later unlock an account:
+
+           usermod -L harry
+           usermod -U harry
+
+SEE ALSO
+       useradd(8), userdel(8), chage(1), passwd(1), gpasswd(1), id(1),
+       groups(1)

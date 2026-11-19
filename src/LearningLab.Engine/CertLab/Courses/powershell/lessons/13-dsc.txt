@@ -1,0 +1,342 @@
+# Unit: u13 | 13. Desired State Configuration | DSC
+
+Desired State Configuration (DSC) turns "do these steps" into "this is how the computer should look". You describe the end state (this folder exists, this registry value is IT, this file holds that text), and a service on the computer, the **Local Configuration Manager** (LCM), checks the computer against the description and fixes what differs. This short unit covers DSC as it ships with Windows PowerShell 5.1: writing a configuration, compiling it to a MOF file, pushing it and checking for drift.
+
+## Lesson: l1301 | Configurations, resources and MOF files
+
+A **configuration** looks like a function. Inside it, a `Node` block names the computer, and each **resource** block describes one thing. The word before the block's name is the resource type (`File`, `Registry`, `Environment`, `Script`, `Service`...), and the name after it (`SiteFolder`) is yours: it identifies that block.
+
+```terminal
+PS C:\Windows\system32> Configuration WebBasics {
+>>     Import-DscResource -ModuleName PSDesiredStateConfiguration
+>>     Node 'WIN-SRV1' {
+>>         File SiteFolder {
+>>             DestinationPath = 'C:\Site'
+>>             Type = 'Directory'
+>>             Ensure = 'Present'
+>>         }
+>>         File HomePage {
+>>             DestinationPath = 'C:\Site\index.html'
+>>             Contents = '<h1>Hello</h1>'
+>>             DependsOn = '[File]SiteFolder'
+>>         }
+>>     }
+>> }
+PS C:\Windows\system32> WebBasics -OutputPath C:\DscConfigs\WebBasics
+
+
+    Directory: C:\DscConfigs\WebBasics
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         3/2/2026   9:00 AM           1349 WIN-SRV1.mof
+```
+
+Running the configuration does **not** change the computer. It **compiles** the description into one `.mof` file per node (`WIN-SRV1.mof`), a plain text document the LCM understands. Without `-OutputPath` the folder is a subfolder named after the configuration, in the current location.
+
+- `Import-DscResource -ModuleName PSDesiredStateConfiguration` says where the resources come from. The built-in resources work without it, but real Windows PowerShell 5.1 then shows a warning asking you to add it, so write it every time. (The practice console does not show that warning.)
+- `Ensure = 'Present'` (the usual default) or `'Absent'` says whether the thing should exist.
+- `DependsOn = '[File]SiteFolder'` makes the LCM handle that block first. The form is always `[Type]Name`.
+- A misspelled property or resource name is caught as soon as PowerShell reads the configuration block, long before anything is applied.
+
+See which resources exist and which properties each takes:
+
+```terminal
+PS C:\Windows\system32> Get-DscResource | Select-Object Name, ModuleName
+
+Name           ModuleName
+----           ----------
+Environment    PSDesiredStateConfiguration
+File
+Group          PSDesiredStateConfiguration
+Log            PSDesiredStateConfiguration
+Registry       PSDesiredStateConfiguration
+Script         PSDesiredStateConfiguration
+Service        PSDesiredStateConfiguration
+User           PSDesiredStateConfiguration
+WindowsFeature PSDesiredStateConfiguration
+
+
+PS C:\Windows\system32> Get-DscResource Registry -Syntax
+Registry [String] #ResourceName
+{
+    Key = [string]
+    ValueName = [string]
+    [DependsOn = [string[]]]
+    [Ensure = [string]{ Absent | Present }]
+    [Force = [bool]]
+    [Hex = [bool]]
+    [PsDscRunAsCredential = [PSCredential]]
+    [ValueData = [string[]]]
+    [ValueType = [string]{ Binary | Dword | ExpandString | MultiString | Qword | String }]
+}
+```
+
+Properties in square brackets are optional; the others (the **key** properties, such as `DestinationPath` and `Key` with `ValueName`) are required. Values after `{ ... | ... }` are the only ones allowed.
+
+> The practice console has the nine resources above. A real Windows PowerShell 5.1 lists more from PSDesiredStateConfiguration, such as `Archive`, `Package`, `WindowsProcess`, `WindowsOptionalFeature` and "Set" versions like `ServiceSet`.
+
+> PowerShell 7 does not include the PSDesiredStateConfiguration resources or the LCM described here. DSC 3 is a separate tool with its own commands. This unit is about the 5.1 version built into Windows.
+
+@try machines=1
+@task t1 | DSC | 10 | WIN-SRV1
+Write a configuration named `LabFolder` for the node `WIN-SRV1` with one `File` resource named `Drop` that makes sure the folder `C:\Drop` exists, and compile it with `-OutputPath C:\DscConfigs\LabFolder`. (Do not apply it yet.)
+@check WIN-SRV1 | the MOF file was written
+Test-Path C:\DscConfigs\LabFolder\WIN-SRV1.mof
+@check WIN-SRV1 | it describes C:\Drop
+(Get-Content C:\DscConfigs\LabFolder\WIN-SRV1.mof -Raw) -match 'C:\\\\Drop|C:\\Drop'
+@check WIN-SRV1 | nothing was applied yet
+-not (Test-Path C:\Drop)
+@hint Configuration LabFolder { Node 'WIN-SRV1' { File Drop { DestinationPath = 'C:\Drop'; Type = 'Directory' } } }, then run LabFolder -OutputPath ...
+@solution WIN-SRV1
+Configuration LabFolder { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Drop { DestinationPath = 'C:\Drop'; Type = 'Directory'; Ensure = 'Present' } } }
+LabFolder -OutputPath C:\DscConfigs\LabFolder
+@endtask
+@end
+
+@quiz
+? What happens when you run a configuration's name, such as `WebBasics`?
++ A .mof file is written for each node; nothing on the computer changes yet
+- The settings are applied at once
+- The configuration is sent to every computer on the network
+! Compiling and applying are separate steps. Start-DscConfiguration applies.
+? How do you make one resource wait for another?
+- Order them in the file
++ DependsOn = '[File]SiteFolder'
+- -Wait
+! The LCM follows DependsOn, in the [Type]Name form.
+? Which command shows the properties a resource takes?
++ Get-DscResource File -Syntax
+- Get-Help File
+- Get-Member -InputObject File
+! -Syntax prints a template with the required and optional properties.
+@end
+
+## Lesson: l1302 | Applying, testing and drift
+
+`Start-DscConfiguration` hands the MOF files in a folder to the LCM of each node they name. `-Wait` runs it in the console instead of as a background job, and `-Verbose` shows each resource being tested and set.
+
+```terminal
+#setup Configuration WebBasics { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File SiteFolder { DestinationPath = 'C:\Site'; Type = 'Directory' }; File HomePage { DestinationPath = 'C:\Site\index.html'; Contents = '<h1>Hello</h1>'; DependsOn = '[File]SiteFolder' } } }
+#setup WebBasics -OutputPath C:\DscConfigs\WebBasics | Out-Null
+PS C:\Windows\system32> Start-DscConfiguration -Path C:\DscConfigs\WebBasics -Wait -Verbose
+VERBOSE: Perform operation 'Invoke CimMethod' with following parameters, ''methodName' = SendConfigurationApply,'className' = MSFT_DSCLocalConfigurationManager,'namespaceName' = root/Microsoft/Windows/DesiredStateConfiguration'.
+VERBOSE: An LCM method call arrived from computer WIN-SRV1 with user sid S-1-5-21-3623811015-3361044348-30300820-500.
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Set      ]
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Resource ]  [[File]SiteFolder]
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Test     ]  [[File]SiteFolder]
+VERBOSE: [WIN-SRV1]:                            [[File]SiteFolder] The system cannot find the file specified.
+VERBOSE: [WIN-SRV1]:                            [[File]SiteFolder] The related file/directory is: C:\Site.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Test     ]  [[File]SiteFolder]  in 0.0150 seconds.
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Set      ]  [[File]SiteFolder]
+VERBOSE: [WIN-SRV1]:                            [[File]SiteFolder] Created the directory C:\Site.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Set      ]  [[File]SiteFolder]  in 0.0310 seconds.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Resource ]  [[File]SiteFolder]
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Resource ]  [[File]HomePage]
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Test     ]  [[File]HomePage]
+VERBOSE: [WIN-SRV1]:                            [[File]HomePage] The system cannot find the file specified.
+VERBOSE: [WIN-SRV1]:                            [[File]HomePage] The related file/directory is: C:\Site\index.html.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Test     ]  [[File]HomePage]  in 0.0150 seconds.
+VERBOSE: [WIN-SRV1]: LCM:  [ Start  Set      ]  [[File]HomePage]
+VERBOSE: [WIN-SRV1]:                            [[File]HomePage] Wrote the file C:\Site\index.html.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Set      ]  [[File]HomePage]  in 0.0310 seconds.
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Resource ]  [[File]HomePage]
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Set      ]
+VERBOSE: [WIN-SRV1]: LCM:  [ End    Set      ]    in  0.2810 seconds.
+VERBOSE: Operation 'Invoke CimMethod' complete.
+VERBOSE: Time taken for configuration job to complete is 0.281 seconds
+PS C:\Windows\system32> Get-Content C:\Site\index.html
+<h1>Hello</h1>
+```
+
+For every resource the LCM first runs **Test** ("is it already right?") and only runs **Set** when the answer is no. Run the same configuration again and nothing is changed: that is what makes DSC safe to repeat.
+
+### Has anything drifted?
+
+People and programs change computers after the fact. `Test-DscConfiguration` asks the LCM to compare the computer with the configuration it applied last (the **current** configuration) and returns `True` or `False`. `-Detailed` lists the resources that are and are not in the desired state.
+
+```terminal
+#setup Configuration WebBasics { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File SiteFolder { DestinationPath = 'C:\Site'; Type = 'Directory' }; File HomePage { DestinationPath = 'C:\Site\index.html'; Contents = '<h1>Hello</h1>'; DependsOn = '[File]SiteFolder' } } }
+#setup WebBasics -OutputPath C:\DscConfigs\WebBasics | Out-Null
+#setup Start-DscConfiguration -Path C:\DscConfigs\WebBasics -Wait
+PS C:\Windows\system32> Test-DscConfiguration
+True
+PS C:\Windows\system32> Set-Content C:\Site\index.html 'Someone changed this'
+PS C:\Windows\system32> Test-DscConfiguration -Detailed
+
+PSComputerName ResourcesInDesiredState ResourcesNotInDesiredState InDesiredState
+-------------- ----------------------- -------------------------- --------------
+WIN-SRV1       {[File]SiteFolder}      {[File]HomePage}           False
+
+
+PS C:\Windows\system32> Start-DscConfiguration -UseExisting -Wait
+PS C:\Windows\system32> Test-DscConfiguration
+True
+```
+
+- `Start-DscConfiguration -UseExisting` applies the current configuration again, which repairs the drift.
+- `Get-DscConfiguration` shows the current values of every resource in the current configuration.
+- `Get-DscConfigurationStatus` shows when the last run was and whether it succeeded.
+
+### The Local Configuration Manager
+
+`Get-DscLocalConfigurationManager` shows the LCM's own settings. Two matter most here:
+
+- **RefreshMode** `PUSH`: configurations arrive with Start-DscConfiguration (the other choice, `PULL`, fetches them from a server).
+- **ConfigurationMode** `ApplyAndMonitor` (the default): apply once, then only report drift. `ApplyAndAutoCorrect` repairs drift by itself every `ConfigurationModeFrequencyMins`; `ApplyOnly` applies and then stops checking.
+
+The LCM is changed with a special *meta-configuration* and `Set-DscLocalConfigurationManager`. The simulator does not support those; the exams only ask what the modes mean.
+
+@try machines=1
+@setup WIN-SRV1
+Configuration Motd { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Motd { DestinationPath = 'C:\Motd.txt'; Contents = 'Welcome to WIN-SRV1' } } }
+Motd -OutputPath C:\DscConfigs\Motd | Out-Null
+
+@task t1 | DSC | 10 | WIN-SRV1
+The folder `C:\DscConfigs\Motd` holds a compiled configuration for this computer that writes `C:\Motd.txt`. Apply it in the console (not as a job). Then someone changes the file: run `Set-Content C:\Motd.txt 'oops'`, and repair the computer from the configuration it already has, without naming the folder again.
+@check WIN-SRV1 | the file holds the configured text again
+(Get-Content C:\Motd.txt -Raw).Trim() -eq 'Welcome to WIN-SRV1'
+@check WIN-SRV1 | the computer is in the desired state
+Test-DscConfiguration
+@check WIN-SRV1 | the repair used the existing configuration
+@($CertLabHistory | Where-Object { $_ -match 'UseExisting' }).Count -gt 0
+@hint Start-DscConfiguration -Path ... -Wait first; after the change, Start-DscConfiguration -UseExisting -Wait.
+@solution WIN-SRV1
+Start-DscConfiguration -Path C:\DscConfigs\Motd -Wait
+Set-Content C:\Motd.txt 'oops'
+Start-DscConfiguration -UseExisting -Wait
+@endtask
+@end
+
+@quiz
+? The LCM applies a resource. What does it do first?
++ It tests whether the resource is already in the desired state
+- It removes the old setting
+- It restarts the computer
+! Test first, Set only when Test says no. That is why a configuration can be applied again safely.
+? Which command answers "is this computer still as configured?" with True or False?
+- Get-DscConfigurationStatus
++ Test-DscConfiguration
+- Get-DscLocalConfigurationManager
+! Add -Detailed to see which resources drifted.
+? With ConfigurationMode ApplyAndMonitor, what happens when a file the configuration wrote is changed?
+- The LCM changes it back within 15 minutes
++ The drift is reported, but nothing is changed until you apply again
+- The configuration is removed
+! ApplyAndAutoCorrect would repair it by itself.
+@end
+
+## Lesson: l1303 | Parameters, configuration data and more resources
+
+Hard-coding a computer name makes a configuration hard to reuse. A configuration takes a `param()` block like a function, and `Node` accepts a variable or a list:
+
+```terminal
+PS C:\Windows\system32> Configuration Branding {
+>>     param([string[]]$ComputerName = 'localhost', [string]$Owner = 'IT')
+>>     Import-DscResource -ModuleName PSDesiredStateConfiguration
+>>     Node $ComputerName {
+>>         Registry Owner {
+>>             Key = 'HKLM:\SOFTWARE\LabCorp'
+>>             ValueName = 'Owner'
+>>             ValueData = $Owner
+>>         }
+>>         Environment Team {
+>>             Name = 'LAB_TEAM'
+>>             Value = $Owner
+>>         }
+>>     }
+>> }
+PS C:\Windows\system32> Branding -ComputerName WIN-SRV1, WIN-CL1 -Owner Finance -OutputPath C:\DscConfigs\Branding
+
+
+    Directory: C:\DscConfigs\Branding
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         3/2/2026   9:00 AM           1267 WIN-SRV1.mof
+-a----         3/2/2026   9:00 AM           1266 WIN-CL1.mof
+```
+
+That writes `WIN-SRV1.mof` and `WIN-CL1.mof`. `Start-DscConfiguration -Path C:\DscConfigs\Branding -Wait` then applies each file to the computer it names (over WinRM, so remoting must work).
+
+### Configuration data
+
+For many nodes with different values, keep the data apart from the logic. `-ConfigurationData` takes a hashtable with an `AllNodes` list; each entry has a `NodeName`, and an entry with `NodeName = '*'` gives values to all of them. Inside the configuration, `$AllNodes` is that list and `$Node` is the entry being compiled:
+
+```terminal
+PS C:\Windows\system32> $data = @{
+>>     AllNodes = @(
+>>         @{ NodeName = '*'; Team = 'IT' }
+>>         @{ NodeName = 'WIN-SRV1'; Role = 'Server' }
+>>         @{ NodeName = 'WIN-CL1'; Role = 'Client'; Team = 'Sales' }
+>>     )
+>> }
+PS C:\Windows\system32> Configuration Roles {
+>>     Import-DscResource -ModuleName PSDesiredStateConfiguration
+>>     Node $AllNodes.NodeName {
+>>         Environment Role { Name = 'LAB_ROLE'; Value = $Node.Role }
+>>         Environment Team { Name = 'LAB_TEAM'; Value = $Node.Team }
+>>     }
+>> }
+PS C:\Windows\system32> Roles -ConfigurationData $data -OutputPath C:\DscConfigs\Roles
+
+
+    Directory: C:\DscConfigs\Roles
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         3/2/2026   9:00 AM           1212 WIN-SRV1.mof
+-a----         3/2/2026   9:00 AM           1214 WIN-CL1.mof
+```
+
+WIN-CL1 gets Team Sales (its own value wins), WIN-SRV1 gets IT from `'*'`.
+
+### The Script resource
+
+When no resource fits, `Script` runs your own code: `TestScript` returns `$true` or `$false`, `SetScript` makes the change, and `GetScript` returns a hashtable with a `Result` key. Variables from the configuration are not visible inside these blocks when they run; use `$using:` to copy a value in.
+
+```text
+Script Stamp {
+    TestScript = { Test-Path C:\Stamp.txt }
+    SetScript  = { Set-Content C:\Stamp.txt (Get-Date) }
+    GetScript  = { @{ Result = (Test-Path C:\Stamp.txt) } }
+}
+```
+
+Other resources in PSDesiredStateConfiguration include `Service`, `WindowsFeature`, `User`, `Group` and `Log` (all in the practice console), and `Archive`, `Package` and `WindowsProcess` (real Windows only). Many more come in modules from the PowerShell Gallery.
+
+@try machines=1
+@task t1 | DSC | 10 | WIN-SRV1
+Write a configuration `Team` with a parameter `$Name` that sets the machine environment variable `LAB_TEAM` to that value using the `Environment` resource for node `WIN-SRV1`. Compile it with `-Name Helpdesk -OutputPath C:\DscConfigs\Team` and apply it with `-Wait`.
+@check WIN-SRV1 | LAB_TEAM is Helpdesk for the machine
+[Environment]::GetEnvironmentVariable('LAB_TEAM', 'Machine') -eq 'Helpdesk'
+@check WIN-SRV1 | the value came from the configuration's parameter
+(Get-Command Team -ErrorAction SilentlyContinue).CommandType -eq 'Configuration' -and (Get-Content C:\DscConfigs\Team\WIN-SRV1.mof -Raw) -match 'Helpdesk'
+@hint Configuration Team { param([string]$Name) ... Node 'WIN-SRV1' { Environment T { Name = 'LAB_TEAM'; Value = $Name } } }
+@solution WIN-SRV1
+Configuration Team { param([string]$Name) Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { Environment T { Name = 'LAB_TEAM'; Value = $Name; Ensure = 'Present' } } }
+Team -Name Helpdesk -OutputPath C:\DscConfigs\Team
+Start-DscConfiguration -Path C:\DscConfigs\Team -Wait
+@endtask
+@end
+
+@quiz
+? In configuration data, what is the entry with `NodeName = '*'` for?
++ Values that every node gets unless its own entry sets them
+- A node named *
+- Every computer on the network
+! A node's own value wins over the '*' value.
+? Inside a Node block compiled from $AllNodes, which variable is the current node's entry?
+- $_
++ $Node
+- $AllNodes[0]
+! $AllNodes is the whole list; $Node is the entry being compiled.
+? What must the TestScript of a Script resource return?
+- A hashtable
+- Nothing
++ $true or $false
+! GetScript returns a hashtable with Result; TestScript answers whether Set is needed.
+@end

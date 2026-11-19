@@ -1,0 +1,30 @@
+NAME
+       groupmod - change a group's name or ID
+
+SYNOPSIS
+       groupmod [-g GID] [-o] [-n NEW-NAME] GROUP
+
+DESCRIPTION
+       groupmod changes a group in /etc/group and /etc/gshadow. Changing the
+       name keeps the members and the files. Changing the GID updates users
+       whose primary group it is, but files on disk keep the old number;
+       fix them with find / -gid OLD -exec chgrp NEWNAME {} \;.
+
+       To change the members, use gpasswd or usermod -aG.
+
+OPTIONS
+       -g GID, --gid GID
+              Give the group this ID.
+
+       -n NAME, --new-name NAME
+              Rename the group.
+
+       -o, --non-unique
+              With -g, allow an ID another group already has.
+
+EXAMPLES
+           groupmod -n developers devops
+           groupmod -g 3001 developers
+
+SEE ALSO
+       groupadd(8), groupdel(8), gpasswd(1), usermod(8)

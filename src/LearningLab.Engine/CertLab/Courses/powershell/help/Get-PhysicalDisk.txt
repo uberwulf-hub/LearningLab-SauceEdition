@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the physical disks the storage system sees, and whether they can join a pool.
+DESCRIPTION:
+Get-PhysicalDisk shows each disk with its FriendlyName, SerialNumber, MediaType (HDD or SSD), CanPool, OperationalStatus, HealthStatus, Usage and Size.
+
+CanPool True means the disk is empty and free to go into a Storage Spaces pool; disks with partitions (such as the system disk) show False. On FS1 the lab has four empty 100 GB disks for pools.
+PARAMETER FriendlyName:
+Only disks with this name. Position 0.
+PARAMETER CanPool:
+$true for disks that can join a pool.
+PARAMETER SerialNumber:
+Only the disk with this serial number.
+PARAMETER StoragePool:
+A pool piped in: shows the disks in that pool.
+EXAMPLE: Get-PhysicalDisk -CanPool $true
+The disks you can put into a new pool.
+EXAMPLE: Get-StoragePool -FriendlyName Data | Get-PhysicalDisk
+The disks inside the Data pool.
+RELATED: New-StoragePool, Add-PhysicalDisk, Get-StoragePool, Get-Disk

@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block Quest</title>
+<!-- Learning Games: no web fonts, so the game works offline. The font stacks below use fonts that come with Windows. -->
+<style>
+  /* Learning Games: a Windows font in place of the Press Start 2P web font, sized up to fill the same space */
+  @font-face{font-family:'Pixel Fallback';src:local('Arial Black'),local('Segoe UI Black'),local('Segoe UI Bold');size-adjust:118%}
+  :root{
+    --sky:#79B7EA; --sky2:#BFE0F7; --grass:#5FA33A; --dirt:#7B4B25; --stone:#8A8A8A;
+    --gold:#F2C230; --diamond:#4FE3E8; --iron:#D9C6A8; --coal:#2B2B2B; --wood:#A5732F;
+    --ui:#1D2230; --ui2:#2A3145; --ui3:#39415A; --ink:#F4F1E6; --ink2:#B9BFD2;
+    --good:#6BE06B; --bad:#FF6B6B; --warn:#FFC857;
+    --pix:'Press Start 2P','Pixel Fallback',monospace; --body:'Nunito','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:var(--ui);color:var(--ink);font-family:var(--body);font-size:18px;
+    padding:0 16px;padding-block:0 16px;min-height:100vh}
+  button{font-family:inherit;cursor:pointer;border:0;color:inherit;background:none;font-size:inherit}
+  button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+  .pix{font-family:var(--pix);letter-spacing:0}
+
+  /* HUD */
+  .hud{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-block:12px;border-bottom:4px solid var(--ui3)}
+  .logo{font-family:var(--pix);font-size:16px;color:var(--gold);text-shadow:3px 3px 0 #6b4e00;white-space:nowrap}
+  .stat{display:flex;flex-direction:column;gap:4px;min-width:120px}
+  .stat .lbl{font-family:var(--pix);font-size:8px;color:var(--ink2);text-transform:uppercase;letter-spacing:1px}
+  .stat .val{font-weight:900;font-size:18px;font-variant-numeric:tabular-nums}
+  .xpbar{height:14px;background:#0f1320;border:2px solid #000;width:180px;position:relative}
+  .xpbar > i{display:block;height:100%;background:linear-gradient(#9CF07A,#4DB824);width:0;transition:width .4s}
+  .inv{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:flex;align-items:center;gap:6px;background:var(--ui2);border:2px solid #000;padding:3px 8px 3px 4px;font-weight:900;font-variant-numeric:tabular-nums}
+  .chip .sw{width:22px;height:22px;border:2px solid #000;image-rendering:pixelated;background-size:100% 100%}
+  .creep{display:flex;align-items:center;gap:8px}
+  .creep .steps{display:flex;gap:4px}
+  .creep .steps i{width:16px;height:16px;border:2px solid #000;background:#0f1320}
+  .creep .steps i.on{background:var(--bad)}
+  .creep .face{width:28px;height:28px;image-rendering:pixelated;background-size:100% 100%;transition:transform .3s}
+  .hudbtns{margin-left:auto;display:flex;gap:6px}
+  .ibtn{background:var(--ui2);border:2px solid #000;box-shadow:inset -2px -2px 0 #000,inset 2px 2px 0 #4a5470;padding:8px 10px;font-family:var(--pix);font-size:9px;color:var(--ink)}
+  .ibtn:active{box-shadow:inset 2px 2px 0 #000}
+
+  /* MAIN */
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;padding-top:16px}
+  @media (max-width:820px){.main{grid-template-columns:1fr}}
+  .world{background:linear-gradient(var(--sky) 0%,var(--sky2) 100%);border:4px solid #000;box-shadow:inset -4px -4px 0 rgba(0,0,0,.25);padding:12px;position:relative;overflow:hidden}
+  .skyline{display:flex;justify-content:space-between;align-items:flex-end;height:64px;padding:0 8px;margin-bottom:6px}
+  .sun{width:34px;height:34px;background:#FFE36B;border:3px solid #000;box-shadow:0 0 0 4px rgba(255,227,107,.35)}
+  .cloud{width:70px;height:20px;background:#fff;border:3px solid #000;opacity:.85;align-self:flex-start;margin-top:6px}
+  .steve{width:40px;height:56px;image-rendering:pixelated;background-size:100% 100%}
+  .grid{display:grid;grid-template-columns:repeat(9,1fr);gap:0;border:3px solid #000;background:#2b1a0e;max-width:100%}
+  .blk{aspect-ratio:1;position:relative;image-rendering:pixelated;background-size:100% 100%;border:1px solid rgba(0,0,0,.35);transition:transform .08s}
+  .blk.open{cursor:pointer}
+  .blk.open:hover{transform:scale(1.06);z-index:2;box-shadow:0 0 0 3px #fff,0 0 0 5px #000}
+  .blk.locked{cursor:not-allowed}
+  .blk.air{background:transparent!important;border-color:transparent}
+  .blk.cave{background:#1a120c!important}
+  .blk.open::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px rgba(255,255,255,.55);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:.25}50%{opacity:.9}}
+  .blk.gated::before{content:"🔒";position:absolute;inset:0;display:grid;place-items:center;font-size:20px;filter:drop-shadow(0 0 2px #000)}
+  .blk.crack{animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}}
+  .frag{position:absolute;width:8px;height:8px;border:1px solid #000;pointer-events:none;animation:fly .6s ease-out forwards;z-index:5}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
+  .worldbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .depth{font-family:var(--pix);font-size:10px;color:#0b2a44;background:rgba(255,255,255,.55);border:2px solid #000;padding:6px 10px}
+  .btn{background:var(--grass);border:3px solid #000;box-shadow:inset -3px -3px 0 #2f6b18,inset 3px 3px 0 #9be07a;padding:10px 16px;font-family:var(--pix);font-size:10px;color:#fff;text-shadow:2px 2px 0 #000}
+  .btn:active{box-shadow:inset 3px 3px 0 #2f6b18}
+  .btn.gold{background:var(--gold);box-shadow:inset -3px -3px 0 #8d6a00,inset 3px 3px 0 #ffe990}
+  .btn.grey{background:var(--stone);box-shadow:inset -3px -3px 0 #4a4a4a,inset 3px 3px 0 #c2c2c2}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+
+  /* SIDE PANEL */
+  .panel{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--ui2);border:3px solid #000;box-shadow:inset -3px -3px 0 #000,inset 3px 3px 0 #4a5470;padding:12px}
+  .card h2{font-family:var(--pix);font-size:10px;margin:0 0 10px;color:var(--warn)}
+  .recipe{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-top:2px solid var(--ui3)}
+  .recipe:first-of-type{border-top:0}
+  .recipe .ico{font-size:24px;text-align:center}
+  .recipe .nm{font-weight:900;font-size:15px}
+  .recipe .need{display:flex;flex-wrap:wrap;gap:4px;font-size:12px;color:var(--ink2);font-weight:800}
+  .recipe .need span.ok{color:var(--good)}
+  .recipe .need span.no{color:var(--bad)}
+  .mini{background:var(--gold);border:2px solid #000;box-shadow:inset -2px -2px 0 #8d6a00,inset 2px 2px 0 #ffe990;padding:6px 8px;font-family:var(--pix);font-size:8px;color:#000}
+  .mini[disabled]{opacity:.4;cursor:not-allowed}
+  .base{display:flex;flex-wrap:wrap;gap:8px;min-height:40px}
+  .trophy{display:flex;align-items:center;gap:4px;background:var(--ui3);border:2px solid #000;padding:4px 8px;font-size:22px}
+  .trophy small{font-size:12px;font-weight:900}
+  .empty{color:var(--ink2);font-size:14px;font-weight:700}
+  .skills{font-size:14px;color:var(--ink2);font-weight:700;line-height:1.5}
+
+  /* OVERLAYS */
+  .ov{position:fixed;inset:0;background:rgba(10,12,20,.78);display:grid;place-items:center;padding:16px;z-index:50;overflow:auto}
+  .qcard{background:var(--ink);color:#1a1a1a;border:4px solid #000;box-shadow:8px 8px 0 #000;width:min(640px,100%);padding:20px 22px 22px}
+  .qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .qhead .sk{font-family:var(--pix);font-size:9px;color:#5a5a5a}
+  .qhead .tm{font-family:var(--pix);font-size:9px;color:#5a5a5a;font-variant-numeric:tabular-nums}
+  .prompt{font-size:clamp(24px,4vw,34px);font-weight:900;line-height:1.25;text-wrap:balance;margin:6px 0 10px}
+  .visual{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:8px 0 14px;min-height:8px}
+  .dots{display:grid;gap:5px}
+  .dot{width:20px;height:20px;border:2px solid #000;background:var(--grass)}
+  .dot.b{background:var(--gold)}
+  .coin{width:44px;height:44px;border-radius:50%;border:3px solid #000;display:grid;place-items:center;font-weight:900;font-size:11px}
+  .answer{display:flex;flex-direction:column;gap:10px}
+  .numshow{font-family:var(--pix);font-size:26px;background:#fff;border:3px solid #000;padding:12px;min-height:58px;text-align:right;font-variant-numeric:tabular-nums}
+  .numshow:empty::before{content:"?";color:#bbb}
+  .pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .key{background:#fff;border:3px solid #000;box-shadow:inset -3px -3px 0 #bbb,inset 3px 3px 0 #fff,3px 3px 0 #000;font-size:26px;font-weight:900;padding:12px 0}
+  .key:active{transform:translate(2px,2px);box-shadow:inset 3px 3px 0 #bbb}
+  .key.go{background:var(--grass);color:#fff;text-shadow:2px 2px 0 #000;grid-row:span 2}
+  .key.del{background:#ffd0d0}
+  .key.neg{background:#e6e6e6}
+  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media (max-width:480px){.choices{grid-template-columns:1fr}}
+  .ch{background:#fff;border:3px solid #000;box-shadow:3px 3px 0 #000;font-size:24px;font-weight:900;padding:14px 10px;text-align:center;line-height:1.2}
+  .ch:hover{background:#fff8d6}
+  .ch:active{transform:translate(2px,2px);box-shadow:none}
+  .ch.right{background:var(--good)}
+  .ch.wrong{background:var(--bad);color:#fff}
+  .fb{margin-top:14px;padding:12px 14px;border:3px solid #000;font-weight:900;font-size:20px;display:none}
+  .fb.good{display:block;background:#d9f7d0}
+  .fb.bad{display:block;background:#ffe0e0}
+  .fb .hint{font-size:16px;font-weight:700;margin-top:6px;color:#333}
+  .qfoot{display:flex;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .lnk{font-weight:900;color:#345;text-decoration:underline;font-size:15px}
+
+  /* START */
+  .start{background:var(--ui2);border:4px solid #000;box-shadow:8px 8px 0 #000;width:min(560px,100%);padding:24px}
+  .start h1{font-family:var(--pix);font-size:22px;color:var(--gold);text-shadow:4px 4px 0 #6b4e00;margin:0 0 6px;line-height:1.4}
+  .start p{margin:0 0 16px;color:var(--ink2);font-weight:700}
+  .subj{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0 18px}
+  .sb{background:var(--ui3);border:3px solid #000;padding:14px 10px;font-weight:900;font-size:17px;text-align:left;display:flex;gap:10px;align-items:center;box-shadow:3px 3px 0 #000}
+  .sb.on{background:var(--grass);box-shadow:none;transform:translate(3px,3px)}
+  .sb .big{font-size:26px}
+  .sb small{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.75)}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+  .field label{font-family:var(--pix);font-size:8px;color:var(--ink2)}
+  .field input{font-family:var(--body);font-size:20px;font-weight:900;padding:10px;border:3px solid #000;background:#fff;color:#111;width:100%}
+
+  /* PARENT */
+  .pcard{background:var(--ink);color:#1a1a1a;border:4px solid #000;box-shadow:8px 8px 0 #000;width:min(680px,100%);padding:22px;font-size:16px}
+  .pcard h2{font-family:var(--pix);font-size:12px;margin:0 0 12px}
+  .pcard h3{font-family:var(--pix);font-size:9px;margin:16px 0 8px;color:#555}
+  .trow{display:grid;grid-template-columns:1fr 60px 60px 1fr;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #ccc;font-weight:700;font-size:14px}
+  .trow.h{font-family:var(--pix);font-size:7px;color:#666;border-top:0}
+  .bar{height:12px;background:#ddd;border:2px solid #000;position:relative}
+  .bar i{display:block;height:100%;background:var(--grass)}
+  .bar.low i{background:var(--bad)}
+  .bar.mid i{background:var(--warn)}
+  .pcard .num{font-variant-numeric:tabular-nums;text-align:right}
+  .toggles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+  .tg{display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;border:3px solid var(--warn);padding:10px 16px;font-family:var(--pix);font-size:10px;z-index:80;opacity:0;transition:opacity .25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;line-height:1.6}
+  .toast.show{opacity:1}
+  .lvlup{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:70}
+  .lvlup div{font-family:var(--pix);font-size:clamp(18px,5vw,40px);color:var(--gold);text-shadow:4px 4px 0 #000;animation:pop 1.6s ease-out forwards}
+  @keyframes pop{0%{transform:scale(.3);opacity:0}20%{transform:scale(1.1);opacity:1}80%{opacity:1}100%{transform:scale(1.3);opacity:0}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="hud">
+    <div class="logo">BLOCK QUEST</div>
+    <div class="stat"><span class="lbl">Miner</span><span class="val" id="hName">—</span></div>
+    <div class="stat"><span class="lbl">Level <span id="hLvl">1</span> · <span id="hTitle">Newbie Miner</span></span><div class="xpbar"><i id="hXp"></i></div></div>
+    <div class="stat"><span class="lbl">Streak</span><span class="val" id="hStreak">0 🔥</span></div>
+    <div class="stat creep"><span class="lbl">Creeper</span><div style="display:flex;align-items:center;gap:8px"><div class="steps" id="hCreep"><i></i><i></i><i></i></div><div class="face" id="hCreepFace"></div></div></div>
+    <div class="inv" id="hInv"></div>
+    <div class="hudbtns">
+      <button class="ibtn" id="bSound" title="Sound">🔊</button>
+      <button class="ibtn" id="bSubj">SUBJECT</button>
+      <button class="ibtn" id="bParent">PARENT</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="world">
+      <div class="skyline"><div class="sun"></div><div class="cloud"></div><div class="steve" id="steve"></div></div>
+      <div class="grid" id="grid"></div>
+      <div class="worldbar">
+        <div class="depth" id="depth">DEPTH 1 · GRASSLANDS</div>
+        <button class="btn gold" id="bDeeper" disabled>DIG DEEPER ⬇</button>
+      </div>
+    </section>
+    <aside class="panel">
+      <div class="card"><h2>CRAFTING BENCH</h2><div id="recipes"></div></div>
+      <div class="card"><h2>MY BASE</h2><div class="base" id="base"></div></div>
+      <div class="card"><h2>TODAY'S SKILLS</h2><div class="skills" id="skillsNow"></div></div>
+    </aside>
+  </main>
+</div>
+
+<div class="ov" id="ovStart">
+  <div class="start">
+    <h1>BLOCK QUEST</h1>
+    <p>Mine blocks by solving puzzles. Craft tools. Dig deeper. Watch out for the creeper!</p>
+    <div class="field"><label>YOUR MINER NAME</label><input id="inName" maxlength="14" placeholder="Steve" autocomplete="off"></div>
+    <div class="subj" id="subjPick"></div>
+    <button class="btn" id="bStart" style="width:100%;font-size:12px;padding:14px">START MINING ⛏</button>
+  </div>
+</div>
+
+<div class="ov" id="ovQ" hidden>
+  <div class="qcard" role="dialog" aria-modal="true">
+    <div class="qhead"><span class="sk" id="qSkill"></span><span class="tm" id="qTimer"></span></div>
+    <div class="prompt" id="qPrompt"></div>
+    <div class="visual" id="qVisual"></div>
+    <div class="answer" id="qAnswer"></div>
+    <div class="fb" id="qFb"></div>
+    <div class="qfoot">
+      <button class="lnk" id="bHint">Show me a hint</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn grey" id="bSkip">LEAVE BLOCK</button>
+        <button class="btn" id="bNext" hidden>KEEP MINING ➜</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovParent" hidden>
+  <div class="pcard">
+    <h2>PARENT DASHBOARD</h2>
+    <div id="pStats"></div>
+    <h3>SKILLS TO PRACTICE (uncheck to turn off)</h3>
+    <div class="toggles" id="pToggles"></div>
+    <div class="qfoot">
+      <button class="lnk" id="bReset">Reset all progress</button>
+      <button class="btn" id="bParentClose">DONE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- TEXTURES (tiny generated pixel art) ---------- */
+function tex(fn){const c=document.createElement('canvas');c.width=16;c.height=16;const g=c.getContext('2d');fn(g);return `url(${c.toDataURL()})`}
+function noise(g,base,shades,x0,y0,w,h){for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){g.fillStyle=Math.random()<.35?pick(shades):base;g.fillRect(x,y,1,1)}}
+function ore(g,color,dark){noise(g,'#8a8a8a',['#7a7a7a','#9a9a9a','#6e6e6e'],0,0,16,16);for(let i=0;i<5;i++){const x=rnd(13),y=rnd(13);g.fillStyle=dark;g.fillRect(x,y,3,3);g.fillStyle=color;g.fillRect(x,y,2,2)}}
+const TEX={
+  grass:tex(g=>{noise(g,'#7b4b25',['#6a3f1d','#8c5a2f','#5e3719'],0,0,16,16);noise(g,'#5fa33a',['#4f8f2e','#73b84a','#3f7a25'],0,0,16,4);for(let x=0;x<16;x+=2)if(Math.random()<.5){g.fillStyle='#4f8f2e';g.fillRect(x,4,1,1)}}),
+  dirt:tex(g=>noise(g,'#7b4b25',['#6a3f1d','#8c5a2f','#5e3719','#96663a'],0,0,16,16)),
+  wood:tex(g=>{noise(g,'#a5732f',['#8d6127','#b8853b'],0,0,16,16);for(let x=1;x<16;x+=4){g.fillStyle='#6d4a19';g.fillRect(x,0,1,16)}}),
+  stone:tex(g=>noise(g,'#8a8a8a',['#7a7a7a','#9a9a9a','#6e6e6e','#a3a3a3'],0,0,16,16)),
+  coal:tex(g=>ore(g,'#2b2b2b','#111')),
+  iron:tex(g=>ore(g,'#e3cfae','#a88a5e')),
+  gold:tex(g=>ore(g,'#f2c230','#a8820e')),
+  diamond:tex(g=>ore(g,'#4fe3e8','#1e9ea3')),
+  emerald:tex(g=>ore(g,'#3ddc5a','#1c8a35')),
+  creeper:tex(g=>{noise(g,'#4fb84a',['#3f9a3a','#66cc60','#2f7a2b'],0,0,16,16);g.fillStyle='#000';g.fillRect(3,4,4,4);g.fillRect(9,4,4,4);g.fillRect(6,8,4,3);g.fillRect(5,10,2,4);g.fillRect(9,10,2,4)}),
+  steve:tex(g=>{g.fillStyle='#5a3a1e';g.fillRect(4,0,8,3);g.fillStyle='#e8b48c';g.fillRect(4,3,8,5);g.fillStyle='#fff';g.fillRect(5,5,2,1);g.fillRect(9,5,2,1);g.fillStyle='#3b3bd6';g.fillRect(5,5,1,1);g.fillRect(10,5,1,1);g.fillStyle='#2fa8a0';g.fillRect(3,8,10,4);g.fillStyle='#3b3bd6';g.fillRect(4,12,3,4);g.fillRect(9,12,3,4)})
+};
+$('#steve').style.backgroundImage=TEX.steve;
+$('#hCreepFace').style.backgroundImage=TEX.creeper;
+
+/* ---------- WORLD CONFIG ---------- */
+const COLS=9,ROWS=7;
+const RES={wood:'Wood',dirt:'Dirt',stone:'Stone',coal:'Coal',iron:'Iron',gold:'Gold',diamond:'Diamond',emerald:'Emerald'};
+const BLOCKXP={grass:5,dirt:5,wood:6,stone:8,coal:10,iron:14,gold:18,diamond:25,emerald:30};
+const BIOMES=['GRASSLANDS','MUDDY HILLS','STONE CAVES','IRON MINES','GOLD CAVERNS','DIAMOND DEPTHS','EMERALD ABYSS','THE DEEP'];
+const TITLES=['Newbie Miner','Dirt Digger','Stone Breaker','Iron Explorer','Gold Hunter','Diamond Master','Emerald Legend','Bedrock Boss'];
+const GATE={iron:'stonePick',gold:'ironPick',diamond:'ironPick',emerald:'diamondPick'};
+const RECIPES=[
+  {id:'stonePick',ico:'⛏️',nm:'Stone Pickaxe',need:{stone:3,wood:2},xp:30,tool:true,desc:'Unlocks iron ore'},
+  {id:'ironPick',ico:'🔨',nm:'Iron Pickaxe',need:{iron:3,wood:2},xp:50,tool:true,desc:'Unlocks gold + diamond'},
+  {id:'diamondPick',ico:'💎',nm:'Diamond Pickaxe',need:{diamond:3,wood:2},xp:90,tool:true,desc:'Unlocks emerald'},
+  {id:'torch',ico:'🔥',nm:'Torch',need:{coal:1,wood:1},xp:15},
+  {id:'sword',ico:'🗡️',nm:'Iron Sword',need:{iron:2,wood:1},xp:25,desc:'Scares the creeper away'},
+  {id:'house',ico:'🏠',nm:'Dirt House',need:{dirt:8,wood:4},xp:60},
+  {id:'castle',ico:'🏰',nm:'Stone Castle',need:{stone:15,gold:2},xp:120},
+  {id:'apple',ico:'🍎',nm:'Golden Apple',need:{gold:3},xp:45},
+  {id:'armor',ico:'🛡️',nm:'Diamond Armor',need:{diamond:4,iron:2},xp:150},
+  {id:'beacon',ico:'🔆',nm:'Emerald Beacon',need:{emerald:3,diamond:1,gold:3},xp:250}
+];
+
+/* ---------- SUBJECTS & QUESTION BANKS ---------- */
+const SUBJECTS=[
+  {id:'math',ico:'🔢',nm:'Math',sub:'Adding, subtracting, place value, time, money'},
+  {id:'read',ico:'📖',nm:'Reading',sub:'Spelling, word work, grammar'},
+  {id:'sci',ico:'🔬',nm:'Science',sub:'Animals, plants, weather, matter'},
+  {id:'ss',ico:'🗺️',nm:'Social Studies',sub:'Maps, community, history'},
+  {id:'mix',ico:'🎲',nm:'Everything',sub:'Mostly math, with all the rest mixed in'}
+];
+
+const SIGHT=['always','around','because','been','before','best','both','buy','call','cold','does','fast','first','five','found','gave','goes','green','made','many','pull','read','right','sing','sleep','tell','their','these','those','upon','very','wash','which','why','wish','work','would','write','your','friend','school','little','house','water','again','animal','people','under','light','never','every','after','think','know','through'];
+const CONTRACT=[['do not',"don't"],['can not',"can't"],['is not',"isn't"],['I am',"I'm"],['it is',"it's"],['we are',"we're"],['they are',"they're"],['you are',"you're"],['she is',"she's"],['he will',"he'll"],['I will',"I'll"],['did not',"didn't"],['was not',"wasn't"],['could not',"couldn't"],['we will',"we'll"],['let us',"let's"]];
+const PLURAL=[['box','boxes'],['fox','foxes'],['bus','buses'],['child','children'],['mouse','mice'],['tooth','teeth'],['foot','feet'],['man','men'],['woman','women'],['dish','dishes'],['baby','babies'],['puppy','puppies'],['leaf','leaves'],['wolf','wolves'],['sheep','sheep'],['goose','geese'],['bench','benches'],['story','stories'],['knife','knives'],['cherry','cherries']];
+const ANTONYM=[['hot','cold'],['big','small'],['fast','slow'],['up','down'],['happy','sad'],['loud','quiet'],['wet','dry'],['light','dark'],['open','closed'],['full','empty'],['tall','short'],['strong','weak'],['early','late'],['clean','dirty'],['soft','hard'],['thick','thin']];
+const SYNONYM=[['big','huge'],['small','tiny'],['happy','glad'],['sad','unhappy'],['fast','quick'],['smart','clever'],['start','begin'],['end','finish'],['shout','yell'],['look','see'],['mad','angry'],['funny','silly'],['cold','chilly'],['pretty','beautiful'],['jump','leap'],['speak','talk']];
+const RHYME=[['cat',['hat','bat','mat'],['cup','dog','sun']],['cake',['lake','make','rake'],['cook','ball','tree']],['light',['night','kite','bite'],['lamp','sun','bulb']],['boat',['goat','coat','note'],['ship','fish','sail']],['rain',['train','chain','plane'],['cloud','snow','wet']],['bug',['rug','mug','hug'],['ant','fly','bee']],['king',['ring','sing','wing'],['queen','crown','duke']],['tree',['bee','see','free'],['leaf','wood','bark']],['moon',['spoon','soon','tune'],['star','sky','night']],['frog',['log','dog','fog'],['pond','hop','toad']]];
+const NOUNVERB={nouns:['dog','table','school','apple','river','teacher','truck','garden','pencil','bird','castle','kitten','ocean','window','cookie'],verbs:['jump','run','sing','eat','swim','read','climb','sleep','laugh','throw','build','dance','draw','shout','wash'],adjs:['tiny','red','fuzzy','loud','bright','sticky','soft','giant','sleepy','shiny','cold','brave']};
+const SCI=[
+  ['Which is a mammal?',['Dolphin','Shark','Frog','Snake'],'Mammals breathe air and feed babies milk. Dolphins do both!'],
+  ['What do plants need to make food?',['Sunlight','Candy','Music','Snow'],'Plants use sunlight, water, and air to make their own food.'],
+  ['Which is a solid?',['Rock','Milk','Steam','Juice'],'Solids keep their shape.'],
+  ['Water turns into ice when it gets…',['Colder','Hotter','Louder','Bigger'],'Freezing happens at 32°F (0°C).'],
+  ['What is a baby frog called?',['Tadpole','Puppy','Cub','Chick'],'Tadpoles live in water and grow legs later.'],
+  ['Which part of a plant takes in water?',['Roots','Petals','Leaves','Seeds'],'Roots drink water from the soil.'],
+  ['A butterfly starts life as a…',['Caterpillar','Tadpole','Chick','Seed'],'Egg → caterpillar → chrysalis → butterfly.'],
+  ['Which animal lives in the ocean?',['Octopus','Camel','Eagle','Goat'],'Octopuses have 8 arms and live in salt water.'],
+  ['What is the closest star to Earth?',['The Sun','The Moon','Mars','Jupiter'],'The Sun is a star, and it is the closest one.'],
+  ['Which is a gas?',['Air','Sand','Wood','Ice'],'Gases spread out to fill their space.'],
+  ['What tool measures temperature?',['Thermometer','Ruler','Clock','Scale'],'Thermometers tell how hot or cold something is.'],
+  ['Which habitat is very cold and icy?',['Arctic','Desert','Rainforest','Grassland'],'Polar bears and penguins live in polar habitats.'],
+  ['A desert gets very little…',['Rain','Sand','Sun','Wind'],'Deserts are dry and get less than 10 inches of rain a year.'],
+  ['What do bees make?',['Honey','Milk','Silk','Wool'],'Bees turn flower nectar into honey.'],
+  ['Which is NOT a living thing?',['Rock','Tree','Ant','Mushroom'],'Living things grow, eat, and make new living things.'],
+  ['What is the hard part inside your body called?',['Bones','Skin','Hair','Blood'],'Your skeleton is made of about 206 bones.'],
+  ['Which season comes after winter?',['Spring','Fall','Summer','Autumn'],'Winter → Spring → Summer → Fall.'],
+  ['Where does rain come from?',['Clouds','Trees','The Sun','Rivers'],'Water droplets in clouds get heavy and fall as rain.'],
+  ['Which animal hatches from an egg?',['Chicken','Cow','Dog','Horse'],'Birds, reptiles, and fish lay eggs.'],
+  ['What makes a shadow?',['Blocking light','Cold air','Loud sound','Water'],'A shadow forms when something blocks light.'],
+  ['Which is a fruit?',['Apple','Carrot','Potato','Lettuce'],'Fruits grow from flowers and hold seeds.'],
+  ['What do we call an animal that only eats plants?',['Herbivore','Carnivore','Predator','Reptile'],'Herbivores eat plants. Carnivores eat meat.'],
+  ['Which planet do we live on?',['Earth','Mars','Venus','Saturn'],'Earth is the third planet from the Sun.'],
+  ['What pulls things down to the ground?',['Gravity','Magnets','Wind','Heat'],'Gravity pulls everything toward Earth.'],
+  ['How many legs does an insect have?',['6','4','8','10'],'Insects have 6 legs. Spiders have 8.'],
+  ['Melting ice turns into…',['Water','Steam','Snow','Rock'],'Solid ice melts into liquid water.'],
+  ['Which sense do you use with your ears?',['Hearing','Sight','Taste','Smell'],'Ears → hearing, eyes → sight, tongue → taste.'],
+  ['Which rock can float?',['Pumice','Granite','Marble','Slate'],'Pumice is full of air bubbles so it floats.']
+];
+const SS=[
+  ['Which direction is at the top of most maps?',['North','South','East','West'],'N is at the top, S at the bottom, E right, W left.'],
+  ['Who helps put out fires?',['Firefighter','Dentist','Farmer','Pilot'],'Firefighters are community helpers.'],
+  ['What do we call the leader of a country like the USA?',['President','Principal','Mayor','Captain'],'The President leads the whole country.'],
+  ['Which is a NEED, not a want?',['Water','Video games','Candy','Toys'],'Needs are things you must have to live.'],
+  ['Which is a continent?',['Africa','Texas','Paris','Canada'],'The 7 continents include Africa, Asia, and North America.'],
+  ['A map key tells you…',['What the symbols mean','The time','The weather','How to spell'],'The key (legend) explains the map symbols.'],
+  ['The 4th of July celebrates…',['Independence Day','Halloween','New Year','Earth Day'],'America declared independence on July 4, 1776.'],
+  ['Which is a landform?',['Mountain','Car','School','Cloud'],'Landforms include mountains, hills, valleys, and plains.'],
+  ['Who leads a city or town?',['Mayor','President','King','Coach'],'A mayor runs a city.'],
+  ['Which body of water is the largest?',['Ocean','Pond','Lake','Stream'],'Oceans cover most of Earth.'],
+  ['What do we call the people who lived in America first?',['Native Americans','Pilgrims','Astronauts','Pirates'],'Native Americans lived here long before Europeans arrived.'],
+  ['A globe is shaped like a…',['Sphere','Cube','Square','Triangle'],'A globe is a round model of Earth.'],
+  ['Which is a rule for being a good citizen?',['Tell the truth','Litter','Cut in line','Yell at others'],'Good citizens are honest and respectful.'],
+  ['How many states are in the USA?',['50','13','100','7'],'There are 50 states. The flag has 50 stars!'],
+  ['Which helper takes care of sick animals?',['Veterinarian','Chef','Mechanic','Librarian'],'Vets are animal doctors.'],
+  ['What did George Washington do?',['First President','Invented the phone','Walked on the Moon','Built a castle'],'George Washington was the first U.S. President.'],
+  ['Money that you keep for later is called…',['Savings','Spending','Trading','Losing'],'Saving means keeping money for later.'],
+  ['On a map, blue usually shows…',['Water','Forest','Roads','Cities'],'Blue is for oceans, lakes, and rivers.'],
+  ['What is the capital of the United States?',['Washington, D.C.','New York','Texas','Chicago'],'Washington, D.C. is where the President lives.'],
+  ['Which is a symbol of the USA?',['Bald eagle','Panda','Kangaroo','Lion'],'The bald eagle is the national bird.']
+];
+
+/* ---------- MATH GENERATORS ---------- */
+const numQ=(prompt,answer,skill,hint,visual)=>({type:'num',prompt,answer:String(answer),skill,hint,visual});
+const choiceQ=(prompt,answer,wrongs,skill,hint,visual)=>({type:'choice',prompt,answer:String(answer),choices:shuffle([String(answer),...wrongs.map(String)]),skill,hint,visual});
+function dotsHTML(a,b,cols){cols=cols||10;let h=`<div class="dots" style="grid-template-columns:repeat(${cols},20px)">`;for(let i=0;i<a;i++)h+='<div class="dot"></div>';for(let i=0;i<b;i++)h+='<div class="dot b"></div>';return h+'</div>'}
+function wrongsNear(ans,n,min){min=min===undefined?0:min;const s=new Set();let tries=0;while(s.size<n&&tries<200){tries++;const d=pick([-10,-3,-2,-1,1,2,3,10,-2,2,-1,1]);const w=ans+d;if(w!==ans&&w>=min)s.add(w)}return [...s]}
+function clockSVG(h,m){const a=(h%12)*30+m*.5,b=m*6;return `<svg width="150" height="150" viewBox="0 0 100 100" aria-label="clock"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#000" stroke-width="4"/>${[...Array(12)].map((_,i)=>{const t=i*30*Math.PI/180;const x=50+38*Math.sin(t),y=50-38*Math.cos(t);return `<text x="${x}" y="${y+4}" font-size="10" font-weight="900" text-anchor="middle" fill="#000">${i===0?12:i}</text>`}).join('')}<line x1="50" y1="50" x2="${50+22*Math.sin(a*Math.PI/180)}" y2="${50-22*Math.cos(a*Math.PI/180)}" stroke="#000" stroke-width="5" stroke-linecap="round"/><line x1="50" y1="50" x2="${50+32*Math.sin(b*Math.PI/180)}" y2="${50-32*Math.cos(b*Math.PI/180)}" stroke="#d33" stroke-width="3" stroke-linecap="round"/><circle cx="50" cy="50" r="3" fill="#000"/></svg>`}
+const fmtTime=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
+const COINS=[['Q',25,'#cfd3d8'],['D',10,'#cfd3d8'],['N',5,'#cfd3d8'],['P',1,'#c98a52']];
+function coinsHTML(list){return list.map(c=>`<div class="coin" style="background:${c[2]}" title="${c[1]} cents">${c[1]}¢</div>`).join('')}
+
+const MATH={
+  add10:{nm:'Adding to 10',layer:1,gen(){const a=rnd(10),b=rnd(11-a);return numQ(`${a} + ${b} = ?`,a+b,'add10',`Count the green blocks, then keep counting the gold ones.`,dotsHTML(a,b))}},
+  sub10:{nm:'Subtracting within 10',layer:1,gen(){const a=1+rnd(10),b=rnd(a+1);return numQ(`${a} − ${b} = ?`,a-b,'sub10',`Start at ${a} and count back ${b}.`,dotsHTML(a,0))}},
+  add20:{nm:'Adding to 20',layer:2,gen(){const a=3+rnd(15),b=2+rnd(Math.min(18-a+1,15));return numQ(`${a} + ${b} = ?`,a+b,'add20',`Make a ten first: ${a} + ${10-a%10||10} gets you to the next ten.`,dotsHTML(a,b))}},
+  sub20:{nm:'Subtracting within 20',layer:2,gen(){const a=8+rnd(13),b=1+rnd(a-1);return numQ(`${a} − ${b} = ?`,a-b,'sub20',`Think: ${b} + ? = ${a}`,dotsHTML(a,0))}},
+  skip:{nm:'Skip counting',layer:2,gen(){const step=pick([2,5,10,10,100]);const start=step===100?rnd(5)*100:step*(1+rnd(6));const seq=[0,1,2,3].map(i=>start+step*i);return numQ(`${seq.slice(0,3).join(', ')}, ___`,seq[3],'skip',`Each number goes up by ${step}.`)}},
+  place:{nm:'Place value',layer:3,gen(){const n=100+rnd(900);const kind=rnd(3);const h=Math.floor(n/100),t=Math.floor(n/10)%10,o=n%10;if(kind===0){const d=pick(['hundreds','tens','ones']);const ans=d==='hundreds'?h:d==='tens'?t:o;return choiceQ(`What digit is in the ${d} place of ${n}?`,ans,shuffle([h,t,o,rnd(10)].filter(x=>x!==ans)).slice(0,3).filter((v,i,a)=>a.indexOf(v)===i).concat(wrongsNear(ans,3,0)).slice(0,3),'place',`${n} = ${h} hundreds, ${t} tens, ${o} ones.`)}if(kind===1)return numQ(`${h} hundreds + ${t} tens + ${o} ones = ?`,n,'place',`Write the digits in order: hundreds, tens, ones.`);return numQ(`${h*100} + ${t*10} + ${o} = ?`,n,'place',`Add the hundreds, then tens, then ones.`)}},
+  add100:{nm:'Adding 2-digit numbers',layer:3,gen(){let a,b;do{a=10+rnd(80);b=10+rnd(80)}while(a%10+b%10>9||a+b>99);return numQ(`${a} + ${b} = ?`,a+b,'add100',`Add the tens (${Math.floor(a/10)*10} + ${Math.floor(b/10)*10}) then the ones (${a%10} + ${b%10}).`)}},
+  sub100:{nm:'Subtracting 2-digit numbers',layer:3,gen(){let a,b;do{a=20+rnd(80);b=10+rnd(a-10)}while(a%10<b%10);return numQ(`${a} − ${b} = ?`,a-b,'sub100',`Subtract the tens, then the ones.`)}},
+  compare:{nm:'Comparing numbers',layer:3,gen(){let a=rnd(1000),b=Math.random()<.15?a:rnd(1000);const ans=a>b?'>':a<b?'<':'=';return{type:'choice',prompt:`${a}  ?  ${b}`,answer:ans,choices:['<','>','='],skill:'compare',hint:'The open side of the sign faces the bigger number. Compare hundreds first.'}}},
+  evenodd:{nm:'Even or odd',layer:3,gen(){const n=rnd(100);return{type:'choice',prompt:`Is ${n} even or odd?`,answer:n%2?'Odd':'Even',choices:['Even','Odd'],skill:'evenodd',hint:'Look at the last digit. 0, 2, 4, 6, 8 are even.'}}},
+  tenmore:{nm:'10 and 100 more or less',layer:3,gen(){const n=110+rnd(780);const d=pick([10,-10,100,-100]);return numQ(`What is ${Math.abs(d)} ${d>0?'more':'less'} than ${n}?`,n+d,'tenmore',`Only the ${Math.abs(d)===10?'tens':'hundreds'} digit changes.`)}},
+  add100r:{nm:'Adding with regrouping',layer:4,gen(){let a,b;do{a=10+rnd(80);b=10+rnd(80)}while(a%10+b%10<10||a+b>99);return numQ(`${a} + ${b} = ?`,a+b,'add100r',`The ones make more than 10, so carry a ten. ${a%10} + ${b%10} = ${a%10+b%10}.`)}},
+  sub100r:{nm:'Subtracting with regrouping',layer:4,gen(){let a,b;do{a=20+rnd(80);b=10+rnd(a-10)}while(a%10>=b%10);return numQ(`${a} − ${b} = ?`,a-b,'sub100r',`Borrow a ten: ${a} is the same as ${Math.floor(a/10)-1} tens and ${a%10+10} ones.`)}},
+  arrays:{nm:'Rows and columns (arrays)',layer:4,gen(){const r=2+rnd(4),c=2+rnd(4);return numQ(`${r} rows of ${c}. How many blocks in all?`,r*c,'arrays',`Add ${c} for each row: ${Array(r).fill(c).join(' + ')}.`,`<div class="dots" style="grid-template-columns:repeat(${c},20px)">${'<div class="dot"></div>'.repeat(r*c)}</div>`)}},
+  time:{nm:'Telling time',layer:5,gen(){const h=1+rnd(12),m=rnd(12)*5;const ans=fmtTime(h,m);const w=new Set();while(w.size<3){const wh=Math.random()<.5?h:1+rnd(12),wm=rnd(12)*5;const s=fmtTime(wh,wm);if(s!==ans)w.add(s)}return choiceQ('What time does the clock show?',ans,[...w],'time','The short hand is the hour. The long hand counts by 5s.',clockSVG(h,m))}},
+  money:{nm:'Counting coins',layer:5,gen(){const n=2+rnd(4);const list=[];for(let i=0;i<n;i++)list.push(pick(COINS));list.sort((a,b)=>b[1]-a[1]);const tot=list.reduce((s,c)=>s+c[1],0);return numQ('How many cents in all?',tot,'money','Start with the biggest coins and count on.',coinsHTML(list))}},
+  word:{nm:'Word problems',layer:5,gen(){const n1=5+rnd(40),n2=3+rnd(30);const t=rnd(4);if(t===0)return numQ(`Steve had ${n1} diamonds. He found ${n2} more. How many now?`,n1+n2,'word','"More" means add.');if(t===1){const a=Math.max(n1,n2),b=Math.min(n1,n2);return numQ(`Alex mined ${a} blocks. A creeper blew up ${b}. How many are left?`,a-b,'word','"Left" means subtract.')}if(t===2){const a=Math.max(n1,n2),b=Math.min(n1,n2);return numQ(`A chest has ${a} apples. Another has ${b}. How many more does the first chest have?`,a-b,'word','"How many more" means find the difference: subtract.')}return numQ(`You need ${n1+n2} stone for a castle. You have ${n1}. How many more do you need?`,n2,'word',`Think: ${n1} + ? = ${n1+n2}`)}},
+  add1000:{nm:'3-digit adding & subtracting',layer:6,gen(){const a=100+rnd(500),b=100+rnd(399);if(Math.random()<.5)return numQ(`${a} + ${b} = ?`,a+b,'add1000','Add hundreds, then tens, then ones. Carry if you need to.');const x=Math.max(a,b),y=Math.min(a,b);return numQ(`${x} − ${y} = ?`,x-y,'add1000','Subtract the ones, tens, then hundreds. Borrow if you need to.')}},
+  measure:{nm:'Measuring',layer:4,gen(){const t=rnd(3);if(t===0)return choiceQ('How many inches are in 1 foot?',12,[10,6,100],'measure','1 foot = 12 inches.');if(t===1)return choiceQ('Which is the best tool to measure a hallway?',['Measuring tape'][0],['Thermometer','Cup','Scale'],'measure','Long things need a long tool.');const a=5+rnd(30),b=5+rnd(30);if(a===b)return choiceQ(`Which is longer: ${a} cm or ${b+3} cm?`,`${b+3} cm`,[`${a} cm`],'measure','The bigger number is longer.');return choiceQ(`A stick is ${a} inches. A rope is ${b} inches. How much longer is the longer one?`,Math.abs(a-b),wrongsNear(Math.abs(a-b),3,0),'measure','Subtract the smaller from the bigger.')}}
+};
+
+/* ---------- READING GENERATORS ---------- */
+function misspell(w){const i=1+rnd(w.length-1);const ops=[()=>w.slice(0,i)+w.slice(i+1),()=>w.slice(0,i)+w[i]+w.slice(i),()=>w.slice(0,i)+pick('aeiou')+w.slice(i+1),()=>w.slice(0,i-1)+w[i]+w[i-1]+w.slice(i+1)];let r=w,tries=0;while((r===w||r.length<2)&&tries<10){r=pick(ops)();tries++}return r}
+const READ={
+  spell:{nm:'Spelling',layer:1,gen(){const w=pick(SIGHT);const s=new Set();while(s.size<3){const m=misspell(w);if(m!==w)s.add(m)}return choiceQ('Which word is spelled correctly?',w,[...s],'spell','Say it slowly and listen for each sound.')}},
+  missing:{nm:'Missing letters',layer:2,gen(){const w=pick(SIGHT);const i=rnd(w.length);const shown=w.slice(0,i)+'_'+w.slice(i+1);const wrong=new Set();while(wrong.size<3){const l=pick('abcdefghijklmnoprstuvwy');if(l!==w[i])wrong.add(l)}return choiceQ(`Fill in the blank:  ${shown}`,w[i],[...wrong],'missing',`The word is "${w}".`)}},
+  contract:{nm:'Contractions',layer:2,gen(){const p=pick(CONTRACT);const wr=shuffle(CONTRACT.filter(x=>x!==p)).slice(0,3).map(x=>x[1]);return choiceQ(`Which contraction means "${p[0]}"?`,p[1],wr,'contract','The apostrophe takes the place of missing letters.')}},
+  plural:{nm:'Plurals',layer:2,gen(){const p=pick(PLURAL);const wr=[p[0]+'s',p[0]+'es',p[0]+'ies'].filter(x=>x!==p[1]).slice(0,2).concat([shuffle(PLURAL.filter(x=>x!==p))[0][1]]);return choiceQ(`One ${p[0]}, two ___`,p[1],[...new Set(wr)].slice(0,3),'plural','Some words change spelling when there is more than one.')}},
+  antonym:{nm:'Opposites',layer:1,gen(){const p=pick(ANTONYM);const wr=shuffle(ANTONYM.filter(x=>x!==p)).slice(0,3).map(x=>x[1]);return choiceQ(`What is the opposite of "${p[0]}"?`,p[1],wr,'antonym','An antonym means the opposite.')}},
+  synonym:{nm:'Same meaning',layer:3,gen(){const p=pick(SYNONYM);const wr=shuffle(SYNONYM.filter(x=>x!==p)).slice(0,3).map(x=>x[1]);return choiceQ(`Which word means almost the same as "${p[0]}"?`,p[1],wr,'synonym','A synonym is a word with the same meaning.')}},
+  rhyme:{nm:'Rhyming',layer:1,gen(){const r=pick(RHYME);return choiceQ(`Which word rhymes with "${r[0]}"?`,pick(r[1]),r[2],'rhyme','Rhyming words end with the same sound.')}},
+  pos:{nm:'Nouns, verbs, adjectives',layer:3,gen(){const t=pick(['noun','verb','adjective']);const pool=t==='noun'?NOUNVERB.nouns:t==='verb'?NOUNVERB.verbs:NOUNVERB.adjs;const others=t==='noun'?[...NOUNVERB.verbs,...NOUNVERB.adjs]:t==='verb'?[...NOUNVERB.nouns,...NOUNVERB.adjs]:[...NOUNVERB.nouns,...NOUNVERB.verbs];const desc={noun:'a person, place, or thing (noun)',verb:'an action word (verb)',adjective:'a describing word (adjective)'}[t];return choiceQ(`Which word is ${desc}?`,pick(pool),shuffle(others).slice(0,3),'pos','Nouns name things. Verbs are actions. Adjectives describe.')}},
+  abc:{nm:'ABC order',layer:2,gen(){const ws=shuffle(SIGHT).slice(0,4).sort();const ans=ws[0];return choiceQ('Which word comes FIRST in ABC order?',ans,ws.slice(1),'abc','Look at the first letter of each word. If they match, look at the second letter.')}}
+};
+const bank=(list,skill,nm,layer)=>({nm,layer,gen(){const q=pick(list);return choiceQ(q[0],q[1][0],q[1].slice(1),skill,q[2])}});
+const SCIQ={sci:bank(SCI,'sci','Science facts',1)};
+const SSQ={ss:bank(SS,'ss','Social studies',1)};
+const ALL={...MATH,...READ,...SCIQ,...SSQ};
+const GROUP={math:MATH,read:READ,sci:SCIQ,ss:SSQ};
+
+/* ---------- STATE ---------- */
+const KEY='blockquest.v1';
+let S=null;
+function fresh(){return{name:'',subject:'math',xp:0,level:1,streak:0,best:0,creep:0,depth:1,inv:{},crafted:{},tools:{},stats:{},off:{},sound:true,world:null,mined:0,total:0,minedAll:0}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);return j?JSON.parse(j):null}catch(e){return null}}
+
+/* ---------- SOUND ---------- */
+let AC=null;
+function beep(freq,dur,type,vol){if(!S||!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.value=freq;g.gain.value=vol||.05;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);o.stop(AC.currentTime+dur)}catch(e){}}
+const SFX={mine(){beep(180,.12,'sawtooth');setTimeout(()=>beep(120,.15,'sawtooth'),60)},good(){beep(660,.1);setTimeout(()=>beep(880,.12),90);setTimeout(()=>beep(1320,.18),180)},bad(){beep(200,.25,'triangle',.06)},craft(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15),i*80))},boom(){beep(80,.6,'sawtooth',.12)},lvl(){[523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,.2,'square',.06),i*110))}};
+
+/* ---------- WORLD ---------- */
+function genWorld(depth){
+  const w=[];
+  for(let r=0;r<ROWS;r++){const row=[];for(let c=0;c<COLS;c++){
+    let t;
+    if(r===0)t=Math.random()<.3?'wood':'grass';
+    else if(r===1)t=Math.random()<.85?'dirt':'stone';
+    else{
+      const p=Math.random();
+      const d=depth;
+      if(p<.02+d*.012)t='diamond';
+      else if(p<.04+d*.02)t='gold';
+      else if(p<.10+d*.02)t='iron';
+      else if(p<.20+d*.01)t='coal';
+      else if(d>=5&&p<.22+d*.005)t='emerald';
+      else t=r<3&&Math.random()<.35?'dirt':'stone';
+      if(d<2&&(t==='diamond'||t==='emerald'))t='iron';
+      if(d<3&&t==='emerald')t='gold';
+    }
+    row.push(t);
+  }w.push(row)}
+  return w;
+}
+function isOpen(r,c){const w=S.world;if(!w[r][c])return false;if(r===0)return true;const n=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];return n.some(([y,x])=>y>=0&&y<ROWS&&x>=0&&x<COLS&&w[y][x]===null)}
+function gated(t){const g=GATE[t];return g&&!S.tools[g]?g:null}
+function renderWorld(){
+  const g=$('#grid');g.innerHTML='';
+  let left=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const t=S.world[r][c];const d=document.createElement('div');d.className='blk';d.dataset.r=r;d.dataset.c=c;
+    if(t===null){d.classList.add(r===0?'air':'cave')}
+    else{left++;d.style.backgroundImage=TEX[t];const open=isOpen(r,c);if(open){const gt=gated(t);if(gt){d.classList.add('gated','locked');d.title=`Craft a ${RECIPES.find(x=>x.id===gt).nm} to mine ${t}!`}else{d.classList.add('open');d.title=`Mine ${t}`;d.tabIndex=0}}}
+    g.appendChild(d);
+  }
+  S.total=ROWS*COLS;S.mined=S.total-left;
+  $('#depth').textContent=`DEPTH ${S.depth} · ${BIOMES[Math.min(S.depth-1,BIOMES.length-1)]}`;
+  $('#bDeeper').disabled=!(S.mined>=Math.floor(S.total*.6));
+}
+$('#grid').addEventListener('click',e=>{const b=e.target.closest('.blk');if(!b)return;onBlock(b)});
+$('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const b=e.target.closest('.blk');if(b){e.preventDefault();onBlock(b)}}});
+function onBlock(b){
+  const r=+b.dataset.r,c=+b.dataset.c;const t=S.world[r][c];if(!t)return;
+  if(!isOpen(r,c)){toast('Dig a path to that block first!');return}
+  const gt=gated(t);if(gt){toast(`You need a ${RECIPES.find(x=>x.id===gt).nm.toUpperCase()} to mine ${t.toUpperCase()}! Craft it at the bench.`);b.classList.add('crack');setTimeout(()=>b.classList.remove('crack'),300);return}
+  askFor(r,c,t,b);
+}
+function breakBlock(r,c,t,el){
+  const rect=el.getBoundingClientRect(),g=$('.world').getBoundingClientRect();
+  for(let i=0;i<10;i++){const f=document.createElement('div');f.className='frag';f.style.left=(rect.left-g.left+rect.width/2)+'px';f.style.top=(rect.top-g.top+rect.height/2)+'px';f.style.backgroundImage=TEX[t];f.style.setProperty('--dx',(rnd(120)-60)+'px');f.style.setProperty('--dy',(rnd(120)-90)+'px');$('.world').appendChild(f);setTimeout(()=>f.remove(),650)}
+  S.world[r][c]=null;S.minedAll++;
+  const res=t==='grass'?'dirt':t;S.inv[res]=(S.inv[res]||0)+1;
+  SFX.mine();renderWorld();renderHUD();renderRecipes();save();
+}
+$('#bDeeper').addEventListener('click',()=>{S.depth++;S.world=genWorld(S.depth);addXP(40);toast(`⬇ DEPTH ${S.depth}: ${BIOMES[Math.min(S.depth-1,BIOMES.length-1)]}`);renderWorld();renderSkills();save()});
+
+/* ---------- QUESTIONS ---------- */
+function activeSkills(){
+  const subj=S.subject;let ids;
+  if(subj==='mix')ids=Object.keys(ALL);else ids=Object.keys(GROUP[subj]);
+  ids=ids.filter(id=>!S.off[id]);
+  const layer=Math.min(S.depth,6);
+  let inLayer=ids.filter(id=>ALL[id].layer<=layer);
+  if(subj==='mix'){const m=inLayer.filter(id=>MATH[id]),o=inLayer.filter(id=>!MATH[id]);return{ids:inLayer,math:m,other:o}}
+  return{ids:inLayer};
+}
+function weightOf(id){const st=S.stats[id]||{n:0,ok:0};const acc=st.n?st.ok/st.n:.6;const layerBoost=ALL[id].layer===Math.min(S.depth,6)?1.4:1;return (1+(1-acc)*2.5)*layerBoost}
+function weightedPick(ids){if(!ids.length)return null;const ws=ids.map(weightOf),tot=ws.reduce((a,b)=>a+b,0);let x=Math.random()*tot;for(let i=0;i<ids.length;i++){x-=ws[i];if(x<=0)return ids[i]}return ids[ids.length-1]}
+function nextQuestion(){
+  const a=activeSkills();let id;
+  if(S.subject==='mix'&&a.math.length&&a.other.length)id=Math.random()<.6?weightedPick(a.math):weightedPick(a.other);
+  else id=weightedPick(a.ids);
+  if(!id){id=S.subject==='mix'?'add10':Object.keys(GROUP[S.subject]||MATH)[0]}
+  const q=ALL[id].gen();q.skill=id;return q;
+}
+
+let Q=null,cur=null,typed='',qStart=0,timerIv=null,answered=false;
+function askFor(r,c,t,el){
+  Q=nextQuestion();cur={r,c,t,el};typed='';answered=false;qStart=Date.now();
+  $('#qSkill').textContent=`${t.toUpperCase()} BLOCK · ${ALL[Q.skill].nm.toUpperCase()}`;
+  $('#qPrompt').textContent=Q.prompt;
+  $('#qVisual').innerHTML=Q.visual||'';
+  $('#qFb').className='fb';$('#qFb').innerHTML='';
+  $('#bNext').hidden=true;$('#bSkip').hidden=false;$('#bHint').hidden=!Q.hint;
+  const A=$('#qAnswer');A.innerHTML='';
+  if(Q.type==='num'){
+    A.innerHTML=`<div class="numshow" id="numshow"></div><div class="pad">${[7,8,9].map(k).join('')}<button class="key del" data-k="del">⌫</button>${[4,5,6].map(k).join('')}<button class="key go" data-k="go">✓</button>${[1,2,3].map(k).join('')}<button class="key neg" data-k="0" style="grid-column:span 3">0</button></div>`;
+  }else{
+    A.innerHTML=`<div class="choices">${Q.choices.map(ch=>`<button class="ch" data-v="${ch.replace(/"/g,'&quot;')}">${ch}</button>`).join('')}</div>`;
+  }
+  $('#ovQ').hidden=false;
+  clearInterval(timerIv);timerIv=setInterval(()=>{$('#qTimer').textContent=Math.floor((Date.now()-qStart)/1000)+'s'},250);$('#qTimer').textContent='0s';
+  if(Q.type!=='num')setTimeout(()=>{const f=A.querySelector('.ch');f&&f.focus()},50);
+}
+const k=n=>`<button class="key" data-k="${n}">${n}</button>`;
+$('#qAnswer').addEventListener('click',e=>{
+  const kb=e.target.closest('.key');if(kb){onKey(kb.dataset.k);return}
+  const ch=e.target.closest('.ch');if(ch&&!answered){grade(ch.dataset.v,ch)}
+});
+function onKey(kk){if(answered)return;if(kk==='del')typed=typed.slice(0,-1);else if(kk==='go'){if(typed!=='')grade(typed)}else if(typed.length<4)typed+=kk;const ns=$('#numshow');if(ns)ns.textContent=typed}
+document.addEventListener('keydown',e=>{
+  if($('#ovQ').hidden)return;
+  if(answered){if(e.key==='Enter'){e.preventDefault();$('#bNext').click()}return}
+  if(Q.type==='num'){if(/^[0-9]$/.test(e.key))onKey(e.key);else if(e.key==='Backspace')onKey('del');else if(e.key==='Enter')onKey('go')}
+});
+$('#bHint').addEventListener('click',()=>{const fb=$('#qFb');fb.className='fb good';fb.style.background='#fff5cc';fb.innerHTML=`💡 <span class="hint" style="font-size:18px">${Q.hint}</span>`;setTimeout(()=>fb.style.background='',0)});
+function grade(v,btn){
+  answered=true;clearInterval(timerIv);
+  const secs=(Date.now()-qStart)/1000;
+  const ok=String(v).trim()===String(Q.answer).trim();
+  const st=S.stats[Q.skill]||(S.stats[Q.skill]={n:0,ok:0,t:0});st.n++;st.t+=secs;if(ok)st.ok++;
+  const fb=$('#qFb');
+  if(ok){
+    S.streak++;S.best=Math.max(S.best,S.streak);
+    let xp=BLOCKXP[cur.t]||5;let bonus='';
+    if(secs<8){xp+=3;bonus+=' ⚡ FAST +3'}
+    if(S.streak%5===0){xp+=10;bonus+=` 🔥 ${S.streak} STREAK +10`}
+    if(S.creep>0&&S.streak%3===0){S.creep--;bonus+=' 🟩 creeper backs off'}
+    fb.className='fb good';fb.innerHTML=`✅ Correct! +${xp} XP${bonus}`;
+    if(btn)btn.classList.add('right');
+    SFX.good();addXP(xp);
+    breakBlock(cur.r,cur.c,cur.t,cur.el);
+  }else{
+    S.streak=0;S.creep++;
+    if(btn){btn.classList.add('wrong');const rb=[...document.querySelectorAll('.ch')].find(b=>b.dataset.v===Q.answer);rb&&rb.classList.add('right')}
+    fb.className='fb bad';fb.innerHTML=`❌ Not quite. The answer is <b>${Q.answer}</b>.<div class="hint">${Q.hint||''}</div>`;
+    SFX.bad();
+    if(S.creep>=3){explode()}
+  }
+  renderHUD();save();
+  $('#bSkip').hidden=true;$('#bNext').hidden=false;$('#bNext').focus();
+}
+function explode(){
+  S.creep=0;SFX.boom();
+  const keys=Object.keys(S.inv).filter(r=>S.inv[r]>0);let lost=[];
+  for(let i=0;i<3&&keys.length;i++){const r=pick(keys);S.inv[r]--;lost.push(RES[r]);if(S.inv[r]<=0){delete S.inv[r];keys.splice(keys.indexOf(r),1)}}
+  document.body.style.animation='shake .4s';setTimeout(()=>document.body.style.animation='',450);
+  toast(lost.length?`💥 CREEPER BOOM! Lost ${lost.join(', ')}. Get 3 right in a row to push it back next time.`:'💥 CREEPER BOOM! Luckily your pockets were empty.');
+  renderRecipes();
+}
+function closeQ(){$('#ovQ').hidden=true;clearInterval(timerIv);Q=null}
+$('#bNext').addEventListener('click',closeQ);
+$('#bSkip').addEventListener('click',closeQ);
+
+/* ---------- XP / HUD ---------- */
+function need(l){return 100*l}
+function addXP(n){S.xp+=n;while(S.xp>=need(S.level)){S.xp-=need(S.level);S.level++;levelUp()}renderHUD()}
+function levelUp(){SFX.lvl();const d=document.createElement('div');d.className='lvlup';d.innerHTML=`<div>LEVEL ${S.level}!</div>`;document.body.appendChild(d);setTimeout(()=>d.remove(),1700)}
+function renderHUD(){
+  $('#hName').textContent=S.name||'—';$('#hLvl').textContent=S.level;$('#hTitle').textContent=TITLES[Math.min(S.level-1>>1,TITLES.length-1)];
+  $('#hXp').style.width=clamp(100*S.xp/need(S.level),0,100)+'%';
+  $('#hStreak').textContent=`${S.streak} 🔥`;
+  [...$('#hCreep').children].forEach((el,i)=>el.classList.toggle('on',i<S.creep));
+  $('#hCreepFace').style.transform=`scale(${1+S.creep*.25})`;
+  $('#hInv').innerHTML=Object.keys(RES).filter(r=>S.inv[r]).map(r=>`<span class="chip" title="${RES[r]}"><i class="sw" style="background-image:${TEX[r]}"></i>${S.inv[r]}</span>`).join('')||'<span class="chip" style="color:var(--ink2)">Pockets empty — mine a block!</span>';
+  $('#bSound').textContent=S.sound?'🔊':'🔇';
+}
+function renderRecipes(){
+  $('#recipes').innerHTML=RECIPES.map(r=>{
+    const have=r.tool&&S.tools[r.id];
+    const can=Object.entries(r.need).every(([k,v])=>(S.inv[k]||0)>=v);
+    const need=Object.entries(r.need).map(([k,v])=>`<span class="${(S.inv[k]||0)>=v?'ok':'no'}">${v} ${RES[k]}</span>`).join(' · ');
+    return `<div class="recipe"><div class="ico">${r.ico}</div><div><div class="nm">${r.nm}${have?' ✓':''}</div><div class="need">${need}</div>${r.desc?`<div class="need"><span>${r.desc}</span></div>`:''}</div><button class="mini" data-id="${r.id}" ${(!can||have)?'disabled':''}>${have?'OWNED':'CRAFT'}</button></div>`}).join('');
+  $('#base').innerHTML=Object.keys(S.crafted).length?RECIPES.filter(r=>S.crafted[r.id]).map(r=>`<span class="trophy" title="${r.nm}">${r.ico}<small>×${S.crafted[r.id]}</small></span>`).join(''):'<span class="empty">Nothing built yet. Craft something!</span>';
+}
+$('#recipes').addEventListener('click',e=>{
+  const b=e.target.closest('.mini');if(!b||b.disabled)return;const r=RECIPES.find(x=>x.id===b.dataset.id);
+  Object.entries(r.need).forEach(([k,v])=>{S.inv[k]-=v;if(S.inv[k]<=0)delete S.inv[k]});
+  S.crafted[r.id]=(S.crafted[r.id]||0)+1;if(r.tool)S.tools[r.id]=true;
+  if(r.id==='sword'&&S.creep>0){S.creep=0;toast('🗡️ The creeper ran away!')}
+  SFX.craft();addXP(r.xp);toast(`${r.ico} Crafted ${r.nm}! +${r.xp} XP`);
+  renderHUD();renderRecipes();renderWorld();save();
+});
+function renderSkills(){const a=activeSkills();$('#skillsNow').innerHTML=a.ids.map(id=>ALL[id].nm).join(' · ')||'—'}
+let toastT=null;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
+
+/* ---------- START / SUBJECT ---------- */
+let pickedSubj='math';
+function renderSubjPick(){$('#subjPick').innerHTML=SUBJECTS.map(s=>`<button class="sb ${s.id===pickedSubj?'on':''}" data-id="${s.id}"><span class="big">${s.ico}</span><span>${s.nm}<small>${s.sub}</small></span></button>`).join('')}
+$('#subjPick').addEventListener('click',e=>{const b=e.target.closest('.sb');if(!b)return;pickedSubj=b.dataset.id;renderSubjPick()});
+$('#bStart').addEventListener('click',()=>{
+  const nm=$('#inName').value.trim()||'Steve';
+  if(!S.world){S.world=genWorld(1)}
+  S.name=nm;S.subject=pickedSubj;$('#ovStart').hidden=true;
+  renderAll();save();
+});
+$('#bSubj').addEventListener('click',()=>{pickedSubj=S.subject;$('#inName').value=S.name;renderSubjPick();$('#ovStart').hidden=false;$('#bStart').textContent='BACK TO MINING ⛏'});
+$('#bSound').addEventListener('click',()=>{S.sound=!S.sound;renderHUD();save();if(S.sound)beep(880,.1)});
+
+/* ---------- PARENT ---------- */
+$('#bParent').addEventListener('click',()=>{renderParent();$('#ovParent').hidden=false});
+$('#bParentClose').addEventListener('click',()=>{$('#ovParent').hidden=true;renderSkills();save()});
+$('#bReset').addEventListener('click',()=>{if(confirm('Erase all progress, XP, and inventory?')){S=fresh();S.world=genWorld(1);save();location.reload()}});
+function renderParent(){
+  const ids=Object.keys(ALL).filter(id=>S.stats[id]&&S.stats[id].n);
+  const totalN=ids.reduce((s,id)=>s+S.stats[id].n,0),totalOk=ids.reduce((s,id)=>s+S.stats[id].ok,0);
+  let h=`<p style="margin:0 0 8px;font-weight:700">${S.name||'Miner'} · Level ${S.level} · ${S.minedAll} blocks mined · ${totalN} questions, ${totalOk} correct${totalN?` (${Math.round(100*totalOk/totalN)}%)`:''} · best streak ${S.best}</p>`;
+  if(ids.length){h+=`<div class="trow h"><span>SKILL</span><span class="num">TRIES</span><span class="num">AVG SEC</span><span>ACCURACY</span></div>`;
+  ids.sort((a,b)=>(S.stats[a].ok/S.stats[a].n)-(S.stats[b].ok/S.stats[b].n)).forEach(id=>{const st=S.stats[id];const acc=st.ok/st.n;h+=`<div class="trow"><span>${ALL[id].nm}</span><span class="num">${st.n}</span><span class="num">${(st.t/st.n).toFixed(0)}</span><span class="bar ${acc<.6?'low':acc<.8?'mid':''}" title="${Math.round(acc*100)}%"><i style="width:${Math.round(acc*100)}%"></i></span></div>`})}
+  else h+='<p style="font-weight:700;color:#555">No questions answered yet. Skills that are practiced most often are the ones with the lowest accuracy.</p>';
+  $('#pStats').innerHTML=h;
+  $('#pToggles').innerHTML=Object.keys(ALL).map(id=>`<label class="tg"><input type="checkbox" data-id="${id}" ${S.off[id]?'':'checked'}> ${ALL[id].nm} <small style="color:#777">(${['','depth 1','depth 2','depth 3','depth 4','depth 5','depth 6'][ALL[id].layer]}+)</small></label>`).join('');
+}
+$('#pToggles').addEventListener('change',e=>{const c=e.target;if(c.type==='checkbox'){if(c.checked)delete S.off[c.dataset.id];else S.off[c.dataset.id]=true;save()}});
+
+/* ---------- BOOT ---------- */
+function renderAll(){renderWorld();renderHUD();renderRecipes();renderSkills()}
+function start(snap){
+  S=(snap&&snap.S)||load()||fresh();
+  if(!S.stats)S.stats={};if(!S.off)S.off={};if(!S.tools)S.tools={};if(!S.crafted)S.crafted={};
+  renderSubjPick();
+  /* Learning Games: the player picked in Learning Games (#player=Name) fills in the miner name the first time */
+  if(!S.name){try{const m=/[#&]player=([^&]*)/.exec(location.hash);if(m)$('#inName').value=decodeURIComponent(m[1]).replace(/[<>&"'`]/g,'').trim().slice(0,14)}catch(e){}}
+  if(!S.world)S.world=genWorld(1);
+  if(S.name){$('#ovStart').hidden=true;renderAll()}
+  else{$('#ovStart').hidden=false;renderAll()}
+  window.claude?.hot?.snapshot?.(()=>({S}));
+}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+})();
+</script>
+</body>
+</html>

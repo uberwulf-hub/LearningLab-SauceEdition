@@ -1,0 +1,7 @@
+## both service alerts, then the services themselves
+siem alerts
+siem search source=winsec event=7045 --fields time,host,user,service,path
+## who signed in to FILE01 just before its service appeared, and from where
+siem search host=FILE01 source=winsec user=adm_{{ADMP}} --fields time,event,user,src_ip,workstation,file
+## follow that account everywhere
+siem search source=winsec user=adm_{{ADMP}} event=4624 --fields time,host,src_ip,workstation

@@ -1,0 +1,61 @@
+NAME
+       groupadd - create a new group
+
+SYNOPSIS
+       groupadd [-g GID] [-r] [-f] [-o] [-K KEY=VALUE] GROUP
+
+DESCRIPTION
+       groupadd adds a group to /etc/group and /etc/gshadow. Without -g it
+       takes the next free group ID at or above GID_MIN (1000) from
+       /etc/login.defs; with -r it takes a system group ID below that.
+
+       Groups let several users share files: make a group, add the users to
+       it (usermod -aG or gpasswd -a), give a directory to the group
+       (chgrp), and set the set-group-ID bit on it (chmod g+s) so new files
+       there belong to the group too.
+
+       Each user also has a private group of their own, made by useradd
+       with the same name (user private groups).
+
+OPTIONS
+       -g GID, --gid GID
+              Use this group ID. It must be free unless -o is given.
+
+       -r, --system
+              Create a system group (an ID below 1000), for services.
+
+       -f, --force
+              Succeed even if the group exists already (and pick another ID
+              when the -g one is taken).
+
+       -o, --non-unique
+              Allow a GID that another group already has.
+
+       -K KEY=VALUE
+              Override a setting of /etc/login.defs, such as GID_MIN=5000.
+
+EXAMPLES
+       Create a group with a set ID:
+
+           groupadd -g 3000 devops
+
+       Set up a shared team directory:
+
+           groupadd devops
+           usermod -aG devops student
+           mkdir /srv/devops
+           chgrp devops /srv/devops
+           chmod 2770 /srv/devops
+
+       Check the result:
+
+           getent group devops
+
+FILES
+       /etc/group, /etc/gshadow, /etc/login.defs
+
+EXIT STATUS
+       0 success, 4 the GID is in use, 9 the group name is in use.
+
+SEE ALSO
+       groupmod(8), groupdel(8), gpasswd(1), useradd(8), group(5)

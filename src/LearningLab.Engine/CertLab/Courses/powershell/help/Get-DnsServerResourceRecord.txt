@@ -1,0 +1,20 @@
+SYNOPSIS: Lists the records in a DNS zone.
+DESCRIPTION:
+Get-DnsServerResourceRecord shows the records of one zone: HostName (@ means the zone itself), RecordType, TimeToLive and RecordData (the address, alias, mail server and so on). Timestamp is empty for static records and holds a date for records that clients registered dynamically or that were added with -AgeRecord; only those can be scavenged.
+
+Filter with -Name and -RRType. A -Name that matches nothing is an error. To see the records of a zone scope used by a DNS policy, add -ZoneScope.
+PARAMETER ZoneName:
+The zone to read, for example corp.example. Position 0.
+PARAMETER Name:
+Only records with this host name, for example srv1. Position 1.
+PARAMETER RRType:
+Only this record type: A, AAAA, CName, MX, NS, Ptr, Soa, Srv, Txt or DNSKEY.
+PARAMETER ZoneScope:
+Reads a zone scope instead of the default records.
+EXAMPLE: Get-DnsServerResourceRecord -ZoneName corp.example -RRType A -ComputerName DC1
+Every A record in the company zone: dc1, dc2, fs1, hv1 and the rest.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -RRType Srv
+The SRV records clients use to find domain controllers (_ldap._tcp, _kerberos._tcp).
+EXAMPLE: Get-DnsServerResourceRecord 0.10.10.in-addr.arpa -RRType Ptr
+The reverse records: which name belongs to each 10.10.0.x address.
+RELATED: Add-DnsServerResourceRecordA, Add-DnsServerResourceRecord, Remove-DnsServerResourceRecord, Get-DnsServerZone

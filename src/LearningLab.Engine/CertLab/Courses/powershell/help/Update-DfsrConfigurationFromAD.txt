@@ -1,0 +1,12 @@
+SYNOPSIS: Makes DFS Replication servers read their settings from Active Directory now.
+DESCRIPTION:
+DFSR members check Active Directory for new settings only every hour or so. After a change (new group, connection or membership), Update-DfsrConfigurationFromAD makes the servers poll now. If AD replication between domain controllers hasn't caught up yet, a server may still see the old settings.
+
+The command line equivalent is dfsrdiag pollad, run on each server.
+PARAMETER ComputerName:
+The servers to tell. Position 0. Default: this one.
+EXAMPLE: Update-DfsrConfigurationFromAD -ComputerName FS1, SRV1
+Both members pick up the new replication setup.
+EXAMPLE: Update-DfsrConfigurationFromAD
+Only this server polls.
+RELATED: Set-DfsrMembership, Get-DfsrBacklog, Add-DfsrConnection

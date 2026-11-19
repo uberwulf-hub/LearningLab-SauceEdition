@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="LearningLab.App"
+             RequestedThemeVariant="Dark">
+    <!-- App Hub's dark look (Core\Theme.xaml there), so the apps feel the same after the move -->
+    <Application.Resources>
+        <SolidColorBrush x:Key="Th.Bg" Color="#0B0D12"/>
+        <SolidColorBrush x:Key="Th.Surface" Color="#13161D"/>
+        <SolidColorBrush x:Key="Th.Surface2" Color="#1A1E27"/>
+        <SolidColorBrush x:Key="Th.Surface3" Color="#242A36"/>
+        <SolidColorBrush x:Key="Th.Border" Color="#252A35"/>
+        <SolidColorBrush x:Key="Th.BorderStrong" Color="#353C4B"/>
+        <SolidColorBrush x:Key="Th.Text" Color="#E6E9F0"/>
+        <SolidColorBrush x:Key="Th.TextMuted" Color="#8C93A5"/>
+        <SolidColorBrush x:Key="Th.TextDim" Color="#5C6375"/>
+        <SolidColorBrush x:Key="Th.Accent" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="Th.AccentHover" Color="#60A5FA"/>
+        <SolidColorBrush x:Key="Th.AccentSoft" Color="#1B2D50"/>
+        <SolidColorBrush x:Key="Th.AccentText" Color="#93C5FD"/>
+    </Application.Resources>
+    <Application.Styles>
+        <FluentTheme />
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#E6E9F0"/>
+        </Style>
+    </Application.Styles>
+</Application>

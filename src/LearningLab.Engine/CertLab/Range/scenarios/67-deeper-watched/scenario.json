@@ -1,0 +1,39 @@
+{
+    "base": "07-deeper-in",
+    "id": "deeper-watched",
+    "title": "Deeper, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Advanced",
+    "order": 4,
+    "summary": "The jump host from Deeper In, but the inside network now has a sensor that flags any scan. You can't sweep your way to the inside server - you have to find out where it is from the jump host itself.",
+    "story": "Thornfield Freight (made up) put a network sensor on its inside network, 10.10.72.0/24. It flags any scan of the inside server - even a ping sweep - and reacts quickly, changing the passwords it saw used. The jump host jump01 (10.10.7.20) is not watched. You start on scout.",
+    "goal": "Capture the jump-host flag and the inside flag without scanning the inside network, and keep the quiet bonus.",
+    "skills": "pivoting through a dual-homed host, finding targets from local files instead of scans, reused credentials",
+    "quietPoints": 120,
+    "watch": [ "store01" ],
+    "noisySolution": "noisy.txt",
+    "vars": { "INNER": "num:11-89", "LOOK": "pick:hosts|history|sshconfig" },
+    "variants": {
+        "LOOK": {
+            "hosts":     { "LOOKCMD": "cat /etc/hosts", "LOOKWHERE": "/etc/hosts" },
+            "history":   { "LOOKCMD": "cat ~/.bash_history", "LOOKWHERE": "pilot's shell history (~/.bash_history)" },
+            "sshconfig": { "LOOKCMD": "cat ~/.ssh/config", "LOOKWHERE": "pilot's ssh settings (~/.ssh/config)" }
+        }
+    },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.7.5/24" ] },
+        { "name": "jump01", "os": "linux", "hostname": "jump01.thornfield.example", "role": "jump host (two networks)", "nics": [ "10.10.7.20/24", "10.10.72.1/24" ], "packages": [ "vsftpd", "nmap" ], "setup": "jump01.sh",
+          "versions": { "21": "vsftpd 3.0.5" } },
+        { "name": "store01", "os": "linux", "hostname": "store01.thornfield.example", "role": "inside server (watched)", "nics": [ "10.10.72.{{INNER}}/24" ], "setup": "store01.sh" }
+    ],
+    "defenderRules": {
+        "count": { "ping-sweep": 4, "port-scan": 4, "login-failed": 4, "password-guessing": 6 },
+        "budget": 4, "window": 1200, "react": 45, "reset": true, "isolate": false,
+        "watches": "any scan of the inside server (even a ping sweep) and wrong passwords"
+    },
+    "hints": [
+        { "text": "A single scan of the inside network is enough to trip this sensor. But a jump host that people use every day already knows where the inside server is: look through jump01's own files before you reach for nmap.", "cost": 15 },
+        { "text": "On this run the address is in {{LOOKWHERE}}: {{LOOKCMD}} on jump01 shows store01 at 10.10.72.{{INNER}}. Then ssh pilot@10.10.72.{{INNER}} from jump01 with the same pilot password - one clean sign-in.", "cost": 25 }
+    ]
+}

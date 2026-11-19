@@ -1,0 +1,60 @@
+NAME
+       mkfs.xfs - create an XFS file system
+
+SYNOPSIS
+       mkfs.xfs [-f] [-L LABEL] [-b size=BYTES] [-q] [-K] [-N] DEVICE
+
+DESCRIPTION
+       mkfs.xfs writes a new, empty XFS file system on a partition, logical
+       volume or whole disk. XFS is the default file system of RHEL 9: the
+       installer uses it for / and /boot. Everything that was on the device
+       before is lost.
+
+       XFS can grow later (xfs_growfs, or lvextend -r) while it is mounted,
+       but it can never shrink. Labels are at most 12 characters.
+
+       For safety, mkfs.xfs refuses a device that already holds a file
+       system or a partition table and tells you to add -f. Check with lsblk
+       -f or blkid that you have the right device before you force it.
+
+       Creating the file system does not mount it. Make a mount point, add a
+       line to /etc/fstab (by UUID or LABEL) and mount it.
+
+OPTIONS
+       -f     Force: overwrite an existing file system or partition table.
+
+       -L LABEL
+              Give the file system a label (up to 12 characters), so it can
+              be mounted with LABEL=... in /etc/fstab or mount -L.
+
+       -b size=BYTES
+              The block size; the default 4096 suits nearly everything.
+
+       -q     Quiet: do not print the summary of the new file system.
+
+       -K     Do not discard (trim) the device's blocks first.
+
+       -N     Dry run: print the settings that would be used, change nothing.
+
+EXAMPLES
+       Make an XFS file system on the first partition of /dev/vdb and mount
+       it at /data at every boot:
+
+           mkfs.xfs /dev/vdb1
+           mkdir /data
+           blkid /dev/vdb1
+           echo 'UUID=<the UUID shown> /data xfs defaults 0 0' >> /etc/fstab
+           mount -a
+
+       Make a labelled XFS file system on a logical volume, replacing an
+       old one:
+
+           mkfs.xfs -f -L webdata /dev/vgweb/web
+
+       Read the settings of a mounted XFS file system:
+
+           xfs_info /data
+
+SEE ALSO
+       mkfs(8), mke2fs(8), xfs_growfs(8), xfs_info(8), xfs_admin(8), blkid(8),
+       mount(8), fstab(5)

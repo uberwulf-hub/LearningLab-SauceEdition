@@ -1,0 +1,75 @@
+NAME
+       man - read the manual pages
+
+SYNOPSIS
+       man [SECTION] PAGE...
+       man -k KEYWORD
+       man -f PAGE
+
+DESCRIPTION
+       man shows the manual page of a command, a configuration file or a
+       concept. Manual pages are the built-in reference of RHEL, and they
+       are available during the RHCSA exam, so practise finding things in
+       them.
+
+       A page is split into sections with standard headings: NAME (one line
+       saying what it is), SYNOPSIS (how to call it: [brackets] mark
+       optional parts, | separates choices, ... means "can repeat"),
+       DESCRIPTION, OPTIONS, EXAMPLES, FILES and SEE ALSO (related pages).
+
+       The pages are grouped into numbered sections. The same name can exist
+       in several, so give the section when it matters (man 5 passwd is the
+       file, man 1 passwd the command):
+
+       1  user commands             5  file formats (fstab, passwd)
+       2  system calls              7  overviews (selinux, regex)
+       3  library functions         8  administration commands
+       4  devices
+
+       In SEE ALSO and elsewhere, a page is written as name(section), such
+       as fstab(5).
+
+       The pager shows the page one screen at a time. Inside it: Space or
+       PgDn next page, b previous page, /WORD search forward, n next match,
+       N previous match, g start, G end, q quit.
+
+OPTIONS
+       -k KEYWORD
+              Search the NAME lines of all pages for KEYWORD and list the
+              matches with their sections (the same as apropos). Good when
+              you do not know which command does a job: man -k partition.
+
+       -f PAGE
+              Show the NAME line of PAGE in each section (the same as
+              whatis).
+
+EXAMPLES
+       Read the page about the fstab file format:
+
+           man 5 fstab
+
+       Find the commands that deal with logical volumes:
+
+           man -k 'logical volume'
+
+       Find the right section for a word:
+
+           man -f passwd
+
+       Look for examples quickly: open the page, type /EXAMPLE and press
+       Enter.
+
+NOTES
+       If man -k finds nothing for a word that should exist, the search
+       index may be old: run mandb as root to rebuild it.
+
+       Many packages also install longer documents in /usr/share/doc/PACKAGE
+       (for example sample configuration files). info pages exist for some
+       GNU tools (info coreutils).
+
+FILES
+       /usr/share/man
+              Where the pages are kept.
+
+SEE ALSO
+       apropos(1), whatis(1), mandb(8), info(1), less(1)

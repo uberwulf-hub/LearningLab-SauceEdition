@@ -1,0 +1,21 @@
+SYNOPSIS: Gets organizational units (OUs) from Active Directory.
+DESCRIPTION:
+OUs are the folders of a domain: they hold users, computers, groups and other OUs, and they are where you link Group Policy and delegate administration.
+Get-ADOrganizationalUnit returns OUs with Name, DistinguishedName and the linked GPOs (LinkedGroupPolicyObjects). Use -Identity with a distinguished name, or -Filter.
+PARAMETER Identity:
+One OU, as a distinguished name such as "OU=Sales,OU=Staff,DC=corp,DC=example" or its GUID. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search in the PowerShell filter language, such as "Name -eq 'Sales'". Use * for all.
+PARAMETER Properties:
+Extra properties, such as ProtectedFromAccidentalDeletion and Description.
+PARAMETER SearchBase:
+Only searches below this container.
+PARAMETER SearchScope:
+Base, OneLevel or Subtree (the default).
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADOrganizationalUnit -Filter * | Select-Object Name, DistinguishedName
+Every OU in corp.example.
+EXAMPLE: Get-ADOrganizationalUnit -Filter * -SearchBase "OU=Staff,DC=corp,DC=example" -SearchScope OneLevel
+The department OUs directly under Staff.
+RELATED: New-ADOrganizationalUnit, Set-ADOrganizationalUnit, Remove-ADOrganizationalUnit, Get-GPInheritance

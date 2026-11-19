@@ -1,0 +1,22 @@
+SYNOPSIS: Shows each adapter's IP address, default gateway and DNS servers together.
+DESCRIPTION:
+Get-NetIPConfiguration is the PowerShell way to see what ipconfig shows: for each connected adapter, its name and description, the network profile name, the IPv4 address, the default gateway and the DNS servers. It gathers what Get-NetAdapter, Get-NetIPAddress, Get-NetRoute and Get-DnsClientServerAddress would each show separately.
+
+Its properties hold full objects, so (Get-NetIPConfiguration).IPv4DefaultGateway.NextHop gives the gateway address.
+PARAMETER InterfaceAlias:
+Shows only this adapter, for example Ethernet.
+PARAMETER InterfaceIndex:
+Shows only the adapter with this ifIndex.
+PARAMETER All:
+Also shows disabled adapters and the loopback interface.
+PARAMETER Detailed:
+Adds more: the MAC address, adapter status, network category, link-local IPv6 address, MTU and DHCP setting.
+EXAMPLE: Get-NetIPConfiguration
+On WIN-CL1: Ethernet, IPv4Address 10.0.10.21, IPv4DefaultGateway 10.0.10.1, DNSServer 10.0.10.10.
+EXAMPLE: Get-NetIPConfiguration -InterfaceAlias Ethernet -Detailed
+Everything about the Ethernet adapter, including whether it uses DHCP.
+EXAMPLE: (Get-NetIPConfiguration -InterfaceAlias Ethernet).DNSServer.ServerAddresses
+Only the DNS server addresses.
+NOTES:
+Start troubleshooting here: a wrong address, a missing gateway or a wrong DNS server shows up at once. CIM-based command from the NetTCPIP module, Windows only.
+RELATED: Get-NetIPAddress, Get-NetRoute, Get-DnsClientServerAddress, Get-NetAdapter

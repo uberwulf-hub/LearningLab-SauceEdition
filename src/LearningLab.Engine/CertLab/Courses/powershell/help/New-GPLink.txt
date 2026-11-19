@@ -1,0 +1,26 @@
+SYNOPSIS: Links a Group Policy Object to an OU, the domain or a site.
+DESCRIPTION:
+A GPO applies to the users and computers in the place it is linked to, and in all OUs below it, unless inheritance is blocked. New-GPLink creates that link.
+Processing order is local, site, domain, OU (parent first, then child): when settings conflict, the last one applied wins, so the closest OU wins. Within one OU, the link with Order 1 has the highest priority.
+An enforced link can't be overridden by lower OUs and goes through blocked inheritance.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Target:
+Where to link it, as a distinguished name: an OU, the domain (DC=corp,DC=example) or a site.
+PARAMETER LinkEnabled:
+Yes (the default) or No.
+PARAMETER Enforced:
+Yes or No (the default).
+PARAMETER Order:
+The link's position among the links of that target; 1 is the highest priority.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: New-GPLink "Sales Desktop" -Target "OU=Sales,OU=Staff,DC=corp,DC=example"
+Applies the GPO to everyone in the Sales OU.
+EXAMPLE: New-GPLink "Security Baseline" -Target "DC=corp,DC=example" -Enforced Yes -Order 1
+Links a GPO to the whole domain, enforced, with the highest priority.
+RELATED: Set-GPLink, Remove-GPLink, Get-GPInheritance, Set-GPInheritance, New-GPO

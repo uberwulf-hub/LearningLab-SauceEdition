@@ -1,0 +1,16 @@
+SYNOPSIS: Makes a virtual hard disk bigger or smaller.
+DESCRIPTION:
+Resize-VHD changes the size the VM sees. Growing works for VHD and VHDX; a VHDX attached to a SCSI controller can even grow while the VM runs. Shrinking works only for VHDX and only down to the end of the last partition: -ToMinimumSize shrinks as far as possible.
+
+Afterwards the guest still sees the old partition size: extend (or first shrink) the partition inside the VM with Disk Management or the guest's storage commands.
+PARAMETER Path:
+The disk file. Position 0.
+PARAMETER SizeBytes:
+The new size, for example 120GB. Position 1.
+PARAMETER ToMinimumSize:
+Shrinks the VHDX as much as its partitions allow.
+EXAMPLE: Resize-VHD -Path "D:\Hyper-V\Virtual Hard Disks\WEB-TEST.vhdx" -SizeBytes 120GB -ComputerName HV1
+WEB-TEST's disk grows from 80 GB to 120 GB.
+EXAMPLE: Get-VHD "D:\Hyper-V\Virtual Hard Disks\WEB-TEST.vhdx" | Select-Object Size, MinimumSize
+Checks the new size and how far it could shrink.
+RELATED: Get-VHD, New-VHD, Convert-VHD

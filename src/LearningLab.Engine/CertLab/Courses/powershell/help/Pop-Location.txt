@@ -1,0 +1,10 @@
+SYNOPSIS: Returns to the location saved last by Push-Location (popd).
+DESCRIPTION:
+Pop-Location takes the newest location off the stack and goes there. With an empty stack it quietly does nothing.
+PARAMETER StackName:
+Uses a named stack.
+PARAMETER PassThru:
+Outputs the location it went to.
+EXAMPLE: Pop-Location
+Goes back to where you were before the last Push-Location.
+RELATED: Push-Location, Get-Location

@@ -1,0 +1,47 @@
+title: Not what it says it is
+level: Intermediate
+kind: File forensics
+topic: Forensics
+teaser: the extension lies; the bytes don't
+points: 65
+order: 47
+answer: flag
+var: NAME = pick:photo|logo|banner|avatar|scan
+
+@intro
+A file ~/{{NAME}}.png won't open as a picture. A file's real type is decided by what is
+inside it, not by its extension, and the two don't always match. Work out what the file
+actually is, open it the right way, and read the flag inside.
+
+@setup
+printf '%s\n' '{{FLAG}}' > /home/player/.carrier
+gzip /home/player/.carrier
+mv /home/player/.carrier.gz /home/player/{{NAME}}.png
+chown player: /home/player/{{NAME}}.png
+
+@solution
+file {{NAME}}.png
+zcat {{NAME}}.png
+
+@walkthrough
+The extension is .png, but it will not open as an image. Ask what it really is:
+
+    file {{NAME}}.png     -> gzip compressed data
+
+So it is gzip, just mislabelled. Read it without renaming by decompressing to the
+terminal:
+
+    zcat {{NAME}}.png
+    # (or: cp {{NAME}}.png out.gz ; gunzip out.gz ; cat out)
+
+The flag is inside. The lesson for forensics: never trust a file's name or extension -
+the file command reads the bytes that say what it really is.
+
+@hint 5
+A name like .png is only a label. The first few bytes of a file (its "magic number") say what it really is, and tools read those instead.
+
+@hint 10
+The .png won't open as an image. Run 'file {{NAME}}.png' to see what it really is (xxd {{NAME}}.png | head shows the first bytes too).
+
+@hint 18
+file says it is gzip (gzip files start with the bytes 1f 8b). Decompress it to the terminal without renaming: zcat {{NAME}}.png

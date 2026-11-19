@@ -1,0 +1,18 @@
+NAME
+       lspci - list the PCI devices of the machine
+
+SYNOPSIS
+       lspci
+
+DESCRIPTION
+       lspci prints one line per device on the PCI bus: its address, its
+       class (Ethernet controller, VGA compatible controller, SCSI storage
+       controller...) and its maker and model. On a virtual machine you will
+       see virtual hardware such as Red Hat's Virtio devices. It is in the
+       pciutils package.
+
+EXAMPLES
+           lspci | grep -i ethernet
+
+SEE ALSO
+       lsblk(8), lscpu(1), lsmod(8)

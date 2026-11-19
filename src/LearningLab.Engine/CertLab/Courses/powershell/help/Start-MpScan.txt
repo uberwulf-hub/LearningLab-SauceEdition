@@ -1,0 +1,10 @@
+SYNOPSIS: Starts a Microsoft Defender Antivirus scan.
+DESCRIPTION:
+Start-MpScan runs a quick scan (the places malware usually hides) or a full scan (every file). Intune's Quick scan and Full scan remote actions do the same from the portal.
+PARAMETER ScanType:
+QuickScan (the default), FullScan or CustomScan.
+PARAMETER ScanPath:
+The folder to scan with CustomScan.
+EXAMPLE: Start-MpScan -ScanType QuickScan
+A quick scan.
+RELATED: Get-MpComputerStatus, Update-MpSignature

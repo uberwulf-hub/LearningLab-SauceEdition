@@ -1,0 +1,43 @@
+NAME
+       touch - create empty files or update file times
+
+SYNOPSIS
+       touch [OPTION]... FILE...
+
+DESCRIPTION
+       touch sets the access and modification times of each FILE to now. A
+       FILE that does not exist is created, empty. The second use is the
+       common one: touch is the quickest way to make an empty file.
+
+OPTIONS
+       -a     Change only the access time.
+
+       -m     Change only the modification time.
+
+       -c, --no-create
+              Do not create missing files.
+
+       -d, --date=TIME
+              Use TIME (such as '2026-01-15 10:00' or 'yesterday') instead of
+              now.
+
+       -t STAMP
+              Use a time written as [[CC]YY]MMDDhhmm[.ss].
+
+       -r, --reference=FILE
+              Use the times of FILE.
+
+       -h, --no-dereference
+              Change a symbolic link itself, not the file it points to.
+
+EXAMPLES
+       Create three empty files:
+
+           touch /tmp/a /tmp/b /tmp/c
+
+       Give a file an old date, for testing find -mtime:
+
+           touch -d '10 days ago' /tmp/old.log
+
+SEE ALSO
+       stat(1), ls(1), find(1)

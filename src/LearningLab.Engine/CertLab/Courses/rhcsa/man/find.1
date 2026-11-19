@@ -1,0 +1,190 @@
+NAME
+       find - search a directory tree for files that match tests
+
+SYNOPSIS
+       find [-H] [-L] [-P] [STARTING-POINT...] [EXPRESSION]
+
+DESCRIPTION
+       find walks down each starting point (the current directory when none
+       is given) and checks every file and directory it meets against the
+       expression. The expression is a list of tests (does the name match?
+       is it owned by this user?) and actions (print it, delete it, run a
+       command on it), read from left to right. Tests written next to each
+       other are joined with "and", so an item counts only when every test
+       is true.
+
+       When the expression has no action, find prints the path of every match
+       (as if -print were added at the end).
+
+       Numbers in tests can be written three ways: +N means more than N, -N
+       means less than N, and N means exactly N.
+
+       find reports directories it cannot read on standard error. When you
+       search the whole system as a normal user, add 2>/dev/null to hide
+       those messages.
+
+OPTIONS
+   Options that change the walk (put them before the tests)
+       -maxdepth N
+              Go at most N levels below the starting point. -maxdepth 1 looks
+              only at the starting directory's own entries.
+
+       -mindepth N
+              Ignore matches that are less than N levels deep.
+
+       -xdev, -mount
+              Stay on the file system of the starting point (do not walk into
+              other mounted file systems).
+
+       -L     Follow symbolic links.
+
+   Tests
+       -name PATTERN
+              The file's name (not its directory) matches the shell pattern.
+              Quote the pattern so the shell does not expand it: -name '*.conf'.
+
+       -iname PATTERN
+              Like -name, ignoring upper and lower case.
+
+       -path PATTERN
+              The whole path matches the pattern.
+
+       -regex PATTERN
+              The whole path matches the regular expression.
+
+       -type C
+              The kind of file: f regular file, d directory, l symbolic link,
+              b block device, c character device, p named pipe, s socket.
+
+       -user NAME, -uid N
+              Owned by that user (name or number).
+
+       -group NAME, -gid N
+              Owned by that group.
+
+       -nouser, -nogroup
+              The owner (or group) number belongs to no existing account,
+              for example after the user was deleted.
+
+       -perm MODE
+              Exactly these permission bits (-perm 644).
+
+       -perm -MODE
+              At least all of these bits are set (-perm -4000 finds set-user-ID
+              programs, -perm -g=w finds group-writable files).
+
+       -perm /MODE
+              Any of these bits is set (-perm /u=s,g=s).
+
+       -size [+-]N[ckMG]
+              The size, rounded up to whole units: c bytes, k kibibytes,
+              M mebibytes, G gibibytes. Without a unit, N counts 512-byte
+              blocks. -size +10M means bigger than 10 MiB.
+
+       -mtime [+-]N
+              Contents changed N days ago (counted in whole 24-hour periods).
+              -mtime -1 means within the last day.
+
+       -mmin [+-]N
+              Contents changed N minutes ago.
+
+       -atime, -amin, -ctime, -cmin
+              The same for the last access and the last status change
+              (owner, permissions, links).
+
+       -newer FILE
+              Changed more recently than FILE.
+
+       -empty An empty file or an empty directory.
+
+       -links N
+              Has N hard links.
+
+       -inum N
+              Has inode number N (finds all hard links to one file).
+
+       -samefile FILE
+              Is the same file as FILE (another hard link to it).
+
+       -context PATTERN
+              The SELinux context matches the pattern.
+
+       -readable, -writable, -executable
+              The user running find may read, write or run it.
+
+   Operators
+       ! TEST, -not TEST
+              True when TEST is false.
+
+       TEST1 -o TEST2, TEST1 -or TEST2
+              True when either test is true.
+
+       \( ... \)
+              Group tests. Escape the parentheses from the shell.
+
+   Actions
+       -print Print the path, then a newline (the default action).
+
+       -print0
+              Print the path followed by a NUL byte, for xargs -0.
+
+       -ls    Print a line like ls -dils for each match.
+
+       -printf FORMAT
+              Print with a format: %p path, %f name, %s size, %u owner,
+              %g group, %m octal permissions, \n newline.
+
+       -delete
+              Delete the match. Try the expression with -print first.
+
+       -exec COMMAND {} \;
+              Run COMMAND once for every match; {} is replaced with the path.
+              The \; (or ';') ends the command.
+
+       -exec COMMAND {} +
+              Run COMMAND as few times as possible, with many paths at once.
+
+       -ok COMMAND {} \;
+              Like -exec, but ask before each run.
+
+       -prune Do not go into this directory.
+
+       -quit  Stop at the first match.
+
+EXAMPLES
+       Find every file owned by the user student and copy it to /root/found,
+       keeping the file attributes:
+
+           mkdir -p /root/found
+           find / -user student -type f -exec cp -a {} /root/found/ \;
+
+       Find files larger than 30 MiB under /usr:
+
+           find /usr -type f -size +30M
+
+       Find all set-user-ID programs:
+
+           find / -perm -4000 -type f 2>/dev/null
+
+       List configuration files in /etc changed in the last two days, without
+       looking into subdirectories:
+
+           find /etc -maxdepth 1 -name '*.conf' -mtime -2
+
+       Save the paths of files under /home that no longer belong to any user:
+
+           find /home -nouser > /root/orphans.txt
+
+       Remove empty directories under /tmp/work:
+
+           find /tmp/work -type d -empty -delete
+
+NOTES
+       Put -maxdepth and -mindepth right after the starting points; find warns
+       when they come after tests.
+
+       When a task asks you to save a list of files, redirect find's output to
+       that file and check it with cat or wc -l afterwards.
+
+SEE ALSO
+       locate(1), xargs(1), ls(1), stat(1), chmod(1)

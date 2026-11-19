@@ -1,0 +1,48 @@
+title: Shouting in capitals
+level: Beginner
+kind: Decoding
+topic: Crypto & Encoding
+teaser: like base64, but only capitals and a few digits
+points: 40
+order: 70
+answer: flag
+var: FILE = pick:message.txt|note.txt|transmission.txt|memo.txt|scrap.txt
+
+@intro
+The file ~/{{FILE}} is written only in capital letters, the digits 2 to 7 and a few =
+signs at the end. That is the fingerprint of a well-known encoding (a cousin of base64).
+Decode it to get the flag.
+
+@setup
+printf '%s\n' '{{B32:FLAG}}' > /home/player/{{FILE}}
+chown player: /home/player/{{FILE}}
+
+@solution
+cat {{FILE}}
+base32 -d {{FILE}}
+echo
+
+@walkthrough
+Encodings turn data into "safe" text and back. Each one has its own alphabet:
+
+- base64 uses A-Z, a-z, 0-9, + and /
+- base32 uses only A-Z and 2-7, and pads with = to a multiple of 8 characters
+
+The file has only capitals and 2-7, so it is base32:
+
+    base32 -d {{FILE}}
+
+prints the flag. Encoding is not encryption: there is no key, anyone can decode it.
+
+@hint 2
+What to think about first: the text isn't random. Computers often write data with a fixed "alphabet" of characters so it can be sent safely as text. Which characters appear tells you which alphabet - and so which encoding - was used.
+
+@hint 3
+Look at the file with cat. You will see only capital letters A to Z, the digits 2 to 7 (never 0, 1, 8 or 9) and maybe = at the end. That exact alphabet belongs to base32. (base64 would also have small letters and + or /.)
+
+@hint 4
+Linux has a base32 command, just like base64. On its own it encodes; with -d it decodes (turns the text back). Every command has a manual: man base32.
+
+@hint 6
+Run: base32 -d {{FILE}}
+It prints FLAG{...}. Copy all of it, including the braces. (If the prompt ends up on the same line, that's only because there was no line break after the flag.)

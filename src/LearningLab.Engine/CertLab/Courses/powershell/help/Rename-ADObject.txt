@@ -1,0 +1,15 @@
+SYNOPSIS: Renames an Active Directory object.
+DESCRIPTION:
+Rename-ADObject changes an object's name (its CN or OU part), and with it the distinguished name. For a user, it doesn't change the SamAccountName or UserPrincipalName; change those with Set-ADUser.
+Protected OUs must be unprotected first.
+PARAMETER Identity:
+The object, by distinguished name or GUID. Position 0, and takes pipeline input.
+PARAMETER NewName:
+The new name. Position 1.
+PARAMETER PassThru:
+Returns the renamed object.
+EXAMPLE: Rename-ADObject "OU=HR,OU=Staff,DC=corp,DC=example" -NewName "People"
+Renames the HR OU (after turning its protection off).
+EXAMPLE: Get-ADUser gkim | Rename-ADObject -NewName "Grace Kim-Lee"; Set-ADUser gkim -Surname "Kim-Lee" -DisplayName "Grace Kim-Lee"
+Renames a user after a change of surname.
+RELATED: Move-ADObject, Set-ADObject, Set-ADUser

@@ -1,0 +1,29 @@
+NAME
+       namei - follow a path name one part at a time
+
+SYNOPSIS
+       namei [-l] [-m] [-o] PATH...
+
+DESCRIPTION
+       namei splits PATH into its parts and shows each one on its own line,
+       from / down to the last name, following symbolic links. With -l it
+       shows the permissions and owner of every directory on the way. That
+       makes it the quickest way to find out why a user cannot reach a file:
+       one directory without the x permission anywhere on the path blocks
+       access.
+
+OPTIONS
+       -l, --long
+              Show the permissions, owner and group (the same as -m -o).
+
+       -m, --modes
+              Show the permissions.
+
+       -o, --owners
+              Show the owner and group.
+
+EXAMPLES
+           namei -l /home/student/public_html/index.html
+
+SEE ALSO
+       ls(1), stat(1), readlink(1), realpath(1)

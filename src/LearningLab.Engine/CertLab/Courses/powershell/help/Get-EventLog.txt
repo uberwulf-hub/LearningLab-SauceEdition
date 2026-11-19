@@ -1,0 +1,38 @@
+SYNOPSIS: Reads the classic event logs (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Get-EventLog reads the classic logs: System, Application, Security, Windows PowerShell and the logs created with New-EventLog. It cannot read the newer logs such as Microsoft-Windows-PowerShell/Operational; use Get-WinEvent for those.
+
+Entries have an Index, a Time, an EntryType (Error, Warning, Information, SuccessAudit, FailureAudit), a Source, an InstanceID and a Message. The InstanceID can be larger than the event id, because it also carries the severity bits: a 7036 from the Service Control Manager is InstanceID 1073748860.
+PARAMETER LogName:
+The log to read. Position 0, required unless you use -List.
+PARAMETER List:
+Lists the classic logs with their size limit, overflow action and number of entries.
+PARAMETER Newest:
+Only the newest N entries.
+PARAMETER EntryType:
+Error, Warning, Information, SuccessAudit or FailureAudit.
+PARAMETER Source:
+Only entries of these sources; wildcards are allowed.
+PARAMETER InstanceId:
+Only entries with these ids. Position 1.
+PARAMETER Message:
+Only entries whose message matches this wildcard pattern.
+PARAMETER After:
+Only entries written after this time.
+PARAMETER Before:
+Only entries written before this time.
+PARAMETER UserName:
+Only entries of these users.
+PARAMETER Index:
+Only the entries with these index numbers.
+PARAMETER ComputerName:
+Reads the log of another computer.
+EXAMPLE: Get-EventLog -LogName System -Newest 20 -EntryType Error, Warning
+Recent problems.
+EXAMPLE: Get-EventLog -List
+The classic logs and how big they may grow.
+EXAMPLE: Get-EventLog Application -Source LabApp -After (Get-Date).AddDays(-1)
+Yesterday's entries of one program.
+NOTES:
+Get-EventLog does not exist in PowerShell 7; write new scripts with Get-WinEvent.
+RELATED: Get-WinEvent, Write-EventLog, Clear-EventLog, Limit-EventLog

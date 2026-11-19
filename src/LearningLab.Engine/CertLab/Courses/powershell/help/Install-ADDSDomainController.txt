@@ -1,0 +1,40 @@
+SYNOPSIS: Promotes this server to an additional domain controller of an existing domain.
+DESCRIPTION:
+Install-ADDSDomainController adds a domain controller to a domain, for fault tolerance or for a branch office. Install the AD-Domain-Services role first, give the server a static address and point its DNS at an existing domain controller.
+It needs Domain Admins rights (pass -Credential when you aren't signed in as one). The new DC copies the directory from a partner by replication.
+With -ReadOnlyReplica it becomes a read-only domain controller (RODC) for places with poor physical security: it holds no passwords except those its password replication policy allows (-AllowPasswordReplicationAccountName), and -DelegatedAdministratorAccountName lets a local person manage the server without being a domain admin. An RODC needs a site.
+PARAMETER DomainName:
+The domain to join as a DC, such as corp.example.
+PARAMETER Credential:
+A Domain Admins account, from Get-Credential.
+PARAMETER SiteName:
+The site to put the DC in (required for an RODC).
+PARAMETER InstallDns:
+Also installs DNS Server.
+PARAMETER NoGlobalCatalog:
+Doesn't make it a global catalog (by default it is one).
+PARAMETER ReadOnlyReplica:
+Makes it a read-only domain controller.
+PARAMETER AllowPasswordReplicationAccountName:
+For an RODC: the accounts whose passwords it may keep.
+PARAMETER DelegatedAdministratorAccountName:
+For an RODC: the person or group who may administer the server locally.
+PARAMETER ReplicationSourceDC:
+The domain controller to copy from, such as DC1.
+PARAMETER SafeModeAdministratorPassword:
+The DSRM password for this DC.
+PARAMETER DatabasePath:
+Where NTDS.dit goes (C:\Windows\NTDS by default).
+PARAMETER LogPath:
+Where the database logs go.
+PARAMETER SysvolPath:
+Where SYSVOL goes (C:\Windows\SYSVOL by default).
+PARAMETER NoRebootOnCompletion:
+Doesn't restart at the end.
+PARAMETER Force:
+Doesn't ask for confirmation.
+EXAMPLE: Install-ADDSDomainController -DomainName corp.example -InstallDns -Credential (Get-Credential CORP\Administrator) -SiteName HQ
+A second writable DC with DNS in the HQ site.
+EXAMPLE: Install-ADDSDomainController -DomainName corp.example -ReadOnlyReplica -SiteName Seattle -DelegatedAdministratorAccountName "CORP\Helpdesk" -InstallDns
+A read-only DC for the Seattle office that the help desk may look after.
+RELATED: Install-ADDSForest, Uninstall-ADDSDomainController, Get-ADDomainController, Install-WindowsFeature

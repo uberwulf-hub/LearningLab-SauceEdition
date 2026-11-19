@@ -1,0 +1,64 @@
+NAME
+       cloudctl - the command line for Skyloft Cloud, a pretend cloud (Cyber Range)
+
+SYNOPSIS
+       cloudctl configure KEY SECRET
+       cloudctl whoami
+       cloudctl [--anonymous] storage ls [BUCKET[/FOLDER]]
+       cloudctl [--anonymous] storage get BUCKET/PATH [-o FILE]
+       cloudctl storage policy BUCKET
+       cloudctl iam show [NAME] | iam roles | iam assume ROLE
+       cloudctl secrets ls | secrets get NAME
+       cloudctl network groups
+       cloudctl compute ls
+
+DESCRIPTION
+       Skyloft Cloud is a made-up cloud provider that exists only inside Cyber
+       Range. Like the real ones, it rents out storage buckets (folders of
+       files on the internet), virtual machines, a store for secrets, and
+       firewall rules called security groups. Who may do what is decided by
+       identities and their permissions (IAM, "identity and access
+       management").
+
+       To use it you need credentials: an access KEY (a name such as
+       SKY1A2B3C...) and its SECRET. cloudctl configure saves them in
+       ~/.skyloft/credentials; every later command signs in with them. With no
+       credentials (or --anonymous) you are an anonymous visitor, who can only
+       look into buckets that were made public.
+
+       The classic cloud mistakes you can practise: a bucket left public with a
+       backup inside, keys left in a file anyone can read, an identity allowed
+       to take on a much stronger role, a server whose "fetch this address"
+       feature reaches the cloud's metadata address 169.254.169.254 (which
+       hands out the server's own credentials), and a security group that lets
+       the whole internet (0.0.0.0/0) reach a port.
+
+COMMANDS
+       configure KEY SECRET    save the credentials
+       whoami                  your identity and what it may do
+       storage ls              the buckets you may list (needs credentials)
+       storage ls BUCKET       the files in a bucket (public ones: anyone)
+       storage get BUCKET/PATH print a file (-o FILE saves it)
+       storage policy BUCKET   whether a bucket is public
+       iam show [NAME]         an identity's permissions (others need iam:read)
+       iam roles               the roles (needs iam:list)
+       iam assume ROLE         temporary credentials for a role (needs iam:assume)
+       secrets ls / get NAME   the secret store (secrets:list, secrets:read)
+       network groups          the security groups (network:list)
+       compute ls              the virtual machines (compute:list)
+
+PERMISSIONS
+       Each permission is an action and a resource, for example
+       storage:read app-logs, secrets:read prod/*, iam:assume deployer. A * in
+       the resource matches anything, so secrets:read * may read every
+       secret - usually far more than an identity needs.
+
+EXAMPLES
+           cloudctl --anonymous storage ls riverbend-backups
+           cloudctl storage get riverbend-backups/db/2026-10-01.sql
+           cloudctl configure SKY4F2A9C0D1E SECRETTEXT
+           cloudctl whoami
+           cloudctl iam assume deployer
+
+SEE ALSO
+       curl(1)

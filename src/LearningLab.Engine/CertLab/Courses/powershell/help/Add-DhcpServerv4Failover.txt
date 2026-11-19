@@ -1,0 +1,30 @@
+SYNOPSIS: Shares scopes between two DHCP servers so one can take over if the other fails.
+DESCRIPTION:
+DHCP failover pairs two Windows DHCP servers for the same scopes. Both know every lease. There are two modes:
+Load balance (the default): both servers answer, split by -LoadBalancePercent (50 means half each).
+Hot standby (-ServerRole Active or Standby): one server answers; the standby takes over only when the partner is down. -ReservePercent (default 5) is the share of addresses the standby keeps for that moment.
+
+-MaxClientLeadTime (default 1 hour) is how far a server may extend leases beyond what its partner knows. -SharedSecret signs the messages between the partners. With -AutoStateTransition $true a server moves to "partner down" on its own after -StateSwitchInterval.
+
+A relationship has exactly two servers. Lease information replicates by itself, but later scope changes don't: use Invoke-DhcpServerv4FailoverReplication.
+PARAMETER Name:
+The relationship's name, for example HQ-Failover.
+PARAMETER ScopeId:
+The scopes to share.
+PARAMETER PartnerServer:
+The other DHCP server.
+PARAMETER LoadBalancePercent:
+This server's share in load balance mode.
+PARAMETER ServerRole:
+Active or Standby: picks hot standby mode.
+PARAMETER ReservePercent:
+Addresses kept for the standby server.
+PARAMETER SharedSecret:
+A password that authenticates the partners' messages.
+PARAMETER AutoStateTransition:
+$true to switch to partner down automatically.
+EXAMPLE: Add-DhcpServerv4Failover -Name HQ-Failover -ScopeId 10.10.0.0 -PartnerServer dc2.corp.example -LoadBalancePercent 50 -SharedSecret "Harbor-Dhcp" -ComputerName SRV1
+SRV1 and DC2 (which needs the DHCP role) share the HQ scope half and half.
+EXAMPLE: Add-DhcpServerv4Failover -Name HQ-Standby -ScopeId 10.10.0.0 -PartnerServer dc2.corp.example -ServerRole Standby -ReservePercent 5
+A hot standby pair: the partner waits with 5 percent of the addresses.
+RELATED: Get-DhcpServerv4Failover, Remove-DhcpServerv4Failover, Invoke-DhcpServerv4FailoverReplication, Get-DhcpServerv4Scope

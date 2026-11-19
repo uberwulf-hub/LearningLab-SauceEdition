@@ -1,0 +1,344 @@
+# Unit: u04 | 4. Logs and journals | Operate running systems
+
+When something goes wrong, the logs usually say why: a service that would not start, a password typed wrong, a disk that filled up. RHEL keeps two kinds of logs side by side, the systemd journal and the classic text files of rsyslog in /var/log. This unit shows where each one is, how to find the lines you need, and how to keep the journal across reboots.
+
+## Lesson: l0401 | Where the logs are: rsyslog and /var/log
+
+Programs send their messages to systemd-journald, which collects everything in the journal. The rsyslog service reads the journal and writes copies of the messages into plain text files under /var/log, sorted by rules. Those files are easy to search with the tools you already know: `less`, `tail`, `grep`.
+
+```terminal
+[root@server1 ~]# ls /var/log
+audit     btmp    cron     lastlog  messages  spooler  wtmp
+boot.log  chrony  dnf.log  maillog  secure    tuned
+```
+
+The files to know:
+
+- `/var/log/messages`: most system messages. Start here.
+- `/var/log/secure`: security and logins: ssh, su, sudo, user changes. Failed logins show up here.
+- `/var/log/cron`: the cron and at schedulers.
+- `/var/log/maillog`: the mail system. `/var/log/boot.log`: messages from the boot.
+- `/var/log/audit/audit.log`: the audit system, including SELinux denials. It is written by auditd, not rsyslog (more in the Security unit).
+- `/var/log/dnf.log`: package installs and updates.
+
+```terminal
+[root@server1 ~]# grep sshd /var/log/secure
+Mar  2 04:00:00 server1 sshd[661]: Server listening on 0.0.0.0 port 22.
+Mar  2 04:00:00 server1 sshd[661]: Server listening on :: port 22.
+[root@server1 ~]# tail -n 2 /var/log/cron
+Mar  2 04:00:00 server1 crond[659]: (CRON) INFO (Syslog will be used instead of sendmail.)
+Mar  2 04:00:00 server1 crond[659]: (CRON) INFO (running with inotify support)
+```
+
+Each line has the same parts: the date and time, the short host name, the program (with its PID in brackets) and the message.
+
+- `tail -f /var/log/messages` keeps the file open and shows new lines as they arrive; Ctrl+C stops it. Run it in one console while you restart a service in another.
+- Most of these files (messages, secure, cron, maillog, boot.log) are only readable by root (mode 600), because they can hold private details.
+- Old logs are rotated by logrotate (usually weekly): messages becomes messages-20260301 and a fresh file starts, so very old lines are in the dated files.
+
+@try machines=1
+@setup server1
+logger -p authpriv.notice -t sshd 'Failed password for root from 192.168.50.99 port 51022 ssh2'
+logger -p authpriv.info -t sshd 'Accepted password for student from 192.168.50.12 port 40112 ssh2'
+logger -p authpriv.notice -t sshd 'Failed password for invalid user admin from 192.168.50.99 port 51030 ssh2'
+logger -p authpriv.notice -t sshd 'Failed password for root from 192.168.50.98 port 49800 ssh2'
+@task t1 | Running systems | 10 | server1
+Someone has been trying to log in to server1 over ssh with wrong passwords. Copy every log line about a failed password from the security log into /root/failed-logins.txt, unchanged and in the original order.
+@check server1 | the three failed-password lines are in the file
+test "$(grep -c 'Failed password' /root/failed-logins.txt)" -eq 3
+@check server1 | nothing else is in the file
+! grep -qv 'Failed password' /root/failed-logins.txt
+@hint Security and login messages go to /var/log/secure. grep prints whole lines.
+@solution server1
+grep 'Failed password' /var/log/secure > /root/failed-logins.txt
+@endtask
+@end
+
+@quiz
+? Which file holds messages about ssh logins and sudo?
+- /var/log/messages
++ /var/log/secure
+- /var/log/auth.log
+- /var/log/sshd
+! On RHEL, authentication messages (the authpriv facility) go to /var/log/secure. auth.log is the Debian and Ubuntu name.
+? Which command shows new lines of /var/log/messages as they are written?
+- cat -n /var/log/messages
+- head -f /var/log/messages
++ tail -f /var/log/messages
+- less -n /var/log/messages
+! -f (follow) keeps tail running and prints each new line. Ctrl+C stops it.
+? Where are SELinux denials recorded?
+- /var/log/selinux
+- /var/log/secure
++ /var/log/audit/audit.log
+- /var/log/boot.log
+! auditd writes them to /var/log/audit/audit.log; ausearch and sealert read them.
+@end
+
+## Lesson: l0402 | Searching the journal with journalctl
+
+The journal keeps more than the text files: every message has fields such as the unit that wrote it, its priority, its PID and the boot it belongs to, and journalctl can filter on all of them. Run as root, it shows everything; normal users see only their own messages unless they are in the wheel or systemd-journal group. Without options it shows the whole journal, oldest first, in a pager (space for the next page, q to quit).
+
+```terminal
+[root@server1 ~]# journalctl -n 3
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Reached target Multi-User System.
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Startup finished in 1.402s (kernel) + 3.218s (initrd) + 9.874s (userspace) = 14.495s.
+Mar 02 04:00:00 server1.lab.example.com systemd-logind[900]: New session of user root.
+[root@server1 ~]# journalctl -u sshd
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Starting OpenSSH server daemon...
+Mar 02 04:00:00 server1.lab.example.com sshd[661]: Server listening on 0.0.0.0 port 22.
+Mar 02 04:00:00 server1.lab.example.com sshd[661]: Server listening on :: port 22.
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Started OpenSSH server daemon.
+```
+
+### The filters you need
+
+- `-n 20`: only the last 20 lines. `-r`: newest first. `-f`: follow new messages, like tail -f.
+- `-u UNIT`: messages of one service, for example `-u sshd` or `-u httpd.service`. The first thing to look at when a service fails.
+- `-p PRIORITY`: that priority and everything more serious. The priorities, from most to least serious: emerg (0), alert (1), crit (2), err (3), warning (4), notice (5), info (6), debug (7). `-p err` shows err, crit, alert and emerg.
+- `-b`: only the current boot. `-b -1` is the boot before, `-b -2` the one before that; `--list-boots` lists them. Older boots are only there when the journal is persistent (next lesson).
+- `--since` and `--until`: a time window. They take `"2026-03-02 09:00:00"`, `"09:00"`, `today`, `yesterday`, `"-1h"` or `"10 minutes ago"`.
+- `-t NAME`: messages with that tag (the name a program logs under). `_PID=1234`, `_UID=1000` and other `FIELD=value` matches filter on journal fields.
+- `-o FORMAT`: the output style. `short` is the default; `short-iso` has full ISO dates, `cat` only the messages, `verbose` every field, `json-pretty` JSON.
+- `-x` adds explanation text to some messages, and `-e` jumps to the end: `journalctl -xe` is what systemctl suggests when a service fails.
+
+The filters combine, and all of them must match:
+
+```terminal
+[root@server1 ~]# logger -p user.err "backup failed: disk full"
+[root@server1 ~]# journalctl -p err
+Mar 02 04:00:00 server1.lab.example.com root: backup failed: disk full
+[root@server1 ~]# journalctl --since "2026-03-02 03:55" --until "2026-03-02 04:05" -u chronyd
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Starting NTP client/server...
+Mar 02 04:00:00 server1.lab.example.com chronyd[654]: chronyd version 4.5 starting (+CMDMON +NTP +REFCLOCK +RTC +PRIVDROP +SCFILTER +SIGND +ASYNCDNS +NTS +SECHASH +IPV6 +DEBUG)
+Mar 02 04:00:00 server1.lab.example.com systemd[1]: Started NTP client/server.
+[root@server1 ~]# journalctl -u crond -o short-iso -n 2
+2026-03-02T04:00:00-05:00 server1.lab.example.com crond[659]: (CRON) INFO (running with inotify support)
+2026-03-02T04:00:00-05:00 server1.lab.example.com systemd[1]: Started Command Scheduler.
+```
+
+When the output goes into a pipe or a file, journalctl prints everything without a pager, so `journalctl -u sshd > /root/sshd.log` saves the whole list.
+
+> Times in the journal are local time (here America/New_York). If a task gives a time window, check the clock and the time zone with date before you filter.
+
+@try machines=1
+@setup server1
+logger -p user.info -t inventory 'nightly inventory started'
+logger -p user.err -t inventory 'cannot reach database server db1'
+logger -p user.crit -t inventory 'inventory data is corrupt'
+logger -p user.warning -t inventory 'inventory took 40 minutes'
+@task t1 | Running systems | 10 | server1
+Save all journal messages of the sshd service (and only those) into /root/sshd-journal.txt.
+@check server1 | the file holds sshd's messages
+grep -q 'Server listening on 0.0.0.0 port 22' /root/sshd-journal.txt
+@check server1 | it holds no messages of other services
+! grep -q 'Command Scheduler\|chronyd\|inventory' /root/sshd-journal.txt
+@hint journalctl -u filters by unit; redirect the output into the file.
+@solution server1
+journalctl -u sshd > /root/sshd-journal.txt
+@endtask
+@task t2 | Running systems | 10 | server1
+Save every journal message with the priority err or more serious into /root/serious.txt.
+@check server1 | the err and crit messages are in the file
+grep -q 'cannot reach database server db1' /root/serious.txt && grep -q 'inventory data is corrupt' /root/serious.txt
+@check server1 | the warning and info messages are not
+! grep -q 'took 40 minutes\|nightly inventory started' /root/serious.txt
+@hint -p err includes everything from err up to emerg.
+@solution server1
+journalctl -p err > /root/serious.txt
+@endtask
+@end
+
+@quiz
+? Which command shows only the messages of the httpd service?
+- journalctl -t httpd.service
++ journalctl -u httpd
+- journalctl -p httpd
+- journalctl httpd
+! -u filters by systemd unit. -p is the priority.
+? journalctl -p warning shows which messages?
+- Only warnings
++ warning and everything more serious (err, crit, alert, emerg)
+- warning and everything less serious
+- All messages, with warnings in red
+! -p shows that priority and the ones above it. Use -p warning..warning for exactly one level.
+? How do you see the messages from the boot before the current one?
+- journalctl -b
+- journalctl --last
++ journalctl -b -1
+- journalctl -k
+! -b alone is the current boot; -b -1 the previous one, which only exists if the journal is persistent.
+@end
+
+## Lesson: l0403 | Keeping the journal across reboots
+
+By default on RHEL 9 the journal lives in memory, under /run/log/journal, and is lost at every reboot. Only the current boot can be searched, which is a problem when you need to know why the machine crashed last night. rsyslog's files in /var/log survive, but the journal itself does not.
+
+The setting is `Storage=` in the `[Journal]` section of /etc/systemd/journald.conf:
+
+- `auto` (the default): keep the journal on disk in /var/log/journal if that folder exists, otherwise in memory.
+- `persistent`: always on disk; journald creates /var/log/journal if needed.
+- `volatile`: always in memory only. `none`: keep nothing.
+
+```terminal
+[root@server1 ~]# grep Storage /etc/systemd/journald.conf
+#Storage=auto
+[root@server1 ~]# ls /var/log/journal
+ls: cannot access '/var/log/journal': No such file or directory
+```
+
+The line is a comment, so the default `auto` applies, and the folder does not exist: the journal is in memory. There are two ways to make it persistent, and either is enough:
+
+- Create the folder: `mkdir -p /var/log/journal`. With `auto`, journald uses it from now on.
+- Or set it in the configuration: change the line to `Storage=persistent` in /etc/systemd/journald.conf (or put `[Journal]` and `Storage=persistent` in a file in /etc/systemd/journald.conf.d/).
+
+Then restart journald so it reads its settings again and starts writing to disk at once: `systemctl restart systemd-journald`. (If you only created the folder, `journalctl --flush` also moves the journal to disk; after a change in journald.conf, restart.)
+
+```terminal
+[root@server1 ~]# mkdir -p /var/log/journal
+[root@server1 ~]# systemctl restart systemd-journald
+[root@server1 ~]# ls /var/log/journal
+da8d791acbd074b2d2ace44110d2d9fa
+[root@server1 ~]# logger "written before the reboot"
+[root@server1 ~]# systemctl reboot
+```
+
+The folder inside is named after the machine ID (/etc/machine-id). After the reboot, the old boot is still there:
+
+```terminal
+[root@server1 ~]# journalctl --list-boots
+IDX BOOT ID                          FIRST ENTRY                  LAST ENTRY
+ -1 497174abcf738dc3aeb83824ad9ff8fd Mon 2026-03-02 04:00:00 EST Mon 2026-03-02 04:00:00 EST
+  0 7a2b7594a656df89b1985261ac42876f Mon 2026-03-02 04:00:00 EST Mon 2026-03-02 04:00:00 EST
+[root@server1 ~]# journalctl -b -1 | grep "before the reboot"
+Mar 02 04:00:00 server1.lab.example.com root: written before the reboot
+```
+
+- A persistent journal limits itself to 10 percent of the file system (at most 4 GiB) and removes the oldest files first. `journalctl --disk-usage` shows how much it uses; `SystemMaxUse=` in journald.conf changes the limit.
+- `journalctl --vacuum-size=500M` or `--vacuum-time=2weeks` removes old journal files by hand.
+
+> Check your work the way the grader will: reboot, then journalctl --list-boots must show more than one boot.
+
+@try machines=1
+@task t1 | Running systems | 10 | server1
+Configure server1 so that the systemd journal is kept on disk and survives reboots.
+@check server1 | the journal has a folder in /var/log/journal
+test -d /var/log/journal
+@check server1 | journald is not set to keep the journal in memory only
+! grep -qsE '^\s*Storage=(volatile|none)' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf
+@check server1 | journald is running
+systemctl is-active systemd-journald
+@hint Either create /var/log/journal or set Storage=persistent, then restart systemd-journald.
+@solution server1
+mkdir -p /var/log/journal
+systemctl restart systemd-journald
+@endtask
+@end
+
+@quiz
+? Where does the journal live when it is not persistent?
+- /var/log/journal
++ /run/log/journal, in memory
+- /tmp/journal
+- /var/lib/systemd/journal
+! /run is a tmpfs: it lives in memory and is empty after every boot.
+? Storage= is not set (the default auto). What makes the journal persistent?
++ Creating the folder /var/log/journal (then restarting journald)
+- Installing rsyslog
+- Running journalctl -b -1
+- Setting Storage=volatile
+! With auto, journald stores on disk exactly when /var/log/journal exists.
+? Which command lists the boots that the journal knows about?
+- journalctl -b
++ journalctl --list-boots
+- last reboot
+- systemctl list-boots
+! --list-boots shows each boot with its index (0 now, -1 before) and ID. last reboot reads wtmp instead.
+@end
+
+## Lesson: l0404 | Writing to the logs: logger and rsyslog rules
+
+### logger
+
+`logger "text"` writes a message to the system log, just like a program would. Scripts and cron jobs use it to leave a trace, and you can use it to test where messages end up.
+
+- `-t TAG` sets the name the message is logged under (the default is your user name).
+- `-p FACILITY.PRIORITY` sets where it comes from and how serious it is, for example `-p local3.notice` or `-p user.err`.
+
+```terminal
+[root@server1 ~]# logger -t backup -p local3.notice "nightly backup done"
+[root@server1 ~]# journalctl -t backup
+Mar 02 04:00:00 server1.lab.example.com backup: nightly backup done
+[root@server1 ~]# tail -1 /var/log/messages
+Mar  2 04:00:00 server1 backup: nightly backup done
+```
+
+### rsyslog rules
+
+rsyslog decides which file gets a message by its facility and priority. The facility says what kind of program sent it: `kern`, `user`, `mail`, `daemon`, `auth`, `authpriv`, `cron`, and `local0` to `local7`, which are free for your own use. The rules are in /etc/rsyslog.conf and in any `*.conf` file in /etc/rsyslog.d:
+
+```terminal
+[root@server1 ~]# grep -v '^#' /etc/rsyslog.conf | grep log/
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+authpriv.*                                              /var/log/secure
+mail.*                                                  -/var/log/maillog
+cron.*                                                  /var/log/cron
+uucp,news.crit                                          /var/log/spooler
+local7.*                                                /var/log/boot.log
+```
+
+Read a rule as SELECTOR then DESTINATION:
+
+- `facility.priority` matches that facility at that priority and above; `*` means every facility or every priority.
+- `facility.=priority` matches exactly one priority, and `facility.none` excludes a facility.
+- Several selectors are joined with `;`. The first rule says: everything at info or above, except mail, authpriv and cron (they have their own files), goes to /var/log/messages.
+- A `-` before the file name means rsyslog need not write each line to disk at once.
+
+To add your own rule, put it in a new file in /etc/rsyslog.d and restart rsyslog:
+
+```terminal
+[root@server1 ~]# echo 'local3.*    /var/log/backup.log' > /etc/rsyslog.d/backup.conf
+[root@server1 ~]# systemctl restart rsyslog
+[root@server1 ~]# logger -t backup -p local3.info "weekly backup done"
+[root@server1 ~]# cat /var/log/backup.log
+Mar  2 04:00:00 server1 backup: weekly backup done
+```
+
+> Test a new rule with logger right away. If nothing shows up, check the spelling in the file and look at systemctl status rsyslog: a typo stops the rule, not the whole service.
+
+@try machines=1
+@task t1 | Running systems | 10 | server1
+Configure rsyslog on server1 so that every message of the facility local5, at any priority, is also written to /var/log/inventory.log. Test it with logger.
+@check server1 | a test message with local5.info reaches /var/log/inventory.log
+logger -p local5.info -t certlab "probe local5 info $$" && grep -q "probe local5 info $$" /var/log/inventory.log
+@check server1 | a debug message reaches it too
+logger -p local5.debug -t certlab "probe local5 debug $$" && grep -q "probe local5 debug $$" /var/log/inventory.log
+@hint A file in /etc/rsyslog.d with the line local5.* /var/log/inventory.log, then systemctl restart rsyslog.
+@solution server1
+echo 'local5.*    /var/log/inventory.log' > /etc/rsyslog.d/inventory.conf
+systemctl restart rsyslog
+logger -p local5.info "inventory test"
+cat /var/log/inventory.log
+@endtask
+@end
+
+@quiz
+? Which rule sends every message of the facility local4 to /var/log/app.log?
+- local4 /var/log/app.log
++ local4.* /var/log/app.log
+- *.local4 /var/log/app.log
+- local4.none /var/log/app.log
+! facility.priority, then the file. * as the priority means every priority.
+? What does the selector mail.none do in the /var/log/messages rule?
++ It keeps mail messages out of that file
+- It sends no mail when messages arrive
+- It matches only mail messages without a priority
+- It turns off the mail log
+! .none excludes a facility from a rule. Mail messages have their own file, /var/log/maillog.
+? Which command writes the message "disk check done" to the log with the tag diskcheck?
+- echo "disk check done" > /var/log/messages
++ logger -t diskcheck "disk check done"
+- journalctl -t diskcheck "disk check done"
+- syslog diskcheck "disk check done"
+! logger sends the message to journald; rsyslog then copies it into the files. Writing into the file yourself skips the journal.
+@end

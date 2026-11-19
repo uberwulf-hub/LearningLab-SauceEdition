@@ -1,0 +1,20 @@
+## the proxy log: which request sent far more than the others
+grep -o 'client=[0-9.]* method=POST host=[^ ]* status=[0-9]* bytes_out=[0-9]*' /var/log/proxy/access.log
+awk '{ print $7, $3, $5 }' /var/log/proxy/access.log | sort -t= -k2 -n | tail -3
+## block that site on the proxy first, so the next batch can't go out
+echo '{{DEST}}' >> /etc/proxy/blocked-sites.txt
+cat /etc/proxy/blocked-sites.txt
+## then look at the PC that sent it
+ssh -o StrictHostKeyChecking=accept-new itadmin@10.10.25.40
+{{ITPW}}
+sudo -i
+{{ITPW}}
+ls -l /etc/cron.d
+cat /etc/cron.d/{{SCRIPT}}
+cat /usr/local/bin/{{SCRIPT}}
+ls -la /var/tmp/{{STAGE}}
+cat /var/tmp/{{STAGE}}/manifest.txt
+## remove the job and its script
+rm -f /etc/cron.d/{{SCRIPT}} /usr/local/bin/{{SCRIPT}}
+exit
+exit

@@ -1,0 +1,20 @@
+SYNOPSIS: Shows which DNS servers each network adapter uses.
+DESCRIPTION:
+Get-DnsClientServerAddress lists, for every interface and for IPv4 and IPv6 separately, the DNS servers the computer asks when it looks up a name (the ServerAddresses column). On the lab machines the Ethernet adapter uses 10.0.10.10, the domain controller DC01.
+
+A wrong or empty DNS server is one of the most common reasons why names do not resolve, joining a domain fails or a computer cannot find its domain controller.
+PARAMETER InterfaceAlias:
+Shows only this adapter, for example Ethernet. Wildcards are allowed.
+PARAMETER InterfaceIndex:
+Shows only the interface with this ifIndex.
+PARAMETER AddressFamily:
+IPv4 or IPv6.
+EXAMPLE: Get-DnsClientServerAddress -InterfaceAlias Ethernet -AddressFamily IPv4
+The IPv4 DNS servers of the Ethernet adapter.
+EXAMPLE: (Get-DnsClientServerAddress -InterfaceAlias Ethernet -AddressFamily IPv4).ServerAddresses
+Only the addresses, as text.
+EXAMPLE: Get-DnsClientServerAddress -AddressFamily IPv4 | Where-Object { -not $_.ServerAddresses }
+Finds interfaces with no DNS server set.
+NOTES:
+The fec0:0:0:ffff:: addresses on the loopback interface are old IPv6 placeholders Windows always shows; ignore them. CIM-based command from the DnsClient module, Windows only.
+RELATED: Set-DnsClientServerAddress, Resolve-DnsName, Get-NetIPConfiguration

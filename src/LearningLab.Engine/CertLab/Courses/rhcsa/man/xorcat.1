@@ -1,0 +1,42 @@
+NAME
+       xorcat - undo (or make) a single-byte XOR over hex text (Cyber Range)
+
+SYNOPSIS
+       xorcat -k KEY [FILE]
+       xorcat --brute [FILE]
+       xorcat -e -k KEY [FILE]
+
+DESCRIPTION
+       XOR ("exclusive or") with one byte is the simplest way to scramble data:
+       every byte is combined with the same key byte, and doing it again with
+       the same key gives the original back. Malware and puzzles use it to hide
+       text from a quick look.
+
+       xorcat reads hex digits (pairs such as 4f 2a 1c, spaces and line breaks
+       are ignored) from FILE or standard input, XORs every byte with KEY and
+       prints the result as text (bytes that aren't printable show as a dot).
+
+       With only 255 possible keys, a single-byte XOR is easy to break: --brute
+       tries every key and prints only the results that are all plain text.
+
+       xorcat is a Cyber Range practice tool; it works only inside the range.
+
+OPTIONS
+       -k KEY, --key=KEY
+              The key byte, 0 to 255, in decimal (42) or hex (0x2a).
+
+       -b, --brute
+              Try every key from 1 to 255; show each one whose result is plain
+              text.
+
+       -e, --encode
+              The other way round: read text and print it XORed with KEY, as
+              hex.
+
+EXAMPLES
+           xorcat -k 0x2a secret.hex
+           xorcat --brute secret.hex
+           echo hello | xorcat -e -k 7
+
+SEE ALSO
+       xxd(1), od(1), base64(1)

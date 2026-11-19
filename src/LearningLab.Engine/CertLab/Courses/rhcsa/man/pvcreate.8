@@ -1,0 +1,65 @@
+NAME
+       pvcreate - make a disk or partition into an LVM physical volume
+
+SYNOPSIS
+       pvcreate [OPTIONS] DEVICE...
+
+DESCRIPTION
+       pvcreate writes an LVM label to a block device, making it a physical
+       volume (PV). A PV is the raw material of LVM: you then add PVs to a
+       volume group (vgcreate, vgextend) and carve logical volumes out of the
+       group (lvcreate).
+
+       A DEVICE can be a whole disk with no partition table (/dev/vdc) or a
+       partition (/dev/vdb1). For a partition, setting its type to Linux LVM
+       first is good practice (parted: set N lvm on; fdisk: type 8e or
+       "Linux LVM"; gdisk: 8e00), though LVM does not require it. A disk
+       that has a partition table cannot be used whole.
+
+       If the device already holds a file system or another signature,
+       pvcreate asks before wiping it. It refuses a device that is mounted
+       or that already belongs to a volume group.
+
+       On RHEL 9 LVM uses a devices file, /etc/lvm/devices/system.devices:
+       pvcreate adds the new PV to it, and LVM commands only look at devices
+       listed there.
+
+       vgcreate and vgextend run pvcreate themselves when they are given a
+       device that is not yet a PV, so this step is often optional.
+
+OPTIONS
+       -f, --force
+              Do not ask before wiping an existing signature. Given twice
+              (-ff) it even reinitialises a PV that belongs to a volume
+              group (this destroys that group's data).
+
+       -y, --yes
+              Answer yes to every question.
+
+       -v, --verbose
+              Say more about what is done.
+
+       -u, --uuid UUID
+              Give the PV this UUID (used when restoring LVM metadata).
+
+EXAMPLES
+       Make a partition and a whole disk into PVs:
+
+              # parted -s /dev/vdb mklabel gpt mkpart lvm1 1MiB 2049MiB set 1 lvm on
+              # pvcreate /dev/vdb1
+                Physical volume "/dev/vdb1" successfully created.
+              # pvcreate /dev/vdc
+
+       Check them, then use them for a new volume group:
+
+              # pvs
+              # vgcreate datavg /dev/vdb1 /dev/vdc
+
+       Grow an existing group with a new PV:
+
+              # pvcreate /dev/vdb2
+              # vgextend datavg /dev/vdb2
+
+SEE ALSO
+       lvm(8), pvs(8), pvdisplay(8), pvremove(8), vgcreate(8), vgextend(8),
+       lvcreate(8), parted(8)

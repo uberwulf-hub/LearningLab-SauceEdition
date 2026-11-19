@@ -1,0 +1,40 @@
+SYNOPSIS: Finds text in files or in piped strings, like grep or findstr.
+DESCRIPTION:
+Select-String (sls) searches each line with a regular expression and outputs a MatchInfo object per matching line. For files it shows file:line:text, with the path relative to the current folder; for piped strings it shows just the line. The objects have Path, Filename, LineNumber, Line, Pattern and Matches, so you can keep working with them.
+
+Matching ignores case unless you add -CaseSensitive. Piped files from Get-ChildItem are searched as files.
+PARAMETER Pattern:
+What to look for: a regular expression (or plain text with -SimpleMatch). Several patterns: a line matches if any of them does.
+PARAMETER Path:
+The files to search. Wildcards are allowed.
+PARAMETER LiteralPath:
+A file, taken exactly as typed.
+PARAMETER InputObject:
+Text to search; normally it comes from the pipeline.
+PARAMETER SimpleMatch:
+Treats the pattern as plain text, so . and * are just characters.
+PARAMETER CaseSensitive:
+Upper and lower case must match.
+PARAMETER NotMatch:
+Finds the lines that do not match.
+PARAMETER AllMatches:
+Puts every match of the line in Matches, not only the first.
+PARAMETER Context:
+Also shows lines around each match: -Context 2 (two before and after) or -Context 1,3. The matching line is marked with >.
+PARAMETER List:
+Stops after the first match in each file.
+PARAMETER Quiet:
+Outputs only True or False: was anything found?
+PARAMETER Include:
+Only searches files whose names match.
+PARAMETER Exclude:
+Skips files whose names match.
+PARAMETER Encoding:
+How to read the files.
+EXAMPLE: Select-String -Path C:\LabFiles\*.log -Pattern ERROR
+Every error line in the logs.
+EXAMPLE: Get-Content C:\LabFiles\app.log | Select-String WARN -Context 1
+Warnings with one line before and after.
+EXAMPLE: (Select-String -Path C:\LabFiles\app.log -Pattern "user '(\w+)'").Matches | ForEach-Object { $_.Groups[1].Value }
+Pulls the user names out of the matches.
+RELATED: Get-Content, Where-Object, about_Regular_Expressions

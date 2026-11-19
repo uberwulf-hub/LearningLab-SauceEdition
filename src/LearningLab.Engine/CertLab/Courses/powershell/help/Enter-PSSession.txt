@@ -1,0 +1,38 @@
+SYNOPSIS: Starts an interactive session on another computer, so what you type runs there.
+DESCRIPTION:
+Enter-PSSession connects your console to a remote computer. The prompt changes to show the computer's name, for example [DC01]: PS C:\Users\Administrator\Documents>, and every command you type runs on that computer until you leave with Exit-PSSession (or exit).
+
+It is the PowerShell version of logging in with a remote shell: handy for looking around or fixing one machine by hand. To run the same commands on many computers, or from a script, use Invoke-Command instead.
+
+You can connect by name (a temporary session that closes when you leave) or enter a session you made earlier with New-PSSession (it stays open after you leave, with its variables).
+PARAMETER ComputerName:
+The computer to connect to. Position 0, so Enter-PSSession DC01 works. Its alias is -Cn.
+PARAMETER Session:
+A session made with New-PSSession. It can also come through the pipeline.
+PARAMETER Id:
+The Id of an existing session (from Get-PSSession).
+PARAMETER Name:
+The friendly name of an existing session.
+PARAMETER Credential:
+Another account to connect as, usually from Get-Credential. On a real PC you are asked for the password. Cert Lab connects with your own account.
+PARAMETER ConfigurationName:
+The endpoint (session configuration) to use. The default is Microsoft.PowerShell; a Just Enough Administration endpoint allows only some commands.
+EXAMPLE: Enter-PSSession -ComputerName localhost
+Opens an interactive session on this same computer: the prompt starts with [the computer name]. Type Exit-PSSession to come back.
+EXAMPLE: $s = New-PSSession -ComputerName localhost; Enter-PSSession -Session $s
+Enters a session that already exists. Variables you set inside are still there the next time you enter it.
+EXAMPLE: Get-PSSession -Id 1 | Enter-PSSession
+The session can also come through the pipeline.
+NOTES:
+Enter-PSSession is for typing at the console. In a script, the lines after it do not run remotely; use Invoke-Command for scripts.
+
+You cannot enter a second session from inside a remote session.
+
+The remote session starts in your Documents folder on that computer, not in the folder you were in.
+
+The remote computer must have remoting turned on (Enable-PSRemoting) and you must be allowed to connect, usually as a member of its Administrators or Remote Management Users group.
+
+Your profile script does not run in a remote session, and programs that open a window or wait for typed input (such as notepad or an interactive ssh) do not work there.
+
+The alias is etsn. PowerShell 7 can also connect over SSH with -HostName.
+RELATED: Exit-PSSession, New-PSSession, Get-PSSession, Invoke-Command, about_Remote

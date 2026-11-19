@@ -1,0 +1,30 @@
+SYNOPSIS: Changes a service's start type, display name, description or status.
+DESCRIPTION:
+Set-Service changes how a service is configured. -StartupType decides what happens at the next restart: Automatic services start with Windows, Manual ones only when something starts them, Disabled ones cannot start. Changing the start type writes event 7040 to the System log.
+
+-Status Running, Stopped or Paused also starts, stops or pauses the service now. Unlike Stop-Service, Set-Service has no -Force: it refuses to stop a service that others depend on.
+PARAMETER Name:
+The service to change (one name). Takes pipeline input.
+PARAMETER InputObject:
+A service object to change.
+PARAMETER StartupType:
+Automatic, Manual or Disabled (aliases StartMode, SM, ST).
+PARAMETER Status:
+Running, Stopped or Paused.
+PARAMETER DisplayName:
+A new display name.
+PARAMETER Description:
+A new description.
+PARAMETER PassThru:
+Outputs the changed service.
+PARAMETER ComputerName:
+Changes a service on another computer (Windows PowerShell 5.1 only).
+EXAMPLE: Set-Service -Name BITS -StartupType Disabled
+BITS will not start any more, not even after a restart.
+EXAMPLE: Set-Service Spooler -StartupType Automatic -Status Running
+Makes the spooler start with Windows and starts it now.
+EXAMPLE: Get-Service W32Time | Set-Service -Description 'Keeps the clock right'
+Changes the description shown in the Services console.
+NOTES:
+Windows PowerShell 5.1 has no AutomaticDelayedStart value; PowerShell 7 added it, and also Remove-Service. In 5.1 delete a service with sc.exe delete NAME.
+RELATED: Get-Service, Start-Service, Stop-Service, New-Service

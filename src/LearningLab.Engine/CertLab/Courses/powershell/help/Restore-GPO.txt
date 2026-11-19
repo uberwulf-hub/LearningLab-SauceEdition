@@ -1,0 +1,23 @@
+SYNOPSIS: Restores a Group Policy Object from a backup.
+DESCRIPTION:
+Restore-GPO puts a GPO's settings back from a backup made with Backup-GPO, into the same GPO (same GUID). If the GPO was deleted, it is created again; its links are not restored, so link it again.
+By default the newest backup of that GPO in the folder is used; -BackupId picks a specific one.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER All:
+Restores the newest backup of every GPO in the folder.
+PARAMETER Path:
+The backup folder.
+PARAMETER BackupId:
+One particular backup, by its ID.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to write to.
+EXAMPLE: Restore-GPO "Sales Desktop" -Path C:\GPOBackups
+Undoes changes to the GPO since its last backup.
+EXAMPLE: Restore-GPO "Sales Desktop" -Path C:\GPOBackups; New-GPLink "Sales Desktop" -Target "OU=Sales,OU=Staff,DC=corp,DC=example"
+Brings back a deleted GPO and links it again.
+RELATED: Backup-GPO, Get-GPO, New-GPLink

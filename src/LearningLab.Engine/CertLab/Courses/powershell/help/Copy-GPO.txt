@@ -1,0 +1,21 @@
+SYNOPSIS: Copies a Group Policy Object to a new GPO, in the same domain or another one.
+DESCRIPTION:
+Copy-GPO makes a new GPO with the same settings as the source, under a new name and a new GUID. Links are not copied: link the copy yourself.
+It's a safe way to try a change: copy the GPO, change the copy, link it to a test OU.
+PARAMETER SourceName:
+The GPO to copy. Position 0.
+PARAMETER SourceGuid:
+The GPO to copy, by GUID.
+PARAMETER TargetName:
+The new GPO's name.
+PARAMETER SourceDomain:
+The source GPO's domain, if not your own.
+PARAMETER TargetDomain:
+The domain to create the copy in.
+PARAMETER Server:
+The domain controller to use.
+EXAMPLE: Copy-GPO -SourceName "Sales Desktop" -TargetName "Sales Desktop (test)"
+A copy to experiment with.
+EXAMPLE: Copy-GPO "Sales Desktop" -TargetName "Finance Desktop" | New-GPLink -Target "OU=Finance,OU=Staff,DC=corp,DC=example"
+Copies the GPO and links the copy to the Finance OU.
+RELATED: New-GPO, Rename-GPO, New-GPLink, Backup-GPO

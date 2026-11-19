@@ -1,0 +1,14 @@
+SYNOPSIS: Deletes registry values (not keys).
+DESCRIPTION:
+Remove-ItemProperty deletes values from a key. To delete the key itself use Remove-Item.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The values to delete (wildcards allowed).
+PARAMETER Force:
+Deletes values in protected keys too.
+EXAMPLE: Remove-ItemProperty HKCU:\Software\Lab -Name Count
+Deletes one value.
+RELATED: New-ItemProperty, Remove-Item

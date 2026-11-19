@@ -1,0 +1,61 @@
+title: Reading the Windows log
+level: Intermediate
+kind: Windows
+topic: Windows
+teaser: who signed in, hiding among the failures
+points: 60
+order: 55
+host: windows
+answer: {{ATKIP}}
+var: ATKIP = ip
+var: USER = pick:sqlsvc|backup|helpdesk|intern
+
+@intro
+You are on a pretend Windows computer. Windows writes sign-in attempts to the
+Security event log: event 4625 is a failed sign-in, 4624 is a successful one. One
+address tried many times and then got in. Read the Security log and give the address
+that finally succeeded.
+
+@winevents
+[
+  { "log": "Security", "id": 4625, "level": 0, "ago": "20m", "repeat": 15, "every": 20,
+    "message": "An account failed to log on. Account Name: {{USER}} Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+  { "log": "Security", "id": 4624, "level": 0, "ago": "14m",
+    "message": "An account was successfully logged on. Account Name: {{USER}} Source Network Address: {{ATKIP}} Logon Type: 3" }
+]
+
+@winsetup
+Write-Output 'Security log seeded.'
+
+@solution
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } -MaxEvents 5 | Format-List TimeCreated, Id, Message
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } -MaxEvents 5 | Format-List Message
+Write-Output '{{ATKIP}}'
+
+@walkthrough
+Windows records sign-in attempts in the Security log. A burst of event 4625 (failed)
+from one address followed by a 4624 (success) for the same account is a password
+guess that finally worked. List the failures:
+
+    Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } | Format-List Message
+
+They all come from one Source Network Address. Then the success:
+
+    Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } | Format-List Message
+
+shows the same address getting in. That address is the answer. The lesson: these
+events are exactly what defenders watch to catch password guessing; a lockout policy
+and alerting on 4625 bursts stop it.
+
+@hint 5
+What to think about first: Windows keeps its own logs, and Get-WinEvent reads them.
+The Security log holds sign-ins: 4625 is a failure, 4624 a success.
+
+@hint 9
+List the failed sign-ins and read their messages:
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } | Format-List Message
+They name a Source Network Address - the same one over and over.
+
+@hint 14
+Check that same address got in: Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } | Format-List Message
+The Source Network Address there is the answer.

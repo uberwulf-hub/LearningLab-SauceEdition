@@ -1,0 +1,14 @@
+## read the web access log: find the address that uploads and then calls a .php again and again
+grep -E 'POST|uploads' /var/log/httpd/access_log
+## find the newest file under the web root - the dropped web shell
+ls -lat /var/www/html/uploads
+## read it: the flag is inside
+cat /var/www/html/uploads/{{SHELL}}.php
+## find the service they left running
+systemctl list-units --type=service --no-pager | grep -Ei '{{SVC}}'
+ls -l /etc/systemd/system/{{SVC}}.service
+## clean up: remove the shell, stop and remove the service
+rm -f /var/www/html/uploads/{{SHELL}}.php
+systemctl disable --now {{SVC}}
+rm -f /etc/systemd/system/{{SVC}}.service
+systemctl daemon-reload

@@ -1,0 +1,18 @@
+Two ways to stay in: a sudo rule and a systemd timer.
+
+1. The log. grep -E 'Accepted|Failed|sudo' /var/log/secure: three failed passwords for {{DEV}} from
+   {{ATKIP}}, then an accepted one. Two minutes later {{DEV}} used sudo to run tee into
+   /etc/sudoers.d/{{SUDOF}}, and then systemctl enable --now {{TIMER}}.timer.
+
+2. The sudo rule. /etc/sudoers.d/{{SUDOF}} says "{{DEV}} ALL=(ALL) NOPASSWD: ALL": that account may now
+   run anything as root without even typing a password. The file name was chosen to look harmless.
+
+3. The timer. systemctl list-timers --all shows {{TIMER}}.timer ("{{TIMER_DESC}}") every 15 minutes. Its
+   service runs /usr/local/lib/.{{TIMER}}/run.sh, which copies the design files to /var/tmp/.pickup.
+   The flag is in notes.txt next to the script.
+
+4. Clean up. systemctl disable --now {{TIMER}}.timer, remove the .timer and .service files,
+   systemctl daemon-reload; rm -f /etc/sudoers.d/{{SUDOF}}; usermod -L {{DEV}}.
+
+For real: timers are as easy to hide as cron jobs, so check systemctl list-timers along with
+/etc/cron.d; keep sudoers.d short and known; and use keys or strong unique passwords for ssh.

@@ -1,0 +1,13 @@
+## the alerts: several at the same second, and one later on its own
+siem alerts
+## every PowerShell start: who started it (parent), as which user
+siem search source=proclog image=*powershell* --fields time,host,user,parent
+## decode the two kinds of hidden command
+echo '{{B64:ITCMD}}' | base64 -d
+echo
+echo '{{B64:BADCMD}}' | base64 -d
+echo
+## on the computer where Word started PowerShell: the programs just before, and what it looked up just after
+siem search host={{BADH}} source=proclog image~winword --fields time,user,parent,cmdline
+siem search host={{BADH}} source=dns --since {{T0}} --limit 3
+siem search source=firewall dst={{DLIP}}

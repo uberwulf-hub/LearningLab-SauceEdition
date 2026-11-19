@@ -1,0 +1,204 @@
+# Unit: u12 | 12. Securing computing resources and assets | Security operations
+
+Security operations starts with knowing what you have and setting it up safely. This unit covers secure baselines and hardening for every kind of device, wireless installation and security settings, mobile device management and deployment models, application security techniques, and the life of an asset from purchase to disposal.
+
+## Lesson: l1201 | Secure baselines and hardening targets
+
+A **secure baseline** is a documented, approved set of security settings for a type of system: which services run, which ports are open, password and lockout rules, logging, installed software and so on. Baselines turn "secure" into something you can check. Their life cycle has three steps:
+
+- **Establish**: start from a trusted guide (for example the CIS Benchmarks or a vendor's security guide), adjust it to your needs, test it and get it approved.
+- **Deploy**: apply it the same way everywhere, with automation: Group Policy, configuration management tools, MDM profiles, golden images or infrastructure as code.
+- **Maintain**: check systems regularly for **drift** (settings that changed since deployment), and update the baseline when new threats, patches or business needs appear.
+
+### Hardening targets
+
+**Hardening** reduces the attack surface: remove what isn't needed, lock down what is. Each kind of device has its own focus:
+
+- **Workstations**: patch the OS and applications, endpoint protection (EDR), host-based firewall, disk encryption, no local admin rights for everyday users, disable unneeded services and autorun.
+- **Servers**: install only the roles a server needs, close unused ports, strong authentication for administrators, central logging, regular patching, remove sample files and default accounts.
+- **Mobile devices**: screen lock and PIN, device encryption, OS updates, apps only from approved stores, remote wipe, managed through MDM.
+- **Switches and routers**: change default credentials, use SSH instead of Telnet and HTTPS instead of HTTP for management, put management interfaces on a separate network, disable unused ports, keep firmware updated, back up configurations.
+- **Cloud infrastructure**: least-privilege identity and access policies, MFA for the console, no storage open to the public by mistake, logging turned on, security groups that allow only needed traffic. Misconfiguration is the biggest cloud risk.
+- **ICS/SCADA** (industrial control systems): often can't be patched quickly or at all, so isolate them (segmentation, sometimes air gaps), strictly control remote access, monitor network traffic for unusual commands.
+- **Embedded systems and RTOS** (real-time operating systems, used where responses must be on time, such as in medical devices or vehicles): limited resources and rare updates. Change defaults, disable unused interfaces, segment them, and buy from vendors that provide updates.
+- **IoT devices** (cameras, smart sensors, thermostats): change default passwords, update firmware, put them on their own network segment or VLAN, turn off features you don't use (such as UPnP or cloud access).
+
+> If a device can't be patched, the answer is usually segmentation plus monitoring: a compensating control.
+
+@quiz
+? An auditor finds that a server's settings no longer match the approved configuration because an admin enabled an extra service last month. Which baseline step should catch this routinely?
+- Establish
+- Deploy
++ Maintain
+- Procure
+! Maintaining a baseline includes checking systems for drift from the approved settings.
+? A factory's control system runs software the vendor no longer updates, and it must keep running. What is the best way to reduce its risk?
++ Isolate it on its own segment with tightly controlled access and monitoring
+- Install the latest desktop antivirus on it
+- Connect it directly to the internet so the vendor can support it
+- Replace its passwords with blank ones to avoid lockouts
+! A system that can't be patched needs compensating controls such as segmentation and monitoring.
+? Which change best hardens a network switch's management?
+- Enable Telnet for faster access
++ Use SSH for management and change the default credentials
+- Leave all unused ports enabled for future use
+- Manage it from the guest Wi-Fi
+! SSH encrypts management sessions, and default credentials are well known to attackers.
+? Which source is a common starting point for building a secure baseline?
+- A list of the company's assets
++ The CIS Benchmarks or the vendor's security configuration guide
+- The firewall's log files
+- A penetration test report from another company
+! Benchmarks and vendor guides give tested, documented settings to adapt into your baseline.
+@end
+
+## Lesson: l1202 | Wireless and mobile devices
+
+### Installing wireless
+
+Before installing access points, do a **site survey**: walk the building measuring signal strength, interference (other networks, microwave ovens, thick walls) and where users are. The result is often shown as a **heat map**: a floor plan colored by signal strength. It shows dead zones to fill and places where the signal leaks outside the building (into the car park, for example), which is a security concern. Plan channels so neighbouring access points don't overlap.
+
+### Wireless security settings
+
+- **WPA3** is the current standard. **WPA3-Personal** uses **SAE** (Simultaneous Authentication of Equals), which replaces WPA2's pre-shared key handshake and resists offline password guessing. **WPA3-Enterprise** can use a 192-bit security mode for sensitive networks. WPA3 also requires **Protected Management Frames**, which stops some deauthentication attacks.
+- **WPA2** with AES (CCMP) is still common; WEP and WPA (TKIP) are broken and must not be used. WPS (the push-button or PIN setup) has known weaknesses: turn it off.
+- **Enterprise mode** uses **802.1X** with a **RADIUS** server (AAA: authentication, authorization and accounting), so each user signs in with their own credentials and can be removed individually. Personal mode shares one passphrase among everyone.
+- **Authentication protocols** used with 802.1X are EAP methods: **EAP-TLS** (certificates on both client and server: the strongest), **PEAP** and **EAP-TTLS** (a TLS tunnel from the server's certificate, with a password inside).
+
+> Shared passphrase: WPA3-Personal (SAE). Individual sign-ins with RADIUS: WPA3-Enterprise with 802.1X. Strongest EAP method: EAP-TLS.
+
+### Mobile solutions
+
+**Mobile device management** (MDM) centrally enforces policies on phones and tablets: passcode rules, encryption, approved apps, VPN and Wi-Fi profiles, remote lock and wipe, and keeping work data in a separate container. Deployment models decide who owns the device:
+
+- **BYOD** (bring your own device): the employee's own phone. Cheap for the company and liked by users, but the hardest to control; privacy matters, so usually only a work container is managed and a wipe removes only work data.
+- **COPE** (corporate-owned, personally enabled): the company buys and owns the device and controls it fully, but allows some personal use.
+- **CYOD** (choose your own device): the employee picks from a list of approved models, which the company then owns or manages. Fewer models makes support and security easier.
+- (Also seen: corporate-owned, business only, with no personal use at all.)
+
+Connection methods each bring risks:
+
+- **Cellular**: traffic goes through the carrier; generally safe, but watch for fake base stations and SIM swapping.
+- **Wi-Fi**: public hotspots may be malicious (evil twins); use a VPN and avoid auto-joining open networks.
+- **Bluetooth**: keep devices non-discoverable, pair only known devices, turn it off when unused (attacks such as bluejacking and bluesnarfing).
+
+@quiz
+? Before installing access points in a new office, the network team walks the floors measuring signal strength and interference and produces a colored floor plan. What are these two things called?
++ A site survey and a heat map
+- A penetration test and a network diagram
+- A baseline and a drift report
+- A tabletop exercise and a runbook
+! A site survey gathers the measurements and a heat map shows signal strength over the floor plan.
+? A company wants each employee to sign in to Wi-Fi with their own account so access can be removed when someone leaves. What should it use?
+- WPA3-Personal with a long passphrase
++ WPA3-Enterprise with 802.1X and a RADIUS server
+- WPS
+- WEP with MAC filtering
+! Enterprise mode authenticates each user through RADIUS; a shared passphrase can't be revoked for one person.
+? Employees will pick a phone from three approved models, which the company buys and manages. Which deployment model is this?
+- BYOD
+- COPE
++ CYOD
+- Shadow IT
+! Choose your own device means choosing from an approved list; COPE is company-chosen corporate devices with personal use allowed.
+? A BYOD user leaves the company. What should MDM do to respect the user's privacy while protecting company data?
+- Factory reset the whole phone
++ Wipe only the managed work container
+- Nothing, because it is the user's phone
+- Lock the phone permanently
+! A selective wipe removes work data and apps but leaves personal data alone.
+@end
+
+## Lesson: l1203 | Application security, sandboxing and monitoring
+
+Many attacks go through applications, so secure development and safe running of software are part of operations.
+
+- **Input validation**: check every input against what is allowed (type, length, format, range) before using it, on the **server** side (client-side checks are easy to bypass). Prefer allow lists (only these characters) to deny lists. It prevents injection attacks such as SQL injection and cross-site scripting.
+- **Secure cookies**: cookies that hold session IDs should have the **Secure** flag (sent only over HTTPS), **HttpOnly** (scripts in the page can't read it, which limits XSS session theft) and **SameSite** (limits sending it on cross-site requests, which helps against CSRF).
+- **Static code analysis** (SAST): tools read the source code without running it, looking for flaws such as injection, hard-coded passwords or unsafe functions. Done early, during development. (Dynamic analysis tests the running program; see the vulnerability management unit.)
+- **Code signing**: the developer signs software with a private key and a code-signing certificate. Users and systems can check that the code came from that publisher and hasn't been changed since. It doesn't prove the code is free of bugs or safe.
+- **Sandboxing**: running code in an isolated environment with limited access to the rest of the system. Browsers sandbox web pages, mobile OSs sandbox apps, and security teams detonate suspicious files in a sandbox to watch what they do.
+- **Monitoring**: watch applications and devices once deployed: logs, errors, unusual behaviour, failed sign-ins. Hardening without monitoring leaves you blind to what gets through.
+
+```file
+Set-Cookie: session=7f3a9c21e8; Secure; HttpOnly; SameSite=Strict; Path=/
+```
+
+> Code signing proves who published it and that it wasn't changed. It does not prove the code is safe.
+
+@quiz
+? A developer's web form checks input with JavaScript in the browser, but an attacker still sends SQL commands to the server. What is missing?
+- Code signing
++ Server-side input validation
+- A sandbox for the browser
+- A heat map
+! Client-side checks can be skipped by sending requests directly; the server must validate every input.
+? Which cookie attribute stops scripts running in the page from reading the session cookie?
+- Secure
++ HttpOnly
+- SameSite
+- Path
+! HttpOnly hides the cookie from scripts; Secure only limits it to HTTPS.
+? A security analyst wants to see what an unknown email attachment does without risking the network. What should she use?
+- Static code analysis of the email header
++ A sandbox
+- Code signing
+- A secure baseline
+! A sandbox runs the file in isolation so its behaviour can be watched safely.
+@end
+
+## Lesson: l1204 | Asset management
+
+You can't protect what you don't know you have. Asset management follows hardware, software and data through their whole life.
+
+### Acquisition and procurement
+
+Security starts at purchase. Buy from trusted vendors and authorized resellers (to avoid counterfeit or tampered goods), check that the vendor provides security updates and support for the expected lifetime, and include security requirements in the contract. Procurement processes also stop **shadow IT**: equipment and services bought without IT's knowledge.
+
+### Assignment and accounting
+
+- **Ownership**: every asset has an owner who is accountable for it (decides who may use it and how it is protected), plus the person it is assigned to.
+- **Classification**: label the asset by how sensitive or critical it is (for example public, confidential, restricted), which decides the controls it needs.
+
+### Monitoring and asset tracking
+
+- **Inventory**: a current list of assets with details such as owner, location, serial number, software and support status. Often kept in a CMDB (configuration management database) and fed by asset tags, barcodes or RFID.
+- **Enumeration**: actively discovering what is out there, for example with network scans, MDM and endpoint agents, and comparing the results with the inventory. Unknown devices are a warning sign.
+
+### Disposal and decommissioning
+
+When an asset leaves service, its data must not leave with it.
+
+- **Sanitization**: removing data so it can't be recovered, while the device may be reused. Methods include **overwriting** (writing patterns over every block; works for traditional hard drives), **cryptographic erase** (destroying the encryption key of a self-encrypting or encrypted drive, which makes the data unreadable; well suited to SSDs), and **degaussing** (a strong magnetic field; works on magnetic media only, and makes hard drives unusable).
+- **Destruction**: physically destroying the media: shredding, pulverizing, drilling, incineration. Used when media can't be sanitized reliably or holds very sensitive data.
+- **Certification**: a document (often a certificate of destruction from a disposal vendor) proving what was destroyed or sanitized, when and how. Keep it for audits.
+- **Data retention**: before disposal, check whether laws, contracts or legal holds require keeping the data. Retention policies say how long each type of data is kept, and data should be deleted when that time ends.
+
+> SSDs don't overwrite reliably because of wear leveling and spare blocks: use cryptographic erase, the drive's secure erase command, or physical destruction. Degaussing doesn't work on SSDs.
+
+@quiz
+? A company is replacing laptops with SSDs and wants to donate them to a school. Which method is most suitable to remove the data while keeping the drives usable?
+- Degaussing
++ Cryptographic erase or the drive's built-in secure erase
+- Deleting the files and emptying the recycle bin
+- Shredding
+! Degaussing doesn't affect SSDs, deleting leaves data recoverable, and shredding destroys the drives.
+? An auditor asks how the company can prove that 40 old hard drives were destroyed. What should it show?
++ The certificate of destruction from the disposal vendor
+- The asset inventory before disposal
+- The purchase orders for the drives
+- The data retention policy
+! Certification documents what was destroyed, when and how.
+? A network scan finds 14 devices that aren't listed anywhere in the CMDB. Which asset management activity found the gap?
+- Classification
+- Procurement
++ Enumeration
+- Sanitization
+! Enumeration discovers what is actually on the network and is compared with the inventory.
+? Before wiping a departed manager's laptop, the legal team says her email must be kept for an ongoing lawsuit. What concept applies?
+- Cryptographic erase
++ Data retention (here, a legal hold)
+- Asset classification
+- Degaussing
+! Retention requirements and legal holds must be checked before any data is destroyed.
+@end

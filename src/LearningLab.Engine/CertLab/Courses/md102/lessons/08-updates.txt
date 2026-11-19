@@ -1,0 +1,293 @@
+# Unit: u08 | 8. Windows updates | Updates
+
+Windows gets two kinds of updates. **Quality updates** come every month (the cumulative update on the second Tuesday, "Patch Tuesday") and fix security holes and bugs. **Feature updates** move a PC to a new version of Windows, such as Windows 11 version 24H2. Intune manages both through **Windows Update for Business**: the PCs still download from Microsoft, but you decide when. This unit covers update rings, feature updates policies, expedited and driver updates, the reports, and what changed when Windows 10 reached its end of support.
+
+## Lesson: l0801 | Windows Update for Business and update rings
+
+Windows Update for Business is a set of Windows policies that tell the PC to **wait** before it installs an update (a deferral), and **how hard to push** the restart. Intune's main tool for it is the **update ring**: **Devices > Windows updates > Update rings > Create profile**.
+
+### Update ring settings
+
+- **Quality update deferral period**: 0 to 30 days after Microsoft releases a monthly update.
+- **Feature update deferral period**: 0 to 365 days after a new Windows version is released.
+- **Microsoft product updates** and **Windows drivers**: allow or block updates for other Microsoft products and drivers through Windows Update.
+- **Upgrade Windows 10 devices to Latest Windows 11 release**: lets a ring move capable Windows 10 PCs to Windows 11.
+- **Feature update uninstall period**: 2 to 60 days during which the user can go back to the previous version.
+- **Automatic update behavior** and **active hours**: when Windows installs and restarts. Active hours (at most 18 hours a day) are the hours Windows won't restart.
+- **Deadlines** (0 to 30 days) for quality and feature updates, plus a **grace period** (0 to 7 days): after the deadline, Windows restarts on its own outside active hours. The grace period gives a PC that was off for a while a few days before the forced restart.
+
+### A ring on the device
+
+A ring is a set of Policy CSP settings in the **Update** area, so the PC stores it under PolicyManager like any other profile:
+
+```terminal
+#setup portal:create ring name=Broad qualityDeferral=7 featureDeferral=30 qualityDeadline=3 featureDeadline=7 grace=2
+#setup portal:assign ring Broad "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update | Select-Object Defer*, Pause*
+
+DeferQualityUpdatesPeriodInDays DeferFeatureUpdatesPeriodInDays PauseQualityUpdates PauseFeatureUpdates
+------------------------------- ------------------------------- ------------------- -------------------
+                              7                              30                   0                   0
+
+
+PS C:\Windows\system32> Get-HotFix | Select-Object -Last 2
+
+Source        Description      HotFixID      InstalledBy          InstalledOn
+------        -----------      --------      -----------          -----------
+RB-LT-001     Security Update  KB5050021     NT AUTHORITY\SYSTEM  1/20/2026 12:00:00 AM
+RB-LT-001     Security Update  KB5051989     NT AUTHORITY\SYSTEM  2/11/2026 12:00:00 AM
+```
+
+> A device should be in **one** update ring. Two rings that target the same device both report a conflict.
+
+@try
+@task t1 | Updates | 10 | portal
+Create an update ring called **Broad** for the Windows PCs: quality updates wait **7** days, feature updates **0** days, a quality update deadline of **3** days with a **2**-day grace period. Assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | RB-LT-001 is in the Broad ring
+ring["Broad"].qualityDeferral == 7
+ring["Broad"].qualityDeadline == 3
+ring["Broad"].grace == 2
+device["RB-LT-001"].ring == Broad
+@check RB-LT-001 | the deferral reached the PC
+(Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update).DeferQualityUpdatesPeriodInDays -eq 7
+@hint Devices > Windows updates > Update rings > Create: quality update deferral 7, feature 0; under User experience settings the deadline for quality updates 3 and the grace period 2.
+@solution portal
+create ring name=Broad qualityDeferral=7 featureDeferral=0 qualityDeadline=3 grace=2
+assign ring Broad "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? What is the longest quality update deferral an update ring allows?
+- 7 days
++ 30 days
+- 365 days
+! Quality updates can be deferred 0 to 30 days; feature updates 0 to 365 days.
+? A user's PC was switched off for two weeks and missed the update deadline. Which setting gives it a few days before the forced restart?
+- Active hours
++ Grace period
+- Feature update uninstall period
+! The grace period (0 to 7 days) starts when a device that missed the deadline comes back, so it isn't restarted the moment it turns on.
+? Which statement about active hours is true?
+- They are the hours when updates are installed
++ Windows won't restart for updates during them, and they can be at most 18 hours long
+- They only apply after the deadline
+! Active hours protect the working day from automatic restarts; the range can't be longer than 18 hours.
+@end
+
+## Lesson: l0802 | Rings in waves, pausing and going back
+
+One ring for everyone means a bad update reaches everyone on the same day. The usual plan is **several rings**, each a little later than the one before:
+
+- **Pilot**: IT and a few keen people, 0 days of deferral. They meet problems first.
+- **Broad**: everyone else, for example 7 or 14 days later.
+- Sometimes a **Critical** ring for PCs that must not break (tills, the CEO's laptop), later still.
+
+Each device must land in exactly one ring. A simple way: assign Broad to all Windows devices and **exclude** the pilot device group, and assign Pilot to the pilot group. (Both are device groups, so the exclusion works.)
+
+### Pausing and uninstalling
+
+On an update ring's page you can **Pause** quality or feature updates when a problem shows up: devices in the ring install no new updates of that kind. A pause ends on its own after a fixed time (35 days in the current portal; it can be extended), so you don't forget it. **Resume** lifts it. **Uninstall** removes the latest quality or feature update from the ring's devices (for a feature update, only within the uninstall period).
+
+> In Cert Lab a pause lasts until you resume it, and the ring page has no Uninstall button.
+
+### Patch Tuesday and time
+
+Monthly updates come out on the **second Tuesday** of each month. Cert Lab's clock starts on Monday 2 March 2026, so the March update appears on **Tuesday 10 March**. Devices check in about every 8 hours; **Skip time** in the portal moves the clock forward, and devices check in on their own as it passes.
+
+@try
+@task t1 | Updates | 15 | portal
+Set up two waves. Ring **Pilot**: quality deferral **0** days, assigned to **Pilot devices**. Ring **Broad**: quality deferral **14** days, assigned to **Windows devices** with **Pilot devices** excluded (feature deferral 0 for both). Then let **9 days** pass (Skip time) so the March update comes out and the PCs check in on their own. The pilot laptop RB-LT-002 should install the March update; RB-LT-001 should still wait.
+@check portal | each laptop is in one ring
+device["RB-LT-002"].ring == Pilot
+device["RB-LT-001"].ring == Broad
+@check portal | the pilot laptop has the March update and the other doesn't yet
+device["RB-LT-002"].patch == 2026-03
+device["RB-LT-001"].patch == 2026-02
+@hint Create both rings, assign Broad to Windows devices and add Pilot devices as an excluded group, assign Pilot to Pilot devices. Then Skip time by 9 days (777600 seconds).
+@solution portal
+create ring name=Pilot qualityDeferral=0 featureDeferral=0
+create ring name=Broad qualityDeferral=14 featureDeferral=0
+assign ring Pilot "Pilot devices"
+assign ring Broad "Windows devices"
+assign ring Broad "Pilot devices" intent=exclude
+#wait 777600
+@endtask
+@end
+
+@quiz
+? You assign the ring Broad to Windows devices and the ring Pilot to Pilot devices, with no exclusions. What happens on a pilot laptop?
+- The Pilot ring wins because it is more specific
++ Both rings target it and they conflict
+- The ring created last wins
+! A device should get one update ring. Exclude the pilot group from Broad so each device is in one ring.
+? A March quality update breaks a line-of-business app on pilot PCs. What do you do on the Broad ring so the other PCs don't install it?
+- Change the feature update deferral
++ Pause quality updates on the Broad ring
+- Delete the Broad ring
+! Pausing quality updates stops new monthly updates for that ring's devices until you resume (or the pause expires).
+? On which day does Microsoft usually release the monthly cumulative update?
+- The first Monday of the month
++ The second Tuesday of the month
+- The last Friday of the month
+! The monthly security update comes out on the second Tuesday, often called Patch Tuesday.
+@end
+
+## Lesson: l0803 | Feature updates and Windows 11
+
+An update ring with a feature deferral moves PCs to **the newest** Windows version once the deferral has passed. Often you want to choose the version yourself instead. A **feature updates policy** (**Devices > Windows updates > Feature updates > Create profile**) names one version, for example **Windows 11, version 24H2**:
+
+- Devices below that version are offered it (as soon as possible, on a date you choose, or gradually).
+- Devices on that version **stay there** until you change the policy, even when Microsoft releases a newer one. That is the way to hold a version.
+- It is assigned to **device groups**. When you use a feature updates policy, set the ring's feature deferral to 0 so the two don't fight.
+- It uses Microsoft's cloud update service (the Windows Update for Business deployment service, now part of Windows Autopatch): the devices must be Microsoft Entra joined or hybrid joined and send Windows diagnostic data, and the users need a licence that includes it (Windows Enterprise E3 or E5, Education A3 or A5, Windows VDA E3 or E5, or Microsoft 365 Business Premium).
+
+### Windows 11's hardware requirements
+
+Windows 11 needs, among other things, **TPM 2.0**, **UEFI with Secure Boot**, a supported 64-bit processor, 4 GB of memory and 64 GB of storage. A PC that doesn't meet them can't take the update. Windows Update doesn't offer Windows 11 to such a PC: it stays on Windows 10 22H2, the last Windows 10 version, and the policy's report shows that it can't take the update (Cert Lab shows **Not applicable**). (Older versions of the policy had an option to install the latest Windows 10 feature update instead; with Windows 10 out of support it is gone.) **RB-DT-007** (TPM 1.2) is such a PC.
+
+### Windows 10's end of support
+
+Windows 10 reached its **end of support on 14 October 2025**. Since then, Windows 10 22H2 gets no more monthly security updates unless the organisation buys **Extended Security Updates (ESU)**. In Cert Lab, the Windows 10 desktops are stuck on the October 2025 update; the way forward is a feature updates policy to Windows 11.
+
+```terminal
+#machine RB-DT-010
+#setup portal:create group name="Win10 desktops" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+#setup portal:create featureUpdate name="Windows 11 24H2" version="Windows 11, version 24H2"
+#setup portal:assign featureUpdate "Windows 11 24H2" "Win10 desktops"
+PS C:\Windows\system32> Get-ComputerInfo -Property OsName, OsDisplayVersion, OsBuildNumber
+
+OSDisplayVersion OsName                          OsBuildNumber
+---------------- ------                          -------------
+22H2             Microsoft Windows 10 Enterprise 19045
+```
+
+The same PC after a check-in:
+
+```terminal
+#machine RB-DT-010
+#setup portal:create group name="Win10 desktops" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+#setup portal:create featureUpdate name="Windows 11 24H2" version="Windows 11, version 24H2"
+#setup portal:assign featureUpdate "Windows 11 24H2" "Win10 desktops"
+#setup portal:remote sync RB-DT-010
+PS C:\Windows\system32> Get-ComputerInfo -Property OsName, OsDisplayVersion, OsBuildNumber
+
+OSDisplayVersion OsName                          OsBuildNumber
+---------------- ------                          -------------
+24H2             Microsoft Windows 11 Enterprise 26100
+```
+
+@try
+@task t1 | Updates | 15 | portal
+Move the Windows 10 desktops to Windows 11. Create an assigned device group **Win10 desktops** with **RB-DT-010** and **RB-DT-007**. Create a feature updates policy **Windows 11 24H2** that deploys Windows 11, version 24H2. Assign it to the group and sync both desktops.
+@check portal | RB-DT-010 runs Windows 11 24H2
+device["RB-DT-010"].featureVersion == 24H2
+@check portal | RB-DT-007 can't, so the policy is not applicable to it
+device["RB-DT-007"].featureVersion == 22H2
+device["RB-DT-007"].policy["Windows 11 24H2"] == "Not applicable"
+@hint Feature updates policies go to device groups.
+@solution portal
+create group name="Win10 desktops" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+create featureUpdate name="Windows 11 24H2" version="Windows 11, version 24H2"
+assign featureUpdate "Windows 11 24H2" "Win10 desktops"
+remote sync RB-DT-010
+remote sync RB-DT-007
+@endtask
+@end
+
+@quiz
+? You want every PC to stay on Windows 11 23H2 for now, although 24H2 is out. What do you use?
+- An update ring with a feature deferral of 365 days
++ A feature updates policy for Windows 11, version 23H2
+- Pause feature updates on the ring
+! A feature updates policy holds devices at the version it names until you change it. A deferral or a pause only delays, then moves them on.
+? A feature updates policy for Windows 11 shows an old desktop with TPM 1.2 as not applicable. Why?
+- The desktop isn't in an update ring
++ It doesn't meet Windows 11's hardware requirements
+- Feature updates need a user group
+! Windows 11 needs TPM 2.0, Secure Boot and a supported processor; Windows Update doesn't offer it to PCs without them.
+? After 14 October 2025, what does a Windows 10 22H2 PC without Extended Security Updates get?
+- Monthly security updates until 2028
++ No more monthly security updates
+- Only feature updates
+! Windows 10 reached its end of support on 14 October 2025; only ESU customers still get security updates.
+@end
+
+## Lesson: l0804 | Expedited and driver updates, reports, Autopatch and Delivery Optimization
+
+### Expedited quality updates
+
+Sometimes a security update can't wait for the ring's deferral, for example when an attack is already going round. A **quality updates policy** (**Devices > Windows updates > Quality updates > Create profile**) **expedites** one monthly update: "install it now on any device whose OS is older than this update", ignoring the ring's quality update deferral. You set how many days (0 to 2) Windows waits before it forces the restart. It is assigned to device groups and has the same requirements as feature updates policies (deployment service, licences, diagnostic data).
+
+### Driver updates
+
+A **driver updates policy** controls the drivers and firmware Windows Update offers: **Manually approve and deploy driver updates** (you review the list and approve each one) or **Automatically approve all recommended driver updates**, with an optional delay in days. The devices' update ring must not block Windows drivers.
+
+### Reports and Windows diagnostic data
+
+**Reports > Windows updates** shows feature update, quality update and expedited update status per device, and the errors. These reports need two things:
+
+- In the tenant: **Tenant administration > Connectors and tokens > Windows data**: turn on **Enable features that require Windows diagnostic data in processor configuration**. (Cert Lab: Tenant administration > Settings > Connectors.)
+- On the devices: Windows diagnostic data at **Required** level or higher (the settings catalog setting **System > Allow Telemetry**; Cert Lab's catalog still calls Required by its old name, **Basic**).
+
+### Windows Autopatch and Delivery Optimization
+
+- **Windows Autopatch** is a Microsoft service on top of Intune that runs the update rings for you: it splits devices into deployment rings (by default Test, Ring1, Ring2, Ring3 and Last), releases Windows, Microsoft 365 Apps, Edge and Teams updates in waves, and watches for problems. It comes with Windows Enterprise E3/E5, Education A3/A5 and Microsoft 365 Business Premium licences (Microsoft support requests only with E3 or higher). Know what it does; Cert Lab doesn't simulate it.
+- **Delivery Optimization** lets PCs share update pieces with each other instead of all downloading from the internet. The **download mode** decides with whom: HTTP only, LAN (same network), Group, Internet, Simple, or Bypass. It is set with the Delivery Optimization template or the settings catalog (**Delivery Optimization > DO Download Mode**). Microsoft Connected Cache adds a local cache server.
+
+### Phones and tablets
+
+iPhones and iPads are updated with **iOS/iPadOS update policies** (supervised devices: install the latest update in a time window you choose); Android Enterprise devices have a **system update** setting in device restrictions (automatic, postponed, or a maintenance window). The exam asks about these only lightly.
+
+@try
+@setup portal
+create ring name=Slow qualityDeferral=14 featureDeferral=0
+assign ring Slow "Windows devices"
+#wait 777600
+@task t1 | Updates | 10 | portal
+It is now 11 March and the March update fixes a hole that is already being attacked. The ring **Slow** makes the PCs wait 14 days. Create a quality updates policy **Expedite March** that expedites the **2026-03 cumulative update**, with **1** day before the restart is forced, assign it to **Windows devices**, and sync **RB-LT-001**.
+@check portal | RB-LT-001 installed the March update in spite of the deferral
+device["RB-LT-001"].patch == 2026-03
+qualityUpdate["Expedite March"].restartDays == 1
+@hint Devices > Windows updates > Quality updates > Create: expedite if the device OS version is less than the 2026-03 cumulative update.
+@solution portal
+create qualityUpdate name="Expedite March" expediteBelow="2026-03 cumulative update" restartDays=1
+assign qualityUpdate "Expedite March" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@task t2 | Updates | 10 | portal
+The Windows update reports are empty. Turn on the tenant's Windows diagnostic data connector, and send **Allow Telemetry = Basic** (Required) to all Windows devices with a settings catalog profile called **Diagnostic data**. Sync RB-LT-001.
+@check portal | the tenant and RB-LT-001 send diagnostic data
+tenant.windowsData == On
+device["RB-LT-001"].setting["System/AllowTelemetry"] == Basic
+@hint Tenant administration > Settings > Connectors: Enable features that need Windows diagnostic data. Then a settings catalog profile with System > Allow Telemetry.
+@solution portal
+tenant windowsData=On
+create config name="Diagnostic data" platform="Windows 10 and later" type="Settings catalog" s:System/AllowTelemetry=Basic
+assign config "Diagnostic data" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? An expedited quality update is assigned to devices in a ring with a 14-day quality deferral. What happens?
++ The devices install the update now, ignoring the deferral
+- They install it after 14 days, as the ring says
+- Nothing, because a device can only have one update policy
+! Expediting overrides the ring's quality update deferral for that one update; the ring still applies to the next ones.
+? The Windows update reports in Intune stay empty although devices update fine. What is missing most likely?
+- An update ring for every device
++ The Windows diagnostic data connector in the tenant, and diagnostic data on the devices
+- A driver updates policy
+! The reports are built from Windows diagnostic data: the tenant must allow it and the devices must send at least Required.
+? Which feature lets PCs on the same network share update downloads with each other?
+- Windows Autopatch
++ Delivery Optimization
+- Expedited quality updates
+! Delivery Optimization's download modes (LAN, Group, Internet...) let PCs get pieces of updates from peers.
+@end
+
+
+

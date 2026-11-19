@@ -1,0 +1,48 @@
+NAME
+       diff - show how two files (or directories) differ
+
+SYNOPSIS
+       diff [-u] [-q] [-r] [-i] [-w] [-y] FILE1 FILE2
+
+DESCRIPTION
+       diff compares two text files line by line and prints what would turn
+       FILE1 into FILE2. In the default format, lines starting with < come
+       from FILE1 and lines with > from FILE2. The unified format (-u) is
+       easier to read: - marks a removed line, + an added one, and a few
+       lines around each change are shown for context.
+
+       The exit status is 0 when the files are the same, 1 when they differ
+       and 2 on trouble.
+
+OPTIONS
+       -u, --unified
+              The unified format.
+
+       -q, --brief
+              Only say whether the files differ.
+
+       -r, --recursive
+              Compare two directories and everything in them.
+
+       -i, --ignore-case
+              Treat upper and lower case as equal.
+
+       -w, --ignore-all-space
+              Ignore all white space.
+
+       -y, --side-by-side
+              Show the two files in two columns.
+
+EXAMPLES
+       See what you changed in a configuration file:
+
+           cp /etc/ssh/sshd_config /root/sshd_config.orig
+           vi /etc/ssh/sshd_config
+           diff -u /root/sshd_config.orig /etc/ssh/sshd_config
+
+       Compare two directory trees:
+
+           diff -rq /etc /root/etc-backup
+
+SEE ALSO
+       cmp(1), comm(1), patch(1)

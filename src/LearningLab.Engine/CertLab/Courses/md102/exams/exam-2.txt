@@ -1,0 +1,328 @@
+# Exam: exam-2 | Practice exam 2 | 100
+A second full practice exam: questions of every kind, a case study about a library service, and four hands-on tasks in the practice portal (one starts on the new laptop RB-LT-003). The tenant is Riverbend Outfitters, as in the course.
+
+@vars
+n = 1 | 2 | 3
+defer = 5 | 7 | 10
+@endvars
+
+@task t01 | Configuration | 4 | portal
+Create a settings catalog profile for Windows 10 and later called **No USB writing {n}** that denies write access to removable disks. Assign it to **Corporate Windows devices** and make sure **RB-LT-001** has the setting.
+@check portal | the profile sets Removable Disk Deny Write Access
+config["No USB writing {n}"].type == "Settings catalog"
+config["No USB writing {n}"].setting["Storage/RemovableDiskDenyWriteAccess"] == Enabled
+config["No USB writing {n}"].include has "Corporate Windows devices"
+@check portal | RB-LT-001 has the setting
+device["RB-LT-001"].setting["Storage/RemovableDiskDenyWriteAccess"] == Enabled
+@solution portal
+create config name="No USB writing {n}" platform="Windows 10 and later" type="Settings catalog" s:Storage/RemovableDiskDenyWriteAccess=Enabled
+assign config "No USB writing {n}" "Corporate Windows devices"
+remote sync RB-LT-001
+@explain
+Devices > Configuration > Create > Windows 10 and later > Settings catalog; search for "removable disk" and add Removable Disk Deny Write Access (category Storage). The device writes MDM settings under HKLM\SOFTWARE\Microsoft\PolicyManager\current\device on the PC; it gets them at its next check-in.
+@endtask
+
+@task t02 | Updates | 4 | portal
+Create two update rings. **Pilot ring {n}**: quality update deferral 0 days, feature update deferral 0 days, assigned to **Pilot devices**. **Broad ring {n}**: quality update deferral {defer} days, feature update deferral 0 days, assigned to **Windows devices** but not to Pilot devices. After a sync, RB-LT-002 must use the pilot ring and RB-LT-001 the broad ring.
+@check portal | the pilot ring
+ring["Pilot ring {n}"].qualityDeferral == 0
+ring["Pilot ring {n}"].include has "Pilot devices"
+@check portal | the broad ring excludes the pilot devices
+ring["Broad ring {n}"].qualityDeferral == {defer}
+ring["Broad ring {n}"].include has "Windows devices"
+ring["Broad ring {n}"].exclude has "Pilot devices"
+@check portal | each device has one ring
+device["RB-LT-002"].ring == "Pilot ring {n}"
+device["RB-LT-001"].ring == "Broad ring {n}"
+@solution portal
+create ring name="Pilot ring {n}" qualityDeferral=0 featureDeferral=0
+create ring name="Broad ring {n}" qualityDeferral={defer} featureDeferral=0
+assign ring "Pilot ring {n}" "Pilot devices"
+assign ring "Broad ring {n}" "Windows devices"
+assign ring "Broad ring {n}" "Pilot devices" intent=exclude
+remote sync RB-LT-001
+remote sync RB-LT-002
+@explain
+Without the exclusion, RB-LT-002 would get both rings, and two rings on one device conflict. Excluding a device group from a policy assigned to a device group works; mixing user and device groups between include and exclude doesn't.
+@endtask
+
+@task t03 | Compliance | 4 | portal
+Create a Conditional Access policy called **MFA for everyone {n}**: every user except the emergency access account **breakglass** must use multifactor authentication for all cloud apps. Turn it **On**.
+@check portal | the policy is on and covers everyone but breakglass
+ca["MFA for everyone {n}"].state == On
+ca["MFA for everyone {n}"].usersExclude has breakglass
+@check portal | sign-ins ask for MFA, the emergency account doesn't
+signin(user=sam, device=RB-DT-010) == "Allowed after MFA"
+signin(user=breakglass) == Allowed
+@solution portal
+create ca name="MFA for everyone {n}" usersInclude="All users" usersExclude=breakglass apps="All cloud apps" grant="Grant access" controls="Require multifactor authentication" state=On
+@explain
+Conditional Access > Create new policy: Users include All users, exclude the emergency account (so a mistake can't lock everyone out), target all cloud apps, grant access with Require multifactor authentication, and set Enable policy to On (new policies start as Report-only).
+@endtask
+
+@task t04 | Deployment | 4 | portal
+Register the new laptop **RB-LT-003** (still in its out-of-box experience) for Windows Autopilot with the group tag **Sales**. Then make sure it gets a user-driven, Microsoft Entra joined deployment profile called **Sales laptops {n}** with the name template **RB-%SERIAL%**, through a dynamic device group **Autopilot Sales {n}** of devices with that group tag. Wait until the profile is assigned.
+@check portal | the laptop is registered with the tag
+autopilot["LB14-55821"].groupTag == Sales
+@check portal | the profile is assigned to it
+autopilot["LB14-55821"].profile == "Sales laptops {n}"
+autopilot["LB14-55821"].profileStatus == Assigned
+autopilotProfile["Sales laptops {n}"].nameTemplate == RB-%SERIAL%
+@solution RB-LT-003
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv
+@solution portal
+import autopilot RB-LT-003 C:\HWID\hash.csv groupTag=Sales
+create group name="Autopilot Sales {n}" type=Security membership="Dynamic device" rule="(device.devicePhysicalIds -any (_ -eq \"[OrderID]:Sales\"))"
+create autopilotProfile name="Sales laptops {n}" mode=User-driven joinType="Microsoft Entra joined" userType=Standard nameTemplate=RB-%SERIAL%
+assign autopilotProfile "Sales laptops {n}" "Autopilot Sales {n}"
+#wait 900
+@explain
+Shift+F10 at the out-of-box experience opens a command prompt; Get-WindowsAutopilotInfo saves the hardware hash. Importing it creates the Autopilot device (and a device object in Microsoft Entra ID with the tag as [OrderID]:Sales), the dynamic group picks it up, and the profile assignment follows after some minutes.
+@endtask
+
+@case cs1 | Copperfield Library Service
+## Overview
+Copperfield Library Service (a made-up organisation) runs eight branch libraries. 200 staff have Microsoft 365 E3 licences. All Windows devices are Microsoft Entra joined and enrolled in Intune.
+
+## Existing environment
+Each branch has staff laptops and four public PCs for visitors. Staff use their own Android phones for Teams and email. Every branch has a local IT helper who supports that branch's staff. A small IT team at the central office manages Intune.
+
+## Requirements
+- IT installs the work apps on the staff's personal Android phones, kept apart from their personal apps and data; IT never sees personal data.
+- The public PCs start straight into a set of approved apps (Microsoft Edge and the catalogue app) without anyone signing in.
+- Each branch's IT helper can run remote actions on the devices of their own branch only, and sees only that branch's policies.
+- Monthly updates first go to ten test laptops; all other devices get them a week later.
+- When someone has used a device's local administrator password, it changes soon afterwards.
+@endcase
+
+@choice c1 | Enrollment | 1 | case=cs1
+How should the staff's personal Android phones be enrolled?
+- Android Enterprise fully managed
++ Android Enterprise personally owned with a work profile
+- Android Enterprise dedicated devices
+- They shouldn't be enrolled at all: app protection policies only
+! A work profile keeps work apps and data in their own container on a personal phone; IT manages only that part. Fully managed and dedicated are for company-owned phones. App protection without enrolment protects data in apps, but it can't install the work apps, which the requirement asks for.
+
+@multi c2 | Configuration | 1 | case=cs1
+Which two settings should the kiosk profile for the public PCs use? Each right answer is part of the solution.
++ Kiosk mode: Multi app kiosk
++ User logon type: Auto logon
+- Kiosk mode: Single app, full-screen kiosk
+- User logon type: Microsoft Entra user or group
+! Several approved apps need multi-app mode, and starting without anyone signing in needs auto logon (a local account Windows signs in by itself). Single-app mode allows one app only.
+
+@choice c3 | Monitoring | 1 | case=cs1
+How do you give each branch's IT helper what they need, with the least effort?
+- Make every helper an Intune Administrator
++ Per branch: a scope tag on that branch's policies, and a Help Desk Operator role assignment with the branch's groups as scope and the branch's tag
+- Per branch: a separate Intune tenant
+- Per branch: a Conditional Access policy for the helper
+! The role assignment's scope groups decide which devices and users the helper can act on; scope tags decide which objects (policies, apps) they see. Intune Administrator would give them everything.
+
+@yesno c4 | Updates | 3 | case=cs1
+For the update requirement, decide whether each statement is true.
+Y A ring with a quality update deferral of 0 days for the test laptops and one with 7 days for everyone else meets it.
+N The ten test laptops should be in both rings.
+Y The ring for everyone else should exclude the group of test laptops.
+! Two rings with different deferrals give the week between them. A device in two rings has a conflict, so the broad ring excludes the test group.
+
+@choice c5 | Protection | 1 | case=cs1
+Which LAPS setting meets the requirement about the local administrator password?
+- Password Age Days set to 1
++ Post Authentication Actions, with a short Post Authentication Reset Delay
+- Password Complexity set to the longest option
+- Administrator Account Name set to a new account
+! The post-authentication actions reset the password (and can sign the account out or restart the device) a set number of hours after the password is used. Password Age Days can't even go below 7 when the password is backed up to Microsoft Entra ID, and an age rotates the password on a schedule whether or not anyone used it.
+
+@choice q01 | Identity | 1
+Autopilot devices imported with the group tag Kiosk must end up in a dynamic group. Which membership rule?
+- (device.deviceCategory -eq "Kiosk")
++ (device.devicePhysicalIds -any (_ -eq "[OrderID]:Kiosk"))
+- (device.enrollmentProfileName -eq "Kiosk")
+- (user.department -eq "Kiosk")
+! The group tag becomes [OrderID]:tag in the device's devicePhysicalIds, a multi-valued property, so the rule uses -any with _ for each value.
+
+@choice q02 | Identity | 1
+You try to assign a Microsoft 365 E3 licence to a new user and the portal refuses. What is missing?
+- A manager
++ A usage location
+- A department
+- A mobile phone number
+! A licence can't be assigned before the user has a usage location (the country where they use the services).
+
+@choice q03 | Enrollment | 1
+The MDM user scope is set to Some, with the group Intune pilot users. Sam, who isn't in that group, joins a new PC to Microsoft Entra ID. What happens?
++ The PC is joined to Microsoft Entra ID but not enrolled in Intune
+- The join fails
+- The PC is joined and enrolled
+- The PC is registered instead of joined
+! The MDM user scope decides who is enrolled automatically when they join a device. Users outside it still join; their device just isn't managed.
+
+@choice q04 | Enrollment | 1
+Priya has enrolled five devices and can't enrol a sixth. The tenant uses the default enrolment restrictions. What should you do?
+- Assign Priya another licence
++ Raise the device limit in a device limit restriction for Priya's group (or remove devices she no longer uses)
+- Set the MDM user scope to All
+- Block personally owned devices
+! The default device limit restriction allows five devices per user; a restriction with a higher limit (up to 15) assigned to her group raises it.
+
+@choice q05 | Compliance | 1
+Which action for noncompliance tells users that their device has become noncompliant?
+- Mark device noncompliant
++ Send email to end user, with a notification message template
+- Retire the noncompliant device
+- Remotely lock the noncompliant device
+! The email action uses a notification message template you create first. Marking the device noncompliant is the action that is always there.
+
+@choice q06 | Compliance | 1
+You must block legacy authentication (old mail clients that can't do MFA). Which Conditional Access configuration does it?
+- Grant access with Require multifactor authentication for Browser clients
++ Client apps: Exchange ActiveSync clients and Other clients; grant: Block access
+- Device platforms: exclude Windows; grant: Block access
+- Locations: All trusted locations; grant: Block access
+! Legacy authentication arrives through the client app types Exchange ActiveSync clients and Other clients; blocking those leaves modern clients alone.
+
+@choice q07 | Deployment | 1
+A partner must install the device-targeted apps on new laptops before they are shipped, so the user's setup is quick. What should the Autopilot profile allow?
+- Self-deploying mode
++ Pre-provisioned deployment
+- Convert all targeted devices to Autopilot
+- Skip AD connectivity check
+! With pre-provisioning allowed, a technician presses the Windows key five times at the first setup screen, provisions the device part, and reseals it. The user finishes the rest later.
+
+@choice q08 | Deployment | 1
+RB-LT-002 runs Windows 11 Pro and is Microsoft Entra joined. Riverbend wants it on Windows Enterprise without reinstalling. Which is the simplest way?
+- An in-place upgrade from installation media
++ Give its user a licence that includes Windows Enterprise E3 (subscription activation)
+- A provisioning package
+- Wipe it and reinstall with Autopilot
+! Subscription activation steps a Pro device up to Enterprise when a user with a Windows Enterprise E3 or E5 licence signs in on an Entra joined (or hybrid joined) device. Nothing is reinstalled.
+
+@choice q09 | Configuration | 1
+A profile must reach only the Windows devices whose model starts with "Lumen Book", whichever group they are in. What should you use?
+- A dynamic user group
++ An assignment to All devices with a filter (device.model -startsWith "Lumen Book") in include mode
+- A scope tag
+- A Conditional Access device filter
+! Assignment filters narrow an assignment by device properties when the device checks in. They are quicker to apply than building a dynamic group, and the same filter can be reused.
+
+@choice q10 | Configuration | 1
+A platform script must write a value under HKEY_CURRENT_USER for the signed-in user. Which script setting?
+- Enforce script signature check: Yes
++ Run this script using the logged on credentials: Yes
+- Run script in 64 bit PowerShell Host: Yes
+- Assign it to a device group
+! By default platform scripts run as SYSTEM; with the logged-on credentials they run as the user and can reach that user's registry hive.
+
+@choice q11 | Updates | 1
+RB-DT-010 runs Windows 10, version 22H2, and hasn't had a monthly update since October 2025. Why?
+- Its update ring pauses quality updates
++ Windows 10 reached its end of support in October 2025, so it gets no more monthly updates unless it is enrolled in Extended Security Updates
+- Its quality update deferral is too long
+- It needs an expedited quality update
+! After 14 October 2025 Windows 10 only gets security updates through the paid Extended Security Updates programme. Moving to Windows 11 (a feature updates policy) is the lasting fix.
+
+@choice q12 | Updates | 1
+The Windows feature update report in the portal stays empty. What is the most likely cause?
++ The tenant's setting to enable features that need Windows diagnostic data isn't turned on
+- No update ring is assigned
+- The devices aren't hybrid joined
+- Conditional Access blocks the reports
+! The Windows update reports need the tenant's Windows data setting (Tenant administration > Connectors and tokens > Windows data) and devices that send at least the required diagnostic data.
+
+@choice q13 | Monitoring | 1
+You need logs from a Windows device that a user reports as broken, without connecting to it. Which remote action?
+- Sync
++ Collect diagnostics
+- Fresh Start
+- Restart
+! Collect diagnostics gathers logs and registry keys from the device and uploads them, so you can download them from the device's page.
+
+@choice q14 | Apps | 1
+Version 3.0 of a Win32 app must replace version 2.4 on every device, removing the old one first. What should you configure on the 3.0 app?
+- A dependency on version 2.4
++ Supersedence of version 2.4, with Uninstall previous version set to Yes
+- An Uninstall assignment of version 3.0
+- A requirement rule for version 2.4
+! Supersedence says which app this one replaces; with uninstall previous version, Intune removes 2.4 before installing 3.0. A dependency would install 2.4.
+
+@choice q15 | Protection | 1
+Users with local admin rights keep turning off Microsoft Defender Antivirus features. What should you turn on?
+- Cloud-delivered protection
++ Tamper protection, in a Windows Security experience profile
+- Controlled folder access
+- An attack surface reduction rule in Audit mode
+! Tamper protection stops local changes to Defender's security settings, even by administrators; the managed settings stay as Intune set them.
+
+@multi m1 | Apps | 1
+Which two default return codes of a Win32 app mean "installed, but a restart is involved"? Each right answer is part of the solution.
++ 3010 (soft reboot)
++ 1641 (hard reboot)
+- 1618 (retry)
+- 1603 (failure)
+! 3010 means the install succeeded and a restart is needed; 1641 means it succeeded and the installer started a restart. 1618 means another installation was running, so Intune tries again; 1603 is a failure.
+
+@multi m2 | Protection | 1
+Devices must be blocked from company data when Defender for Endpoint rates them as medium risk or higher. Which three things are needed? Each right answer is part of the solution.
++ The connection between Microsoft Defender for Endpoint and Intune turned on
++ Devices onboarded through an endpoint detection and response policy
++ A compliance policy that requires the device to be at or under the machine risk score Low, used by Conditional Access
+- An attack surface reduction rule in Block mode
+- A security baseline for Microsoft Edge
+! The connector lets Defender for Endpoint send risk to Intune, onboarding gives devices a risk score, and the compliance setting turns a high score into noncompliance that Conditional Access acts on.
+
+@multi m3 | Configuration | 1
+Which two show you which Intune policies reached a Windows device? Each right answer is part of the solution.
++ The device's page in the portal (device configuration and compliance states)
++ An MDM diagnostics report made on the device with mdmdiagnosticstool
+- gpresult /r on the device
+- Get-MpComputerStatus on the device
+! The portal shows each policy's state for the device, and the MDM diagnostics report lists what the device's MDM client received. gpresult shows Group Policy, which Intune doesn't use.
+
+@order o1 | Protection | 1
+RB-LT-001 must be encrypted silently with BitLocker. Which four steps, in order?
+1 Create a disk encryption policy with Require Device Encryption enabled, warnings for other disk encryption disabled and standard user encryption allowed
+2 Assign the policy to a group that holds RB-LT-001
+3 Sync RB-LT-001 so it gets the policy
+4 Check Get-BitLockerVolume on the device and the recovery key on its page in the portal
+x Ask the user to start encryption in Control Panel
+! The policy only acts once it is assigned and the device has checked in. Silent encryption needs no user at all.
+
+@order o2 | Deployment | 1
+A technician pre-provisions a laptop with Windows Autopilot before it goes to its user. Which four steps happen, in order?
+1 Turn the laptop on and press the Windows key five times on the first setup screen
+2 Choose pre-provisioning and start provisioning
+3 The device's apps and policies install, then the technician reseals the laptop
+4 The user turns the laptop on and signs in to finish the user part
+x The user presses Shift+F10 and imports the hardware hash
+! Pre-provisioning (technician flow) splits setup in two: the device part at the technician's desk, the user part later at the user's.
+
+@order o3 | Updates | 1
+Windows 10 PCs that can run Windows 11 must move to Windows 11, version 24H2. Which four steps, in order?
+1 Create a feature updates policy for Windows 11, version 24H2
+2 Assign it to a group of the Windows 10 PCs
+3 Let the PCs check in and install the update
+4 Follow the progress in the Windows feature update report
+x Pause the ring's feature updates
+! Pausing feature updates would stop the upgrade. The report needs the tenant's Windows data setting.
+
+@yesno y1 | Enrollment | 3
+Decide whether each statement about Windows enrolment is true.
+Y "Enroll only in device management" enrols a PC in Intune without joining it to Microsoft Entra ID.
+Y Devices set up with Windows Autopilot are treated as corporate-owned.
+N Blocking personally owned Windows devices also blocks Windows Autopilot.
+! Enroll only in device management is MDM enrolment without a join. Autopilot, provisioning packages, Group Policy and co-management enrolments count as corporate, so they still work when personal devices are blocked.
+
+@yesno y2 | Configuration | 3
+Decide whether each statement about assignment filters is true.
+N A filter can be used on an excluded group.
+Y A filter's platform must match the platform of the policy it is used with.
+Y In exclude mode, the policy reaches the group's devices that don't match the filter.
+! Filters are for included groups only, in include mode (only matching devices) or exclude mode (all but matching devices), and a Windows filter can only be used with a Windows policy.
+
+@yesno y3 | Protection | 3
+Decide whether each statement about attack surface reduction rules is true.
+Y A rule in Audit mode records what it would have blocked without blocking it.
+Y A rule in Warn mode blocks, but lets the user choose to go on.
+N A rule in Off mode still blocks the most dangerous files.
+! Not configured and Off do nothing; Audit only records; Warn blocks with a choice to continue; Block blocks.

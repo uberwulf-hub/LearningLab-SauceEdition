@@ -1,0 +1,146 @@
+NAME
+       journalctl - read the systemd journal (the system log)
+
+SYNOPSIS
+       journalctl [OPTION...] [FIELD=VALUE...]
+
+DESCRIPTION
+       systemd-journald collects messages from the kernel, from services
+       (whatever they print and send to syslog) and from the boot itself,
+       with the time, host, program, process ID, unit and priority of each.
+       journalctl shows them, oldest first, in a pager (less): use the arrow
+       keys and / to search, q to quit. Normal users see their own messages;
+       members of the wheel group (and adm, systemd-journal) and root see
+       everything.
+
+       rsyslog also writes most messages as text to /var/log/messages,
+       /var/log/secure (logins, sudo), /var/log/cron and others.
+
+   Keeping the journal
+       By default RHEL keeps the journal in /run/log/journal, which is in
+       memory and is lost at every reboot (Storage=auto with no
+       /var/log/journal directory). To keep it on disk across reboots,
+       either create the directory or set it in the configuration:
+
+           mkdir -p /var/log/journal          (with Storage=auto)
+           or: Storage=persistent in /etc/systemd/journald.conf
+           then: systemctl restart systemd-journald
+
+       After that, journalctl --list-boots shows earlier boots and -b -1
+       shows the previous one.
+
+   Priorities
+       0 emerg, 1 alert, 2 crit, 3 err, 4 warning, 5 notice, 6 info,
+       7 debug. -p err shows err and everything more serious.
+
+OPTIONS
+       -u UNIT, --unit=UNIT
+              Messages of one service, such as -u sshd or -u httpd.service.
+
+       -b [N], --boot[=N]
+              Messages of this boot only; -b -1 the previous boot (needs a
+              persistent journal).
+
+       --list-boots
+              List the boots in the journal.
+
+       -p PRIORITY, --priority=PRIORITY
+              Only this priority and more serious; a range like -p
+              warning..err works too.
+
+       -S TIME, --since=TIME; -U TIME, --until=TIME
+              Only messages from (or up to) TIME: "2026-03-02 09:00",
+              "09:30", today, yesterday, "1 hour ago", "-10min".
+
+       -n [N], --lines[=N]
+              Only the last N lines (10 by default).
+
+       -f, --follow
+              Keep showing new messages as they arrive (Ctrl+C stops).
+
+       -r, --reverse
+              Newest first.
+
+       -e, --pager-end
+              Jump to the end in the pager.
+
+       -x, --catalog
+              Add explanations to messages where the catalog has them.
+
+       -k, --dmesg
+              Only kernel messages (of this boot).
+
+       -t ID, --identifier=ID
+              Only messages with this syslog identifier, such as -t sudo or
+              the tag of logger -t.
+
+       -g PATTERN, --grep=PATTERN
+              Only messages whose text matches the regular expression.
+
+       -o FORMAT, --output=FORMAT
+              short (the default), short-iso, short-precise, verbose (every
+              field), json, json-pretty, cat (only the text).
+
+       --no-pager
+              Print straight to the terminal.
+
+       -q, --quiet
+              No informational lines such as "-- No entries --".
+
+       --disk-usage
+              How much space the journal files use.
+
+       --vacuum-size=SIZE, --vacuum-time=TIME
+              Delete old journal files until they use less than SIZE, or
+              those older than TIME.
+
+       --flush
+              Move the journal from /run to /var/log/journal now.
+
+       --rotate
+              Start new journal files.
+
+       --utc  Show times in UTC.
+
+   Matching fields
+       FIELD=VALUE arguments show only entries with that field, for example
+       _PID=1234, _UID=1000, _COMM=sshd, _SYSTEMD_UNIT=sshd.service,
+       PRIORITY=3, SYSLOG_IDENTIFIER=sudo. -o verbose shows all fields of an
+       entry.
+
+EXAMPLES
+       Why did the web server not start?
+
+           systemctl status httpd
+           journalctl -u httpd -n 20
+
+       Errors since this boot:
+
+           journalctl -b -p err
+
+       What happened in the last hour, newest first:
+
+           journalctl --since "1 hour ago" -r
+
+       Follow sshd while someone logs in from server2:
+
+           journalctl -u sshd -f
+
+       Messages a script sent with logger -t backup:
+
+           journalctl -t backup
+
+       Save today's warnings to a file:
+
+           journalctl --since today -p warning --no-pager > /root/warnings.txt
+
+FILES
+       /etc/systemd/journald.conf
+              Settings (Storage=, SystemMaxUse=...).
+
+       /run/log/journal, /var/log/journal
+              Where the journal is kept (in memory, or on disk).
+
+SEE ALSO
+       systemd-journald(8), journald.conf(5), logger(1), systemctl(1),
+       rsyslogd(8)

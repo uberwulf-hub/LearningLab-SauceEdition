@@ -1,0 +1,23 @@
+SYNOPSIS: Changes the properties of an Active Directory group, including its scope.
+DESCRIPTION:
+Set-ADGroup changes a group's description, display name, category or scope. Membership is changed with Add-ADGroupMember and Remove-ADGroupMember instead.
+Not every scope change is allowed directly. Global and domain local groups can become universal (if their members allow it), and a universal group can become global or domain local. Global to domain local, or the other way, needs a stop at Universal first.
+PARAMETER Identity:
+The group. Position 0, and takes pipeline input.
+PARAMETER GroupScope:
+The new scope: DomainLocal, Global or Universal.
+PARAMETER GroupCategory:
+Security or Distribution.
+PARAMETER Description:
+A new description.
+PARAMETER DisplayName:
+A new display name.
+PARAMETER Replace:
+A hash table of LDAP attributes to set.
+PARAMETER Clear:
+Attributes to empty.
+EXAMPLE: Set-ADGroup Helpdesk -Description "Help desk staff, can reset passwords in OU=Staff"
+Updates the description of the Helpdesk group.
+EXAMPLE: Set-ADGroup "Sales Managers" -GroupScope Universal
+Turns a global group into a universal one.
+RELATED: Get-ADGroup, New-ADGroup, Add-ADGroupMember

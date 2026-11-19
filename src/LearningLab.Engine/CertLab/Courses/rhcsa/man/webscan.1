@@ -1,0 +1,25 @@
+NAME
+       webscan - look for pages a web site doesn't link to (Cyber Range)
+
+SYNOPSIS
+       webscan [-w WORDLIST] http://HOST[:PORT]/[FOLDER/]
+
+DESCRIPTION
+       webscan asks the web server for a list of common page and folder names
+       (default /usr/share/wordlists/range-paths.txt) and reports the ones that
+       exist (any answer but 404 Not Found). Forgotten admin pages, backups and
+       test folders are often found this way. Every request lands in the web
+       server's log, so it is noisy.
+
+       Also look at robots.txt: it lists pages a site asks search engines not
+       to show, which tells visitors where to look.
+
+OPTIONS
+       -w WORDLIST   the names to try, one on each line
+
+EXAMPLES
+       webscan http://10.10.1.40/
+       curl http://10.10.1.40/robots.txt
+
+SEE ALSO
+       curl(1), nmap(1), vulnlookup(1)

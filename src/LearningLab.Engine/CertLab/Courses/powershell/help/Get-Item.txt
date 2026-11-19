@@ -1,0 +1,24 @@
+SYNOPSIS: Gets one item itself (a file, folder, registry key, variable...), not what is inside it.
+DESCRIPTION:
+Get-Item returns the object for a path: FileInfo or DirectoryInfo on the disk, a RegistryKey in the registry, an entry on Env:. Use it to read properties ((Get-Item app.log).Length) or to call methods.
+PARAMETER Path:
+The items to get. Wildcards are allowed; hidden items match a wildcard only with -Force.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Force:
+Also matches hidden and system items.
+PARAMETER Stream:
+Lists the alternate data streams of a file, for example Zone.Identifier, the mark Windows puts on downloaded files. Use * for all of them.
+PARAMETER Include:
+Keeps only names matching these patterns.
+PARAMETER Exclude:
+Leaves out names matching these patterns.
+PARAMETER Filter:
+A file name pattern.
+EXAMPLE: Get-Item C:\LabFiles\app.log | Format-List *
+Every property of a file.
+EXAMPLE: (Get-Item HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run).Property
+The value names in a registry key.
+EXAMPLE: Get-Item $HOME\Downloads\Get-Inventory.ps1 -Stream *
+Shows the Zone.Identifier stream of a downloaded script.
+RELATED: Get-ChildItem, Get-ItemProperty, Set-Item

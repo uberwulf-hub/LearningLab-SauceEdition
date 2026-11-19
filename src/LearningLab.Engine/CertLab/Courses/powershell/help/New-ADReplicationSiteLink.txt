@@ -1,0 +1,23 @@
+SYNOPSIS: Creates a site link between Active Directory sites.
+DESCRIPTION:
+New-ADReplicationSiteLink lets two or more sites replicate with each other. Choose the cost (lower is preferred when there is more than one path) and the interval (between 15 and 10080 minutes; 180 by default).
+IP is the normal transport. SMTP links can only carry the schema, configuration and global catalog data between domains, never a domain's own data, and are rarely used.
+PARAMETER Name:
+The link's name, such as HQ-Seattle. Position 0.
+PARAMETER SitesIncluded:
+The sites it connects. Position 1.
+PARAMETER Cost:
+The cost, 100 by default. Lower costs win.
+PARAMETER ReplicationFrequencyInMinutes:
+How often replication runs over the link, at least 15 minutes.
+PARAMETER InterSiteTransportProtocol:
+IP (the default) or SMTP.
+PARAMETER Description:
+A note.
+PARAMETER PassThru:
+Returns the new link.
+EXAMPLE: New-ADReplicationSiteLink HQ-Seattle -SitesIncluded HQ, Seattle -Cost 50 -ReplicationFrequencyInMinutes 15
+A cheap, frequent link between head office and Seattle.
+EXAMPLE: Get-ADReplicationSiteLink -Filter * | Select-Object Name, Cost, SitesIncluded
+Checks the links afterwards.
+RELATED: Get-ADReplicationSiteLink, Set-ADReplicationSiteLink, New-ADReplicationSite

@@ -1,0 +1,60 @@
+title: Members only
+level: Beginner
+kind: Groups
+topic: Linux
+teaser: a folder you can open because of a group you're in
+points: 40
+order: 61
+answer: {{SECRET}}
+var: GRP = pick:auditors|payroll|archive|opsteam|helpdesk|records
+var: SECRET = word
+
+@intro
+Under /srv there are several team folders. Most are closed to you, but you (the user
+player) were added to one team's group, and that group may read its folder. Find out
+which group you belong to, open that team's note, and give the password written in it.
+
+@setup
+for g in auditors payroll archive opsteam helpdesk records; do
+  groupadd $g 2>/dev/null || true
+  mkdir -p /srv/$g
+  echo "Team notes for $g - members only." > /srv/$g/note.txt
+  chgrp -R $g /srv/$g
+  chmod 750 /srv/$g
+  chmod 640 /srv/$g/note.txt
+done
+usermod -aG {{GRP}} player
+printf 'Team notes for {{GRP}} - members only.\nThe password for the old archive is: {{SECRET}}\n' > /srv/{{GRP}}/note.txt
+chgrp {{GRP}} /srv/{{GRP}}/note.txt
+chmod 640 /srv/{{GRP}}/note.txt
+
+@solution
+id
+ls -l /srv
+cat /srv/{{GRP}}/note.txt
+
+@walkthrough
+id prints who you are: your user, your main group, and every other group you belong to.
+
+    id      -> ... groups=1001(player),1003({{GRP}})
+
+ls -l /srv shows each team folder with its group and permissions drwxr-x---: the owner
+(root) may do everything, the group may read and enter (r-x), and everybody else
+nothing (---). You are in {{GRP}}, so that folder - and only that one - opens for you:
+
+    cat /srv/{{GRP}}/note.txt
+
+The password in the note is the answer. Groups are how Linux shares files with a team
+without opening them to everyone; check who is in a group with getent group NAME.
+
+@hint 2
+What to think about first: besides its owner, every file and folder belongs to a group, and the people in that group get their own permissions. So the question is: which groups are you in, and which folder belongs to one of them?
+
+@hint 3
+The command id prints your user name and every group you belong to (after "groups="). Run it: id. One group there has the same name as a team folder under /srv.
+
+@hint 4
+ls -l /srv lists the team folders. The permissions drwxr-x--- mean: d is a folder; the owner may read, write and enter (rwx); the group may read and enter (r-x); everyone else may do nothing (---). The fourth column is the folder's group.
+
+@hint 6
+Open the note in the folder whose group you are in: cat /srv/GROUP/note.txt (put your group's name in place of GROUP). The other folders will say "Permission denied", which is the lock doing its job. The password in the note is the answer.

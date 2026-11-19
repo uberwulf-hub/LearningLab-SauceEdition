@@ -1,0 +1,50 @@
+NAME
+       lvreduce - make a logical volume smaller
+
+SYNOPSIS
+       lvreduce {-L [-]SIZE | -l [-]EXTENTS} [-r] [-f] LV
+
+DESCRIPTION
+       lvreduce shrinks a logical volume. The extents it frees go back to the
+       volume group.
+
+       Shrinking is risky: anything stored past the new end of the LV is
+       lost. A file system must therefore be shrunk first, and only some
+       file systems can shrink. ext4 can (resize2fs, unmounted). XFS cannot
+       shrink at all: to make an XFS volume smaller, back up the files,
+       recreate the LV and the file system, and restore.
+
+       With -r, lvreduce shrinks the ext4 file system before the LV, and
+       refuses when the file system cannot be shrunk. Without -r it checks
+       too: it refuses when a file system on the LV is bigger than the new
+       size. On an LV with no file system it warns that this may destroy
+       data and asks before it goes on.
+
+OPTIONS
+       -L, --size [-]SIZE
+              The new size, or with a minus sign the amount to remove. Units
+              K, M, G, T.
+
+       -l, --extents [-]N
+              The same in extents.
+
+       -r, --resizefs
+              Shrink the file system first (ext4).
+
+       -f, --force
+              Do not ask for confirmation.
+
+       -y, --yes
+              Answer yes to all questions.
+
+EXAMPLES
+       Shrink an ext4 LV to 400 MiB, file system included:
+
+           lvreduce -r -L 400M /dev/vgdata/archive
+
+       Remove 200 MiB from an LV that holds no file system:
+
+           lvreduce -f -L -200M vgdata/scratch
+
+SEE ALSO
+       lvextend(8), lvresize(8), resize2fs(8), lvm(8)

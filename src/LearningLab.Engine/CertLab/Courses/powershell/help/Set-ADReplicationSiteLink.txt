@@ -1,0 +1,20 @@
+SYNOPSIS: Changes a site link's cost, interval or sites.
+DESCRIPTION:
+Set-ADReplicationSiteLink adjusts an existing link: make replication more frequent, change which path is preferred (cost), or add and remove sites. Sites are added and removed with a hash table so the other sites stay in the link.
+PARAMETER Identity:
+The site link, such as DEFAULTIPSITELINK. Position 0, and takes pipeline input.
+PARAMETER Cost:
+The new cost.
+PARAMETER ReplicationFrequencyInMinutes:
+The new interval, at least 15 minutes.
+PARAMETER SitesIncluded:
+Adds or removes sites: @{Add="Seattle"} or @{Remove="Seattle"}.
+PARAMETER Description:
+A new description.
+PARAMETER PassThru:
+Returns the link after the change.
+EXAMPLE: Set-ADReplicationSiteLink DEFAULTIPSITELINK -ReplicationFrequencyInMinutes 15
+Replicates between the sites every 15 minutes instead of every 180.
+EXAMPLE: Set-ADReplicationSiteLink DEFAULTIPSITELINK -SitesIncluded @{Add="Seattle"}
+Adds the new Seattle site to the default link.
+RELATED: Get-ADReplicationSiteLink, New-ADReplicationSiteLink, Get-ADReplicationSite

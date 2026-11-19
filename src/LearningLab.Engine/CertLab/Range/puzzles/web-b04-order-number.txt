@@ -1,0 +1,67 @@
+title: Order number one
+category: web
+level: Beginner
+kind: Web
+topic: Access control
+teaser: change one number in the address and see someone else's order
+points: 40
+order: 4
+packages: httpd
+answer: flag
+var: ME = person
+var: MYPW = word
+var: MYID = num:3120-3980
+var: FIRST = num:1001-1009
+var: OTHER = person
+
+@intro
+You bought a pair of wool socks from Copperleaf Market (http://copperleaf.example/).
+The shop's email says you can see your order any time at:
+
+    http://copperleaf.example/orders?id={{MYID}}
+
+Look closely at that address. The shop's very first order was a test order the
+staff made when the shop opened, with a note only staff should see. Find it.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "weak": "idor", "me": "{{ME}}", "mypass": "{{MYPW}}",
+                  "accounts": "{{OTHER}}|{{MYPW}}x|customer|{{OTHER}}@mail.example;shopstaff|not-telling|admin|staff@copperleaf.example",
+                  "orders": "{{FIRST}}|shopstaff|1 test kettle|TEST ORDER - staff code {{FLAG}};{{MYID}}|{{ME}}|1 pair of wool socks|leave at the door;2950|{{OTHER}}|1 trail tent|gift wrap please" } } ]
+
+@solution
+curl -s "http://copperleaf.example/orders?id={{MYID}}"
+curl -s "http://copperleaf.example/orders?id=1000"
+curl -s "http://copperleaf.example/orders?id={{FIRST}}"
+
+@walkthrough
+The address ends in ?id={{MYID}}: the order is picked by a plain number, and the
+shop shows whatever number it is asked for without checking that the order is
+yours. That is called an insecure direct object reference (IDOR), a kind of broken
+access control.
+
+    curl -s "http://copperleaf.example/orders?id={{MYID}}"
+
+Your own order loads. Order numbers go up one by one, so the first orders have
+small numbers. Trying from 1000 upwards:
+
+    curl -s "http://copperleaf.example/orders?id={{FIRST}}"
+
+shows the staff's test order and its note with the staff code. The fix is one
+check on the server: is this order's customer the person who is signed in?
+
+@hint 2
+What to think about first: the address of your order has a number in it. The website uses that number to decide which order to show. Ask yourself: what would happen if you asked for a different number? A careful shop checks that the order belongs to you; a careless one just shows it.
+
+@hint 3
+Try your own order first: curl -s "http://copperleaf.example/orders?id={{MYID}}" (the quotes stop the shell from treating the ? specially). Then change the number by one and see what you get. If you can see a stranger's order, the shop isn't checking who you are.
+
+@hint 4
+Order numbers usually count up from the day a shop opens, so the very first orders have the smallest numbers. A shop's numbering often starts at a round number such as 1000 or 1001.
+
+@hint 6
+Near step by step: try curl -s "http://copperleaf.example/orders?id=1001", then 1002, 1003 and so on up to 1009. One of them is the TEST ORDER made by staff, and its note has the staff code that starts with FLAG{.

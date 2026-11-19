@@ -1,0 +1,31 @@
+# Deck: local-storage | Local storage | Local storage
+List all disks, partitions and logical volumes with their mount points :: `lsblk`
+Show the file system type, label and UUID of every block device :: `lsblk -f`
+Print only the UUID of the file system on /dev/vdb1 :: `blkid -s UUID -o value /dev/vdb1`
+Show the partition table of /dev/vdb with fdisk :: `fdisk -l /dev/vdb`
+How many primary partitions does an MBR table allow, and how do you get more? :: Four. Make one of them an extended partition; logical partitions (5, 6...) go inside it.
+Three advantages of GPT over MBR :: Up to 128 partitions, disks larger than 2 TiB, and a backup copy of the table at the end of the disk (partitions can also have names).
+Write a new, empty GPT partition table on /dev/vdb with parted :: `parted -s /dev/vdb mklabel gpt`
+Create a GPT partition named data from 1 MiB to 1025 MiB on /dev/vdb :: `parted -s /dev/vdb mkpart data 1MiB 1025MiB`
+Mark partition 2 of /dev/vdb for LVM with parted :: `parted -s /dev/vdb set 2 lvm on`
+Delete partition 3 of /dev/vdb with parted :: `parted -s /dev/vdb rm 3`
+Show the partition table of /dev/vdb in MiB, to see where free space starts :: `parted -s /dev/vdb unit MiB print`
+fdisk type codes for Linux, Linux swap and Linux LVM :: 83 Linux, 82 Linux swap, 8e Linux LVM (in gdisk: 8300, 8200, 8e00).
+In fdisk, which key writes the changes, and which leaves without writing? :: w writes the table and quits; q quits without changing anything.
+Make the kernel read the partition table of /dev/vdb again :: `partprobe /dev/vdb`
+Turn /dev/vdb1 into an LVM physical volume :: `pvcreate /dev/vdb1`
+Create the volume group vgdata on /dev/vdb1 with 16 MiB extents :: `vgcreate -s 16M vgdata /dev/vdb1`
+Create the 500 MiB logical volume lvweb in vgdata :: `lvcreate -n lvweb -L 500M vgdata`
+Create the logical volume lvdb of exactly 40 extents in vgdata :: `lvcreate -n lvdb -l 40 vgdata`
+Create the logical volume lvrest using all the free space of vgdata :: `lvcreate -n lvrest -l 100%FREE vgdata`
+A VG has 8 MiB extents and you ask lvcreate for 100M. What size do you get? :: 104 MiB: LVM rounds up to whole extents (13 x 8 MiB).
+Show the extent size of the volume group vgdata, without headings :: `vgs --noheadings -o vg_extent_size vgdata`
+Add the physical volume /dev/vdc1 to the volume group vgdata :: `vgextend vgdata /dev/vdc1`
+Remove the logical volume vgdata/lvold without being asked to confirm :: `lvremove -y vgdata/lvold`
+Remove the empty volume group vgold :: `vgremove vgold`
+Wipe the LVM label from /dev/vdc1 :: `pvremove /dev/vdc1`
+The order for taking an LV apart :: Unmount it and remove its fstab line, then lvremove, then vgremove, then pvremove, then delete the partition.
+Prepare the partition /dev/vdb2 as swap space :: `mkswap /dev/vdb2`
+The /etc/fstab line that turns on the swap LV /dev/vgdata/swap at boot :: /dev/vgdata/swap none swap defaults 0 0
+Turn on every swap area listed in /etc/fstab :: `swapon -a`
+Why mount by UUID or LABEL rather than /dev/vdb1? :: Device names follow the order the kernel finds disks and can change; a UUID or label stays with the file system.

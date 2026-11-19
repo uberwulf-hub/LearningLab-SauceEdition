@@ -1,0 +1,61 @@
+# Sheet: frameworks | Frameworks, laws and standards | Security program management and oversight
+## NIST Cybersecurity Framework 2.0 (2024)
+Govern (GV) :: new in 2.0: strategy, roles, policy, risk management and supply chain oversight; sits at the centre of the others
+Identify (ID) :: know your assets, risks and improvement needs
+Protect (PR) :: safeguards: access control, training, data security, platform security
+Detect (DE) :: find attacks and anomalies through monitoring
+Respond (RS) :: act on a detected incident: manage, analyse, report, contain
+Recover (RC) :: restore systems and services and communicate during recovery
+Profiles and tiers :: current vs target profile shows gaps; tiers 1 to 4 (partial, risk informed, repeatable, adaptive) describe maturity
+## NIST Risk Management Framework (SP 800-37)
+1 Prepare :: set context, roles and risk strategy
+2 Categorize :: rate the system by impact (low, moderate, high)
+3 Select :: choose controls from SP 800-53
+4 Implement :: put the controls in place and document them
+5 Assess :: check the controls work as intended
+6 Authorize :: a senior official accepts the risk and grants authority to operate (ATO)
+7 Monitor :: keep watching controls and risk over time
+## Other NIST publications
+SP 800-53 :: the catalogue of security and privacy controls
+SP 800-61 :: incident response guidance (Rev. 3, 2025, built around CSF 2.0; Rev. 2 was the Computer Security Incident Handling Guide)
+SP 800-63 :: digital identity guidelines (passwords, MFA, identity proofing)
+SP 800-88 :: media sanitization (clear, purge, destroy)
+## ISO and CIS
+ISO/IEC 27001 :: requirements for an information security management system (ISMS); organizations can be certified
+ISO/IEC 27002 :: guidance on the security controls that go with 27001
+ISO/IEC 27701 :: privacy extension to 27001 and 27002
+ISO/IEC 27017 / 27018 :: cloud security controls / protecting personal data in public clouds
+ISO 31000 :: general risk management guidelines
+CIS Controls :: 18 prioritized controls made of smaller safeguards, grouped into implementation groups IG1 to IG3
+CIS Benchmarks :: hardening guides for specific systems such as Windows, Linux and cloud services
+## Laws and industry standards
+PCI DSS :: card industry standard for anyone handling payment cards; version 4.0.1 is current; not a law but contractually required
+HIPAA :: US law protecting health information (PHI) at covered entities and their business associates
+GDPR :: EU law for personal data of people in the EU; 72-hour breach notice to the authority, fines up to 4 percent of global turnover
+SOX (Sarbanes-Oxley) :: US law for public companies; controls over financial reporting and its records
+GLBA (Gramm-Leach-Bliley) :: US law requiring financial institutions to protect customer data
+FISMA :: US law requiring federal agencies to run security programs (uses NIST RMF)
+CCPA / CPRA :: California consumer privacy laws: rights to know, delete and opt out of sale
+FERPA :: US law protecting student education records
+## Audit reports
+SOC 1 :: controls over financial reporting at a service organization
+SOC 2 Type I :: security, availability, processing integrity, confidentiality or privacy controls as designed at one point in time
+SOC 2 Type II :: the same controls tested over a period (often 6 to 12 months); stronger evidence
+SOC 3 :: a short public summary of a SOC 2 report
+## Attack models
+MITRE ATT&CK :: matrix of real attacker tactics (columns, the why) and techniques (the how), with IDs such as T1566 phishing
+Diamond Model :: every intrusion event links adversary, capability, infrastructure and victim
+Cyber Kill Chain :: Lockheed Martin's seven stages: reconnaissance, weaponization, delivery, exploitation, installation, command and control, actions on objectives
+OWASP Top 10 :: the most critical web application risk categories, updated every few years
+## Vulnerability standards (SCAP and friends)
+SCAP :: NIST suite for automated, standard vulnerability and configuration checking
+CVE :: unique ID for each publicly known vulnerability (CVE-year-number)
+CVSS :: severity score 0.0 to 10.0 (none, low 0.1-3.9, medium 4.0-6.9, high 7.0-8.9, critical 9.0-10.0); version 4.0 is current
+CWE :: list of weakness types behind vulnerabilities
+CPE :: standard names for platforms and products (which software and version is affected)
+CCE :: IDs for configuration settings
+OVAL :: language for describing how to test a system for a vulnerability or setting
+XCCDF :: format for checklists and benchmarks, pointing to OVAL checks
+NVD :: NIST's database of CVEs with CVSS scores and CPE names
+KEV catalog :: CISA's list of vulnerabilities known to be exploited in the wild; patch these first
+STIX / TAXII :: format for threat intelligence / transport for sharing it

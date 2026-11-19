@@ -1,0 +1,30 @@
+NAME
+       chpasswd - set many passwords at once from standard input
+
+SYNOPSIS
+       chpasswd < FILE
+       echo 'USER:PASSWORD' | chpasswd
+
+DESCRIPTION
+       chpasswd reads lines of the form user:password from standard input
+       and sets each user's password, as passwd would. It is meant for
+       scripts and for creating many accounts. It must be run as root.
+
+       The password is given in clear text, so it may be seen in the shell
+       history or in the process list. Remove such files afterwards.
+
+EXAMPLES
+       Set the password of one user without being asked:
+
+           echo 'student:redhat' | chpasswd
+
+       Create users from a list and give each the same first password:
+
+           for u in alice bob carol; do
+               useradd "$u"
+               echo "$u:Welcome1" | chpasswd
+               chage -d 0 "$u"
+           done
+
+SEE ALSO
+       passwd(1), useradd(8), chage(1)

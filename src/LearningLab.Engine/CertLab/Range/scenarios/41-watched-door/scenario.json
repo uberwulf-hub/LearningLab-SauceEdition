@@ -1,0 +1,23 @@
+{
+    "base": "01-open-door",
+    "id": "watched-door",
+    "title": "Door, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Beginner",
+    "order": 1,
+    "summary": "The same little office server as Open Door - but this time someone is watching the logs. Walk in by the quiet path and they never notice. Kick the door down and they lock you out.",
+    "story": "Northwind Books (made up) asked you back to test files01 on 10.10.1.0/24, and this time their IT person is keeping an eye on the server. Get in and reach both flags without making a racket: big scans, failed sign-ins and password guessing all get noticed. You start on scout.",
+    "goal": "Capture both flags the quiet way. The quiet bonus is yours as long as the watcher never raises the alarm.",
+    "skills": "quiet recon, anonymous FTP, ssh, sudo -l, staying under the radar",
+    "quietPoints": 100,
+    "watch": [ "files01" ],
+    "noisySolution": "noisy.txt",
+    "hints": [
+        { "text": "What to think about first: someone is reading the server's logs. Every scan, failed sign-in and guessed password leaves a line there. The trick is not to be clever but to be calm: do fewer things, and only things that look like normal use.", "cost": 3 },
+        { "text": "What counts as noise here: a scan of many ports or many addresses, failed sign-ins, password-guessing tools (pwguess) and page-guessing tools (webscan). What barely counts: one targeted look at one machine, reading public files, and signing in once with a password that works. The Defender tab shows what the watcher has seen so far.", "cost": 5 },
+        { "text": "A quiet look: 'nmap -sV 10.10.1.20' checks only that server's common ports and what answers on them - one short, ordinary-looking scan. It shows FTP (21) and ssh (22). Skip big sweeps like -p- (all 65,535 ports).", "cost": 8 },
+        { "text": "Anonymous FTP is normal traffic: 'ftp 10.10.1.20', user anonymous, any password, then 'cd pub', 'get new-staff.txt', 'bye' and 'cat new-staff.txt'. The note has dana's password. Use it - don't guess it. One correct sign-in looks like dana going to work; a hundred wrong ones look like a burglar.", "cost": 12 },
+        { "text": "Quiet all the way to the end: 'ssh dana@10.10.1.20' with the password, 'cat flag.txt', then 'sudo -l' and sudo find /root -name flag.txt -exec cat {} \\; for root's flag. If you never trip the alarm you keep the whole quiet bonus.", "cost": 16 }
+    ]
+}

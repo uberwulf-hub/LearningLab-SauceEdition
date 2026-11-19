@@ -1,0 +1,20 @@
+SYNOPSIS: Adds a new module repository, such as an internal file share or web server.
+DESCRIPTION:
+Register-PSRepository tells PowerShellGet about another place to get modules from. Companies use it for an internal repository: a shared folder (\\server\share) or an internal NuGet web server holding modules they approved.
+
+A new repository is Untrusted unless you say otherwise.
+PARAMETER Name:
+A short name for the repository, used later with -Repository.
+PARAMETER SourceLocation:
+Where the modules are: a UNC path such as \\WIN-SRV1\PSRepo or a web address.
+PARAMETER InstallationPolicy:
+Trusted or Untrusted (the default).
+EXAMPLE: Register-PSRepository -Name LabRepo -SourceLocation \\WIN-SRV1\PSRepo -InstallationPolicy Trusted
+Registers a file share on WIN-SRV1 as a trusted repository called LabRepo.
+EXAMPLE: Get-PSRepository
+Checks that LabRepo now appears next to PSGallery.
+NOTES:
+A name can be registered only once; to change a repository, use Set-PSRepository.
+In Cert Lab the repository list changes, but Find-Module and Install-Module still cannot download anything: the practice network has no internet and no package server. Copy module folders into C:\Program Files\WindowsPowerShell\Modules instead.
+PowerShell 7.4 and later use PSResourceGet's Register-PSResourceRepository.
+RELATED: Get-PSRepository, Set-PSRepository, Unregister-PSRepository, Find-Module

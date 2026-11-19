@@ -1,0 +1,206 @@
+# Unit: u16 | 16. Automation, incident response and forensics | Security operations
+
+When something goes wrong, speed and order matter. This unit covers automation and orchestration (which makes routine security work fast and consistent), the incident response process in CompTIA's order, training and testing, root cause analysis and threat hunting, digital forensics with its legal side, and the data sources investigators rely on.
+
+## Lesson: l1601 | Automation and orchestration
+
+**Automation** means a script or tool does a task without a person; **orchestration** links many automated tasks across different systems into one workflow. Security uses them for:
+
+- **User provisioning**: create accounts, groups and mailboxes from the HR system when someone joins; remove them when they leave.
+- **Resource provisioning**: build servers, networks and cloud resources from templates (infrastructure as code), already configured to the baseline.
+- **Guard rails**: automatic checks that stop unsafe actions or settings, for example refusing to create a storage bucket open to the public.
+- **Security groups**: adding and removing members, or firewall-style cloud security groups, automatically based on rules.
+- **Ticket creation** and **escalation**: an alert opens a ticket with the details already filled in, and escalates to a senior analyst or manager if it isn't handled in time or is severe.
+- **Enabling and disabling services and access**: for example, disabling an account automatically after impossible travel is detected.
+- **Continuous integration and testing**: code is built and security-tested automatically on every change.
+- **Integrations and APIs**: tools talk to each other through APIs, so the SIEM can tell the firewall to block an address.
+
+**SOAR** (security orchestration, automation and response) platforms run **playbooks**: when an alert of a known type arrives, they gather information, enrich it (look up the IP's reputation, the user's details), and take or suggest actions.
+
+### Benefits
+
+Efficiency and time saved, consistent results (enforcing baselines the same way every time), standard infrastructure configurations, secure scaling, faster reaction time, and staff free to work on harder problems (it is a workforce multiplier) and less burned out by repetitive tasks.
+
+### Other considerations
+
+- **Complexity**: many linked scripts and tools are hard to understand and debug.
+- **Cost**: tools, licences and the people to build them.
+- **Single point of failure**: if the automation platform fails or is compromised, many processes stop or go wrong at once.
+- **Technical debt**: quick scripts that nobody documents or updates become a burden later.
+- **Ongoing supportability**: someone must maintain the automation as systems and APIs change.
+
+> Automation does one task; orchestration ties tasks together across tools. SOAR does this for security alerts.
+
+@quiz
+? When the SIEM detects a malware alert, a platform automatically looks up the file hash, isolates the laptop through the EDR and opens a ticket. What kind of tool is this?
++ SOAR
+- NetFlow
+- DLP
+- SCAP
+! SOAR orchestrates automated playbooks across security tools in response to alerts.
+? A cloud policy refuses any request to create a virtual machine with a public IP address in the finance account. What is this an example of?
+- Escalation
++ A guard rail
+- Technical debt
+- Ticket creation
+! Guard rails automatically stop unsafe configurations before they happen.
+? A team relies on dozens of undocumented scripts written by an engineer who has left. Which automation concern is this?
+- Reaction time
++ Technical debt and ongoing supportability
+- Workforce multiplier
+- Guard rails
+! Unmaintained automation becomes technical debt that is hard to support.
+@end
+
+## Lesson: l1602 | The incident response process
+
+CompTIA's incident response process has seven phases, in this order:
+
+- **1. Preparation**: before anything happens. Write the incident response plan, form the team (and know who to call: management, legal, PR, outside experts), set up tools, logging and communication channels, train people.
+- **2. Detection**: noticing that something may be wrong: an alert, a user report, an unusual log entry.
+- **3. Analysis**: confirming whether it is a real incident, working out its scope (which systems, which data, which accounts), and its severity, so it can be prioritized.
+- **4. Containment**: stopping the spread and limiting damage: isolate infected hosts, disable compromised accounts, block malicious addresses. Short-term containment is fast; longer-term may involve moving systems to a separate segment. Collect evidence before wiping anything.
+- **5. Eradication**: removing the cause: delete malware, close the vulnerability, remove attacker accounts and backdoors, reset credentials.
+- **6. Recovery**: bringing systems back to normal operation: restore from clean backups, rebuild, patch, monitor closely for signs that the attacker is back.
+- **7. Lessons learned**: after the incident, a review meeting and report: what happened, what worked, what didn't, and what to change in the plan, the controls and the training.
+
+> Order: Preparation, Detection, Analysis, Containment, Eradication, Recovery, Lessons learned. Contain before you eradicate; eradicate before you recover.
+
+### Training and testing
+
+People need to practise their roles: training for responders and for everyone else (how to report). Plans are tested with **tabletop exercises** (talking through a scenario) and **simulations** (acting out a realistic event, such as a mock ransomware attack in a test environment).
+
+### Root cause analysis and threat hunting
+
+- **Root cause analysis**: finding the underlying reason an incident happened (not just "the server was infected" but "a missing patch on an internet-facing service, because that server wasn't in the patching inventory"), so the fix prevents it from happening again.
+- **Threat hunting**: proactively searching for attackers who are already inside but haven't triggered any alert, starting from a hypothesis ("if an attacker used this technique, we would see these traces") and from threat intelligence. Hunting assumes prevention may have failed.
+
+@quiz
+? A help desk analyst has just confirmed that a laptop is spreading malware to the file server. What should happen next?
+- Lessons learned meeting
++ Containment, such as isolating the laptop from the network
+- Recovery from backup
+- Preparation of the response plan
+! After detection and analysis, containment stops the spread; eradication and recovery come later.
+? Which phase includes reimaging infected machines from clean images and watching them closely afterwards?
+- Detection
+- Containment
++ Recovery
+- Preparation
+! Recovery returns systems to normal operation and monitors for reinfection.
+? An analyst with no alert to follow searches endpoint logs for signs of a credential-dumping technique reported in a new threat report. What is she doing?
++ Threat hunting
+- Root cause analysis
+- Eradication
+- E-discovery
+! Threat hunting proactively looks for hidden attackers based on a hypothesis or intelligence.
+? Which phase comes first in the incident response process?
+- Detection
++ Preparation
+- Analysis
+- Containment
+! Preparation is done before any incident: plans, team, tools and training.
+@end
+
+## Lesson: l1603 | Digital forensics
+
+Digital forensics collects and examines evidence so that it can support decisions and, if needed, stand up in court.
+
+- **Legal hold**: an instruction (usually from the legal team when a lawsuit or investigation is expected) to preserve all relevant data and suspend normal deletion. Overrides retention schedules.
+- **Chain of custody**: a record of who collected each piece of evidence, when, where, and every person who handled it afterwards, so nobody can claim it was tampered with. A gap in the chain can make evidence unusable.
+- **Acquisition**: collecting the evidence: making a **forensic image** (a bit-by-bit copy) of drives, capturing memory, copying logs. Use write blockers so the original isn't changed, and work on copies.
+- **Preservation**: keeping evidence unchanged and safe: hash the original and the copies (matching hashes prove the copy is exact), store them securely, record everything.
+- **Reporting**: a clear report of what was done, what was found and how, written so that non-technical readers (managers, lawyers) can follow it.
+- **E-discovery**: finding, collecting and handing over electronic information (email, documents, chat) requested in a legal case.
+
+### Order of volatility
+
+Collect the most short-lived evidence first, because it disappears soonest (when the power goes off, or as the system keeps running). From most to least volatile:
+
+- 1. CPU registers and cache
+- 2. Memory (RAM): including running processes, network connections, the routing table and ARP cache
+- 3. Temporary files and swap / page file
+- 4. Disk (files on hard drives and SSDs)
+- 5. Remote logs and monitoring data (for example a central log server)
+- 6. Physical configuration and network topology
+- 7. Archived media (backups, tapes, optical discs)
+
+> Don't switch off a running compromised machine before capturing memory: RAM contents are lost at power-off.
+
+```file
+Chain of custody - Item 3: laptop LT-0412, serial 7XK29Q
+2026-05-04 10:12  Collected by J. Ruiz (IR team) from desk 4B, powered on
+2026-05-04 10:20  Memory captured, SHA-256 9c41...e0 recorded
+2026-05-04 11:05  Handed to M. Tan (forensics lab), sealed bag 0021
+```
+
+@quiz
+? An investigator arrives at a running server that was attacked. What should she collect first?
++ The contents of memory
+- A forensic image of the hard drive
+- The backup tapes from last month
+- The network topology diagram
+! Memory is far more volatile than disk or archives and is lost when the server is shut down.
+? How does an investigator show that a forensic copy of a drive is identical to the original?
+- By comparing the file names
++ By computing and comparing hashes of the original and the copy
+- By checking the copy's file sizes
+- By writing a report
+! Matching cryptographic hashes prove the two are bit-for-bit identical.
+? A lawsuit is expected, and legal tells IT to stop the automatic deletion of a department's email. What is this instruction?
+- E-discovery
+- Chain of custody
++ A legal hold
+- Acquisition
+! A legal hold preserves relevant data and suspends normal deletion.
+? Evidence was left on a desk overnight with no record of who had it. What is the main risk?
+- The hash will change on its own
++ The chain of custody is broken, so the evidence may not be accepted
+- Order of volatility no longer applies
+- The evidence becomes more volatile
+! A gap in the chain of custody lets someone argue the evidence was tampered with.
+@end
+
+## Lesson: l1604 | Data sources for investigations
+
+Investigators draw on many sources and correlate them:
+
+- **Firewall logs**: allowed and blocked connections, with addresses, ports and times. Show what talked to what across the boundary.
+- **Application logs**: sign-ins, errors and actions inside an application (a web server's access log, a database's audit log).
+- **Endpoint logs**: from EDR and antivirus agents: processes started, files changed, detections.
+- **OS-specific security logs**: Windows Security event log (sign-ins, privilege use, account changes), Linux `auth.log` / `secure` and the system journal.
+- **IPS/IDS logs**: alerts on attack signatures or anomalies.
+- **Network logs**: routers, switches, DNS, DHCP and proxy logs, NetFlow.
+- **Metadata**: data about data: an email's headers (servers it passed through, sending IP), a file's creation time and author, a photo's location tags. Often revealing even when content isn't available.
+- **Vulnerability scans**: show which weaknesses a system had, which helps explain how an attacker got in.
+- **Automated reports** and **dashboards**: summaries from the SIEM and other tools that show trends and highlight what to look at.
+- **Packet captures**: full copies of network traffic (for example with Wireshark or tcpdump), showing the actual content of unencrypted traffic. The most detailed network source, but large, so usually captured only in key places or for short periods.
+
+```file
+2026-05-04T09:58:11Z sshd[2211]: Failed password for root from 203.0.113.45 port 51122
+2026-05-04T09:58:13Z sshd[2211]: Failed password for root from 203.0.113.45 port 51122
+2026-05-04T09:58:20Z sshd[2214]: Accepted password for backup from 203.0.113.45 port 51130
+```
+
+The excerpt from a Linux authentication log shows repeated failed root logins from one external address, then a successful login to another account from the same address: worth investigating at once.
+
+@quiz
+? An analyst needs to know which servers an email passed through and the sender's original IP address. What should she look at?
+- The firewall rule list
++ The email's header metadata
+- A vulnerability scan
+- The dashboard
+! Email headers are metadata that record the path and sending servers.
+? Which source would show the actual content of an unencrypted file transfer over the network?
+- NetFlow records
++ A packet capture
+- The Windows Security event log
+- A CVSS report
+! A packet capture holds the full traffic, including payloads; NetFlow only summarizes flows.
+? Looking at the log excerpt in this lesson, what is the most concerning event?
+- The failed root logins
++ The successful login to the backup account from the same address that was guessing passwords
+- That the log uses UTC time
+- That sshd is running
+! Failed guesses are common noise; a success from the same attacker means an account may be compromised.
+@end

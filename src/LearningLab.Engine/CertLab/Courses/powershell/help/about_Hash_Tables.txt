@@ -1,0 +1,39 @@
+TOPIC
+    about_Hash_Tables
+
+SHORT DESCRIPTION
+    Key and value pairs: creating, reading and changing hashtables.
+
+LONG DESCRIPTION
+    A hashtable stores values under keys. Keys are not case-sensitive.
+
+        $ports = @{ HTTP = 80; HTTPS = 443 }
+        $ports['HTTPS']          443
+        $ports.HTTP              80
+        $ports.SSH = 22          adds a key (or changes it)
+        $ports.Remove('HTTP')    removes a key
+        $ports.ContainsKey('RDP')
+        $ports.Keys; $ports.Values; $ports.Count
+
+  Order
+    A plain hashtable keeps its keys in an order of its own, not the order
+    you typed. Write [ordered]@{ ... } to keep your order.
+
+  Going through the pairs
+    $ports.GetEnumerator() gives the pairs one by one; each has Name (or
+    Key) and Value. Pipe it to Sort-Object Value to sort by the values.
+
+        foreach ($pair in $ports.GetEnumerator()) { "$($pair.Name) = $($pair.Value)" }
+
+  Hashtables in PowerShell commands
+    - [pscustomobject]@{ Name = 'a'; Size = 1 } makes an object.
+    - @{ Name = 'Doubled'; Expression = { $_.Size * 2 } } is a calculated
+      property for Select-Object and Format-Table.
+    - Get-Variable @params passes a hashtable as parameters (splatting).
+    - Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 7036 }
+      filters event logs.
+
+SEE ALSO
+    about_Arrays
+    about_Splatting
+    about_Calculated_Properties

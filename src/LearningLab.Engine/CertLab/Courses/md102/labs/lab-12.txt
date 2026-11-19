@@ -1,0 +1,95 @@
+# Lab: lab-12 | Endpoint security | u12 | 35
+Riverbend's security officer wants the Windows PCs hardened: a standard Defender Antivirus policy, tamper protection, a firewall rule for the expenses server, attack surface reduction in audit mode with controlled folder access, and onboarding to Microsoft Defender for Endpoint with the risk score feeding compliance.
+
+@vars
+day = Sunday | Wednesday | Friday
+folder = C:\Tools\Payroll | C:\Finance\Macros | C:\Apps\Ledger
+@endvars
+
+@setup portal
+device RB-LT-002 riskAfterOnboard=Medium
+
+@task t01 | Protection | 20 | portal
+Create a **Microsoft Defender Antivirus** policy **Defender baseline** that allows real-time monitoring and cloud protection with the **High** cloud block level, turns **PUA protection on**, and runs the scheduled scan every **{day}**. Assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | the policy reached RB-LT-001 with cloud protection
+antivirus["Defender baseline"].cloudLevel == High
+antivirus["Defender baseline"].scanDay == {day}
+device["RB-LT-001"].policy["Defender baseline"] == Succeeded
+device["RB-LT-001"].cloud == On
+@check RB-LT-001 | PUA protection is on
+(Get-MpPreference).PUAProtection -eq 1
+@hint Endpoint security > Antivirus > Microsoft Defender Antivirus: Allow Realtime Monitoring, Allow Cloud Protection, Cloud Block Level, PUA Protection, Schedule Scan Day.
+@solution portal
+create av name="Defender baseline" rtp=Allowed cloud=Allowed cloudLevel=High pua="PUA Protection on" scanDay={day}
+assign av "Defender baseline" "Windows devices"
+remote sync RB-LT-001
+@explain
+Cloud protection lets Defender ask Microsoft's cloud about new files within seconds; the High block level blocks more unknown files. PUA protection blocks adware, bundlers and similar unwanted software. On the PC, Get-MpPreference shows PUAProtection 1 and MAPSReporting 2.
+@endtask
+
+@task t02 | Protection | 15 | portal
+Make sure nobody can switch Defender off locally: create a **Windows Security experience** policy **Tamper protection** with tamper protection **On**, assign it to **Windows devices** and sync **RB-LT-002**.
+@check portal | tamper protection is on from Intune
+device["RB-LT-002"].tamper == On
+device["RB-LT-002"].policy["Tamper protection"] == Succeeded
+@check RB-LT-002 | the PC reports tamper protection managed by Intune
+(Get-MpComputerStatus).TamperProtectionSource -eq 'Intune'
+@hint Endpoint security > Antivirus > Create policy > Windows Security experience: TamperProtection (Device) = On.
+@solution portal
+create wsx name="Tamper protection" tamper=On
+assign wsx "Tamper protection" "Windows devices"
+remote sync RB-LT-002
+@explain
+Tamper protection stops local changes to Defender's protection, even by local administrators and malware running as one. Get-MpComputerStatus shows IsTamperProtected and where the setting comes from. In a real tenant the PC must also be onboarded to Defender for Endpoint before Intune can manage tamper protection (Cert Lab doesn't check this).
+@endtask
+
+@task t03 | Protection | 15 | portal
+Finance's PCs must accept connections from the expenses server on **TCP 8443**. Create a firewall rules policy **Expenses inbound** with one rule: name **Expenses app**, inbound, allow, TCP, port 8443. Assign it to **Finance** and sync **RB-DT-010**.
+@check portal | the rule policy reached Sam's desktop
+firewallRules["Expenses inbound"].rules contains "Expenses app, In, Allow, TCP, 8443"
+device["RB-DT-010"].policy["Expenses inbound"] == Succeeded
+@hint Endpoint security > Firewall > Create policy > Windows Firewall rules. In Cert Lab a rule is one line: name, In or Out, Allow or Block, TCP / UDP / Any, ports.
+@solution portal
+create firewallRules name="Expenses inbound" rules="Expenses app, In, Allow, TCP, 8443"
+assign firewallRules "Expenses inbound" Finance
+remote sync RB-DT-010
+@explain
+Rules policies add rules on top of the firewall profile settings; several rule policies on one PC add up. A rule should be as narrow as possible: one port, one direction, and in a real tenant the server's address as the remote address.
+@endtask
+
+@task t04 | Protection | 25 | portal
+Turn on attack surface reduction for the pilot. Create an ASR policy **ASR audit** with **Block Office applications from creating executable content** and **Block Win32 API calls from Office macros** in **Audit** mode, **Block credential stealing from the Windows local security authority subsystem** in **Block** mode, **controlled folder access** in **Audit Mode**, and the ASR-only exclusion `{folder}` (the payroll macros live there). Assign it to **Pilot devices** and sync **RB-LT-002**.
+@check portal | the rules have the right modes on the pilot laptop
+device["RB-LT-002"].asr["officeExe"] == Audit
+device["RB-LT-002"].asr["macroWin32"] == Audit
+device["RB-LT-002"].asr["lsass"] == Block
+asr["ASR audit"].asrExclusions == {folder}
+@check RB-LT-002 | controlled folder access is in audit mode
+(Get-MpPreference).EnableControlledFolderAccess -eq 2
+@hint Endpoint security > Attack surface reduction > Create policy > Attack Surface Reduction Rules. Controlled folder access: Audit Mode. The exclusion goes in Attack Surface Reduction Only Exclusions.
+@solution portal
+create asr name="ASR audit" asr:officeExe=Audit asr:macroWin32=Audit asr:lsass=Block cfa="Audit Mode" asrExclusions={folder}
+assign asr "ASR audit" "Pilot devices"
+remote sync RB-LT-002
+@explain
+Audit mode records what the rules would block without stopping anything; after a few weeks you review the events, keep the exclusions that legitimate work needs, and switch to Block. The LSASS rule is safe to block straight away. In Get-MpPreference, actions are 0 off, 1 block, 2 audit, 6 warn, and EnableControlledFolderAccess 2 is audit.
+@endtask
+
+@task t05 | Protection | 25 | portal
+Onboard the PCs to Microsoft Defender for Endpoint and let the risk score count. Turn on the tenant connection to Defender for Endpoint, create an EDR policy **Onboard to MDE** (package from the connector) for **Windows devices**, and a Windows compliance policy **MDE risk** for **Pilot devices** that allows a machine risk score of at most **Medium**. Sync **RB-LT-002**: it is onboarded, gets a Medium score and must stay compliant.
+@check portal | RB-LT-002 is onboarded and compliant with its Medium score
+device["RB-LT-002"].mde == Yes
+device["RB-LT-002"].risk == Medium
+compliance["MDE risk"].mdeRisk == Medium
+device["RB-LT-002"].policy["MDE risk"] == Compliant
+@hint Tenant administration > Settings > Connectors (Defender for Endpoint), Endpoint security > Endpoint detection and response (Auto from connector), and a compliance policy with "Require the device to be at or under the machine risk score".
+@solution portal
+tenant mdeConnector=On
+create edr name="Onboard to MDE" package="Auto from connector"
+assign edr "Onboard to MDE" "Windows devices"
+create compliance name="MDE risk" platform="Windows 10 and later" mdeRisk=Medium
+assign compliance "MDE risk" "Pilot devices"
+remote sync RB-LT-002
+@explain
+The device needs the connector and the EDR policy before it has a risk score; a compliance policy that asks for a score on a device that isn't onboarded marks it noncompliant. With "at or under Medium", a Medium device passes and a High one fails until it is cleaned.
+@endtask

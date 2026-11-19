@@ -1,0 +1,12 @@
+SYNOPSIS: Reads only the data of one or more registry values (or file properties).
+DESCRIPTION:
+Get-ItemPropertyValue (added in PowerShell 5) returns the value itself instead of an object around it, so you do not need (Get-ItemProperty ...).Name.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The values to read.
+EXAMPLE: Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name CurrentBuild
+The Windows build number.
+RELATED: Get-ItemProperty

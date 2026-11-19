@@ -1,0 +1,20 @@
+SYNOPSIS: Creates a new registry value with the type you choose.
+DESCRIPTION:
+New-ItemProperty adds a value to a registry key and shows it. Unlike Set-ItemProperty it refuses a value that already exists ("The property already exists.") unless you add -Force.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The new value's name.
+PARAMETER PropertyType:
+The value type (alias -Type): String (text), ExpandString (text with %variables%), DWord (a 32-bit number), QWord (a 64-bit number), MultiString (several strings) or Binary (bytes). The default is String.
+PARAMETER Value:
+The data.
+PARAMETER Force:
+Replaces an existing value.
+EXAMPLE: New-ItemProperty HKCU:\Software\Lab -Name Count -PropertyType DWord -Value 5
+A number value.
+EXAMPLE: New-ItemProperty HKCU:\Software\Lab -Name Servers -PropertyType MultiString -Value 'WEB01','DC01'
+A list of strings.
+RELATED: Set-ItemProperty, Remove-ItemProperty, New-Item

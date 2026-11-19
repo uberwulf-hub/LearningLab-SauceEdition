@@ -1,0 +1,19 @@
+1. Find the folders. Scan 10.10.4.30 (ssh, http). webscan http://10.10.4.30/ tries
+   common folder names and finds /backup/, which lists its files.
+
+2. The key. /backup/ holds id_rsa, an SSH private key. Save it and make it private
+   (ssh refuses a key that others could read): chmod 600 id_rsa.
+
+3. Foothold. The key belongs to webadmin, whose public half is in authorized_keys,
+   so ssh -i id_rsa webadmin@10.10.4.30 signs you in with no password. The user flag
+   is in webadmin's home.
+
+4. Root. ls -l /etc/cron.d shows root runs /opt/maint/rotate.sh every minute, and the
+   script is world-writable (777). Add a line to it and wait for the next minute (use
+   the Skip 1 minute button):
+
+       echo 'cp /root/flag.txt /tmp/r.txt; chmod 644 /tmp/r.txt' >> /opt/maint/rotate.sh
+       cat /tmp/r.txt
+
+How to fix it: never publish a private key (and if one leaks, replace the key pair);
+and a script root runs on a timer must be writable only by root.

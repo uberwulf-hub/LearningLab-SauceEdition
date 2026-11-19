@@ -1,0 +1,20 @@
+SYNOPSIS: Lists the approved verbs for PowerShell command names.
+DESCRIPTION:
+PowerShell commands are named Verb-Noun, and the verb comes from an agreed list so that names are predictable: Get reads, Set changes, New creates, Remove deletes, Start and Stop begin and end something. Get-Verb shows that list, with the group each verb belongs to (Common, Data, Lifecycle, Diagnostic, Communications, Security, Other).
+
+Use it when you name your own functions. A module whose functions use other verbs gets a warning when it is imported.
+PARAMETER Verb:
+The verbs to show. Position 0. Wildcards work: Get-Verb Re*.
+EXAMPLE: Get-Verb
+Lists every approved verb and its group.
+EXAMPLE: Get-Verb -Verb Get, Set
+Shows just those two verbs.
+EXAMPLE: Get-Verb | Where-Object Group -eq 'Lifecycle'
+Lists the verbs for starting, stopping, installing, enabling and similar actions.
+NOTES:
+Some verbs look alike but have different meanings: New makes something that did not exist, Add puts something into a container, and Set changes something that already exists. Remove is the opposite of New and Add.
+
+The verb list belongs to the PowerShell version: newer versions add a few verbs (such as Build and Deploy), and in PowerShell 7 Get-Verb has a -Group parameter and a Description column.
+
+Using an unapproved verb does not stop a function from working; it only makes the name harder for others to guess.
+RELATED: Get-Command, about_Functions, about_Command_Syntax

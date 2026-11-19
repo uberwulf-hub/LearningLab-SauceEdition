@@ -1,0 +1,389 @@
+# Exam: exam-2 | Practice exam 2 | 100
+The second full practice exam: Microsoft-style questions, a case study and six hands-on tasks on the Harborline network. The grader restarts every machine before it checks your work.
+
+@vars
+n = 1 | 2 | 3
+ip = 160 | 170 | 180
+@endvars
+
+@task t01 | AD DS | 4 | DC1
+DC2 sits in the branch office, whose subnet is **10.20.0.0/24**. Create the site **Branch** with that subnet, put the site in **DEFAULTIPSITELINK** and make that link replicate every **15 minutes**, then move **DC2** into the Branch site.
+@check admin | the site, its subnet and the link
+subnet["10.20.0.0/24"].site == Branch
+sitelink["DEFAULTIPSITELINK"].sites has Branch
+sitelink["DEFAULTIPSITELINK"].interval == 15
+@check admin | DC2 is in Branch
+dc["DC2"].site == Branch
+@solution DC1
+New-ADReplicationSite -Name Branch
+New-ADReplicationSubnet -Name 10.20.0.0/24 -Site Branch
+Set-ADReplicationSiteLink -Identity DEFAULTIPSITELINK -SitesIncluded @{Add="Branch"} -ReplicationFrequencyInMinutes 15
+Move-ADDirectoryServer -Identity DC2 -Site Branch
+@explain
+New-ADReplicationSite doesn't put the new site in any site link (the console makes you pick one), and a site in no link gets no replication from other sites. The subnet tells clients and DCs which site an address belongs to; 15 minutes is the shortest interval a site link allows.
+@endtask
+
+@task t02 | Group Policy | 4 | admin
+Every server must show the logon message title **Harborline servers {n}**. Create the GPO **Server banner {n}** with that setting, link it to the **Servers** OU, and make sure no GPO linked lower down can override it.
+@check admin | the servers get the title
+rsop(computer=FS1).setting["LogonTitle"].value == "Harborline servers {n}"
+rsop(computer=SRV1).setting["LogonTitle"].winner == "Server banner {n}"
+@check admin | the link is enforced
+gpo["Server banner {n}"].enforced["Servers"] == Yes
+@solution admin
+gpo new "Server banner {n}"
+gpo set "Server banner {n}" setting=LogonTitle state=Enabled value="Harborline servers {n}"
+gpo link "Server banner {n}" Servers enforced=yes
+@explain
+The message title is under Computer Configuration > Policies > Windows Settings > Security Settings > Local Policies > Security Options. Enforcing the link makes its settings win over GPOs linked to child OUs and lets it pass Block Inheritance.
+@endtask
+
+@task t03 | Networking | 4 | SRV1
+On SRV1, reserve **10.10.0.{ip}** in the scope **10.10.0.0** for the printer **PRN-HQ-01** (MAC address **00-1B-A9-4C-21-07**), and exclude **10.10.0.190-10.10.0.199** from the scope for static devices.
+@check admin | the reservation and the exclusion
+dhcp(SRV1).scope["10.10.0.0"].reservation["10.10.0.{ip}"].mac == 00-1B-A9-4C-21-07
+dhcp(SRV1).scope["10.10.0.0"].exclusions has 10.10.0.190-10.10.0.199
+@solution SRV1
+Add-DhcpServerv4Reservation -ScopeId 10.10.0.0 -IPAddress 10.10.0.{ip} -ClientId 00-1B-A9-4C-21-07 -Name PRN-HQ-01
+Add-DhcpServerv4ExclusionRange -ScopeId 10.10.0.0 -StartRange 10.10.0.190 -EndRange 10.10.0.199
+@explain
+A reservation ties an address to a client's MAC address (ClientId); an exclusion keeps addresses inside the range from being leased at all. The printer gets the reserved address at its next renewal.
+@endtask
+
+@task t04 | File and storage | 4 | FS1
+On FS1, pool the four empty disks into a storage pool named **Pool{n}**, and create a **two-way mirror** volume named **Projects** on it, **100 GB**, formatted **ReFS**, as drive **P:**.
+@check admin | the pool and the mirror
+pool["Pool{n}"].disks == 4
+vdisk["Projects"].resiliency == Mirror
+vdisk["Projects"].copies == 2
+@check admin | the volume
+volume(FS1, P).fs == ReFS
+@solution FS1
+New-StoragePool -FriendlyName Pool{n} -StorageSubSystemFriendlyName "Windows Storage*" -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+New-Volume -StoragePoolFriendlyName Pool{n} -FriendlyName Projects -ResiliencySettingName Mirror -NumberOfDataCopies 2 -Size 100GB -FileSystem ReFS -DriveLetter P
+@explain
+Get-PhysicalDisk -CanPool $true lists the disks that can join a pool (no partitions, not the system disk). New-Volume creates the virtual disk, partition and file system in one step; a two-way mirror needs two disks and uses twice its size in the pool.
+@endtask
+
+@task t05 | Hybrid identity | 4 | admin
+Install Microsoft Entra Connect Sync on **SRV1** with **password hash synchronization**, syncing only the **Staff** OU. Before that, make **Bianca Cole** (bcole) sign in as **bcole@harborline.example**, the tenant's verified domain.
+@check admin | sync is set up as asked
+connect.server == SRV1
+connect.signin == PHS
+cloud.users !has svc-backup
+@check admin | Bianca's cloud account uses the verified domain
+cloud.user["bcole"].upn == bcole@harborline.example
+@solution admin
+upnsuffix add harborline.example
+set user bcole upn=bcole@harborline.example
+connect install server=SRV1 signin=PHS ous="OU=Staff,DC=corp,DC=example"
+@explain
+A user's UPN suffix must be a domain verified in the tenant; otherwise the cloud account gets the initial onmicrosoft domain. Add the suffix to the forest (Active Directory Domains and Trusts, or Set-ADForest -UPNSuffixes), change the users' UPNs, then sync. OU filtering keeps service accounts out.
+@endtask
+
+@task t06 | Virtualization | 3 | HV1
+On HV1, create the generation 2 VM **WEB-{n}** with **2 GB** of startup memory, a new **40 GB** virtual hard disk and a connection to the switch **LAN**, then take a checkpoint named **Clean install**.
+@check admin | the VM
+vm["WEB-{n}"].generation == 2
+vm["WEB-{n}"].switch == LAN
+vm["WEB-{n}"].memorygb == 2
+@check admin | the checkpoint
+vm["WEB-{n}"].checkpoints has "Clean install"
+@solution HV1
+New-VM -Name WEB-{n} -Generation 2 -MemoryStartupBytes 2GB -NewVHDPath "D:\Hyper-V\Virtual Hard Disks\WEB-{n}.vhdx" -NewVHDSizeBytes 40GB -SwitchName LAN
+Checkpoint-VM -Name WEB-{n} -SnapshotName "Clean install"
+@explain
+New-VM creates the disk (a dynamically expanding VHDX) when you give -NewVHDPath and -NewVHDSizeBytes. Checkpoint-VM makes a production checkpoint by default on current hosts.
+@endtask
+
+@case cs2 | Brightwater Brewing
+## Overview
+Brightwater Brewing (a made-up company) brews and ships beer from a main brewery and runs three taprooms. It has 250 staff; two administrators look after the servers.
+
+## Existing environment
+The domain brightwater.example has two domain controllers at the brewery. File servers at the brewery hold the shared folders \\BW-FS1\Recipes and \\BW-FS1\Sales. Each taproom has one Windows Server 2022 server that is both a file server and a Hyper-V host, with a local copy of the sales folder that staff update by hand. The servers are managed with Remote Desktop. The company has an Azure subscription with a storage account but uses it only for backups.
+
+## Requirements
+- Staff everywhere use one path, \\brightwater.example\Shares\Sales, and reach the copy closest to them.
+- The sales folders at the brewery and the taprooms stay identical automatically; a file changed in a taproom reaches the brewery.
+- The taproom servers keep only recently used files locally; older files stay in Azure and come back when someone opens them.
+- Administrators manage every server from a browser, including Hyper-V and storage, without Remote Desktop.
+- Only the Brewers group may change files in \\BW-FS1\Recipes; everyone in the company may read them.
+
+## Technical constraints
+Use the existing Azure subscription. Don't add servers.
+@endcase
+
+@choice c1 | File and storage | 2 | case=cs2
+What should you create for the single path requirement?
++ A domain-based DFS namespace with a folder Sales whose targets are the brewery's and the taprooms' shares
+- A stand-alone DFS namespace on BW-FS1
+- A DFS replication group with the sales folders
+- A CNAME record named Shares that points to BW-FS1
+! A domain-based namespace (\\domain\namespace) is hosted on several servers and, by default, refers clients to the folder target in their own site first. Replication is a separate job.
+
+@multi c2 | File and storage | 2 | case=cs2
+Which two components keep the sales folders identical and the taproom servers small? Each correct answer is part of the solution.
++ Azure File Sync with a sync group whose server endpoints are the sales folders, and cloud tiering on the taproom servers
++ A Storage Sync Service in the existing subscription with an Azure file share as the cloud endpoint
+- DFS Replication with the taproom servers as read-only members
+- Storage Replica between BW-FS1 and each taproom server
+- Data Deduplication on the taproom servers' system volumes
+! Azure File Sync keeps every server endpoint in a sync group in step through the Azure file share (the cloud endpoint), and cloud tiering keeps only recently used files on the server. Storage Replica copies whole volumes for disaster recovery, not files between several offices.
+
+@choice c3 | Server management | 2 | case=cs2
+What should the administrators use to manage the servers from a browser?
+- Server Manager
++ Windows Admin Center installed as a gateway
+- Remote Server Administration Tools on their PCs
+- sconfig
+! Windows Admin Center is a browser-based tool: its gateway connects to the servers over PowerShell remoting and WinRM and offers Hyper-V, storage, files and much more.
+
+@yesno c4 | File and storage | 3 | case=cs2
+You plan permissions for \\BW-FS1\Recipes. Decide whether each statement is true.
+Y Share permission Full Control for Authenticated Users, with the real limits set in NTFS, meets the requirement.
+N NTFS Read for Domain Users and Modify for Brewers lets Brewers change files if the share gives Everyone only Read.
+Y Access-based enumeration hides folders a user has no permission to read.
+! Over the network the more restrictive of share and NTFS wins, so a Read-only share stops the Brewers' Modify. A common design gives a generous share permission and controls access in NTFS.
+
+@choice c5 | File and storage | 2 | case=cs2
+Which setting makes the taproom servers keep files from the last 30 days locally?
+- A volume free space policy of 30 percent
++ A date policy that tiers files not accessed for 30 days
+- Data Deduplication with a minimum file age of 30 days
+- An offline files policy on the clients
+! Cloud tiering has a volume free space policy (keep this much of the volume free) and a date policy (tier files not used for N days); with both, a file is tiered when either policy calls for it, and the free space policy always wins.
+
+@choice q01 | AD DS | 1
+You must add a domain controller to a branch office where the server can't be physically secured. What should you deploy?
+- A writable domain controller with BitLocker
++ A read-only domain controller with a password replication policy that allows only the branch's users and computers
+- A domain controller without the global catalog
+- A member server running AD LDS
+! An RODC holds a read-only copy and caches only the passwords its password replication policy allows; if it is stolen, only those accounts need resetting.
+
+@choice q02 | AD DS | 1
+Which operations master role must be available to create new users, groups and computers in a domain over time?
++ RID master
+- Schema master
+- Infrastructure master
+- Domain naming master
+! Each DC gets pools of relative IDs from the RID master to build new objects' SIDs; when a DC runs out of its pool and the RID master is unavailable, it can't create security principals.
+
+@yesno q03 | AD DS | 1
+Decide whether each statement about trusts is true.
+Y A forest trust between two forests is transitive between the domains of both forests.
+N An external trust is transitive.
+Y Selective authentication requires you to grant "Allowed to authenticate" on the resources users from the other forest may use.
+! Forest trusts are transitive across the two forests' domains; external trusts link one domain to one domain without transitivity. Selective authentication blocks access until "Allowed to authenticate" is granted on the computers.
+
+@order q04 | AD DS | 1
+Put the steps for creating a group managed service account for a web farm in order.
+1 Add-KdsRootKey (once per forest) and wait until it is in effect
+2 New-ADServiceAccount -Name gmsa-web -DNSHostName gmsa-web.corp.example -PrincipalsAllowedToRetrieveManagedPassword WebServers
+3 On each web server, Install-ADServiceAccount gmsa-web
+4 Test-ADServiceAccount gmsa-web, then configure the service to run as CORP\gmsa-web$
+x Set-ADAccountPassword gmsa-web -Reset
+! The KDS root key comes first; the gMSA names the group of hosts allowed to get its password; each host installs and tests it. Nobody sets a gMSA's password: Windows changes it.
+
+@choice q05 | AD DS | 1
+A change made on DC1 at 09:00 reached DC2, in another site, only at 12:00. What explains it?
+- Change notification is off within DC1's site
++ The site link between the sites replicates every 180 minutes, its default interval
+- DC2 isn't a global catalog
+- The RID master is DC1
+! Within a site, DCs notify their partners about 15 seconds after a change; between sites replication waits for the site link's schedule (default every 180 minutes).
+
+@choice q06 | Group Policy | 1
+A GPO must apply only to Windows 11 computers in an OU that also holds Windows 10 computers. What should you add to the GPO?
+- Security filtering with Domain Computers
++ A WMI filter that checks the operating system version
+- Block Inheritance on the OU
+- Loopback processing
+! A WMI filter is evaluated on each computer; the GPO applies only where its query is true, for example Win32_OperatingSystem where Version is like 10.0.2% and ProductType is 1 (Windows 11 builds start at 22000; Windows 10's are all below 20000).
+
+@multi q07 | Group Policy | 1
+Which two statements about Group Policy processing are true? Each correct answer is part of the solution.
++ GPOs linked to the domain are applied before GPOs linked to OUs
++ A setting from a GPO linked to an OU wins over the same setting from a GPO linked to the domain
+- Site-linked GPOs are applied last
+- User settings are applied before computer settings at startup
+- Block Inheritance stops enforced GPOs
+! The order is local, site, domain, then OUs from parent to child (LSDOU); what is applied later wins, so the closest OU wins unless a higher link is enforced.
+
+@choice q08 | Group Policy | 1
+You removed Authenticated Users from a GPO's security filtering and added a user group. The GPO now applies to no one. What fixes it?
+- Add the group to the GPO's delegation with Edit settings
++ Give Domain Computers (or Authenticated Users) Read permission on the GPO
+- Enforce the GPO's link
+- Run gpupdate /force on the DC
+! Since MS16-072 user policy is retrieved with the computer's credentials; the computer needs Read on the GPO even when only users get Apply.
+
+@choice q09 | Group Policy | 1
+Which command backs up all GPOs of the domain to C:\GpoBackups?
++ Backup-GPO -All -Path C:\GpoBackups
+- Export-GPO -All -Path C:\GpoBackups
+- Copy-GPO -All -TargetPath C:\GpoBackups
+- Get-GPOReport -All -Path C:\GpoBackups
+! Backup-GPO saves settings, security and the WMI filter link; links to sites, domains and OUs aren't part of a backup. Restore-GPO brings a GPO back from it.
+
+@choice q10 | Hybrid identity | 1
+Users must sign in to Microsoft 365 with their on-premises password, and the security team wants passwords checked by on-premises DCs at sign-in, with account lockouts and hours enforced there. Which sign-in method meets this?
+- Password hash synchronization
++ Pass-through authentication
+- Cloud-only accounts
+- Seamless SSO without synchronization
+! Pass-through authentication validates each sign-in through agents on premises against AD, so on-premises policies apply at sign-in. Install at least three agents for high availability.
+
+@choice q11 | Hybrid identity | 1
+What does a Microsoft Entra Connect Sync server in staging mode do?
+- It exports changes to Microsoft Entra ID only at night
++ It imports and synchronises but doesn't export, so it can take over if the active server fails
+- It runs pass-through authentication only
+- It synchronises passwords but not objects
+! A staging server stays ready with an up-to-date configuration; you switch it to active when the primary server is gone.
+
+@choice q12 | Server management | 1
+A Server Core server must be added to Windows Admin Center, but the connection fails. Which feature does Windows Admin Center need on the server?
++ PowerShell remoting over WinRM
+- Remote Desktop
+- SMB 1.0
+- The Server Manager GUI
+! Windows Admin Center manages servers through PowerShell remoting and WMI over WinRM (HTTP 5985 or HTTPS 5986); Enable-PSRemoting or sconfig turns it on.
+
+@yesno q13 | Server management | 1
+Decide whether each statement about Server Core is true.
+Y sconfig changes the computer name, domain membership, network settings and updates.
+N You can switch a Server Core installation of Windows Server 2022 to Desktop Experience by adding a feature.
+Y Windows Admin Center and PowerShell remoting can manage it from another computer.
+! Server Core has no desktop and, since Windows Server 2016, can't be converted to Desktop Experience (reinstall instead); manage it with sconfig locally or remotely with PowerShell and Windows Admin Center.
+
+@choice q14 | Server management | 1
+An Azure Arc-enabled server shows Disconnected in the portal. What should you check on the server first?
+- The Hyper-V role
++ That the Azure Connected Machine agent's service (himds) is running and can reach Azure
+- That the server is joined to Microsoft Entra ID
+- The Windows Admin Center gateway
+! The himds service sends the heartbeat; if it stops or loses its outbound connection, the server is shown as Disconnected (after about 15 minutes). azcmagent show reports the agent's status.
+
+@choice q15 | Virtualization | 1
+You need a virtual switch that lets VMs talk to each other and to the host, but not to the physical network. Which type?
+- External
++ Internal
+- Private
+- External with management OS sharing turned off
+! Internal switches connect the VMs and the host; private switches connect only the VMs; external switches bind to a physical adapter.
+
+@choice q16 | Virtualization | 1
+Which virtual hard disk type stores only the changes made since a parent disk?
+- Fixed
+- Dynamic
++ Differencing
+- Pass-through
+! A differencing disk records changes relative to its parent, which must not change afterwards; checkpoints use the same idea (AVHDX files).
+
+@multi q17 | Virtualization | 1
+Which two features need the VM to be turned off before you change them? Each correct answer is part of the solution.
++ Exposing virtualization extensions for nested virtualization
++ Turning dynamic memory on or off
+- Adding a SCSI virtual hard disk to a generation 2 VM
+- Changing a network adapter's virtual switch
+- Taking a checkpoint
+! Processor and dynamic memory settings require the VM off. SCSI disks, switch connections and checkpoints can change while a generation 2 VM runs.
+
+@choice q18 | Virtualization | 1
+Which command lists the containers on a host, including stopped ones?
+- docker images
++ docker ps -a
+- docker inspect
+- Get-VM
+! docker ps shows running containers; -a includes stopped ones. docker images lists the images stored on the host.
+
+@choice q19 | Virtualization | 1
+Which base container image is the smallest and suited to .NET Core and new applications, but not to most traditional Windows applications?
+- servercore
++ nanoserver
+- windows
+- server
+! Nano Server images are very small and lack many Windows APIs; Server Core images run most traditional applications and roles such as IIS.
+
+@choice q20 | Networking | 1
+Clients must resolve names in partner.example through the partner's DNS server, while every other Internet name goes to the ISP's DNS server. What should you configure on your DNS servers?
+- A forwarder to the partner's server
++ A conditional forwarder for partner.example to the partner's server, and a forwarder to the ISP's server
+- A secondary zone for partner.example with transfers refused by the partner
+- Root hints only
+! A conditional forwarder handles one domain; the ordinary forwarder handles everything else the server isn't authoritative for.
+
+@order q21 | Networking | 1
+Put the steps for signing a zone with DNSSEC on a Windows DNS server in order.
+1 Choose the zone and sign it (Invoke-DnsServerZoneSign -SignWithDefault)
+2 Let the server create the key-signing and zone-signing keys and the signature records
+3 Distribute the trust anchor to the other DNS servers that validate
+4 Turn on DNSSEC validation requirements for clients with the Name Resolution Policy Table
+x Disable dynamic updates for the zone
+! Signing creates the KSK and ZSK, DNSKEY, RRSIG and NSEC/NSEC3 records; resolvers need the trust anchor; clients are told to require validation through the NRPT (Group Policy). Dynamic updates still work in signed AD-integrated zones.
+
+@choice q22 | Networking | 1
+What happens when a client's DNS server returns "name does not exist" (NXDOMAIN)?
++ The client accepts the answer and doesn't ask its other DNS servers
+- The client asks the next DNS server in its list
+- The client tries NetBIOS broadcast only after asking all servers
+- The client retries the same server three times
+! An authoritative negative answer is final; the client moves to the next DNS server only when a server doesn't answer or fails.
+
+@choice q23 | Networking | 1
+IP Address Management (IPAM) must manage your DHCP and DNS servers. How are the managed servers usually configured to let IPAM in?
+- By installing the IPAM feature on each DHCP and DNS server
++ With Group Policy objects created by Invoke-IpamGpoProvisioning and linked by IPAM's provisioning
+- By adding the IPAM server to Enterprise Admins
+- By enabling SMB 1.0 on each server
+! IPAM's Group Policy based provisioning creates GPOs that set firewall rules, groups and permissions on the managed servers; the IPAM server itself must be a domain member and not a DC.
+
+@multi q24 | Networking | 1
+Which two DHCP options give clients their default gateway and DNS servers? Each correct answer is part of the solution.
++ 003 Router
++ 006 DNS Servers
+- 015 DNS Domain Name
+- 044 WINS/NBNS Servers
+- 051 Lease
+! Option 003 is the default gateway and 006 the DNS servers; 015 is the DNS suffix. Options at scope level override server-level options.
+
+@choice q25 | Networking | 1
+Branch PCs on another subnet must get addresses from the DHCP server at head office. What else is needed besides a scope for the branch subnet?
+- A second DHCP server in the branch
++ A DHCP relay agent (IP helper) on the branch router or a server in the branch
+- A superscope
+- DHCP failover
+! DHCP discovery uses broadcasts, which routers don't forward; a relay agent forwards them to the DHCP server and tells it which subnet the request came from.
+
+@choice q26 | File and storage | 1
+Which feature replicates a whole volume, block by block, to another server for disaster recovery?
+- DFS Replication
++ Storage Replica
+- Azure File Sync
+- Data Deduplication
+! Storage Replica copies volumes at block level (synchronously or asynchronously); DFS Replication and Azure File Sync replicate files.
+
+@choice q27 | File and storage | 1
+In a DFS Replication group's initial sync, why do you mark one member as primary?
++ Its files win over different files on the other members during the first sync
+- It is the only member that can receive changes afterwards
+- It replicates to Azure
+- It holds the DFS namespace
+! The primary member is authoritative only for the initial sync; afterwards replication is multi-master. Members also wait until they've read the configuration from Active Directory.
+
+@choice q28 | File and storage | 1
+Which share setting hides folders that a user has no permission to open?
+- Offline caching set to None
++ Access-based enumeration
+- Encrypt data access
+- Continuous availability
+! With access-based enumeration (FolderEnumerationMode AccessBased) users see only the files and folders they can read.
+
+@yesno q29 | File and storage | 1
+Decide whether each statement about Storage Spaces Direct is true.
+Y It pools the local disks of the servers in a failover cluster.
+N It works on a single server with direct-attached disks.
+Y It is a basis for hyper-converged infrastructure with Hyper-V.
+! Storage Spaces Direct needs a failover cluster (two or more servers) and uses each node's local drives; standalone Storage Spaces is what you use on one server.

@@ -1,0 +1,18 @@
+SYNOPSIS: Renames a Group Policy Object.
+DESCRIPTION:
+Rename-GPO changes a GPO's display name. Its GUID, settings and links stay the same, so nothing changes for the computers and users it applies to.
+PARAMETER Name:
+The current display name. Position 0.
+PARAMETER Guid:
+The GPO's GUID, instead of its name.
+PARAMETER TargetName:
+The new display name.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Rename-GPO "Sales Desktop" -TargetName "Sales - Desktop settings"
+Gives the GPO a clearer name.
+EXAMPLE: Get-GPO -All | Select-Object DisplayName, Id
+Lists the names and GUIDs first.
+RELATED: Get-GPO, Copy-GPO, New-GPO

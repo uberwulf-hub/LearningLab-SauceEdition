@@ -1,0 +1,54 @@
+title: Something in the air
+level: Beginner
+kind: Environment variables
+topic: Linux
+teaser: a setting your shell carries around
+points: 40
+order: 62
+answer: {{CODE}}
+var: VNAME = pick:DEPLOY_TOKEN|BUILD_KEY|SYNC_CODE|RELEASE_PIN|UPLOAD_SECRET
+var: CODE = hex:10
+
+@intro
+Every program you start inherits a list of named settings from your shell, called
+environment variables (HOME, PATH, USER...). A careless deploy script added a secret
+token to your shell's start-up file, so it is now in your environment too. Find the
+token and give its value.
+
+@setup
+cat >> /home/player/.bashrc <<'RC'
+
+# added by the deploy script - do not remove
+export {{VNAME}}={{CODE}}
+RC
+chown player: /home/player/.bashrc
+
+@solution
+printenv | sort
+printenv {{VNAME}}
+
+@walkthrough
+printenv prints every environment variable as NAME=value. Sorting makes it easier to
+scan:
+
+    printenv | sort
+
+Next to the usual ones (HOME, PATH, SHELL, USER...) there is {{VNAME}}={{CODE}}. To
+print just that one: printenv {{VNAME}} (or echo ${{VNAME}}).
+
+It got there through ~/.bashrc, the file bash runs each time it starts; the deploy
+script added an export line. The lesson: secrets in environment variables are seen by
+every program you run and are easy to leak into logs. Keep them in protected files or a
+proper secret store, and never in a shell start-up file.
+
+@hint 2
+What to think about first: your shell carries a list of settings, like a backpack it hands to every program it starts. They are called environment variables. One of them in your list doesn't belong to a normal system.
+
+@hint 3
+The command printenv prints all of them, one per line, as NAME=value. Piping it to sort (printenv | sort) puts them in alphabetical order so they are easier to read. The | sign sends the output of the first command into the second.
+
+@hint 4
+Most of the names are ordinary: HOME is your home folder, PATH is where the shell looks for programs, USER is your name, SHELL is bash. Look for a name that sounds like a token, key or code.
+
+@hint 6
+To see where it came from, look at the end of your shell's start-up file: tail ~/.bashrc. The value after the = sign of that export line is the answer; printenv NAME prints just that value.

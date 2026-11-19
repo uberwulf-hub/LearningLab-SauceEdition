@@ -1,0 +1,26 @@
+SYNOPSIS: Keeps only the objects that pass a test.
+DESCRIPTION:
+Where-Object lets an object through when its test is true. Write the test as a script block, where $_ is the current object, or with the simple syntax: a property name, an operator switch and a value.
+
+Filter as early as you can: when the first command has its own filter parameter (Get-ChildItem -Filter, Get-Service -Name...), use that, and Where-Object for everything else.
+PARAMETER FilterScript:
+The test, as a script block: { $_.Length -gt 1MB }. Also the property name in the simple syntax (alias Property).
+PARAMETER Value:
+The value to compare with in the simple syntax.
+PARAMETER EQ:
+Simple syntax: the property equals the value (also NE, GT, GE, LT, LE).
+PARAMETER Like:
+Simple syntax: wildcard match (also NotLike, Match, NotMatch with a regular expression).
+PARAMETER Contains:
+Simple syntax: the property (a collection) contains the value (also NotContains, In, NotIn).
+PARAMETER InputObject:
+The objects to test (from the pipeline).
+EXAMPLE: Get-Service | Where-Object { $_.Status -eq 'Running' -and $_.StartType -eq 'Manual' }
+Running services that start manually.
+EXAMPLE: Get-Service | Where-Object Status -eq Stopped
+The same kind of test in the simple syntax (one condition only).
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Where-Object Office -like 'S*'
+Employees whose office starts with S.
+NOTES:
+? and where are aliases of Where-Object. The simple syntax allows one condition; combine several with a script block. The .Where({ }) method on a collection does the same filtering without the pipeline.
+RELATED: ForEach-Object, Select-Object, about_Comparison_Operators

@@ -1,0 +1,40 @@
+title: Reading hex
+level: Beginner
+kind: Decoding
+points: 40
+order: 4
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/bytes.txt holds a word written as hexadecimal: two characters (0-9, a-f) for each
+letter. Turn the hex back into text.
+
+@setup
+printf '%s' '{{SECRET}}' | od -An -tx1 | tr -d ' \n' > /home/player/bytes.txt
+chown player: /home/player/bytes.txt
+
+@solution
+cat bytes.txt
+echo
+xxd -r -p bytes.txt
+echo
+
+@walkthrough
+Each byte of text is shown as two hex digits (for example 61 is the letter a).
+xxd -r -p ("reverse", "plain") reads a string of hex and prints the bytes:
+
+    xxd -r -p bytes.txt
+
+@hint 2
+What to think about first: computers store every letter as a number. Hexadecimal ("hex") is a way of writing those numbers with 16 symbols, 0-9 and a-f, so each letter takes exactly two characters. Look at the file with cat bytes.txt and count: an even number of characters, all 0-9 and a-f, is a strong sign of hex.
+
+@hint 3
+For example, the letter a is number 97, which is 61 in hex; b is 62, c is 63. So 636174 is c-a-t. You could look each pair up in an ASCII table, but a tool does it in one go.
+
+@hint 5
+xxd is a tool that shows files as hex ("a hex dump"). With -r it goes the other way, from hex back to the original bytes. Because this file is plain hex with no addresses or columns, add -p ("plain") so xxd knows what to expect.
+
+@hint 8
+Run: xxd -r -p bytes.txt
+(-r reverse, -p plain). The word it prints is the answer; type echo afterwards if your prompt ends up on the same line.

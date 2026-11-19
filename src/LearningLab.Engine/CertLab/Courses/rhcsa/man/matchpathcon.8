@@ -1,0 +1,21 @@
+NAME
+       matchpathcon - show the default SELinux context for a path
+
+SYNOPSIS
+       matchpathcon [-V] PATH...
+
+DESCRIPTION
+       matchpathcon prints the context the SELinux policy (including your
+       semanage fcontext rules) gives each PATH, which is the context
+       restorecon would set. The path does not have to exist.
+
+OPTIONS
+       -V     Verify: compare the file's real context with the default and
+              say "verified" or what it should be.
+
+EXAMPLES
+           matchpathcon /var/www/html/index.html
+           matchpathcon -V /srv/web/index.html
+
+SEE ALSO
+       restorecon(8), semanage(8), ls(1)

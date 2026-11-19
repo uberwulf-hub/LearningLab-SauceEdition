@@ -1,0 +1,113 @@
+NAME
+       useradd - create a new user account
+
+SYNOPSIS
+       useradd [OPTIONS] LOGIN
+       useradd -D
+
+DESCRIPTION
+       useradd creates the account LOGIN: a line in /etc/passwd (name, UID,
+       primary group, comment, home directory, shell), a line in /etc/shadow
+       (the password, locked until one is set) and, on RHEL 9 by default, a
+       private group with the same name and number in /etc/group, and the
+       home directory /home/LOGIN filled with copies of the files in
+       /etc/skel. The account cannot log in until it has a password: set one
+       with passwd LOGIN.
+
+       Values not given on the command line come from /etc/login.defs (UID
+       range, password aging defaults, whether to create the home directory
+       and the private group) and /etc/default/useradd (home base, shell,
+       skeleton directory). useradd -D prints those defaults.
+
+       New ordinary users get the first free UID from 1000 up (UID_MIN in
+       login.defs); system accounts (-r) get one below 1000.
+
+OPTIONS
+       -u, --uid UID
+              Use this UID instead of the next free one.
+
+       -g, --gid GROUP
+              The primary group (name or GID). It must exist. Without -g a
+              private group named after the user is created.
+
+       -G, --groups GROUP1[,GROUP2...]
+              Supplementary groups (comma separated, no spaces). They must
+              exist.
+
+       -c, --comment TEXT
+              The comment field (GECOS), usually the person's full name.
+
+       -d, --home-dir DIR
+              The home directory, instead of /home/LOGIN.
+
+       -m, --create-home
+              Create the home directory (the RHEL 9 default).
+
+       -M, --no-create-home
+              Do not create the home directory.
+
+       -s, --shell SHELL
+              The login shell. /sbin/nologin makes an account that cannot log
+              in interactively (for services, or a user who only uses files
+              over the network).
+
+       -e, --expiredate YYYY-MM-DD
+              The account stops working on this date.
+
+       -f, --inactive DAYS
+              Days after a password expires before the account is locked.
+
+       -r, --system
+              Create a system account (UID below 1000, no home directory, no
+              aging).
+
+       -k, --skel DIR
+              Copy the starting files from DIR instead of /etc/skel.
+
+       -N, --no-user-group
+              Do not create a private group; use the default group instead.
+
+       -p, --password HASH
+              Set an already encrypted password. Plain text does not work
+              here: use passwd or chpasswd instead.
+
+       -o, --non-unique
+              With -u, allow a UID that another account already has.
+
+       -D, --defaults
+              Print (or with other options, change) the defaults.
+
+EXAMPLES
+       Create the user harry, with the password redhat:
+
+           useradd harry
+           echo redhat | passwd --stdin harry
+
+       Create sarah with UID 2001, in the supplementary group admins, with a
+       full name:
+
+           groupadd admins
+           useradd -u 2001 -G admins -c 'Sarah Lee' sarah
+
+       Create an account that cannot log in to a shell:
+
+           useradd -s /sbin/nologin backupuser
+
+       Check the result:
+
+           id sarah
+           getent passwd sarah
+
+FILES
+       /etc/passwd, /etc/shadow, /etc/group, /etc/gshadow
+              The account databases.
+
+       /etc/login.defs, /etc/default/useradd
+              Defaults for new accounts.
+
+       /etc/skel/
+              Files copied into each new home directory.
+
+SEE ALSO
+       usermod(8), userdel(8), passwd(1), chage(1), groupadd(8), id(1),
+       login.defs(5), passwd(5), shadow(5)

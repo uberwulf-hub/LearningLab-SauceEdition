@@ -1,0 +1,94 @@
+NAME
+       sudoers - the rules that decide who may run what with sudo
+
+SYNOPSIS
+       /etc/sudoers
+       /etc/sudoers.d/*
+
+DESCRIPTION
+       sudo reads its rules from /etc/sudoers, which on RHEL 9 ends with the
+       line "#includedir /etc/sudoers.d" (the # is part of the keyword here,
+       not a comment). Every file in that directory is read too, in name
+       order, except names that contain a dot or end in ~. Keep your own
+       rules in separate files there; the main file stays as the package
+       installed it.
+
+       Always edit with visudo (visudo -f /etc/sudoers.d/NAME for a file of
+       its own): it checks the syntax before saving. A broken file can stop
+       sudo from working for everyone. Files should have mode 0440 and be
+       owned by root.
+
+   Rules
+       A user rule has this form:
+
+           WHO  WHERE=(AS-WHOM)  [TAG:]  COMMANDS
+
+       WHO      a user name, %group for every member of a group, or an
+                alias.
+       WHERE    the host names this rule applies to; ALL almost always.
+       AS-WHOM  the users (and :groups) the commands may run as; (ALL) means
+                anyone, including root. Left out, only root.
+       TAG      NOPASSWD: lets the commands run without asking for the
+                user's password; PASSWD: is the default.
+       COMMANDS a comma-separated list of full program paths, with
+                arguments if they must match exactly, or ALL. A directory
+                path ending in / allows every program in it.
+
+       When several rules match, the LAST one wins, so put exceptions after
+       general rules. Lines starting with # are comments (except #include
+       and #includedir).
+
+   Aliases
+       Names in capitals stand for lists:
+
+           User_Alias  ADMINS = harry, natasha
+           Cmnd_Alias  NETWORK = /usr/bin/nmcli, /usr/sbin/ip
+           Host_Alias  WEB = server1, server2
+
+   Defaults
+       Lines starting with Defaults change sudo's behaviour, for example
+       Defaults timestamp_timeout=10 (minutes a password is remembered) or
+       Defaults:harry !requiretty.
+
+   The RHEL 9 defaults
+       root    ALL=(ALL)       ALL
+       %wheel  ALL=(ALL)       ALL
+
+       So members of the group wheel may run anything as anyone, after typing
+       their own password.
+
+EXAMPLES
+       Let the members of the group admins run every command as root:
+
+           %admins ALL=(ALL) ALL
+
+       The same without a password:
+
+           %admins ALL=(ALL) NOPASSWD: ALL
+
+       Let the user natasha manage users and nothing else:
+
+           natasha ALL=(root) /usr/sbin/useradd, /usr/sbin/usermod, /usr/bin/passwd
+
+       Let the group webteam restart the web server:
+
+           %webteam ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd
+
+       Create such a file and check it:
+
+           echo '%admins ALL=(ALL) ALL' > /etc/sudoers.d/admins
+           chmod 440 /etc/sudoers.d/admins
+           visudo -c
+
+NOTES
+       Allowing an editor, a shell or a program that can start a shell (vim,
+       less, bash, find with -exec) is the same as allowing everything.
+
+       Group membership changes need a new login before sudo sees them.
+
+FILES
+       /etc/sudoers, /etc/sudoers.d/
+              The rules.
+
+SEE ALSO
+       sudo(8), visudo(8), su(1), usermod(8)

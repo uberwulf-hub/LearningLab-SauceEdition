@@ -1,0 +1,22 @@
+SYNOPSIS: Creates a file, a folder, a registry key, an environment variable or another item.
+DESCRIPTION:
+New-Item makes a new item at a path and outputs it. On the disk -ItemType File (the default) or Directory picks what to create, and -Value gives a new file its text. In the registry it creates a key (use New-ItemProperty for values). On Env:, Variable:, Alias: and Function: it creates a variable, alias or function.
+PARAMETER Path:
+Where to create the item. With -Name, the folder or key to create it in.
+PARAMETER Name:
+The new item's name, when -Path is its parent.
+PARAMETER ItemType:
+File or Directory on the disk (alias -Type). Links are not simulated by Cert Lab.
+PARAMETER Value:
+A new file's text, a registry key's default value, or a variable's value.
+PARAMETER Force:
+Replaces an existing file, returns an existing folder instead of an error, and creates missing parent folders or keys.
+EXAMPLE: New-Item -ItemType Directory C:\Tools
+Creates a folder (mkdir C:\Tools does the same).
+EXAMPLE: New-Item C:\Tools\notes.txt -Value 'first line'
+Creates a file with some text.
+EXAMPLE: New-Item HKCU:\Software\Lab
+Creates a registry key.
+NOTES:
+An existing folder gives "An item with the specified name ... already exists."; an existing file gives "The file ... already exists." unless you add -Force.
+RELATED: Remove-Item, New-ItemProperty, Set-Content

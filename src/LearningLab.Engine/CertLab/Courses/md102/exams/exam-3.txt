@@ -1,0 +1,335 @@
+# Exam: exam-3 | Practice exam 3 | 100
+The third full practice exam: questions of every kind, a case study about a manufacturer, and five hands-on tasks in the practice portal and on the devices. The tenant is Riverbend Outfitters, as in the course; before you start, its automatic enrolment covers only the group Intune pilot users.
+
+@vars
+n = 1 | 2 | 3
+tag = Sales | Field | Retail
+@endvars
+
+@setup portal
+tenant mdmScope=Some mdmGroup="Intune pilot users"
+
+@task t01 | Enrollment | 4 | RB-LT-003
+Sam Ortiz will use the new laptop **RB-LT-003**, which is still in its out-of-box experience and isn't registered for Autopilot. Set it up for Sam with his work account so that it is **Microsoft Entra joined and enrolled in Intune**, without changing who else is enrolled automatically.
+@check portal | RB-LT-003 is joined and enrolled, with Sam as its user
+device["LB14-55821"].join == "Entra joined"
+device["LB14-55821"].managed == Intune
+device["LB14-55821"].user == sam
+@check portal | the MDM user scope still covers only the pilot group
+tenant.mdmScope == Some
+@solution portal
+members add "Intune pilot users" sam
+@solution RB-LT-003
+#oobe sam
+@explain
+With the MDM user scope set to Some, only members of its group are enrolled when they join a device. Adding Sam to Intune pilot users enrols his laptop without enrolling everyone. Setting the scope to All would also work for Sam, but it changes who else is enrolled.
+@endtask
+
+@task t02 | Apps | 4 | portal
+On iPhones, Sales users may reach Office 365 only from Outlook or Teams protected by an app protection policy. Create an iOS/iPadOS app protection policy **Protect mail {n}** for Microsoft Outlook and Microsoft Teams that requires a PIN and blocks saving copies of company data, assigned to **Sales**, and a Conditional Access policy **Protected apps {n}** (On) for Sales, Office 365, iOS, that requires an app protection policy.
+@check portal | the app protection policy
+appProtection["Protect mail {n}"].targetApps has "Microsoft Outlook"
+appProtection["Protect mail {n}"].pin == Require
+appProtection["Protect mail {n}"].saveCopies == Block
+appProtection["Protect mail {n}"].include has Sales
+@check portal | Outlook gets in, an unprotected app doesn't
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Outlook", mfa=yes) == Allowed
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Word", mfa=yes) == Blocked
+@solution portal
+create appProtection name="Protect mail {n}" platform=iOS/iPadOS targetApps="Microsoft Outlook,Microsoft Teams" pin=Require saveCopies=Block
+assign appProtection "Protect mail {n}" Sales
+create ca name="Protected apps {n}" usersInclude=Sales apps="Office 365" platforms=iOS grant="Grant access" controls="Require app protection policy" state=On
+@explain
+App protection policies are assigned to user groups and work with or without enrolment. The Conditional Access grant "Require app protection policy" lets in only client apps that a policy protects for that user; Word isn't in this policy, so it is refused.
+@endtask
+
+@task t03 | Protection | 4 | portal
+Encrypt **RB-LT-002** with BitLocker silently (its user is a standard user), with XTS-AES 256-bit and the recovery key backed up to Microsoft Entra ID. Assign the policy to **Pilot devices**. Wait until the encryption has finished and the device has reported it.
+@check portal | the policy can encrypt silently
+count(diskEncryption, requireEncryption=Enabled, allowWarning=Disabled, standardUser=Enabled) >= 1
+@check portal | RB-LT-002 is encrypted and its key is in Microsoft Entra ID
+device["RB-LT-002"].bitlocker == On
+device["RB-LT-002"].bitlockerMethod == "XTS-AES 256-bit"
+device["RB-LT-002"].recoveryKeyIn == "Microsoft Entra ID"
+@solution portal
+create diskEncryption name="Silent BitLocker {n}" requireEncryption=Enabled allowWarning=Disabled standardUser=Enabled osMethod="XTS-AES 256-bit" backup=Enabled
+assign diskEncryption "Silent BitLocker {n}" "Pilot devices"
+remote sync RB-LT-002
+#wait 7200
+remote sync RB-LT-002
+@explain
+Silent encryption needs Require Device Encryption, Allow Warning For Other Disk Encryption set to Disabled and, for standard users, Allow Standard User Encryption. Encryption takes a while; the next check-in reports it.
+@endtask
+
+@task t04 | Monitoring | 3 | portal
+Chen must be able to run remote actions on the devices of the **Sales** users, and on no others. Put Chen in a new group **Sales support {n}** and give that group the **Help Desk Operator** role with Sales as its scope.
+@check portal | Chen manages Sales devices only
+canmanage(chen, RB-LT-001) == yes
+canmanage(chen, RB-DT-010) == no
+@solution portal
+create group name="Sales support {n}" type=Security membership=Assigned members=chen
+create roleAssignment name="Sales help desk {n}" role="Help Desk Operator" admins="Sales support {n}" scopeGroups=Sales
+@explain
+Tenant administration > Roles > Help Desk Operator > Assignments: members are the admins (a group), scope groups are the users and devices they may manage. RB-LT-001 belongs to Jordan (Sales); RB-DT-010 belongs to Sam (Finance).
+@endtask
+
+@task t05 | Configuration | 3 | RB-LT-001
+Every Windows device must have the registry value **HKLM\SOFTWARE\Riverbend**, **Team** = **{tag}**, written by a platform script called **Team tag {n}** that runs as SYSTEM. Make sure RB-LT-001 has it.
+@check RB-LT-001 | the value is on the device
+(Get-ItemProperty -Path HKLM:\SOFTWARE\Riverbend -Name Team).Team -eq '{tag}'
+@check portal | it came from the platform script
+script["Team tag {n}"].include has "Windows devices"
+device["RB-LT-001"].policy["Team tag {n}"] == Succeeded
+@solution portal
+create script name="Team tag {n}" content="New-Item -Path HKLM:\SOFTWARE\Riverbend -Force | Out-Null; Set-ItemProperty -Path HKLM:\SOFTWARE\Riverbend -Name Team -Value '{tag}'" runAsUser=No
+assign script "Team tag {n}" "Windows devices"
+remote sync RB-LT-001
+@explain
+Devices > Scripts and remediations > Platform scripts. Scripts run through the Intune Management Extension, as SYSTEM unless "Run this script using the logged on credentials" is Yes, and once per device (again only if the script changes).
+@endtask
+
+@case cs1 | Fernvale Manufacturing
+## Overview
+Fernvale Manufacturing (a made-up company) makes garden furniture in one factory and has a sales office in another city. 300 staff have Microsoft 365 E3 licences, and Intune manages the Windows devices.
+
+## Existing environment
+Office staff use Windows 11 laptops that are Microsoft Entra joined. On the factory floor, shared Windows PCs are used by several people in each shift; everyone signs in with their own account. Engineers use a design app whose installer needs a vendor runtime installed first. The sales team gets company-owned iPads, bought through Apple Business Manager. About 40 contractors work for Fernvale for a few months each, from their own PCs.
+
+## Requirements
+- Contractors get a managed Windows desktop they reach from their own PCs; Fernvale doesn't ship them hardware.
+- The design app installs on engineers' laptops only after the runtime is in place, without engineers doing anything.
+- The sales iPads are supervised and enrolled automatically the first time they are switched on.
+- Factory PCs never restart for updates during the day shift (06:00 to 18:00).
+- Office 365 can be reached only from devices Intune reports as compliant.
+@endcase
+
+@choice c1 | Deployment | 1 | case=cs1
+What should Fernvale give the contractors?
+- Microsoft Entra registered access from their own PCs
++ Windows 365 Cloud PCs, managed with Intune
+- Laptops set up with Windows Autopilot self-deploying mode
+- A provisioning package for their own PCs
+! A Cloud PC is a Windows desktop in Microsoft's cloud that the contractor opens from any device; Intune manages it like a physical PC, and nothing has to be shipped. Their own PCs stay theirs.
+
+@choice c2 | Apps | 1 | case=cs1
+How do you make sure the runtime is installed before the design app?
++ Add both as Win32 apps and make the runtime a dependency of the design app, installed automatically
+- Assign the runtime as Available and the design app as Required
+- Make the design app supersede the runtime
+- Put both installers in one platform script
+! A dependency is installed first (with automatic install, even if the runtime isn't assigned itself), and the design app installs only when it succeeded. Supersedence is for replacing an app.
+
+@choice c3 | Enrollment | 1 | case=cs1
+Which enrolment method meets the requirement for the sales iPads?
+- User enrolment through Company Portal
++ Automated Device Enrollment through Apple Business Manager
+- Microsoft Entra registration on each iPad
+- A provisioning package
+! Automated Device Enrollment (ADE) enrols company-owned Apple devices bought through Apple Business Manager as soon as they are set up, and makes them supervised.
+
+@yesno c4 | Updates | 3 | case=cs1
+For the factory PCs, decide whether each statement is true.
+Y Active hours from 06:00 to 18:00 in their update ring keep Windows from restarting by itself during the day shift, as long as no update deadline has passed.
+N Active hours can cover the whole 24 hours.
+Y The factory PCs can have their own ring, assigned to a group of those PCs.
+! Windows doesn't restart automatically during active hours, which can be up to 18 hours long; only once an update's deadline (plus grace period) has passed is a restart forced regardless of active hours, so give the factory ring deadlines long enough for a restart outside the shift. A separate ring for a device group lets the factory PCs have their own settings.
+
+@multi c5 | Compliance | 1 | case=cs1
+Which two are needed for the Office 365 requirement? Each right answer is part of the solution.
++ Compliance policies assigned to the devices
++ A Conditional Access policy for Office 365 that requires the device to be marked as compliant
+- An app configuration policy for Outlook
+- A device limit restriction
+! Compliance policies decide whether a device is compliant; Conditional Access uses that result when people sign in.
+
+@choice q01 | Identity | 1
+Which of these Microsoft Entra roles can show a device's local administrator password backed up by Windows LAPS?
++ Cloud Device Administrator
+- Global Reader
+- Helpdesk Administrator
+- Security Reader
+! Reading LAPS passwords needs a permission that Global Administrator, Cloud Device Administrator and Intune Administrator have. Global Reader can read neither the password nor its details; Helpdesk Administrator and Security Administrator see only the details.
+
+@choice q02 | Identity | 1
+You need a group whose members are all Windows devices, kept up to date automatically. Which group type and membership?
+- Microsoft 365 group, Dynamic device
++ Security group, Dynamic device
+- Security group, Assigned
+- Microsoft 365 group, Dynamic user
+! Dynamic device membership is available for security groups only; Microsoft 365 groups hold users.
+
+@choice q03 | Enrollment | 1
+Sam tries "Enroll only in device management" on his home PC, which runs Windows 11 Home. It fails. Why?
+- Sam's licence doesn't include Intune
++ Windows Home doesn't support enrolment in device management
+- The device limit is reached
+- Personal devices are always blocked
+! MDM enrolment needs Windows Pro, Enterprise or Education. On a Home PC, Sam can still add his work account (registering it), and app-level protections and Conditional Access still apply.
+
+@choice q04 | Enrollment | 1
+Company-owned Android barcode scanners in the warehouse must run one app, shared by everyone, with no personal use. Which Android Enterprise scenario fits?
+- Personally owned work profile
+- Corporate-owned work profile
++ Dedicated devices
+- Fully managed devices
+! Dedicated devices (once called COSU) are company devices for one purpose, often locked to one or a few apps and shared between people.
+
+@choice q05 | Compliance | 1
+A laptop was switched off for six weeks. Its settings are fine, but it shows Not compliant. Why?
+- Its compliance policy expired
++ It didn't check in within the compliance status validity period
+- Its BitLocker recovery key rotated
+- Its user's licence lapsed
+! A device that doesn't report within the validity period (30 days by default) is marked not compliant until it checks in again.
+
+@choice q06 | Compliance | 1
+People at the head office mustn't be asked for MFA; everywhere else they must. How?
+- Exclude the head office users from the policy
++ Create a named location with the office's IP range, mark it trusted, and exclude All trusted locations from the MFA policy
+- Use a device platform condition
+- Use the client apps condition
+! Locations work on the IP address of the sign-in. Excluding trusted locations skips the policy only for sign-ins from there.
+
+@choice q07 | Deployment | 1
+A shared laptop must go back to a business-ready state: personal files, apps and settings removed, but still Microsoft Entra joined and enrolled. Which remote action?
+- Wipe
+- Retire
++ Autopilot Reset
+- Delete
+! Autopilot Reset removes the user's things and brings the device back to the organisation's setup, keeping its join and enrolment; policies and apps come back at the next check-in.
+
+@choice q08 | Deployment | 1
+Which of these Autopilot device name templates is valid?
++ RB-%RAND:5%
+- RB-LAPTOP-OFFICE-%RAND:3%
+- RB_%SERIAL%
+- %RAND:6%
+! Names can be at most 15 characters, of letters, digits and hyphens, not only digits. The second is too long, the third has an underscore and the fourth would be only digits.
+
+@choice q09 | Configuration | 1
+Branch offices have slow internet links, and the same updates and apps are downloaded by every PC. Which settings help most?
+- Feature update deferral
++ Delivery Optimization (download mode LAN or Group)
+- Active hours
+- A security baseline
+! Delivery Optimization lets PCs share pieces of updates and apps with each other, so each piece crosses the slow link fewer times.
+
+@choice q10 | Configuration | 1
+A Policy CSP setting must apply to each user who signs in, not to the device. How does the custom profile's OMA-URI start?
+- ./Device/Vendor/MSFT/Policy/Config/
++ ./User/Vendor/MSFT/Policy/Config/
+- HKCU\Software\Policies\
+- ./Vendor/MSFT/User/
+! OMA-URIs under ./User apply to the user; under ./Device to the device. Registry paths aren't OMA-URIs.
+
+@choice q11 | Updates | 1
+New drivers must be checked by IT before any device installs them. What should you use?
+- An update ring that blocks Windows drivers
++ A driver updates policy with manual approval
+- An expedited quality updates policy
+- A feature updates policy
+! A driver updates policy with manual approval lists the drivers Windows Update offers; nothing installs until you approve it. Blocking drivers in a ring stops them all.
+
+@choice q12 | Updates | 1
+You want an update ring's active hours to run from 06:00 to 02:00. Why isn't that possible?
++ Active hours can be at most 18 hours
+- Active hours must end before midnight
+- Active hours need a deadline
+- Active hours need Windows Enterprise
+! Active hours from 06:00 to 02:00 are 20 hours; Windows allows up to 18.
+
+@choice q13 | Monitoring | 1
+A laptop must be reset to factory settings but stay enrolled, with its user's account kept, so it is ready again quickly. Which option?
+- Retire
+- Fresh Start
++ Wipe, with "Wipe device, but keep enrollment state and associated user account"
+- Delete
+! That wipe option resets the device and keeps its enrolment and user, so it comes back managed without being set up again.
+
+@choice q14 | Apps | 1
+Several people use each factory PC. How should Microsoft 365 Apps be installed there?
+- With a per-user installer from the Office website
++ With shared computer activation turned on in the Microsoft 365 Apps app
+- As an Available app for each user
+- With a provisioning package
+! Shared computer activation lets each person sign in and use their own licence on a shared PC, without using up activations.
+
+@choice q15 | Protection | 1
+What is a security baseline in Intune?
+- A compliance policy that blocks old Windows versions
++ A group of security settings, recommended by Microsoft, to start from and adjust
+- A report of devices with threats
+- An antivirus scan schedule
+! Baselines bundle recommended settings for Windows, Defender for Endpoint, Edge and others; you can change any value before assigning.
+
+@multi m1 | Apps | 1
+An app protection policy must stop Outlook users copying company data into personal apps. Which two settings? Each right answer is part of the solution.
++ Send org data to other apps: Policy managed apps
++ Restrict cut, copy and paste between other apps: Policy managed apps (or with paste in)
+- Back up org data: Allow
+- PIN for access: Not required
+! Both settings keep company data inside apps that a policy manages. Backups and the PIN are about other risks.
+
+@multi m2 | Deployment | 1
+Which two can the Enrollment Status Page do during Windows setup? Each right answer is part of the solution.
++ Show the progress of apps and profiles being installed
++ Keep the user from using the device until chosen apps are installed
+- Collect the device's hardware hash
+- Encrypt the system drive
+! The Enrollment Status Page tracks what Intune installs during setup and can block the desktop until the apps you pick are in.
+
+@multi m3 | Monitoring | 1
+Which two remote actions are for Windows devices only (not for iPhones)? Each right answer is part of the solution.
++ Autopilot Reset
++ Fresh Start
+- Retire
+- Sync
+! Retire and Sync work on every platform. Autopilot Reset and Fresh Start reinstall or reset Windows.
+
+@order o1 | Apps | 1
+The design app needs the vendor runtime. Which four steps, in order?
+1 Wrap the runtime's installer into an .intunewin file
+2 Add the runtime as a Win32 app
+3 Add the design app as a Win32 app with the runtime as a dependency
+4 Assign the design app as Required to the engineers
+x Assign the runtime as Uninstall
+! A dependency can only name an app that already exists in Intune, and it is installed first wherever the main app is required.
+
+@order o2 | Compliance | 1
+A new compliance policy requires BitLocker and RB-LT-001 isn't encrypted yet. Which four steps make it compliant, in order?
+1 Assign a disk encryption policy that can encrypt silently
+2 Sync RB-LT-001 so it gets the policy
+3 Wait until encryption has finished
+4 Sync again so compliance is evaluated with BitLocker on
+x Reset the device with Fresh Start
+! Compliance is worked out when the device checks in; it shows the BitLocker state at that moment, so the device reports again after encryption finishes.
+
+@order o3 | Identity | 1
+You are creating a dynamic group for Windows devices. Which four steps, in order?
+1 Users and groups > Groups > New group, type Security
+2 Set the membership type to Dynamic device
+3 Write the dynamic query, for example (device.deviceOSType -eq "Windows")
+4 Validate the rule against a few devices and create the group
+x Add the devices as members
+! Members of a dynamic group come from its rule; you can't add them by hand.
+
+@yesno y1 | Compliance | 3
+Decide whether each statement about Conditional Access is true.
+Y A policy in Report-only mode never blocks a sign-in.
+Y A policy that targets All users also applies to guests.
+N Security defaults and Conditional Access policies are meant to be used together.
+! Report-only only records what would happen. All users includes guests and external users. Security defaults are for tenants without Conditional Access; you turn them off when you use policies.
+
+@yesno y2 | Deployment | 3
+Decide whether each statement about Windows 365 and Azure Virtual Desktop is true.
+Y Windows 365 Cloud PCs can be managed with Intune like physical PCs.
+N Azure Virtual Desktop multi-session hosts need one Windows 365 licence per Cloud PC.
+Y A Windows 365 provisioning policy says how the Cloud PCs join (Microsoft Entra join or hybrid join).
+! Windows 365 is per-user Cloud PCs with a fixed price; Azure Virtual Desktop runs on your own Azure virtual machines, often shared by several users at once (multi-session), and isn't licensed per Cloud PC.
+
+@yesno y3 | Monitoring | 3
+Decide whether each statement about Intune administration is true.
+Y Objects without a scope tag have the Default tag.
+Y One role assignment can have several scope groups.
+N Intune Administrator is an Intune role you assign in Tenant administration > Roles.
+! Intune Administrator is a Microsoft Entra role (it gives full Intune rights); Intune's own roles, such as Help Desk Operator, are assigned in Tenant administration > Roles.

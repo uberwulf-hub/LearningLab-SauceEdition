@@ -1,0 +1,44 @@
+SYNOPSIS: Finds commands: cmdlets, functions, aliases and programs.
+DESCRIPTION:
+Get-Command is the way to discover what you can run. With no parameters it lists every command in the session. With a name, wildcards, a verb or a noun, it narrows the list down.
+
+PowerShell command names follow a Verb-Noun pattern (Get-Process, Stop-Service, New-Item). So when you look for "something to do with jobs", try Get-Command -Noun *Job*; when you want everything that removes things, try Get-Command -Verb Remove.
+
+Each result tells you the command type (Cmdlet, Function, Alias or Application), its name, its version and the module it comes from.
+PARAMETER Name:
+The command names to find. Position 0. Wildcards work: Get-Command *service*.
+PARAMETER Verb:
+Finds commands with this verb (the part before the dash). Wildcards work.
+PARAMETER Noun:
+Finds commands with this noun (the part after the dash). Wildcards work.
+PARAMETER Module:
+Finds the commands of one module, for example Microsoft.PowerShell.Utility.
+PARAMETER CommandType:
+Only commands of this type: Cmdlet, Function, Alias, Application, and so on.
+PARAMETER ParameterName:
+Only commands that have a parameter with this name, for example -ParameterName ComputerName.
+PARAMETER Syntax:
+Shows how to type the command (its syntax lines) instead of the command object.
+PARAMETER TotalCount:
+Stops after this many results.
+EXAMPLE: Get-Command -Noun Job
+Lists the commands for background jobs: Get-Job, Start-Job, Receive-Job and the rest.
+EXAMPLE: Get-Command -Verb Get -Noun *Variable
+Finds Get-Variable.
+EXAMPLE: Get-Command Get-Variable -Syntax
+Prints the syntax line, the same one Get-Help shows.
+EXAMPLE: Get-Command -Name *-PSSession
+Lists the commands that work with remote sessions.
+EXAMPLE: Get-Command -ParameterName ComputerName
+Lists the commands that can work against other computers.
+NOTES:
+The alias is gcm.
+
+Get-Command finds programs on the PATH too: Get-Command ping shows ping.exe and where it lives.
+
+Get-Command -Verb and -Noun only match commands that follow the Verb-Noun pattern (cmdlets and functions).
+
+Modules load automatically the first time you use one of their commands; Get-Command also lists the commands of modules that are installed but not loaded yet.
+
+To see which verbs are the approved ones, use Get-Verb.
+RELATED: Get-Help, Get-Alias, Get-Member, Get-Verb, about_Command_Syntax

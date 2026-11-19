@@ -1,0 +1,12 @@
+SYNOPSIS: Checks whether the WinRM service of a computer answers.
+DESCRIPTION:
+Test-WSMan asks a computer's WinRM service (the service PowerShell remoting uses) to identify itself. An answer means remoting can at least reach the computer; an error usually means WinRM is not running, not listening, or blocked by a firewall.
+PARAMETER ComputerName:
+The computer to test (default: this one).
+PARAMETER Credential:
+Another account to connect with.
+EXAMPLE: Test-WSMan -ComputerName WIN-CL1
+Fails until Enable-PSRemoting has been run on WIN-CL1, then shows the identification.
+EXAMPLE: Test-WSMan
+Tests this computer.
+RELATED: Enable-PSRemoting, Invoke-Command, New-PSSession, about_Remote

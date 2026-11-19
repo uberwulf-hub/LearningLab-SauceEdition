@@ -1,0 +1,98 @@
+NAME
+       ps - list the running processes
+
+SYNOPSIS
+       ps [OPTIONS]
+
+DESCRIPTION
+       ps prints one line for each process: its process ID (PID), the
+       terminal it belongs to, how much processor time it has used, and the
+       command. Unlike top it shows the list once and exits, so its output
+       can be sorted, filtered with grep or used in scripts.
+
+       ps understands two styles of options. Unix style options start with a
+       dash and can be grouped (ps -ef). BSD style options have no dash
+       (ps aux). They mean different things: "ps -a" and "ps a" are not the
+       same. With no options ps shows only the processes of your own
+       terminal.
+
+OPTIONS
+       -e, -A
+              Every process on the system.
+
+       -f     Full format: UID, PID, PPID (parent), C, STIME, TTY, TIME and
+              the whole command line.
+
+       -l     Long format, with the priority (PRI) and nice value (NI).
+
+       -u USER, -U USER
+              Only the processes of USER (a name or a UID; several separated
+              by commas).
+
+       -p PID, --pid PID
+              Only these process IDs.
+
+       --ppid PID
+              Only the children of these parent processes.
+
+       -C NAME
+              Only the processes whose command name is NAME.
+
+       -o FIELDS, --format FIELDS
+              Choose the columns, for example -o pid,user,%cpu,%mem,comm.
+              Write FIELD= (with nothing after the =) to leave out the header.
+              Useful fields: pid, ppid, user, uid, ni (nice), pri, %cpu,
+              %mem, rss, vsz, stat, tty, time, etime, start, comm (command
+              name), args (whole command line), label (SELinux context).
+
+       --sort [+|-]FIELD[,...]
+              Sort by these fields; a minus sign sorts from biggest to
+              smallest. ps --sort=-%cpu puts the busiest processes first.
+
+       -Z, --context
+              Add a column with each process's SELinux context (type such as
+              httpd_t or sshd_t).
+
+       --no-headers
+              Leave out the header line.
+
+       a, x, u (BSD style)
+              "a" shows processes of all users that have a terminal, "x" adds
+              those without a terminal, "u" uses the user-oriented format
+              (USER, PID, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME,
+              COMMAND). Together: ps aux. Add Z for the SELinux context:
+              ps auxZ.
+
+STAT
+       The STAT column letters: R running, S sleeping, D waiting for disk
+       (cannot be interrupted), T stopped, Z zombie (finished, but its parent
+       has not collected it); extra letters: < high priority (negative
+       nice), N low priority (positive nice), s session leader, + in the
+       foreground of its terminal.
+
+EXAMPLES
+       Everything, in two common styles:
+
+              $ ps -ef
+              $ ps aux
+
+       The five processes using the most CPU, then the most memory:
+
+              $ ps aux --sort=-%cpu | head -6
+              $ ps -eo pid,user,%mem,comm --sort=-%mem | head -6
+
+       The nice value of one process, and all processes of student:
+
+              $ ps -o pid,ni,comm -p 1234
+              $ ps -u student
+
+       SELinux contexts of the web server's processes:
+
+              # ps -eZ | grep httpd
+
+       Only the PIDs of sshd, without a header:
+
+              $ ps -C sshd -o pid=
+
+SEE ALSO
+       top(1), pgrep(1), kill(1), pkill(1), nice(1), renice(1), pidof(1)

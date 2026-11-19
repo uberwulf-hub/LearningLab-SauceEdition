@@ -1,0 +1,18 @@
+1. Two servers. nmap -sn 10.10.8.0/24 finds web01 (10.10.8.20, web) and app02
+   (10.10.8.30, ssh). webscan on web01 turns up a /backups/ folder.
+
+2. The hash dump. /backups/accounts.bak is a user:hash export ($6$..., sha512-crypt).
+   Save it and crack it: hashcrack accounts.bak. The decoy accounts have long random
+   passwords and don't crack; renter's is a common word and does.
+
+3. Reuse. The renter password is used again on app02. ssh renter@10.10.8.30 and
+   read the user flag.
+
+4. Root. find / -perm -4000 lists set-user-ID files. /usr/local/bin/readlog is a copy
+   of cat with the SUID bit set, owned by root, so it reads root's files:
+
+       readlog /root/flag.txt
+
+How to fix it: never leave a password export in the web root; use long, unique
+passwords so a crack of one doesn't open another host; and never set the SUID bit on
+a program that reads arbitrary files.

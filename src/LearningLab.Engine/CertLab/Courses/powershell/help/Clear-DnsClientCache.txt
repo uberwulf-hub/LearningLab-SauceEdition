@@ -1,0 +1,12 @@
+SYNOPSIS: Empties the computer's DNS cache.
+DESCRIPTION:
+Windows keeps the answers of recent name lookups in a cache, each for as long as its TTL allows, so it does not ask the DNS server every time. When a record changes on the server (a web server moved to a new address, say), the old answer can stay in the cache for a while.
+
+Clear-DnsClientCache throws every cached answer away, so the next lookup asks the DNS server again. It is the PowerShell version of ipconfig /flushdns. It has no parameters you need and outputs nothing.
+EXAMPLE: Clear-DnsClientCache
+Empties the cache.
+EXAMPLE: Clear-DnsClientCache; Resolve-DnsName web01.lab.example.com
+Forgets old answers, then asks DC01 for a fresh one.
+NOTES:
+Entries from the hosts file (C:\Windows\System32\drivers\etc\hosts) are not affected: they are read from the file every time. Windows also has Get-DnsClientCache to see the cache. Needs an administrator on a real PC. CIM-based command from the DnsClient module, Windows only.
+RELATED: Resolve-DnsName, Get-DnsClientServerAddress

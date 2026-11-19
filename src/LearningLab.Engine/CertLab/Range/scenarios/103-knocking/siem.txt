@@ -1,0 +1,11 @@
+# Knocking on the Website (offsets from {{T0}}, the moment the scanner got its file)
+# a search engine's crawler following old links from an old sitemap (harmless)
+-45m host=WEB01 source=web client={{BOTIP}} method=GET path=/robots.txt status=200 bytes=312 agent="FindItBot/2.1 (+http://search.findit.example/bot)"
+-44m x[/products/old-lamp|/products/old-desk-chair|/products/winter-sale|/news/2019-opening|/products/blue-mug|/products/old-shelf|/careers/2020-intern|/products/garden-set]/20s host=WEB01 source=web client={{BOTIP}} method=GET path=%ITEM% status=404 bytes=215 agent="FindItBot/2.1 (+http://search.findit.example/bot)"
+-41m host=WEB01 source=alert severity=low rule="Many pages not found for one visitor" client={{BOTIP}} note="8 requests from {{BOTIP}} got 404 within a few minutes"
+-40m x[/|/products|/about]/30s host=WEB01 source=web client={{BOTIP}} method=GET path=%ITEM% status=200 bytes=8120 agent="FindItBot/2.1 (+http://search.findit.example/bot)"
+# a tool trying the usual secret places
+-6m x[/admin|/.env|/wp-login.php|/phpmyadmin/|/config.php|/.git/HEAD|/server-status|/backup.tar|/db.sql|/old/|/test.php|/login.bak]/15s host=WEB01 source=web client={{SCANIP}} method=GET path=%ITEM% status=404 bytes=210 agent="{{TOOL}}/4.2"
+-170s host=WEB01 source=alert severity=low rule="Many pages not found for one visitor" client={{SCANIP}} note="12 requests from {{SCANIP}} got 404 within a few minutes"
++0 host=WEB01 source=web client={{SCANIP}} method=GET path={{LEAK}} status=200 bytes={{LEAKBYTES}} agent="{{TOOL}}/4.2"
++15s x[/uploads/|/private/|/.htpasswd]/15s host=WEB01 source=web client={{SCANIP}} method=GET path=%ITEM% status=404 bytes=210 agent="{{TOOL}}/4.2"

@@ -1,0 +1,44 @@
+NAME
+       id - print a user's user ID, group IDs and SELinux context
+
+SYNOPSIS
+       id [OPTION]... [USER]
+
+DESCRIPTION
+       With no USER, id shows the identity of the current shell: its user ID
+       (uid), primary group (gid), every group it belongs to, and on an
+       SELinux system its security context. With a USER name (or number) it
+       shows that user's IDs and groups as they are in /etc/passwd and
+       /etc/group right now.
+
+       A shell keeps the groups it had when it started: after usermod -aG,
+       "id student" shows the new group but student's open shell does not
+       until student logs in again.
+
+OPTIONS
+       -u, --user
+              Print only the user ID.
+
+       -g, --group
+              Print only the primary group ID.
+
+       -G, --groups
+              Print all group IDs, primary first.
+
+       -n, --name
+              With -u, -g or -G: print names instead of numbers.
+
+       -Z, --context
+              Print only the SELinux context of the current shell.
+
+EXAMPLES
+              $ id student
+              uid=1000(student) gid=1000(student) groups=1000(student),10(wheel)
+              $ id -un
+              student
+              $ id -nG student
+              student wheel
+              # id -u harry || echo "no user harry"
+
+SEE ALSO
+       groups(1), whoami(1), getent(1), useradd(8), usermod(8)

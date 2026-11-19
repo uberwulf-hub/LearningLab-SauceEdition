@@ -1,0 +1,22 @@
+SYNOPSIS: Changes the settings of an existing share.
+DESCRIPTION:
+Set-SmbShare changes a share's description, access-based enumeration, encryption, offline caching and user limit. Share permissions are changed with Grant-, Revoke-, Block- and Unblock-SmbShareAccess instead.
+
+It asks for confirmation; -Force skips it.
+PARAMETER Name:
+The share or shares. Position 0.
+PARAMETER Description:
+A new description.
+PARAMETER FolderEnumerationMode:
+AccessBased hides what a user can't open; Unrestricted shows everything.
+PARAMETER EncryptData:
+$true to require SMB encryption for this share.
+PARAMETER CachingMode:
+None, Manual, Documents, Programs or BranchCache.
+PARAMETER ConcurrentUserLimit:
+The most users at once (0 means no limit).
+EXAMPLE: Set-SmbShare -Name Finance -EncryptData $true -Force
+Finance files travel encrypted; clients without SMB 3 can't connect.
+EXAMPLE: Set-SmbShare -Name HR -FolderEnumerationMode AccessBased -Force
+Users see only the HR folders they have access to.
+RELATED: Get-SmbShare, New-SmbShare, Grant-SmbShareAccess, Set-SmbServerConfiguration

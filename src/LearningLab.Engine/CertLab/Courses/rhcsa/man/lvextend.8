@@ -1,0 +1,77 @@
+NAME
+       lvextend - make a logical volume bigger
+
+SYNOPSIS
+       lvextend {-L [+]SIZE | -l [+]EXTENTS} [-r] LV [PV...]
+
+DESCRIPTION
+       lvextend grows a logical volume (LV) using free space in its volume
+       group (VG). It is part of LVM, the logical volume manager. The LV can
+       stay mounted and in use while it grows.
+
+       Growing the LV does not grow the file system inside it. Either add -r
+       (--resizefs), which grows the file system right after the LV, or grow
+       the file system yourself: xfs_growfs MOUNTPOINT for XFS, resize2fs
+       DEVICE for ext4. Forgetting this step is a common mistake: lvs shows
+       the new size but df still shows the old one.
+
+       The LV can be named /dev/VG/LV, /dev/mapper/VG-LV or VG/LV.
+
+       Sizes are rounded up to whole physical extents (4 MiB each unless the
+       VG was created with another -s). lvextend says so when it rounds.
+
+       When the VG has no free space left, add a disk or partition to it
+       first: pvcreate the device, then vgextend VG DEVICE.
+
+OPTIONS
+       -L, --size [+]SIZE
+              The new size, with a unit: K, M, G or T (powers of 1024, so 1G
+              is 1024 MiB). With a plus sign the size is added to the current
+              size: -L +500M grows the LV by 500 MiB, -L 2G makes it 2 GiB in
+              total.
+
+       -l, --extents [+]N
+              The size in extents instead of bytes. A percentage is allowed:
+              -l +100%FREE uses all the free space in the VG, -l +50%FREE
+              half of it, -l 80%VG makes the LV 80% of the whole VG.
+
+       -r, --resizefs
+              Also grow the file system on the LV (XFS, ext4). XFS must be
+              mounted to grow; ext4 can be mounted or not.
+
+       -t, --test
+              Show what would happen without changing anything.
+
+       PV...  Take the new extents only from these physical volumes.
+
+EXAMPLES
+       Grow the LV data in VG vgdata by 300 MiB and its file system with it:
+
+           lvextend -r -L +300M /dev/vgdata/data
+
+       Make the LV exactly 1 GiB, then grow its XFS file system by hand:
+
+           lvextend -L 1G /dev/vgdata/data
+           xfs_growfs /data
+
+       Give an ext4 LV all the remaining free space of its VG:
+
+           lvextend -l +100%FREE vgdata/archive
+           resize2fs /dev/vgdata/archive
+
+       Check the result:
+
+           lvs vgdata
+           df -h /data
+
+NOTES
+       Exam tasks often give a size range ("between 450 and 500 MiB"). Pick
+       a size that is a whole number of extents inside the range, such as
+       480M with 4 MiB extents or 464M with 16 MiB extents.
+
+       An LV cannot grow past the free space of its VG. Check it first with
+       vgs (the VFree column).
+
+SEE ALSO
+       lvreduce(8), lvresize(8), lvcreate(8), lvs(8), vgextend(8),
+       xfs_growfs(8), resize2fs(8), lvm(8)

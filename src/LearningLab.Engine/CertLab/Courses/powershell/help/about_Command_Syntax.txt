@@ -1,0 +1,30 @@
+TOPIC
+    about_Command_Syntax
+
+SHORT DESCRIPTION
+    How to read the SYNTAX lines of a help page.
+
+LONG DESCRIPTION
+    Each line under SYNTAX is one way to call the command (a parameter
+    set). Parameters from different lines usually cannot be mixed.
+
+        Get-Service [[-Name] <string[]>] [-DependentServices] [<CommonParameters>]
+
+    -Name <string[]>      a parameter and the type of its value; [] after the
+                          type means a list (values separated by commas)
+    [-Name] <...>         the parameter name may be left out: the value is
+                          positional
+    [[-Name] <...>]       the whole parameter is optional
+    -Path <string>        no brackets around it: mandatory
+    [-Force]              a switch: no value, on when named
+    <CommonParameters>    -Verbose, -Debug, -ErrorAction, -ErrorVariable,
+                          -WarningAction, -WarningVariable,
+                          -InformationAction, -InformationVariable,
+                          -OutVariable, -OutBuffer, -PipelineVariable
+
+    Parameter names may be shortened as long as they stay unique (-Comp for
+    -ComputerName), and a value can be attached with a colon: -Force:$false.
+
+SEE ALSO
+    Get-Help
+    about_CommonParameters

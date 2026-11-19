@@ -1,0 +1,17 @@
+SYNOPSIS: Saves a report of the Group Policy settings a computer and user really received.
+DESCRIPTION:
+Get-GPResultantSetOfPolicy (RSoP) reports which GPOs applied to a computer and a user, which were filtered out and why (security filtering, WMI filter, disabled link, empty), and which setting won where GPOs disagreed. It's the PowerShell counterpart of gpresult /h.
+The report is written to a file, as HTML (easy to read in a browser) or XML. The user must have signed in to that computer at least once.
+PARAMETER Computer:
+The computer to report on; this one by default.
+PARAMETER User:
+The user to report on, such as CORP\bcole; the current user by default.
+PARAMETER ReportType:
+Html or Xml.
+PARAMETER Path:
+The file to write, such as C:\Reports\cl1-bcole.html.
+EXAMPLE: Get-GPResultantSetOfPolicy -Computer CL1 -User CORP\bcole -ReportType Html -Path C:\Reports\cl1-bcole.html
+What Bianca Cole and CL1 received, as a web page.
+EXAMPLE: Get-GPResultantSetOfPolicy -ReportType Xml -Path C:\Reports\rsop.xml
+The result for this computer and you, as XML.
+RELATED: Get-GPOReport, Invoke-GPUpdate, Get-GPInheritance, Get-GPPermission

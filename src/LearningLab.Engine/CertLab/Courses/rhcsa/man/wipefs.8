@@ -1,0 +1,46 @@
+NAME
+       wipefs - list or erase file system, RAID and partition-table signatures
+
+SYNOPSIS
+       wipefs [-n] [-q] [-t TYPE] DEVICE
+       wipefs -a [-f] DEVICE
+
+DESCRIPTION
+       Every file system, swap area, LVM physical volume and partition table
+       starts with a signature: a few "magic" bytes that tell tools what the
+       device holds. Without options, wipefs lists the signatures it finds on
+       DEVICE with their offset and type. With -a it erases them, so that
+       tools see an empty device again (for example before pvcreate or
+       mkfs complains about an old file system). Only the signature bytes are
+       erased, not the data, but the old contents become unreachable for
+       practical purposes.
+
+OPTIONS
+       -a, --all
+              Erase every signature found.
+
+       -o, --offset OFFSET
+              Erase only the signature at this offset.
+
+       -t, --types TYPE
+              Only signatures of these types (such as xfs or gpt).
+
+       -n, --no-act
+              Show what would be erased without erasing.
+
+       -f, --force
+              Erase even if the device is in use.
+
+       -q, --quiet
+              Print fewer messages.
+
+EXAMPLES
+           wipefs /dev/vdb
+           wipefs -a /dev/vdb
+
+NOTES
+       Make sure you have the right device: wipefs -a on a disk in use
+       destroys access to its data. Unmount it first.
+
+SEE ALSO
+       blkid(8), lsblk(8), parted(8), mkfs(8)

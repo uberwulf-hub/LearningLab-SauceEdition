@@ -1,0 +1,46 @@
+NAME
+       getent - look up entries in the system databases (users, groups, hosts)
+
+SYNOPSIS
+       getent DATABASE [KEY...]
+
+DESCRIPTION
+       getent looks things up the same way programs do, through the name
+       service switch (/etc/nsswitch.conf). That means it finds local
+       entries from files such as /etc/passwd and /etc/hosts and also those
+       from network sources (DNS, LDAP, IdM) when the system uses them.
+
+       Without a KEY it prints the whole database (for the network ones, as
+       far as they allow); with keys it prints only the matching entries,
+       in the same format as the file. The exit status is 2 when a key is not
+       found, which makes getent useful in scripts and checks.
+
+DATABASES
+       passwd     users (name or UID as key)
+       group      groups (name or GID)
+       shadow     password ageing data (root only)
+       gshadow    group passwords and administrators (root only)
+       hosts      host names and addresses, in the order nsswitch.conf
+                  gives (usually /etc/hosts first, then DNS)
+       ahosts     like hosts, listing every address
+       services   network service names and ports, from /etc/services
+
+EXAMPLES
+       Does the user exist, and what are its UID and home?
+
+           getent passwd student
+
+       Which users are in the group devops?
+
+           getent group devops
+
+       How does this machine resolve a name (hosts file or DNS)?
+
+           getent hosts server2.lab.example.com
+
+       Which port is https?
+
+           getent services https
+
+SEE ALSO
+       id(1), nsswitch.conf(5), passwd(5), group(5), hosts(5)

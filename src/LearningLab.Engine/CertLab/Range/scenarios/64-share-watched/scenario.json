@@ -1,0 +1,26 @@
+{
+    "base": "03-share-and-tell",
+    "id": "share-watched",
+    "title": "Share, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Intermediate",
+    "order": 2,
+    "summary": "The Windows file server from Share and Tell, with file auditing switched on. Every file copied off the shared folder is noted, and so is every sign-in. Read only the one file you need.",
+    "story": "Pinecone Logistics (made up) turned on file auditing on WIN-FS01 (10.10.3.40): copies from the Public share, connections to it and sign-ins are all counted, and wrong passwords count double. You start on scout. Get from the share to the administrator's desktop while touching as little as you can.",
+    "goal": "Capture both flags on WIN-FS01 without raising the alarm, and keep the quiet bonus.",
+    "skills": "SMB shares, listing before you copy, winrm-shell, credentials in scripts, staying quiet",
+    "quietPoints": 110,
+    "watch": [ "WIN-FS01" ],
+    "noisySolution": "noisy.txt",
+    "defenderRules": {
+        "count": { "smb-read": 3, "smb-anonymous": 1, "login-failed": 4, "login": 1, "password-guessing": 6 },
+        "budget": 9, "window": 1500, "react": 120, "reset": false, "isolate": false,
+        "watches": "files copied off the shared folder, connections to it, sign-ins and especially wrong passwords"
+    },
+    "hints": [
+        { "text": "This watcher is file auditing: each copy from the share costs a lot, each connection and sign-in a little, a wrong password a lot. Budget it: one listing of the shares, one connection that lists the folder and copies a single file, then two sign-ins with passwords you found.", "cost": 10 },
+        { "text": "smbclient -L //10.10.3.40 -N lists the shares; then in ONE connection list Public and get only the file that matters: smbclient //10.10.3.40/Public -N -c 'ls; get new-staff.txt'. The welcome file is not worth the noise.", "cost": 16 },
+        { "text": "winrm-shell -i 10.10.3.40 -u kim -p (the password from the note): kim's flag is on her desktop, and the script in her Documents holds the local Administrator password. Leave, then sign in once as Administrator for the last flag.", "cost": 24 }
+    ]
+}

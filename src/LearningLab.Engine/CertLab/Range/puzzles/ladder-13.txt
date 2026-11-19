@@ -1,0 +1,43 @@
+title: Step 13: Letters moved along
+level: Advanced
+category: ladder
+login: step13
+kind: Translating letters
+teaser: every letter shifted 13 places along the alphabet: tr shifts them back
+points: 40
+order: 13
+answer: {{PW}}
+var: PW = hex:10
+var: LINE = The password for step 14 is {{PW}}
+
+@intro
+You are step13. secret.txt looks like nonsense, but every letter in it has been
+moved 13 places along the alphabet (a becomes n, b becomes o... and after z it starts
+again at a). Digits were left alone. This old trick is called ROT13. Undo it.
+
+@setup
+useradd -m step14
+echo 'step14:{{PW}}' | chpasswd
+printf '%s\n' '{{ROT13:LINE}}' > /home/step13/secret.txt
+chown step13: /home/step13/secret.txt
+
+@solution
+cat secret.txt
+cat secret.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+
+@walkthrough
+tr ("translate") swaps characters: every character in the first list becomes the
+matching character in the second list.
+
+    cat secret.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+
+The first list is the alphabet A to Z then a to z; the second starts at N, wraps
+round to M, and does the same for lower case, so each letter moves 13 places. Because
+the alphabet has 26 letters, moving 13 twice brings you back where you started: the
+same command both hides and reveals ROT13 text.
+
+@hint 10
+The tr command changes characters: tr 'abc' 'xyz' turns every a into x, b into y and c into z. You want every letter replaced by the letter 13 places further on, wrapping around after z. The sentence starts with "Gur", which is "The" moved 13 places.
+
+@hint 18
+cat secret.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m' - the two lists line up A with N, ..., M with Z, N with A, and the same for small letters.

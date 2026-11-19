@@ -1,0 +1,17 @@
+## the sign-in: the reused account and the address
+grep -Ei 'accepted|session' /var/log/secure
+## the account's own command history gives the address again (an scp to their box)
+cat /home/{{USER}}/.bash_history
+## persistence 1: an extra authorized key (its comment is their handle)
+cat /home/{{USER}}/.ssh/authorized_keys
+## persistence 2: a scheduled beacon
+ls -la /etc/cron.d
+cat /etc/cron.d/{{CRONF}}
+## persistence 3: a dropped note with the flag
+find /var/tmp -type f 2>/dev/null
+cat /var/tmp/.cache/.loot.txt
+## shut every door
+sed -i '/{{KEYCMT}}/d' /home/{{USER}}/.ssh/authorized_keys
+rm -f /etc/cron.d/{{CRONF}}
+usermod -L {{USER}}
+passwd -S {{USER}}

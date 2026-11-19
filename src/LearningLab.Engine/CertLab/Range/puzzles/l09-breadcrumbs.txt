@@ -1,0 +1,48 @@
+title: Breadcrumbs
+level: Expert
+kind: Linux trail
+topic: Linux
+teaser: a variable, a group, two locks
+points: 100
+order: 68
+answer: flag
+var: GRP = pick:relops|vaultkeepers|nightshift|infra2|dataops
+var: HID = hex:5
+var: K = num:17-250
+
+@intro
+Someone hid a flag on this box and left you only one clue: it lives in your
+environment.
+
+@setup
+groupadd {{GRP}}
+usermod -aG {{GRP}} player
+mkdir -p /srv/{{GRP}}/.{{HID}}
+printf '%s' '{{XOR:K:FLAG}}' | base32 > /srv/{{GRP}}/.{{HID}}/data.txt
+printf 'second lock: one byte, %s\n' '{{K}}' > /srv/{{GRP}}/.{{HID}}/key.txt
+chgrp -R {{GRP}} /srv/{{GRP}}
+chmod 750 /srv/{{GRP}} /srv/{{GRP}}/.{{HID}}
+chmod 640 /srv/{{GRP}}/.{{HID}}/data.txt /srv/{{GRP}}/.{{HID}}/key.txt
+cat >> /home/player/.bashrc <<'RC'
+export NEXT_STOP=/srv/{{GRP}}/.{{HID}}
+RC
+
+@solution
+printenv | grep -i next
+ls -la /srv/{{GRP}}/.{{HID}}
+cat /srv/{{GRP}}/.{{HID}}/key.txt
+base32 -d /srv/{{GRP}}/.{{HID}}/data.txt > /tmp/step.hex
+xorcat -k {{K}} /tmp/step.hex
+
+@walkthrough
+1. printenv shows NEXT_STOP=/srv/{{GRP}}/.{{HID}}, a hidden folder.
+2. It belongs to the group {{GRP}} (mode 750), and id shows you are in it, so you may
+   read it.
+3. data.txt is base32 (only A-Z, 2-7 and =): base32 -d gives hex digits.
+4. key.txt says the second lock is one byte, {{K}}: XOR. xorcat -k {{K}} on the hex
+   prints the flag. (xorcat --brute would also find it.)
+
+Each step on its own is easy; chaining them is the skill.
+
+@hint 25
+printenv, then id: the folder's group is one of yours. data.txt is base32; what's inside is hex for xorcat.

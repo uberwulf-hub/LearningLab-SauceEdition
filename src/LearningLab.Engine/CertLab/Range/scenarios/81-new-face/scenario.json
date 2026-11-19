@@ -1,0 +1,69 @@
+{
+    "id": "new-face",
+    "title": "A New Face in Administrators",
+    "category": "blue",
+    "level": "Beginner",
+    "order": 5,
+    "summary": "A Windows PC in the office has an administrator account nobody remembers making. Find it, find out who made it and from where, and take its powers away before it is used.",
+    "story": "{{CO}} (made up) has a small office PC, {{PC}}, on 10.10.21.0/24. This morning the office manager noticed a new name on the sign-in screen. You sit at soc, a Linux box on the same network, and you have the PC's administrator password: {{ADMPW}}. Connect with: winrm-shell -i 10.10.21.30 -u Administrator -p {{ADMPW}}",
+    "goal": "Find the extra administrator account, the staff account and address used to make it, and the flag on its desktop; then take it out of the Administrators group and switch it off before someone uses it to copy the payroll folder.",
+    "skills": "winrm-shell, Get-LocalGroupMember, Get-LocalUser, the Security log (4624, 4720, 4732), Remove-LocalGroupMember, Disable-LocalUser",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 25,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the payroll folder",
+    "goalPoints": 60,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-OFFICE1|WIN-OPS02|WIN-DESK7|WIN-ADMIN3",
+        "STAFF": "person",
+        "STAFFPW": "word",
+        "ADMPW": "word",
+        "ROGUEPW": "word",
+        "ATKIP": "ip",
+        "ROGUE": "pick:it-support|svc_backup|helpdesk2"
+    },
+    "variants": { "ROGUE": {
+        "it-support": { "ROGUE_FULL": "IT Support", "ROGUE_DESC": "Remote support account" },
+        "svc_backup": { "ROGUE_FULL": "Backup Service", "ROGUE_DESC": "Nightly backup job" },
+        "helpdesk2": { "ROGUE_FULL": "Help Desk", "ROGUE_DESC": "Second help desk login" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.21.5/24" ] },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "office PC (yours to look after)", "nics": [ "10.10.21.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{STAFF}}", "password": "{{STAFFPW}}", "admin": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "30h", "repeat": 3, "every": 3600, "message": "An account was successfully logged on. Account Name: {{STAFF}} Source Network Address: 10.10.21.30 Logon Type: 2" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "20h", "message": "An account was successfully logged on. Account Name: {{STAFF}} Source Network Address: {{ATKIP}} Logon Type: 10" },
+            { "log": "Security", "id": 4720, "level": 0, "ago": "19h", "message": "A user account was created. Subject: Account Name: {{STAFF}} New Account: Account Name: {{ROGUE}}" },
+            { "log": "Security", "id": 4732, "level": 0, "ago": "19h", "message": "A member was added to a security-enabled local group. Subject: Account Name: {{STAFF}} Member: {{ROGUE}} Group Name: Administrators" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag on the new account's desktop", "points": 60, "machine": "{{PC}}", "path": "C:\\Users\\{{ROGUE}}\\Desktop\\todo.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "rogue", "ask": "What is the name of the extra administrator account?", "answer": "{{ROGUE}}", "points": 40, "explain": "Get-LocalGroupMember Administrators lists it next to Administrator and {{STAFF}}; nobody in the office made it." },
+        { "id": "maker", "ask": "Which staff account created it?", "answer": "{{STAFF}}", "points": 40, "explain": "Event 4720 (account created) and 4732 (added to Administrators) name {{STAFF}} as the account that did it." },
+        { "id": "addr", "ask": "From what address was that staff account signed in when it happened?", "answer": "{{ATKIP}}", "points": 40, "explain": "The 4624 remote sign-in (Logon Type 10) just before, from an outside address." }
+    ],
+    "tasks": [
+        { "id": "ungroup", "name": "Take the extra account out of the Administrators group", "machine": "{{PC}}", "check": "if (Get-LocalGroupMember -Group Administrators | Where-Object { $_.Name -like '*{{ROGUE}}' }) { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-LocalGroupMember -Group Administrators -Member {{ROGUE}}" },
+        { "id": "disable", "name": "Switch the extra account off", "machine": "{{PC}}", "check": "if ((Get-LocalUser -Name '{{ROGUE}}').Enabled) { exit 1 } else { exit 0 }", "points": 40, "explain": "Disable-LocalUser -Name {{ROGUE}}" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "{{PC}}", "run": "New-Item -ItemType Directory -Path 'C:\\Users\\Public\\out' -Force | Out-Null; Copy-Item 'C:\\Payroll\\*' 'C:\\Users\\Public\\out' -ErrorAction SilentlyContinue", "unless": "if (Get-LocalGroupMember -Group Administrators | Where-Object { $_.Name -like '*{{ROGUE}}' }) { exit 1 } else { exit 0 }", "note": "The extra administrator signed in and copied the payroll folder into a public folder, ready to take away.", "goal": true }
+    ],
+    "hints": [
+        { "text": "What to think about first: you are the defender. An account that can do anything on a PC (an administrator) is the most valuable thing an intruder can make. Ask three questions: who are the administrators, which one doesn't belong, and who made it? Answer each in the Findings tab as you go.", "cost": 3 },
+        { "text": "Connect from your box: winrm-shell -i 10.10.21.30 -u Administrator -p {{ADMPW}}. You then type PowerShell commands on the PC itself (the prompt starts with PS). Get-LocalGroupMember -Group Administrators lists every member of the Administrators group; Get-LocalUser lists all accounts with a description, so a made-up 'help' account stands out.", "cost": 5 },
+        { "text": "Windows writes account changes to the Security log. Event 4720 means 'an account was created' and 4732 means 'someone was added to a group'. Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4720,4732 } | Format-List TimeCreated, Message shows who did it. A remote sign-in just before (event 4624, Logon Type 10) shows where that person was signed in from.", "cost": 8 },
+        { "text": "The flag is on the new account's desktop: Get-ChildItem C:\\Users\\{{ROGUE}}\\Desktop, then Get-Content on the file there.", "cost": 12 },
+        { "text": "Take its power away: Remove-LocalGroupMember -Group Administrators -Member {{ROGUE}} takes it out of the group, and Disable-LocalUser -Name {{ROGUE}} switches it off so it can't sign in at all. Press Check on both fixes. (In real life you would also change {{STAFF}}'s password, because someone else knows it.)", "cost": 16 }
+    ]
+}

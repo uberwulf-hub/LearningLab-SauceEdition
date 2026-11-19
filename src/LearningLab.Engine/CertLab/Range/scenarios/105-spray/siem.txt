@@ -1,0 +1,13 @@
+# Spray and Pray (offsets from {{T0}}, the first sprayed sign-in)
+# a reporting program on {{APP}} still uses the old password of {{SVC}} (changed last week): it fails every five minutes
+-3h x45/5m host=DC01 source=winsec event=4625 user={{SVC}} logon_type=3 src_ip={{NET}}.{{AN}} workstation={{APP}} status=0xC000006A note="A sign-in failed: wrong password"
+-170m host=DC01 source=alert severity=medium rule="One account failing again and again" user={{SVC}} note="{{SVC}} failed to sign in 3 times in 15 minutes"
+# the spray: one password tried against many accounts through the webmail server
++0 x[{{P1}}|{{P2}}|{{P3}}|{{P4}}|{{P5}}|{{P6}}]/12s host=MAIL01 source=winsec event=4625 user=%ITEM% logon_type=8 src_ip={{SPRAYIP}} status=0xC000006A note="A sign-in failed: wrong password"
+{{if MORE=yes}}
++72s x[{{P7}}|{{P8}}|{{P9}}]/12s host=MAIL01 source=winsec event=4625 user=%ITEM% logon_type=8 src_ip={{SPRAYIP}} status=0xC000006A note="A sign-in failed: wrong password"
+{{end}}
++80s host=MAIL01 source=alert severity=high rule="Failed sign-ins for many accounts from one address" src_ip={{SPRAYIP}} note="Six or more accounts failed from {{SPRAYIP}} within two minutes"
++110s host=MAIL01 source=winsec event=4624 user={{PV}} logon_type=8 src_ip={{SPRAYIP}} note="An account signed in (webmail)"
++3m host=MAIL01 source=web client={{SPRAYIP}} method=GET path=/mail/inbox status=200 bytes=48211 agent="Mozilla/5.0 (X11; Linux x86_64)"
++4m host=MAIL01 source=web client={{SPRAYIP}} method=POST path=/mail/settings/forwarding status=200 bytes=512 agent="Mozilla/5.0 (X11; Linux x86_64)"

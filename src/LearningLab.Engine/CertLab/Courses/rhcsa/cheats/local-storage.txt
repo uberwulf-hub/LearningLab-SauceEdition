@@ -1,0 +1,52 @@
+# Sheet: local-storage | Local storage | Local storage
+## Looking at disks
+lsblk :: disks, partitions and LVs as a tree, with mount points
+lsblk -f :: adds the file system type, label and UUID
+lsblk -b -d -n -o SIZE /dev/vdb1 :: one device's size in bytes, without heading or children
+blkid /dev/vdb1 :: type, UUID, label and PARTUUID of one device
+blkid -s UUID -o value /dev/vdb1 :: only the UUID (for fstab lines)
+fdisk -l /dev/vdb :: partition table with types (Disklabel type: dos = MBR, gpt = GPT)
+parted -s /dev/vdb unit MiB print :: partition table in MiB: see where free space starts
+## MBR and GPT with fdisk / gdisk
+fdisk /dev/vdb :: interactive editor for MBR (and GPT) tables; nothing is written before w
+fdisk keys: n new, d delete, t type, p print :: the same letters work in gdisk
+fdisk keys: w and q :: w writes the table and quits, q quits without writing
++1G / +512M :: size answer at "Last sector": 1 GiB / 512 MiB from the start
+83 / 82 / 8e :: fdisk (MBR) types: Linux / Linux swap / Linux LVM
+gdisk /dev/vdc :: interactive editor for GPT tables only
+8300 / 8200 / 8e00 :: gdisk types: Linux file system / Linux swap / Linux LVM
+partprobe /dev/vdb :: make the kernel read the partition table again
+## Partitions with parted
+parted -s /dev/vdb mklabel gpt :: new empty GPT table (msdos for MBR); only on a disk nobody uses
+parted -s /dev/vdb mkpart data 1MiB 1025MiB :: GPT partition named data, START and END are positions
+parted -s /dev/vdb mkpart swap1 linux-swap 1025MiB 1537MiB :: a partition with the swap type (does not format it)
+parted -s /dev/vdb set 2 lvm on :: mark partition 2 for LVM
+parted -s /dev/vdb rm 2 :: delete partition 2 (the others keep their numbers)
+## LVM: create
+pvcreate /dev/vdb1 :: make a physical volume
+vgcreate vgdata /dev/vdb1 :: volume group with 4 MiB extents
+vgcreate -s 16M vgdata /dev/vdb1 :: volume group with 16 MiB extents (only at creation)
+lvcreate -n lvweb -L 500M vgdata :: logical volume by size (rounded up to whole extents)
+lvcreate -n lvdb -l 40 vgdata :: logical volume of exactly 40 extents
+lvcreate -n lvrest -l 100%FREE vgdata :: logical volume using all the free space
+vgextend vgdata /dev/vdc1 :: add a PV to a VG (more free space)
+## LVM: look
+pvs / vgs / lvs :: one line per PV / VG / LV
+vgs --noheadings -o vg_extent_size vgdata :: just the extent size
+lvdisplay vgdata/lvweb :: the long form, with the number of extents (Current LE)
+## LVM: remove
+lvremove -y vgdata/lvold :: remove an LV (unmount it and clean fstab first)
+vgremove vgold :: remove a VG
+vgreduce vgdata /dev/vdc1 :: take an unused PV out of a VG
+pvremove /dev/vdc1 :: wipe the PV label
+## Swap
+mkswap /dev/vdb2 :: write a swap signature (prints the UUID)
+/dev/vgdata/swap none swap defaults 0 0 :: fstab line for swap (mount point none)
+swapon -a :: turn on all swap in fstab (and test the lines)
+swapon --show :: active swap areas
+swapoff /dev/vdb2 :: turn one swap area off (before removing it)
+## Mount at boot
+UUID=... /data xfs defaults 0 0 :: fstab line by UUID (blkid prints it)
+LABEL=DATA /data xfs defaults 0 0 :: fstab line by label
+systemctl daemon-reload :: make systemd read the changed fstab
+mount -a :: mount everything fstab lists; reports bad lines now instead of at boot

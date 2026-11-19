@@ -1,0 +1,60 @@
+{
+    "id": "locked-out",
+    "title": "Locked Out or Broken In?",
+    "category": "soc",
+    "level": "Beginner",
+    "order": 1,
+    "summary": "One alert: a string of failed sign-ins, then a successful one. Someone guessing a password - or just a person with an old password saved? Read the SIEM and decide.",
+    "story": "You are the analyst on shift in {{CO}}'s small security team (a made-up company). The SIEM - the system that collects every computer's logs in one place - raised an alert a few minutes ago: many failed sign-ins for one account, followed by a sign-in that worked. Your job is not to panic and not to ignore it: look at the events behind the alert and decide whether it is a real attack or a false alarm.",
+    "goal": "Decide whether the alert is real, and answer the questions about it: the account, where the failed sign-ins came from, which computer they were aimed at, how many there were, and when they started.",
+    "skills": "reading SIEM alerts, Windows sign-in events (4624, 4625), searching and counting events",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 15,
+    "vars": {
+        "CO": "company",
+        "U": "person:flast",
+        "O1": "person:flast", "O2": "person:flast", "O3": "person:flast",
+        "H1": "num:10-39", "H2": "num:40-59", "H3": "num:60-79", "H4": "num:80-99",
+        "NET": "subnet:10",
+        "ATKIP": "ip",
+        "T0": "time:9-15",
+        "NFAIL": "num:12-28",
+        "REAL": "pick:guess|stale"
+    },
+    "variants": {
+        "REAL": {
+            "guess": { "VERDICT": "real", "SRC": "{{ATKIP}}", "TARGET": "RDGW01", "WHY": "The failed sign-ins came from an address outside the company, over remote desktop, and ended in a successful sign-in from that same address: someone guessed the password." },
+            "stale": { "VERDICT": "false alarm", "SRC": "{{NET}}.{{H1}}", "TARGET": "FILE01", "WHY": "The failed sign-ins came from the person's own computer, minutes after they changed their password, over the network to the file server: an old password still saved on that computer. Once they updated it, the sign-in worked." }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 140, "from": "-150m", "to": "+40m",
+            "hosts": [ "WS-{{H1}}", "WS-{{H2}}", "WS-{{H3}}", "WS-{{H4}}" ],
+            "users": [ "{{U}}", "{{O1}}", "{{O2}}", "{{O3}}" ],
+            "ips": [ "{{NET}}.{{H1}}", "{{NET}}.{{H2}}", "{{NET}}.{{H3}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}", "quiet": [ "{{U}}" ],
+            "kinds": [ "logon", "logon", "process", "process", "dns", "firewall" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "Is this alert a real attack or a false alarm? (real / false alarm - you get one try)", "answer": "{{VERDICT}}", "tries": 1, "points": 60,
+          "explain": "{{WHY}}" },
+        { "id": "acct", "ask": "Which account had the failed sign-ins?", "answer": "{{U}}", "points": 20, "explain": "The alert and every 4625 event name it." },
+        { "id": "src", "ask": "Which address did the failed sign-ins come from?", "answer": "{{SRC}}", "points": 30, "explain": "The src_ip field of the 4625 events." },
+        { "id": "target", "ask": "Which computer were the sign-ins aimed at (the host that logged them)?", "answer": "{{TARGET}}", "points": 20, "explain": "The host field of the 4625 events." },
+        { "id": "count", "ask": "How many failed sign-ins were there for that account?", "answer": "{{NFAIL}}", "points": 30, "explain": "siem search source=winsec event=4625 user={{U}} counts them." },
+        { "id": "first", "ask": "At what time (HH:MM:SS) was the first failed sign-in?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The events are listed oldest first; the first 4625 is at {{T0}}." }
+    ],
+    "hints": [
+        { "text": "What to think about first: an alert is only a starting point - a rule in the SIEM noticed a pattern. Your job is to look at the events behind it and ask: who, from where, to where, how many, and does it make sense? Failed sign-ins happen all the time (people mistype), so the details decide whether it is an attack.", "cost": 3 },
+        { "text": "Type siem alerts to see the alert. Then look at the sign-in events: siem search source=winsec event=4625 shows every failed sign-in (4625 is Windows' number for 'a sign-in failed'; 4624 means it worked). Each line has fields like user=, src_ip= (where it came from) and host= (the computer that wrote it down).", "cost": 5 },
+        { "text": "To count, narrow the search to the account and read the last line, which says how many events matched: siem search source=winsec event=4625 user=NAME. The results are in time order, so the first line is the first failed sign-in. siem search source=winsec user=NAME shows the successful one (4624) too.", "cost": 8 },
+        { "text": "Deciding: addresses starting like the company's own computers (the same first three numbers as the WS- computers in the SIEM) are inside the building. An address from outside, logon_type=10 (remote desktop) and a sign-in that finally works from that same address is someone guessing a password. Failures from the person's own computer to a file server right after they changed their password (event 4723) is an old saved password - annoying, not an attack.", "cost": 12 }
+    ]
+}

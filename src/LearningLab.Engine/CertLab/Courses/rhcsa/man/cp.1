@@ -1,0 +1,110 @@
+NAME
+       cp - copy files and directories
+
+SYNOPSIS
+       cp [OPTION...] SOURCE DEST
+       cp [OPTION...] SOURCE... DIRECTORY
+       cp [OPTION...] -t DIRECTORY SOURCE...
+
+DESCRIPTION
+       cp copies SOURCE to DEST. When the last argument is an existing
+       directory, every SOURCE is copied into it under its own name. An
+       existing file named DEST is overwritten without a question unless you
+       add -i or -n.
+
+       By default cp does not copy directories (use -r or -a), the copy
+       belongs to the user running cp, its mode is the source's mode limited
+       by the umask, and its time stamps are new. The SELinux label of a new
+       file comes from the directory it is created in, not from the source.
+       Use -a, -p or --preserve when the copy must keep those attributes.
+
+       On RHEL 9, root's shell has the alias cp='cp -i', so cp asks before
+       overwriting. Use \cp or the full path /usr/bin/cp to skip the alias.
+
+OPTIONS
+       -r, -R, --recursive
+              Copy directories and everything in them.
+
+       -a, --archive
+              Copy as exactly as possible: recursive, keep symbolic links as
+              links, and keep the mode, owner, group, time stamps, ACLs,
+              SELinux context and extended attributes. The same as -dR
+              --preserve=all.
+
+       -p     Keep the mode, owner and time stamps
+              (--preserve=mode,ownership,timestamps).
+
+       --preserve[=LIST]
+              Keep the listed attributes: mode, ownership, timestamps, links,
+              context, xattr, all.
+
+       -i, --interactive
+              Ask before overwriting an existing file.
+
+       -n, --no-clobber
+              Never overwrite an existing file.
+
+       -f, --force
+              If an existing destination cannot be opened, remove it and try
+              again.
+
+       -u, --update
+              Copy only when the source is newer than the destination, or the
+              destination is missing.
+
+       -v, --verbose
+              Print each file as it is copied.
+
+       -l, --link
+              Make hard links instead of copies.
+
+       -s, --symbolic-link
+              Make symbolic links instead of copies.
+
+       -L, --dereference
+              Copy the files that symbolic links point to.
+
+       -P, --no-dereference
+              Copy symbolic links as links.
+
+       -t DIRECTORY, --target-directory=DIRECTORY
+              Copy all SOURCE arguments into DIRECTORY.
+
+       -T, --no-target-directory
+              Treat DEST as a normal file, even if it is a directory.
+
+       --parents
+              Recreate each source's directory path under the destination.
+
+       -b, --backup
+              Keep a backup (DEST~) of a file that would be overwritten.
+
+EXAMPLES
+       Copy a file into a directory:
+
+           cp /etc/hosts /root/backup/
+
+       Copy a whole directory tree with owners, modes, ACLs and SELinux
+       labels kept:
+
+           cp -a /srv/data /srv/data.bak
+
+       Copy a web page from the home directory, letting it take the label of
+       /var/www/html:
+
+           cp /home/student/index.html /var/www/html/
+
+       Copy several files and say what happened:
+
+           cp -v /etc/fstab /etc/hostname /root/saved/
+
+       Keep the path when copying, giving /root/keep/etc/ssh/sshd_config:
+
+           cp --parents /etc/ssh/sshd_config /root/keep
+
+NOTES
+       mv keeps a file's SELinux label (it is the same file); cp gives the copy
+       a new one. After mv into a web or service directory, run restorecon.
+
+SEE ALSO
+       mv(1), rsync(1), install(1), ln(1), restorecon(8)

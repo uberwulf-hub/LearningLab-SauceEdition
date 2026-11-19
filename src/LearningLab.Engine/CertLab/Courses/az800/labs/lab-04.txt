@@ -1,0 +1,83 @@
+# Lab: lab-04 | A Group Policy baseline | u04 | 45
+Harborline's auditors left a list: stronger domain passwords, a locked-down desktop for Sales, a security baseline that reaches everyone, and a pilot for a new Windows Update setting. The security team has already made its GPO **Security baseline** and linked it to the domain.
+
+@vars
+pwlen = 10 | 12 | 14
+lockout = 5 | 10
+@endvars
+
+@setup admin
+gpo new "Security baseline" comment="Owned by the security team"
+gpo set "Security baseline" setting=ScreenSaver state=Enabled
+gpo set "Security baseline" setting=ScreenSaverSecure state=Enabled
+gpo link "Security baseline" "corp.example"
+gpo new "Updates default"
+gpo set "Updates default" setting=AutoUpdate state=Enabled value="Auto download and notify for install"
+gpo link "Updates default" "Workstations"
+gpo new "Updates pilot"
+gpo set "Updates pilot" setting=AutoUpdate state=Enabled value="Auto download and schedule the install"
+gpo link "Updates pilot" "Workstations"
+
+@task t01 | Group Policy | 20 | admin
+Domain passwords must be at least **{pwlen}** characters, and accounts must lock after **{lockout}** wrong passwords. Put the settings where they apply to domain accounts.
+@check admin | the domain's policy
+domain.minPwdLength == {pwlen}
+domain.lockoutThreshold == {lockout}
+passwordpolicy(user=bcole).minlength == {pwlen}
+@check admin | in the Default Domain Policy
+gpo["Default Domain Policy"].setting["MinPwdLength"].value == {pwlen}
+@hint Computer Configuration > Policies > Windows Settings > Security Settings > Account Policies, in the GPO linked to the domain.
+@solution admin
+gpo set "Default Domain Policy" setting=MinPwdLength state=Enabled value={pwlen}
+gpo set "Default Domain Policy" setting=LockoutThreshold state=Enabled value={lockout}
+@explain
+Only GPOs linked to the domain set the account policy of domain accounts; the domain controllers write it onto the domain itself. The same settings in an OU's GPO affect only local accounts.
+@endtask
+
+@task t02 | Group Policy | 25 | admin
+Create the GPO **Sales lockdown** that removes **Run** from the Start menu and prohibits **Control Panel**, and link it so it reaches the Sales people. Don't force a refresh: let CL1's background refresh pick it up (skip time), then check that it applied for Bianca Cole.
+@check admin | the GPO and its link
+gpo["Sales lockdown"].setting["NoRun"] == Enabled
+gpo["Sales lockdown"].setting["NoControlPanel"] == Enabled
+gpo["Sales lockdown"].links has "OU=Sales,OU=Staff,DC=corp,DC=example"
+@check admin | CL1 applied it for bcole in a background refresh
+applied(CL1, user=bcole).setting["NoRun"] == Enabled
+applied(CL1, user=bcole).setting["NoControlPanel"] == Enabled
+@hint Both are user settings: link the GPO to Staff/Sales. Members refresh every 90 minutes plus up to 30 minutes, so skip two hours.
+@solution admin
+gpo new "Sales lockdown"
+gpo set "Sales lockdown" setting=NoRun state=Enabled
+gpo set "Sales lockdown" setting=NoControlPanel state=Enabled
+gpo link "Sales lockdown" "Staff/Sales"
+#wait 7200
+@explain
+The background refresh runs every 90 minutes with a random offset of up to 30, so a new GPO reaches a running PC within two hours (and at once at the next sign-in for user settings, or with gpupdate).
+@endtask
+
+@task t03 | Group Policy | 30 | admin
+The IT team must no longer receive **Staff desktop** or anything else linked above `Staff/IT`, but **Security baseline** must still reach everyone, IT included, and win over any GPO linked lower.
+@check admin | IT blocks inheritance and no longer gets Staff desktop
+ou["Staff/IT"].blocked == Yes
+rsop(computer=CL1, user=arivera).usergpos !has "Staff desktop"
+@check admin | the security baseline is enforced and reaches IT and Sales
+gpo["Security baseline"].enforced["corp.example"] == Yes
+rsop(computer=CL1, user=arivera).setting["ScreenSaverSecure"] == Enabled
+rsop(computer=CL1, user=bcole).setting["ScreenSaverSecure"] == Enabled
+@solution admin
+inheritance block "Staff/IT"
+gpo setlink "Security baseline" "corp.example" enforced=yes
+@explain
+Block Inheritance stops everything from above except enforced links. Enforcing the domain link of the baseline makes it apply through the block and win conflicts.
+@endtask
+
+@task t04 | Group Policy | 25 | admin
+Two GPOs on `Workstations` configure Automatic Updates. The pilot is over and its setting should now win on every workstation: make **Updates pilot** take precedence over **Updates default** without deleting or unlinking either.
+@check admin | Updates pilot has link order 1 and wins on CL1
+gpo["Updates pilot"].linkorder["Workstations"] == 1
+rsop(computer=CL1).setting["AutoUpdate"].winner == "Updates pilot"
+rsop(computer=CL1).setting["AutoUpdate"].value == "Auto download and schedule the install"
+@solution admin
+gpo setlink "Updates pilot" "Workstations" order=1
+@explain
+Within one container, the GPO with link order 1 is applied last and wins conflicts.
+@endtask

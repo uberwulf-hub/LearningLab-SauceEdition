@@ -1,0 +1,19 @@
+NAME
+       strings - print the readable text found inside a file
+
+SYNOPSIS
+       strings [FILE]...
+
+DESCRIPTION
+       strings looks through a file, usually a program or another binary file,
+       and prints every run of at least four printable characters it finds,
+       one per line. It is a quick way to see messages, file paths or version
+       numbers built into a program without running it.
+
+EXAMPLES
+       Look for configuration paths inside the sshd program:
+
+           strings /usr/sbin/sshd | grep /etc/
+
+SEE ALSO
+       file(1), xxd(1), od(1)

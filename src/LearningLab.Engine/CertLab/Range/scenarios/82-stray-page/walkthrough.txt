@@ -1,0 +1,17 @@
+You are the defender of a small website. The trail is in the web log and in the uploads folder.
+
+1. The web log. /var/log/httpd/access_log has one line per request. grep -E 'POST|uploads' on it shows
+   ordinary visitors sending photos in the day, and {{ATKIP}} late at night: it POSTs to /upload.php and
+   then asks for /uploads/{{FILE}} - a file it had just put there.
+
+2. The folder. ls -l /var/www/html/uploads lists {{PHOTO1}}.jpg and {{PHOTO2}}.jpg (photos) and
+   {{FILE}}, which is not a photo at all: it is {{WHAT}}. cat shows it; the flag is inside.
+
+3. The open door. ls -ld /var/www/html/uploads shows drwxrwxrwx: every account on the server may write
+   there. That makes it easy for anything else to drop files too.
+
+4. Clean up. rm -f /var/www/html/uploads/{{FILE}} and chmod 755 /var/www/html/uploads. If you are too
+   slow, the dropped page is used again.
+
+For real: an upload form must check what it receives (only real pictures), store uploads where the web
+server won't run them as pages, and folders should never be writable by everyone (777).

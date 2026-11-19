@@ -1,0 +1,22 @@
+SYNOPSIS: Writes an entry to a classic event log (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Write-EventLog lets a script record what it did in the Application log (or another classic log), where monitoring tools and administrators look. The source must first be registered for that log with New-EventLog, once per computer, as an administrator.
+PARAMETER LogName:
+The log to write to. Position 0.
+PARAMETER Source:
+The registered source name. Position 1.
+PARAMETER EventId:
+A number you choose for this kind of event (0 to 65535). Position 2.
+PARAMETER EntryType:
+Error, Warning, Information (the default), SuccessAudit or FailureAudit. Position 3.
+PARAMETER Message:
+The text of the entry. Position 4.
+PARAMETER Category:
+A category number.
+EXAMPLE: New-EventLog -LogName Application -Source LabApp
+Registers the source once.
+EXAMPLE: Write-EventLog -LogName Application -Source LabApp -EventId 100 -EntryType Warning -Message 'Disk almost full'
+Writes a warning.
+NOTES:
+In PowerShell 7 there is no Write-EventLog; the .NET class System.Diagnostics.EventLog or New-WinEvent can be used instead.
+RELATED: New-EventLog, Get-EventLog, Get-WinEvent

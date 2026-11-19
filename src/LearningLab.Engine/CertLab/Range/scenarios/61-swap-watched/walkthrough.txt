@@ -1,0 +1,18 @@
+Same shop server as Swap Meet, but now a watcher counts wrong passwords, password guessing and downloads
+from the FTP drop.
+
+1. A quiet look. nmap -sn 10.10.11.0/24 finds store1 (10.10.11.20); nmap -sV 10.10.11.20 shows FTP (21)
+   and ssh (22). This watcher doesn't count a single targeted scan.
+
+2. One file, not all of them. ftp 10.10.11.20 as anonymous, cd pub, ls - then get only new-staff.txt.
+   Every download is counted, so a quick look at the names saves you from emptying the folder.
+
+3. One clean sign-in. The note gives {{USER}}'s password. ssh {{USER}}@10.10.11.20 with it (typed right
+   the first time) and read flag.txt.
+
+4. Root. sudo -l shows {{SUDOBIN}}; on this run {{SUDORUN}} prints root's flag.
+
+Why the noisy way fails: downloading everything adds up, and pwguess tries hundreds of passwords against
+ssh - each one a failed sign-in in the log. Past the watcher's patience it raises the alarm and blocks your
+address on the firewall. In real life, defenders alert on bursts of failed logins and unusual downloads;
+an attacker who uses what they found, once, blends in.

@@ -1,0 +1,100 @@
+# Lab: lab-07 | Scheduling, services, time, software and boot | u07 | 45
+Everything in this lab happens on server1. Someone has already changed a few things on it: the machine boots into the graphical target and the time service is switched off. Every change you make must still be in place after a reboot. The repositories are on http://repo.lab.example.com (BaseOS and AppStream) and the NTP server is ntp.lab.example.com.
+
+@setup server1
+systemctl set-default graphical.target
+systemctl disable --now chronyd
+
+@task t01 | Deploy and maintain | 10 | server1
+The user student must run the command `df -h >> /home/student/disk.log` every 20 minutes from 08:00 to 17:59, Monday to Friday.
+@check server1 | student's crontab runs the command every 20 minutes, 08-17, on weekdays
+crontab -l -u student | grep -Eq '^(\*/20|0,20,40|0-59/20) +(8-17|08-17) +\* +\* +(1-5|mon-fri|Mon-Fri) +.*df -h >> /home/student/disk\.log'
+@hint The hour field 8-17 covers 08:00 to 17:59. As root, crontab -u student - reads the new table from standard input (or use crontab -e -u student).
+@solution server1
+echo '*/20 8-17 * * 1-5 df -h >> /home/student/disk.log' | crontab -u student -
+crontab -l -u student
+@explain
+The five fields are minute, hour, day of month, month and day of week. */20 in the minute field gives :00, :20 and :40; 8-17 in the hour field means every hour from 08 to 17, so the last run is at 17:40. 1-5 is Monday to Friday. A personal crontab runs as its owner, so it has no user field (only /etc/crontab and /etc/cron.d files do).
+@endtask
+
+@task t02 | Deploy and maintain | 10 | server1
+As root, schedule a one-time job that runs `tar czf /root/etc-backup.tar.gz /etc` at 23:30 today. Do not use cron for it.
+@check server1 | a job waits for 23:30
+atq | grep -q ' 23:30:00 '
+@check server1 | the job runs the tar command
+for j in $(atq | awk '{print $1}'); do at -c $j | grep -q 'tar czf /root/etc-backup.tar.gz /etc' && exit 0; done; exit 1
+@hint at reads the commands from standard input. atq lists the waiting jobs, at -c NUMBER shows one.
+@solution server1
+echo 'tar czf /root/etc-backup.tar.gz /etc' | at 23:30
+atq
+@explain
+at runs a job once and then forgets it, which is exactly what a one-time task needs. The job keeps the environment and working directory of the moment you created it; at -c shows all of it, with your commands at the end. atrm NUMBER cancels a job.
+@endtask
+
+@task t03 | Deploy and maintain | 15 | server1
+Create a systemd service `report.service` that runs `/usr/bin/logger daily-report`, and a timer `report.timer` that starts it every day at 06:00. If the machine is off at 06:00, the job must run as soon as it is on again. The timer must be active now and at every boot.
+@check server1 | report.timer is enabled and active
+systemctl is-enabled report.timer && systemctl is-active report.timer
+@check server1 | the timer is due at 06:00
+systemctl list-timers --all | grep 'report.timer' | grep -q ' 06:00:00 '
+@check server1 | the service runs logger daily-report and missed runs are caught up
+systemctl cat report.service | grep -q '^ExecStart=.*logger daily-report' && systemctl cat report.timer | grep -Eq '^Persistent *= *(true|yes)'
+@hint Two files in /etc/systemd/system. The timer needs OnCalendar=, Persistent=true and an [Install] section with WantedBy=timers.target. Then daemon-reload and enable --now the timer.
+@solution server1
+printf '[Unit]\nDescription=Daily report\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/logger daily-report\n' > /etc/systemd/system/report.service
+printf '[Unit]\nDescription=Daily report at 06:00\n\n[Timer]\nOnCalendar=*-*-* 06:00:00\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/report.timer
+systemctl daemon-reload
+systemctl enable --now report.timer
+systemctl list-timers
+@explain
+A timer starts the service with the same name. OnCalendar=*-*-* 06:00:00 (or 06:00) is every day at 06:00, and Persistent=true catches up a run that was missed while the machine was off. Enable the TIMER: the service has no [Install] section and is started by the timer. systemctl daemon-reload makes systemd read new or changed unit files.
+@endtask
+
+@task t04 | Deploy and maintain | 15 | server1
+Make server1 keep its clock in sync with the NTP server ntp.lab.example.com, and only with that server. The time service must run now and start at every boot.
+@check server1 | chrony.conf uses ntp.lab.example.com as its only source
+grep -Eq '^(server|pool) +ntp\.lab\.example\.com' /etc/chrony.conf && test "$(grep -Ec '^(server|pool|peer) ' /etc/chrony.conf)" = 1
+@check server1 | chronyd is enabled and active
+systemctl is-enabled chronyd && systemctl is-active chronyd
+@check server1 | chrony sees the server
+chronyc sources | grep -q 'ntp.lab.example.com'
+@hint Comment out the pool line in /etc/chrony.conf, add a server line, then systemctl enable --now chronyd (or restart it if it already runs).
+@solution server1
+sed -i 's/^pool /#pool /' /etc/chrony.conf
+echo 'server ntp.lab.example.com iburst' >> /etc/chrony.conf
+systemctl enable --now chronyd
+#wait 20
+chronyc sources
+@explain
+Someone had disabled and stopped chronyd, so changing the file is not enough: enable --now both starts it and makes it start at boot (if it had been running, you would restart it to read the new file). iburst makes the first sync quick. In chronyc sources, ^* marks the server the clock follows.
+@endtask
+
+@task t05 | Deploy and maintain | 15 | server1
+Make server1 boot into the text-only multi-user target by default. Also, every kernel entry in the boot loader must show the boot messages: remove the arguments `rhgb` and `quiet` from all of them.
+@check server1 | the default target is multi-user.target
+test "$(systemctl get-default)" = multi-user.target
+@check server1 | no boot entry has rhgb or quiet
+grubby --info=ALL | grep -q '^args=' && ! grubby --info=ALL | grep '^args=' | grep -Eqw 'rhgb|quiet'
+@hint systemctl set-default. grubby --update-kernel=ALL --remove-args="..." takes several arguments at once.
+@solution server1
+systemctl set-default multi-user.target
+grubby --update-kernel=ALL --remove-args="rhgb quiet"
+grubby --info=ALL | grep ^args
+@explain
+set-default replaces the link /etc/systemd/system/default.target. grubby edits the boot entries in /boot/loader/entries directly, so no grub2-mkconfig is needed; ALL changes every installed kernel, including the rescue entry. To keep the change for kernels installed later as well, also remove the words from GRUB_CMDLINE_LINUX in /etc/default/grub.
+@endtask
+
+@task t06 | Deploy and maintain | 15 | server1
+Configure server1 to install software from the repositories http://repo.lab.example.com/BaseOS and http://repo.lab.example.com/AppStream (the packages are signed; the key is /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release). Then install the packages `tree` and `lsof`.
+@check server1 | both repositories can be used
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh && dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@check server1 | tree and lsof are installed
+rpm -q tree && rpm -q lsof
+@hint One .repo file in /etc/yum.repos.d with two [sections] (name, baseurl, gpgcheck, gpgkey), or dnf config-manager --add-repo for each URL. Then dnf install -y.
+@solution server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n' > /etc/yum.repos.d/lab.repo
+dnf repolist
+dnf install -y tree lsof
+@explain
+Each [section] of a .repo file is one repository: baseurl says where it is, gpgcheck=1 with gpgkey= lets dnf check the signatures (it imports the key the first time). gpgcheck=0 also works but trusts anything. dnf repolist lists what dnf can use; rpm -q PKG checks that a package is installed.
+@endtask

@@ -1,0 +1,46 @@
+# Deck: ad-ds | Active Directory Domain Services | AD DS
+Add the AD DS role to a server (binaries only) :: `Install-WindowsFeature AD-Domain-Services -IncludeManagementTools`
+Promote a server to an extra DC of corp.example with DNS :: `Install-ADDSDomainController -DomainName corp.example -InstallDns`
+Cmdlet for the first DC of a brand new forest :: `Install-ADDSForest`
+Cmdlet for a child or tree domain in an existing forest :: Install-ADDSDomain (-DomainType ChildDomain or TreeDomain)
+Make the new DC read-only :: -ReadOnlyReplica (and -SiteName, which an RODC requires)
+Promote over a slow link without copying the whole directory :: Install from media: ntdsutil "ifm" on a DC, then -InstallationMediaPath
+Highest functional level for Windows Server 2019 and 2022 DCs :: Windows Server 2016 (there is no 2019 or 2022 level)
+Group whose members' passwords may be cached on RODCs :: Allowed RODC Password Replication Group (empty by default)
+A user is in both RODC password replication groups :: Denied wins: the password is not cached
+Which side holds the resources in a trust? :: The trusting side; access goes against the direction of the trust
+Trust between two forests' root domains, transitive inside both :: Forest trust
+Trust to one domain of another forest, not transitive :: External trust
+Trust inside one forest to shorten the authentication path :: Shortcut trust
+Trust to a non-Windows Kerberos v5 realm :: Realm trust
+Partner users may authenticate only to computers you allow :: Selective authentication ("Allowed to authenticate" on each computer object)
+Creating a trust fails: "domain does not exist or could not be contacted" :: Add a conditional forwarder (or stub zone) for the other forest first
+Add a UPN suffix to the forest :: `Set-ADForest -UPNSuffixes @{Add='harborline.example'}`
+Group scope for "people in the same job" :: Global (members from its own domain, usable in the whole forest)
+Group scope that receives the permission in AGDLP :: Domain local
+Global to domain local, directly? :: No: go through Universal first
+Group with no NTLM, no cached credentials, 4-hour tickets for its members :: Protected Users (for administrators' accounts)
+Why can't a GPO be linked to the Computers folder? :: It is a container, not an OU: pre-stage accounts in an OU or use redircmp
+Delete an OU that is protected from accidental deletion :: Clear the protection first: `Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false`
+Turn on the AD Recycle Bin :: `Enable-ADOptionalFeature 'Recycle Bin Feature' -Scope ForestOrConfigurationSet -Target corp.example`
+Can the Recycle Bin restore something deleted before it was enabled? :: No, and it can't be turned off once on
+Restore a deleted user with PowerShell :: `Get-ADObject -Filter 'samAccountName -eq "dpatel"' -IncludeDeletedObjects | Restore-ADObject`
+Needed once per forest before the first gMSA :: A KDS root key: `Add-KdsRootKey -EffectiveImmediately` (usable 10 hours later)
+Let a server use a gMSA :: `Install-ADServiceAccount gmsa-web`
+What can a fine-grained password policy be applied to? :: Users and global security groups, never OUs
+Two PSOs reach a user: precedence 5 and 20 :: Precedence 5 wins (lowest number)
+Which PSO does arivera get? :: `Get-ADUserResultantPasswordPolicy arivera`
+List the five operations masters :: `netdom query fsmo`
+Forest-wide operations master roles :: Schema master and domain naming master
+Role that gets password changes first and is the domain's time source :: PDC emulator
+Role that hands out pools of relative IDs for new SIDs :: RID master
+Role that should not be on a GC in a multi-domain forest (unless all DCs are GCs) :: Infrastructure master
+Move the PDC emulator to DC2 while both DCs run :: `Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole PDCEmulator`
+Take a role from a DC that is gone for good :: Seize: the same cmdlet with -Force; never bring the old holder back
+Universal group memberships at sign-in in a site without a GC :: Universal Group Membership Caching on the site
+Create a subnet for the branch site :: `New-ADReplicationSubnet -Name 10.20.0.0/24 -Site Branch`
+Shortest site link replication interval; default :: 15 minutes; 180 minutes (DEFAULTIPSITELINK)
+Two replication paths between sites: which is used? :: The one with the lowest total cost
+Replication within a site :: Change notification about 15 seconds after a change, not compressed
+Push replication from a DC to all partners across sites now :: `repadmin /syncall /AdeP`
+Replication health of every DC at a glance :: `repadmin /replsummary`

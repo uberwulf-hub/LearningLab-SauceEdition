@@ -1,0 +1,30 @@
+{
+    "id": "open-door",
+    "title": "Open Door",
+    "level": "Beginner",
+    "order": 1,
+    "summary": "A small office file server left a door open. Find it, walk in, and see how far a forgotten note and a careless sudo rule take you.",
+    "story": "Northwind Books (a made-up shop) asked you to test the one server on its office network, 10.10.1.0/24. You sit at scout, your own Linux box on the same network. Nobody told you the server's address or what it runs: finding out is your first job.",
+    "goal": "Capture two flags: one in a staff member's home folder and one in root's home folder.",
+    "skills": "host discovery, port scanning, anonymous FTP, ssh, sudo -l",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 25,
+    "vars": { "PW1": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.1.5/24" ] },
+        { "name": "files01", "os": "linux", "hostname": "files01.northwind.example", "role": "office file server", "nics": [ "10.10.1.20/24" ], "packages": [ "vsftpd" ], "setup": "files01.sh",
+          "versions": { "21": "vsftpd 3.0.5" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "Dana's flag", "points": 100, "machine": "files01", "path": "/home/dana/flag.txt", "owner": "dana", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 150, "machine": "files01", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "What to think about first: you don't know where the server is or what it offers, so the job is to look before you touch. A network is a street of addresses; your first question is which houses have someone home, and your second is which doors they have. Nothing here needs guessing - the server gives itself away if you ask politely.", "cost": 3 },
+        { "text": "nmap is a tool that knocks on addresses. 'nmap -sn 10.10.1.0/24' asks every address from 10.10.1.1 to 10.10.1.254 'are you there?' without touching any doors (-sn means 'no port scan'). One new address answers besides your own. Then 'nmap -sV ADDRESS' checks that one machine's common doors (ports) and asks each what program answers (-sV = versions).", "cost": 5 },
+        { "text": "The scan shows port 21 (FTP, an old way to share files) and port 22 (ssh, remote sign-in). Many FTP servers are set up to let anyone in with the user name 'anonymous' and any password. That is meant for public files, but people often leave private notes there. Try: ftp 10.10.1.20, type anonymous as the name and anything as the password, then 'cd pub', 'ls', 'get FILE' and 'bye'. Read what you downloaded with cat.", "cost": 8 },
+        { "text": "The note is for a new staff member, dana, and has her temporary password - never changed. ssh lets you sign in to the server as her: 'ssh dana@10.10.1.20', answer yes to the new-host question, then type the password. Her flag is in her home folder (cat flag.txt). Copy it into the flag box.", "cost": 12 },
+        { "text": "For root's flag: 'sudo -l' lists the programs dana may run as the all-powerful root user. It shows find. find can run another command for every file it finds (-exec), and under sudo that command runs as root too. So this reads root's flag: sudo find /root -name flag.txt -exec cat {} \\; (the {} is replaced by each file found; \\; ends the command). The lesson: never give sudo on a tool that can run other programs.", "cost": 16 }
+    ]
+}

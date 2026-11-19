@@ -1,0 +1,62 @@
+NAME
+       mkswap - prepare a device or file as swap space
+
+SYNOPSIS
+       mkswap [-L LABEL] [-U UUID] [-f] DEVICE|FILE
+
+DESCRIPTION
+       mkswap writes a swap signature on a partition, a logical volume or a
+       file, so the kernel can use it as swap: space on disk where memory
+       pages go when RAM runs short. It prints the size and the new UUID.
+
+       mkswap only prepares the space. swapon turns it on now; a line in
+       /etc/fstab turns it on at every boot:
+
+           UUID=...   none   swap   defaults   0 0
+
+       On an MBR or GPT partition, set the partition type to Linux swap too
+       (fdisk type 82 / 19, gdisk 8200, parted "linux-swap"). This is good
+       practice, though the kernel does not need it.
+
+       A swap file must belong to root with mode 0600, and must be made with
+       dd (not a sparse file) before mkswap runs on it.
+
+OPTIONS
+       -L, --label LABEL
+              Give the swap space a label (use LABEL=... in fstab).
+
+       -U, --uuid UUID
+              Use this UUID instead of a random one.
+
+       -f, --force
+              Go ahead even on a whole disk with a partition table, or when
+              the size looks wrong.
+
+       -c, --check
+              Check the device for bad blocks first.
+
+EXAMPLES
+       Add a 512 MiB swap partition non-destructively and enable it at
+       every boot (on a GPT disk, where the first word is the name):
+
+           parted /dev/vdb mkpart swap1 linux-swap 1001MiB 1513MiB
+           mkswap /dev/vdb2
+           echo 'UUID=<the UUID shown> none swap defaults 0 0' >> /etc/fstab
+           swapon -a
+           swapon --show
+
+       Swap on a logical volume:
+
+           lvcreate -n swap2 -L 256M vgdata
+           mkswap /dev/vgdata/swap2
+           swapon /dev/vgdata/swap2
+
+       A swap file:
+
+           dd if=/dev/zero of=/swapfile bs=1M count=256
+           chmod 600 /swapfile
+           mkswap /swapfile
+           swapon /swapfile
+
+SEE ALSO
+       swapon(8), swapoff(8), free(1), fstab(5), blkid(8)

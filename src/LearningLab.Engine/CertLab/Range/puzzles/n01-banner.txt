@@ -1,0 +1,53 @@
+title: Reading the sign on the door
+level: Beginner
+kind: Network
+topic: Network
+teaser: a server that tells you exactly what it is
+points: 45
+order: 45
+packages: httpd
+answer: {{PROD}}/{{VER}}
+var: PROD = pick:NimbusCMS|AcmePortal|PineServe|LarkCMS|HarborHTTP
+var: VER = pick:2.1|3.0|1.4|4.2|2.9
+
+@intro
+A web server is running on this box (http://localhost/). Servers often announce their
+software and version in a header they send back - a "banner". Knowing the exact
+product and version is the first thing an attacker looks up for known weaknesses. Read
+the banner and give the software and version exactly as it appears (for example
+Something/1.0).
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/", "kind": "page", "server": "{{PROD}}/{{VER}}", "title": "Home", "body": "<h1>Welcome</h1>" }
+]
+
+@solution
+curl -sI http://localhost/
+echo {{PROD}}/{{VER}}
+
+@walkthrough
+curl -I asks for just the headers (the "banner grab"):
+
+    curl -sI http://localhost/
+
+Among them is a Server: line naming the software and version, {{PROD}}/{{VER}}. That is
+the answer. Real scanners read this header automatically; the defence is to hide or
+trim the version so attackers can't instantly match it to a known weakness.
+
+@hint 2
+What to think about first: when your computer asks a web server for a page, the reply starts with "headers" - short lines about the reply itself, which a browser reads and hides from you. One of them often names the server's software.
+
+@hint 3
+curl fetches web pages from the command line. With -I it asks only for the headers (no page), and -s hides the progress meter: curl -sI http://localhost/
+
+@hint 5
+In the headers, find the line that starts with "Server:". Defenders care about it because a name and exact version lets anyone look up known weaknesses for that version; many servers are set to hide it.
+
+@hint 7
+The answer is the Server value exactly as written, name/version - for example Something/1.0.
+Copy everything after "Server: " on that line (but not the space). If you see several header lines, the one you want
+is the only one that starts with Server.

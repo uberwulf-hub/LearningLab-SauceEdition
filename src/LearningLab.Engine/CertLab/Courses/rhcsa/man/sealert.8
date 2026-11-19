@@ -1,0 +1,40 @@
+NAME
+       sealert - explain SELinux denials in plain words
+
+SYNOPSIS
+       sealert -a FILE
+       sealert -l ID
+
+DESCRIPTION
+       sealert belongs to the setroubleshoot-server package (not installed
+       at first: dnf install setroubleshoot-server). It reads the AVC denials
+       that SELinux writes to /var/log/audit/audit.log and, for each one,
+       says what was blocked and suggests fixes with a confidence score:
+       usually a restorecon, a semanage port or fcontext rule, or a boolean.
+
+       When the package is installed, the setroubleshoot service also logs
+       a one-line summary of each new denial to the journal, ending with a
+       "sealert -l ID" command that shows the full report.
+
+OPTIONS
+       -a FILE
+              Analyse every denial in FILE (usually the audit log).
+
+       -l ID  Show the report for one alert, by the ID from the journal.
+
+EXAMPLES
+       Explain the denials logged so far:
+
+           sealert -a /var/log/audit/audit.log
+
+       Find the alert IDs in the journal:
+
+           journalctl -t setroubleshoot
+
+NOTES
+       Read the suggestions critically: the first one (often restorecon or
+       semanage) is usually right; making a custom module with audit2allow
+       is rarely the answer.
+
+SEE ALSO
+       ausearch(8), audit2why(1), restorecon(8), semanage(8), setsebool(8)

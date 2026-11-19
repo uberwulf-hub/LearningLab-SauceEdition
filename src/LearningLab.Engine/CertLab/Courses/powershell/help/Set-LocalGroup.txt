@@ -1,0 +1,11 @@
+SYNOPSIS: Changes the description of a local group.
+DESCRIPTION:
+Set-LocalGroup changes a group's description. Use Rename-LocalGroup for the name and Add-LocalGroupMember for members.
+PARAMETER Name:
+The group. Position 0.
+PARAMETER InputObject:
+A LocalGroup object.
+PARAMETER Description:
+The new description. Required.
+EXAMPLE: Set-LocalGroup -Name WebAdmins -Description 'People who manage IIS'
+RELATED: Get-LocalGroup, Rename-LocalGroup

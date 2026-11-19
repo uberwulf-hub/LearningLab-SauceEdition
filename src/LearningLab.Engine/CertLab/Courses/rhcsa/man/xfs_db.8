@@ -1,0 +1,21 @@
+NAME
+       xfs_db - examine and debug the inside of an XFS file system
+
+SYNOPSIS
+       xfs_db [-r] [-c COMMAND] DEVICE
+
+DESCRIPTION
+       xfs_db is a low-level tool for XFS experts. It reads (and can change)
+       the structures inside an XFS file system: superblocks, inodes,
+       directory blocks. Ordinary administration never needs it; a wrong
+       write can destroy the file system. Use xfs_info, xfs_admin and
+       xfs_repair instead.
+
+OPTIONS
+       -r     Read only.
+
+       -c COMMAND
+              Run COMMAND and exit, for example -c 'sb 0' -c print.
+
+SEE ALSO
+       xfs_info(8), xfs_admin(8), xfs_repair(8)

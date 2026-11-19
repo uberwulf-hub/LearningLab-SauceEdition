@@ -1,0 +1,25 @@
+SYNOPSIS: Adds a DNS record of any common type: A, CNAME, PTR, SRV, TXT or MX.
+DESCRIPTION:
+Add-DnsServerResourceRecord is the general way to add records. A switch picks the type, and each type needs its own data parameters:
+-A with -IPv4Address; -CName with -HostNameAlias; -Ptr with -PtrDomainName; -MX with -MailExchange and -Preference; -Txt with -DescriptiveText; -Srv with -DomainName, -Priority, -Weight and -Port.
+
+The type-specific commands (Add-DnsServerResourceRecordA and friends) do the same with fewer parameters. SRV records are how clients find services: for example _ldap._tcp points to the domain controllers.
+PARAMETER ZoneName:
+The zone to add to.
+PARAMETER Name:
+The record name inside the zone.
+PARAMETER A:
+Adds a host record (with -IPv4Address).
+PARAMETER CName:
+Adds an alias (with -HostNameAlias).
+PARAMETER Srv:
+Adds a service record (with -DomainName, -Priority, -Weight, -Port).
+PARAMETER Txt:
+Adds a text record (with -DescriptiveText), used for things like domain ownership checks.
+PARAMETER MX:
+Adds a mail exchanger (with -MailExchange and -Preference).
+EXAMPLE: Add-DnsServerResourceRecord -ZoneName corp.example -Txt -Name . -DescriptiveText "verify=harborline-2026"
+A TXT record on the zone itself, as a cloud service might ask for to prove you own the domain.
+EXAMPLE: Add-DnsServerResourceRecord -ZoneName corp.example -Srv -Name _sip._tcp -DomainName srv1.corp.example -Priority 0 -Weight 100 -Port 5060
+A service record that points SIP clients at SRV1 on port 5060.
+RELATED: Add-DnsServerResourceRecordA, Add-DnsServerResourceRecordCName, Add-DnsServerResourceRecordMX, Add-DnsServerResourceRecordPtr, Get-DnsServerResourceRecord

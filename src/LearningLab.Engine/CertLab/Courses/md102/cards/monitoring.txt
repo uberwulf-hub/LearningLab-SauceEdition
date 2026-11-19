@@ -1,0 +1,24 @@
+# Deck: monitoring | Monitoring and administration | Monitoring
+Make a device check in now :: Sync (the remote action)
+Remove company apps and data but keep personal data, and take the device out of Intune :: Retire
+Reset a lost or stolen company device to factory settings :: Wipe
+Wipe a Windows PC but have it come back enrolled :: Wipe with "Retain enrollment state and user account"
+Remove the user's files and apps but keep the PC Entra joined and enrolled :: Autopilot Reset
+Remove the manufacturer's extra apps and reset Windows :: Fresh Start (with Retain user data it stays Entra joined and enrols again)
+What Delete does on a Windows device :: Removes the record from Intune and retires the device at its next check-in; the Entra ID object stays
+The longest Windows device name Rename device accepts :: 15 characters (letters, digits, hyphens; not only digits)
+Gather a Windows device's logs into a zip from the portal :: Collect diagnostics (download it under Device diagnostics)
+Microsoft Defender actions on the device page :: Quick scan, Full scan, Update Windows Defender security intelligence
+Run a quick Defender scan on the PC itself :: `Start-MpScan -ScanType QuickScan`
+Update Defender's security intelligence on the PC itself :: `Update-MpSignature`
+The service that receives the push telling a Windows device to check in :: dmwappushservice
+Show the IME's last log lines :: `Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 20`
+The three parts of an Intune role assignment :: Members (admin groups), scope (groups) and scope tags
+What the scope groups of a role assignment decide :: Which users and devices the admins may manage
+What scope tags decide :: Which objects (devices, policies, apps) the admins see; untagged objects have Default
+The built-in Intune role for remote actions and viewing devices :: Help Desk Operator
+The built-in Intune role for compliance and configuration :: Policy and Profile Manager
+The Entra role that gives full rights in Intune :: Intune Administrator
+The Entra role that manages device objects and reads BitLocker keys and LAPS passwords :: Cloud Device Administrator
+Does Entra's Helpdesk Administrator give rights in Intune? :: No: it resets passwords; Intune needs a role assignment
+The reports that score startup, app reliability and cloud readiness :: Endpoint analytics (needs enrolled devices and its data collection policy)

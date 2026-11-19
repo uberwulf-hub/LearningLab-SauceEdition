@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/LearningLab.Engine/LearningLab.Engine.csproj" />
+  <Project Path="src/LearningLab/LearningLab.csproj" />
+  <Project Path="src/LearningLab.Desktop/LearningLab.Desktop.csproj" />
+  <Project Path="src/LearningLab.Android/LearningLab.Android.csproj" />
+  <Project Path="tests/LearningLab.Tests/LearningLab.Tests.csproj" />
+</Solution>

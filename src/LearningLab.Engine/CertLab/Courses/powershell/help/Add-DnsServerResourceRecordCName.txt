@@ -1,0 +1,18 @@
+SYNOPSIS: Adds an alias (CNAME) record that points one name at another.
+DESCRIPTION:
+A CNAME record says that a name is another name for an existing host: intranet.corp.example is srv1.corp.example. Clients follow the alias and then look up the A record of the target.
+
+A name that has a CNAME record cannot have any other record (no A, no MX), and the zone itself (@) cannot be an alias. Use the full name of the target.
+PARAMETER ZoneName:
+The zone to add to.
+PARAMETER Name:
+The alias, for example wiki.
+PARAMETER HostNameAlias:
+The real host's full name, for example srv1.corp.example.
+PARAMETER TimeToLive:
+How long clients may cache the answer.
+EXAMPLE: Add-DnsServerResourceRecordCName -ZoneName corp.example -Name wiki -HostNameAlias srv1.corp.example
+wiki.corp.example now leads to SRV1.
+EXAMPLE: Resolve-DnsName wiki.corp.example
+Shows the alias and the address it ends at.
+RELATED: Add-DnsServerResourceRecordA, Add-DnsServerResourceRecord, Get-DnsServerResourceRecord, Remove-DnsServerResourceRecord

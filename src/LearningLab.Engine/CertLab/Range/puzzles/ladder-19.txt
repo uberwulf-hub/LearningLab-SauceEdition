@@ -1,0 +1,57 @@
+title: Step 19: The job that runs every minute
+level: Expert
+category: ladder
+login: step19
+kind: Scheduled jobs
+teaser: a cron job copies the password somewhere; read the job to find where
+points: 50
+order: 19
+answer: {{PW}}
+var: PW = hex:10
+var: PHRASE = pick:I am user|copy for|today it is|hello from
+
+@intro
+You are step19. A scheduled job (cron) runs every minute as the user step20 and puts
+a copy of step20's password somewhere you can read it. The schedules live in
+/etc/cron.d. Read the job, read the script it runs, and work out where the copy goes.
+
+@setup
+useradd -m step20
+echo 'step20:{{PW}}' | chpasswd
+mkdir -p /etc/ladder
+printf '%s\n' '{{PW}}' > /etc/ladder/step20
+chown step20: /etc/ladder/step20
+chmod 400 /etc/ladder/step20
+cat > /usr/local/bin/ladder-step20.sh <<'JOB'
+#!/bin/bash
+# copies today's password where step19 can pick it up
+name=$(echo "{{PHRASE}} $(whoami)" | md5sum | cut -d ' ' -f 1)
+cat /etc/ladder/step20 > /tmp/$name
+chmod 644 /tmp/$name
+JOB
+chmod 755 /usr/local/bin/ladder-step20.sh
+printf '%s\n' '* * * * * step20 /usr/local/bin/ladder-step20.sh > /dev/null 2>&1' > /etc/cron.d/ladder-step20
+chmod 644 /etc/cron.d/ladder-step20
+su - step20 -c /usr/local/bin/ladder-step20.sh
+
+@solution
+ls -l /etc/cron.d
+cat /etc/cron.d/ladder-step20
+cat /usr/local/bin/ladder-step20.sh
+echo "{{PHRASE}} step20" | md5sum
+cat /tmp/$(echo "{{PHRASE}} step20" | md5sum | cut -d ' ' -f 1)
+
+@walkthrough
+/etc/cron.d/ladder-step20 says: every minute (* * * * *), as the user step20, run
+/usr/local/bin/ladder-step20.sh. The script makes a file name from the md5sum of the
+text "{{PHRASE}} " followed by the output of whoami - and when the job runs, whoami
+is step20. Do the same calculation yourself:
+
+    echo "{{PHRASE}} step20" | md5sum
+    cat /tmp/$(echo "{{PHRASE}} step20" | md5sum | cut -d ' ' -f 1)
+
+Reading what scheduled jobs do is how both attackers and defenders find out what a
+computer does on its own when nobody is watching.
+
+@hint 25
+cat /etc/cron.d/ladder-step20 names the script; cat the script. Its whoami runs as step20, not as you, so put step20 in its place when you work out the name.

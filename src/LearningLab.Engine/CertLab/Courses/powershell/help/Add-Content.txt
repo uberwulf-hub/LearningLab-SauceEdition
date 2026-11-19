@@ -1,0 +1,22 @@
+SYNOPSIS: Adds lines to the end of a file (creates the file if needed).
+DESCRIPTION:
+Add-Content appends each value as a line. It keeps the encoding of an existing file; a new file gets the Default (ANSI) encoding.
+PARAMETER Path:
+The files to add to.
+PARAMETER LiteralPath:
+The file, taken exactly as typed.
+PARAMETER Value:
+The lines to add.
+PARAMETER Encoding:
+How to store the text: ASCII, Default (the Windows ANSI code page), OEM, UTF8 (with a byte order mark), UTF7, UTF32, Unicode (UTF-16), BigEndianUnicode, String, Unknown or Byte.
+PARAMETER NoNewline:
+Adds the text without a line break.
+PARAMETER Force:
+Writes to read-only files too.
+PARAMETER PassThru:
+Also outputs the values written.
+PARAMETER Stream:
+Adds to an alternate data stream.
+EXAMPLE: Add-Content C:\LabFiles\app.log "$(Get-Date -Format s) INFO  Checked by script"
+Appends a log line.
+RELATED: Set-Content, Get-Content

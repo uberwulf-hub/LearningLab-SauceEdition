@@ -1,0 +1,51 @@
+# Sheet: file-and-storage | File servers, storage, DFS and Azure File Sync | File and storage
+## Shares
+Get-SmbShare / Get-SmbShareAccess -Name x :: shares and their share permissions
+New-SmbShare -Name x -Path p -FullAccess|-ChangeAccess|-ReadAccess who :: new share (default: Everyone Read)
+New-SmbShare ... -FolderEnumerationMode AccessBased -EncryptData $true :: access-based enumeration and SMB encryption
+Set-SmbShare -Name x -EncryptData $true -FolderEnumerationMode AccessBased :: change an existing share
+Grant-SmbShareAccess / Revoke-SmbShareAccess / Block-SmbShareAccess -Name x -AccountName who :: edit share permissions
+Set-SmbServerConfiguration -EnableSMB1Protocol $false :: keep SMB 1.0 off (also remove the FS-SMB1 feature)
+Set-SmbServerConfiguration -EncryptData $true :: encrypt every share of the server
+## NTFS permissions
+icacls path :: show entries: F, M, RX, R, W; (OI) files, (CI) folders, (IO) inherit only
+icacls path /grant 'CORP\Group:(OI)(CI)M' :: add an allow entry for the folder and everything below
+icacls path /deny 'CORP\user:(OI)(CI)W' :: deny write (beats allows at the same level)
+icacls path /remove[:g|:d] 'CORP\who' :: remove entries (all, grants, denies)
+icacls path /inheritance:d | /inheritance:r | /inheritance:e :: disable keeping copies / disable removing / enable again
+Get-Acl / Set-Acl :: read and write a whole ACL from PowerShell
+Over the network :: the more restrictive of share and NTFS
+Order of evaluation :: explicit deny, explicit allow, then inherited entries level by level from the nearest parent (deny before allow at each level)
+## Storage Spaces
+Get-PhysicalDisk -CanPool $true :: disks that can be pooled
+New-StoragePool -FriendlyName p -StorageSubSystemFriendlyName 'Windows Storage*' -PhysicalDisks (Get-PhysicalDisk -CanPool $true) :: new pool
+New-VirtualDisk -StoragePoolFriendlyName p -FriendlyName v -ResiliencySettingName Mirror -ProvisioningType Thin -Size 100GB :: virtual disk
+New-Volume -StoragePoolFriendlyName p -FriendlyName v -ResiliencySettingName Parity -FileSystem ReFS -DriveLetter F -Size 100GB :: virtual disk, partition and format in one
+Simple / two-way mirror / three-way mirror / parity / dual parity :: at least 1 / 2 / 5 / 3 / 7 disks (stand-alone pool)
+Thin / Fixed :: space taken as written (can overprovision) / all at once
+ReFS :: integrity, self-repair from mirrors, block cloning; not for boot; no EFS or quotas
+Storage Spaces Direct :: Datacenter, 2-16 clustered servers' local disks, cache, CSV; Enable-ClusterStorageSpacesDirect
+Storage Replica :: block-level volume replication, synchronous or asynchronous, log volumes; Standard: 1 volume up to 2 TB
+## Data Deduplication
+Install-WindowsFeature FS-Data-Deduplication :: the role service
+Enable-DedupVolume -Volume E: -UsageType Default|HyperV|Backup :: enable per volume (not the system volume)
+Set-DedupVolume -Volume E: -MinimumFileAgeDays 0 :: optimize files of any age (default 3)
+Start-DedupJob -Volume E: -Type Optimization|GarbageCollection|Scrubbing :: run a job now
+Get-DedupStatus / Get-DedupVolume :: saved space, optimized files
+## DFS Namespaces
+Install-WindowsFeature FS-DFS-Namespace -IncludeManagementTools :: the role service and tools
+New-DfsnRoot -Path \\corp.example\Files -TargetPath \\FS1\Files -Type DomainV2 :: domain-based namespace (2008 mode)
+New-DfsnFolder -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales :: a folder and its first target
+New-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\DC2\Sales :: another target
+Set-DfsnFolderTarget -Path ... -TargetPath ... -State Offline | -ReferralPriorityClass GlobalHigh :: stop referrals / override ordering
+Referrals :: same-site targets first, then by site cost; cached 1800 s for folders
+## DFS Replication
+New-DfsReplicationGroup -GroupName g / New-DfsReplicatedFolder -GroupName g -FolderName f :: group and folder
+Add-DfsrMember -GroupName g -ComputerName FS1,DC2 / Add-DfsrConnection -GroupName g -SourceComputerName FS1 -DestinationComputerName DC2 :: members and connection (two-way)
+Set-DfsrMembership -GroupName g -FolderName f -ComputerName FS1 -ContentPath D:\x -PrimaryMember $true :: local path; primary wins the initial sync
+Update-DfsrConfigurationFromAD -ComputerName FS1,DC2 :: read the configuration now (else every 60 minutes)
+Get-DfsrBacklog -GroupName g -FolderName f -SourceComputerName a -DestinationComputerName b :: files waiting to replicate
+## Azure File Sync
+Storage Sync Service :: the Azure resource; a server registers with one
+Sync group :: one cloud endpoint (Azure file share) + server endpoints (one per server, NTFS)
+Cloud tiering :: volume free space policy (wins) + date policy; tiered files recall when opened; not on the system volume

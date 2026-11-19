@@ -1,0 +1,21 @@
+NAME
+       runlevel - print the old and current SysV runlevel
+
+SYNOPSIS
+       runlevel
+
+DESCRIPTION
+       runlevel prints two values: the previous runlevel (N when there was
+       none) and the current one. Runlevels are the older names for systemd
+       targets, kept for compatibility: 3 is multi-user.target (text mode), 5
+       graphical.target, 1 rescue.target, 0 poweroff and 6 reboot.
+
+       On RHEL 9, work with targets instead: systemctl get-default, systemctl
+       set-default, systemctl isolate.
+
+EXAMPLES
+           runlevel
+           systemctl get-default
+
+SEE ALSO
+       systemctl(1), systemd.special(7)

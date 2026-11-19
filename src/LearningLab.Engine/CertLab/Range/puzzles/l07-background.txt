@@ -1,0 +1,45 @@
+title: Something in the background
+level: Advanced
+kind: Processes
+topic: Linux
+teaser: a program in disguise, running from a hidden folder
+points: 75
+order: 66
+answer: /var/tmp/.{{DIR}}/{{PROC}}
+var: PROC = pick:kworker-sync|systemd-helper|dbus-cache|irqbalanced|udev-agent
+var: DIR = pick:cache|fonts|x11-lock|tmp-sync|session
+
+@intro
+This box feels slow, and someone thinks a program is running that shouldn't be. Its name
+was chosen to look like part of the system. Find it among the running processes and give
+the full path of the program it runs from.
+
+@setup
+mkdir -p /var/tmp/.{{DIR}}
+cp /bin/sleep /var/tmp/.{{DIR}}/{{PROC}}
+chmod 755 /var/tmp/.{{DIR}}/{{PROC}}
+nohup /var/tmp/.{{DIR}}/{{PROC}} 86400 > /dev/null 2>&1 &
+nohup sleep 3600 > /dev/null 2>&1 &
+
+@solution
+ps aux
+ps -eo pid,user,args | grep -v grep | grep /tmp/
+ls -la /var/tmp/.{{DIR}}
+
+@walkthrough
+ps aux lists every process with its owner and full command line. Real system programs
+run from /usr/bin, /usr/sbin or /usr/lib; kernel threads appear in [brackets]. One line
+stands out: root running /var/tmp/.{{DIR}}/{{PROC}} - a name that sounds like the
+system, but a program in a hidden folder under /var/tmp, where anyone may write.
+
+    ps -eo pid,user,args | grep /tmp/
+    ls -la /var/tmp/.{{DIR}}
+
+On a real system you would note the process number, look at the file (sha256sum it,
+copy it aside) and then stop it and find how it starts (cron, a service, a profile).
+
+@hint 10
+Look at where each program runs from, not at its name. System programs live in /usr; a temporary folder is a strange home.
+
+@hint 20
+ps aux | grep tmp narrows the list (grep -v grep hides the search itself). The answer is the program's full path.

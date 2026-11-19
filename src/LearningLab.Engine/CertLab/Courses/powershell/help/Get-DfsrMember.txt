@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the servers in DFS Replication groups.
+DESCRIPTION:
+Get-DfsrMember shows each member server of a replication group (GroupName, ComputerName).
+PARAMETER GroupName:
+Only these groups. Position 0.
+PARAMETER ComputerName:
+Only these servers.
+EXAMPLE: Get-DfsrMember -GroupName Sales-Replication
+The servers that replicate Sales.
+RELATED: Add-DfsrMember, Get-DfsrMembership, Get-DfsReplicationGroup

@@ -1,0 +1,17 @@
+1. Find the folders. Scan web3 (nmap -sV 10.10.12.30: ssh and http). webscan http://10.10.12.30/ tries
+   common folder names and finds /backup/, which lists its files.
+
+2. The backup. /backup/ holds site-backup.tar.gz. Download it (curl -o) and unpack it (tar xzf). Inside,
+   site/config/db.php has the database password in plain text.
+
+3. Password reuse. The same password opens an ssh shell for the service account {{SVCUSER}}:
+   ssh {{SVCUSER}}@10.10.12.30. The user flag is in that account's home.
+
+4. Root. sudo -l shows you may run {{SUDOBIN}} as root; that tool reads any file, so it reads root's flag.
+   On this run:
+
+       {{SUDORUN}}
+
+How to fix it: never leave backups in the web root (they are downloadable by anyone); never keep passwords
+in files that end up in a backup; don't reuse a database password as a login password; and never grant
+sudo on a tool that can read any file or run commands.

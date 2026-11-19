@@ -1,0 +1,29 @@
+NAME
+       seq - print a sequence of numbers
+
+SYNOPSIS
+       seq [-s SEPARATOR] [-w] [-f FORMAT] [FIRST [STEP]] LAST
+
+DESCRIPTION
+       seq prints the numbers from FIRST (default 1) to LAST, adding STEP
+       (default 1) each time, one per line. It is handy for loops in
+       scripts: for i in $(seq 1 5). In bash, {1..5} does the same.
+
+OPTIONS
+       -s, --separator TEXT
+              Put TEXT between the numbers instead of a newline.
+
+       -w, --equal-width
+              Pad the numbers with leading zeros to the same width.
+
+       -f, --format FORMAT
+              printf-style format, such as -f 'user%02g'.
+
+EXAMPLES
+           seq 5
+           seq 10 -2 0
+           seq -w 1 10
+           for n in $(seq 1 3); do useradd user$n; done
+
+SEE ALSO
+       bash(1), printf(1), shuf(1)

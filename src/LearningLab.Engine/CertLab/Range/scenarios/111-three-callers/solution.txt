@@ -1,0 +1,9 @@
+## the three alerts and the addresses they are about
+siem alerts --fields time,host,dst,note
+## which program connects to each address, and on which port
+siem search source=proclog event=3 --count-by image
+siem search source=proclog event=3 image~rundll32 --limit 3 --fields time,host,user,image,dst,dport
+## do the addresses have names? (a lookup explains an honest one)
+siem search source=dns image~svchost --fields time,host,query,answer
+## what loaded the DLL
+siem search source=proclog event=1 image~rundll32 --fields time,host,user,cmdline

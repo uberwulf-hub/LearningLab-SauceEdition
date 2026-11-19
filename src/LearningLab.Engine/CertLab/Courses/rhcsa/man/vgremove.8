@@ -1,0 +1,29 @@
+NAME
+       vgremove - delete a volume group
+
+SYNOPSIS
+       vgremove [-f] [-y] VG...
+
+DESCRIPTION
+       vgremove deletes a volume group. If the group still contains logical
+       volumes, vgremove asks before removing each of them (and their data);
+       -f removes them without asking. Unmount their file systems, deactivate
+       swap on them and remove their /etc/fstab lines first. The PVs stay
+       PVs; clear them with pvremove if the disks are needed for something
+       else.
+
+OPTIONS
+       -f, --force
+              Remove the logical volumes without asking.
+
+       -y, --yes
+              Answer yes to questions.
+
+EXAMPLES
+           umount /mnt/data
+           lvremove /dev/vgdata/lvdata
+           vgremove vgdata
+           pvremove /dev/vdb1
+
+SEE ALSO
+       vgcreate(8), lvremove(8), pvremove(8)

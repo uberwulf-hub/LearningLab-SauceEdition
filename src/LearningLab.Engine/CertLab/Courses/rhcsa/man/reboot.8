@@ -1,0 +1,34 @@
+NAME
+       reboot - restart the machine; poweroff - switch it off
+
+SYNOPSIS
+       reboot [-f]
+       poweroff [-f]
+
+DESCRIPTION
+       reboot stops every service in order, unmounts the file systems and
+       starts the machine again. poweroff does the same and then switches
+       the machine off. On RHEL 9 both are short forms of systemctl reboot
+       and systemctl poweroff. Only root can run them.
+
+       Before a reboot on the exam, make sure your changes will survive it:
+       services enabled, file systems in /etc/fstab (check with mount -a),
+       network settings saved in the connection profile, booleans set with
+       -P, firewall rules made --permanent.
+
+       In the rd.break emergency shell systemd is not running yet. There,
+       leave with exit (twice) to let the boot continue, or force a restart
+       with reboot -f.
+
+OPTIONS
+       -f, --force
+              Restart or power off at once, without stopping the services.
+              Only for emergencies: unsaved data is lost.
+
+EXAMPLES
+           reboot
+           systemctl reboot
+           poweroff
+
+SEE ALSO
+       shutdown(8), halt(8), systemctl(1)

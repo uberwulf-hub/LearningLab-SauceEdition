@@ -1,0 +1,36 @@
+SYNOPSIS: Compares two sets of objects and shows what is different.
+DESCRIPTION:
+Compare-Object takes a reference set (the "before" or "expected" list) and a difference set (the "after" or "actual" list) and reports the items that are in only one of them.
+
+Each result has a SideIndicator: <= means the item is only in the reference set, => means it is only in the difference set, and == (shown only with -IncludeEqual) means it is in both.
+
+Without -Property, whole objects are compared by their text. For objects with many properties, name the properties that matter, for example -Property Name, or every object will look different.
+PARAMETER ReferenceObject:
+The first set, the one you compare against. Position 0, required.
+PARAMETER DifferenceObject:
+The second set. Position 1, required. It can also come through the pipeline.
+PARAMETER Property:
+The properties to compare, for example Name or Name, Office. The results then show those properties instead of the whole object.
+PARAMETER IncludeEqual:
+Also shows the items found in both sets, marked ==.
+PARAMETER ExcludeDifferent:
+Leaves out the differences. Use it with -IncludeEqual to see only what the two sets share.
+PARAMETER PassThru:
+Outputs the original objects (with a SideIndicator property added) instead of a small result object.
+PARAMETER CaseSensitive:
+Treats "Ada" and "ada" as different. By default case is ignored.
+EXAMPLE: Compare-Object -ReferenceObject 'a','b','c' -DifferenceObject 'b','c','d'
+Shows d with => (only in the second list) and a with <= (only in the first).
+EXAMPLE: Compare-Object 'a','b','c' 'b','c','d' -IncludeEqual
+The same lists given by position, now also listing b and c with ==.
+EXAMPLE: $e = Import-Csv C:\LabFiles\employees.csv; Compare-Object ($e | Select-Object -First 3) ($e | Select-Object -First 2) -Property Name
+Compares two groups of employees by name only. Alan Turing is in the first group but not the second.
+EXAMPLE: Compare-Object 'a','b' 'b','c' -IncludeEqual -ExcludeDifferent
+Shows only b, the item both lists have.
+NOTES:
+No output means no differences (unless you used -IncludeEqual).
+
+If either set is $null (for example a command found nothing), Compare-Object stops with an error about binding a null value. Check your input first.
+
+Windows PowerShell 5.1 has two aliases for it: compare and diff. PowerShell 7 on Linux and macOS has no diff alias, because diff is a real program there.
+RELATED: Group-Object, Sort-Object, Select-Object, Where-Object

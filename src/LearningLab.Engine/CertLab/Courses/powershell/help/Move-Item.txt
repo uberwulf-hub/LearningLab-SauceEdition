@@ -1,0 +1,22 @@
+SYNOPSIS: Moves (or renames by moving) files, folders and registry keys.
+DESCRIPTION:
+Move-Item takes each item away from its place and puts it at -Destination. An existing folder as the destination receives the item inside it. An existing file at the destination is an error unless you add -Force.
+PARAMETER Path:
+What to move. Wildcards are allowed; piped items bind by PSPath.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Destination:
+The new folder or the new full path.
+PARAMETER Force:
+Replaces an existing file at the destination.
+PARAMETER PassThru:
+Outputs the moved items.
+PARAMETER Include:
+Only moves names that match these patterns.
+PARAMETER Exclude:
+Skips names that match these patterns.
+PARAMETER Filter:
+A file name pattern for what to move.
+EXAMPLE: Move-Item C:\LabFiles\*.log C:\LabFiles\Archive
+Moves the log files into the archive folder.
+RELATED: Copy-Item, Rename-Item

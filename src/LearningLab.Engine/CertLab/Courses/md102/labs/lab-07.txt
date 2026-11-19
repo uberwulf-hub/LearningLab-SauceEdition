@@ -1,0 +1,86 @@
+# Lab: lab-07 | Configuration profiles and scripts | u07 | 30
+Riverbend's security team sent a list of settings for the Windows PCs: a USB rule for Finance, Bluetooth off on the pilot laptop, the shop kiosk, the office Wi-Fi and a tag file that the inventory tool reads. Do each one with the right kind of profile or script, assign it to the right group, and make the devices check in to prove it worked.
+
+@vars
+ssid = RB-Staff | RB-Office | RB-Corp
+psk = Riv3rbend-W1fi-2026 | Outd00r-Staff-Net | Tr41l-Head-Office
+url = https://shop.riverbend.example | https://catalog.riverbend.example | https://store.riverbend.example
+tag = RB-INV-2026 | RB-ASSET-OK | RB-TAGGED
+@endvars
+
+@task t01 | Configuration | 20 | portal
+Finance people must not copy files to USB drives. Create a settings catalog profile **Finance USB** for Windows 10 and later that sets **Removable Disk Deny Write Access** to **Enabled**. It belongs to the people, not the machines: assign it to the **Finance** user group. Sync Sam's desktop **RB-DT-010** to check.
+@check portal | the profile targets the Finance users and reached Sam's desktop
+config["Finance USB"].include has Finance
+device["RB-DT-010"].setting["Storage/RemovableDiskDenyWriteAccess"] == Enabled
+@check RB-DT-010 | the value is under PolicyManager
+(Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Storage).RemovableDiskDenyWriteAccess -eq 1
+@hint Settings catalog, area Storage. Assign it to the group Finance (Sam is in it and RB-DT-010 is his primary device), then Sync RB-DT-010.
+@solution portal
+create config name="Finance USB" platform="Windows 10 and later" type="Settings catalog" s:Storage/RemovableDiskDenyWriteAccess=Enabled
+assign config "Finance USB" Finance
+remote sync RB-DT-010
+@explain
+A user group assignment follows the person to the devices they use: Sam is in Finance, so his desktop gets the profile. The portal label is Enabled; on the PC the Policy CSP stores the number 1 under PolicyManager\current\device\Storage.
+@endtask
+
+@task t02 | Configuration | 20 | portal
+The security team wants Bluetooth switched off on the pilot laptop, and they sent the setting as an OMA-URI: `./Device/Vendor/MSFT/Policy/Config/Connectivity/AllowBluetooth`, Integer, value `0`. Create a **Custom** profile called **Bluetooth off** with that setting (name the setting **AllowBluetooth**), assign it to the **Pilot devices** group and sync **RB-LT-002**.
+@check portal | it is a custom profile and Bluetooth is off on RB-LT-002
+config["Bluetooth off"].type == Custom
+config["Bluetooth off"].omaUri == ./Device/Vendor/MSFT/Policy/Config/Connectivity/AllowBluetooth
+device["RB-LT-002"].setting["Connectivity/AllowBluetooth"] == "Disallow Bluetooth"
+@hint Profile type Custom: OMA-URI setting name, OMA-URI, data type Integer, value 0.
+@solution portal
+create config name="Bluetooth off" platform="Windows 10 and later" type=Custom omaName=AllowBluetooth omaUri=./Device/Vendor/MSFT/Policy/Config/Connectivity/AllowBluetooth omaType=Integer omaValue=0
+assign config "Bluetooth off" "Pilot devices"
+remote sync RB-LT-002
+@explain
+A custom profile sends the OMA-URI exactly as typed. Because it is a Policy CSP address, the device stores it like the settings catalog's Connectivity > Allow Bluetooth (0 = Disallow Bluetooth). If a settings catalog profile set the same setting to another value, the two would conflict.
+@endtask
+
+@task t03 | Configuration | 20 | portal
+The kiosk **RB-KIOSK-01** in the shop must show only Microsoft Edge on `{url}`, full screen, signing in on its own, in public browsing mode. Create a **Kiosk** profile called **Shop kiosk** (single app, full-screen kiosk; auto logon with a local account; Microsoft Edge browser; public browsing), assign it to **Kiosk devices**, and sync the kiosk.
+@check portal | the kiosk runs Edge on the shop page
+config["Shop kiosk"].type == Kiosk
+device["RB-KIOSK-01"].policy["Shop kiosk"] == Succeeded
+device["RB-KIOSK-01"].kiosk contains "Microsoft Edge browser"
+device["RB-KIOSK-01"].kiosk contains "{url}"
+@hint Kiosk profile: kiosk mode Single app, full-screen kiosk; user logon type Auto logon (local account); application type Microsoft Edge browser; Edge kiosk mode type Public browsing (InPrivate); start URL.
+@solution portal
+create config name="Shop kiosk" platform="Windows 10 and later" type=Kiosk kioskMode="Single app, full-screen kiosk" logon="Auto logon (local account)" kioskApp="Microsoft Edge browser" edgeType="Public browsing (InPrivate)" startUrl={url}
+assign config "Shop kiosk" "Kiosk devices"
+remote sync RB-KIOSK-01
+@explain
+A single-app kiosk with an automatic local sign-in is the usual setup for a shop or reception PC: nobody needs an account, and public browsing (InPrivate) clears the session between customers. Kiosk profiles are device settings, so they go to a device group.
+@endtask
+
+@task t04 | Configuration | 20 | portal
+Every Windows PC should join the office Wi-Fi **{ssid}** (WPA2-Personal, key `{psk}`) on its own when it is in range. Create a **Wi-Fi** profile called **Office Wi-Fi**, assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | RB-LT-001 knows the office network
+config["Office Wi-Fi"].ssid == {ssid}
+device["RB-LT-001"].wifi has {ssid}
+@hint Profile type Wi-Fi: network name, wireless security type WPA/WPA2-Personal, pre-shared key, connect automatically Yes.
+@solution portal
+create config name="Office Wi-Fi" platform="Windows 10 and later" type=Wi-Fi ssid={ssid} wifiSecurity="WPA/WPA2-Personal" wifiKey={psk} autoConnect=Yes
+assign config "Office Wi-Fi" "Windows devices"
+remote sync RB-LT-001
+@explain
+A Wi-Fi profile puts the network and its key on the PC, so people never need to know the key. For a network with certificates (WPA2-Enterprise) you would also deploy the certificate profiles it needs.
+@endtask
+
+@task t05 | Configuration | 20 | portal
+The inventory tool reads the file `C:\ProgramData\Riverbend\tag.txt`, which must contain `{tag}`. Write a **platform script** called **Inventory tag** that creates the folder and writes that text into the file, runs as SYSTEM in 64-bit PowerShell, assign it to **Windows devices**, and sync **RB-LT-001**.
+@check portal | the script succeeded on RB-LT-001
+device["RB-LT-001"].policy["Inventory tag"] == Succeeded
+script["Inventory tag"].runAsUser == No
+@check RB-LT-001 | the file has the tag
+(Get-Content C:\ProgramData\Riverbend\tag.txt) -eq '{tag}'
+@hint New-Item -Path C:\ProgramData\Riverbend -ItemType Directory -Force; Set-Content -Path C:\ProgramData\Riverbend\tag.txt -Value {tag}. Leave "Run this script using the logged on credentials" at No.
+@solution portal
+create script name="Inventory tag" content="New-Item -Path C:\ProgramData\Riverbend -ItemType Directory -Force | Out-Null; Set-Content -Path C:\ProgramData\Riverbend\tag.txt -Value {tag}" runAsUser=No run64=Yes
+assign script "Inventory tag" "Windows devices"
+remote sync RB-LT-001
+@explain
+Platform scripts run through the Intune Management Extension, once per device, as SYSTEM unless you choose the user's credentials. A standard user couldn't write to C:\ProgramData\Riverbend in every case, so SYSTEM is the right choice here. The IME log (C:\ProgramData\Microsoft\IntuneManagementExtension\Logs) shows whether the script ran.
+@endtask

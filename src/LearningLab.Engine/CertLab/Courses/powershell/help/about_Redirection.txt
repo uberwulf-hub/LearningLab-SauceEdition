@@ -1,0 +1,59 @@
+TOPIC
+    about_Redirection
+
+SHORT DESCRIPTION
+    Sending output streams to files or to other streams with > and >>.
+
+LONG DESCRIPTION
+    PowerShell keeps different kinds of output apart in numbered streams.
+    Redirection sends one or more of them somewhere else, usually a file.
+
+  The streams
+    1   Success (normal output)
+    2   Error
+    3   Warning
+    4   Verbose
+    5   Debug
+    6   Information (also what Write-Host writes, since version 5)
+    *   All of them
+
+  The operators
+    >     Write to a file, replacing it.
+    >>    Add to the end of a file.
+    n>&1  Send stream n into the success stream (only &1 works).
+
+        Get-Service > C:\LabFiles\services.txt
+        Get-Date >> C:\LabFiles\services.txt
+        Get-Item C:\NoSuchFile 2> C:\LabFiles\errors.txt
+        Get-ChildItem C:\LabFiles, C:\Missing 2>&1 |
+            Out-File C:\LabFiles\all.txt
+        .\Setup.ps1 *> C:\LabFiles\setup.log
+
+    To throw output away, redirect it to $null:
+
+        Remove-Item C:\LabFiles\old.txt 2> $null
+
+  Redirection and Out-File
+    > works like Out-File, and >> like Out-File -Append. Use Out-File (or
+    Set-Content) when you need to choose the encoding or the line width.
+    Only stream 1 goes down a pipeline; 2>&1 brings errors along as
+    ErrorRecord objects.
+
+  Encoding
+    In Windows PowerShell 5.1, > and Out-File write UTF-16 LE ("Unicode")
+    with a byte order mark. Set-Content and Add-Content write the ANSI code
+    page by default. Use -Encoding UTF8 when other programs must read the
+    file (in 5.1 that adds a byte order mark).
+
+        Get-Process | Out-File C:\LabFiles\p.txt -Encoding UTF8
+
+  PowerShell 7
+    PowerShell 7 writes UTF-8 without a byte order mark by default, for >
+    as well as for the cmdlets.
+
+SEE ALSO
+    Out-File
+    Out-Null
+    Tee-Object
+    Set-Content
+    about_Operators

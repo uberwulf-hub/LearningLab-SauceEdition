@@ -1,0 +1,48 @@
+# Sheet: containers | Containers | Containers
+## Setup and registries
+dnf install container-tools :: podman, skopeo and buildah
+/etc/containers/registries.conf :: unqualified-search-registries for short names
+~/.config/containers/registries.conf :: a user's own registry settings
+podman login registry.lab.example.com :: log in (podman logout to forget it)
+podman search registry.lab.example.com/ :: the images in a registry
+podman pull registry.lab.example.com/ubi9/ubi :: download an image (always the full name in the lab)
+## Images
+podman images :: local images of the current user
+skopeo inspect docker://registry.lab.example.com/ubi9/httpd-24 :: image details from the registry, no download
+podman image inspect IMAGE :: full details of a local image (Config.Cmd, Env, ExposedPorts, User)
+podman inspect IMAGE --format '{{.Config.Cmd}}' :: one field only
+podman tag greeter:1.0 greeter:latest :: another name for the same image
+podman rmi IMAGE :: remove an image (-f also when containers use it)
+## Running containers
+podman run -d --name web1 -p 8080:8080 IMAGE :: in the background, host port 8080 to container port 8080
+podman run -e MYSQL_USER=app -e MYSQL_PASSWORD=pw IMAGE :: settings through environment variables
+podman run --rm IMAGE COMMAND :: a one-off command, removed afterwards
+podman run -it --name shell1 IMAGE /bin/bash :: an interactive shell in a new container
+podman ps :: running containers (-a: also stopped ones)
+podman logs web1 :: what the container printed
+podman exec web1 COMMAND :: run a command in a running container
+podman exec -it web1 /bin/bash :: a shell in a running container
+podman stop web1 :: stop it (podman start web1 starts it again)
+podman restart web1 :: stop and start
+podman rm web1 :: remove a stopped container (-f: also a running one)
+podman inspect web1 :: details of a container (State, Mounts, Config.Env)
+## Storage
+-v ~/web:/var/www/html:Z :: bind mount a host folder, relabelled for this container
+-v ~/web:/var/www/html:z :: the same, shared by several containers
+podman unshare chown 27:27 ~/dbdata :: give a folder to UID 27 as the container sees it
+podman volume create data1 :: a named volume (podman volume ls, podman volume rm)
+## Building images
+FROM registry.lab.example.com/ubi9/ubi :: Containerfile: the base image (first line)
+RUN dnf -y install httpd :: Containerfile: a command run during the build
+COPY file /path :: Containerfile: copy a file from the build folder
+ENV NAME=value :: Containerfile: an environment variable
+CMD ["/bin/bash", "/hello.sh"] :: Containerfile: the default command
+podman build -t greeter:1.0 . :: build from ./Containerfile (-f FILE for another file)
+## Containers as services
+ssh student@localhost :: log in as the user (su gives no user session)
+loginctl enable-linger student :: user services start at boot without a login
+podman generate systemd --name web1 --files --new :: write container-web1.service (run it in ~/.config/systemd/user)
+~/.config/containers/systemd/web1.container :: a Quadlet file; daemon-reload turns it into web1.service
+systemctl --user daemon-reload :: read new or changed user units
+systemctl --user enable --now container-web1.service :: start now and at boot
+systemctl --user status container-web1.service :: is it running, and its last messages

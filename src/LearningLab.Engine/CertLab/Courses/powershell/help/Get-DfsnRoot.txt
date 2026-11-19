@@ -1,0 +1,12 @@
+SYNOPSIS: Lists DFS namespaces.
+DESCRIPTION:
+Get-DfsnRoot shows each namespace with its Path, Type (Domain V2, Domain V1, Standalone), Properties (for example access-based enumeration), State and TimeToLiveSec (how long clients cache the referral).
+PARAMETER Path:
+Only this namespace; wildcards work. Position 0.
+PARAMETER Domain:
+The namespaces of this domain.
+EXAMPLE: Get-DfsnRoot -Domain corp.example
+Every namespace in the domain.
+EXAMPLE: Get-DfsnRoot -Path \\corp.example\Files | Format-List *
+The details of one namespace.
+RELATED: New-DfsnRoot, Get-DfsnFolder

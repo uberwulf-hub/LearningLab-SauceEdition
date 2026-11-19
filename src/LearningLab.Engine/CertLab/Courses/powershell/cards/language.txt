@@ -1,0 +1,23 @@
+# Deck: language | Variables, types and operators | Language
+Make $port always hold an integer, starting with '8080' :: `[int]$port = '8080'`
+Show the type of a value :: `$x.GetType().Name`
+Convert '42' to a number, getting $null instead of an error if it fails :: `'42' -as [int]`
+What does '10' + 5 give? :: 105 (the left side is a string, so 5 is joined as text)
+What does [int]2.5 give? :: 2 (a half rounds to the nearest even number)
+Make an array that is always an array, even with one item :: `@(Get-Process -Name explorer)`
+The last item of an array $a :: `$a[-1]`
+Is 'DC01' in the array $servers? :: `$servers -contains 'DC01'`
+Keep only the items of $servers that start with WIN :: `$servers -like 'WIN*'`
+A hashtable that keeps the order of its keys :: `[ordered]@{ First = 1; Second = 2 }`
+Make an object with the properties Name and Size :: `[pscustomobject]@{ Name = 'a'; Size = 1 }`
+Add the property Site to an existing object $o :: `$o | Add-Member -NotePropertyName Site -NotePropertyValue 'Lab'`
+After 'id=42' -match 'id=(\d+)', where is 42? :: in $Matches[1]
+Replace every dot in $s with a dash :: `$s -replace '\.', '-'`
+Split 'a,b,c' at the commas :: `'a,b,c' -split ','`
+Join the items of $list with semicolons :: `$list -join ';'`
+Put $n and $total into 'n of total' with the format operator :: `'{0} of {1}' -f $n, $total`
+Show a number with 2 decimals :: `'{0:N2}' -f 3.14159`
+Why is "$name.Length" not the length of $name? :: inside double quotes only the variable is expanded; write "$($name.Length)"
+Which compares case-sensitively: -eq or -ceq? :: -ceq (the c versions are case-sensitive)
+Discard the index ArrayList.Add returns :: `[void]$list.Add($item)`
+Return a list as one object from a function :: `return , $list`

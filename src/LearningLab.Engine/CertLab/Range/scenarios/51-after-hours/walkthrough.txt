@@ -1,0 +1,20 @@
+You are the defender here. The intruder has already been and gone; their trail is in the logs and on disk.
+
+1. Who and from where. /var/log/secure keeps ssh sign-ins. grep -Ei 'failed|accepted' /var/log/secure
+   shows a burst of "Failed password for {{USER}} from {{ATKIP}}" (someone guessing the password) ending
+   in "Accepted password for {{USER}} from {{ATKIP}}". So the account used was {{USER}} and the address
+   was {{ATKIP}}. (last and lastb show the same kind of thing.)
+
+2. What they left. Attackers leave a way back in. /etc/cron.d holds scheduled jobs; the file "sync"
+   does not belong there. It runs /opt/.sync.sh every minute, a hidden script that stages the reports
+   for sending out. The script points at /opt/.sync, where they dropped a file - that file holds the flag.
+
+3. Clean up before it runs again. Remove the job and the script (rm -f /etc/cron.d/sync /opt/.sync.sh)
+   and lock the account so the guessed password is useless (usermod -L {{USER}}, which passwd -S shows
+   as LK). If you are too slow, the leftover job copies the reports to a staging folder - you want to
+   stop it first.
+
+How this happens for real: a weak or reused password lets someone guess their way in over ssh; once in,
+they add a cron job or a service so they survive a reboot. The fixes are strong unique passwords (and
+better, keys only), fail2ban or rate limiting, and watching /etc/cron.d, new users and services for
+things you did not put there.

@@ -1,0 +1,78 @@
+NAME
+       swapon, swapoff - start and stop using swap space
+
+SYNOPSIS
+       swapon [-p PRIORITY] DEVICE...
+       swapon -a
+       swapon --show | -s
+       swapoff DEVICE...
+       swapoff -a
+
+DESCRIPTION
+       Swap space is disk space the kernel uses as extra, slow memory: when RAM
+       runs short, pages that are rarely used are moved out to swap. A swap
+       area is a partition (type "Linux swap"), a logical volume or a file,
+       prepared once with mkswap.
+
+       swapon starts using swap areas; swapoff stops using them (the pages in
+       them are first moved back into RAM, so there must be room). Neither
+       survives a reboot by itself: to use a swap area at every boot, add a
+       line to /etc/fstab with the type swap and the mount point none, then
+       test it with swapon -a.
+
+OPTIONS
+       -a, --all
+              swapon: start every swap area listed in /etc/fstab (except those
+              marked noauto) that is not active yet. swapoff: stop all swap.
+
+       -p, --priority=N
+              Give this area a priority (-1 to 32767). The kernel fills higher
+              priorities first. In /etc/fstab write it as the option pri=N.
+
+       --show
+              List the active swap areas: name, kind (partition or file), size,
+              how much is used and the priority.
+
+       -s, --summary
+              A short list of the active swap areas (the same as
+              cat /proc/swaps).
+
+       -v, --verbose
+              Say what is being done.
+
+       -U UUID, -L LABEL
+              Name the swap area by its UUID or label.
+
+EXAMPLES
+       Make a new 1 GiB swap partition on /dev/vdb and use it now and at boot:
+
+           parted -s /dev/vdb mkpart swap1 linux-swap 1MiB 1025MiB
+           mkswap /dev/vdb1
+           blkid /dev/vdb1
+           echo 'UUID=<uuid-from-blkid> none swap defaults 0 0' >> /etc/fstab
+           swapon -a
+           swapon --show
+
+       Use a swap logical volume with a higher priority:
+
+           mkswap /dev/vgdata/swaplv
+           echo '/dev/vgdata/swaplv none swap pri=10 0 0' >> /etc/fstab
+           swapon -a
+
+       Stop using a swap area before removing it:
+
+           swapoff /dev/vdb1
+
+NOTES
+       Checking with swapon -a after editing /etc/fstab catches typing
+       mistakes before a reboot does. free -h shows the total swap.
+
+FILES
+       /etc/fstab
+              Swap areas used at boot.
+
+       /proc/swaps
+              The active swap areas.
+
+SEE ALSO
+       mkswap(8), fstab(5), free(1), blkid(8), lvcreate(8)

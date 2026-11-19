@@ -1,0 +1,49 @@
+title: Step 4: The hidden file
+level: Beginner
+category: ladder
+login: step4
+kind: Hidden files
+teaser: a folder that looks empty, and the ls option that shows everything
+points: 20
+order: 4
+answer: {{PW}}
+var: PW = hex:10
+var: HID = pick:.hidden|.secret|.not-here|.look-closer|.tucked-away
+
+@intro
+You are step4. In your home folder there is a folder called inhere. The password for
+step 5 is in a file inside it - but ls inhere shows nothing at all. Find the file.
+
+@setup
+useradd -m step5
+echo 'step5:{{PW}}' | chpasswd
+mkdir -p /home/step4/inhere
+printf '%s\n' '{{PW}}' > '/home/step4/inhere/{{HID}}'
+chown -R step4: /home/step4/inhere
+
+@solution
+ls inhere
+ls -la inhere
+cat inhere/{{HID}}
+
+@walkthrough
+On Linux a file whose name starts with a dot is "hidden": plain ls skips it to keep
+listings tidy, but it is an ordinary file. ls -a ("all") shows it, and ls -la shows it
+as a long list with owner, size and date:
+
+    ls -la inhere
+    cat inhere/{{HID}}
+
+The . and .. entries in the list are the folder itself and the folder above it.
+
+@hint 2
+What to think about first: a folder that looks empty might not be. Linux hides any file whose name starts with a dot from a normal listing. It isn't locked or protected - ls just leaves it out unless you ask for everything.
+
+@hint 3
+Many commands take options: a dash and a letter after the command name that change what it does. ls -a means "list all files, the hidden ones too". You can put the folder's name after it: ls -a inhere.
+
+@hint 4
+ls -la combines two options: -l for the long list (who owns each file, its size, its date) and -a for all. You will see . and .. too: they mean "this folder" and "the folder above". The other name starting with a dot is the one you want.
+
+@hint 5
+Run ls -la inhere, then cat inhere/ followed by the hidden file's name, dot included (for example cat inhere/.hidden). The ten letters and digits it prints are the answer.

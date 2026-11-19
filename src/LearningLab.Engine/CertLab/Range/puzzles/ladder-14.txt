@@ -1,0 +1,103 @@
+title: Step 14: Boxes inside boxes
+level: Advanced
+category: ladder
+login: step14
+kind: Archives
+teaser: a parcel squeezed and packed several times over: file tells you each layer
+points: 40
+order: 14
+answer: {{PW}}
+var: PW = hex:10
+var: ORDER = pick:a|b
+var: INNER = pick:inside.dat|keep.bin|layer2|contents
+@vars ORDER=a
+LAYERS = gzip, then bzip2, then tar, then gzip again (the file inside the tar is gzip)
+@vars ORDER=b
+LAYERS = gzip, then tar, then gzip, then bzip2 (the file inside the tar is gzip, and inside that is bzip2)
+
+@intro
+You are step14. The file parcel has been compressed and packed again and again (gzip,
+bzip2 and tar, in some order), and every layer was given a name that tells you
+nothing. Unwrap it layer by layer until you reach the password for step 15.
+
+Work in a folder of your own under /tmp, so you can make new files:
+
+    mkdir -p /tmp/s14 && cp parcel /tmp/s14/ && cd /tmp/s14
+
+@setup
+useradd -m step15
+echo 'step15:{{PW}}' | chpasswd
+mkdir -p /root/l14
+cd /root/l14
+printf 'The password for step 15 is %s\n' '{{PW}}' > secret.txt
+{{if ORDER=a}}
+gzip secret.txt
+mv secret.txt.gz {{INNER}}
+tar -cf box.tar {{INNER}}
+bzip2 box.tar
+mv box.tar.bz2 layer
+gzip layer
+mv layer.gz /home/step14/parcel
+{{else}}
+bzip2 secret.txt
+mv secret.txt.bz2 layer
+gzip layer
+mv layer.gz {{INNER}}
+tar -cf box.tar {{INNER}}
+gzip box.tar
+mv box.tar.gz /home/step14/parcel
+{{end}}
+cd /
+rm -rf /root/l14
+chown step14: /home/step14/parcel
+
+@solution
+mkdir -p /tmp/s14 && cp parcel /tmp/s14/ && cd /tmp/s14
+file parcel
+{{if ORDER=a}}
+mv parcel parcel.gz
+gunzip parcel.gz
+file parcel
+mv parcel parcel.bz2
+bunzip2 parcel.bz2
+file parcel
+tar -xf parcel
+ls
+file {{INNER}}
+mv {{INNER}} inner.gz
+gunzip inner.gz
+file inner
+cat inner
+{{else}}
+mv parcel parcel.gz
+gunzip parcel.gz
+file parcel
+tar -xf parcel
+ls
+file {{INNER}}
+mv {{INNER}} inner.gz
+gunzip inner.gz
+file inner
+mv inner inner.bz2
+bunzip2 inner.bz2
+file inner
+cat inner
+{{end}}
+
+@walkthrough
+file looks at the first bytes of a file (its "magic number") and says what it really
+is, whatever its name. At each layer:
+
+  - "gzip compressed data": rename it to end in .gz and run gunzip
+  - "bzip2 compressed data": rename it to end in .bz2 and run bunzip2
+  - "POSIX tar archive": tar -xf unpacks the files inside (ls shows them)
+  - "ASCII text": you are there - cat it
+
+Unwrapping this parcel went: {{LAYERS}}.
+The habit to learn: never trust a file's name - ask file.
+
+@hint 10
+Run file on the parcel after every step: it tells you whether it is gzip, bzip2, tar or plain text. gunzip only unpacks names ending in .gz and bunzip2 names ending in .bz2, so rename (mv) before you unpack. tar -xf unpacks a tar archive whatever it is called.
+
+@hint 18
+Repeat: file X; then mv X X.gz && gunzip X.gz (gzip), or mv X X.bz2 && bunzip2 X.bz2 (bzip2), or tar -xf X && ls (tar). Stop when file says ASCII text and cat it.

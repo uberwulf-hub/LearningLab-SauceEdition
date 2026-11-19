@@ -1,0 +1,37 @@
+# Deck: networking | DNS, DHCP and hybrid networking | Networking
+Zone type that is a read-only copy filled by zone transfers :: Secondary zone
+Zone type that holds only SOA, NS and glue A records of another zone :: Stub zone (it keeps the other zone's list of name servers up to date)
+Replication scope that reaches every DNS server on a DC in the whole forest :: Forest (the ForestDnsZones partition)
+Replication scope that reaches every DC of the domain, DNS server or not :: Legacy (the domain partition)
+Create an AD-integrated primary zone replicated to the domain's DNS servers :: `Add-DnsServerPrimaryZone -Name harborline.internal -ReplicationScope Domain`
+Create the reverse zone for 10.20.0.0/24 :: `Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 -ReplicationScope Domain`
+What does a zone need for "Secure only" dynamic updates? :: It must be stored in Active Directory
+Aging is on but stale records stay. What is missing? :: Scavenging on at least one DNS server (`Set-DnsServerScavenging -ScavengingState $true`)
+Default no-refresh and refresh intervals of DNS aging :: 7 days each
+Send queries for tidewater.example to 192.168.50.10, on every DC of the forest :: `Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest`
+Forwarder or conditional forwarder? :: A forwarder takes every query the server can't answer; a conditional forwarder only one domain's
+What stops working when recursion is off? :: Forwarders and conditional forwarders: the server only answers from its own zones
+Allow zone transfers of corp.example only to 10.10.0.50 :: `Set-DnsServerPrimaryZone -Name corp.example -SecureSecondaries TransferToSecureServers -SecondaryServers 10.10.0.50`
+Sign a zone with DNSSEC using the defaults :: `Invoke-DnsServerZoneSign -ZoneName harborline.internal -SignWithDefault`
+DNSSEC record that proves a name doesn't exist :: NSEC or NSEC3
+DNSSEC record published in the parent zone :: DS (a hash of the child zone's key signing key)
+How do Windows clients come to require DNSSEC validation? :: A Name Resolution Policy Table (NRPT) rule from Group Policy
+DNS policy action that drops a query without answering :: IGNORE (DENY answers with a refusal)
+Do DNS policies replicate between DNS servers? :: No: configure each server
+The three building blocks of split-brain DNS with policies :: A client subnet, a zone scope with the internal records, and a query resolution policy
+Authorize SRV1 as a DHCP server :: `Add-DhcpServerInDC -DnsName srv1.corp.example -IPAddress 10.10.0.50`
+Option set on the server and on the scope: which wins? :: The scope's (reservation beats scope beats server)
+DHCP options 003, 006 and 015 :: Router, DNS servers, DNS domain name
+Default DHCP lease on Windows Server :: 8 days (clients renew at half the lease)
+Clients in another subnet need addresses from a central DHCP server. What do they need? :: A DHCP relay agent (IP helper) in their subnet, and a scope for that subnet
+DHCP failover mode with one active server and a reserve on the other :: Hot standby (5% reserve by default)
+Default MCLT of a DHCP failover relationship :: 1 hour
+After changing a reservation on a failover partner :: `Invoke-DhcpServerv4FailoverReplication`
+Where can't IPAM be installed? :: On a domain controller (use a domain member server)
+IPAM's usual way to get access to the managed servers :: Group Policy based provisioning (`Invoke-IpamGpoProvisioning`), then mark each server Managed
+VPN protocol that works where only HTTPS gets through :: SSTP (port 443)
+What must be done before adding an Azure Network Adapter? :: Register Windows Admin Center with Azure
+Azure Network Adapter is which kind of VPN? :: Point-to-site, for one server, to an Azure VPN gateway
+Keep an on-premises IP address for a VM moved to Azure :: Azure Extended Network
+The address of Azure-provided DNS :: 168.63.129.16 (reachable only from inside Azure)
+On-premises DNS servers resolving Azure Private DNS zones send queries to :: The DNS Private Resolver's inbound endpoint (with a conditional forwarder)

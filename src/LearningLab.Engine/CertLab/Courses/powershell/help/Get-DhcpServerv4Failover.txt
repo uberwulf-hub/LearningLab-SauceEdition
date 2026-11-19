@@ -1,0 +1,12 @@
+SYNOPSIS: Shows DHCP failover relationships.
+DESCRIPTION:
+Get-DhcpServerv4Failover lists each failover relationship with its PartnerServer, Mode (LoadBalance or HotStandby), the scopes it covers, State (Normal, CommunicationInterrupted, PartnerDown...), LoadBalancePercent or ReservePercent, and MaxClientLeadTime.
+PARAMETER Name:
+Shows only this relationship.
+PARAMETER ScopeId:
+Shows the relationship a scope belongs to.
+EXAMPLE: Get-DhcpServerv4Failover -ComputerName SRV1
+Lists SRV1's failover relationships.
+EXAMPLE: Get-DhcpServerv4Failover -ScopeId 10.10.0.0 | Format-List Name, PartnerServer, Mode, State
+Checks how the HQ scope is protected.
+RELATED: Add-DhcpServerv4Failover, Remove-DhcpServerv4Failover, Invoke-DhcpServerv4FailoverReplication

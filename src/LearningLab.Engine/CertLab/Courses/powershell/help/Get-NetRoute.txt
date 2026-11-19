@@ -1,0 +1,24 @@
+SYNOPSIS: Lists the routing table: where the computer sends packets for each network.
+DESCRIPTION:
+Get-NetRoute shows the routes, one per line: DestinationPrefix (the network, such as 10.0.10.0/24), NextHop (the router to send it to; 0.0.0.0 means "deliver directly on this network"), RouteMetric and the interface.
+
+The route with DestinationPrefix 0.0.0.0/0 is the default gateway: everything that matches no other route goes there. Windows also makes routes by itself for each address (the address, its network and its broadcast), plus multicast, broadcast and loopback routes.
+PARAMETER DestinationPrefix:
+Shows only this destination, for example 0.0.0.0/0. Wildcards are allowed.
+PARAMETER InterfaceAlias:
+Shows only the routes of this adapter, for example Ethernet.
+PARAMETER InterfaceIndex:
+Shows only the routes of the interface with this ifIndex.
+PARAMETER AddressFamily:
+IPv4 or IPv6.
+PARAMETER NextHop:
+Shows only routes that use this router.
+EXAMPLE: Get-NetRoute -AddressFamily IPv4
+The IPv4 routing table, like route print.
+EXAMPLE: Get-NetRoute -DestinationPrefix 0.0.0.0/0
+The default gateway route; NextHop is 10.0.10.1 on the lab machines.
+EXAMPLE: (Get-NetRoute -DestinationPrefix 0.0.0.0/0).NextHop
+Only the gateway address.
+NOTES:
+A destination that has no route is an error ("No MSFT_NetRoute objects found"). CIM-based command from the NetTCPIP module, Windows only. In PowerShell 7 on Linux, use ip route instead.
+RELATED: New-NetRoute, Remove-NetRoute, Get-NetIPConfiguration, Test-NetConnection

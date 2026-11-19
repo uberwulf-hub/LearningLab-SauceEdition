@@ -1,0 +1,28 @@
+# Sheet: output | Formatting and output | Output
+## Formatting (last in the pipeline)
+Get-Service | Format-Table Name, Status, StartType -AutoSize :: a table of chosen properties
+Get-Service Spooler | Format-List * :: every property as a list
+Get-ChildItem | Format-Wide -Column 3 :: one property in columns
+Format-Table -Wrap :: wrap long values instead of cutting them
+Format-Table Name, @{ Label = 'MB'; Expression = { $_.WS / 1MB }; FormatString = 'N1' } :: a calculated column
+## Where the text goes
+Get-Service > C:\LabFiles\svc.txt :: to a file (UTF-16 in 5.1)
+Get-Service >> C:\LabFiles\svc.txt :: append
+Get-Service | Out-File C:\LabFiles\svc.txt -Encoding ascii :: choose the encoding
+Get-Item C:\nope 2>$null :: hide errors (2> error stream)
+Get-Item C:\nope 2>&1 :: errors into the output
+Get-Service | Out-String :: the text as one string
+Get-Service | Out-Null :: discard
+## CSV
+Get-Service | Select-Object Name, Status | Export-Csv C:\LabFiles\s.csv -NoTypeInformation :: save as CSV
+Import-Csv C:\LabFiles\employees.csv :: read (values are strings)
+Import-Csv C:\LabFiles\shares.csv -Delimiter ';' :: another separator
+Get-Service | ConvertTo-Csv -NoTypeInformation :: CSV text without a file
+## JSON
+Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json :: read JSON into objects
+$data | ConvertTo-Json -Depth 5 :: write JSON (default depth 2)
+$data | ConvertTo-Json -Compress :: on one line
+## Text
+'{0,-12} {1,8:N1}' -f $name, $size :: aligned columns and number formats
+@" ... "@ :: a multi-line text with variables
+Write-Host 'message' -ForegroundColor Green :: a message for the screen only

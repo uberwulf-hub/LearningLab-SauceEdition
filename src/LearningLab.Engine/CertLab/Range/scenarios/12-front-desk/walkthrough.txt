@@ -1,0 +1,26 @@
+1. Find the PC. nmap -sn {{NET}}.0/24 finds {{HOST}} at {{NET}}.30. nmap -sV {{NET}}.30
+   shows Windows file sharing (139, 445), RPC (135) and remote management (5985).
+
+2. The open share. smbclient -L //{{NET}}.30 -N lists the shares without an account.
+   {{SHARE}} lets guests in: smbclient //{{NET}}.30/{{SHARE}} -N -c 'ls; get {{NOTE}}'.
+   The welcome note gives {{STAFF}}'s first password, never changed.
+
+3. Foothold. winrm-shell -i {{NET}}.30 -u {{STAFF}} -p {{STAFFPW}} opens PowerShell on the PC.
+   The user flag is on {{STAFF}}'s desktop. {{STAFF}} is a standard user, so the
+   Administrator's desktop is closed.
+
+4. A password left behind. This run it was in {{PLACE}}:
+
+       {{LOOK}}
+
+   It names the account {{ADMUSER}} with the password {{ADMPW}}. (Other runs leave it in
+   the registry's automatic sign-in settings, in a PowerShell history file, or in a
+   leftover unattend.xml - all three are classic places to look on Windows.)
+
+5. Administrator. winrm-shell -i {{NET}}.30 -u {{ADMUSER}} -p {{ADMPW}}; {{ADMUSER}} is in
+   Administrators, so it reads C:\Users\Administrator\Desktop\flag.txt.
+
+How to fix it: never share a folder with "everyone" unless what is in it is truly public;
+don't put passwords in welcome notes; turn off automatic sign-in (or at least never for
+an administrator), clear PowerShell history that holds secrets, and delete setup answer
+files once Windows is installed.

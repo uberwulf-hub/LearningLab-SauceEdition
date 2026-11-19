@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the Windows updates installed on the computer.
+DESCRIPTION:
+Get-HotFix reads Win32_QuickFixEngineering and shows each update's HotFixID (KB number), Description (Update, Security Update), who installed it and when.
+PARAMETER Id:
+KB numbers; wildcards are allowed. Position 0.
+PARAMETER Description:
+Only updates with this description, for example 'Security Update'.
+PARAMETER ComputerName:
+Other computers.
+EXAMPLE: Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 3
+The newest updates.
+EXAMPLE: Get-HotFix -Id KB5012170
+Is this update installed? An error says it is not.
+RELATED: Get-CimInstance, Get-ComputerInfo

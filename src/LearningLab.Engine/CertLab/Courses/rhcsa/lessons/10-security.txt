@@ -1,0 +1,693 @@
+# Unit: u10 | 10. Security | Manage security
+
+A server is only as safe as its weakest setting. This unit brings together the layers that protect a RHEL 9 machine: the firewall that decides which network traffic gets in, the default permissions new files get, logging in with keys instead of passwords, and SELinux, which keeps every program inside the box it belongs in even when ordinary permissions would let it out.
+
+## Lesson: l1001 | Firewall rules with firewall-cmd
+
+You met firewalld in the networking unit. Here is the short version, because almost every security task on the exam ends with "and make sure it can be reached from the network".
+
+firewalld sorts network interfaces into zones. Each zone has a list of services and ports it lets in; everything else coming in is refused (the public zone rejects it). On RHEL 9 the interface enp1s0 is in the zone public, which is also the default zone, so commands without `--zone` change public.
+
+```terminal
+[root@server1 ~]# firewall-cmd --get-default-zone
+public
+[root@server1 ~]# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp1s0
+  sources:
+  services: cockpit dhcpv6-client ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+### Runtime and permanent
+
+firewalld keeps two sets of rules. The runtime rules are the ones in force right now; the permanent rules are saved on disk and loaded at boot or at `firewall-cmd --reload`. A command without `--permanent` changes only the runtime rules, so it is gone after a reboot. A command with `--permanent` changes only the saved rules, so nothing happens until you reload:
+
+```terminal
+[root@server1 ~]# firewall-cmd --permanent --add-service=http
+success
+[root@server1 ~]# firewall-cmd --permanent --add-port=8443/tcp
+success
+[root@server1 ~]# firewall-cmd --list-services
+cockpit dhcpv6-client ssh
+[root@server1 ~]# firewall-cmd --reload
+success
+[root@server1 ~]# firewall-cmd --list-services
+cockpit dhcpv6-client http ssh
+[root@server1 ~]# firewall-cmd --list-ports
+8443/tcp
+```
+
+The habit that never fails: add the rule with `--permanent`, then `firewall-cmd --reload`. If you already changed the runtime rules and they work, `firewall-cmd --runtime-to-permanent` saves them all.
+
+- `--add-service=NAME` opens the ports of a known service (`firewall-cmd --get-services` lists the names: http, https, nfs, mountd, rpc-bind, samba, dns, ntp...).
+- `--add-port=8080/tcp` opens one port, `--add-port=5000-5010/udp` a range.
+- `--remove-service` and `--remove-port` close them again.
+
+> The firewall is only one of three gates. A web server on port 8443 also needs SELinux to allow the port (lesson 5 of this unit) and the program itself must listen on it. Check all three when something cannot be reached.
+
+@try machines=1
+@task t1 | Security | 10 | server1
+Allow the services `http` and `https` and the port `8443/tcp` through the firewall of server1, now and after a reboot.
+@check server1 | the permanent rules allow http, https and 8443/tcp
+firewall-cmd --permanent --list-services | grep -qw http && firewall-cmd --permanent --list-services | grep -qw https && firewall-cmd --permanent --list-ports | grep -qw 8443/tcp
+@check server1 | the running firewall allows them too
+firewall-cmd --list-services | grep -qw http && firewall-cmd --list-services | grep -qw https && firewall-cmd --list-ports | grep -qw 8443/tcp
+@hint Add each rule with --permanent, then reload the firewall so the saved rules are in force.
+@solution server1
+firewall-cmd --permanent --add-service=http --add-service=https
+firewall-cmd --permanent --add-port=8443/tcp
+firewall-cmd --reload
+firewall-cmd --list-all
+@endtask
+@end
+
+@quiz
+? You ran firewall-cmd --permanent --add-service=nfs. Clients still cannot connect. What is missing?
+- a reboot is the only way to apply it
++ firewall-cmd --reload, so the permanent rules become the running ones
+- systemctl restart nfs-server
+- the same command with --zone=public
+! --permanent only changes the saved rules. --reload loads them into the running firewall.
+? Which command opens TCP port 9090 permanently?
+- firewall-cmd --add-port=9090
++ firewall-cmd --permanent --add-port=9090/tcp
+- firewall-cmd --permanent --open=9090/tcp
+- firewall-cmd --permanent --add-service=9090
+! A port needs its protocol (/tcp or /udp). Remember the reload afterwards.
+? What does firewall-cmd --runtime-to-permanent do?
+- reloads the saved rules
++ saves the rules that are in force now as the permanent rules
+- makes every later command permanent
+- deletes the permanent rules
+! It copies the running configuration to disk, so rules you tested without --permanent survive a reboot.
+@end
+
+## Lesson: l1002 | Default permissions: umask
+
+When a program creates a file it asks for a mode, normally 666 (rw for everybody) for files and 777 for folders. Before the file is created, the kernel takes away the bits in the process's umask. With the usual umask 022 the write bit for the group and others is removed: files get 644 and folders 755.
+
+```terminal
+[root@server1 ~]# umask
+0022
+[root@server1 ~]# mkdir demo
+[root@server1 ~]# touch demo.txt
+[root@server1 ~]# ls -ld demo demo.txt
+drwxr-xr-x. 2 root root 6 Mar  2 04:00 demo
+-rw-r--r--. 1 root root 0 Mar  2 04:00 demo.txt
+```
+
+### Reading and changing the umask
+
+Each digit of the umask is a set of bits to REMOVE (4 read, 2 write, 1 execute), for the owner, the group and others. Some common values:
+
+- 022: files 644, folders 755 (others can read).
+- 002: files 664, folders 775 (the group can write too). RHEL 9 gives this to ordinary users whose primary group is their own private group; root gets 022.
+- 027: files 640, folders 750 (others get nothing).
+- 077: files 600, folders 700 (only the owner).
+
+Note that a umask never adds an execute bit to a file: a new file starts from 666, so a umask of 000 still gives rw-rw-rw-.
+
+```terminal
+[root@server1 ~]# umask 027
+[root@server1 ~]# mkdir demo2
+[root@server1 ~]# touch demo2.txt
+[root@server1 ~]# ls -ld demo2 demo2.txt
+drwxr-x---. 2 root root 6 Mar  2 04:00 demo2
+-rw-r-----. 1 root root 0 Mar  2 04:00 demo2.txt
+[root@server1 ~]# umask -S
+u=rwx,g=rx,o=
+```
+
+`umask -S` shows the same value the other way round: the permissions that are KEPT.
+
+### Making it permanent
+
+`umask 027` at the prompt only changes the current shell; the next login starts with the default again. To keep it, put the command in a file that the login shell reads:
+
+- for one user: a line `umask 027` at the end of that user's `~/.bashrc` (or `~/.bash_profile`);
+- for every user: a small file such as `/etc/profile.d/umask.sh` containing `umask 027` (files in /etc/profile.d that end in .sh are read by every login shell);
+- the `UMASK` line of /etc/login.defs is a system-wide default (useradd reads it, for example), but the shell start-up files /etc/profile and /etc/bashrc set the umask again afterwards, so for shells the two ways above are the ones that count.
+
+```terminal
+[root@server1 ~]# grep ^UMASK /etc/login.defs
+UMASK           022
+```
+
+> umask only affects NEW files. Files that already exist keep their mode; fix those with chmod.
+
+@try machines=1
+@task t1 | Security | 10 | server1
+Make sure that every time the user `student` logs in, new files get the mode 640 and new folders 750. Other users must keep their default.
+@check server1 | student's login shells get the umask 0027
+test "$(certlab-check umask student)" = 0027
+@check server1 | root keeps the umask 0022
+test "$(certlab-check umask root)" = 0022
+@hint Work out which bits to remove from 666 and 777. Put the umask command in a file that only student's login shell reads.
+@solution server1
+echo 'umask 027' >> /home/student/.bashrc
+@endtask
+@end
+
+@quiz
+? The umask is 027. Which mode does a new file get?
+- 750
++ 640
+- 027
+- 660
+! Files start from 666; removing 027 leaves 640. Folders start from 777 and get 750.
+? Which umask makes new files readable and writable by the owner only?
+- 007
+- 066
++ 077
+- 700
+! 077 removes every bit for the group and others: files 600, folders 700.
+? Where should you put a umask for all users of the machine?
+- /etc/umask
++ a file ending in .sh in /etc/profile.d
+- /etc/default/useradd
+- each user's ~/.ssh/config
+! Login shells read every *.sh file in /etc/profile.d, so one line there reaches everybody.
+@end
+
+## Lesson: l1003 | Key-based ssh logins
+
+A password can be guessed or watched over a shoulder. An ssh key pair is much harder to steal: the private key stays on your machine, and the server only stores the public half. When you connect, the server asks your ssh client to prove that it holds the private key, and no password crosses the network.
+
+### Making a key pair
+
+`ssh-keygen` creates the pair in ~/.ssh: `id_ed25519` (private, mode 600, never share it) and `id_ed25519.pub` (public). It asks for a passphrase that protects the private key; `-N ''` sets an empty one, which the exam usually wants so that logins work without any typing.
+
+```terminal
+[student@server1 ~]$ ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+Generating public/private ed25519 key pair.
+Created directory '/home/student/.ssh'.
+Your identification has been saved in /home/student/.ssh/id_ed25519
+Your public key has been saved in /home/student/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:Ws2zgjhFgi/Ez1hGnEPl0Idiy4Aft+jLISG02j4jqdQ student@server1.lab.example.com
+The key's randomart image is:
++---[ED25519 256]-+
+| . o++..         |
+|.oooBoo .        |
+|..=B+=o.         |
+|oooB+o   o       |
+|o+o + . S +      |
+|o =. o +   o     |
+| * Eo o . .      |
+|+ *  .   .       |
+|o. o             |
++----[SHA256]-----+
+```
+
+Without `-t` you get an RSA key (`id_rsa`), which works just as well.
+
+### Copying the public key to the server
+
+`ssh-copy-id USER@HOST` logs in once with the password and appends your public key to `~/.ssh/authorized_keys` of that user on the server, creating the folder with the right modes. After that the login needs no password:
+
+```terminal
+[student@server1 ~]$ ssh-copy-id student@server2
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/student/.ssh/id_ed25519.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+The authenticity of host 'server2 (192.168.50.12)' can't be established.
+ED25519 key fingerprint is SHA256:CSGKzvYSOfnQXRpu6xQl6t1hYLnO4gEhQwYBk4mSDD0.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+student@server2's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'student@server2'"
+and check to make sure that only the key(s) you wanted were added.
+
+[student@server1 ~]$ ssh student@server2 hostname
+server2.lab.example.com
+```
+
+The first connection to a new host asks you to confirm its host key, which is then stored in ~/.ssh/known_hosts. Type yes (or connect with `-o StrictHostKeyChecking=accept-new`).
+
+### Modes matter
+
+sshd refuses a key when someone else could have changed it. The home folder must not be writable by the group or others, `~/.ssh` should be 700 and `authorized_keys` 600 (644 is also accepted), all owned by the user. If you copy the key by hand (for example with `cat id_ed25519.pub >> ~/.ssh/authorized_keys`), set those modes yourself.
+
+```terminal
+[root@server2 ~]# ls -la /home/student/.ssh
+total 4
+drwx------. 2 student student  24 Mar  2 04:00 .
+drwx------. 3 student student  78 Mar  2 04:00 ..
+-rw-------. 1 student student 113 Mar  2 04:00 authorized_keys
+```
+
+### Server settings: sshd_config
+
+The ssh server reads /etc/ssh/sshd_config, and that file starts by including every `*.conf` file in /etc/ssh/sshd_config.d. For each setting the FIRST value sshd finds wins, so a drop-in file beats a line further down in sshd_config. Two settings come up again and again:
+
+- `PermitRootLogin no` forbids root logins over ssh (`prohibit-password`, the RHEL default, allows root only with a key).
+- `PasswordAuthentication no` allows only keys (and other non-password methods) for everybody.
+
+```terminal
+[root@server2 ~]# grep -E '^#?(PermitRootLogin|PasswordAuthentication)' /etc/ssh/sshd_config
+#PermitRootLogin prohibit-password
+#PasswordAuthentication yes
+[root@server2 ~]# ls /etc/ssh/sshd_config.d
+01-permitrootlogin.conf  50-redhat.conf
+[root@server2 ~]# cat /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+# This file has been generated by the Anaconda Installer.
+# Allow root to log in using ssh. Remove this file to opt-out.
+PermitRootLogin yes
+```
+
+Here the installer wrote a drop-in that allows root with a password. Changing only the commented line in sshd_config would do nothing: change the drop-in (or delete it), then `systemctl restart sshd` (or `reload`) so the server reads its settings again.
+
+> Before you turn off passwords, make sure your key login works, and keep a console open. On the exam the console is always there, but on a real server a wrong sshd setting can lock you out.
+
+@try machines=2
+@task t1 | Security | 10 | server1
+The user `student` on server1 must be able to log in to server2 as `student` with an ssh key, without typing a password.
+@check server1 | student@server1 logs in to student@server2 with a key
+certlab-check sshkey student student@server2
+@hint As student: ssh-keygen with an empty passphrase, then ssh-copy-id student@server2 (the password is student).
+@solution server1
+su - student
+ssh-keygen -t ed25519 -N '' -f /home/student/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=accept-new student@server2
+student
+exit
+@endtask
+@task t2 | Security | 10 | server2
+Root must no longer be able to log in to server2 over ssh.
+@check server2 | the first PermitRootLogin setting sshd reads is no
+test "$(cat /etc/ssh/sshd_config.d/*.conf /etc/ssh/sshd_config | grep -i '^[[:space:]]*PermitRootLogin' | head -1 | awk '{print $2}')" = no
+@check server2 | sshd is running
+systemctl is-active sshd
+@hint Look in /etc/ssh/sshd_config.d before you edit sshd_config: the first value sshd reads wins. Restart sshd afterwards.
+@solution server2
+cat /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+systemctl restart sshd
+@endtask
+@end
+
+@quiz
+? Which file on the SERVER holds the public keys that may log in as a user?
+- ~/.ssh/id_rsa.pub
+- ~/.ssh/known_hosts
++ ~/.ssh/authorized_keys
+- /etc/ssh/ssh_host_rsa_key.pub
+! ssh-copy-id appends your public key to the user's ~/.ssh/authorized_keys on the server. known_hosts is on the client and lists servers' host keys.
+? A key login is refused although the key is in authorized_keys. ls shows drwxrwxrwx for ~/.ssh. What is wrong?
+- the key type is too old
++ sshd ignores keys in a folder that others could change: make ~/.ssh 700
+- the user's password is locked
+- ssh-copy-id must be run as root
+! sshd checks ownership and modes (StrictModes). ~/.ssh 700 and authorized_keys 600 always work.
+? You set PermitRootLogin no at the end of /etc/ssh/sshd_config and restarted sshd, but root can still log in. Why?
+- the setting needs a reboot
++ a file in /etc/ssh/sshd_config.d, read first, already sets PermitRootLogin yes
+- the line must be in /etc/ssh/ssh_config
+- PermitRootLogin only works with PasswordAuthentication yes
+! sshd uses the first value it finds, and the drop-in files are included at the top of sshd_config.
+@end
+
+## Lesson: l1004 | SELinux modes and contexts
+
+Ordinary permissions answer "may this user touch this file?". SELinux adds a second question for every action: "may this kind of program touch this kind of object?". A web server, for example, may read web content but not home folders or /etc/shadow, even if the file modes would allow it. If an attacker takes over the web server, they are still stuck inside the web server's box.
+
+### The three modes
+
+- enforcing: SELinux checks every action and blocks what the policy does not allow. This is the RHEL default and what the exam expects.
+- permissive: SELinux checks and logs what it would have blocked, but blocks nothing. Useful for a quick test: if something works in permissive mode and fails in enforcing mode, SELinux is the cause.
+- disabled: no checks and no labels kept up to date. Going back from disabled needs a full relabel of the file system at boot.
+
+```terminal
+[root@server1 ~]# getenforce
+Enforcing
+[root@server1 ~]# setenforce 0
+[root@server1 ~]# getenforce
+Permissive
+[root@server1 ~]# setenforce 1
+[root@server1 ~]# getenforce
+Enforcing
+```
+
+`setenforce 0` and `setenforce 1` switch between permissive and enforcing until the next boot. The mode at boot comes from /etc/selinux/config:
+
+```terminal
+[root@server1 ~]# grep ^SELINUX= /etc/selinux/config
+SELINUX=enforcing
+[root@server1 ~]# sestatus
+SELinux status:                 enabled
+SELinuxfs mount:                /sys/fs/selinux
+SELinux root directory:         /etc/selinux
+Loaded policy name:             targeted
+Current mode:                   enforcing
+Mode from config file:          enforcing
+Policy MLS status:              enabled
+Policy deny_unknown status:     allowed
+Memory protection checking:     actual (secure)
+Max kernel policy version:      33
+```
+
+`sestatus` shows both: the current mode and the mode from the config file. When they differ, someone used setenforce; fix the file too if the change must survive a reboot. You can also choose the mode for one boot with the kernel arguments `enforcing=0` or `selinux=0`.
+
+### Contexts: the labels
+
+SELinux decides by labels, called contexts. Every file, process, port and user has one, with four parts: `user:role:type:level`. For the targeted policy only the third part, the TYPE, matters in daily work. Most options that show contexts are `-Z`:
+
+```terminal
+[root@server1 ~]# ls -dZ /etc /etc/shadow /home/student /tmp
+system_u:object_r:etc_t:s0 /etc
+system_u:object_r:shadow_t:s0 /etc/shadow
+unconfined_u:object_r:user_home_dir_t:s0 /home/student
+system_u:object_r:tmp_t:s0 /tmp
+[root@server1 ~]# id -Z
+unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+```
+
+- `ls -Z` shows the context of files, `ls -dZ` of a folder itself.
+- `ps -eZ` (or `ps axZ`) adds a LABEL column to the process list: sshd runs as `sshd_t`, the Apache web server as `httpd_t`, chronyd as `chronyd_t`. Search it with grep, for example `ps -eZ | grep httpd`.
+- `id -Z` shows your own context. Users who log in normally are `unconfined_t`: the policy leaves them alone and confines the services.
+
+The policy is a long list of rules such as "httpd_t may read files of type httpd_sys_content_t". So when a service is blocked, the cause is almost always a label that is wrong, a port that is not labelled for the service, or a boolean that is off. The next two lessons fix each of them.
+
+> Never solve an exam task by switching SELinux off. The graders check that it is enforcing, and many tasks only count when the service works WITH SELinux.
+
+@try machines=1
+@task t1 | Security | 10 | server1
+Someone switched SELinux on server1 to permissive, both for now and in its configuration file. Put it back into enforcing mode, at once and for every later boot.
+@check server1 | SELinux is enforcing now
+test "$(getenforce)" = Enforcing
+@check server1 | the configuration file says enforcing
+grep -q '^SELINUX=enforcing' /etc/selinux/config
+@hint setenforce changes the running mode; the boot mode is the SELINUX= line in /etc/selinux/config.
+@solution server1
+setenforce 1
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+sestatus
+@endtask
+@task t2 | Security | 10 | server1
+Write the SELinux type of the file /etc/shadow (only the type, for example `etc_t`) into the file /root/shadow-type.txt.
+@check server1 | /root/shadow-type.txt holds shadow_t
+grep -qx 'shadow_t' /root/shadow-type.txt
+@hint ls -Z shows user:role:type:level. cut -d: -f3 picks the third part.
+@solution server1
+ls -Z /etc/shadow
+ls -Z /etc/shadow | cut -d: -f3 > /root/shadow-type.txt
+@endtask
+@setup server1
+setenforce 0
+sed -i 's/^SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+@end
+
+@quiz
+? Which mode logs what SELinux would block but blocks nothing?
+- enforcing
++ permissive
+- disabled
+- targeted
+! Permissive mode only logs. targeted is the name of the policy, not a mode.
+? You ran setenforce 0 yesterday and rebooted today. Which mode is SELinux in now?
+- permissive, because setenforce changes it for good
++ the mode in /etc/selinux/config, normally enforcing
+- disabled
+- the mode is chosen at random
+! setenforce lasts until the next boot. The boot mode comes from SELINUX= in /etc/selinux/config.
+? In the context system_u:object_r:httpd_sys_content_t:s0, which part decides most access in the targeted policy?
+- system_u
+- object_r
++ httpd_sys_content_t, the type
+- s0
+! The targeted policy is a set of type rules: which process type may do what to which object type.
+@end
+
+## Lesson: l1005 | File contexts and port labels
+
+### Where file labels come from
+
+A new file gets the type of the folder it is created in. That is why a file you create in /var/www/html is labelled for the web server. But `mv` keeps a file's old label, and `cp -a` copies it too. Moving a file from your home folder into the web folder is the classic way to break a web page:
+
+```terminal
+[root@server1 ~]# echo hi > /root/index.html
+[root@server1 ~]# mv /root/index.html /var/www/html/
+[root@server1 ~]# ls -Z /var/www/html
+unconfined_u:object_r:admin_home_t:s0 index.html
+[root@server1 ~]# curl -s http://localhost/index.html | head -3
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>403 Forbidden</title>
+```
+
+The file modes are fine, but httpd_t may not read admin_home_t. Apache answers 403 Forbidden.
+
+### restorecon: put the default label back
+
+SELinux keeps a database of which label every path SHOULD have. `restorecon` resets files to it; `-v` shows what changed and `-R` works through folders:
+
+```terminal
+[root@server1 ~]# restorecon -v /var/www/html/index.html
+Relabeled /var/www/html/index.html from unconfined_u:object_r:admin_home_t:s0 to unconfined_u:object_r:httpd_sys_content_t:s0
+[root@server1 ~]# curl -s http://localhost/index.html
+hi
+```
+
+`chcon -t TYPE FILE` also changes a label, but only until the next relabel or restorecon. On the exam, always use the database and restorecon so the label survives.
+
+### semanage fcontext: new rules for new places
+
+When you put content in a place SELinux knows nothing about, such as a new folder /web, the database has to learn the right type first. Add a rule with `semanage fcontext -a`, then apply it with restorecon:
+
+```terminal
+[root@server1 ~]# mkdir /web
+[root@server1 ~]# echo web > /web/index.html
+[root@server1 ~]# ls -dZ /web
+unconfined_u:object_r:root_t:s0 /web
+[root@server1 ~]# semanage fcontext -a -t httpd_sys_content_t '/web(/.*)?'
+[root@server1 ~]# restorecon -Rv /web
+Relabeled /web from unconfined_u:object_r:root_t:s0 to unconfined_u:object_r:httpd_sys_content_t:s0
+Relabeled /web/index.html from unconfined_u:object_r:root_t:s0 to unconfined_u:object_r:httpd_sys_content_t:s0
+[root@server1 ~]# semanage fcontext -l -C
+SELinux fcontext                                   type               Context
+
+/web(/.*)?                                         all files          system_u:object_r:httpd_sys_content_t:s0
+```
+
+- The pattern `'/web(/.*)?'` means the folder itself and everything below it. Keep the single quotes so the shell leaves it alone.
+- `semanage fcontext -l` lists all rules; `-l -C` only the ones you added. `-d PATTERN` deletes a rule.
+- Not sure which type to use? Look at a place that already works: `ls -dZ /var/www/html`, or search the rules: `semanage fcontext -l | grep /var/www`.
+
+Types you meet often: `httpd_sys_content_t` (web content), `public_content_t` (shared by several services), `samba_share_t` (Samba shares), `container_file_t` (container volumes), `user_home_t` (home folders).
+
+### semanage port: which ports a service may use
+
+SELinux also labels network ports. A confined service may only listen on ports labelled for it. Apache may use the ports of `http_port_t`; to run it on port 8088 you label that port first:
+
+```terminal
+[root@server1 ~]# semanage port -l | grep http_port_t
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+[root@server1 ~]# semanage port -a -t http_port_t -p tcp 8088
+[root@server1 ~]# semanage port -l | grep -w 8088
+http_port_t                    tcp      8088, 80, 81, 443, 488, 8008, 8009, 8443, 9000
+[root@server1 ~]# semanage port -l -C
+SELinux Port Type              Proto    Port Number
+
+http_port_t                    tcp      8088
+```
+
+If the port already has another type, `-a` fails with "already defined"; use `-m` (modify) instead. `-d` removes your label again. The same goes for ssh on a new port: `semanage port -a -t ssh_port_t -p tcp 2222`.
+
+> semanage changes are permanent at once: no reload, no reboot. A new port still needs the program's own setting (Listen 8088 for Apache) and a firewall rule.
+
+@try machines=1
+@task t1 | Security | 10 | server1
+The folder /srv/web holds web pages. Make SELinux label it, and everything that will ever be inside it, as web content (`httpd_sys_content_t`), in a way that survives a relabel of the file system.
+@check server1 | a file context rule for /srv/web exists
+semanage fcontext -l -C | grep -q '^/srv/web'
+@check server1 | /srv/web/index.html is labelled httpd_sys_content_t
+stat -c %C /srv/web/index.html | grep -q ':httpd_sys_content_t:'
+@check server1 | a new file created in /srv/web gets the type
+rm -f /srv/web/check.txt; touch /srv/web/check.txt && restorecon /srv/web/check.txt && stat -c %C /srv/web/check.txt | grep -q ':httpd_sys_content_t:'; r=$?; rm -f /srv/web/check.txt; exit $r
+@hint semanage fcontext -a -t TYPE '/srv/web(/.*)?', then restorecon -Rv /srv/web.
+@solution server1
+semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?'
+restorecon -Rv /srv/web
+ls -Z /srv/web
+@endtask
+@task t2 | Security | 10 | server1
+A web server will listen on TCP port 8090. Allow it as far as SELinux is concerned.
+@check server1 | tcp port 8090 is labelled http_port_t
+semanage port -l | grep '^http_port_t ' | grep -qw 8090
+@hint semanage port -a needs the type, the protocol and the port.
+@solution server1
+semanage port -a -t http_port_t -p tcp 8090
+semanage port -l | grep http_port_t
+@endtask
+@setup server1
+mkdir -p /srv/web
+echo 'site under construction' > /srv/web/index.html
+@end
+
+@quiz
+? You moved a page from /root into /var/www/html and Apache answers 403. What fixes it permanently?
+- chmod 777 on the page
+- chcon -t httpd_sys_content_t on the page
++ restorecon -v on the page
+- setenforce 0
+! mv kept the label admin_home_t. restorecon puts back the label from the database; chcon would be undone by the next relabel.
+? Apache must serve files from a new folder /data/site. Which pair of commands labels it for good?
+- chcon -R -t httpd_sys_content_t /data/site, then reboot
++ semanage fcontext -a -t httpd_sys_content_t '/data/site(/.*)?', then restorecon -Rv /data/site
+- restorecon -Rv /data/site alone
+- setsebool -P httpd_data_site on
+! The database must learn the new place first (semanage fcontext), then restorecon applies it.
+? sshd must listen on port 2022 with SELinux enforcing. Which command is needed?
+- semanage fcontext -a -t ssh_port_t 2022
++ semanage port -a -t ssh_port_t -p tcp 2022
+- setsebool -P ssh_port 2022
+- firewall-cmd only, SELinux does not care about ports
+! Confined services may only bind ports with their port type. Add the firewall rule and the Port line in sshd_config as well.
+@end
+
+## Lesson: l1006 | Booleans and diagnosing SELinux denials
+
+### Booleans: switches in the policy
+
+Some rules in the policy can be turned on and off without writing policy: these switches are booleans. They cover common choices, such as "may the web server connect to other machines?" or "may Samba share home folders?".
+
+```terminal
+[root@server1 ~]# getsebool -a | grep httpd_can_network
+httpd_can_network_connect --> off
+httpd_can_network_connect_db --> off
+[root@server1 ~]# setsebool -P httpd_enable_homedirs on
+[root@server1 ~]# getsebool httpd_enable_homedirs
+httpd_enable_homedirs --> on
+[root@server1 ~]# semanage boolean -l | grep httpd_enable_homedirs
+httpd_enable_homedirs          (on   ,  on )  Allow httpd to read home directories
+[root@server1 ~]# semanage boolean -l -C
+SELinux boolean                State  Default Description
+
+httpd_enable_homedirs          (on   ,  on )  Allow httpd to read home directories
+```
+
+- `getsebool NAME` shows one boolean, `getsebool -a` all of them.
+- `setsebool NAME on` changes it only until the next boot. `setsebool -P NAME on` also saves it: always use -P on the exam.
+- `semanage boolean -l` lists every boolean with its current and saved state and a description, which helps you find the right one: `semanage boolean -l | grep -i samba`. `-l -C` shows the ones you changed.
+
+### Diagnosing a denial
+
+When SELinux blocks something, the program usually reports only "Permission denied" or a 403. The real reason is in the audit log, /var/log/audit/audit.log, as an AVC (access vector cache) message. `ausearch -m AVC -ts recent` shows the denials of the last ten minutes (`-ts today` for the whole day):
+
+```terminal
+[root@server1 ~]# ausearch -m AVC -ts recent
+----
+time->Mon Mar 2 04:00:00 2026
+type=AVC msg=audit(1772442000.700:100): avc:  denied  { read } for  pid=673 comm="httpd" name="index.html" dev="dm-0" ino=852 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=0
+```
+
+Read it like a sentence: the process `httpd` (scontext type `httpd_t`) was denied `read` on the file `index.html` (tcontext type `admin_home_t`). A web server reading a file labelled as root's home folder: the label is wrong, so restorecon is the fix. If the target were a port or a network connection, think of semanage port or a boolean.
+
+### sealert: the explanation in plain words
+
+The package setroubleshoot-server adds `sealert`, which reads the log and suggests fixes. It is not installed at first: `dnf -y install setroubleshoot-server`.
+
+```terminal
+[root@server1 ~]# sealert -a /var/log/audit/audit.log
+100% done
+found 1 alerts in /var/log/audit/audit.log
+--------------------------------------------------------------------------------
+
+SELinux is preventing /usr/sbin/httpd from read access on the file index.html.
+
+*****  Plugin restorecon (99.5 confidence) suggests   ************************
+
+If you want to fix the label.
+index.html default label should be httpd_sys_content_t.
+Then you can run restorecon. The access attempt may have been stopped due to insufficient permissions to access a parent directory in which case try to change the following command accordingly.
+Do
+# /sbin/restorecon -v <path to index.html>
+
+Additional Information:
+Source Context                system_u:system_r:httpd_t:s0
+Target Context                unconfined_u:object_r:admin_home_t:s0
+Target Objects                index.html [ file ]
+
+--------------------------------------------------------------------------------
+```
+
+Once setroubleshoot-server is installed, each new denial also goes to the system journal with a hint like "run sealert -l ID" (`journalctl -t setroubleshoot`).
+
+### A checklist when a service fails with SELinux enforcing
+
+1. Is it SELinux at all? Look for AVC messages (`ausearch -m AVC -ts recent`). A quick `setenforce 0` test is fine, but switch back with `setenforce 1` at once.
+2. A file or folder: wrong type. Fix with `restorecon -Rv`, after `semanage fcontext -a` if the place is new.
+3. A port: `semanage port -a -t TYPE -p tcp PORT`.
+4. A behaviour (connecting out, home folders, NFS content): find the boolean with `semanage boolean -l | grep ...` and `setsebool -P`.
+
+> sealert sometimes suggests building a custom policy module with audit2allow. That is almost never the right answer on the exam: a label, a port type or a boolean is.
+
+@try machines=1
+@task t1 | Security | 10 | server1
+Web applications on server1 must be allowed to connect to other machines over the network (the SELinux boolean `httpd_can_network_connect`). The setting must survive a reboot.
+@check server1 | the boolean is on now
+getsebool httpd_can_network_connect | grep -q -- '--> on'
+@check server1 | the boolean is saved for later boots
+semanage boolean -l -C | grep -q '^httpd_can_network_connect '
+@hint setsebool without -P only lasts until the next boot.
+@solution server1
+setsebool -P httpd_can_network_connect on
+getsebool httpd_can_network_connect
+@endtask
+@task t2 | Security | 10 | server1
+Apache is running on server1, but the page http://localhost/report.html answers "403 Forbidden". Find out why and fix it, with SELinux staying in enforcing mode.
+@check server1 | the page is served
+curl -s http://localhost/report.html | grep -q 'quarterly report'
+@check server1 | SELinux is still enforcing
+test "$(getenforce)" = Enforcing
+@hint ausearch -m AVC -ts recent shows the denial. Compare the file's type with what httpd may read.
+@solution server1
+curl -s http://localhost/report.html
+ausearch -m AVC -ts recent
+ls -Z /var/www/html
+restorecon -Rv /var/www/html
+curl -s http://localhost/report.html
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install httpd
+systemctl enable --now httpd
+echo 'quarterly report' > /root/report.html
+mv /root/report.html /var/www/html/report.html
+chmod 644 /var/www/html/report.html
+curl -s http://localhost/report.html
+@end
+
+@quiz
+? Which command turns on the boolean samba_enable_home_dirs so that it stays on after a reboot?
+- setsebool samba_enable_home_dirs on
++ setsebool -P samba_enable_home_dirs on
+- semanage boolean -a samba_enable_home_dirs
+- getsebool -P samba_enable_home_dirs on
+! -P writes the value into the policy on disk. Without it the change is lost at the next boot.
+? In an AVC message, what does tcontext describe?
+- the context of the process that was denied
++ the context of the object the process tried to use
+- the time of the denial
+- the type of the policy
+! scontext is the source (the process), tcontext the target (file, port, socket...), tclass the kind of target.
+? Which command shows the SELinux denials of the last few minutes?
+- journalctl -p err
+- getsebool -a
++ ausearch -m AVC -ts recent
+- sestatus -v
+! AVC messages are in /var/log/audit/audit.log; ausearch filters them by type (-m) and time (-ts).
+@end

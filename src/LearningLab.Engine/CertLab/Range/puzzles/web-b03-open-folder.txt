@@ -1,0 +1,70 @@
+title: The folder with no front door
+category: web
+level: Beginner
+kind: Web
+topic: Server mistakes
+teaser: a folder on the web server lists everything inside it
+points: 40
+order: 3
+packages: httpd
+answer: flag
+var: DIR = pick:backup|backups|old|files
+var: NOTE = pick:staff-notes|todo-for-staff|handover|owner-notes
+var: DAY = num:10-28
+
+@intro
+Somebody copied a few of Copperleaf Market's files into a folder on the web server
+"just for a day" and forgot about it. When a web folder has no index page, many
+servers helpfully show a list of every file in it - to anyone who asks.
+
+Find the folder, read the list, and open the file that looks like it is meant for
+staff. The flag is inside. The shop is at http://copperleaf.example/.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+mkdir -p /var/www/html/{{DIR}}
+printf 'order,customer,total\n3101,avery,24.50\n3102,blake,89.00\n' > /var/www/html/{{DIR}}/orders-2026-10-{{DAY}}.csv
+printf 'Notes for the team\n- the till needs new paper\n- staff code for the back office: %s\n' '{{FLAG}}' > /var/www/html/{{DIR}}/{{NOTE}}.txt
+printf 'just a picture\n' > /var/www/html/{{DIR}}/logo-old.png
+chown -R apache:apache /var/www/html/{{DIR}}
+chmod 700 /var/www/html/{{DIR}}
+chmod 600 /var/www/html/{{DIR}}/*
+
+@web
+[ { "path": "/", "kind": "shop", "settings": { "flag": "{{FLAG}}" } } ]
+
+@solution
+webscan http://copperleaf.example/
+curl -s http://copperleaf.example/{{DIR}}/
+curl -s http://copperleaf.example/{{DIR}}/{{NOTE}}.txt
+
+@walkthrough
+webscan tries common folder and page names and shows the ones that exist:
+
+    webscan http://copperleaf.example/
+
+It finds /{{DIR}}. Asking for the folder itself (with a / at the end) shows an
+"Index of" page - the web server lists the files because the folder has no
+index.html:
+
+    curl -s http://copperleaf.example/{{DIR}}/
+
+Among them is {{NOTE}}.txt; open it and the staff code is inside:
+
+    curl -s http://copperleaf.example/{{DIR}}/{{NOTE}}.txt
+
+Two mistakes at once: leaving copies of private files on a public server, and
+letting the server list folders (on Apache, "Options -Indexes" switches that off).
+
+@hint 2
+What to think about first: a web server shows files from its folders. If a folder has no main page (index.html), many servers make one up - a list of every file inside. So the job is to find a folder whose name you don't know yet, then look inside it.
+
+@hint 3
+You don't have to guess folder names one by one. webscan has a list of names people often use (backup, old, files, admin...) and asks for each: run webscan http://copperleaf.example/ and look at the names it reports.
+
+@hint 4
+When webscan finds a folder, ask for it with a slash at the end: curl -s http://copperleaf.example/NAME/ - the slash means "the folder itself". If you see "Index of", the server is listing the files for you.
+
+@hint 6
+Near step by step: webscan reports a folder such as /backup. Run curl -s http://copperleaf.example/backup/ (use the name it found), look for a .txt file meant for staff or the team, and open it with curl -s http://copperleaf.example/backup/FILENAME.txt. The flag starts with FLAG{.

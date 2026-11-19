@@ -1,0 +1,22 @@
+SYNOPSIS: Makes a report of a GPO's settings, links and permissions.
+DESCRIPTION:
+Get-GPOReport describes a GPO: its status, where it is linked, its security filtering and every configured setting, as HTML or XML. Without -Path the report is returned as text, which is handy for searching with Select-String or reading as [xml].
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER All:
+Reports on every GPO of the domain.
+PARAMETER ReportType:
+Html or Xml.
+PARAMETER Path:
+The file to write; without it the report is output.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to read from.
+EXAMPLE: Get-GPOReport "Default Domain Policy" -ReportType Html -Path C:\Reports\ddp.html
+The domain's default policy as a web page.
+EXAMPLE: ([xml](Get-GPOReport "Sales Desktop" -ReportType Xml)).GPO.LinksTo
+Where the Sales Desktop GPO is linked.
+RELATED: Get-GPO, Get-GPResultantSetOfPolicy, Get-GPRegistryValue

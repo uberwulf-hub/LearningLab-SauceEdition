@@ -1,0 +1,114 @@
+NAME
+       systemd.unit - the format of systemd unit files
+
+SYNOPSIS
+       NAME.service, NAME.target, NAME.timer, NAME.socket, NAME.mount,
+       NAME.path ...
+
+DESCRIPTION
+       A unit file describes something systemd manages. Its name ends with
+       the unit type. The file is in INI style: sections in square brackets,
+       then KEY=VALUE lines. # and ; start comments. Every unit type uses the
+       [Unit] and [Install] sections described here; each type adds its own
+       section ([Service], [Timer], [Mount] ...).
+
+   Where unit files live
+       /usr/lib/systemd/system/
+              Units installed by packages. Do not edit these: an update
+              would overwrite your change.
+
+       /etc/systemd/system/
+              Your own units, and changes to packaged ones. A file here with
+              the same name as one in /usr/lib/systemd/system replaces it
+              completely.
+
+       /etc/systemd/system/NAME.d/*.conf
+              Drop-in files: only the settings they contain are added to or
+              change the original unit. systemctl edit NAME makes one
+              (override.conf). To clear a list setting before giving new
+              values, assign it empty first (ExecStart= then ExecStart=...).
+
+       ~/.config/systemd/user/
+              A user's own units, for systemctl --user.
+
+       After creating or changing a file, run systemctl daemon-reload.
+       systemctl cat NAME shows the unit with all its drop-ins.
+
+THE [Unit] SECTION
+       Description=TEXT
+              A short name shown by systemctl status and in the journal.
+
+       Documentation=URLS
+              Where to read more (man:, https:).
+
+       Wants=UNITS
+              Start these units too; it does not matter if they fail.
+
+       Requires=UNITS
+              Start these too; if they fail or stop, stop this one.
+
+       After=UNITS, Before=UNITS
+              Order only: start this unit after (or before) those, when both
+              are being started. Wants= and After= are usually given
+              together (After=network-online.target with
+              Wants=network-online.target).
+
+       Conflicts=UNITS
+              Starting this stops those, and the other way round.
+
+       ConditionPathExists=PATH
+              Start only if PATH exists (skipped quietly otherwise).
+
+THE [Install] SECTION
+       Used only by systemctl enable and disable.
+
+       WantedBy=TARGETS
+              systemctl enable makes a link in
+              /etc/systemd/system/TARGET.wants/, so the unit starts whenever
+              that target starts. Services that should run at boot use
+              WantedBy=multi-user.target; user services use
+              WantedBy=default.target; timers use WantedBy=timers.target.
+
+       RequiredBy=TARGETS
+              The same, as a Requires= dependency.
+
+       Alias=NAMES
+              Other names for the unit, linked at enable time.
+
+TARGETS
+       A target groups units into a state of the system, like the old run
+       levels: multi-user.target (text console with network),
+       graphical.target (with the graphical login), rescue.target (single
+       user, file systems mounted), emergency.target (only a root shell, root
+       file system read-only). systemctl get-default and set-default show and
+       set the one used at boot.
+
+EXAMPLES
+       A drop-in that makes a service restart when it fails:
+
+           mkdir -p /etc/systemd/system/httpd.service.d
+           printf '[Service]\nRestart=on-failure\n' \
+               > /etc/systemd/system/httpd.service.d/restart.conf
+           systemctl daemon-reload
+           systemctl restart httpd
+
+       A small unit and how to turn it on:
+
+           [Unit]
+           Description=Lab backup
+           After=network-online.target
+           Wants=network-online.target
+
+           [Service]
+           Type=oneshot
+           ExecStart=/usr/local/bin/backup.sh
+
+           [Install]
+           WantedBy=multi-user.target
+
+           systemctl daemon-reload
+           systemctl enable --now backup.service
+
+SEE ALSO
+       systemd.service(5), systemd.timer(5), systemctl(1), systemd.mount(5),
+       systemd.target(5)

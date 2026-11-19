@@ -1,0 +1,31 @@
+# Deck: users-groups | Users and groups | Users and groups
+Create the user ana with the UID 2001 :: `useradd -u 2001 ana`
+Create the user bob with the comment "Bob Smith" :: `useradd -c "Bob Smith" bob`
+Create the user svc1 that cannot log in interactively :: `useradd -s /sbin/nologin svc1`
+Create the user lee with devs and ops as secondary groups :: `useradd -G devs,ops lee`
+Add the existing user ana to the group devs, keeping her other groups :: `usermod -aG devs ana`
+What does usermod -G devs ana do without -a? :: It REPLACES all of ana's secondary groups with devs.
+Change ana's login shell to /bin/bash :: `usermod -s /bin/bash ana`
+Remove the user bob together with his home folder and mail spool :: `userdel -r bob`
+What does userdel leave behind without -r? :: The home folder and the mail spool; their files keep the old UID as owner.
+Create the group devs with the GID 3000 :: `groupadd -g 3000 devs`
+Rename the group devs to developers :: `groupmod -n developers devs`
+Add the user sam to the group finance with gpasswd :: `gpasswd -a sam finance`
+Remove the user sam from the group finance :: `gpasswd -d sam finance`
+Show the group names of the user ana :: `id -nG ana`
+Look up the account line of ana in the system's user database :: `getent passwd ana`
+The seven fields of /etc/passwd :: name, x, UID, GID of the primary group, comment, home folder, login shell
+Where are the password hashes and the aging values stored? :: /etc/shadow, readable only by root
+Where are the defaults for useradd's password aging (PASS_MAX_DAYS...)? :: /etc/login.defs; it only affects users created afterwards.
+Which folder's contents are copied into every new home folder? :: /etc/skel
+Set ana's password from standard input (RHEL) :: `echo 'S3cret!pw' | passwd --stdin ana`
+Set passwords for several users from user:password lines :: `chpasswd`
+Make ana change her password at the next login :: `chage -d 0 ana`
+ana must change her password every 90 days :: `chage -M 90 ana`
+Make ana's account expire on 2026-12-31 :: `chage -E 2026-12-31 ana`
+Show ana's password aging in plain words :: `chage -l ana`
+Lock ana's password :: `passwd -l ana`
+Start a login shell as student (student's own environment) :: `su - student`
+Give ana full sudo rights the RHEL way :: `usermod -aG wheel ana`
+Sudo rule: members of ops may run everything without a password :: %ops ALL=(ALL) NOPASSWD: ALL (in a file in /etc/sudoers.d, mode 440)
+Check the syntax of /etc/sudoers and every file in /etc/sudoers.d :: `visudo -c`

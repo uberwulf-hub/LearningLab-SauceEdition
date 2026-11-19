@@ -1,0 +1,16 @@
+SYNOPSIS: Adds a pointer (PTR) record that maps an address back to a name.
+DESCRIPTION:
+PTR records live in reverse lookup zones such as 0.10.10.in-addr.arpa and answer the question "which name has this address?". Tools like nslookup and many logging systems use them.
+
+The -Name is only the part of the address that is not in the zone name: for 10.10.0.60 in the zone 0.10.10.in-addr.arpa, it is 60. The reverse zone must already exist. Often it is easier to add the A record with -CreatePtr.
+PARAMETER ZoneName:
+The reverse zone, for example 0.10.10.in-addr.arpa.
+PARAMETER Name:
+The host part of the address, for example 60.
+PARAMETER PtrDomainName:
+The full name the address belongs to, for example app.corp.example.
+EXAMPLE: Add-DnsServerResourceRecordPtr -ZoneName 0.10.10.in-addr.arpa -Name 60 -PtrDomainName app.corp.example
+10.10.0.60 now resolves back to app.corp.example.
+EXAMPLE: Resolve-DnsName 10.10.0.60
+A reverse lookup that uses the new record.
+RELATED: Add-DnsServerResourceRecordA, Add-DnsServerPrimaryZone, Get-DnsServerResourceRecord, Remove-DnsServerResourceRecord

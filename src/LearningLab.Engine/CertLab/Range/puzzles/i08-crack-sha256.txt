@@ -1,0 +1,36 @@
+title: A longer hash
+level: Intermediate
+kind: Password cracking
+points: 50
+order: 17
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/digest.txt holds a password as a SHA-256 hash (64 hex digits). Tell hashcrack it is
+sha256 and let it try the word list. What is the password?
+
+@setup
+printf 'web:{{SHA256:SECRET}}\n' > /home/player/digest.txt
+chown player: /home/player/digest.txt
+
+@solution
+cat digest.txt
+hashcrack --format=sha256 digest.txt
+
+@walkthrough
+A 64-hex-digit hash could be SHA-256. Tell hashcrack which scheme to use:
+
+    hashcrack --format=sha256 digest.txt
+
+It hashes each word with SHA-256 and compares. Longer hashes take no longer to crack
+when the password itself is a common word: the password's strength is what matters.
+
+@hint 4
+How long is the hash? 32 hex digits is usually MD5, 40 SHA-1, 64 SHA-256. A cracker needs to know which recipe to try.
+
+@hint 8
+hashcrack guesses the type from the length, but you can say it outright: hashcrack --format=sha256 digest.txt
+
+@hint 12
+Run: hashcrack --format=sha256 digest.txt - the word it prints is the answer.

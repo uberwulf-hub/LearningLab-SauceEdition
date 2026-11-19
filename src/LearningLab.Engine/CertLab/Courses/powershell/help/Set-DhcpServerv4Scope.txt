@@ -1,0 +1,22 @@
+SYNOPSIS: Changes an existing IPv4 scope: name, range, lease time, state.
+DESCRIPTION:
+Set-DhcpServerv4Scope changes the settings of a scope. Common uses: deactivating a scope before maintenance (-State InActive), shortening the lease time, or widening the range.
+
+The range must stay inside the scope's subnet; the subnet itself can't change (delete and recreate the scope for that).
+PARAMETER ScopeId:
+The scope to change, for example 10.10.0.0.
+PARAMETER Name:
+A new name.
+PARAMETER State:
+Active or InActive.
+PARAMETER LeaseDuration:
+The new lease time, for example 2.00:00:00.
+PARAMETER StartRange:
+A new first address.
+PARAMETER EndRange:
+A new last address.
+EXAMPLE: Set-DhcpServerv4Scope -ScopeId 10.10.0.0 -LeaseDuration 4.00:00:00 -ComputerName SRV1
+New leases in the HQ scope last 4 days.
+EXAMPLE: Set-DhcpServerv4Scope -ScopeId 10.10.0.0 -State InActive
+Stops the scope from leasing new addresses.
+RELATED: Get-DhcpServerv4Scope, Add-DhcpServerv4Scope, Remove-DhcpServerv4Scope

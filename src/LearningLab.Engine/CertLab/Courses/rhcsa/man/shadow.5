@@ -1,0 +1,42 @@
+NAME
+       shadow - the file of password hashes and password aging
+
+SYNOPSIS
+       /etc/shadow
+
+DESCRIPTION
+       /etc/shadow holds the password hash and the aging rules of each local
+       account. Only root can read it. The nine fields are separated by
+       colons:
+
+           NAME:HASH:LAST:MIN:MAX:WARN:INACTIVE:EXPIRE:RESERVED
+
+       NAME      the login name (as in /etc/passwd).
+       HASH      the hashed password. On RHEL 9 it starts with $6$
+                 (SHA-512). ! or !! (alone or in front of a hash) means
+                 locked or never set: no password login is possible. An empty
+                 field means no password is needed (never do that).
+       LAST      the day of the last password change, counted in days since
+                 1970-01-01. 0 means the user must change it at the next
+                 login.
+       MIN       days that must pass before the password may be changed
+                 again.
+       MAX       days a password stays valid; afterwards it must be changed.
+       WARN      days before expiry that the user is warned.
+       INACTIVE  days after expiry during which a login (with a forced
+                 change) is still allowed; then the account is disabled.
+       EXPIRE    the day (since 1970) the account stops working.
+       RESERVED  unused.
+
+       Empty aging fields mean "no limit". Change them with chage or passwd,
+       and read them in plain words with chage -l NAME.
+
+EXAMPLES
+           harry:$6$Sx...:20514:0:90:7:::
+
+           chage -l harry
+           chage -M 90 -W 7 harry
+           chage -d 0 harry      (force a change at the next login)
+
+SEE ALSO
+       passwd(5), chage(1), passwd(1), login.defs(5), usermod(8)

@@ -1,0 +1,56 @@
+{
+    "id": "cover-up",
+    "title": "Cover-Up",
+    "category": "blue",
+    "level": "Expert",
+    "order": 4,
+    "summary": "A careful intruder got in with a reused password and left several ways back in - an extra key, a scheduled beacon, and a note - then tried to tidy up after themselves. Find all of it and shut every door.",
+    "story": "You run db3, a database server for {{CO}} (made up), on 10.10.9.0/24. The security team saw a short connection from an unexpected address and handed it to you. You have a root console on db3. The attacker tried to clean up, but not everything is gone.",
+    "goal": "Work out the account the intruder reused and the address they came from, find the three things they left (an extra SSH key, a scheduled beacon, and a dropped note with the flag), and remove every one - plus lock the account - before the beacon copies the database out.",
+    "skills": "auth logs, bash history, authorized_keys, cron jobs, locking an account, thorough clean-up",
+    "defender": "none",
+    "start": "db3",
+    "minutes": 45,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the database out",
+    "goalPoints": 90,
+    "vars": {
+        "CO": "company",
+        "USER": "pick:dbadmin|pgsql|dbops|sqlsvc",
+        "PW": "word",
+        "ATKIP": "ip",
+        "KEYCMT": "pick:nomad@rig|ghost@box|raven@dev|zero@lab",
+        "CRONF": "pick:dbsync|health|rotate|mirror"
+    },
+    "machines": [
+        {
+            "name": "db3",
+            "os": "linux",
+            "hostname": "db3.{{CO_DOMAIN}}",
+            "role": "database server (yours)",
+            "nics": [ "10.10.9.10/24" ],
+            "motd": "{{CO}} db3 - restricted.",
+            "setup": "db3.sh"
+        }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag in the dropped note", "points": 60, "machine": "db3", "path": "/var/tmp/.cache/.loot.txt", "owner": "root", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "acct", "ask": "Which account did the intruder reuse to get in?", "answer": "{{USER}}", "points": 40, "explain": "The successful sign-in in /var/log/secure is for this database account." },
+        { "id": "addr", "ask": "What address did they connect from?", "answer": "{{ATKIP}}", "points": 40, "explain": "The same address is on the sign-in and in the account's bash history (an scp back to it)." },
+        { "id": "key", "ask": "What is the comment on the extra SSH key they added to the account?", "answer": "{{KEYCMT}}", "points": 50, "explain": "The last line of ~/.ssh/authorized_keys is a key you did not add; its comment is the attacker's handle." }
+    ],
+    "tasks": [
+        { "id": "delkey", "name": "Remove the attacker's extra SSH key", "machine": "db3", "check": "test ! -f /home/{{USER}}/.ssh/authorized_keys || ! grep -q '{{KEYCMT}}' /home/{{USER}}/.ssh/authorized_keys", "points": 50, "explain": "Delete the line with {{KEYCMT}} from ~/.ssh/authorized_keys." },
+        { "id": "delcron", "name": "Remove the scheduled beacon", "machine": "db3", "check": "test ! -e /etc/cron.d/{{CRONF}}", "points": 50, "explain": "rm -f /etc/cron.d/{{CRONF}}." },
+        { "id": "lock", "name": "Lock the reused account", "machine": "db3", "check": "passwd -S {{USER}} | grep -q LK", "points": 40, "explain": "usermod -L {{USER}}." }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "db3", "run": "mkdir -p /tmp/.x; echo dump > /tmp/.x/db.sql 2>/dev/null; true", "unless": "test ! -e /etc/cron.d/{{CRONF}}", "note": "The scheduled beacon fired and staged a database dump in /tmp/.x, ready to send out.", "goal": true }
+    ],
+    "hints": [
+        { "text": "The sign-in log and the account's own shell history tell you who and from where; history -c doesn't empty the file on disk.", "cost": 20 },
+        { "text": "Three ways back in: a key, a schedule, a dropped note. Remove the first two and lock the account.", "cost": 35 }
+    ]
+}

@@ -1,0 +1,22 @@
+## srv first: the secure log was tidied, the journal wasn't
+ssh -o StrictHostKeyChecking=accept-new itadmin@10.10.29.10
+{{ITPW}}
+sudo -i
+{{ITPW}}
+grep -c Accepted /var/log/secure
+journalctl -t sshd --no-pager
+crontab -l -u {{USER}}
+ls -la /home/{{USER}}/.config/{{HIDE}}
+cat /home/{{USER}}/.config/{{HIDE}}/key.txt
+crontab -r -u {{USER}}
+usermod -L {{USER}}
+exit
+exit
+## the PC: the same account and address
+winrm-shell -i 10.10.29.30 -u Administrator -p {{ADMPW}}
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624,4698 } -MaxEvents 6 | Format-List TimeCreated, Id, Message
+(Get-ScheduledTask -TaskName {{TASK}}).Actions
+Get-Content C:\Users\{{USER}}\AppData\Local\{{HIDEWIN}}\key.txt
+Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false
+Disable-LocalUser -Name {{USER}}
+exit

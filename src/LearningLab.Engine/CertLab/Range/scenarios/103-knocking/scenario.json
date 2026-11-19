@@ -1,0 +1,60 @@
+{
+    "id": "knocking",
+    "title": "Knocking on the Website",
+    "category": "soc",
+    "level": "Beginner",
+    "order": 3,
+    "summary": "Two visitors to the company website set off the same alarm: lots of 'page not found'. One is a search engine following old links. The other is trying doors.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). The website runs on WEB01, and the SIEM collects its visitor log: every page asked for, by which address, and whether it worked (status 200) or wasn't there (404). A rule fires when one visitor gets many 404s in a short time. It fired twice today.",
+    "goal": "Decide which alert is real, find the address that was looking for weaknesses and the file it managed to download, when, and what its program called itself.",
+    "skills": "reading web server logs, status codes, user agents, counting by field",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 15,
+    "vars": {
+        "CO": "company",
+        "U1": "person:flast", "U2": "person:flast", "U3": "person:flast",
+        "H1": "num:10-39", "H2": "num:40-69", "H3": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:10-16",
+        "SCANIP": "ip", "BOTIP": "ip",
+        "LEAK": "pick:/backup.zip|/db-backup.sql.gz|/site-old.tar.gz|/export.csv",
+        "TOOL": "pick:Nimbus-Scan|DoorKnocker|PathProbe|WebSweep",
+        "LEAKBYTES": "num:200000-900000",
+        "QV": "pick:scan|bot"
+    },
+    "variants": {
+        "QV": {
+            "scan": { "QIP": "{{SCANIP}}", "VQ": "real" },
+            "bot": { "QIP": "{{BOTIP}}", "VQ": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 150, "from": "-2h", "to": "+40m",
+            "hosts": [ "WS-{{H1}}", "WS-{{H2}}", "WS-{{H3}}" ],
+            "users": [ "{{U1}}", "{{U2}}", "{{U3}}" ],
+            "ips": [ "{{NET}}.{{H1}}", "{{NET}}.{{H2}}", "{{NET}}.{{H3}}" ],
+            "net": "{{NET}}", "web": "WEB01", "domain": "{{CO_DOMAIN}}",
+            "kinds": [ "web", "web", "web", "web", "process", "dns", "firewall", "logon" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The alert about the visitor {{QIP}}: real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "{{BOTIP}} asked for robots.txt first, then followed old product links, and says it is a search engine's crawler: harmless. {{SCANIP}} asked for admin pages, settings files and backups that no visitor should want - a tool trying doors." },
+        { "id": "scanner", "ask": "Which address was looking for weaknesses?", "answer": "{{SCANIP}}", "points": 30, "explain": "Its 404s are all well-known secret or admin paths." },
+        { "id": "leak", "ask": "Which file did it manage to download (its one request that worked)?", "answer": "{{LEAK}}", "points": 40, "explain": "The only status=200 for that address." },
+        { "id": "when", "ask": "At what time (HH:MM:SS) did it get that file?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The time of that status=200 request." },
+        { "id": "agent", "ask": "What did that visitor's program call itself (the agent field, the name before the /)?", "answer": "{{TOOL}}", "accept": [ "{{TOOL}}/4.2" ], "points": 20, "explain": "agent= is what the visitor's program says it is. Tools can lie about it, but many don't bother." }
+    ],
+    "hints": [
+        { "text": "What to think about first: a 404 just means 'that page isn't here'. Ordinary visitors get a few from old links. The question is which pages a visitor asked for. Someone asking for /admin, /.env (a settings file) or /backup.zip is guessing where secrets might be; someone asking for old product pages is following links that used to work.", "cost": 3 },
+        { "text": "siem alerts shows the two alerts and the client= address each is about. To see one visitor's requests: siem search source=web client=ADDRESS. Each line shows the path= asked for, the status= (200 worked, 404 not found) and the agent= (what the visitor's program says it is).", "cost": 5 },
+        { "text": "siem search source=web client=ADDRESS --count-by status counts how many requests got each status. For the address that was guessing, one request worked: siem search source=web client=ADDRESS status=200 shows which file it downloaded, and its time= is when.", "cost": 8 },
+        { "text": "A search engine's crawler usually asks for /robots.txt first (the file where websites tell robots what they may visit) and names itself with a web address in its agent. The other visitor's agent names a scanning tool. Answer real for the scanner's alert and false alarm for the crawler's.", "cost": 12 }
+    ]
+}

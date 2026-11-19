@@ -1,0 +1,101 @@
+# Lab: lab-10 | Users, CIM and networking | u10 | 45
+A new member of staff starts on the client, an account has more rights than it should, the server needs a disk report, the client must answer pings, a new service on the server needs a firewall rule, and the server gets a second address.
+
+@vars
+user = asmith | bjones | cwu
+pw = Gr33n-Leaf! | Bl4ck-Cat! | Bl0e-Sky7!
+port = 9001-9099
+ip = 60-90
+@endvars
+
+@task t01 | Administration | 10 | WIN-CL1
+On **WIN-CL1**, create the local user `{user}` with the password `{pw}` and the description `Help desk`. Its password must **never expire**, and it must be a member of **Remote Desktop Users**.
+@check WIN-CL1 | {user} exists, enabled, with the description
+$u = Get-LocalUser {user} -ErrorAction SilentlyContinue; $u.Enabled -and $u.Description -eq 'Help desk'
+@check WIN-CL1 | the password never expires
+$u = Get-LocalUser {user} -ErrorAction SilentlyContinue; $null -ne $u -and $null -eq $u.PasswordExpires
+@check WIN-CL1 | {user} is in Remote Desktop Users
+@(Get-LocalGroupMember 'Remote Desktop Users' | Where-Object Name -like '*\{user}').Count -eq 1
+@hint $pw = ConvertTo-SecureString '{pw}' -AsPlainText -Force; New-LocalUser {user} -Password $pw -Description 'Help desk' -PasswordNeverExpires; then Add-LocalGroupMember.
+@solution WIN-CL1
+$pw = ConvertTo-SecureString '{pw}' -AsPlainText -Force
+New-LocalUser -Name {user} -Password $pw -Description 'Help desk' -PasswordNeverExpires
+Add-LocalGroupMember -Group 'Remote Desktop Users' -Member {user}
+Get-LocalUser {user} | Select-Object Name, Enabled, Description, PasswordExpires
+@explain
+New-LocalUser wants the password as a SecureString. ConvertTo-SecureString -AsPlainText -Force makes one from text (fine in a lab; at a real console Read-Host -AsSecureString keeps the password off the screen and out of the history). -PasswordNeverExpires on New-LocalUser is a switch; on Set-LocalUser it takes $true or $false. A user whose password never expires shows an empty PasswordExpires.
+@endtask
+
+@task t02 | Administration | 10 | WIN-CL1
+On **WIN-CL1**, the account `LabUser` is a member of **Administrators**, which it should not be. Take it out of that group, but keep the account and its other group memberships.
+@check WIN-CL1 | LabUser is not an administrator
+@(Get-LocalGroupMember Administrators | Where-Object Name -like '*\LabUser').Count -eq 0
+@check WIN-CL1 | LabUser still exists, enabled, and is still in Users
+$u = Get-LocalUser LabUser -ErrorAction SilentlyContinue; $u.Enabled -and @(Get-LocalGroupMember Users | Where-Object Name -like '*\LabUser').Count -eq 1
+@hint Remove-LocalGroupMember -Group Administrators -Member LabUser
+@solution WIN-CL1
+Remove-LocalGroupMember -Group Administrators -Member LabUser
+Get-LocalGroupMember Administrators
+@explain
+Remove-LocalGroupMember changes only the membership; the account stays, with its profile and its other groups. Remove-LocalUser would have deleted the account, and Disable-LocalUser would have stopped it signing in at all.
+@endtask
+
+@task t03 | Administration | 10 | WIN-SRV1
+On WIN-SRV1, write a disk report to `C:\Reports\disks.csv` with one row per **local disk** (DriveType 3) and the columns `DeviceID`, `FreeGB` and `SizeGB`: the free space and the size in gigabytes, rounded to one decimal. No type line at the top. Read the disks with Get-CimInstance.
+@check WIN-SRV1 | one row per local disk with the right numbers
+$disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3"); $rows = @(Import-Csv C:\Reports\disks.csv); $rows.Count -eq $disks.Count -and $rows.Count -gt 0 -and @($disks | Where-Object { $d = $_; $r = $rows | Where-Object DeviceID -eq $d.DeviceID; -not ($r -and [double]$r.FreeGB -eq [math]::Round($d.FreeSpace / 1GB, 1) -and [double]$r.SizeGB -eq [math]::Round($d.Size / 1GB, 1)) }).Count -eq 0
+@check WIN-SRV1 | the columns are DeviceID, FreeGB and SizeGB with no type line
+(Get-Content C:\Reports\disks.csv -TotalCount 1) -eq '"DeviceID","FreeGB","SizeGB"'
+@hint Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3" | Select-Object DeviceID, @{ n = 'FreeGB'; e = { [math]::Round($_.FreeSpace / 1GB, 1) } }, ... | Export-Csv -NoTypeInformation
+@solution WIN-SRV1
+New-Item C:\Reports -ItemType Directory -Force | Out-Null
+Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3" | Select-Object DeviceID, @{ n = 'FreeGB'; e = { [math]::Round($_.FreeSpace / 1GB, 1) } }, @{ n = 'SizeGB'; e = { [math]::Round($_.Size / 1GB, 1) } } | Export-Csv C:\Reports\disks.csv -NoTypeInformation
+Get-Content C:\Reports\disks.csv
+@explain
+The WQL filter "DriveType = 3" keeps only local disks (a DVD drive is type 5). FreeSpace and Size are in bytes; calculated properties turn them into gigabytes as the rows are made. The same command reads another computer's disks with -CimSession or -ComputerName, as long as WinRM runs there.
+@endtask
+
+@task t04 | Administration | 10 | WIN-CL1
+WIN-SRV1 cannot ping WIN-CL1, because the client's firewall blocks incoming pings. Allow **only** incoming IPv4 pings (echo requests) on WIN-CL1, with the rule Windows already has for that. Do not open file sharing.
+@check WIN-SRV1 | WIN-SRV1 can ping WIN-CL1
+Test-Connection WIN-CL1 -Count 1 -Quiet
+@check WIN-CL1 | file sharing (SMB) is still closed
+"$((Get-NetFirewallRule -Name FPS-SMB-In-TCP).Enabled)" -eq 'False'
+@hint Get-NetFirewallRule -DisplayName '*Echo Request*' shows the rule; its Name is FPS-ICMP4-ERQ-In. Enable just that one.
+@solution WIN-CL1
+Get-NetFirewallRule -DisplayName '*Echo Request*ICMPv4-In*' | Select-Object Name, DisplayName, Enabled
+Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In
+@explain
+The rule exists on every Windows computer, turned off on clients. Enable-NetFirewallRule -DisplayGroup 'File and Printer Sharing' would also have opened SMB file sharing, which the task did not ask for: enable only the rule you need. Get-NetFirewallRule -DisplayName accepts wildcards, which is a quick way to find a rule.
+@endtask
+
+@task t05 | Administration | 10 | WIN-SRV1
+A new service on WIN-SRV1 listens on TCP port **{port}**. Create an inbound firewall rule named `LabSvc{port}` that **allows** TCP {port}, but only from the lab network **10.0.10.0/24**.
+@check WIN-SRV1 | the rule is inbound, allow, enabled
+$r = Get-NetFirewallRule -Name LabSvc{port} -ErrorAction SilentlyContinue; "$($r.Enabled)" -eq 'True' -and "$($r.Direction)" -eq 'Inbound' -and "$($r.Action)" -eq 'Allow'
+@check WIN-SRV1 | it is for TCP {port}
+$f = Get-NetFirewallRule -Name LabSvc{port} -ErrorAction SilentlyContinue | Get-NetFirewallPortFilter; "$($f.Protocol)" -eq 'TCP' -and "$($f.LocalPort)" -eq '{port}'
+@check WIN-SRV1 | only from 10.0.10.0/24
+$a = Get-NetFirewallRule -Name LabSvc{port} -ErrorAction SilentlyContinue | Get-NetFirewallAddressFilter; "$($a.RemoteAddress)" -match '^10\.0\.10\.0/(24|255\.255\.255\.0)$'
+@hint New-NetFirewallRule -Name LabSvc{port} -DisplayName ... -Direction Inbound -Protocol TCP -LocalPort {port} -RemoteAddress 10.0.10.0/24 -Action Allow
+@solution WIN-SRV1
+New-NetFirewallRule -Name LabSvc{port} -DisplayName 'Lab service {port}' -Direction Inbound -Protocol TCP -LocalPort {port} -RemoteAddress 10.0.10.0/24 -Action Allow
+Get-NetFirewallRule -Name LabSvc{port} | Get-NetFirewallAddressFilter
+@explain
+-Name gives the rule an identifier you can find it by later; without it Windows makes up a GUID. The port lives in the rule's port filter and the allowed addresses in its address filter, which is why the checks pipe the rule to Get-NetFirewallPortFilter and Get-NetFirewallAddressFilter. Real Windows shows 10.0.10.0/24 back as 10.0.10.0/255.255.255.0.
+@endtask
+
+@task t06 | Administration | 10 | WIN-SRV1
+Give WIN-SRV1's `Ethernet` adapter the extra IPv4 address **10.0.10.{ip}/24** (keep the existing one), and set its DNS servers to **10.0.10.10** first and **10.0.10.11** second.
+@check WIN-SRV1 | 10.0.10.{ip}/24 is on Ethernet
+$a = Get-NetIPAddress -IPAddress 10.0.10.{ip} -ErrorAction SilentlyContinue | Select-Object -First 1; $a.InterfaceAlias -eq 'Ethernet' -and $a.PrefixLength -eq 24 -and @(Get-NetIPAddress -IPAddress 10.0.10.11 -ErrorAction SilentlyContinue).Count -gt 0
+@check WIN-SRV1 | the DNS servers are 10.0.10.10 then 10.0.10.11
+((Get-DnsClientServerAddress -InterfaceAlias Ethernet -AddressFamily IPv4).ServerAddresses -join ',') -eq '10.0.10.10,10.0.10.11'
+@hint New-NetIPAddress -InterfaceAlias Ethernet -IPAddress ... -PrefixLength 24; Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10, 10.0.10.11
+@solution WIN-SRV1
+New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.{ip} -PrefixLength 24
+Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10, 10.0.10.11
+Get-NetIPConfiguration
+@explain
+New-NetIPAddress adds an address next to the ones the adapter has (it is shown twice: for the running settings and for the saved ones). Set-DnsClientServerAddress replaces the whole list of DNS servers, in the order given, so name every server you want to keep.
+@endtask

@@ -1,0 +1,20 @@
+SYNOPSIS: Sends questions about one domain straight to the DNS servers you name.
+DESCRIPTION:
+A conditional forwarder says: for names ending in this domain, ask these servers. It is the usual way to let two forests find each other before a trust, for example corp.example and its partner tidewater.example.
+
+It holds no records, only the list of server addresses. If the other side changes its DNS servers, you must update the list yourself (a stub zone would follow the change on its own).
+
+Stored in Active Directory with -ReplicationScope, every DC running DNS in that scope gets the forwarder; with -ZoneFile (or neither) it stays on this server only.
+PARAMETER Name:
+The domain to forward, for example tidewater.example.
+PARAMETER MasterServers:
+The DNS servers to forward to.
+PARAMETER ReplicationScope:
+Forest, Domain, Legacy or Custom, to keep it in AD.
+PARAMETER ForwarderTimeout:
+Seconds to wait for each server before giving up (default 5).
+EXAMPLE: Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest
+Every DNS server on a DC in the forest now sends tidewater.example questions to the partner's server.
+EXAMPLE: Resolve-DnsName dc1.tidewater.example
+Checks that a name in the partner forest now resolves.
+RELATED: Add-DnsServerStubZone, Add-DnsServerForwarder, Get-DnsServerZone, Remove-DnsServerZone

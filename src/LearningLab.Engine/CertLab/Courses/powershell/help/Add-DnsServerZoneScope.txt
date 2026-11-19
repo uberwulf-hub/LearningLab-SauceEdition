@@ -1,0 +1,14 @@
+SYNOPSIS: Adds a zone scope: a second set of records inside the same zone.
+DESCRIPTION:
+A zone scope is a separate copy of a zone's records with its own answers. The same name, such as app.corp.example, can then have one address in the default scope and another in a scope used for branch clients. A DNS policy decides which scope answers which client.
+
+After creating the scope, add records to it with the -ZoneScope parameter of the record commands.
+PARAMETER ZoneName:
+The zone, for example corp.example.
+PARAMETER Name:
+The name of the new scope, for example BranchScope.
+EXAMPLE: Add-DnsServerZoneScope -ZoneName corp.example -Name BranchScope -ComputerName DC1
+Creates the scope.
+EXAMPLE: Add-DnsServerResourceRecordA -ZoneName corp.example -ZoneScope BranchScope -Name app -IPv4Address 10.20.0.60
+Gives app a branch address inside that scope.
+RELATED: Get-DnsServerZoneScope, Add-DnsServerClientSubnet, Add-DnsServerQueryResolutionPolicy, Add-DnsServerResourceRecordA

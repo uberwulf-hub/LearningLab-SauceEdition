@@ -1,0 +1,21 @@
+The watcher here has one favourite rule: it reviews every use of sudo and su.
+
+1. In, quietly. nmap -sn {{NET}}.0/24 finds {{HOST}} ({{NET}}.20); nmap -sV shows FTP and ssh. Anonymous
+   FTP's pub/new-staff.txt has {{USER}}'s password. ssh {{USER}}@{{NET}}.20 and read flag.txt.
+
+2. Don't take the bait. {{USER}} may run find as root through sudo (the note even warns that sudo is
+   reviewed). It would work - and the watcher would see it at once.
+
+3. A set-user-ID program. find / -perm -4000 -type f lists programs that run as their owner whoever
+   starts them. Besides the usual ones (passwd, su, sudo, mount...) there is /usr/local/bin/{{TOOL}}, a
+   copy of {{KIND}} owned by root with the s bit. It reads any file as root, and no sudo line is ever
+   written:
+
+       {{RUN}}
+
+Why the noisy way fails: sudo find works, but every sudo is a "privilege" event this watcher weighs
+heavily; one is enough to raise the alarm, and soon your address is blocked.
+
+How to fix it (for the defender): watching sudo is good, but also check for set-user-ID files nobody
+expected (find / -perm -4000 on a schedule), and never mark a text tool like cat, head or tac
+set-user-ID.

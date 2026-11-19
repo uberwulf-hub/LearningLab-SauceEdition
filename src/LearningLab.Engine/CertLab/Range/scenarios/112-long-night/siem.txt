@@ -1,0 +1,21 @@
+# Long Night (offsets from {{T0}}, the first finance file opened)
+# the morning: both people work from home for an hour before coming in
+-13h host=VPN01 source=winsec event=4624 user={{LATE}} logon_type=3 src_ip={{HOMEIP}} vpn_ip={{NET}}.{{PL}} note="VPN connected"
+-12h host=VPN01 source=winsec event=4634 user={{LATE}} src_ip={{HOMEIP}} note="VPN disconnected"
+-13h host=VPN01 source=winsec event=4624 user={{VICT}} logon_type=3 src_ip={{VHOME}} vpn_ip={{NET}}.{{PV}} note="VPN connected"
+-12h host=VPN01 source=winsec event=4634 user={{VICT}} src_ip={{VHOME}} note="VPN disconnected"
+# the evening: {{LATE}} finishes a report from home, as usual
+-70m host=VPN01 source=winsec event=4624 user={{LATE}} logon_type=3 src_ip={{HOMEIP}} vpn_ip={{NET}}.{{PL}} note="VPN connected"
+-70m host=VPN01 source=alert severity=low rule="VPN sign-in outside working hours" user={{LATE}} src_ip={{HOMEIP}} note="{{LATE}} connected to the VPN in the evening"
+-65m x[Reports\{{LATE}}\monthly-report.docx|Reports\{{LATE}}\figures.xlsx|Reports\{{LATE}}\notes.txt]/4m host=FILE01 source=winsec event=5145 user={{LATE}} share=\\FILE01\Reports file=%ITEM% src_ip={{NET}}.{{PL}} note="A shared file was opened"
+-20m host=VPN01 source=winsec event=4634 user={{LATE}} src_ip={{HOMEIP}} note="VPN disconnected"
+# the intruder with {{VICT}}'s stolen password
+-25m host=VPN01 source=winsec event=4624 user={{VICT}} logon_type=3 src_ip={{ATKIP}} vpn_ip={{NET}}.{{PV}} note="VPN connected"
+-25m host=VPN01 source=alert severity=low rule="VPN sign-in outside working hours" user={{VICT}} src_ip={{ATKIP}} note="{{VICT}} connected to the VPN in the evening"
+-22m host=WS-{{HV}} source=winsec event=4624 user={{VICT}} logon_type=10 src_ip={{NET}}.{{PV}} note="An account signed in over remote desktop"
++0 x{{NFILES}}/4s host=FILE01 source=winsec event=5145 user={{VICT}} share=\\FILE01\Finance file=Finance\ledger-%N%.xlsx src_ip={{NET}}.{{HV}} note="A shared file was opened"
++8m host=WS-{{HV}} source=proclog event=1 user={{VICT}} image="C:\Program Files\7-Zip\7z.exe" parent=C:\Windows\explorer.exe cmdline="7z.exe a C:\Users\{{VICT}}\Desktop\{{ARCH}} C:\Users\{{VICT}}\Desktop\copy\*"
++10m host=WS-{{HV}} source=dns query={{UPDOM}} type=A answer={{UPIP}} src_ip={{NET}}.{{HV}} image="C:\Program Files\Edge\msedge.exe"
++10m host=FW01 source=firewall action=allow direction=out src={{NET}}.{{HV}} dst={{UPIP}} dport=443 proto=tcp bytes=734003200
++11m host=FW01 source=alert severity=medium rule="Large upload" src={{NET}}.{{HV}} dst={{UPIP}} note="700 MB left the network from {{NET}}.{{HV}}"
++13m host=VPN01 source=winsec event=4634 user={{VICT}} src_ip={{ATKIP}} note="VPN disconnected"

@@ -1,0 +1,44 @@
+NAME
+       tr - change, squeeze or delete characters
+
+SYNOPSIS
+       tr [-c] [-d] [-s] SET1 [SET2]
+
+DESCRIPTION
+       tr reads standard input (it never takes a file name: use < FILE) and
+       writes it out with characters replaced: each character of SET1 becomes
+       the character at the same place in SET2.
+
+       Sets may use ranges (a-z), escapes (\n newline, \t tab) and classes
+       such as [:lower:], [:upper:], [:digit:], [:space:] and [:alpha:].
+
+OPTIONS
+       -d, --delete
+              Delete the characters in SET1.
+
+       -s, --squeeze-repeats
+              Replace a run of the same character (from the last set given) by
+              one.
+
+       -c, --complement
+              Use every character that is NOT in SET1.
+
+EXAMPLES
+       Turn lower case into upper case:
+
+           echo server1 | tr a-z A-Z
+
+       Turn colons into newlines to read PATH:
+
+           echo $PATH | tr : '\n'
+
+       Squeeze runs of spaces into one, then cut a field:
+
+           df -h | tr -s ' ' | cut -d ' ' -f 1,5
+
+       Delete carriage returns from a Windows text file:
+
+           tr -d '\r' < notes.txt > notes-unix.txt
+
+SEE ALSO
+       sed(1), cut(1), awk(1)

@@ -1,0 +1,20 @@
+SYNOPSIS: Makes a new drive that points at a folder, a registry key or another root.
+DESCRIPTION:
+New-PSDrive gives a short name to a place you use often, for example Lab: for C:\LabFiles. It also adds the registry hive that Windows PowerShell does not map by default: New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT.
+
+The drive lasts until the session ends (Cert Lab does not simulate -Persist).
+PARAMETER Name:
+The drive's name, without the colon.
+PARAMETER PSProvider:
+The provider: FileSystem, Registry, Certificate, Environment...
+PARAMETER Root:
+Where the drive starts: a folder (C:\LabFiles), a registry path (HKEY_CLASSES_ROOT or HKLM:\SOFTWARE).
+PARAMETER Description:
+A note shown by Get-PSDrive | Format-List.
+EXAMPLE: New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles
+After this, cd Lab: and dir Lab:\Reports work.
+EXAMPLE: New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
+Makes the file associations hive reachable as HKCR:.
+NOTES:
+The root must exist: a missing folder gives "The specified drive root ... either does not exist, or it is not a folder."
+RELATED: Get-PSDrive, Remove-PSDrive

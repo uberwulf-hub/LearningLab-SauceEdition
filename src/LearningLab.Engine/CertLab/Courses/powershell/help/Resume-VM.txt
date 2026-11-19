@@ -1,0 +1,12 @@
+SYNOPSIS: Continues a paused virtual machine.
+DESCRIPTION:
+Resume-VM continues a VM that Suspend-VM paused. It fails if the VM isn't paused. A Saved VM is brought back with Start-VM instead.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Resume-VM -Name APP-OLD -ComputerName HV1
+APP-OLD runs again.
+EXAMPLE: Get-VM | Where-Object State -eq Paused | Resume-VM
+Continues every paused VM.
+RELATED: Suspend-VM, Start-VM, Get-VM

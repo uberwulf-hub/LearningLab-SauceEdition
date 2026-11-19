@@ -1,0 +1,31 @@
+NAME
+       chroot - run a command or shell with another directory as /
+
+SYNOPSIS
+       chroot NEWROOT [COMMAND [ARGUMENT...]]
+
+DESCRIPTION
+       chroot starts COMMAND (an interactive shell when none is given) with
+       NEWROOT as its root directory: inside it, / means NEWROOT, and
+       nothing outside can be reached by path. Only root may do this.
+
+       On the RHCSA you meet it when you reset a lost root password. The
+       rescue environment (rd.break on the kernel command line) mounts the
+       real system at /sysroot; chroot /sysroot makes it your / so that
+       passwd changes the real /etc/shadow.
+
+EXAMPLES
+       Reset the root password from the rd.break shell:
+
+           mount -o remount,rw /sysroot
+           chroot /sysroot
+           passwd root
+           touch /.autorelabel
+           exit
+           exit
+
+       touch /.autorelabel makes SELinux relabel the files at the next boot,
+       because the new /etc/shadow was written without a proper label.
+
+SEE ALSO
+       passwd(1), fixfiles(8), bootup(7)

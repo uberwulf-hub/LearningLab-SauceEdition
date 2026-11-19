@@ -1,0 +1,21 @@
+SYNOPSIS: Chooses which functions, variables and aliases a script module makes visible.
+DESCRIPTION:
+Export-ModuleMember is used inside a .psm1 file. It lists the parts of the module that the person who imports it can see; everything else stays private to the module.
+
+Without Export-ModuleMember, a script module exports all of its functions but none of its variables or aliases. As soon as the module calls Export-ModuleMember, only the names it lists are exported.
+
+If the module also has a manifest, both lists apply: a function must be exported by the .psm1 and listed in the manifest's FunctionsToExport to be visible.
+PARAMETER Function:
+Names or patterns of the functions to export, for example Get-*.
+PARAMETER Variable:
+Names of the variables to export (without the $).
+PARAMETER Alias:
+Names of the aliases to export.
+EXAMPLE: Export-ModuleMember -Function Get-Inventory, Set-Inventory
+Put at the end of a .psm1 file: only these two functions are visible and the helper functions stay hidden.
+EXAMPLE: Export-ModuleMember -Function * -Variable LabServer -Alias gin
+Exports every function, the $LabServer variable and the gin alias.
+NOTES:
+Run outside a module (at the prompt or in a normal .ps1 script), Export-ModuleMember fails with an error.
+Listing functions by name instead of * helps PowerShell find a module's commands faster.
+RELATED: Import-Module, New-ModuleManifest, about_Modules

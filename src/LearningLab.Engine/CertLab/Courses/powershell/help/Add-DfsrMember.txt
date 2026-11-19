@@ -1,0 +1,14 @@
+SYNOPSIS: Adds servers to a DFS Replication group.
+DESCRIPTION:
+Add-DfsrMember makes servers members of a group. Each needs the DFS Replication role service. Members don't replicate yet: they also need connections (Add-DfsrConnection) and a content path (Set-DfsrMembership).
+PARAMETER GroupName:
+The replication group. Position 0.
+PARAMETER ComputerName:
+The server or servers. Position 1.
+PARAMETER Description:
+A description.
+EXAMPLE: Add-DfsrMember -GroupName Sales-Replication -ComputerName FS1, SRV1
+Step 3: both servers join the group.
+EXAMPLE: Get-DfsrMember -GroupName Sales-Replication
+Checks the members.
+RELATED: Get-DfsrMember, Add-DfsrConnection, Set-DfsrMembership, New-DfsReplicationGroup

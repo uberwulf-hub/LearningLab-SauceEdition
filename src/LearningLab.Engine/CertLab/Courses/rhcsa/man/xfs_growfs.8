@@ -1,0 +1,57 @@
+NAME
+       xfs_growfs - grow a mounted XFS file system into new space
+
+SYNOPSIS
+       xfs_growfs [-d] [-D SIZE] [-n] MOUNT-POINT
+
+DESCRIPTION
+       After the device under an XFS file system has grown (usually a logical
+       volume after lvextend), the file system still has its old size.
+       xfs_growfs makes it use the new space. The file system must be
+       mounted, and it keeps working while it grows: nothing has to stop.
+
+       XFS can only grow. There is no way to shrink an XFS file system: to
+       make one smaller, back up the data, make a new, smaller file system
+       and restore. ext4 file systems can grow and (unmounted) shrink with
+       resize2fs.
+
+       Name the mount point. Newer versions also accept the device, but the
+       mount point always works.
+
+       lvextend -r (--resizefs) grows the LV and runs xfs_growfs (or
+       resize2fs for ext4) in one step, which is the easiest way.
+
+OPTIONS
+       -d     Grow the data section to the full size of the device (the
+              default when no option is given).
+
+       -D SIZE
+              Grow to SIZE file system blocks instead of the whole device.
+
+       -n     Do not change anything; print the file system's geometry (like
+              xfs_info).
+
+EXAMPLES
+       Grow the LV lvdata by 500 MiB and then its XFS file system:
+
+           lvextend -L +500M /dev/vgdata/lvdata
+           xfs_growfs /mnt/data
+           df -h /mnt/data
+
+       The same in one step:
+
+           lvextend -r -L +500M /dev/vgdata/lvdata
+
+       Grow it to a total of 2 GiB, extending the VG first if it is full:
+
+           vgextend vgdata /dev/vdc1
+           lvextend -r -L 2G /dev/vgdata/lvdata
+
+NOTES
+       If df still shows the old size, the file system was not grown: run
+       xfs_growfs on the mount point.
+
+       lvextend -L 2G sets the size to 2 GiB; lvextend -L +2G adds 2 GiB.
+
+SEE ALSO
+       lvextend(8), xfs_info(8), resize2fs(8), df(1), mkfs.xfs(8)

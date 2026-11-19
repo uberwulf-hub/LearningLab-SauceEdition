@@ -1,0 +1,100 @@
+NAME
+       ls - list directory contents (also dir and vdir)
+
+SYNOPSIS
+       ls [OPTION...] [FILE...]
+
+DESCRIPTION
+       ls lists the entries of each directory given (the current one by
+       default) sorted by name, and shows other FILEs by name. Names that
+       start with a dot are hidden unless -a or -A is given.
+
+   The long format (-l)
+           -rw-r-----. 1 student devops 2048 Mar  2 09:15 report.txt
+           drwxrws---+ 2 root    devops   26 Mar  2 09:20 project
+
+       1. The type (- file, d directory, l symbolic link, b and c devices,
+          p pipe, s socket) and the permissions for owner, group and others
+          (r read, w write, x execute; s and t are the special bits, see
+          chmod).
+       2. A . after the permissions means the file has an SELinux context; a
+          + means it has an ACL as well (see getfacl).
+       3. The number of hard links.
+       4. The owner and the group.
+       5. The size in bytes (for a directory, the size of its list of names).
+       6. The time of the last change of the contents.
+       7. The name; for a symbolic link, also -> and where it points.
+
+       vdir is the same as ls -l, and dir is the same as ls.
+
+OPTIONS
+       -l     The long format.
+
+       -a, --all
+              Show hidden entries too, including . and ..
+
+       -A, --almost-all
+              Show hidden entries, without . and ..
+
+       -d, --directory
+              Show a directory itself, not what is in it (ls -ld /srv).
+
+       -h, --human-readable
+              With -l, sizes such as 4.0K and 2.1M.
+
+       -R, --recursive
+              List subdirectories too, all the way down.
+
+       -t     Sort by time, newest first.
+
+       -S     Sort by size, biggest first.
+
+       -r, --reverse
+              Reverse the sort order (ls -ltr puts the newest last).
+
+       -i, --inode
+              Show the inode number (equal for hard links).
+
+       -Z, --context
+              Show the SELinux context of each file.
+
+       -n, --numeric-uid-gid
+              Like -l, with UID and GID numbers instead of names.
+
+       -F, --classify
+              Add / after directories, * after programs, @ after links.
+
+       -1     One name per line.
+
+       -L, --dereference
+              Show the target of symbolic links instead of the links.
+
+       --full-time
+              With -l, the full date and time.
+
+       --color=WHEN
+              Colour the names: always, auto or never.
+
+EXAMPLES
+       Everything in the home directory, with details:
+
+           ls -la ~
+
+       The permissions of a directory itself:
+
+           ls -ld /srv/project
+
+       The SELinux context of the web pages:
+
+           ls -Z /var/www/html
+
+       The newest files in /var/log last:
+
+           ls -ltr /var/log
+
+       Check that two names are hard links (same inode):
+
+           ls -li /root/data.txt /root/data-link.txt
+
+SEE ALSO
+       stat(1), chmod(1), getfacl(1), find(1), tree(1)

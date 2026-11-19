@@ -1,0 +1,57 @@
+# Lab: lab-13 | Connecting the office to Azure | u13 | 35
+Harborline's Azure subscription has the virtual network `vnet-hybrid` (10.50.0.0/16) with the VMs AZ-APP1 and AZ-DC3, and an Azure DNS Private Resolver whose inbound endpoint is 10.50.0.4. One server needs Azure today; the whole office follows when the site-to-site VPN is ready.
+
+@vars
+server = FS1 | HV1 | CORE1
+@endvars
+
+@task t01 | Networking | 30 | admin
+**{server}** must reach the virtual network now. Register Windows Admin Center with Azure and give {server} an **Azure Network Adapter**; wait until the virtual network gateway is ready.
+@check admin | {server} reaches the virtual network through the new gateway
+azure.gateway == Yes
+azure.reach["{server}"] == Yes
+@hint Windows Admin Center: Settings > Azure > Register; then {server} > Networking > Add Azure Network Adapter. The gateway takes about 25 minutes: Skip time.
+@solution admin
+wac register
+azure netadapter {server}
+#wait 1800
+@explain
+Windows Admin Center creates the point-to-site gateway, its address pool and certificates, and sets up the VPN connection on the server. Only {server} gets the connection.
+@endtask
+
+@task t02 | Networking | 25 | admin
+The Azure VMs must find `corp.example`. Set the DNS servers of `vnet-hybrid` to AZ-DC3 (**10.50.1.5**) first and DC1 (**10.10.0.10**) second.
+@check admin | the virtual network uses the domain's DNS servers
+azure.vnetdns has 10.50.1.5
+azure.vnetdns has 10.10.0.10
+@hint The virtual network's DNS servers setting: Custom.
+@solution admin
+azure vnetdns 10.50.1.5,10.10.0.10
+@explain
+VMs use the VNet's DNS servers after their next restart or DHCP renewal. Azure-provided DNS (168.63.129.16) knows nothing about corp.example.
+@endtask
+
+@task t03 | Networking | 25 | DC1
+Harborline's storage accounts use private endpoints for blob storage. Make every DNS server on a DC in the forest send queries for `blob.core.windows.net` to the resolver's inbound endpoint 10.50.0.4.
+@check admin | both DCs forward the name space to the resolver
+dns(DC1).conditional["blob.core.windows.net"] has 10.50.0.4
+dns(DC2).conditional["blob.core.windows.net"] has 10.50.0.4
+@hint A conditional forwarder stored in Active Directory with forest scope; give replication a minute.
+@solution DC1
+Add-DnsServerConditionalForwarderZone -Name blob.core.windows.net -MasterServers 10.50.0.4 -ReplicationScope Forest
+#wait 60
+@explain
+The resolver sits inside the VNet, so it can see the Private DNS zone privatelink.blob.core.windows.net and return the private endpoints' addresses to the office.
+@endtask
+
+@task t04 | Networking | 20 | admin
+The office firewall and the Azure VPN gateway are now configured for a site-to-site connection. Bring the connection up so that every office server, SRV1 included, reaches the virtual network.
+@check admin | the tunnel is up
+azure.vpn == Yes
+azure.reach["SRV1"] == Yes
+@hint The site-to-site connection in the Azure portal: Connect.
+@solution admin
+azure vpn on
+@explain
+A site-to-site VPN connects networks, not single servers: every machine in the office's address ranges (the local network gateway) can reach the VNet through it.
+@endtask

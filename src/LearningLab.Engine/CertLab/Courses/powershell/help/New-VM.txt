@@ -1,0 +1,31 @@
+SYNOPSIS: Creates a new virtual machine on a Hyper-V host.
+DESCRIPTION:
+New-VM creates the VM's configuration and, if you ask, its disk. The choice that can't be changed later is -Generation:
+Generation 1 emulates an old PC (BIOS, IDE boot disk, legacy devices). Pick it only for old operating systems.
+Generation 2 uses UEFI with Secure Boot, boots from SCSI or the network, and is the right choice for Windows Server 2012 and later and current Linux.
+The default is Generation 1, so give -Generation 2 explicitly.
+
+For the disk: -NewVHDPath with -NewVHDSizeBytes creates a dynamically expanding VHDX, -VHDPath attaches an existing one, -NoVHD makes none. -SwitchName connects the network adapter. The VM is created turned off.
+PARAMETER Name:
+The VM's name.
+PARAMETER Generation:
+1 or 2.
+PARAMETER MemoryStartupBytes:
+The memory it starts with, for example 4GB.
+PARAMETER NewVHDPath:
+Path of a new virtual disk to create (needs -NewVHDSizeBytes).
+PARAMETER NewVHDSizeBytes:
+Size of that new disk, for example 60GB.
+PARAMETER VHDPath:
+An existing virtual disk to use.
+PARAMETER SwitchName:
+The virtual switch to connect to, for example LAN.
+PARAMETER Path:
+Folder for the VM's configuration files.
+PARAMETER NoVHD:
+Creates the VM without a disk.
+EXAMPLE: New-VM -Name APP-NEW -Generation 2 -MemoryStartupBytes 4GB -NewVHDPath "D:\Hyper-V\Virtual Hard Disks\APP-NEW.vhdx" -NewVHDSizeBytes 80GB -SwitchName LAN -ComputerName HV1
+A Generation 2 VM with a new 80 GB disk on the LAN switch.
+EXAMPLE: Start-VM APP-NEW
+Turns it on.
+RELATED: Get-VM, Set-VM, Start-VM, New-VHD, Get-VMSwitch, Set-VMFirmware

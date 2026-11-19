@@ -1,0 +1,12 @@
+SYNOPSIS: Removes an account's Allow entry from a share.
+DESCRIPTION:
+Revoke-SmbShareAccess deletes the Allow entries of an account. It doesn't touch Deny entries (use Unblock-SmbShareAccess for those). The account may still get in through a group it belongs to, such as Everyone.
+PARAMETER Name:
+The share. Position 0.
+PARAMETER AccountName:
+The user or group.
+PARAMETER Force:
+Removes without asking.
+EXAMPLE: Revoke-SmbShareAccess -Name Finance -AccountName Everyone -Force
+Everyone no longer has Read on Finance; only the accounts listed explicitly do.
+RELATED: Grant-SmbShareAccess, Unblock-SmbShareAccess, Get-SmbShareAccess

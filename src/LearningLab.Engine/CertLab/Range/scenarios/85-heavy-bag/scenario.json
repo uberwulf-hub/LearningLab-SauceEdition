@@ -1,0 +1,56 @@
+{
+    "id": "heavy-bag",
+    "title": "A Heavy Bag",
+    "category": "blue",
+    "level": "Intermediate",
+    "order": 7,
+    "summary": "Every web request in the office goes through the proxy, and the proxy log shows one upload far bigger than anything else, in the middle of the night. Find which PC sent it, where to, and what keeps sending it.",
+    "story": "You run gw, the office proxy of {{CO}} (made up), on 10.10.25.0/24; every PC reaches the web through it, and it writes one line per request to /var/log/proxy/access.log. You have a root console on gw. The office PCs can be reached with ssh as itadmin (password {{ITPW}}, allowed to use sudo).",
+    "goal": "Find the PC that sent the huge upload and the site it went to, capture the flag in the folder it was sent from, block the site on the proxy before the next batch, and remove the job that sends it.",
+    "skills": "reading a proxy log, sort, awk, ssh, sudo, cron jobs, a proxy blocklist",
+    "defender": "none",
+    "start": "gw",
+    "minutes": 30,
+    "attackerIp": "{{DESTIP}}",
+    "goalName": "send the next batch of client files out",
+    "goalPoints": 70,
+    "vars": {
+        "CO": "company",
+        "STAFF": "person",
+        "ITPW": "word",
+        "TIME": "time:1-4",
+        "BYTES": "num:612000000-905000000",
+        "DEST": "pick:filedrop-cloud.example|quickshare.example|bigbox-storage.example",
+        "SCRIPT": "pick:offsite-backup|nightly-sync|archive-push",
+        "STAGE": "pick:.cache-out|.bk|.spool2"
+    },
+    "variants": { "DEST": {
+        "filedrop-cloud.example": { "DESTIP": "203.0.113.84" },
+        "quickshare.example": { "DESTIP": "198.51.100.61" },
+        "bigbox-storage.example": { "DESTIP": "203.0.113.150" } } },
+    "machines": [
+        { "name": "gw", "os": "linux", "hostname": "gw.{{CO_DOMAIN}}", "role": "office proxy (yours)", "nics": [ "10.10.25.1/24" ], "setup": "gw.sh" },
+        { "name": "ws", "os": "linux", "hostname": "ws40.{{CO_DOMAIN}}", "role": "{{STAFF_FULL}}'s PC", "nics": [ "10.10.25.40/24" ], "server": false,
+          "motd": "{{CO}} workstation ws40.", "setup": "ws.sh" }
+    ],
+    "flags": [
+        { "id": "stage", "name": "The flag in the folder the upload came from", "points": 60, "machine": "ws", "path": "/var/tmp/{{STAGE}}/manifest.txt", "owner": "root", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "client", "ask": "Which internal address sent the huge upload?", "answer": "10.10.25.40", "points": 40, "explain": "Sorting the log by bytes_out puts one POST of hundreds of megabytes at the top, from this client." },
+        { "id": "dest", "ask": "Which site did it go to?", "answer": "{{DEST}}", "points": 40, "explain": "The host= field of that line - a file-sharing site nobody in the office uses." },
+        { "id": "job", "ask": "What is the full path of the program on that PC that makes the bundle?", "answer": "/usr/local/bin/{{SCRIPT}}", "accept": [ "{{SCRIPT}}" ], "points": 40, "explain": "A cron job in /etc/cron.d runs it every night at 02:30." }
+    ],
+    "tasks": [
+        { "id": "block", "name": "Block the site on the proxy", "machine": "gw", "check": "grep -qx '{{DEST}}' /etc/proxy/blocked-sites.txt", "points": 50, "explain": "echo {{DEST}} >> /etc/proxy/blocked-sites.txt (one name per line)" },
+        { "id": "job", "name": "Remove the job that makes the bundle", "machine": "ws", "check": "test ! -e /etc/cron.d/{{SCRIPT}} && test ! -e /usr/local/bin/{{SCRIPT}}", "points": 40, "explain": "On ws: rm -f /etc/cron.d/{{SCRIPT}} /usr/local/bin/{{SCRIPT}}" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "gw", "run": "echo \"2026-04-06 02:30:12 client=10.10.25.40 method=POST host={{DEST}} status=200 bytes_out={{BYTES}} bytes_in=340\" >> /var/log/proxy/access.log", "unless": "grep -qx '{{DEST}}' /etc/proxy/blocked-sites.txt", "note": "The site wasn't blocked, so the next batch of client files went out through the proxy.", "goal": true }
+    ],
+    "hints": [
+        { "text": "Each line of /var/log/proxy/access.log is one request with its size: bytes_out is how much the PC sent. Most are a few kilobytes. Find the biggest: awk '{ print $7, $3, $5 }' /var/log/proxy/access.log | sort -t= -k2 -n puts the sizes in order (the biggest last), or just read it with cat - one number has nine digits.", "cost": 8 },
+        { "text": "That line gives the client (the PC's address) and host (the site). Block the site on the proxy by adding its name as one line to /etc/proxy/blocked-sites.txt. Then look at the PC: ssh itadmin@10.10.25.40, sudo -i, and check /etc/cron.d for a job that runs at night.", "cost": 14 },
+        { "text": "The cron job runs /usr/local/bin/{{SCRIPT}}, which bundles /srv/clients into /var/tmp/{{STAGE}}; the flag is in that folder. Remove the cron file and the script on ws.", "cost": 22 }
+    ]
+}

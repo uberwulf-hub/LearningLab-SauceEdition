@@ -1,0 +1,14 @@
+SYNOPSIS: Applies a provisioning package (.ppkg) to the computer.
+DESCRIPTION:
+Install-ProvisioningPackage applies a package made with Windows Configuration Designer: for example a device name, Wi-Fi settings, and a bulk token that joins the PC to Microsoft Entra ID and enrols it in Intune (bulk enrolment). A package whose bulk token has expired can't join the PC: make a new one.
+PARAMETER PackagePath:
+The .ppkg file.
+PARAMETER QuietInstall:
+Don't ask for confirmation.
+PARAMETER ForceInstall:
+Apply the package even if it was applied before.
+PARAMETER LogsDirectoryPath:
+Where to write the logs.
+EXAMPLE: Install-ProvisioningPackage -PackagePath D:\Riverbend.ppkg -QuietInstall
+Applies the package without questions.
+RELATED: Get-WindowsAutopilotInfo

@@ -1,0 +1,16 @@
+# Three Callers (offsets from {{T0}}, the hidden program's first call)
+# the clock: Windows' time service keeps the computer's clock right
+-40m host={{TIMEH}} source=dns query=ntp.clockwork.example type=A answer={{TIMEIP}} src_ip={{TIMEHIP}} image=C:\Windows\System32\svchost.exe
+-40m x40/64s host={{TIMEH}} source=proclog event=3 user="LOCAL SERVICE" image=C:\Windows\System32\svchost.exe service=W32Time dst={{TIMEIP}} dport=123 proto=udp note="Network connection"
+-40m x40/64s host=FW01 source=firewall action=allow direction=out src={{TIMEHIP}} dst={{TIMEIP}} dport=123 proto=udp bytes=76
+-25m host={{TIMEH}} source=alert severity=medium rule="Regular connections to one address" dst={{TIMEIP}} note="{{TIMEH}} connected to {{TIMEIP}} 15 times at regular intervals"
+# updates: the update agent asks for updates every five minutes
+-50m host={{UPDH}} source=dns query=wu.osvendor.example type=A answer={{UPDIP}} src_ip={{UPDHIP}} image=C:\Windows\System32\svchost.exe
+-50m x18/5m host={{UPDH}} source=proclog event=3 user=SYSTEM image=C:\Windows\System32\svchost.exe service=wuauserv dst={{UPDIP}} dport=443 proto=tcp note="Network connection"
+-50m x18/5m host=FW01 source=firewall action=allow direction=out src={{UPDHIP}} dst={{UPDIP}} dport=443 proto=tcp bytes=4120
+-10m host={{UPDH}} source=alert severity=medium rule="Regular connections to one address" dst={{UPDIP}} note="{{UPDH}} connected to {{UPDIP}} 8 times at regular intervals"
+# the hidden program: rundll32 loading a DLL from Temp, checking in with a bare address
+-3m host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\rundll32.exe parent=C:\Windows\explorer.exe cmdline="rundll32.exe C:\Users\{{BADU}}\AppData\Local\Temp\{{DLL}},DllRegister"
++0 x24/{{INT}}s host={{BADH}} source=proclog event=3 user={{BADU}} image=C:\Windows\System32\rundll32.exe dst={{C2IP}} dport=443 proto=tcp note="Network connection"
++0 x24/{{INT}}s host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{C2IP}} dport=443 proto=tcp bytes=620
++20m host={{BADH}} source=alert severity=medium rule="Regular connections to one address" dst={{C2IP}} note="{{BADH}} connected to {{C2IP}} at regular intervals"

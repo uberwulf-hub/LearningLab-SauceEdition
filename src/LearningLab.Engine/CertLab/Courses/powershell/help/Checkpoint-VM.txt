@@ -1,0 +1,16 @@
+SYNOPSIS: Takes a checkpoint (snapshot) of a virtual machine.
+DESCRIPTION:
+A checkpoint saves a VM's state so you can go back to it, for example before an update. The VM's CheckpointType decides what is saved: a Production checkpoint (default) uses VSS inside the guest for a consistent copy without memory; a Standard checkpoint also saves the memory.
+
+After a checkpoint, writes go to a new .avhdx file next to the disk. Checkpoints are not backups: they live on the same disk as the VM, and a long chain slows it down. Delete them when they are no longer needed. Without -SnapshotName the name is the VM's name and the time.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER SnapshotName:
+The checkpoint's name. Position 1.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Checkpoint-VM -Name WEB-TEST -SnapshotName "Before IIS update" -ComputerName HV1
+A checkpoint to go back to if the update goes wrong.
+EXAMPLE: Get-VMSnapshot -VMName WEB-TEST
+Lists the VM's checkpoints.
+RELATED: Get-VMSnapshot, Restore-VMSnapshot, Remove-VMSnapshot, Set-VM

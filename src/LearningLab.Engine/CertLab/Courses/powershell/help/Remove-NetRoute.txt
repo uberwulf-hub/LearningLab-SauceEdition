@@ -1,0 +1,26 @@
+SYNOPSIS: Removes routes from the routing table.
+DESCRIPTION:
+Remove-NetRoute deletes the routes you added by hand and default gateways. Pick them with -DestinationPrefix, -NextHop or the interface, or pipe them from Get-NetRoute.
+
+It asks you to confirm each route, because removing the default gateway cuts the computer off from every other network. Answer Y, or add -Confirm:$false.
+PARAMETER DestinationPrefix:
+The destination of the route, for example 10.0.20.0/24 or 0.0.0.0/0.
+PARAMETER NextHop:
+Removes routes that use this router.
+PARAMETER InterfaceAlias:
+Removes routes of this adapter.
+PARAMETER InterfaceIndex:
+Removes routes of the interface with this ifIndex.
+PARAMETER InputObject:
+Routes piped from Get-NetRoute.
+PARAMETER PassThru:
+Outputs each removed route.
+EXAMPLE: Remove-NetRoute -DestinationPrefix 10.0.20.0/24 -Confirm:$false
+Removes the route to 10.0.20.0/24 without asking.
+EXAMPLE: Remove-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.10.1
+Removes the default gateway, after asking.
+EXAMPLE: Get-NetRoute -NextHop 10.0.10.1 | Remove-NetRoute -WhatIf
+Shows which routes through 10.0.10.1 would be removed.
+NOTES:
+The routes Windows makes by itself for each address come back from the address; remove the address instead. CIM-based command from the NetTCPIP module, Windows only. Needs an administrator on a real PC.
+RELATED: Get-NetRoute, New-NetRoute, Remove-NetIPAddress

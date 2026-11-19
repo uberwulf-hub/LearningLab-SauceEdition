@@ -1,0 +1,57 @@
+NAME
+       xargs - build command lines from standard input and run them
+
+SYNOPSIS
+       xargs [-0] [-n N] [-L N] [-I REPLACE] [-d DELIM] [-r] [-t] [COMMAND
+             [INITIAL-ARGUMENTS]]
+
+DESCRIPTION
+       xargs reads words (separated by blanks or newlines) from standard
+       input and runs COMMAND with them added as arguments, as few times as
+       possible. It turns a list printed by one command into arguments for
+       another: find ... | xargs rm. Without COMMAND it runs echo.
+
+       File names with spaces break the default splitting. Pair find -print0
+       with xargs -0, which splits on NUL bytes only.
+
+OPTIONS
+       -0, --null
+              Items are separated by NUL bytes (from find -print0).
+
+       -d, --delimiter=CHAR
+              Items are separated by CHAR (for example -d '\n': one item per
+              line).
+
+       -n, --max-args=N
+              Use at most N items per command run.
+
+       -L, --max-lines=N
+              Use at most N input lines per command run.
+
+       -I REPLACE
+              Run COMMAND once per input line, putting the line wherever
+              REPLACE (often {}) appears.
+
+       -r, --no-run-if-empty
+              Do not run COMMAND at all when the input is empty.
+
+       -t, --verbose
+              Print each command line on standard error before running it.
+
+       -p     Ask before running each command.
+
+EXAMPLES
+       Delete the .tmp files under /tmp/work, even with spaces in names:
+
+           find /tmp/work -name '*.tmp' -print0 | xargs -0 rm -f
+
+       Create the users listed in a file, one per line:
+
+           xargs -n 1 useradd < /root/newusers.txt
+
+       Copy each file named in a list into /root/backup:
+
+           cat /root/list.txt | xargs -I {} cp {} /root/backup/
+
+SEE ALSO
+       find(1), bash(1)

@@ -1,0 +1,18 @@
+SYNOPSIS: Brings back a deleted Active Directory object from the Recycle Bin.
+DESCRIPTION:
+With the AD Recycle Bin enabled (Enable-ADOptionalFeature), a deleted object keeps all its attributes, including group memberships, for the deleted object lifetime (180 days by default). Restore-ADObject puts it back where it was, with the same SID.
+Find deleted objects with Get-ADObject -IncludeDeletedObjects and pipe them in. Restore a deleted OU before the objects that were in it, or give -TargetPath.
+Without the Recycle Bin, deleted objects become tombstones that lose most of their attributes.
+PARAMETER Identity:
+The deleted object, normally piped from Get-ADObject -IncludeDeletedObjects. Position 0.
+PARAMETER NewName:
+A new name for the restored object.
+PARAMETER TargetPath:
+Restores it into another OU instead of its last place.
+PARAMETER PassThru:
+Returns the restored object.
+EXAMPLE: Get-ADObject -Filter "SamAccountName -eq 'knovak'" -IncludeDeletedObjects | Restore-ADObject
+Brings back Kara Novak's deleted account with her groups.
+EXAMPLE: Get-ADObject -Filter "Deleted -eq `$true -and ObjectClass -eq 'user'" -IncludeDeletedObjects | Restore-ADObject -TargetPath "OU=Staff,DC=corp,DC=example"
+Restores every deleted user into the Staff OU.
+RELATED: Get-ADObject, Enable-ADOptionalFeature, Get-ADOptionalFeature, Remove-ADUser

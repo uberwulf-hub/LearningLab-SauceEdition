@@ -1,0 +1,16 @@
+SYNOPSIS: Changes Secure Boot on a Generation 2 VM.
+DESCRIPTION:
+Secure Boot checks that the boot loader is signed by a trusted certificate. The template says which certificates are trusted: MicrosoftWindows (the default) for Windows guests, MicrosoftUEFICertificateAuthority for most Linux distributions. A Linux VM that won't boot with the Windows template usually needs the second one (or Secure Boot off).
+
+The VM must be off. Generation 1 VMs have no Secure Boot.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER EnableSecureBoot:
+On or Off.
+PARAMETER SecureBootTemplate:
+MicrosoftWindows or MicrosoftUEFICertificateAuthority.
+EXAMPLE: Set-VMFirmware -VMName LAB-HOST -SecureBootTemplate MicrosoftUEFICertificateAuthority -ComputerName HV1
+LAB-HOST can now boot a Linux installer.
+EXAMPLE: Set-VMFirmware -VMName LAB-HOST -EnableSecureBoot Off
+Turns Secure Boot off completely.
+RELATED: Get-VMFirmware, New-VM

@@ -1,0 +1,17 @@
+NAME
+       cksum - print a CRC checksum and byte count of files
+
+SYNOPSIS
+       cksum [FILE...]
+
+DESCRIPTION
+       For each FILE (or standard input), cksum prints a 32-bit CRC checksum,
+       the number of bytes, and the name. It is a quick check that two copies
+       are the same; for anything that matters, use sha256sum, which is much
+       harder to fool.
+
+EXAMPLES
+           cksum /etc/hosts /tmp/hosts.copy
+
+SEE ALSO
+       sha256sum(1), md5sum(1), b2sum(1), cmp(1)

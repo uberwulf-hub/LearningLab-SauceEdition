@@ -1,0 +1,48 @@
+NAME
+       grub2-mkconfig - generate the GRUB configuration file
+
+SYNOPSIS
+       grub2-mkconfig [-o FILE] [--update-bls-cmdline]
+
+DESCRIPTION
+       grub2-mkconfig builds GRUB's main configuration file from the settings
+       in /etc/default/grub and the scripts in /etc/grub.d. Without -o it only
+       prints the result, which is useful for checking but changes nothing.
+
+       On RHEL 9 the kernels themselves are listed by the entries in
+       /boot/loader/entries, which grub.cfg reads at boot. Settings such as
+       GRUB_TIMEOUT go into grub.cfg, so after changing them you must run
+       grub2-mkconfig -o. The kernel command line lives in each entry's
+       "options" line: after changing GRUB_CMDLINE_LINUX add
+       --update-bls-cmdline so the entries get the new arguments too (or use
+       grubby --update-kernel=ALL, which does both).
+
+       The file to write is /boot/grub2/grub.cfg on both BIOS and UEFI
+       machines. (On UEFI, /boot/efi/EFI/redhat/grub.cfg is a small stub that
+       loads it: do not overwrite the stub.)
+
+OPTIONS
+       -o, --output=FILE
+              Write the configuration to FILE instead of printing it.
+
+       --update-bls-cmdline
+              Also write the GRUB_CMDLINE_LINUX arguments into the "options"
+              line of every entry in /boot/loader/entries.
+
+EXAMPLES
+       Make the menu wait 10 seconds:
+              # vim /etc/default/grub        (set GRUB_TIMEOUT=10)
+              # grub2-mkconfig -o /boot/grub2/grub.cfg
+              Generating grub configuration file ...
+              done
+
+       Add an argument for every kernel through /etc/default/grub:
+              # vim /etc/default/grub        (add it to GRUB_CMDLINE_LINUX)
+              # grub2-mkconfig -o /boot/grub2/grub.cfg --update-bls-cmdline
+
+FILES
+       /etc/default/grub, /etc/grub.d/, /boot/grub2/grub.cfg,
+       /boot/loader/entries/*.conf
+
+SEE ALSO
+       grubby(8), grub2-set-default(8), grub2-editenv(1)

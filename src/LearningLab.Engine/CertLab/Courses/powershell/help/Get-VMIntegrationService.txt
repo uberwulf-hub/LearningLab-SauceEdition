@@ -1,0 +1,16 @@
+SYNOPSIS: Lists a VM's integration services and whether they are on.
+DESCRIPTION:
+Integration services let the host and the guest work together: Heartbeat, Shutdown (lets Stop-VM shut down cleanly), Time Synchronization, Key-Value Pair Exchange, VSS (needed for Production checkpoints and host-level backup) and Guest Service Interface (lets the host copy files in; off by default).
+
+Get-VMIntegrationService shows each one with Enabled (on in the VM's settings) and PrimaryStatusDescription (OK, or No Contact when the guest side isn't answering).
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Name:
+Only these services.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMIntegrationService -VMName APP-OLD -ComputerName HV1
+Which services APP-OLD uses.
+EXAMPLE: Get-VM | Get-VMIntegrationService -Name Heartbeat
+Is every guest alive?
+RELATED: Enable-VMIntegrationService, Disable-VMIntegrationService, Stop-VM, Checkpoint-VM

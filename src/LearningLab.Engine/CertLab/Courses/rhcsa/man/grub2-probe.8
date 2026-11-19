@@ -1,0 +1,26 @@
+NAME
+       grub2-probe - show what GRUB knows about a device or path
+
+SYNOPSIS
+       grub2-probe [OPTION]... PATH_OR_DEVICE
+
+DESCRIPTION
+       grub2-probe asks GRUB's own disk and file system drivers about a path or
+       device: which file system it holds, which device it is on, its UUID and
+       so on. GRUB's scripts use it while building the menu. It is a quick way
+       to check that GRUB can read the file system that holds /boot.
+
+OPTIONS
+       -t, --target=WHAT
+              What to print: fs (the default: the file system type), fs_uuid,
+              fs_label, device, drive, partmap.
+
+       -d, --device
+              The argument is a device (such as /dev/vda1), not a path.
+
+EXAMPLES
+              # grub2-probe /boot
+              xfs
+
+SEE ALSO
+       grub2-install(8), grub2-mkconfig(8)

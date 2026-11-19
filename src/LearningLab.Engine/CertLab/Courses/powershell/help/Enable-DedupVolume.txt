@@ -1,0 +1,16 @@
+SYNOPSIS: Turns on Data Deduplication for a volume.
+DESCRIPTION:
+Data Deduplication finds identical chunks in files and stores them once, which can save a lot of space on file shares, archives and virtual disk libraries. It needs the Data Deduplication role service (FS-Data-Deduplication) and works on NTFS and ReFS data volumes, never on the system or boot volume.
+
+-UsageType sets the defaults: Default for general file servers, HyperV for virtual desktops' disks, Backup for virtual backup appliances. Files are processed by background optimization jobs, so savings appear only after the first job ran (Start-DedupJob to run one now). By default only files older than 3 days are optimized.
+PARAMETER Volume:
+The volume or volumes, for example E:. Position 0.
+PARAMETER UsageType:
+Default, HyperV or Backup.
+PARAMETER DataAccess:
+Also turns on the filter that reads optimized files (normally done for you).
+EXAMPLE: Enable-DedupVolume -Volume E: -UsageType Default
+Deduplication for FS1's archive, which holds many copies of the same reports.
+EXAMPLE: Start-DedupJob -Volume E: -Type Optimization -Wait
+Runs the first optimization now instead of waiting for the schedule.
+RELATED: Get-DedupVolume, Set-DedupVolume, Start-DedupJob, Get-DedupStatus, Disable-DedupVolume

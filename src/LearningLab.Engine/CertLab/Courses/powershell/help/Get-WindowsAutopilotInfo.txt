@@ -1,0 +1,18 @@
+SYNOPSIS: Reads the device's hardware hash for Windows Autopilot.
+DESCRIPTION:
+Get-WindowsAutopilotInfo collects the serial number, the Windows product ID and the hardware hash that register a device with Windows Autopilot. On a real PC it is a script from the PowerShell Gallery (Install-Script Get-WindowsAutopilotInfo); in Cert Lab it is ready to use. Save the result to a CSV file and import that file in the portal (Devices > Enrollment > Windows Autopilot > Devices > Import). During the out-of-box experience, Shift+F10 opens a command prompt where you can start PowerShell to run it.
+PARAMETER OutputFile:
+The CSV file to write.
+PARAMETER GroupTag:
+A group tag to put in the file (a column Group Tag).
+PARAMETER AssignedUser:
+A user to pre-fill during setup.
+PARAMETER Append:
+Add a row to an existing file (several devices in one CSV).
+PARAMETER Online:
+On a real PC, uploads the hash directly. Cert Lab never signs in anywhere, so it refuses this.
+EXAMPLE: Get-WindowsAutopilotInfo -OutputFile C:\HWID\AutopilotHWID.csv
+Writes the hash file to import in the portal.
+EXAMPLE: Get-WindowsAutopilotInfo -OutputFile C:\HWID\AutopilotHWID.csv -GroupTag Sales
+The same, with a group tag for a dynamic group.
+RELATED: Install-ProvisioningPackage

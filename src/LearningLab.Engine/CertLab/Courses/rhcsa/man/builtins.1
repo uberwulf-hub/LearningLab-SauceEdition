@@ -1,0 +1,116 @@
+NAME
+       builtins - commands built into bash
+
+SYNOPSIS
+       help [COMMAND]
+       type COMMAND
+
+DESCRIPTION
+       Some commands are not separate programs but part of bash itself:
+       they change the shell (cd, export, umask), control scripts (if-tests,
+       loops, exit) or are simply faster that way (echo, printf). They have
+       no manual pages of their own; this page lists them, and help COMMAND
+       prints bash's short description of each one. type COMMAND tells
+       whether a name is a builtin, an alias, a function or a program.
+
+       Some builtins also exist as programs (echo, test, printf, kill, pwd).
+       In a script, the builtin is used.
+
+COMMANDS
+   Moving around and the environment
+       cd [DIR]       Change the current directory (cd alone: home; cd -:
+                      the previous one).
+       pwd            Print the current directory.
+       pushd, popd, dirs
+                      Keep a stack of directories.
+       export NAME[=VALUE]
+                      Pass a variable on to programs started from this shell.
+       unset NAME     Remove a variable or function.
+       declare, typeset, local, readonly
+                      Create variables with attributes (local: only inside a
+                      function; readonly: cannot change).
+       umask [MODE]   Show or set the permission bits removed from new files
+                      (umask 022: files 644, directories 755; umask 027:
+                      files 640, directories 750). Lasts for this shell; put
+                      it in ~/.bashrc to keep it.
+       alias NAME='COMMAND', unalias NAME
+                      Define or remove a short name for a command.
+       ulimit         Show or set limits such as open files (ulimit -n).
+
+   Output and input
+       echo [-n] [-e] TEXT
+                      Print TEXT (-n: no newline; -e: understand \n, \t).
+       printf FORMAT [ARGS]
+                      Print with a format (%s text, %d number, \n newline).
+       read [-r] [-p PROMPT] [-s] NAME...
+                      Read a line from standard input into variables (-s: do
+                      not show it; -r: keep backslashes).
+       mapfile, readarray
+                      Read lines into an array.
+
+   Running things
+       source FILE, . FILE
+                      Run FILE's commands in the current shell (so its
+                      variables stay set).
+       eval TEXT      Run TEXT as a command line.
+       exec COMMAND   Replace the shell with COMMAND.
+       command NAME   Run the program NAME, ignoring aliases and functions.
+       time PIPELINE  Report how long a command took.
+       type NAME      Say what NAME is (builtin, alias, file...).
+       hash           Show or reset bash's memory of program paths.
+       history        Show the command history (!N runs entry N again).
+
+   Scripts
+       if, then, elif, else, fi; for, while, until, do, done; case, esac
+                      Keywords for conditions and loops.
+       test EXPR, [ EXPR ]
+                      Check a condition (see test(1)).
+       exit [N]       Leave the shell or script with status N.
+       return [N]     Leave a function.
+       break, continue
+                      Leave a loop, or go on with its next round.
+       shift [N]      Drop the first N arguments ($2 becomes $1).
+       getopts        Read -x style options in a script.
+       let EXPR, (( EXPR ))
+                      Arithmetic: let n=n+1, ((n++)).
+       set [-e] [-u] [-x] [-o OPTION]
+                      Shell options: -e stop on an error, -u unset
+                      variables are errors, -x print each command before
+                      running it (good for finding bugs), -o pipefail.
+       shopt          Further shell options.
+       trap COMMAND SIGNAL
+                      Run COMMAND when the shell gets SIGNAL (or EXIT).
+       true, false, : Do nothing and succeed (or fail).
+
+   Jobs
+       jobs           List the background jobs of this shell.
+       fg [%N], bg [%N]
+                      Bring a job to the foreground, or let a stopped one go
+                      on in the background (Ctrl+Z stops a job).
+       wait [PID]     Wait for background jobs.
+       disown         Let a job keep running after the shell exits.
+       kill [-SIGNAL] PID|%N
+                      Send a signal (the builtin also takes %N job numbers).
+
+   Information
+       help [NAME]    Short help for the builtins.
+       compgen, complete
+                      Tab completion.
+       enable         Turn builtins on or off.
+       logout         Leave a login shell.
+
+EXAMPLES
+       Find out what a name is:
+
+           type cd ls ll
+
+       Make new files private for this session:
+
+           umask 077
+
+       Debug a script by watching each command:
+
+           bash -x /root/myscript.sh
+
+SEE ALSO
+       bash(1), test(1), kill(1)

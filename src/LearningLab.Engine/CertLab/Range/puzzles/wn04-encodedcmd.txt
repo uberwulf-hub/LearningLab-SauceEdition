@@ -1,0 +1,59 @@
+title: A command in disguise
+level: Advanced
+kind: Windows
+topic: Windows
+teaser: base64 that only PowerShell reads
+points: 75
+order: 53
+host: windows
+answer: flag
+
+@intro
+You are on a pretend Windows computer. A scheduled task on it runs a PowerShell
+command that has been hidden with -EncodedCommand - PowerShell's way of passing a
+command as base64. Decode it to see what it really does; the flag is in the hidden
+command. (PowerShell's encoded commands are base64 of UTF-16, so decode them that
+way.)
+
+@winsetup
+$task = 'powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Write-Output 'beacon {{FLAG}}'; Start-Sleep 60"))
+Set-Content -Path 'C:\ProgramData\run.txt' -Value $task
+$a = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -WindowStyle Hidden -EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Write-Output 'beacon {{FLAG}}'; Start-Sleep 60")))
+$t = New-ScheduledTask -Action $a
+Register-ScheduledTask -TaskName 'Updater' -InputObject $t | Out-Null
+
+@solution
+Get-ScheduledTask -TaskName Updater | ForEach-Object { $_.Actions }
+(Get-ScheduledTask -TaskName Updater).Actions.Arguments
+$enc = ((Get-ScheduledTask -TaskName Updater).Actions.Arguments -split ' ')[-1]
+[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($enc))
+
+@walkthrough
+A scheduled task named Updater runs powershell.exe with -EncodedCommand and a long
+base64 blob. That option is a common way to hide what a command does. Read the task's
+arguments:
+
+    (Get-ScheduledTask -TaskName Updater).Actions.Arguments
+
+Take the base64 part (the last word) and decode it. PowerShell encodes as UTF-16
+(Unicode), so:
+
+    $enc = ((Get-ScheduledTask -TaskName Updater).Actions.Arguments -split ' ')[-1]
+    [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($enc))
+
+The decoded command prints the flag. The lesson: -EncodedCommand is not encryption;
+defenders decode it the same way, so hidden commands in a task are a red flag.
+
+@hint 6
+What to think about first: -EncodedCommand just carries a command as base64 text, so
+it is not visible at a glance but anyone can turn it back. First see the task's command
+line with (Get-ScheduledTask -TaskName Updater).Actions.Arguments.
+
+@hint 10
+The long word after -EncodedCommand is base64. PowerShell encodes in UTF-16, so decode
+with [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String(THEWORD)).
+
+@hint 16
+$enc = ((Get-ScheduledTask -TaskName Updater).Actions.Arguments -split ' ')[-1]
+[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($enc))
+The flag is in the text it prints.

@@ -1,0 +1,62 @@
+NAME
+       ss - show network sockets (listening ports and connections)
+
+SYNOPSIS
+       ss [OPTIONS] [FILTER]
+
+DESCRIPTION
+       ss lists the sockets of the system: the ports that services listen on
+       and the connections that are open. It replaces the older netstat
+       command. Use it to check that a service really listens on the port you
+       expect before you look at the firewall or SELinux.
+
+       Each line shows the protocol (Netid), the state (LISTEN for a server
+       waiting for clients, ESTAB for an open connection, UNCONN for UDP),
+       the queue sizes, and the local and remote address with port. An
+       address of 0.0.0.0, [::] or * means "every address of this machine".
+
+OPTIONS
+       -t, --tcp
+              Show TCP sockets.
+
+       -u, --udp
+              Show UDP sockets.
+
+       -l, --listening
+              Show only listening sockets (servers). Without -l, ss shows open
+              connections and leaves listening sockets out.
+
+       -n, --numeric
+              Show port numbers instead of service names (22 instead of ssh).
+
+       -p, --processes
+              Show the program that owns each socket, with its PID. Only root
+              sees other users' programs.
+
+       -a, --all
+              Show listening and non-listening sockets.
+
+       -s, --summary
+              Print counts of sockets by kind.
+
+       -4, -6 Only IPv4 or only IPv6 sockets.
+
+EXAMPLES
+       List all TCP ports that services listen on, with their programs:
+
+           ss -tlnp
+
+       Check whether anything listens on port 82:
+
+           ss -tln | grep ':82 '
+
+       List UDP sockets, such as chronyd's port 323:
+
+           ss -ulnp
+
+NOTES
+       The letters are often combined: ss -tulpn shows listening TCP and UDP
+       sockets with numbers and programs.
+
+SEE ALSO
+       ip(8), firewall-cmd(1), systemctl(1)

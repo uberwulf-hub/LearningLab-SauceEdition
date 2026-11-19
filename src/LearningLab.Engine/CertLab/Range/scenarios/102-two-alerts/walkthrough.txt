@@ -1,0 +1,17 @@
+1. siem alerts shows four "PowerShell with a hidden command" alerts: three in the same second (WS-{{H3}},
+   WS-{{H4}} and {{GOODH}}) and one later, on its own, on {{BADH}}.
+2. siem search source=proclog image=*powershell* --fields time,host,user,parent shows who started each:
+   - the three together were started by svchost.exe as SYSTEM: the Task Scheduler running the same job on several
+     computers at once. Decoded (echo TEXT | base64 -d) the command is: {{ITCMD}}
+     - an inventory saved to the file server. Harmless: a false alarm.
+   - the one on {{BADH}} was started by winword.exe, as {{BADU}}. Word has no business starting PowerShell.
+     Decoded, it downloads a script from http://{{DLDOM}} and runs it.
+3. siem search host={{BADH}} (add source=proclog, or --since {{T0}}) tells the story in order: Outlook, then Word opening
+   C:\Users\{{BADU}}\Downloads\{{DOC}} at {{T0}}, PowerShell 19 seconds later, a DNS lookup of {{DLDOM}}
+   ({{DLIP}}) and the firewall letting the download out.
+
+So the alert on WS-{{HA}} was {{VA}}. A real team would now take {{BADH}} off the network, block {{DLDOM}} and
+{{DLIP}}, and find who else received that email.
+
+(Real PowerShell encodes -EncodedCommand as UTF-16 text, so on a real computer you would decode it with
+[Text.Encoding]::Unicode in PowerShell or base64 -d | iconv -f UTF-16LE. This practice SIEM uses plain base64.)

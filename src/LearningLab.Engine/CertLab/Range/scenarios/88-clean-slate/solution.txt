@@ -1,0 +1,15 @@
+## the forwarded copy of the PC's Security log, kept on this box
+ls /var/log/forwarded
+grep -E ' (4624|4625|4720|4732|4688|1102) ' /var/log/forwarded/{{LOWER:PC}}-security.log
+## on the PC: the log really was cleared
+winrm-shell -i 10.10.28.30 -u Administrator -p {{ADMPW}}
+Get-WinEvent -LogName Security | Format-List TimeCreated, Id, Message
+Get-LocalGroupMember -Group Administrators
+## what runs at every sign-in
+Get-ChildItem 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp'
+Get-Content 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\{{START}}'
+Get-Content C:\Users\Public\Libraries\cache\readme.txt
+## undo it
+Remove-Item 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\{{START}}'
+Remove-LocalUser -Name {{ROGUE}}
+exit

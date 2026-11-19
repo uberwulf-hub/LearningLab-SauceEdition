@@ -1,0 +1,16 @@
+SYNOPSIS: Adds users, computers or groups to an Active Directory group.
+DESCRIPTION:
+Add-ADGroupMember is group-centred: one group, many new members. To put one account into many groups, use Add-ADPrincipalGroupMembership.
+A person's new membership is in their access token only from the next sign-in (or for a computer, the next restart), because the token is built at sign-in.
+Scope rules apply: for example a global group can't hold members from another domain, and a domain local group can't be put inside a global group.
+PARAMETER Identity:
+The group to add to. Position 0.
+PARAMETER Members:
+The accounts or groups to add, separated by commas. Position 1.
+PARAMETER PassThru:
+Returns the group after the change.
+EXAMPLE: Add-ADGroupMember Sales -Members bcole, dpatel
+Adds Bianca Cole and Dev Patel to the Sales group.
+EXAMPLE: Add-ADGroupMember FS-Marketing-Modify -Members Marketing
+Nests the Marketing global group inside a domain local permission group (AGDLP).
+RELATED: Remove-ADGroupMember, Get-ADGroupMember, Add-ADPrincipalGroupMembership

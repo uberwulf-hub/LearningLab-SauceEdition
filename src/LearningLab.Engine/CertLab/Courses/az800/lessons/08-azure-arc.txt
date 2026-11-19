@@ -1,0 +1,230 @@
+# Unit: u08 | 8. Azure Arc, Azure VMs and updates | Server management
+
+Harborline's servers live in two places: in its own building and as virtual machines in Azure. Microsoft's answer to "one place to manage them all" is **Azure Arc**, which makes a server outside Azure appear in the Azure portal as a resource of its own. This unit covers Arc-enabled servers, keeping servers patched with Azure Update Manager (plus what Azure Automation still does), and the everyday management of Windows Server VMs in Azure.
+
+## Lesson: l0801 | Azure Arc-enabled servers
+
+An **Azure Arc-enabled server** is a physical server or VM outside Azure (in your datacenter or another cloud) with the **Azure Connected Machine agent** installed. The agent connects it to a subscription and resource group, so it gets a resource ID, tags, role-based access control, and can use Azure services: Azure Policy, Azure Monitor, Microsoft Defender for Cloud, Azure Update Manager, VM extensions. Arc itself costs nothing; the services you use on top of it may.
+
+The agent has three services:
+
+- **himds** (Azure Hybrid Instance Metadata Service): the connection to Azure and the server's managed identity. If it stops, the server shows **Disconnected** after about 15 minutes without a heartbeat; after 45 days disconnected it becomes **Expired** and must be onboarded again.
+- **GCArcService** (guest configuration): checks and applies **Azure Policy machine configuration** (guest configuration) settings inside the OS, such as "the administrators group must contain only these accounts".
+- **ExtensionService**: installs and removes **extensions**, for example the Azure Monitor Agent (`AzureMonitorWindowsAgent`), Microsoft Defender for Endpoint (`MDE.Windows`), the Custom Script Extension or the Dependency agent.
+
+The agent needs only **outbound HTTPS (443)** to Azure, directly, through a proxy, or over Private Link. Ways to onboard:
+
+- **One server**: Azure portal > Azure Arc > Machines > Add, which generates a script you run on the server (you sign in during the run). Windows Admin Center (registered with Azure) can do the same for a server it manages.
+- **At scale**: the same script with a **service principal** that has the *Azure Connected Machine Onboarding* role, run by Group Policy, Configuration Manager or any deployment tool. Behind every method is `azcmagent connect --resource-group ... --location ...`.
+
+On the server, `azcmagent show` reports the status and resource details, `azcmagent disconnect` removes the resource, and the agent logs are in `%ProgramData%\AzureConnectedMachineAgent\Log`. Through Arc, **Microsoft Defender for Cloud** (Defender for Servers) protects the server and **Extended Security Updates** for Windows Server 2012 / 2012 R2 can be delivered.
+
+```terminal
+#setup admin:arc onboard SRV1
+#machine SRV1
+PS C:\Windows\system32> azcmagent show
+Resource Name                           : SRV1
+Resource Group Name                     : rg-hybrid
+Subscription ID                         : 5c1e7a9d-3b2f-4e61-9a80-1d2c3b4a5f60
+Location                                : West US 2
+Agent Version                           : 1.47
+Agent Status                            : Connected
+Agent Last Heartbeat                    : 2026-03-02T09:00:00Z
+
+Agent Service (himds)                   : running
+GC Service (gcarcservice)               : running
+PS C:\Windows\system32> Get-Service himds, GCArcService
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  himds              Azure Hybrid Instance Metadata Service
+Running  GCArcService       Guest Configuration Arc Service
+```
+
+@try
+@setup admin
+arc onboard CORE1
+@setup CORE1
+Stop-Service himds
+Set-Service himds -StartupType Disabled
+@task t1 | Server management | 10 | admin
+Connect **SRV1** and **FS1** to Azure Arc in the resource group **rg-arc-servers**.
+@check admin | both are Connected in rg-arc-servers
+arc["SRV1"].status == Connected
+arc["SRV1"].rg == rg-arc-servers
+arc["FS1"].status == Connected
+arc["FS1"].rg == rg-arc-servers
+@solution admin
+arc onboard SRV1 rg=rg-arc-servers
+arc onboard FS1 rg=rg-arc-servers
+@endtask
+@task t2 | Server management | 10 | CORE1
+In the portal, **CORE1** has shown **Disconnected** for a day. Find out why on CORE1 and fix it so it stays fixed after a restart.
+@check admin | CORE1 is Connected and its agent starts by itself
+arc["CORE1"].status == Connected
+service(CORE1, "himds").starttype == Automatic
+@hint azcmagent show, then look at the himds service.
+@solution CORE1
+azcmagent show
+Set-Service himds -StartupType Automatic
+Start-Service himds
+@explain
+Disconnected means Azure got no heartbeat. The himds service carries it; once it runs again the status comes back by itself, as long as the server wasn't offline for 45 days (then it is Expired and must be onboarded again).
+@endtask
+@task t3 | Server management | 10 | admin
+Install the **Azure Monitor Agent** extension (`AzureMonitorWindowsAgent`) on **SRV1** so its event logs can be collected.
+@check admin | the extension is on SRV1
+arc["SRV1"].extensions has AzureMonitorWindowsAgent
+@solution admin
+arc extension SRV1 AzureMonitorWindowsAgent
+@endtask
+@end
+
+@quiz
+? An Arc-enabled server shows Disconnected. Which service on the server should you check first?
++ himds (Azure Hybrid Instance Metadata Service)
+- WinRM
+- ADSync
+! himds keeps the connection and heartbeat to Azure; GCArcService and ExtensionService depend on it.
+? What network access does the Connected Machine agent need?
+- Inbound HTTPS from Azure to the server
++ Outbound HTTPS (443) to Azure, directly, by proxy or Private Link
+- A site-to-site VPN to an Azure virtual network
+! The agent only makes outbound connections; nothing has to be opened inbound.
+? You must onboard 300 servers to Azure Arc with no one signing in on each. What do you use?
+- The portal's single-server script on each server
++ The onboarding script with a service principal that has the Azure Connected Machine Onboarding role, deployed by GPO or Configuration Manager
+- Windows Admin Center, one server at a time
+! A service principal lets the script authenticate without a person; give it only the onboarding role.
+@end
+
+## Lesson: l0802 | Azure Update Manager and Azure Automation
+
+**Azure Update Manager** is Azure's update service for Windows and Linux machines, both **Azure VMs** and **Arc-enabled servers**. It needs no extra agent (it uses the VM agent or the Arc agent) and no Log Analytics workspace.
+
+- **Assess**: check which updates a machine is missing, now (one-time assessment) or every 24 hours (**periodic assessment**, which you can switch on with Azure Policy for many machines).
+- **One-time update**: install now, choosing classifications (Critical, Security, Update rollups, Definition, Updates...), KB numbers to include or exclude, and the reboot option.
+- **Maintenance configurations**: schedules (for example the Sunday after Patch Tuesday, 02:00-05:00) with **dynamic scopes** that pick machines by subscription, resource group, location, OS or tag.
+- Results and history show per machine and per update; Azure Resource Graph can query them.
+
+Windows Server Update Services (WSUS) and Group Policy still work for servers that can't reach Azure, but Microsoft no longer adds features to WSUS.
+
+**Azure Automation** is the older automation service. Its *Update Management* feature was retired in 2024 and replaced by Azure Update Manager. What is still used:
+
+- **Runbooks** (PowerShell or Python scripts that run in Azure on a schedule or from a webhook). A **Hybrid Runbook Worker** (installed as an extension, also on Arc-enabled servers) runs them on your own servers.
+- **Change Tracking and Inventory** (software, files, registry and services that changed), now based on the Azure Monitor Agent.
+- Desired State Configuration in Automation is being replaced by Azure Policy **machine configuration**.
+
+```terminal
+#setup admin:arc onboard SRV1
+#setup admin:update assess SRV1
+#setup admin:update install SRV1 classes=Security
+#machine SRV1
+PS C:\Windows\system32> Get-HotFix | Sort-Object HotFixID | Format-Table HotFixID, Description
+
+HotFixID  Description
+--------  -----------
+KB5012170 Security Update
+KB5050575 Update
+KB5050593 Security Update
+KB5051979 Security Update
+KB5054980 Security Update
+KB5055526 Security Update
+```
+
+@try
+@setup admin
+arc onboard SRV1
+@task t1 | Server management | 10 | admin
+Use **Azure Update Manager** to find what **SRV1** is missing and install the **Security** updates now.
+@check admin | SRV1 was assessed and has the security updates
+updates(SRV1).assessed == Yes
+updates(SRV1).missing !has KB5055526
+hotfix(SRV1) has KB5055526
+@hint Check for updates first: Update Manager installs what an assessment found.
+@solution admin
+update assess SRV1
+update install SRV1 classes=Security
+@endtask
+@task t2 | Server management | 10 | admin
+**CORE1** isn't in Update Manager at all. Bring it in and install only its **Security** updates; the Malicious Software Removal Tool (an update rollup) waits for the next window.
+@check admin | CORE1 has the security update and still misses the rollup
+arc["CORE1"].status == Connected
+hotfix(CORE1) has KB5055526
+updates(CORE1).missing has KB890830
+@hint Update Manager manages Azure VMs and Arc-enabled servers. A server outside Azure needs Arc first.
+@solution admin
+arc onboard CORE1
+update assess CORE1
+update install CORE1 classes=Security
+@endtask
+@end
+
+@quiz
+? Which machines can Azure Update Manager patch?
+- Only Azure VMs
++ Azure VMs and Azure Arc-enabled servers
+- Any server that has WSUS
+! Arc gives servers outside Azure the identity and agent that Update Manager uses.
+? You want Update Manager to check every Arc-enabled server for missing updates every day without anyone clicking. What do you turn on?
+- A one-time assessment
++ Periodic assessment (with Azure Policy for many machines)
+- A Hybrid Runbook Worker
+! Periodic assessment runs about every 24 hours; Azure Policy can switch it on for every machine in a scope.
+? What replaced Azure Automation's Update Management?
+- WSUS
++ Azure Update Manager
+- Azure Policy machine configuration
+! Automation Update Management was retired in 2024; Update Manager needs no Log Analytics workspace.
+@end
+
+## Lesson: l0803 | Windows Server VMs in Azure
+
+Running Windows Server as an **Azure VM** moves the hardware to Microsoft, but the OS is still yours to manage. What the exam expects you to know:
+
+- **Size** sets the processors and memory (`Standard_D2s_v5`: 2 vCPUs, 8 GB). You can resize a running VM (it restarts); if the new size isn't on the same hardware cluster, **stop (deallocate)** it first. Only a **deallocated** VM stops costing compute; shutting Windows down inside the VM doesn't.
+- **Disks**: the OS disk, **data disks** (Standard HDD, Standard SSD, Premium SSD, Ultra Disk) with **host caching** None, ReadOnly or ReadWrite per disk, and a temporary disk (D:) that is lost when the VM moves: never keep data on it.
+- **Networking**: a NIC in a VNet subnet with a private IP (**Dynamic** or **Static** allocation, set on the NIC in Azure), optional public IP, network security groups. Reach VMs over a VPN, **Azure Bastion** (RDP in the browser, no public IP), or **just-in-time access** from Defender for Cloud, which opens RDP for a short time only.
+- **When Windows won't answer**: **boot diagnostics** (a screenshot of the console), the **Serial console** (a SAC / CMD prompt), **Run command** (runs a PowerShell script through the VM agent), **Reset password**, and redeploying to new hardware.
+- **Licensing and editions**: **Azure Hybrid Benefit** uses Windows Server licenses you already own (with Software Assurance) to pay less. **Windows Server Datacenter: Azure Edition** adds **hotpatch** (security updates without restarts most months) and SMB over QUIC.
+- **Management**: VM extensions (the same idea as on Arc), Windows Admin Center in the portal, Azure Update Manager, Azure Backup, and Azure Policy.
+
+@try
+@task t1 | Server management | 10 | admin
+**AZ-APP1** is too slow. Move it to the size **Standard_D4s_v5**, and make its private IP static so the app's firewall rules keep working.
+@check admin | the new size and a static IP
+azure.vm["AZ-APP1"].size == Standard_D4s_v5
+azure.vm["AZ-APP1"].ipallocation == Static
+@solution admin
+azure vm AZ-APP1 size=Standard_D4s_v5 ipallocation=Static
+@endtask
+@task t2 | Server management | 10 | admin
+Add a 128 GB data disk named **appdata** to AZ-APP1 for its read-heavy files, with the caching that suits read-heavy data, and check it for missing updates with Update Manager.
+@check admin | the disk and the assessment
+azure.vm["AZ-APP1"].disk["appdata"].caching == ReadOnly
+azure.vm["AZ-APP1"].disk["appdata"].sizegb == 128
+updates(AZ-APP1).assessed == Yes
+@solution admin
+azure vm AZ-APP1 disk name=appdata size=128 caching=ReadOnly
+update assess AZ-APP1
+@endtask
+@end
+
+@quiz
+? A VM is shut down from inside Windows. What does the company still pay for?
++ Compute, because the VM is stopped but still allocated
+- Nothing, a stopped VM costs nothing
+- Only the public IP
+! Only Stop (deallocate) in Azure releases the hardware; disks are charged either way.
+? Remote Desktop must reach Azure VMs without a public IP on any of them. What do you use?
+- A public load balancer
++ Azure Bastion
+- The Serial console
+! Bastion gives RDP in the browser from the portal; the VMs keep only private addresses.
+? Which data disk caching suits read-heavy application data?
+- None
++ ReadOnly
+- ReadWrite
+! ReadOnly caching speeds up reads; None is for AD DS and write-heavy logs, ReadWrite only for apps that handle caching safely.
+@end
+

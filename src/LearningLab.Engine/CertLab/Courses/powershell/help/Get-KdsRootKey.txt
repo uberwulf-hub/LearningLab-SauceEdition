@@ -1,0 +1,9 @@
+SYNOPSIS: Lists the forest's KDS root keys.
+DESCRIPTION:
+Get-KdsRootKey shows each Key Distribution Service root key with its KeyId and EffectiveTime. If it returns nothing, the forest has no root key yet and New-ADServiceAccount will fail for group managed service accounts until you run Add-KdsRootKey.
+A key whose EffectiveTime is still in the future exists but can't be used yet.
+EXAMPLE: Get-KdsRootKey
+The root keys and when each becomes usable.
+EXAMPLE: Get-KdsRootKey | Where-Object EffectiveTime -le (Get-Date)
+Only the keys that are already in effect.
+RELATED: Add-KdsRootKey, New-ADServiceAccount

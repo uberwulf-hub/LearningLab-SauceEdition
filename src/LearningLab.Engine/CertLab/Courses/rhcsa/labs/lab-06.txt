@@ -1,0 +1,140 @@
+# Lab: lab-06 | File systems, NFS, autofs and permissions | u06 | 50
+Practice for unit 6 on server1. Some storage is ready for you: two empty partitions on vdc, and an xfs file system on the logical volume vglab/lvapp mounted on /app. The dnf repositories are configured. Start with task 1: until it is done, mount -a reports an error. Everything must also work after a reboot.
+
+@vars
+grp = webteam | design | research
+member = maria | omar | lena
+reader = auditor | intern
+size = 600 | 640 | 680
+@endvars
+
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+groupadd {grp}
+useradd -G {grp} {member}
+useradd {reader}
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm 1MiB 2049MiB
+vgcreate vglab /dev/vdb1
+lvcreate -n lvapp -L 300M vglab
+mkfs.xfs /dev/vglab/lvapp
+mkdir /app
+echo '/dev/vglab/lvapp /app xfs defaults 0 0' >> /etc/fstab
+mount -a
+echo 'config=keep' > /app/settings.conf
+parted -s /dev/vdc mklabel gpt
+parted -s /dev/vdc mkpart transfer 1MiB 513MiB
+parted -s /dev/vdc mkpart docs 513MiB 1537MiB
+mkdir /oldarchive
+echo 'UUID=3c1f5e2a-9d4b-4c11-8e0f-5a6b7c8d9e01 /oldarchive xfs defaults 0 0' >> /etc/fstab
+
+@task t01 | File systems | 10 | server1
+/etc/fstab has a line for /oldarchive whose file system no longer exists. At the next boot it would stop server1 in emergency mode. Remove that line (or turn it into a comment), so that every line in /etc/fstab works. Do not change the other lines.
+@check server1 | no active fstab line mounts /oldarchive
+! findmnt -s /oldarchive >/dev/null 2>&1
+@check server1 | mount -a succeeds and /app is still in fstab
+mount -a && findmnt -s /app >/dev/null
+@hint mount -a shows which line fails. sed -i '/oldarchive/d' /etc/fstab deletes it; or put a # in front with vi.
+@solution server1
+mount -a
+sed -i '/oldarchive/d' /etc/fstab
+systemctl daemon-reload
+mount -a
+@explain
+systemd turns every fstab line into a mount unit that the boot waits for. A line whose device cannot be found makes that unit fail, and the boot stops in emergency mode, where you would log in as root, fix the line, run systemctl daemon-reload and mount -a, and reboot. Finding it with mount -a beforehand is much easier. The option nofail would also let the boot carry on without a missing device.
+@endtask
+
+@task t02 | File systems | 20 | server1
+Format /dev/vdc2 with ext4 and the label `DOCS`, and mount it on /docs at every boot by its label. Format /dev/vdc1 with vfat and mount it on /transfer at every boot by its UUID.
+@check server1 | vdc2 is ext4 labelled DOCS, mounted on /docs from fstab's LABEL=DOCS
+test "$(blkid -s TYPE -o value /dev/vdc2)" = ext4 && test "$(findmnt -s -n -o SOURCE /docs)" = "LABEL=DOCS" && test "$(findmnt -n -o SOURCE /docs)" = /dev/vdc2
+@check server1 | vdc1 is vfat, mounted on /transfer by UUID
+test "$(blkid -s TYPE -o value /dev/vdc1)" = vfat && test "$(findmnt -s -n -o SOURCE /transfer)" = "UUID=$(blkid -s UUID -o value /dev/vdc1)" && test "$(findmnt -n -o FSTYPE /transfer)" = vfat
+@hint mkfs.ext4 -L DOCS; mkfs.vfat. A vfat UUID is short (like 1A2B-3C4D); blkid prints it.
+@solution server1
+mkfs.ext4 -L DOCS /dev/vdc2
+mkfs.vfat /dev/vdc1
+mkdir -p /docs /transfer
+echo 'LABEL=DOCS /docs ext4 defaults 0 2' >> /etc/fstab
+echo "UUID=$(blkid -s UUID -o value /dev/vdc1) /transfer vfat defaults 0 0" >> /etc/fstab
+systemctl daemon-reload
+mount -a
+df -hT /docs /transfer
+@explain
+mkfs.ext4 takes the label with -L; mkfs.vfat would take it with -n. The last fstab field of 2 asks for a file system check of ext4 at boot (0 skips it, which is also fine). vfat has no Linux owners or permissions: everything on it belongs to the user who mounted it, unless mount options (uid=, gid=, umask=) say otherwise.
+@endtask
+
+@task t03 | File systems | 15 | server1
+The xfs file system on /app (logical volume vglab/lvapp) is too small. Grow the logical volume to {size} MiB and the file system with it. The file /app/settings.conf must stay.
+@check server1 | vglab/lvapp is {size} MiB
+test "$(lvs --noheadings --units m -o lv_size vglab/lvapp | tr -d ' ')" = "{size}.00m"
+@check server1 | the file system uses the new space, and the data is there
+test "$(df -m --output=size /app | tail -1 | tr -d ' ')" -ge $(({size} - 60)) && grep -q config=keep /app/settings.conf
+@hint lvextend -r -L {size}M does both layers. Without -r, run xfs_growfs /app afterwards.
+@solution server1
+vgs vglab
+lvextend -r -L {size}M /dev/vglab/lvapp
+df -h /app
+@explain
+-r (--resizefs) grows the file system right after the LV. If you forget it, the LV is bigger but df still shows the old size until you run xfs_growfs /app (or resize2fs for ext4). xfs grows while mounted, so the data and the users of /app are not disturbed.
+@endtask
+
+@task t04 | File systems | 15 | server1
+Mount the NFS export /exports/shared from utility.lab.example.com on /mnt/shared, now and at every boot.
+@check server1 | /mnt/shared is an NFS mount of /exports/shared
+findmnt -n -o FSTYPE /mnt/shared | grep -q '^nfs' && findmnt -n -o SOURCE /mnt/shared | grep -q ':/exports/shared$'
+@check server1 | /etc/fstab mounts it at boot
+findmnt -s -n -o FSTYPE /mnt/shared | grep -q '^nfs' && findmnt -s -n -o SOURCE /mnt/shared | grep -q ':/exports/shared$'
+@hint showmount -e lists the exports. Type nfs, source SERVER:/PATH, and the option _netdev.
+@solution server1
+showmount -e utility.lab.example.com
+mkdir -p /mnt/shared
+echo 'utility.lab.example.com:/exports/shared /mnt/shared nfs defaults,_netdev 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /mnt/shared
+@explain
+_netdev tells systemd that the mount needs the network, so it waits for it at boot. The client works out the NFS version (4.2) with the server, which is why findmnt shows nfs4. Files root creates there belong to nobody, because the server squashes root.
+@endtask
+
+@task t05 | File systems | 20 | server1
+Configure autofs so that /remote/public mounts the NFS export /exports/public of utility.lab.example.com read-only when it is used, and /remote/shared mounts /exports/shared read-write. autofs must start at boot.
+@check server1 | autofs is enabled and running
+systemctl is-enabled autofs && systemctl is-active autofs
+@check server1 | /remote/public is a read-only mount of /exports/public when used
+ls /remote/public >/dev/null 2>&1; findmnt -n -o SOURCE /remote/public | grep -q ':/exports/public$' && findmnt -n -o OPTIONS /remote/public | grep -q '^ro'
+@check server1 | /remote/shared mounts /exports/shared when used
+ls /remote/shared >/dev/null 2>&1; findmnt -n -o SOURCE /remote/shared | grep -q ':/exports/shared$'
+@hint dnf install autofs. A file /etc/auto.master.d/NAME.autofs names /remote and a map file; the map has one line per key: key, -options, server:/path.
+@solution server1
+dnf install -y autofs
+echo '/remote /etc/auto.remote' > /etc/auto.master.d/remote.autofs
+echo 'public -ro utility.lab.example.com:/exports/public' > /etc/auto.remote
+echo 'shared -rw utility.lab.example.com:/exports/shared' >> /etc/auto.remote
+systemctl enable --now autofs
+ls /remote/public /remote/shared
+@explain
+This is an indirect map: autofs owns /remote and creates public and shared under it on demand, and unmounts them after a few idle minutes. ls /remote shows nothing until a key has been used, which is normal. The same export may be mounted in two places (here /mnt/shared and /remote/shared) without trouble.
+@endtask
+
+@task t06 | File systems | 20 | server1
+Create the folder /srv/{grp}, owned by the group `{grp}`. Members of `{grp}` can create and change files in it and new files automatically belong to `{grp}`; other users have no access through the normal permissions. The user `{reader}`, who is not a member, must be able to list the folder and read its files, including files created later, through ACLs.
+@check server1 | /srv/{grp} belongs to {grp} with mode 2770
+test "$(stat -c '%G %a' /srv/{grp})" = "{grp} 2770"
+@check server1 | a file {member} creates belongs to {grp}
+su - {member} -c 'touch /srv/{grp}/lab-check' && test "$(stat -c %G /srv/{grp}/lab-check)" = {grp}
+@check server1 | {reader} can list the folder and read that new file, without being in {grp}
+su - {reader} -c 'ls /srv/{grp} && cat /srv/{grp}/lab-check' >/dev/null && ! id -nG {reader} | grep -qw {grp}
+@check server1 | the folder has a default ACL entry for {reader}
+getfacl /srv/{grp} 2>/dev/null | grep -Eq '^default:user:{reader}:r'
+@hint chgrp + chmod 2770, then setfacl -m u:{reader}:rx and setfacl -m d:u:{reader}:rx.
+@solution server1
+mkdir -p /srv/{grp}
+chgrp {grp} /srv/{grp}
+chmod 2770 /srv/{grp}
+setfacl -m u:{reader}:rx /srv/{grp}
+setfacl -m d:u:{reader}:rx /srv/{grp}
+getfacl /srv/{grp}
+@explain
+The 2 in 2770 is the set-GID bit: new files inherit the folder's group. The ACL entry gives {reader} r-x on the folder itself; the default (d:) entry is copied to every new file, so {reader} can read those too (on a file, x stays off unless the file asks for it). The mask, shown by getfacl, caps what named entries get; chmod g=... changes the mask, so check with getfacl after a chmod.
+@endtask

@@ -1,0 +1,10 @@
+SYNOPSIS: Opens a file with its default program, as double-clicking it would.
+DESCRIPTION:
+On a real PC, Invoke-Item (ii) starts the program Windows has for the file type: Notepad for .txt, Excel for .csv, File Explorer for a folder (ii . opens the current folder). The practice machines have no desktop, so Cert Lab only says what would open.
+PARAMETER Path:
+The items to open. Wildcards are allowed.
+PARAMETER LiteralPath:
+The items, taken exactly as typed.
+EXAMPLE: Invoke-Item C:\LabFiles\employees.csv
+Would open the file in the program for .csv files.
+RELATED: Start-Process, Get-Item

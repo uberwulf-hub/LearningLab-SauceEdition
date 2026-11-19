@@ -1,0 +1,23 @@
+NAME
+       groupdel - delete a group
+
+SYNOPSIS
+       groupdel [-f] GROUP
+
+DESCRIPTION
+       groupdel removes GROUP from /etc/group and /etc/gshadow. It refuses to
+       remove a group that is still some user's primary group; change or
+       remove that user first (or use -f).
+
+       Files owned by the group are not changed: they keep the number, and
+       ls -l shows that number instead of a name. find / -nogroup finds them.
+
+OPTIONS
+       -f, --force
+              Delete the group even if it is a user's primary group.
+
+EXAMPLES
+           groupdel devops
+
+SEE ALSO
+       groupadd(8), groupmod(8), userdel(8), find(1)

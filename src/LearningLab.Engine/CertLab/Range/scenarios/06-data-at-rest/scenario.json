@@ -1,0 +1,33 @@
+{
+    "id": "data-at-rest",
+    "title": "Data at Rest",
+    "level": "Advanced",
+    "order": 6,
+    "summary": "A download page lets you climb out of its folder and read any file. That leads to database credentials, a table full of passwords, and a shell.",
+    "story": "Sagebrush Clinic (made up) runs an intranet server, db01, on 10.10.6.0/24. You start on scout. The intranet has a documents page that serves files by name.",
+    "goal": "Capture the user flag in the dbadmin home folder and the root flag in /root.",
+    "skills": "path traversal, reading configs, a pretend SQL database, ssh, sudo",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 45,
+    "vars": { "DBPW": "word", "ADMPW": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.6.5/24" ] },
+        { "name": "db01", "os": "linux", "hostname": "db01.sagebrush.example", "role": "intranet and database", "nics": [ "10.10.6.30/24" ], "packages": [ "httpd", "mariadb-server", "mariadb" ], "setup": "db01.sh",
+          "versions": { "80": "DocuShare Mini 0.9 (Apache httpd 2.4.62)", "3306": "MariaDB 10.5" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "dbadmin flag", "points": 140, "machine": "db01", "path": "/home/dbadmin/flag.txt", "owner": "dbadmin", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 160, "machine": "db01", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "web": [
+        { "machine": "db01", "path": "/", "kind": "page", "title": "Sagebrush Intranet", "body": "<h1>Sagebrush Clinic intranet</h1><p>Documents: <a href=\"/download?name=handbook.txt\">/download?name=handbook.txt</a></p>" },
+        { "machine": "db01", "path": "/download", "kind": "file", "param": "name", "base": "/var/www/docs", "runAs": "apache", "title": "Document download",
+          "body": "<h1>Document download</h1><p>Ask for a file: /download?name=handbook.txt</p>" }
+    ],
+    "hints": [
+        { "text": "Scan db01 (web on 80, MariaDB on 3306). The download page serves files by name: /download?name=handbook.txt. Try climbing out of its folder with ../ to read system files, e.g. name=../../../../etc/passwd.", "cost": 15 },
+        { "text": "Read the web app's config the same way: name=../conf/db.ini (relative to /var/www/docs). It holds a MariaDB user and password. Connect: mysql -h 10.10.6.30 -u intranet -pPASSWORD intranet", "cost": 30 },
+        { "text": "In the database, SHOW TABLES and SELECT * FROM staff. One row has the dbadmin Linux password. ssh dbadmin@10.10.6.30, then sudo -l (awk reads any file as root).", "cost": 45 }
+    ]
+}

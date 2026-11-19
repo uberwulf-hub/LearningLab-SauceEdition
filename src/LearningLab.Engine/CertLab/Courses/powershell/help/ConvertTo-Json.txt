@@ -1,0 +1,30 @@
+SYNOPSIS: Turns objects into JSON text.
+DESCRIPTION:
+ConvertTo-Json writes objects as JSON, the text format used by web services, settings files and many other programs. Properties become keys, arrays become [ ] lists, $true and $false become true and false, and $null becomes null.
+
+When several objects come through the pipeline, ConvertTo-Json collects them all and writes one JSON array. A single object becomes a single JSON object.
+
+Nesting is limited by -Depth, which is only 2 by default. Anything deeper is not written out; instead you get the object's text, such as "System.Collections.Hashtable". Raise -Depth for nested data.
+PARAMETER InputObject:
+The objects to convert. Usually they come through the pipeline. Position 0, required.
+PARAMETER Depth:
+How many levels of nested objects to write. The default is 2. Windows PowerShell 5.1 allows up to 100.
+PARAMETER Compress:
+Writes everything on one line with no spaces, which is smaller to store or send.
+EXAMPLE: [pscustomobject]@{ Name = 'web01'; Up = $true; Ram = 16 } | ConvertTo-Json
+Writes a JSON object with three keys, one per line.
+EXAMPLE: 1, 2, 3 | ConvertTo-Json -Compress
+Writes [1,2,3] on one line: several input objects become one array.
+EXAMPLE: @{ a = @{ b = @{ c = @{ d = 1 } } } } | ConvertTo-Json
+The innermost level is too deep for the default depth, so it shows as "System.Collections.Hashtable".
+EXAMPLE: @{ a = @{ b = @{ c = @{ d = 1 } } } } | ConvertTo-Json -Depth 5
+With enough depth, the whole structure is written, ending in "d": 1.
+NOTES:
+5.1 writes two spaces after each colon and lines up nested objects under their key; PowerShell 7 uses one space and plain two-space indents. Both are valid JSON.
+
+5.1 writes dates as "\/Date(milliseconds)\/" and enum values as numbers. PowerShell 7 writes dates as ISO text (2026-03-02T09:00:00) and has -EnumsAsStrings.
+
+5.1 gives no warning when the depth cuts data off; PowerShell 7 does. If a value looks like a type name, check -Depth.
+
+To keep a single item as an array, pass it with -InputObject @(1) instead of the pipeline.
+RELATED: ConvertFrom-Json, ConvertTo-Csv, Export-Csv, about_Hash_Tables

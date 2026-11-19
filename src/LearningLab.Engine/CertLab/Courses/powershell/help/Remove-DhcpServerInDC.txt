@@ -1,0 +1,12 @@
+SYNOPSIS: Takes a DHCP server off the authorized list in Active Directory.
+DESCRIPTION:
+Remove-DhcpServerInDC unauthorizes a server. A domain-joined Windows DHCP server that is no longer authorized stops leasing addresses, so do this when you retire a server or move DHCP somewhere else. Clients keep their leases until they expire, then look for another server.
+
+It needs Enterprise Admins rights.
+PARAMETER DnsName:
+The server's full name.
+PARAMETER IPAddress:
+The server's IP address.
+EXAMPLE: Remove-DhcpServerInDC -DnsName srv1.corp.example -IPAddress 10.10.0.50
+SRV1 stops leasing once it notices it is no longer authorized.
+RELATED: Add-DhcpServerInDC, Get-DhcpServerInDC

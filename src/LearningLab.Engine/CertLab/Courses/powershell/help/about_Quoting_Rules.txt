@@ -1,0 +1,49 @@
+TOPIC
+    about_Quoting_Rules
+
+SHORT DESCRIPTION
+    Single and double quotes, here-strings and the escape character.
+
+LONG DESCRIPTION
+  Single quotes
+    Text in single quotes is used exactly as written: 'Cost: $5' stays
+    Cost: $5. To put a single quote inside, write two: 'it''s'.
+
+  Double quotes
+    Text in double quotes is expanded: variables are replaced by their
+    values and $( ) runs what is inside.
+
+        $n = 'Ada'
+        "Hello $n"                  Hello Ada
+        "Length: $($n.Length)"      Length: 3
+        "Length: $n.Length"         Length: Ada.Length
+
+    Only the variable name is expanded: a property, an index or a
+    calculation needs $( ). A colon right after a variable name is read
+    as a drive or scope ($env:PATH), so "$n: hi" is an error in Windows
+    PowerShell 5.1; write "${n}: hi" or "$($n): hi".
+
+  The escape character
+    The backtick ` changes the meaning of the next character inside
+    double quotes:
+
+        `n  new line      `t  tab      `"  a double quote
+        `$  a dollar sign that is not a variable
+        ``  a backtick
+
+    At the end of a line, outside quotes, a backtick continues the command
+    on the next line.
+
+  Here-strings
+    A here-string holds several lines. It starts with @" (or @') at the
+    end of a line and ends with "@ (or '@) at the very start of a line.
+    @" ... "@ expands variables, @' ... '@ does not.
+
+        $text = @'
+        Line one with a $ sign
+        Line two
+        '@
+
+SEE ALSO
+    about_Variables
+    about_Operators

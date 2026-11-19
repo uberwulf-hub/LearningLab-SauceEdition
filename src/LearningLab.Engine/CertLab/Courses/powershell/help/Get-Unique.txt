@@ -1,0 +1,26 @@
+SYNOPSIS: Removes repeats from a sorted list.
+DESCRIPTION:
+Get-Unique compares each item with the one just before it and drops it when they are the same. It only looks at neighbours, so the list must be sorted first; otherwise a value that comes back later is kept again.
+
+Most of the time Sort-Object -Unique (or Select-Object -Unique) is simpler. Get-Unique is useful when the input is already sorted and you want to keep it streaming.
+
+Items are compared as text, and the comparison is case-sensitive: "a" and "A" are different.
+PARAMETER InputObject:
+The items to check. They come through the pipeline.
+PARAMETER AsString:
+Compares the items as text. This is how Cert Lab always compares them.
+PARAMETER OnType:
+Compares the items' types instead of their values: of several neighbours of the same type, only the first is kept.
+EXAMPLE: 1, 1, 2, 3, 1 | Sort-Object | Get-Unique
+Outputs 1, 2 and 3.
+EXAMPLE: 1, 1, 2, 2, 2, 3, 1 | Get-Unique
+Outputs 1, 2, 3, 1: without sorting, the last 1 is not next to the others.
+EXAMPLE: 1, 'a', 2, 'b' | Get-Unique -OnType
+Keeps the first item of each run of the same type.
+NOTES:
+The alias is gu.
+
+For objects with several properties, comparing their text rarely means what you want. Choose the property that matters instead: Sort-Object -Property Name -Unique.
+
+Sort-Object -Unique is case-insensitive; Get-Unique is case-sensitive.
+RELATED: Sort-Object, Select-Object, Group-Object, Compare-Object

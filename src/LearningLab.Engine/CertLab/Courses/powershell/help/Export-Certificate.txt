@@ -1,0 +1,17 @@
+SYNOPSIS: Saves the public part of a certificate to a .cer file.
+DESCRIPTION:
+Export-Certificate writes a certificate from a store to a file, without its private key. The file is safe to share: it lets other computers check signatures made with the certificate, but not make new ones.
+
+The usual next step is Import-Certificate on the computers that should trust the certificate.
+PARAMETER Cert:
+The certificate, for example the object New-SelfSignedCertificate returned. You can pipe it in.
+PARAMETER FilePath:
+The file to write, for example C:\LabFiles\LabSigning.cer.
+EXAMPLE: $cert | Export-Certificate -FilePath C:\LabFiles\LabSigning.cer
+Saves the public part of the certificate in $cert.
+EXAMPLE: Export-Certificate -Cert $cert -FilePath C:\LabFiles\LabSigning.cer; Import-Certificate -FilePath C:\LabFiles\LabSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
+Exports the certificate and trusts it on the same computer, so signatures made with it become Valid.
+NOTES:
+In Cert Lab the .cer file is a readable stand-in; a real .cer file is binary. Import-Certificate reads both the same way.
+To copy a certificate with its private key, Windows uses a password-protected .pfx file (Export-PfxCertificate), which is not part of this lab.
+RELATED: Import-Certificate, New-SelfSignedCertificate, Set-AuthenticodeSignature

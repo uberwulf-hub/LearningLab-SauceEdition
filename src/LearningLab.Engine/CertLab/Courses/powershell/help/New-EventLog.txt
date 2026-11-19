@@ -1,0 +1,14 @@
+SYNOPSIS: Registers an event source, and creates a classic log if it does not exist (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Before a script can write with Write-EventLog it needs a source: a name tied to one log. New-EventLog registers the source; if the log name is new it creates that log too. A source can belong to only one log.
+PARAMETER LogName:
+The log (Application, or a new name). Position 0.
+PARAMETER Source:
+One or more source names. Position 1.
+PARAMETER MessageResourceFile:
+A message file for the source (not needed for plain messages).
+EXAMPLE: New-EventLog -LogName Application -Source LabApp
+A source for a script that writes to Application.
+EXAMPLE: New-EventLog -LogName LabLog -Source LabTool
+A new log of your own, with one source.
+RELATED: Write-EventLog, Remove-EventLog, Get-EventLog

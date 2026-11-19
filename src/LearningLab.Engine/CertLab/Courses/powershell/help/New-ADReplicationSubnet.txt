@@ -1,0 +1,18 @@
+SYNOPSIS: Adds a subnet to Active Directory and assigns it to a site.
+DESCRIPTION:
+New-ADReplicationSubnet tells Active Directory which addresses belong to which site. Write the subnet as network/prefix length, such as 10.20.0.0/24. A subnet can belong to only one site; a subnet without a site is ignored.
+PARAMETER Name:
+The subnet, such as 10.20.0.0/24. Position 0.
+PARAMETER Site:
+The site it belongs to. Position 1.
+PARAMETER Location:
+Where it is, as free text.
+PARAMETER Description:
+A note.
+PARAMETER PassThru:
+Returns the new subnet.
+EXAMPLE: New-ADReplicationSubnet -Name 10.20.0.0/24 -Site Seattle -Location "Seattle warehouse"
+Puts the 10.20.0.x addresses in the Seattle site.
+EXAMPLE: Get-ADReplicationSubnet -Filter * | Select-Object Name, Site
+Checks the result.
+RELATED: Get-ADReplicationSubnet, New-ADReplicationSite, Get-ADReplicationSite

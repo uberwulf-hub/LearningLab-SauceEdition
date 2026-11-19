@@ -1,0 +1,31 @@
+# Deck: deploy-maintain | Deploy and maintain | Deploy and maintain
+The five time fields of a cron line, in order :: minute, hour, day of month, month, day of week (then the command)
+Replace the crontab of the user harry with the line in a pipe, as root :: `echo '0 2 * * * /usr/local/bin/backup' | crontab -u harry -`
+List the crontab of the user harry :: `crontab -l -u harry`
+What does `*/15 9-17 * * 1-5` mean in a crontab? :: every 15 minutes from 09:00 to 17:45, Monday to Friday
+Which extra field do lines in /etc/crontab and /etc/cron.d have? :: the user that runs the command, right after the five time fields
+Which file, if it exists, lists the only users allowed to use crontab? :: /etc/cron.allow (otherwise everyone except those in /etc/cron.deny)
+Run `logger hello` once at 16:30 tomorrow :: `echo 'logger hello' | at 16:30 tomorrow`
+List the jobs waiting in the at queue :: `atq`
+Delete the at job number 4 :: `atrm 4`
+Which section and setting of a timer unit sets the schedule? :: [Timer] OnCalendar=, for example OnCalendar=*-*-* 06:00:00
+What does Persistent=true do in a timer? :: it runs a job that was missed while the machine was off as soon as it is on again
+Make systemd read new or changed unit files :: `systemctl daemon-reload`
+Start the timer backup.timer now and at every boot :: `systemctl enable --now backup.timer`
+List the timers with their next and last run :: `systemctl list-timers`
+Start the service httpd now and at every boot :: `systemctl enable --now httpd`
+Stop the service atd and keep it from starting at boot :: `systemctl disable --now atd`
+Make the service nfs-server impossible to start, even by hand :: `systemctl mask nfs-server` (undo with systemctl unmask)
+Show the target the machine boots into :: `systemctl get-default`
+Make the machine boot into the text console by default :: `systemctl set-default multi-user.target`
+Switch to the graphical target now, without a reboot :: `systemctl isolate graphical.target`
+Set the time zone to Europe/Paris :: `timedatectl set-timezone Europe/Paris`
+The line in /etc/chrony.conf that uses the NTP server ntp.example.com :: server ntp.example.com iburst
+Show the NTP sources chrony uses and which one it follows :: `chronyc sources` (^* marks the current source)
+Write a repo file for http://repo.example.com/BaseOS automatically :: `dnf config-manager --add-repo http://repo.example.com/BaseOS`
+Which repo file setting points at the signing key? :: gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release (with gpgcheck=1)
+Find the package that provides the command semanage :: `dnf provides */semanage`
+Which installed package owns the file /etc/chrony.conf? :: `rpm -qf /etc/chrony.conf`
+Add the kernel argument console=ttyS0 to every boot entry :: `grubby --update-kernel=ALL --args="console=ttyS0"`
+Show the default kernel's boot entry with its arguments :: `grubby --info=DEFAULT`
+Rebuild the GRUB configuration after editing /etc/default/grub :: `grub2-mkconfig -o /boot/grub2/grub.cfg`

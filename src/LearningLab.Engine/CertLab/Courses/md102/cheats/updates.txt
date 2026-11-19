@@ -1,0 +1,34 @@
+# Sheet: updates | Windows updates | Updates
+## Portal
+Devices > Windows updates > Update rings :: deferrals, deadlines, restart behaviour; one ring per device
+Devices > Windows updates > Feature updates :: move to and hold one Windows version (device groups)
+Devices > Windows updates > Quality updates :: expedite one monthly update (device groups)
+Devices > Windows updates > Driver updates :: approve drivers by hand or automatically (device groups)
+Reports > Windows updates :: feature, quality and expedited update reports
+Tenant administration > Connectors and tokens > Windows data :: allow Windows diagnostic data for the Windows update reports
+## Update ring settings
+Quality update deferral :: 0-30 days
+Feature update deferral :: 0-365 days
+Feature update uninstall period :: 2-60 days
+Upgrade Windows 10 devices to Latest Windows 11 release :: lets the ring move capable PCs to Windows 11
+Active hours :: no restarts in this range; at most 18 hours
+Deadline for quality / feature updates :: 0-30 days, then Windows restarts on its own
+Grace period :: 0-7 days after a missed deadline
+Pause :: stops new updates of one kind; ends after 35 days unless extended
+Uninstall :: removes the latest quality or feature update from the ring's devices
+## Feature updates and Windows 11
+Feature updates policy :: devices move to the version named and stay there
+PCs that can't run Windows 11 :: not offered it; they stay on Windows 10 22H2 (not applicable in the policy)
+Windows 11 needs :: TPM 2.0, UEFI Secure Boot, supported 64-bit CPU, 4 GB RAM, 64 GB storage
+Windows 10 end of support :: 14 October 2025; only ESU customers get security updates
+Patch Tuesday :: the second Tuesday of each month
+## On the PC
+Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update :: the ring's deferrals and pauses
+Get-HotFix :: installed updates
+Get-ComputerInfo -Property OsName, OsDisplayVersion, OsBuildNumber :: Windows version and build
+## Other services
+Expedited quality update :: install now, ignoring the ring's deferral; restart within 0-2 days
+Windows Autopatch :: Microsoft runs rings and waves (by default Test, Ring1, Ring2, Ring3, Last) for Windows, Microsoft 365 Apps, Edge, Teams
+Delivery Optimization :: peers share downloads; modes HTTP only, LAN, Group, Internet, Simple, Bypass
+iOS/iPadOS update policies :: install updates on supervised devices in a time window
+Android system update :: automatic, postponed or windowed (device restrictions)

@@ -1,0 +1,28 @@
+NAME
+       rmdir - remove empty directories
+
+SYNOPSIS
+       rmdir [-p] [-v] [--ignore-fail-on-non-empty] DIRECTORY...
+
+DESCRIPTION
+       rmdir removes directories only when they are empty, which makes it a
+       safe choice: it fails with "Directory not empty" instead of deleting
+       files. Use rm -r for a directory with files in it.
+
+OPTIONS
+       -p, --parents
+              Also remove the parent directories that become empty:
+              rmdir -p a/b/c removes c, then b, then a.
+
+       -v, --verbose
+              Print each directory removed.
+
+       --ignore-fail-on-non-empty
+              Do not report directories that are not empty.
+
+EXAMPLES
+           rmdir /tmp/empty
+           rmdir -p projects/2026/drafts
+
+SEE ALSO
+       mkdir(1), rm(1)

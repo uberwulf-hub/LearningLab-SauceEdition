@@ -1,0 +1,50 @@
+title: Step 2: A file called -
+level: Beginner
+category: ladder
+login: step2
+kind: Awkward file names
+teaser: the file's name is a single dash, and cat treats a dash in a special way
+points: 20
+order: 2
+answer: {{PW}}
+var: PW = hex:10
+
+@intro
+You are step2 now. The password for step 3 is in a file in your home folder whose
+whole name is a single dash: -
+
+Try cat - and see what happens (press Ctrl+C to stop it). Then find a way to make cat
+understand that you mean the file.
+
+@setup
+useradd -m step3
+echo 'step3:{{PW}}' | chpasswd
+printf '%s\n' '{{PW}}' > /home/step2/-
+chown step2: /home/step2/-
+
+@solution
+ls -l
+cat ./-
+
+@walkthrough
+For many commands a lone dash means "read what I type" (standard input) instead of a
+file, so cat - just waits for you to type. To name the file itself, give its path:
+
+    cat ./-
+
+The dot means "this folder", so ./- is "the file called - in this folder". cat no
+longer sees a lone dash, only a path, and prints the file. Writing the full path,
+cat /home/step2/-, works just as well.
+
+@hint 2
+What to think about first: the file is there (ls shows it), so the problem is not finding it but naming it. A single dash has a special meaning to cat: "read from the keyboard instead of a file". So cat - sits and waits for you. Ctrl+C stops it.
+
+@hint 3
+Every file has a path, a way of writing where it lives. A single dot . means "the folder I am in", and / separates folder names. So ./- means "the file named - in this folder". To cat, that is a path, not the special dash.
+
+@hint 4
+You can also write the whole path from the top of the computer: your home folder is /home/step2, so the file is /home/step2/-. Either form works. Tab completion (press Tab while typing a name) is a handy way to avoid typing mistakes.
+
+@hint 5
+Type exactly: cat ./-
+It prints ten letters and digits: that is the password for step 3, and the answer.

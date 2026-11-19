@@ -1,0 +1,23 @@
+NAME
+       fsck.vfat - check and repair a FAT (vfat) file system
+
+SYNOPSIS
+       fsck.vfat [-n] [-y] DEVICE
+
+DESCRIPTION
+       fsck.vfat (also called fsck.fat and dosfsck, from the dosfstools
+       package) checks a FAT12, FAT16 or FAT32 file system, such as a USB
+       stick or the EFI system partition, and repairs it. Unmount the file
+       system first.
+
+OPTIONS
+       -n     Check only; change nothing.
+
+       -y     Answer yes to every question.
+
+EXAMPLES
+           umount /mnt/usb
+           fsck.vfat -n /dev/vdb2
+
+SEE ALSO
+       fsck(8), mkfs.fat(8), fatlabel(8)

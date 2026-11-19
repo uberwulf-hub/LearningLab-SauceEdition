@@ -1,0 +1,88 @@
+NAME
+       tuned-adm - choose the tuning profile of the tuned service
+
+SYNOPSIS
+       tuned-adm list
+       tuned-adm active
+       tuned-adm recommend
+       tuned-adm profile PROFILE...
+       tuned-adm off
+       tuned-adm verify
+
+DESCRIPTION
+       The tuned service adjusts many kernel and device settings at once to
+       suit how the machine is used: saving power, handling heavy network
+       traffic, running as a virtual machine, and so on. A set of such
+       settings is a profile. tuned-adm lists the profiles, shows which one
+       is in use and switches to another.
+
+       tuned must be running (systemctl enable --now tuned). The chosen
+       profile is remembered and applied again at every boot.
+
+       Some profiles shipped with RHEL 9:
+
+       balanced
+              A middle way between speed and saving power.
+
+       powersave
+              Save as much power as possible.
+
+       throughput-performance
+              Settings for high throughput on a physical server.
+
+       latency-performance, network-latency
+              Quick responses, at the cost of power.
+
+       network-throughput
+              Fast network transfers.
+
+       virtual-guest
+              For a machine running inside a virtual machine.
+
+       virtual-host
+              For a machine that runs virtual machines.
+
+       desktop
+              Based on balanced, for interactive use.
+
+COMMANDS
+       list   List the available profiles with a description, and the active
+              one.
+
+       active Print the profile in use now.
+
+       recommend
+              Print the profile tuned suggests for this machine (for a virtual
+              machine: virtual-guest).
+
+       profile PROFILE...
+              Switch to PROFILE. Several names merge their settings.
+
+       off    Stop tuning (no profile).
+
+       verify Check that the profile's settings are all still in effect.
+
+EXAMPLES
+       See which profile is active and which one is recommended:
+
+           tuned-adm active
+           tuned-adm recommend
+
+       Switch to the recommended profile:
+
+           tuned-adm profile virtual-guest
+           tuned-adm active
+
+       Use a profile for heavy network traffic:
+
+           tuned-adm profile network-throughput
+
+FILES
+       /usr/lib/tuned/
+              The profiles that come with tuned.
+
+       /etc/tuned/
+              Your own profiles, and active_profile (the chosen one).
+
+SEE ALSO
+       tuned(8), sysctl(8), systemctl(1)

@@ -1,0 +1,49 @@
+NAME
+       winrm-shell - a PowerShell session on a Windows host (Cyber Range)
+
+SYNOPSIS
+       winrm-shell -i HOST -u USER [-p PASSWORD | -H HASH]
+
+DESCRIPTION
+       winrm-shell signs in to the remote management service of a Windows
+       computer (WinRM, TCP port 5985) and gives you a PowerShell prompt there,
+       marked with a * at the start:
+
+           *PS C:\Users\kim\Documents>
+
+       Everything you type runs on the Windows host as that account until you
+       type exit. A standard account can't open other people's profile folders
+       or protected folders, and may write only to its own profile, Public and
+       the temp folders; an administrator may do anything.
+
+       Only accounts that may use remote management (members of Remote
+       Management Users, or administrators) can sign in.
+
+       In Cyber Range the Windows hosts are pretend machines with a simulated
+       PowerShell 5.1 (the same one as Cert Lab's PowerShell course).
+
+OPTIONS
+       -i HOST     the Windows host's address or name
+       -u USER     the account (DOMAIN\USER for a domain account)
+       -p PASSWORD its password (without -p or -H winrm-shell asks)
+       -H HASH     sign in with the account's password hash instead of the
+                   password. Windows accepts a hash for network sign-ins, so a
+                   stolen hash is as good as the password ("pass the hash").
+                   The range's hashes are its own simulated format.
+
+EXTRA COMMANDS
+       download FILE [LOCAL]   copy a file from the Windows host to your box
+       upload LOCAL [FILE]     copy a file from your box to the Windows host
+       exit                    leave
+
+EXAMPLES
+       winrm-shell -i 10.10.1.30 -u kim -p pancake
+       whoami
+       Get-ChildItem C:\Users\kim\Desktop
+       exit
+
+NOTES
+       Only test computers you own or have written permission to test.
+
+SEE ALSO
+       smbclient(1), hashcrack(1), ticket-request(1)

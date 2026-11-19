@@ -1,0 +1,107 @@
+# Lab: lab-08 | Addresses, names and the firewall | u08 | 45
+This lab uses both machines. server1 (192.168.50.11) already runs a web server, and server2 (192.168.50.12) has lost part of its network settings. The network is 192.168.50.0/24 with the gateway and DNS server 192.168.50.254 and the domain lab.example.com. Every change must still be in place after a reboot, so make it in the connection profiles and the permanent firewall configuration.
+
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install httpd
+echo 'lab 8 web server' > /var/www/html/index.html
+systemctl enable --now httpd
+
+@setup server2
+nmcli con mod enp1s0 ipv4.dns "" ipv4.dns-search ""
+nmcli con up enp1s0
+
+@task t01 | Networking | 15 | server1
+Add the IPv4 address 192.168.50.61/24 to server1's connection profile enp1s0 as a second address. The first address (192.168.50.11/24) and the gateway must stay. Make it active now.
+@check server1 | the profile has both addresses
+nmcli -g ipv4.addresses con show enp1s0 | grep -q '192.168.50.11/24' && nmcli -g ipv4.addresses con show enp1s0 | grep -q '192.168.50.61/24'
+@check server1 | both addresses are active and the default route is kept
+ip -4 -br addr show enp1s0 | grep -q '192.168.50.61/24' && ip -4 -br addr show enp1s0 | grep -q '192.168.50.11/24' && ip route | grep -q '^default via 192.168.50.254'
+@check server2 | server2 reaches the new address
+ping -c 1 -W 2 192.168.50.61
+@hint +ipv4.addresses adds to the list; without the + the list is replaced. Then nmcli con up enp1s0.
+@solution server1
+nmcli con mod enp1s0 +ipv4.addresses 192.168.50.61/24
+nmcli con up enp1s0
+ip -4 -br addr
+@explain
+nmcli con mod saves the change in the keyfile (/etc/NetworkManager/system-connections/enp1s0.nmconnection) and nmcli con up puts it on the device. ipv4.addresses 192.168.50.61/24 without the + would have replaced 192.168.50.11, and the other machines would lose server1's usual address. ip addr add would work only until the next reboot.
+@endtask
+
+@task t02 | Networking | 15 | server2
+server2 can no longer look up names: its profile has no DNS server and no search domain. Configure server2 to use the DNS server 192.168.50.254 and the search domain lab.example.com, so that both `server1.lab.example.com` and the short name `server1` resolve. The settings must survive a reboot.
+@check server2 | the active profile has the DNS server and the search domain
+c=$(nmcli -g GENERAL.CONNECTION device show enp1s0); nmcli -g ipv4.dns con show "$c" | grep -q '192.168.50.254' && nmcli -g ipv4.dns-search con show "$c" | grep -q 'lab.example.com'
+@check server2 | server1.lab.example.com and server1 resolve
+getent hosts server1.lab.example.com | grep -q '^192\.168\.50\.11 ' && getent hosts server1 | grep -q '^192\.168\.50\.11 '
+@hint /etc/resolv.conf is written by NetworkManager, so set ipv4.dns and ipv4.dns-search in the profile, then activate it again.
+@solution server2
+nmcli con mod enp1s0 ipv4.dns 192.168.50.254 ipv4.dns-search lab.example.com
+nmcli con up enp1s0
+cat /etc/resolv.conf
+getent hosts server1
+@explain
+NetworkManager builds /etc/resolv.conf from the active profile: nameserver lines from ipv4.dns, the search line from ipv4.dns-search. An edit of resolv.conf by hand is overwritten the next time the profile is activated. getent hosts is the right test because it resolves names the way programs do (/etc/hosts first, then DNS).
+@endtask
+
+@task t03 | Networking | 10 | server2
+Give server2's profile enp1s0 the static IPv6 address fd00:50::12/64. Its IPv4 settings must not change.
+@check server2 | the profile has fd00:50::12/64
+nmcli -g ipv6.addresses con show enp1s0 | grep -q 'fd00:50::12/64'
+@check server2 | the address is active and IPv4 still works
+ip -6 -br addr show enp1s0 | grep -q 'fd00:50::12/64' && ip -4 -br addr show enp1s0 | grep -q '192.168.50.12/24'
+@hint ipv6.method manual and ipv6.addresses with nmcli con mod, then nmcli con up.
+@solution server2
+nmcli con mod enp1s0 ipv6.method manual ipv6.addresses fd00:50::12/64
+nmcli con up enp1s0
+ip -br addr
+@explain
+The ipv6 settings of a profile are separate from the ipv4 ones, so this leaves the IPv4 address, gateway and DNS alone. Give the prefix: without /64 nmcli stores the address as /128.
+@endtask
+
+@task t04 | Networking | 10 | server1
+On server1, the names `backup.lab.example.com` and `backup` must resolve to server2's address, 192.168.50.12, even when DNS is not available.
+@check server1 | backup.lab.example.com resolves to 192.168.50.12
+getent hosts backup.lab.example.com | grep -q '^192\.168\.50\.12 '
+@check server1 | backup resolves to 192.168.50.12
+getent hosts backup | grep -q '^192\.168\.50\.12 '
+@hint A name that must work without DNS goes into /etc/hosts.
+@solution server1
+echo '192.168.50.12  backup.lab.example.com  backup' >> /etc/hosts
+getent hosts backup
+@explain
+/etc/hosts is read before DNS (the hosts line of /etc/nsswitch.conf says files dns), so its entries work without a DNS server. host and dig would not find backup: they ask only the DNS server.
+@endtask
+
+@task t05 | Networking | 15 | server1
+The web server on server1 runs, but other machines cannot reach it. Open the firewall of server1 for the web server (port 80) for every machine, now and after a reboot.
+@check server2 | server2 gets the page from server1
+curl -s -m 5 http://server1.lab.example.com/ | grep -q 'lab 8 web server'
+@check server1 | http (or 80/tcp) is in the permanent configuration
+firewall-cmd --permanent --query-service=http >/dev/null || firewall-cmd --permanent --query-port=80/tcp >/dev/null
+@hint firewall-cmd --permanent --add-service=..., then firewall-cmd --reload.
+@solution server1
+curl -s http://localhost/
+firewall-cmd --permanent --add-service=http
+firewall-cmd --reload
+firewall-cmd --list-services
+@explain
+curl on server1 itself worked from the start, which tells you the service is fine and the firewall is the problem (the firewall does not filter connections a machine makes to itself). --permanent saves the rule and --reload loads it into the running firewall; without --permanent it would be gone after a reboot.
+@endtask
+
+@task t06 | Networking | 15 | server1
+server2 must no longer be able to log in to server1 with ssh, but it must still reach server1's web server, and other machines must still be able to use ssh on server1. Make the rule permanent and active now.
+@check server2 | ssh from server2 to server1 is refused by the firewall
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server1.lab.example.com true 2>&1 | grep -Eq 'No route to host|Connection refused|timed out'
+@check server2 | server2 still gets the web page
+curl -s -m 5 http://server1.lab.example.com/ | grep -q 'lab 8 web server'
+@check server1 | ssh is still open for other machines, and the rule is saved
+firewall-cmd --query-service=ssh >/dev/null && firewall-cmd --permanent --list-all-zones | grep -q '192\.168\.50\.12'
+@hint A rich rule with source address="192.168.50.12", service name="ssh" and reject (or drop). A source in the drop zone would also cut off the web server.
+@solution server1
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.12" service name="ssh" reject'
+firewall-cmd --reload
+firewall-cmd --list-rich-rules
+@explain
+Rich rules are checked before the zone's services, so this one stops ssh from server2 while the ssh service stays open for everyone else. Putting 192.168.50.12 into the drop or block zone would be too much: every port, the web server included, would be shut for server2. Removing the ssh service from the zone would shut out everyone.
+@endtask

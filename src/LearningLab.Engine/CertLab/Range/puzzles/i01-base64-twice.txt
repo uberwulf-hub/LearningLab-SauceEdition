@@ -1,0 +1,35 @@
+title: Wrapped twice
+level: Intermediate
+kind: Decoding
+points: 50
+order: 10
+answer: flag
+
+@intro
+~/data.txt was base64-encoded, and then that result was base64-encoded again. Peel
+both layers to reach the flag.
+
+@setup
+printf '%s' '{{FLAG}}' | base64 | base64 > /home/player/data.txt
+chown player: /home/player/data.txt
+
+@solution
+cat data.txt
+base64 -d data.txt
+base64 -d data.txt | base64 -d
+echo
+
+@walkthrough
+Decoding once gives you... more base64. That is the clue to decode again. You can
+chain the two decodes in a pipe:
+
+    base64 -d data.txt | base64 -d
+
+@hint 4
+Think in layers: whatever you decode, look at the result and ask "what does this look like?" before you stop.
+
+@hint 8
+Decode it once (base64 -d data.txt) and look carefully at the result: it is base64 again - letters, digits, + and /, maybe = at the end.
+
+@hint 12
+The | pipe hands one command's output to the next, so both layers come off at once: base64 -d data.txt | base64 -d

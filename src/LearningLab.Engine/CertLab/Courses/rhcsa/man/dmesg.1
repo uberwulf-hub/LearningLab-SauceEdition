@@ -1,0 +1,23 @@
+NAME
+       dmesg - print the kernel's message buffer
+
+SYNOPSIS
+       dmesg
+
+DESCRIPTION
+       The kernel keeps its recent messages in a ring buffer in memory:
+       what hardware it found at boot, disks being added, file systems being
+       mounted, drivers reporting errors. dmesg prints that buffer, each line
+       starting with the seconds since boot. On RHEL only root may read it.
+
+       Look here when a new disk does not show up or a device misbehaves.
+       journalctl -k shows the same kernel messages with real times, and also
+       for earlier boots when the journal is persistent.
+
+EXAMPLES
+       Did the kernel see the second disk?
+
+           dmesg | grep vdb
+
+SEE ALSO
+       journalctl(1), lsblk(8)

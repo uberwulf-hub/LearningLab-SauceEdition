@@ -1,0 +1,63 @@
+# Sheet: risk | Risk formulas and BIA | Security program management and oversight
+## Quantitative risk terms
+AV (asset value) :: what the asset is worth in money (replacement cost plus lost value)
+EF (exposure factor) :: the share of the asset lost in one incident, from 0 to 100 percent
+SLE (single loss expectancy) :: SLE = AV x EF, the cost of one incident
+ARO (annualized rate of occurrence) :: incidents expected per year (1 = yearly, 0.2 = once in 5 years, 4 = four times a year)
+ALE (annualized loss expectancy) :: ALE = SLE x ARO, the expected loss per year
+Control value :: ALE before - ALE after - yearly cost of the control; positive means worth it
+## Worked example
+Step 1 - asset :: a warehouse system worth 80,000 (AV)
+Step 2 - exposure :: a flood would ruin 40 percent of it, so EF = 0.4
+Step 3 - SLE :: 80,000 x 0.4 = 32,000 per flood
+Step 4 - ARO :: a flood is expected once every 8 years, so ARO = 1 / 8 = 0.125
+Step 5 - ALE :: 32,000 x 0.125 = 4,000 per year
+Step 6 - control :: a flood barrier costs 1,500 a year and cuts the ARO to 0.025: new ALE 800
+Step 7 - decision :: 4,000 - 800 - 1,500 = 1,700 saved per year, so the barrier is worth buying
+## Qualitative analysis
+Likelihood x impact :: rate each from low to high (or 1 to 5) and multiply for a risk score
+Heat map :: grid of likelihood against impact; red squares get attention first
+Inherent vs residual risk :: risk before controls vs the risk left after controls
+## Business impact analysis
+RTO (recovery time objective) :: longest a system may be down before the harm is unacceptable
+RPO (recovery point objective) :: how much data, in time, can be lost; sets backup frequency
+MTD / MTO :: maximum tolerable downtime of the whole business function; RTO must fit inside it
+MTTR (mean time to repair) :: average time to fix a failure; lower is better
+MTBF (mean time between failures) :: average running time between failures of something repaired; higher is better
+MTTF (mean time to failure) :: average life of something that is replaced, not repaired
+Availability from MTBF and MTTR :: availability = MTBF / (MTBF + MTTR)
+99.9 / 99.99 / 99.999 percent :: about 8.8 hours / 53 minutes / 5 minutes of downtime per year
+Mission-essential functions :: the work that must continue; the BIA finds them and the systems they depend on
+## Risk strategies
+Mitigate (reduce) :: add controls to lower likelihood or impact
+Transfer (share) :: move the cost to someone else, such as cyber insurance or an outsourcing contract
+Avoid :: stop the activity that causes the risk
+Accept :: live with it when it is within appetite; record who decided and why
+Exception / exemption :: a formal, time-limited acceptance of not meeting a policy, usually with compensating controls
+## Appetite, tolerance and the register
+Risk appetite :: how much risk the organization is willing to take in pursuit of its goals
+Expansionary / conservative / neutral :: an appetite that welcomes risk for growth / avoids risk / balances the two
+Risk tolerance :: how far a given risk may vary from the appetite before action is needed
+Risk threshold :: the level at which a risk must be escalated or treated
+Risk register :: list of risks with owner, likelihood, impact, score, response and status
+Risk owner :: the person accountable for a risk and its response
+KRI (key risk indicator) :: a measure that warns early when a risk is growing
+Risk assessment frequency :: ad hoc, one-time, recurring or continuous
+## Agreement types
+SLA (service-level agreement) :: measurable service promises (uptime, response times) with penalties
+MOU (memorandum of understanding) :: shared intent and roles; usually not legally binding
+MOA (memorandum of agreement) :: written duties of each side; more formal than an MOU
+MSA (master service agreement) :: general terms that cover all future work between two parties
+SOW / WO (statement of work / work order) :: the tasks, deliverables, schedule and price for one piece of work
+NDA (non-disclosure agreement) :: promise to keep shared information confidential
+BPA (business partners agreement) :: how partners share duties, profits, losses and decisions
+ISA (interconnection security agreement) :: technical security rules for connecting two organizations' systems
+## Third-party risk
+Right-to-audit clause :: lets you inspect the vendor's security
+Due diligence :: checking a vendor's security, finances and history before you sign
+Vendor questionnaire :: standard security questions the vendor answers and backs with evidence
+Independent assessment :: outside audit reports such as SOC 2 Type II or ISO 27001 certification
+Supply chain analysis :: looking at the vendor's own suppliers and components (SBOM)
+Conflict of interest :: a relationship that could bias vendor selection; disclose it and step aside
+Vendor monitoring :: ongoing reviews, breach news and performance against the SLA
+Rules of engagement :: written scope, timing and limits for testing a vendor or your own systems

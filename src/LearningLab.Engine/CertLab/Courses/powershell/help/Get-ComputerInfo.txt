@@ -1,0 +1,12 @@
+SYNOPSIS: Gathers system information into one object.
+DESCRIPTION:
+Get-ComputerInfo collects facts from several places (the registry, the BIOS, the operating system and the computer system classes) into one object with properties such as WindowsProductName, OsVersion, OsLastBootUpTime, OsUptime, CsDomain, CsTotalPhysicalMemory and BiosManufacturer. The property names start with where they come from: Windows, Bios, Cs (computer system), Os.
+PARAMETER Property:
+Only these properties; wildcards are allowed, for example Os*. Position 0.
+EXAMPLE: Get-ComputerInfo -Property Os*
+Everything about the operating system.
+EXAMPLE: (Get-ComputerInfo).OsUptime
+How long the computer has been running.
+NOTES:
+Cert Lab returns a selection of the properties a real Windows gives.
+RELATED: Get-CimInstance, Get-HotFix

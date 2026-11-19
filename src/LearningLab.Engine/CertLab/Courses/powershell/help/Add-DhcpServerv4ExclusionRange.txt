@@ -1,0 +1,16 @@
+SYNOPSIS: Keeps a range of addresses in a scope from being leased.
+DESCRIPTION:
+An exclusion range takes addresses out of a scope, usually because servers, printers or network gear have them set by hand. The server never offers an excluded address.
+
+To give one device a fixed address from DHCP instead, use a reservation (Add-DhcpServerv4Reservation).
+PARAMETER ScopeId:
+The scope, for example 10.10.0.0.
+PARAMETER StartRange:
+The first excluded address.
+PARAMETER EndRange:
+The last excluded address (the same as the start for a single address).
+EXAMPLE: Add-DhcpServerv4ExclusionRange -ScopeId 10.10.0.0 -StartRange 10.10.0.100 -EndRange 10.10.0.109 -ComputerName SRV1
+The first ten addresses of the HQ scope are kept for devices set by hand.
+EXAMPLE: Get-DhcpServerv4ExclusionRange -ScopeId 10.10.0.0
+Lists the exclusions.
+RELATED: Get-DhcpServerv4ExclusionRange, Add-DhcpServerv4Reservation, Add-DhcpServerv4Scope

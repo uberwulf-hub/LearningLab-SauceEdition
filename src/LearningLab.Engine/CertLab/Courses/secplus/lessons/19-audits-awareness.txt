@@ -1,0 +1,171 @@
+# Unit: u19 | 19. Audits, assessments and security awareness | Security program management and oversight
+
+Controls only help if they work and people use them. Audits and assessments check the first part; security awareness training takes care of the second. This unit covers attestation, internal and external audits, penetration testing and its types, and how to build, run and measure a security awareness program.
+
+## Lesson: l1901 | Audits, assessments and attestation
+
+An **audit** checks controls and processes against a defined set of requirements (a law, a standard, a policy) and reports whether they are met. An **assessment** is usually broader and less formal: it looks at how well security works and where the risks are. **Attestation** is a formal statement, often signed by an auditor or a responsible manager, that something is true: that controls exist and work, or that a report is accurate.
+
+### Internal
+
+- **Compliance**: the organization's own compliance staff check that it meets the laws, regulations and standards that apply.
+- **Audit committee**: a committee of the board that oversees the audit function and financial reporting, receives audit results, and makes sure findings are acted on. Internal auditors usually report to it, which keeps them independent of the managers they audit.
+- **Self-assessments**: teams check their own controls, often with a questionnaire or checklist. Cheap and frequent, but less independent.
+
+### External
+
+- **Regulatory**: audits and inspections by a regulator, required by law for certain industries (banking, health, energy).
+- **Examinations**: formal reviews by a regulator or examiner, common in banking, to check compliance and soundness.
+- **Assessment**: an outside firm reviews the security program, often against a framework, to find gaps.
+- **Independent third-party audit**: an outside, independent auditor tests controls and gives an opinion, such as a SOC 2 report or an ISO 27001 certification audit. Customers and partners trust these because the auditor has no stake in the result.
+
+> Internal audits help you improve; external, independent audits give others confidence. Independence is the key difference.
+
+@quiz
+? A cloud provider gives customers a report from an outside audit firm that tested its security controls over twelve months. What kind of audit is this?
+- A self-assessment
++ An independent third-party audit
+- An internal compliance check
+- A tabletop exercise
+! An outside auditor with no stake in the result performed it, which is why customers trust it.
+? Internal auditors report to a board committee rather than to the IT director. Why?
++ To keep them independent of the managers whose areas they audit
+- Because the board performs the technical testing
+- So that audit results stay secret from the board
+- Because regulators require IT directors to be auditors
+! Reporting to the audit committee protects auditors from pressure by the people they audit.
+? A department fills in a checklist about its own access reviews and backups each quarter. What is this?
+- A regulatory examination
+- An independent audit
++ A self-assessment
+- A penetration test
+! Teams checking their own controls is a self-assessment.
+@end
+
+## Lesson: l1902 | Penetration testing
+
+A **penetration test** (pen test) is an authorized, simulated attack to find and exploit weaknesses, showing what a real attacker could do. It always needs written permission and **rules of engagement**: scope (which systems, addresses, buildings), times, allowed methods, contacts and what to do if something breaks or a real attack is found.
+
+### Kinds of test
+
+- **Physical**: testing locks, badges, guards, tailgating and access to buildings and server rooms.
+- **Offensive**: the attacking side, trying to break in (often called the **red team**).
+- **Defensive**: the defending side, detecting and responding to attacks (the **blue team**).
+- **Integrated**: attackers and defenders work together and share what they see, so defenses improve during the test (often called **purple teaming**).
+
+### How much the testers know
+
+- **Known environment** (formerly white box): the testers get full information: network diagrams, source code, credentials. Thorough and efficient.
+- **Partially known environment** (gray box): some information, such as a user account or an address range. A common middle ground, like an insider or an attacker who has done some research.
+- **Unknown environment** (black box): no information beyond the target's name. Most like an outside attacker, but slower and may miss things.
+
+### Reconnaissance
+
+- **Passive reconnaissance**: gathering information without touching the target's systems directly: public websites, social media, job adverts, DNS and WHOIS records, search engines, leaked data (OSINT). The target can't detect it.
+- **Active reconnaissance**: interacting with the target's systems: port scans, ping sweeps, banner grabbing, vulnerability scans. Gives more detail but can be detected and logged.
+
+A typical test then moves to exploitation, then to **lateral movement** (moving to other systems), **privilege escalation** and **persistence**, then **cleanup** (removing tools and accounts the testers created) and a report with findings and fixes.
+
+> Reading job adverts and DNS records: passive. Running a port scan: active.
+
+@quiz
+? Testers are given network diagrams, source code and administrator credentials before they start. What kind of test is this?
++ Known environment
+- Unknown environment
+- Partially known environment
+- Passive reconnaissance
+! Full information is a known environment (formerly white box) test.
+? A tester studies the company's job adverts, staff profiles on social networks and public DNS records. What is this?
+- Active reconnaissance
++ Passive reconnaissance
+- Lateral movement
+- Privilege escalation
+! Gathering public information without touching the target's systems is passive reconnaissance.
+? During an exercise the attack team and the defense team sit together, sharing each technique and whether it was detected. What kind of test is this?
+- Offensive only
+- Defensive only
++ Integrated
+- Physical
+! Attackers and defenders working together to improve detection is an integrated (purple team) test.
+? Before a pen test begins, which document sets which systems may be tested, when, and who to call if a service fails?
+- The SLA
++ The rules of engagement
+- The acceptable use policy
+- The risk register
+! Rules of engagement define the scope, timing, methods and contacts of the test.
+@end
+
+## Lesson: l1903 | Security awareness training
+
+People are targeted because they are easier to trick than systems are to break. A good awareness program turns staff from the weakest link into an early warning system.
+
+### Phishing campaigns
+
+Organizations send **simulated phishing** emails to their own staff to teach and measure. The goals:
+
+- **Recognizing a phishing attempt**: unexpected requests, urgency or threats, a sender address that doesn't match the name, links whose real address differs from the text, unexpected attachments, requests for passwords or payments.
+- **Responding to reported suspicious messages**: make reporting easy (a Report button), thank people who report, check the message quickly, and if it is real, remove it from other mailboxes and block the sender or link. People who click get short, friendly training, not punishment.
+
+### Anomalous behavior recognition
+
+Staff and managers learn to notice and report unusual behaviour:
+
+- **Risky**: actions that knowingly increase risk, such as disabling antivirus to install a game, or sharing passwords.
+- **Unexpected**: things out of the ordinary, such as a colleague asking for access they don't need, or a device acting strangely.
+- **Unintentional**: honest mistakes, such as emailing a file to the wrong person or leaving a laptop unlocked. Treated as a chance to teach.
+
+### User guidance and training topics
+
+- **Policy and handbooks**: what the rules are and where to find them.
+- **Situational awareness**: noticing what is around you: someone reading your screen, a stranger following you through a door, a suspicious call.
+- **Insider threat**: signs that someone may be misusing access, and how to report concerns safely.
+- **Password management**: long passphrases, a password manager, never reusing or sharing passwords, using MFA.
+- **Removable media and cables**: don't plug in found USB drives or unknown charging cables (they can carry malware or act as keyboards); use only approved devices.
+- **Social engineering**: phishing, vishing, smishing, pretexting, tailgating, and that it is fine to say no and verify through a known channel.
+- **Operational security** (OPSEC): not revealing sensitive details through social media posts, photos of the office, or conversations in public.
+- **Hybrid and remote work**: secure home Wi-Fi, VPN use, locking the screen, keeping work and family use separate, being careful on public Wi-Fi.
+
+### Reporting and monitoring
+
+- **Initial**: a baseline measure when the program starts (for example, the first simulated phishing click rate).
+- **Recurring**: regular measurements to show progress: click rates, reporting rates, training completion, number of real incidents reported by staff.
+
+A rising **report rate** is as important as a falling click rate: it shows people are acting as sensors.
+
+### Development and execution
+
+- **Development**: decide the goals, the audience (everyone, plus extra training for high-risk roles such as finance, help desk and executives), the topics, and the format (short videos, live sessions, newsletters, posters, simulations).
+- **Execution**: deliver training at onboarding and at least yearly, plus short refreshers, run campaigns, measure, and adjust the program based on the results and on new threats.
+
+@quiz
+? After a simulated phishing campaign, which measure best shows that staff are acting as an early warning system?
+- The number of emails sent
++ The percentage of staff who reported the message
+- The number of staff who deleted it without reporting
+- The size of the attachment
+! Reporting lets the security team react; a rising report rate shows the program is working.
+? An employee finds a USB drive labeled "Salaries 2026" in the car park. What should training tell her to do?
+- Plug it into a work PC to find the owner
+- Plug it into a home PC instead
++ Hand it to IT or security without plugging it in
+- Format it and keep it
+! Found drives can carry malware or act as keyboards; they should go to IT unopened.
+? A worker emails a customer list to the wrong external address by mistake. How is this behaviour best classified?
+- Risky
++ Unintentional
+- Insider threat
+- Unexpected
+! An honest mistake is unintentional behaviour, handled with guidance rather than punishment.
+? An employee posts a photo of her desk on social media, with a sticky note showing the Wi-Fi password in view. Which training topic covers this?
++ Operational security
+- Password expiration
+- Penetration testing
+- Situational awareness of tailgating
+! OPSEC is about not leaking sensitive information through everyday activity such as posts and photos.
+? A company measures its phishing click rate in the first month of a new program. What type of reporting is this?
+- Recurring
++ Initial
+- External
+- Continuous
+! The first measurement is the initial baseline; later regular measurements are recurring.
+@end

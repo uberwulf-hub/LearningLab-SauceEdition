@@ -1,0 +1,16 @@
+SYNOPSIS: Sets whether and how often a DNS server deletes stale records.
+DESCRIPTION:
+Scavenging is the clean-up run that deletes records which aging has marked stale. -ScavengingState $true turns it on and -ScavengingInterval sets how often it runs (often 7 days).
+
+It only removes records from zones that have aging turned on (Set-DnsServerZoneAging). -ApplyOnAllZones also applies the server's aging settings to every existing AD-integrated zone.
+
+Turn it on for one DNS server only, so you know where deletions come from.
+PARAMETER ScavengingState:
+$true to delete stale records, $false to stop.
+PARAMETER ScavengingInterval:
+How often the clean-up runs, for example 7.00:00:00.
+PARAMETER ApplyOnAllZones:
+Applies the aging settings to all existing zones.
+EXAMPLE: Set-DnsServerScavenging -ScavengingState $true -ScavengingInterval 7.00:00:00 -ComputerName DC1
+DC1 removes stale records once a week.
+RELATED: Set-DnsServerZoneAging, Get-DnsServerResourceRecord, Get-DnsServerZone

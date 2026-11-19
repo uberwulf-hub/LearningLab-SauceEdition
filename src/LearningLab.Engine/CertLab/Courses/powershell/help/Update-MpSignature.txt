@@ -1,0 +1,8 @@
+SYNOPSIS: Updates Microsoft Defender Antivirus security intelligence.
+DESCRIPTION:
+Update-MpSignature downloads the newest security intelligence (definitions). Afterwards Get-MpComputerStatus shows an AntivirusSignatureAge of 0. Intune's remote action Update Windows Defender security intelligence does the same.
+PARAMETER UpdateSource:
+Where to get the update from, for example MicrosoftUpdateServer.
+EXAMPLE: Update-MpSignature
+Gets the newest definitions.
+RELATED: Get-MpComputerStatus

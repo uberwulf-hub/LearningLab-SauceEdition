@@ -1,0 +1,53 @@
+title: Step 11: Words in the noise
+level: Advanced
+category: ladder
+login: step11
+kind: Binary files
+teaser: a file of unreadable bytes with a few readable words inside
+points: 40
+order: 11
+packages: binutils
+answer: {{PW}}
+var: PW = hex:10
+var: D1 = hex:10
+var: D2 = hex:10
+
+@intro
+You are step11. data.bin is not a text file: it is mostly bytes that don't stand for
+letters, so cat shows a mess. Somewhere inside are a few readable runs of text. The
+password for step 12 is on the one that starts with several = signs and says it is
+the password.
+
+@setup
+useradd -m step12
+echo 'step12:{{PW}}' | chpasswd
+f=/home/step11/data.bin
+printf '\x7fELF\x02\x01\x01\x00\x00\x00\x03\x00\x3e\x00\x01\x00\x00\x00' > $f
+printf '\x01\x02\x03Gx\x05\x06==== {{D1}}\x00\x11\x12\x13' >> $f
+printf '\x14\x15\x16k\x17\x18\x19\x1a\x1b\x1c\x1dQ\x1e\x1f' >> $f
+printf '\x00\x00==== not the password\x00\x01\x02\x03' >> $f
+printf '\x04p\x05\x06\x07\x08z\x0e\x0f\x10==== {{D2}}\x11\x12' >> $f
+printf '\x13\x14\x15\x16==== the password for step 12 is {{PW}}\x00\x17' >> $f
+printf '\x18\x19\x1aW\x1b\x1c\x1d\x1e\x1f\x00\x01\x02\x03\x04\x05' >> $f
+chown step11: $f
+
+@solution
+file data.bin
+strings data.bin
+strings data.bin | grep ====
+
+@walkthrough
+strings reads any file and prints only the runs of four or more printable characters,
+skipping the bytes that aren't letters, digits or punctuation:
+
+    strings data.bin | grep ====
+
+Several lines start with ====; only one says it is the password for step 12. Programs,
+pictures and disk copies are full of readable bits like these, which is why strings is
+one of the first tools people try on an unknown file.
+
+@hint 10
+cat prints every byte, readable or not. The command strings prints only the readable stretches of a file. Then grep can keep the lines with ==== in them.
+
+@hint 18
+Type: strings data.bin | grep ==== - one line says "the password for step 12 is" followed by the answer.

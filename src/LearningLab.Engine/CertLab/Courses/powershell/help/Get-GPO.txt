@@ -1,0 +1,20 @@
+SYNOPSIS: Gets Group Policy Objects (GPOs) of a domain.
+DESCRIPTION:
+Get-GPO returns a GPO with its DisplayName, Id (GUID), owner, creation and change times, GpoStatus (which halves are enabled: user settings, computer settings, both or none) and the versions of each half.
+A GPO does nothing until it is linked to a site, the domain or an OU (New-GPLink). Get-GPO doesn't show links; Get-GPOReport and Get-GPInheritance do.
+Every domain starts with two GPOs: Default Domain Policy (linked to the domain; holds the password and lockout policy) and Default Domain Controllers Policy (linked to the Domain Controllers OU).
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO's GUID, instead of its name.
+PARAMETER All:
+Returns every GPO of the domain.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-GPO -All | Select-Object DisplayName, GpoStatus, ModificationTime
+Every GPO, which halves are on and when each last changed.
+EXAMPLE: Get-GPO "Default Domain Policy"
+One GPO by name.
+RELATED: New-GPO, Remove-GPO, Get-GPOReport, New-GPLink, Get-GPInheritance

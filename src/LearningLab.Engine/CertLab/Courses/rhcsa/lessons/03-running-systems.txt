@@ -1,0 +1,520 @@
+# Unit: u03 | 3. Operate running systems | Operate running systems
+
+A server spends most of its life running, and an administrator keeps it that way: restarting it safely, choosing what it starts at boot, getting back in when the root password is lost, finding the program that eats the CPU, and keeping services up. This unit covers all of that, plus copying files between machines.
+
+## Lesson: l0301 | Booting, rebooting and shutting down
+
+When a RHEL machine starts, the work passes from one stage to the next:
+
+- The firmware (BIOS or UEFI) checks the hardware and starts the boot loader from the disk.
+- GRUB 2, the boot loader, shows its menu for a few seconds and loads the chosen kernel and its initramfs (a small temporary root file system with the drivers needed to find the real disks).
+- The kernel starts, the initramfs finds and mounts the real root file system (read-only at first) and hands over to it.
+- systemd (process 1) starts everything else: it mounts the file systems in /etc/fstab, starts services, and brings the machine to its default target, usually the text login of multi-user.target.
+
+Knowing the stages tells you where you can step in: at the GRUB menu you can change the kernel's options for one boot, which is how you reach rescue mode or reset a lost root password (next lessons).
+
+### Reboot and power off
+
+Always shut a machine down cleanly: services stop in order, data still in memory reaches the disks and file systems are unmounted. Pulling the power can damage files.
+
+- `systemctl reboot` restarts the machine; `systemctl poweroff` stops it and switches it off. The short forms `reboot` and `poweroff` do the same.
+- `shutdown -r now` reboots and `shutdown -h now` powers off at once. With `+10` instead of `now` the action waits 10 minutes (logged-in users get a warning), and `shutdown -c` cancels a planned one.
+- `halt` stops the system but leaves the power on; it is rarely what you want.
+
+```terminal
+[root@server1 ~]# uptime
+ 04:00:00 up 1 min,  1 user,  load average: 0.02, 0.05, 0.01
+[root@server1 ~]# who -b
+         system boot  2026-03-02 04:00
+[root@server1 ~]# shutdown -r +10
+Reboot scheduled for Mon 2026-03-02 04:10:00 EST, use 'shutdown -c' to cancel.
+[root@server1 ~]# shutdown -c
+```
+
+`uptime` shows how long the machine has been running and the load average (how many programs wanted the CPU, averaged over 1, 5 and 15 minutes); `who -b` shows when it last booted.
+
+> In the exam, reboot your machines before you finish. The graders reboot them before checking, and anything that only works until the next boot (a mount not in /etc/fstab, a service started but not enabled) counts as not done. Better to find out while you still have time.
+
+@quiz
+? Which command reboots the machine cleanly, right now?
+- shutdown -c
++ systemctl reboot
+- halt
+- kill -9 1
+! systemctl reboot (or reboot, or shutdown -r now) stops the services in order and restarts. shutdown -c cancels a planned shutdown.
+? Which program loads the kernel and shows the boot menu?
+- systemd
++ GRUB 2
+- The initramfs
+- tuned
+! GRUB 2 is the boot loader. systemd only starts after the kernel and initramfs have done their work.
+? What does shutdown -h +15 do?
+- Reboots in 15 seconds
++ Powers the machine off in 15 minutes
+- Shows the last 15 shutdowns
+- Halts 15 services
+! +15 is minutes from now; -h halts and powers off. shutdown -c cancels it.
+@end
+
+## Lesson: l0302 | Targets: choosing what the system starts
+
+A systemd target is a named group of units that together make a state of the system. Instead of the old numbered run levels, RHEL 9 uses these:
+
+- `multi-user.target`: the normal server state, with text logins and network services. The default on servers.
+- `graphical.target`: multi-user plus a graphical login screen.
+- `rescue.target`: a single root shell with the local file systems mounted but no network and almost no services. For repairs.
+- `emergency.target`: even less. The root file system is mounted read-only and nothing else is started. For when rescue mode does not work, for example because of a bad line in /etc/fstab.
+
+### The default target
+
+The target the machine boots into is a symbolic link, /etc/systemd/system/default.target. Do not edit it by hand; let systemctl do it:
+
+```terminal
+[root@server1 ~]# systemctl get-default
+multi-user.target
+[root@server1 ~]# ls -l /etc/systemd/system/default.target
+lrwxrwxrwx. 1 root root 41 Mar  2 04:00 /etc/systemd/system/default.target -> /usr/lib/systemd/system/multi-user.target
+```
+
+`systemctl set-default graphical.target` replaces that link (it tells you that it removed the old link and created a new one), and `systemctl get-default` then prints graphical.target. set-default changes only the next boots. Nothing changes now.
+
+### Switching now: isolate
+
+`systemctl isolate TARGET` switches the running system to that target at once, stopping whatever the new target does not need. `systemctl isolate multi-user.target` leaves a graphical desktop; `systemctl rescue` (the same as `systemctl isolate rescue.target`) drops to rescue mode and asks for the root password; `systemctl default` goes back to the default target. Only targets that allow it can be isolated (their unit file says `AllowIsolate=yes`).
+
+> isolate rescue.target stops sshd and the network. Do it on a console, never over ssh, or you cut off your own connection.
+
+### Choosing a target for one boot, at the GRUB menu
+
+When the machine will not boot normally, pick the target at the boot menu instead:
+
+- Reboot. The GRUB menu starts the highlighted entry by itself after a few seconds (5 by default), so press an arrow key at once: any key stops the countdown.
+- With the entry highlighted, press `e` (just the key, no Enter). A small editor opens with the entry's commands and the cursor at the top.
+- Go down with the arrow keys to the line that starts with `linux`. It is long, so it wraps over several screen lines, each ending in `\`. Press End (or Ctrl+E) to reach its end, then type a space and `systemd.unit=rescue.target` (or `systemd.unit=emergency.target`).
+- Press Ctrl+X (or F10) to boot with that change. It is for this one boot only; nothing is saved. Esc instead throws your change away and goes back to the menu.
+
+In the emergency target the root file system is read-only. To fix a file such as /etc/fstab, first run `mount -o remount,rw /`, then edit, then `systemctl default` (or exit) to carry on booting.
+
+@try machines=1
+@task t1 | Running systems | 10 | server1
+Make server1 boot into the graphical target by default from now on. (Nothing needs to change for the running system.)
+@check server1 | the default target is graphical.target
+test "$(systemctl get-default)" = graphical.target
+@hint systemctl get-default shows the current setting; set-default changes it.
+@solution server1
+systemctl set-default graphical.target
+@endtask
+@end
+
+@quiz
+? Which command makes the machine start in text mode at every boot?
+- systemctl isolate multi-user.target
++ systemctl set-default multi-user.target
+- systemctl enable multi-user.target --now
+- systemctl default
+! set-default changes the default.target link for the following boots. isolate only switches the running system.
+? A wrong line in /etc/fstab stops the boot, and even rescue mode fails. What do you add to the kernel line at the GRUB menu?
+- single
++ systemd.unit=emergency.target
+- init=/bin/rescue
+- rd.fstab=off
+! The emergency target mounts only the root file system (read-only), so a broken fstab entry does not stop it. Remount / read-write, fix the file, then continue.
+? At the GRUB menu, which key lets you change the boot entry for one boot?
+- Tab
++ e
+- F2
+- c
+! e edits the selected entry; Ctrl+X boots with the change. Nothing is saved for the next boot.
+@end
+
+## Lesson: l0303 | Resetting a lost root password
+
+If nobody knows the root password, you can still get in if you sit at the console: stop the boot inside the initramfs, before the real system starts, and change the password from there. This is an exam classic, so practise the steps until they are automatic.
+
+### The steps
+
+- Reboot the machine (on a virtual machine, its reset button). At the GRUB menu, press an arrow key to stop the countdown, then `e` on the entry.
+- Go down to the line that starts with `linux`, press End, and type a space and `rd.break`. Press Ctrl+X to boot.
+- The boot stops in a shell of the initramfs, with the prompt `switch_root:/#`. The real root file system is mounted read-only on /sysroot.
+- `mount -o remount,rw /sysroot` makes it writable.
+- `chroot /sysroot` makes /sysroot your `/`, so the next commands change the real system, not the initramfs.
+- `passwd root` sets the new password.
+- `touch /.autorelabel` asks for an SELinux relabel at the next boot (see below).
+- `exit` twice: the first leaves the chroot, the second leaves the initramfs shell, and the boot carries on.
+
+```terminal
+switch_root:/# mount -o remount,rw /sysroot
+switch_root:/# chroot /sysroot
+sh-5.1# echo 'N3wPass!word' | passwd --stdin root
+Changing password for user root.
+passwd: all authentication tokens updated successfully.
+sh-5.1# touch /.autorelabel
+sh-5.1# exit
+exit
+switch_root:/# exit
+exit
+```
+
+### Why /.autorelabel matters
+
+In the initramfs no SELinux policy is loaded. passwd writes a new /etc/shadow, and that new file has no SELinux label. Once the system boots with SELinux enforcing, the login programs are not allowed to read a file without the right label, and nobody can log in, not even with the new password. /.autorelabel tells the next boot to relabel every file (it takes a while and reboots once by itself). After that, everything works.
+
+- Forget the relabel and you can still repair it: boot with rd.break again and add the file, or (if you can get a root shell some other way) run `restorecon -v /etc/shadow`.
+- Do not set SELinux to permissive or disabled to get round this. Exam tasks expect enforcing.
+- Some guides add `enforcing=0` to the kernel line instead of using /.autorelabel, then run `restorecon /etc/shadow` and `setenforce 1` after the boot (enforcing=0 starts the system in permissive mode). Either way works; the relabel is simpler to remember.
+
+> Watch the prompt: before chroot it is switch_root:/#, after chroot it is sh-5.1#. A passwd typed before the chroot changes the initramfs copy, which is thrown away at the end of the boot.
+
+@try machines=1
+@nologin server1
+@setup server1
+echo 'Forg0tten-pw-77' | passwd --stdin root
+@task t1 | Running systems | 20 | server1
+Nobody knows the root password of server1 any more. Interrupt its boot and set the root password to `Rec0vered!` (SELinux must stay enforcing). Use the machine's reset button to restart it.
+@check server1 | root can log in with Rec0vered!
+certlab-check password root 'Rec0vered!'
+@check server1 | the machine boots normally with SELinux enforcing
+certlab-check booted && test "$(getenforce)" = Enforcing
+@hint Reset, press e at the menu, go down to the linux line, End, type a space and rd.break, Ctrl+X. Then remount /sysroot read-write, chroot /sysroot, passwd root, touch /.autorelabel, exit, exit.
+@solution server1
+#reset
+#key e
+#key Down Down Down End
+#type  rd.break
+#key Ctrl+X
+mount -o remount,rw /sysroot
+chroot /sysroot
+echo 'Rec0vered!' | passwd --stdin root
+touch /.autorelabel
+exit
+exit
+#password Rec0vered!
+getenforce
+@endtask
+@end
+
+@quiz
+? What do you add to the kernel line to stop the boot in the initramfs?
+- systemd.unit=rescue.target
++ rd.break
+- init=/sysroot
+- single
+! rd.break stops inside the initramfs, before the real root file system takes over. rescue.target would ask for the root password you do not know.
+? Why do you run chroot /sysroot before passwd?
+- To make the disk writable
++ So that passwd changes the real system's /etc/shadow instead of the initramfs
+- To load the SELinux policy
+- To start the network
+! After chroot, / is the real root file system. Without it you would change a copy that disappears at the end of the boot.
+? You reset the password but forgot touch /.autorelabel. What happens after the boot?
+- Nothing, it works normally
+- SELinux switches itself to permissive
++ Nobody can log in, because the new /etc/shadow has no SELinux label
+- The old password comes back
+! With SELinux enforcing, the login programs cannot read an unlabelled /etc/shadow. A relabel (or restorecon) fixes it.
+@end
+
+## Lesson: l0304 | Processes: finding and stopping them
+
+Every running program is a process with a number, its PID. A process belongs to a user and has a parent (the process that started it). When a machine is slow, you find the process that uses the most CPU or memory and decide what to do with it.
+
+### ps: a snapshot
+
+- `ps aux` lists every process with its user, PID, CPU and memory share, and the full command line.
+- `ps -ef` is the same list in another style, with the parent PID (PPID).
+- `ps -eo FIELDS` picks the columns you want, and `--sort=-%cpu` (or `-%mem`) sorts with the biggest first. With `head` it is the quickest way to the top users.
+- `ps -u USER` shows one user's processes, `ps -p PID` one process, `ps -C NAME` processes by command name.
+
+```terminal
+[root@server1 ~]# ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -3
+    PID USER    %CPU %MEM COMMAND
+    679 student 99.7  0.1 dd
+      1 root     0.0  0.1 systemd
+```
+
+### top: a live view
+
+`top` refreshes every few seconds. The header shows the load, CPU use and memory; below it the busiest processes come first. Keys inside top: `P` sorts by CPU, `M` by memory, `k` kills a process (it asks for the PID), `r` renices one, `q` quits. `top -b -n 1` prints a single screen and exits, which works in a pipe:
+
+```terminal
+[root@server1 ~]# top -b -n 1 | head -9
+top - 04:00:00 up 1 min,  1 user,  load average: 1.02, 0.85, 0.51
+Tasks: 137 total,   1 running, 136 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 49.9 us,  0.3 sy,  0.0 ni, 49.9 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :  3735.8 total,  2160.6 free,  612.3 used,   962.9 buff/cache
+MiB Swap:  2048.0 total,  2048.0 free,      0.0 used.  3123.4 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+    679 student   20   0   20000   4000   2000 R  99.7   0.1   0:00.12 dd
+      1 root      20   0   20000   4000   2000 S   0.0   0.1   0:00.12 systemd
+```
+
+The dd process of student keeps one of the two CPUs busy (99.7 percent of one CPU, about half of the machine, which is why the header says 49.9 us and 49.9 id).
+
+### Signals: kill, pkill and killall
+
+`kill PID` sends a signal to a process. The ones to know:
+
+- 15, SIGTERM (the default): please stop. The program can clean up first.
+- 9, SIGKILL: stop now. The kernel ends the process; the program gets no chance to save anything. Use it only when SIGTERM did not work.
+- 1, SIGHUP: many services re-read their configuration when they get it.
+- 19 and 18, SIGSTOP and SIGCONT: pause and resume.
+
+Write the signal as `kill -9 PID`, `kill -KILL PID` or `kill -SIGKILL PID`; `kill -l` lists them all. `pgrep` finds PIDs by name (`-l` adds the name, `-u USER` limits it to one user), `pkill` sends a signal by name or user, and `killall NAME` signals every process with that exact name.
+
+```terminal
+[root@server1 ~]# pgrep -u student -l
+679 dd
+686 sleep
+[root@server1 ~]# kill 679
+[root@server1 ~]# pgrep -u student -l
+686 sleep
+[root@server1 ~]# pkill -u student
+[root@server1 ~]# pgrep -u student -l
+[root@server1 ~]# echo $?
+1
+```
+
+pgrep ends with code 1 when nothing matches, so it also works as a test in scripts and checks.
+
+### Jobs in your own shell
+
+A command ending with `&` runs in the background and your prompt comes back at once. `jobs` lists your background jobs, `fg %1` brings job 1 back to the front, Ctrl+Z pauses the job in front and `bg` lets a paused job continue in the background. `kill %1` sends the signal to job 1.
+
+> Before you kill something, look at what it is (ps -p PID -o user,cmd). Killing a system service or another person's work by mistake is worse than a slow machine.
+
+@try machines=1
+@setup server1
+su - student -c 'dd if=/dev/zero of=/dev/null &'
+su - student -c 'sleep 7200 &'
+@task t1 | Running systems | 10 | server1
+server1 is slow. Find the process that uses the most CPU and stop it. Leave every other process of student running.
+@check server1 | the CPU hog (dd) is gone
+! pgrep -u student dd >/dev/null
+@check server1 | student's other process (sleep) still runs
+pgrep -u student sleep >/dev/null
+@hint ps -eo pid,user,%cpu,comm --sort=-%cpu | head shows the top one; then kill its PID.
+@solution server1
+ps -eo pid,user,%cpu,comm --sort=-%cpu | head -3
+pkill -u student dd
+@endtask
+@end
+
+@quiz
+? Which command lists processes with the biggest memory users first?
+- ps aux --sort=pid
++ ps -eo pid,user,%mem,comm --sort=-%mem
+- top -m
+- free -h
+! --sort=-%mem sorts by memory, biggest first (the minus means descending). free shows totals, not processes.
+? kill without a signal number sends which signal?
+- SIGKILL (9)
+- SIGHUP (1)
++ SIGTERM (15)
+- SIGSTOP (19)
+! SIGTERM asks the program to stop cleanly. Use -9 only when it does not react.
+? Which command sends SIGTERM to every process of the user dave?
+- kill dave
++ pkill -u dave
+- killall -9 dave
+- pgrep -u dave
+! pkill -u matches by owner. pgrep -u only lists the PIDs.
+@end
+
+## Lesson: l0305 | Priorities with nice and renice, tuning with tuned
+
+### nice values
+
+When several processes want the CPU, the kernel shares it by priority. The nice value is how you influence that: it goes from -20 (most favoured) to 19 (most polite), and 0 is normal. A higher nice value means the process gets less CPU when the machine is busy; on an idle machine it still runs at full speed.
+
+- `nice -n 10 COMMAND` starts a command with nice value 10 (just `nice COMMAND` also means 10).
+- `renice -n 15 -p PID` changes the value of a running process. `renice -n 5 -u USER` changes all of a user's processes.
+- Normal users may only make their own processes nicer (a higher number) and can never go back down. Only root can lower a nice value or give a negative one.
+- See the value in the NI column: `ps -o pid,ni,comm -p PID`, `ps -eo pid,ni,comm`, or top.
+
+```terminal
+[root@server1 ~]# ps -o pid,user,ni,comm -C sleep
+    PID USER    NI COMMAND
+    693 student  0 sleep
+[root@server1 ~]# renice -n 10 -p 693
+693 (process ID) old priority 0, new priority 10
+[root@server1 ~]# su - student -c 'renice -n 5 -p 693'
+renice: failed to set priority for 693 (process ID): Permission denied
+[root@server1 ~]# ps -o pid,user,ni,comm -C sleep
+    PID USER    NI COMMAND
+    693 student 10 sleep
+```
+
+student was not allowed to go from 10 back to 5, even for a process of their own.
+
+> top shows two columns: PR (the priority the kernel uses, 20 plus the nice value for normal processes) and NI (the nice value). Tasks talk about the nice value.
+
+### tuned: tuning profiles
+
+tuned is a service that sets many kernel and hardware settings at once from a profile, for example for best throughput, low latency, saving power or running as a virtual machine. `tuned-adm` manages it:
+
+- `tuned-adm active` shows the profile in use, `tuned-adm list` lists all of them.
+- `tuned-adm recommend` names the profile tuned thinks fits this machine.
+- `tuned-adm profile NAME` switches to a profile. It is remembered (in /etc/tuned/active_profile) and used again after a reboot.
+- `tuned-adm off` stops tuning. The tuned service itself must be running and enabled for profiles to apply at boot: `systemctl enable --now tuned`.
+
+```terminal
+[root@server1 ~]# tuned-adm active
+Current active profile: virtual-guest
+[root@server1 ~]# tuned-adm recommend
+virtual-guest
+[root@server1 ~]# tuned-adm profile throughput-performance
+[root@server1 ~]# tuned-adm active
+Current active profile: throughput-performance
+```
+
+A task like "use the recommended tuning profile" means: run `tuned-adm recommend`, then `tuned-adm profile` with the name it printed.
+
+@try machines=1
+@setup server1
+tuned-adm profile powersave
+su - student -c 'sleep 7300 &'
+@task t1 | Running systems | 10 | server1
+server1 uses the wrong tuning profile. Set it to the profile that tuned recommends for this machine.
+@check server1 | the active profile is the recommended one
+test "$(tuned-adm active)" = "Current active profile: $(tuned-adm recommend)"
+@hint tuned-adm recommend prints the name; tuned-adm profile NAME applies it.
+@solution server1
+tuned-adm recommend
+tuned-adm profile virtual-guest
+@endtask
+@task t2 | Running systems | 10 | server1
+student has a long sleep command running. Change the nice value of that running process to 12.
+@check server1 | the sleep process runs with nice value 12
+test "$(ps -o ni= -p $(pgrep -u student sleep) | tr -d ' ')" = 12
+@hint pgrep -u student sleep gives the PID; renice -n 12 -p PID.
+@solution server1
+renice -n 12 -p $(pgrep -u student sleep)
+@endtask
+@end
+
+@quiz
+? Which nice value gives a process the smallest share of a busy CPU?
+- -20
+- 0
+- 10
++ 19
+! The higher the nice value, the "nicer" the process is to others. 19 is the highest.
+? A normal user runs renice -n -5 on their own process. What happens?
+- It works
++ It is refused: only root may lower a nice value or set a negative one
+- The value becomes 5
+- The process is killed
+! Users may only raise the nice value of their own processes.
+? Which command applies the throughput-performance tuning profile so that it is used after a reboot too?
+- tuned-adm active throughput-performance
++ tuned-adm profile throughput-performance
+- systemctl enable throughput-performance
+- tuned-adm recommend throughput-performance
+! tuned-adm profile switches and remembers the choice. The tuned service must be enabled.
+@end
+
+## Lesson: l0306 | Network services and copying files between machines
+
+### Services with systemctl
+
+A network service (sshd, chronyd, httpd...) runs as a systemd service unit. Two things are separate and you usually want both:
+
+- Running now: `systemctl start NAME`, `stop`, `restart` (stop and start), `reload` (re-read the configuration without stopping, when the service supports it).
+- Starting at boot: `systemctl enable NAME` and `disable`. `systemctl enable --now NAME` does both enable and start; `disable --now` both disable and stop.
+- Checking: `systemctl status NAME` shows the state, the main PID and the last log lines. `systemctl is-active NAME` and `is-enabled NAME` print one word, which is ideal in scripts and to check your work.
+- `systemctl mask NAME` makes a service impossible to start at all, even by hand or by another service; `unmask` undoes it.
+
+```terminal
+[root@server1 ~]# systemctl status crond | grep -E 'Loaded|Active'
+     Loaded: loaded (/usr/lib/systemd/system/crond.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2026-03-02 04:00:00 EST; 0s ago
+[root@server1 ~]# systemctl is-active crond
+active
+[root@server1 ~]# systemctl is-enabled crond
+enabled
+[root@server1 ~]# systemctl stop crond
+[root@server1 ~]# systemctl is-active crond
+inactive
+[root@server1 ~]# systemctl start crond
+```
+
+Read the Loaded line: `enabled` there means it starts at boot. The Active line says whether it runs now. A service can be enabled but stopped, or running but not enabled (then it is gone after the next reboot).
+
+### scp: copy files over ssh
+
+`scp` copies files between machines through an ssh connection, so it asks for the same password (or uses the same keys) as ssh, and the first connection asks you to trust the other machine's key. The remote side is written `USER@HOST:PATH`; leave out `USER@` to use your own user name.
+
+- `scp FILE USER@HOST:/path/` copies to the other machine.
+- `scp USER@HOST:/path/file LOCALPATH` copies from it.
+- `scp -r FOLDER USER@HOST:/path/` copies a whole folder. `-p` keeps times and modes.
+
+```terminal
+[root@server1 ~]# echo hello > /root/report.txt
+[root@server1 ~]# scp /root/report.txt student@server2:/tmp/
+The authenticity of host 'server2 (192.168.50.12)' can't be established.
+ED25519 key fingerprint is SHA256:CSGKzvYSOfnQXRpu6xQl6t1hYLnO4gEhQwYBk4mSDD0.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'server2' (ED25519) to the list of known hosts.
+student@server2's password:
+report.txt                               100% 6        1.2MB/s   00:00
+[root@server1 ~]# scp root@server2:/etc/hostname /root/server2-hostname
+root@server2's password:
+hostname                                 100% 24        1.2MB/s   00:00
+[root@server1 ~]# cat /root/server2-hostname
+server2.lab.example.com
+```
+
+A copied file belongs to the user who logged in on the receiving side: /tmp/report.txt on server2 belongs to student. `sftp USER@HOST` is an interactive way to do the same (put, get, ls, bye), and `rsync` copies only what changed, but scp is all the exam needs.
+
+> The path after the colon is on the other machine. Without a colon, scp copies locally: scp file server2 just makes a file named server2 in the current folder.
+
+Logging in as root with a password (ssh or scp to root@server2) works here because the installer was told to allow it: it left the file /etc/ssh/sshd_config.d/01-permitrootlogin.conf with `PermitRootLogin yes`. Without that file, RHEL 9's sshd refuses root password logins (the default is prohibit-password, keys only), and you would log in as a normal user instead.
+
+@try machines=2
+@setup server1
+echo 'web: 2, db: 1, cache: 3' > /root/inventory.txt
+@setup server2
+systemctl disable --now atd
+@task t1 | Running systems | 10 | server2
+Copy /root/inventory.txt from server1 to server2 as /tmp/inventory.txt. Use scp from server1 (root's password on server2 is redhat).
+@check server2 | /tmp/inventory.txt on server2 has the inventory
+grep -q 'web: 2, db: 1, cache: 3' /tmp/inventory.txt
+@hint scp /root/inventory.txt root@server2:/tmp/ ; the first time, answer yes to the key question.
+@solution server1
+scp /root/inventory.txt root@server2:/tmp/
+yes
+redhat
+@endtask
+@task t2 | Running systems | 10 | server2
+On server2 the atd service is stopped and does not start at boot. Start it now and make it start at every boot.
+@check server2 | atd is running
+systemctl is-active atd
+@check server2 | atd is enabled
+systemctl is-enabled atd
+@solution server2
+systemctl enable --now atd
+@endtask
+@end
+
+@quiz
+? httpd runs now but is gone after every reboot. What is missing?
+- systemctl start httpd
++ systemctl enable httpd
+- systemctl reload httpd
+- systemctl unmask httpd
+! start only affects the running system; enable makes it start at boot. enable --now does both.
+? Which command copies /etc/hosts from server2 into the current folder on server1?
+- scp /etc/hosts server2
++ scp root@server2:/etc/hosts .
+- scp server2 /etc/hosts .
+- cp server2:/etc/hosts .
+! The remote side is USER@HOST:PATH, and the dot is the local current folder.
+? Which command prints just active or inactive for sshd?
+- systemctl status sshd
++ systemctl is-active sshd
+- systemctl list-units sshd
+- systemctl show sshd
+! is-active prints one word and sets the exit code, which makes it perfect for checks.
+@end

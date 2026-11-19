@@ -1,0 +1,22 @@
+NAME
+       pvmove - move data from one physical volume to others
+
+SYNOPSIS
+       pvmove SOURCE-PV [DESTINATION-PV...]
+
+DESCRIPTION
+       pvmove moves the extents in use on SOURCE-PV to other PVs of the same
+       volume group (all of them, or only the ones named), while the logical
+       volumes stay online. It prints its progress as a percentage. The VG
+       needs enough free extents on the other PVs.
+
+       Use it to empty a disk before taking it out of a VG with vgreduce.
+
+EXAMPLES
+       Empty /dev/vdb1 onto /dev/vdc1, then remove it from the VG:
+
+           pvmove /dev/vdb1 /dev/vdc1
+           vgreduce vgdata /dev/vdb1
+
+SEE ALSO
+       vgreduce(8), pvremove(8), pvs(8), lvm(8)

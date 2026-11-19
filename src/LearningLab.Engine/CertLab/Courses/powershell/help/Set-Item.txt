@@ -1,0 +1,16 @@
+SYNOPSIS: Changes the value of an item: an environment variable, a variable, an alias, or a key's default value.
+DESCRIPTION:
+Set-Item works on providers whose items have one value. It creates the item if it is missing on Env:, Variable:, Alias: and Function:. The file system does not support it: use Set-Content for a file's text.
+PARAMETER Path:
+The item to change.
+PARAMETER LiteralPath:
+The item, taken exactly as typed.
+PARAMETER Value:
+The new value.
+PARAMETER Force:
+Changes read-only variables too.
+PARAMETER PassThru:
+Outputs the changed item.
+EXAMPLE: Set-Item Env:LAB_MODE 'test'
+Same as $env:LAB_MODE = 'test', for this session only.
+RELATED: Get-Item, Clear-Item, Set-Content

@@ -1,0 +1,59 @@
+{
+    "id": "new-faces",
+    "title": "New Faces",
+    "category": "soc",
+    "level": "Expert",
+    "order": 1,
+    "summary": "Four alerts in a day: new accounts, a group change and a cleared log. The help desk set up two new starters this morning. Someone else set up one more for themselves.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company), a busy Monday with new starters. The SIEM raised alerts about new accounts, an account added to a powerful group, and a security log being wiped. Sort the onboarding from the intrusion and reconstruct the intruder's path.",
+    "goal": "Decide which new-account alert is real, then name the account the intruder created and the account they used, the group, the computer whose log was wiped, where they first came from and when the account was made.",
+    "skills": "account management events (4720, 4728, 4732, 1102), remote desktop sign-ins, following one account across computers",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 35,
+    "vars": {
+        "CO": "company",
+        "U1": "person:flast", "U2": "person:flast", "U3": "person:flast",
+        "HD": "person:flast", "ADMP": "person:flast",
+        "N1": "person:first.last", "N2": "person:first.last",
+        "H1": "num:10-39", "H2": "num:40-69", "H3": "num:70-99", "HH": "num:100-120",
+        "NET": "subnet:10",
+        "T0": "time:15-18",
+        "ATKIP": "ip",
+        "ROGUE": "pick:svc_update2|backup_adm|helpdesk2|sqlsvc_old",
+        "QV": "pick:onboard|rogue"
+    },
+    "variants": {
+        "QV": {
+            "onboard": { "QACC": "{{N1}}", "VQ": "false alarm" },
+            "rogue": { "QACC": "{{ROGUE}}", "VQ": "real" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 220, "from": "-9h", "to": "+40m",
+            "hosts": [ "WS-{{H1}}", "WS-{{H2}}", "WS-{{H3}}", "WS-{{HH}}" ],
+            "users": [ "{{U1}}", "{{U2}}", "{{U3}}", "hd_{{HD}}" ],
+            "ips": [ "{{NET}}.{{H1}}", "{{NET}}.{{H2}}", "{{NET}}.{{H3}}", "{{NET}}.{{HH}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01", "RDGW01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}", "quiet": [ "adm_{{ADMP}}" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The \"New account created\" alert for {{QACC}}: real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "{{N1}} and {{N2}} were made by the help desk's hd_{{HD}} in the morning from the help desk's own computer and put in Staff. {{ROGUE}} was made late in the afternoon by adm_{{ADMP}}, who had just signed in over remote desktop from outside, and put straight into Domain Admins." },
+        { "id": "rogue", "ask": "Which account did the intruder create?", "answer": "{{ROGUE}}", "points": 40, "explain": "The 4720 by adm_{{ADMP}}." },
+        { "id": "used", "ask": "Which existing account did the intruder use to do it?", "answer": "adm_{{ADMP}}", "points": 40, "explain": "user= on the 4720 and 4728 for {{ROGUE}}." },
+        { "id": "group", "ask": "Which group was the new account added to?", "answer": "Domain Admins", "points": 30, "explain": "group= on the 4728." },
+        { "id": "wiped", "ask": "On which computer was the security log cleared?", "answer": "RDGW01", "points": 30, "explain": "The 1102 event." },
+        { "id": "from", "ask": "From which address did the intruder first sign in?", "answer": "{{ATKIP}}", "points": 40, "explain": "The remote desktop sign-in (4624, logon_type=10) for adm_{{ADMP}} on RDGW01." },
+        { "id": "when", "ask": "At what time (HH:MM:SS) was the intruder's account created?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The time of that 4720." }
+    ],
+    "hints": [
+        { "text": "4720 is 'an account was made', 4728/4732 'added to a group'. Compare who made each account, from where, when, and into which group. Then follow the maker's account backwards: siem search user=NAME source=winsec.", "cost": 25 },
+        { "text": "A cleared log (1102) hides what happened on that computer - but the SIEM already has a copy of everything sent before the wipe.", "cost": 35 }
+    ]
+}

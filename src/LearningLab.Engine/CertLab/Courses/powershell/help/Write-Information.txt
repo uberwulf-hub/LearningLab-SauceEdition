@@ -1,0 +1,12 @@
+SYNOPSIS: Writes a message to the information stream.
+DESCRIPTION:
+Write-Information writes to stream 6, the same stream Write-Host uses since PowerShell 5.0. The messages are hidden by default; they show when -InformationAction Continue is given or $InformationPreference is Continue, and 6>&1 turns them into output.
+PARAMETER MessageData:
+The message.
+PARAMETER Tags:
+Words to label the message with.
+EXAMPLE: Write-Information 'Step 1 done' -InformationAction Continue
+Shows the message.
+EXAMPLE: Write-Information 'quiet'
+Shows nothing with the default preference.
+RELATED: Write-Host, Write-Verbose, about_Preference_Variables

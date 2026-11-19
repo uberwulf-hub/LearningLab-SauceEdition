@@ -1,0 +1,19 @@
+SYNOPSIS: Creates an organizational unit (OU) in Active Directory.
+DESCRIPTION:
+New-ADOrganizationalUnit makes a new OU. Without -Path it is created at the top of the domain (DC=corp,DC=example).
+New OUs are protected from accidental deletion by default: Remove-ADOrganizationalUnit refuses until you turn the protection off.
+PARAMETER Name:
+The OU's name, such as Marketing. Position 0.
+PARAMETER Path:
+The parent, as a distinguished name, such as "OU=Staff,DC=corp,DC=example".
+PARAMETER ProtectedFromAccidentalDeletion:
+$true (the default) or $false.
+PARAMETER Description:
+A note about the OU.
+PARAMETER DisplayName:
+The display name.
+EXAMPLE: New-ADOrganizationalUnit Marketing -Path "OU=Staff,DC=corp,DC=example"
+A Marketing OU next to Sales, Finance, HR and IT.
+EXAMPLE: New-ADOrganizationalUnit Kiosks -Path "OU=Workstations,DC=corp,DC=example" -Description "Shared PCs in the lobby"
+An OU for computers that will get their own Group Policy.
+RELATED: Get-ADOrganizationalUnit, Set-ADOrganizationalUnit, Remove-ADOrganizationalUnit, New-GPLink

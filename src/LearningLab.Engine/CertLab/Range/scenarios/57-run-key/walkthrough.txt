@@ -1,0 +1,20 @@
+You are the defender of one Windows PC, {{PC}}.
+
+1. Connect. winrm-shell -i 10.10.12.30 -u Administrator -p {{ADMPW}} opens PowerShell on the PC.
+
+2. What starts at sign-in. The registry key HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run lists
+   programs Windows starts for everyone who signs in. Get-ItemProperty on it shows SecurityHealth
+   (Windows' own) and {{VAL}}, which runs a hidden PowerShell script from C:\ProgramData\{{VAL}}\run.ps1.
+   Attackers love this spot: it survives restarts and needs no extra software.
+
+3. Who and from where. The Security log keeps sign-ins as event 4624. Get-WinEvent -FilterHashtable
+   @{ LogName='Security'; Id=4624 } shows several ordinary sign-ins at the desk (Logon Type 2) and one
+   remote sign-in (Logon Type 10) for {{USER}} from {{ATKIP}} - someone who knew {{USER}}'s password.
+
+4. The flag. C:\ProgramData\{{VAL}}\config.txt, next to the script.
+
+5. Clean up. Remove-ItemProperty -Path '...\Run' -Name {{VAL}} and Remove-Item ...\run.ps1. If you are too
+   slow, the next sign-in runs the script and copies the front-desk share into the attacker's folder.
+
+For real: also reset {{USER}}'s password, turn off remote sign-in where it isn't needed, and watch the Run
+keys (and the Startup folders, scheduled tasks and services) for entries you didn't put there.

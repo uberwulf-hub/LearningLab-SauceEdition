@@ -1,0 +1,22 @@
+NAME
+       lvrename - rename a logical volume
+
+SYNOPSIS
+       lvrename VG OLDNAME NEWNAME
+       lvrename /dev/VG/OLDNAME /dev/VG/NEWNAME
+
+DESCRIPTION
+       lvrename gives a logical volume a new name inside its volume group.
+       The data is not touched and a mounted LV keeps working, but its device
+       paths change (/dev/VG/NEWNAME, /dev/mapper/VG-NEWNAME). Update
+       /etc/fstab if it names the LV by path; entries that use the UUID keep
+       working.
+
+EXAMPLES
+       Rename the LV data in vgdata to projects:
+
+           lvrename vgdata data projects
+           lvs vgdata
+
+SEE ALSO
+       vgrename(8), lvs(8), lvm(8)

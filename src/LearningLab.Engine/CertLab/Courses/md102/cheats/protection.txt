@@ -1,0 +1,48 @@
+# Sheet: protection | Endpoint security, BitLocker and LAPS | Protection
+## Portal
+Endpoint security > Antivirus :: Microsoft Defender Antivirus; Windows Security experience (tamper protection: devices onboarded to Defender for Endpoint)
+Endpoint security > Firewall :: Windows Firewall (profiles); Windows Firewall rules
+Endpoint security > Attack surface reduction :: ASR rules, controlled folder access, exclusions
+Endpoint security > Endpoint detection and response :: onboarding to Defender for Endpoint
+Endpoint security > Security baselines :: Windows, Defender for Endpoint, Edge, Windows 365, Microsoft 365 Apps
+Endpoint security > Disk encryption :: BitLocker
+Endpoint security > Account protection :: Windows LAPS
+Entra admin center > Devices > Device settings :: Enable Microsoft Entra LAPS
+## Defender
+Get-MpComputerStatus :: running state: AntivirusEnabled, RealTimeProtectionEnabled, IsTamperProtected, signature age
+Get-MpPreference :: configuration: PUAProtection, MAPSReporting, ExclusionPath, ASR rules
+Start-MpScan -ScanType QuickScan :: a quick scan
+Update-MpSignature :: new security intelligence
+PUAProtection :: 0 off, 1 on, 2 audit
+ASR actions :: 0 off, 1 block, 2 audit, 6 warn
+EnableControlledFolderAccess :: 0 off, 1 on, 2 audit
+## Firewall
+Domain / Private / Public :: domain network / trusted network / anywhere else
+Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction :: profile states
+## Defender for Endpoint
+Connector on (both portals) + EDR "Auto from connector" :: onboarding from Intune
+Sense :: the Defender for Endpoint sensor service
+Machine risk score :: Clear, Low, Medium, High; used by compliance, then Conditional Access
+## BitLocker
+Require Device Encryption = Enabled :: turn BitLocker on
+Allow Warning For Other Disk Encryption = Disabled :: silent encryption
+Allow Standard User Encryption = Enabled :: silent for non-admin users
+Startup PIN required :: not silent: the user must choose it
+XTS-AES 128-bit :: default OS drive method (256-bit stronger)
+Save recovery information to Microsoft Entra ID :: back up the key
+Do not enable BitLocker until recovery information is stored :: key first, then encryption
+Configure Recovery Password Rotation :: replace used keys; allows the key rotation action
+Get-BitLockerVolume -MountPoint C: :: VolumeStatus, ProtectionStatus, EncryptionMethod, KeyProtector
+Recovery keys :: Intune device > Recovery keys; Entra device > BitLocker keys; user: My Account
+## LAPS
+Backup Directory :: Disabled, Microsoft Entra ID only, Active Directory only
+Password Age Days :: default 30; at least 7 with Entra ID
+Administrator Account Name :: empty = built-in Administrator; another account must exist
+Post Authentication Actions :: reset; reset and log off (default); reset and reboot
+Post Authentication Reset Delay :: 0-24 hours, default 24
+Invoke-LapsPolicyProcessing :: process the LAPS policy now
+Reset-LapsPassword :: set and back up a new password now
+Rotate local admin password :: the same from the Intune portal
+Read the password :: Cloud Device Administrator, Intune Administrator, Global Administrator
+Read only the LAPS details :: Helpdesk Administrator, Security Administrator, Security Reader
+Microsoft > Windows > LAPS > Operational :: the Event Viewer log of LAPS

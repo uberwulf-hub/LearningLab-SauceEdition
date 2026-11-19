@@ -1,0 +1,67 @@
+# Lab: lab-02 | Enrolling Windows devices | u02 | 30
+Automatic enrolment was switched off during a migration and never switched back on. A laptop for Ava in HR is waiting, and the security team wants personal Windows devices out of Intune. Do the tasks in order: once personal Windows devices are blocked, a join from Settings no longer enrols.
+
+@vars
+limit = 2 | 3 | 4
+@endvars
+
+@setup portal
+tenant mdmScope=None
+device RB-LT-002 join=None managed=None user="" ownership=""
+
+@task t01 | Enrollment | 20 | portal
+Turn automatic enrolment back on for **all** users.
+@check portal | the MDM user scope is All
+tenant.mdmScope == All
+@hint Tenant administration > Settings, section Automatic enrolment.
+@solution portal
+tenant mdmScope=All
+@explain
+With the MDM user scope at None, Windows devices still join Microsoft Entra ID but nothing enrols them in Intune. All (or Some with a group) brings automatic enrolment back.
+@endtask
+
+@task t02 | Enrollment | 30 | RB-LT-002
+RB-LT-002 is Ava's new laptop (`ava`). Make sure she is allowed to enrol it, then join it to Microsoft Entra ID with her account so that it is enrolled in Intune.
+@check portal | Ava has a licence that includes Intune
+user["ava"].licenses has "Intune Plan 1"
+@check portal | RB-LT-002 is joined, enrolled and Ava's
+device["RB-LT-002"].join == "Entra joined"
+device["RB-LT-002"].managed == Intune
+device["RB-LT-002"].user == ava
+@hint Ava only has Office 365 E3. Add Intune Plan 1 to her licences first, then use Settings > Access work or school > Connect > Join this device to Microsoft Entra ID.
+@solution portal
+set user ava +licenses="Intune Plan 1"
+@solution RB-LT-002
+#settings join ava
+dsregcmd /status
+@explain
+Automatic enrolment needs both the MDM user scope and a licence with Intune. Office 365 E3 has no Intune, so the join would work and the enrolment would fail with a licence error.
+@endtask
+
+@task t03 | Enrollment | 25 | portal
+Block **personally owned Windows** devices in the **default** enrolment restriction, and set the default device limit to **{limit}** devices per user.
+@check portal | personal Windows devices are blocked by default
+tenant.winPersonal == Block
+@check portal | the device limit is {limit}
+tenant.enrollLimit == {limit}
+@hint Both values are the default restrictions (Tenant administration > Settings, section Enrolment restrictions in Cert Lab).
+@solution portal
+tenant winPersonal=Block enrollLimit={limit}
+@explain
+The default restrictions apply to every user with no other restriction assigned. Blocking personal Windows devices stops joins and enrolments from Settings, while Autopilot, provisioning packages, Group Policy and co-management still enrol (they count as corporate).
+@endtask
+
+@task t04 | Enrollment | 25 | portal
+IT staff test personal devices for the company. Create a Windows platform restriction called **IT - personal Windows allowed** for **IT Admins** that allows personally owned Windows devices, with priority **1**, so IT is not caught by the default block.
+@check portal | the restriction allows personal Windows devices for IT Admins
+restriction["IT - personal Windows allowed"].platform == "Windows (MDM)"
+restriction["IT - personal Windows allowed"].personal == Allow
+restriction["IT - personal Windows allowed"].include has "IT Admins"
+restriction["IT - personal Windows allowed"].priority == 1
+@hint Devices > Enrollment > Device platform restriction, assigned to IT Admins.
+@solution portal
+create restriction name="IT - personal Windows allowed" platform="Windows (MDM)" allow=Allow personal=Allow priority=1
+assign restriction "IT - personal Windows allowed" "IT Admins"
+@explain
+A restriction assigned to a group overrides the default for its members; when several apply, the one with the highest priority (lowest number) wins. Restrictions are assigned to user groups because they are checked against the person who enrols.
+@endtask

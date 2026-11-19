@@ -1,0 +1,29 @@
+NAME
+       pvremove - remove the LVM label from a device
+
+SYNOPSIS
+       pvremove [-f] [-y] PV...
+
+DESCRIPTION
+       pvremove wipes the LVM label from a physical volume, so the device is
+       an ordinary disk or partition again. A PV that still belongs to a
+       volume group cannot be removed: first move its data away (pvmove) and
+       take it out of the VG (vgreduce VG PV), or remove the whole VG
+       (vgremove).
+
+OPTIONS
+       -f, --force
+              Remove even when LVM has doubts. Use -ff to remove a PV that is
+              still listed in a VG (this breaks that VG).
+
+       -y, --yes
+              Answer yes to the questions.
+
+EXAMPLES
+       Take /dev/vdc out of vgdata and free it:
+
+           vgreduce vgdata /dev/vdc
+           pvremove /dev/vdc
+
+SEE ALSO
+       pvcreate(8), vgreduce(8), pvmove(8), lvm(8)

@@ -1,0 +1,73 @@
+NAME
+       su - run a shell or a command as another user
+
+SYNOPSIS
+       su [-] [-l] [-c COMMAND] [-s SHELL] [-m] [USER]
+
+DESCRIPTION
+       su (switch user) starts a shell as USER, or as root when no user is
+       given. It asks for the password of the target account, not your own;
+       root may switch to any account without a password. Type exit to go
+       back to the shell you came from.
+
+       There are two kinds of switch, and the difference matters:
+
+       su USER
+              Changes only the identity. You keep your current directory and
+              most of your environment, including PATH. Programs may then
+              look for files in the wrong places.
+
+       su - USER  (or su -l USER)
+              Starts a login shell, as if USER had logged in: it goes to
+              USER's home directory, sets HOME, SHELL, USER, LOGNAME and PATH
+              for USER and runs the login scripts (/etc/profile,
+              ~/.bash_profile). This is almost always the one you want.
+
+       Compared with sudo, su needs the target account's password and gives a
+       whole shell; sudo needs your own password, checks the sudoers rules
+       and logs each command.
+
+OPTIONS
+       -, -l, --login
+              Start a login shell (see above). Put it before the user name.
+
+       -c, --command=COMMAND
+              Run only COMMAND (one argument: quote it) as the user, then come
+              back.
+
+       -s, --shell=SHELL
+              Run SHELL instead of the user's shell from /etc/passwd.
+
+       -m, -p, --preserve-environment
+              Keep the current environment.
+
+EXAMPLES
+       Become root with root's own environment:
+
+           su -
+
+       Become the user student (from root, no password is asked):
+
+           su - student
+
+       Run one command as student and return to root:
+
+           su - student -c 'crontab -l'
+
+       Check what a user can reach, as that user:
+
+           su - student -c 'ls -l /srv/shared'
+
+NOTES
+       An account whose shell is /sbin/nologin cannot get a shell with su;
+       it prints "This account is currently not available.".
+
+       Logging in as root over ssh may be refused while su - still works
+       from a normal account, depending on PermitRootLogin in sshd_config.
+
+FILES
+       /etc/pam.d/su
+              The authentication rules for su.
+
+SEE ALSO
+       sudo(8), login(1), bash(1), passwd(5)

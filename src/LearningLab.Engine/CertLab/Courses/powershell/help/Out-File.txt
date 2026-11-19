@@ -1,0 +1,40 @@
+SYNOPSIS: Saves output to a text file, exactly as it would look on screen.
+DESCRIPTION:
+Out-File writes the same text you would see in the console to a file. Objects are formatted first (as tables, lists or plain text), so a file made with Out-File is for people to read, not for programs to load again. To save data that you will import later, use Export-Csv or ConvertTo-Json instead.
+
+The redirection operators do the same job: command > file is Out-File, and command >> file is Out-File -Append.
+
+In Windows PowerShell 5.1 the default encoding is Unicode (UTF-16 little-endian, two bytes per character, with a byte order mark). Some programs read such files badly; add -Encoding UTF8 or -Encoding ASCII when another program needs the file.
+PARAMETER FilePath:
+The file to write. Position 0, required. Its alias is -Path.
+PARAMETER Encoding:
+The text encoding: Unicode (the 5.1 default), UTF8 (with a byte order mark in 5.1), ASCII, UTF32, BigEndianUnicode, Default (the computer's ANSI code page) or OEM. Position 1.
+PARAMETER Append:
+Adds to the end of the file instead of replacing it.
+PARAMETER NoClobber:
+Refuses to replace a file that already exists.
+PARAMETER Width:
+The line width for formatting tables. Wider lines keep more columns; the default is the console's width.
+PARAMETER NoNewline:
+Writes the text without line breaks between items and at the end.
+PARAMETER LiteralPath:
+The file path taken exactly as typed, for names with [ ] or other wildcard characters.
+PARAMETER InputObject:
+What to write. Usually it comes through the pipeline.
+EXAMPLE: 'hello' | Out-File C:\LabFiles\hello.txt
+Writes one line to a new file (replacing it if it exists).
+EXAMPLE: 'more' | Out-File C:\LabFiles\hello.txt -Append
+Adds a line to the end of the same file.
+EXAMPLE: 'x' | Out-File C:\LabFiles\hello.txt -NoClobber
+Fails, because the file already exists.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Table Name, Office | Out-File C:\LabFiles\offices.txt -Encoding UTF8
+Saves a readable table as a UTF-8 file.
+NOTES:
+Out-File supports -WhatIf and -Confirm.
+
+In 5.1, Out-File, > and >> write UTF-16 by default, while Set-Content and Add-Content write ANSI by default. Appending with >> to a file made by Set-Content can give text with odd gaps between letters, because the two halves use different encodings. Give the same -Encoding every time you write to a file.
+
+PowerShell 7 writes UTF-8 without a byte order mark everywhere by default, and its UTF8 choice means no byte order mark too (utf8BOM adds one).
+
+Long lines in tables are cut to the width; use -Width 300 or Format-Table -AutoSize to keep wide columns.
+RELATED: Export-Csv, Tee-Object, Out-String, Out-Host, about_Redirection

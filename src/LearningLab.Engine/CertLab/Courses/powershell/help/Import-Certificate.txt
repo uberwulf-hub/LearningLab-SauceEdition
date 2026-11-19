@@ -1,0 +1,20 @@
+SYNOPSIS: Adds a certificate from a .cer file to a certificate store.
+DESCRIPTION:
+Import-Certificate reads a certificate file made by Export-Certificate and puts it in the store you name. Which store matters:
+
+Cert:\LocalMachine\Root (Trusted Root Certification Authorities): the computer trusts certificates issued by this one. A self-signed signing certificate must be here for its signatures to count as valid.
+Cert:\LocalMachine\TrustedPublisher: scripts signed with this certificate run without asking "Do you want to run software from this untrusted publisher?".
+Cert:\LocalMachine\Disallowed: scripts signed with it never run.
+
+The CurrentUser stores work the same way, for your account only.
+PARAMETER FilePath:
+The .cer file to import. You can pipe in files.
+PARAMETER CertStoreLocation:
+The store, for example Cert:\LocalMachine\Root. The default is Cert:\CurrentUser\My.
+EXAMPLE: Import-Certificate -FilePath C:\LabFiles\LabSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
+Makes WIN-CL1 trust the lab's self-signed signing certificate.
+EXAMPLE: Import-Certificate -FilePath C:\LabFiles\LabSigning.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+Lets scripts signed with it run under AllSigned without a question.
+NOTES:
+Only add certificates you trust to Root: a root certificate can vouch for anything.
+RELATED: Export-Certificate, New-SelfSignedCertificate, Get-AuthenticodeSignature, about_Signing

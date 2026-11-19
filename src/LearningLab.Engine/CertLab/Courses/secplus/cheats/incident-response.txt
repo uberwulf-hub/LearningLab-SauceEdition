@@ -1,0 +1,56 @@
+# Sheet: incident-response | Incident response and forensics | Security operations
+## Incident response phases (in order)
+1 Preparation :: plan, team, contacts, tools, training and playbooks ready before anything happens
+2 Detection :: notice something is wrong (alerts, user reports, logs) and confirm it is an incident
+3 Analysis :: work out scope, cause, systems and data affected; decide severity
+4 Containment :: stop the spread (isolate hosts, disable accounts, block addresses) while keeping evidence
+5 Eradication :: remove the cause (malware, attacker accounts, the flaw that let them in)
+6 Recovery :: restore from clean backups, patch, return systems to service and watch closely
+7 Lessons learned :: review what happened and improve plans and controls, soon after the incident
+## Containment choices
+Isolation :: cut a host off the network (EDR isolation, switch port, quarantine VLAN)
+Segmentation :: move affected systems to a restricted segment so the business can keep running
+Quarantine :: hold a suspicious file or message where it can't run
+Keep it powered on? :: usually yes until memory is captured; pulling the plug loses RAM evidence
+## Order of volatility (collect first to last)
+1 CPU registers and cache :: gone in nanoseconds
+2 Routing table, ARP cache, process table, kernel statistics :: change constantly
+3 RAM (memory) :: lost at power off; holds running malware, keys and connections
+4 Temporary files and swap / page file :: overwritten during normal use
+5 Disk :: survives a reboot; take a bit-for-bit image
+6 Remote logs and monitoring data :: kept on other systems but may roll over
+7 Physical configuration and network topology :: changes rarely
+8 Archives and backups :: least volatile
+## Digital forensics
+Legal hold :: order to keep all data related to a case or lawsuit; overrides normal deletion schedules
+Chain of custody :: signed record of who collected, handled and stored each item, when and why
+Acquisition :: make forensic copies (disk images, memory dumps) with a write blocker
+Hashing evidence :: hash the original and the copy (SHA-256); matching hashes prove nothing changed
+Preservation :: store evidence securely and work only on copies
+E-discovery :: finding and handing over electronic information for a legal case
+Reporting :: a clear, factual report of what was found and how, fit for management or court
+Timeline :: events put in order from many sources; time zones and clock offsets must be recorded
+Artifacts :: traces left behind such as browser history, prefetch files, registry entries and logs
+## Data sources
+Firewall logs :: allowed and blocked connections, addresses and ports
+Application logs :: sign-ins, errors and actions inside an app
+Endpoint logs :: EDR and antivirus events, processes started, files changed
+OS security logs :: Windows Security log (event 4624 sign-in, 4625 failed sign-in), Linux auth.log or secure
+IDS / IPS logs :: signatures matched, alerts and blocks
+Network logs :: switch, router, VPN, DNS and DHCP records
+Metadata :: data about data: email headers, file times, photo location and camera details
+NetFlow / flow data :: who talked to whom, when and how much, without contents
+Packet captures (PCAP) :: full traffic contents for deep analysis
+Vulnerability scans :: show which weaknesses an attacker could have used
+Automated reports and dashboards :: summaries from the SIEM for trends and quick status
+## Plans, people and tests
+Incident response plan (IRP) :: roles, contacts, severity levels, communication and reporting duties
+Playbook / runbook :: step-by-step response for one kind of incident, such as phishing or ransomware
+SOAR :: runs playbook steps automatically (enrich alerts, block, open tickets)
+CSIRT / CIRT :: the incident response team, with technical, legal, HR, PR and management members
+Tabletop exercise :: a guided discussion of a scenario, no systems touched
+Simulation :: a realistic practice run, such as a mock attack or phishing test
+Root cause analysis :: find the underlying cause, not just the symptom, so it doesn't happen again
+Threat hunting :: proactively searching for attackers already inside, using hypotheses and threat intelligence
+Escalation :: when and to whom an incident moves up, including legal, executives and regulators
+Communication :: share facts only with people who need them; use out-of-band channels if email may be compromised

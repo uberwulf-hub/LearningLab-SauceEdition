@@ -1,0 +1,99 @@
+NAME
+       semanage - change lasting SELinux settings: file contexts, ports, booleans
+
+SYNOPSIS
+       semanage fcontext {-a | -m} -t TYPE 'PATTERN'
+       semanage fcontext -d 'PATTERN'
+       semanage fcontext -a -e REFERENCE PATH
+       semanage fcontext -l [-C]
+       semanage port {-a | -m} -t TYPE -p tcp|udp PORT
+       semanage port -d -p tcp|udp PORT
+       semanage port -l [-C]
+       semanage boolean -m {--on | --off} BOOLEAN
+       semanage boolean -l [-C]
+       semanage login -l
+
+DESCRIPTION
+       semanage changes the local customisations of the SELinux policy. They
+       are saved in the policy store and survive reboots and full relabels.
+       Each kind of setting is a subcommand. semanage must be run as root,
+       even for listing (it reads the policy store, which only root may
+       open).
+
+   fcontext
+       Rules that say which context files under a path should get. Adding a
+       rule does not relabel anything by itself: run restorecon afterwards.
+       The pattern is a regular expression for the whole path. The usual
+       form for a directory and everything in it is '/dir(/.*)?'. Quote it
+       so the shell does not touch it.
+
+   port
+       Which port numbers a service is allowed to use. For example, Apache
+       (httpd_t) may bind only to ports of type http_port_t (80, 443, 8008,
+       8443...). To run a web server on port 82, add 82 to http_port_t; to
+       let sshd listen on 2222, add it to ssh_port_t. A port that already
+       has a type in the policy must be changed with -m instead of -a.
+
+   boolean
+       The same switches as setsebool -P, with a list that shows each
+       boolean's current and default state and a description.
+
+OPTIONS
+       -a, --add
+              Add a rule.
+
+       -d, --delete
+              Delete a rule you added (policy rules cannot be deleted).
+
+       -m, --modify
+              Change an existing rule.
+
+       -l, --list
+              List the rules, the policy's and yours.
+
+       -C, --locallist
+              With -l, list only the rules you added.
+
+       -t, --type TYPE
+              The SELinux type, such as httpd_sys_content_t or http_port_t.
+
+       -p, --proto tcp|udp
+              The protocol of a port rule.
+
+       -e, --equal REFERENCE
+              File context: label PATH the same way as REFERENCE.
+
+       --on, --off
+              Boolean: the new value.
+
+EXAMPLES
+       Let Apache serve files from /srv/web:
+
+           semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?'
+           restorecon -Rv /srv/web
+
+       Show your own file context rules:
+
+           semanage fcontext -l -C
+
+       Let httpd listen on TCP port 82:
+
+           semanage port -a -t http_port_t -p tcp 82
+           semanage port -l | grep http_port_t
+
+       Remove that port rule again:
+
+           semanage port -d -p tcp 82
+
+       Turn a boolean on for good:
+
+           semanage boolean -m --on httpd_enable_homedirs
+
+NOTES
+       semanage comes with the policycoreutils-python-utils package. The
+       audit log and sealert usually suggest the exact semanage command for
+       a denial; read it before you type it.
+
+SEE ALSO
+       restorecon(8), setsebool(8), getsebool(8), sealert(8), ls(1),
+       ss(8), selinux(8)

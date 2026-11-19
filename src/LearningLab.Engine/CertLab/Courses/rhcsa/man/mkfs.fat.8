@@ -1,0 +1,45 @@
+NAME
+       mkfs.fat - create a FAT (vfat) file system
+
+SYNOPSIS
+       mkfs.fat [-F 12|16|32] [-n LABEL] [-I] [-v] DEVICE
+       mkfs.vfat [OPTIONS] DEVICE
+
+DESCRIPTION
+       mkfs.fat writes an empty FAT file system, the kind used on USB sticks,
+       memory cards and the EFI system partition. Linux mounts it with the
+       type vfat. mkfs.vfat and mkdosfs are other names for the same
+       program. Everything on the device is lost.
+
+       FAT has no Unix owners or permission bits. Every file on a mounted
+       vfat file system shows the same owner and mode, chosen at mount time
+       with options such as uid=, gid= and umask= (chmod and chown fail).
+       It also has no SELinux labels; use the context= mount option when a
+       service needs a particular type.
+
+OPTIONS
+       -F 12|16|32
+              The FAT size. mkfs.fat picks one from the device size when it
+              is not given; 32 is usual for anything larger than 512 MiB.
+
+       -n LABEL
+              The volume label, up to 11 characters.
+
+       -I     Allow a whole disk (no partition table) as the device.
+
+       -v     Print more details.
+
+EXAMPLES
+       Make a vfat file system on /dev/vdc1 and mount it at /media/usb with
+       files owned by student:
+
+           mkfs.vfat -n USBDATA /dev/vdc1
+           mkdir -p /media/usb
+           mount -o uid=student,gid=student /dev/vdc1 /media/usb
+
+       In /etc/fstab:
+
+           UUID=1A2B-3C4D  /media/usb  vfat  defaults,uid=1000,gid=1000  0 0
+
+SEE ALSO
+       mkfs(8), fatlabel(8), mount(8), fstab(5)

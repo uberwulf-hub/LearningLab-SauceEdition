@@ -1,0 +1,69 @@
+NAME
+       vgs - list LVM volume groups in a short table
+
+SYNOPSIS
+       vgs [-a] [-o FIELDS] [-O SORT] [-S SELECTION] [--noheadings]
+           [--units UNIT] [--nosuffix] [--separator TEXT] [VG...]
+
+DESCRIPTION
+       vgs prints one line per volume group:
+
+       VG     the name.
+       #PV    how many physical volumes it is made of.
+       #LV    how many logical volumes it holds.
+       #SN    how many snapshots.
+       Attr   attributes; the first letter w means writable, the third
+              letter n the normal allocation policy.
+       VSize  the total size.
+       VFree  the space not yet given to any LV.
+
+       Sizes are shown in convenient units with a letter (m for MiB, g for
+       GiB) and a < in front when the value was rounded.
+
+       With -o you choose the columns, which together with --noheadings
+       makes vgs good for scripts and checks.
+
+OPTIONS
+       -o, --options FIELDS
+              The columns to show, comma separated. Useful fields: vg_name,
+              pv_count, lv_count, vg_size, vg_free, vg_extent_size,
+              vg_extent_count, vg_free_count, vg_uuid. -o +FIELD adds a
+              column to the default ones.
+
+       --noheadings
+              Leave out the header line.
+
+       --units UNIT
+              Show sizes in this unit: b, k, m, g, t (powers of 1024), or
+              upper case for powers of 1000.
+
+       --nosuffix
+              Leave the unit letter off the sizes (with --units).
+
+       --separator TEXT
+              Separate columns with TEXT instead of spaces.
+
+       -O, --sort FIELDS
+              Sort by these fields (a - in front sorts in reverse).
+
+       -S, --select SELECTION
+              Only volume groups that match, such as -S 'vg_free > 0'.
+
+       -a, --all
+              Include everything LVM knows about.
+
+EXAMPLES
+       List all volume groups:
+
+           vgs
+
+       Print the extent size of vgdata, for a test:
+
+           vgs --noheadings -o vg_extent_size vgdata
+
+       Show the free space in MiB, without the unit letter:
+
+           vgs --noheadings --units m --nosuffix -o vg_free vgdata
+
+SEE ALSO
+       pvs(8), lvs(8), vgdisplay(8), vgcreate(8), vgextend(8)

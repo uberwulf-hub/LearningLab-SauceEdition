@@ -1,0 +1,89 @@
+# Lab: lab-04 | Account hygiene and privileged access | u15 | 35
+An access review on server1 found the classic problems: an account of a contractor who left months ago still works, passwords never expire, a former administrator still has full root rights through the wheel group, and the web team has a shared root password because "they only need to restart the web server". Fix them on server1. Leave the accounts and their files in place: HR and the auditors may still need them.
+
+@vars
+leaver = jdoyle | mreyes | tpark
+oldadmin = hgrant | rsilva | ywong
+@endvars
+
+@setup server1
+useradd -c 'Contractor (left in 2025)' {leaver}
+echo 'Winter-Lamp-42' | passwd --stdin {leaver}
+useradd -c 'Accounts payable' priya
+echo 'Paper-Moon-19' | passwd --stdin priya
+useradd -G wheel -c 'Former admin, now in sales' {oldadmin}
+useradd -c 'Web operations' webops
+echo 'Blue-Kettle-77' | passwd --stdin webops
+
+@task t01 | Security operations | 15 | server1
+The contractor account `{leaver}` is no longer needed. Make sure nobody can log in with it: lock its password and give it the shell /sbin/nologin. Do not delete the account or its home folder.
+@check server1 | the password is locked
+getent shadow {leaver} | cut -d: -f2 | grep -q '^!'
+@check server1 | the shell is /sbin/nologin and the home folder is still there
+test "$(getent passwd {leaver} | cut -d: -f7)" = /sbin/nologin && test -d /home/{leaver}
+@hint usermod -L locks the password (passwd -l does too); usermod -s changes the shell.
+@solution server1
+lastlog -u {leaver}
+usermod -L -s /sbin/nologin {leaver}
+getent shadow {leaver}
+@explain
+Deprovisioning should happen on the day someone leaves; an unused account that still works is an easy target, because nobody notices when it is used. Locking puts a ! in front of the password hash, so no password can match. It does not stop ssh keys, which is why the shell /sbin/nologin is set too. An account expiry date (usermod -e or chage -E) is a third way, and the safest is all of them plus removing keys.
+@endtask
+
+@task t02 | Security operations | 15 | server1
+Set password aging for `priya`: she must change her password at least every 90 days, may not change it again on the same day (at least 1 day between changes), and is warned 14 days before it expires.
+@check server1 | priya's aging is 1 / 90 / 14 days
+test "$(getent shadow priya | cut -d: -f4-6)" = "1:90:14"
+@hint chage -m sets the minimum, -M the maximum and -W the warning days; chage -l USER shows them.
+@solution server1
+chage -m 1 -M 90 -W 14 priya
+chage -l priya
+@explain
+The minimum age stops people from changing their password several times in a row to get back to their old favourite. Current guidance (NIST SP 800-63B) actually prefers long passwords that are changed when there is a sign of compromise, rather than on a fixed schedule; many organisations' policies still ask for 90 days, and the exam expects you to know both chage and the reasoning.
+@endtask
+
+@task t03 | Security operations | 10 | server1
+New accounts created on server1 from now on must get a maximum password age of 90 days by default.
+@check server1 | login.defs sets PASS_MAX_DAYS to 90
+grep -Eq '^PASS_MAX_DAYS[[:space:]]+90$' /etc/login.defs && test "$(grep -Ec '^PASS_MAX_DAYS' /etc/login.defs)" -eq 1
+@hint useradd takes its password aging defaults from /etc/login.defs.
+@solution server1
+grep ^PASS_MAX_DAYS /etc/login.defs
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   90/' /etc/login.defs
+grep ^PASS_MAX_DAYS /etc/login.defs
+@explain
+login.defs only affects accounts created later: existing accounts keep their values until chage changes them. That is why task 2 used chage for priya.
+@endtask
+
+@task t04 | Security operations | 10 | server1
+`{oldadmin}` moved to the sales team and no longer administers servers, but is still in the group wheel, which gives full sudo rights. Remove {oldadmin} from wheel only: the account stays and student keeps its rights.
+@check server1 | {oldadmin} is not in wheel, student still is
+! id -nG {oldadmin} | grep -qw wheel && id -nG student | grep -qw wheel
+@check server1 | the account still exists
+id {oldadmin}
+@hint gpasswd -d USER GROUP removes one user from one group.
+@solution server1
+getent group wheel
+gpasswd -d {oldadmin} wheel
+getent group wheel
+@explain
+Privileges that stay after a change of job are called privilege creep. Regular access reviews (attestation: a manager confirms each person's rights) catch it. gpasswd -d is safer than usermod -G, which replaces the whole list of extra groups and can remove more than you meant to.
+@endtask
+
+@task t05 | Security operations | 20 | server1
+The user `webops` must be able to restart the web server with `sudo /usr/bin/systemctl restart httpd`, and nothing else as root. Write the rule in a file in /etc/sudoers.d (keep sudo asking for webops's own password), and do not put webops in wheel.
+@check server1 | the sudoers files are valid
+visudo -c
+@check server1 | webops may run exactly that command as root
+sudo -l -U webops | grep -q '(root) /usr/bin/systemctl restart httpd$'
+@check server1 | webops has no other sudo rights and is not in wheel
+! sudo -l -U webops | grep -q 'ALL$' && ! sudo -l -U webops | grep -q NOPASSWD && ! id -nG webops | grep -qw wheel
+@hint A line `USER ALL=(root) /full/path/command args` in /etc/sudoers.d/NAME; check it with visudo -c and sudo -l -U webops.
+@solution server1
+echo 'webops ALL=(root) /usr/bin/systemctl restart httpd' > /etc/sudoers.d/webops
+chmod 440 /etc/sudoers.d/webops
+visudo -c
+cat /etc/sudoers.d/webops
+@explain
+sudo gives a person just the commands their job needs and logs each use with their own name, which a shared root password cannot do (no accountability, and everybody must be told when it changes). Name commands with their full path and arguments: a rule for /usr/bin/systemctl alone would let webops stop the firewall or start a root shell service. Always check with visudo -c: a broken sudoers file can lock everyone out of sudo.
+@endtask

@@ -1,0 +1,24 @@
+SYNOPSIS: Runs a method of a CIM class or instance.
+DESCRIPTION:
+Some actions are methods: Win32_Process Create starts a program, Terminate and GetOwner work on a process, Win32_Service has StartService, StopService, PauseService, ResumeService and ChangeStartMode, Win32_OperatingSystem has Reboot and Shutdown. Call a class method (Create) with -ClassName, an instance method on objects from Get-CimInstance (pipe them in). The result has a ReturnValue: 0 is success, other numbers are the method's own error codes (for StopService, 5 means it was not running; for StartService, 10 means it already runs).
+PARAMETER ClassName:
+The class, for a class method such as Create. Position 0.
+PARAMETER InputObject:
+Instances from Get-CimInstance, through the pipeline.
+PARAMETER Query:
+A WQL query that picks the instances.
+PARAMETER MethodName:
+The method. Position 1.
+PARAMETER Arguments:
+The method's arguments as a hashtable, for example @{CommandLine='notepad.exe'}. Position 2.
+PARAMETER ComputerName:
+Runs it on other computers.
+PARAMETER CimSession:
+Runs it through sessions.
+EXAMPLE: Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='notepad.exe'}
+Starts Notepad and returns its ProcessId.
+EXAMPLE: Get-CimInstance Win32_Service -Filter "Name='Spooler'" | Invoke-CimMethod -MethodName StopService
+Stops the spooler through CIM.
+EXAMPLE: Get-CimInstance Win32_Process -Filter "Name='notepad.exe'" | Invoke-CimMethod -MethodName GetOwner
+Who started each Notepad.
+RELATED: Get-CimInstance, Get-CimClass

@@ -1,0 +1,33 @@
+NAME
+       tee - copy standard input to files and to the screen at the same time
+
+SYNOPSIS
+       tee [-a] [FILE]...
+
+DESCRIPTION
+       tee reads standard input and writes it both to standard output and to
+       each FILE, like a T-shaped pipe fitting. Put it in the middle of a pipe
+       to save what passes through and still see it (or pass it on).
+
+       tee is also how a normal user writes to a root-owned file with sudo:
+       in "sudo echo x > file" the redirection is done by your own shell, not
+       by sudo, so it fails; "echo x | sudo tee file" works.
+
+OPTIONS
+       -a, --append
+              Add to the end of the files instead of replacing them.
+
+       -i, --ignore-interrupts
+              Ignore Ctrl+C.
+
+EXAMPLES
+       Save a list and look at it at once:
+
+           find /etc -name '*.conf' | tee /root/conf-files.txt
+
+       Add a line to /etc/hosts as student:
+
+           echo '192.168.50.12 server2' | sudo tee -a /etc/hosts
+
+SEE ALSO
+       cat(1), sudo(8), bash(1)

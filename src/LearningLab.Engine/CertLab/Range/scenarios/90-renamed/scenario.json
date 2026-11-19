@@ -1,0 +1,69 @@
+{
+    "id": "renamed",
+    "title": "Renamed",
+    "category": "blue",
+    "level": "Expert",
+    "order": 6,
+    "summary": "The team's files on the file server all have a strange new ending and a note asks for contact to get them back. Nothing is actually scrambled here - but something keeps renaming. Stop it, put the files back and find the way in.",
+    "story": "{{CO}} (made up): FS01 (Windows file server, 10.10.30.40, share Team) and scan1 (Linux, 10.10.30.20, receives scans and drops them on the share). You are at soc. FS01: Administrator / {{ADMPW}} over winrm-shell. scan1: ssh itadmin (password {{ITPW}}, may use sudo). In Cyber Range the files are only renamed, so renaming them back restores them.",
+    "goal": "Stop whatever renames the files, give every file its real name back, find how the intruder reached the server and from where, capture the flag, and close both doors before the next run renames the rest.",
+    "skills": "scheduled tasks, Rename-Item in a loop, the Security log, following a sign-in to another machine, saved passwords in config files",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 55,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "rename the rest of the share",
+    "goalPoints": 100,
+    "vars": {
+        "CO": "company",
+        "ITPW": "word", "ADMPW": "word", "SCANPW": "word", "SVCPW": "word",
+        "ATKIP": "ip",
+        "SVC": "pick:svc_scan|scan2share|svc_copier",
+        "TASK": "pick:IndexHelper|ShareOptimizer|QuotaCheck",
+        "FAKEDOM": "pick:files-back.example|restore-desk.example",
+        "EXT": "pick:locked|frozen|held"
+    },
+    "variants": { "EXT": {
+        "locked": { "NOTE": "READ-ME-locked.txt" },
+        "frozen": { "NOTE": "HOW-TO-UNFREEZE.txt" },
+        "held": { "NOTE": "FILES-HELD.txt" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.30.5/24" ] },
+        { "name": "scan1", "os": "linux", "hostname": "scan1.{{CO_DOMAIN}}", "role": "scanner drop box (yours)", "nics": [ "10.10.30.20/24" ], "motd": "{{CO}} scan1.", "setup": "scan.sh" },
+        { "name": "FS01", "os": "windows", "hostname": "fs01.{{CO_DOMAIN}}", "role": "file server (yours)", "nics": [ "10.10.30.40/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{SVC}}", "password": "{{SVCPW}}", "admin": true }
+          ],
+          "shares": [ { "name": "Team", "path": "C:\\Shares\\Team", "comment": "Team files" } ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "30h", "repeat": 3, "every": 3600, "message": "An account was successfully logged on. Account Name: {{SVC}} Source Network Address: 10.10.30.20 Logon Type: 3 Process: smb" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "35000s", "message": "An account was successfully logged on. Account Name: {{SVC}} Source Network Address: 10.10.30.20 Logon Type: 3 Process: wsmprovhost (remote PowerShell)" },
+            { "log": "Security", "id": 4698, "level": 0, "ago": "34800s", "message": "A scheduled task was created. Subject: Account Name: {{SVC}} Task Name: \\{{TASK}}" }
+          ],
+          "setup": "fs.ps1" }
+    ],
+    "flags": [
+        { "id": "task", "name": "The flag in the renaming task's folder", "points": 80, "machine": "FS01", "path": "C:\\ProgramData\\{{TASK}}\\id.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "task", "ask": "What scheduled task does the renaming?", "answer": "{{TASK}}", "points": 40, "explain": "Created by {{SVC}} (event 4698); it runs C:\\ProgramData\\{{TASK}}\\run.ps1." },
+        { "id": "from", "ask": "From which machine on your own network did that account connect (its address)?", "answer": "10.10.30.20", "accept": [ "scan1" ], "points": 40, "explain": "The 4624 just before the task: remote PowerShell from 10.10.30.20 - not a person's PC but the scanner box." },
+        { "id": "cfg", "ask": "On that machine, which file held the server account's password?", "answer": "/etc/scan-to-share.conf", "accept": [ "scan-to-share.conf" ], "points": 50, "explain": "Readable by every account; the scanner account's history shows it being read." },
+        { "id": "addr", "ask": "From what outside address did the intruder sign in to that machine?", "answer": "{{ATKIP}}", "points": 40, "explain": "/var/log/secure on scan1: a failed then accepted password for scanner." }
+    ],
+    "tasks": [
+        { "id": "task", "name": "Remove the renaming task", "machine": "FS01", "check": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 40, "explain": "Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false" },
+        { "id": "restore", "name": "Give every file its real name back", "machine": "FS01", "check": "if ((Get-ChildItem C:\\Shares\\Team -Filter '*.{{EXT}}') -or -not (Test-Path C:\\Shares\\Team\\rota.txt) -or -not (Test-Path C:\\Shares\\Team\\holiday-plan.txt)) { exit 1 } else { exit 0 }", "points": 50, "explain": "Get-ChildItem C:\\Shares\\Team -Filter *.{{EXT}} | ForEach-Object { Rename-Item $_.FullName ($_.Name -replace '\\.{{EXT}}$','') }" },
+        { "id": "svc", "name": "Switch off the server account whose password leaked", "machine": "FS01", "check": "if ((Get-LocalUser -Name '{{SVC}}').Enabled) { exit 1 } else { exit 0 }", "points": 30, "explain": "Disable-LocalUser -Name {{SVC}} (until the scanner gets a new password)" },
+        { "id": "scanner", "name": "Lock the scanner account the intruder used on scan1", "machine": "scan1", "check": "passwd -S scanner | grep -q LK", "points": 30, "explain": "usermod -L scanner" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "FS01", "run": "Get-ChildItem C:\\Shares\\Team -File | Where-Object { $_.Extension -ne '.{{EXT}}' -and $_.Name -ne '{{NOTE}}' } | ForEach-Object { Rename-Item $_.FullName ($_.Name + '.{{EXT}}') }", "unless": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "note": "The task ran again and renamed the rest of the team share.", "goal": true }
+    ],
+    "hints": [
+        { "text": "Stop it first (the task), then repair, then trace: the 4624 before the task names a machine of yours, and that machine has its own log and its own leaked secret.", "cost": 30 },
+        { "text": "Renaming back: Get-ChildItem C:\\Shares\\Team -Filter *.{{EXT}} | ForEach-Object { Rename-Item $_.FullName ($_.Name -replace '\\.{{EXT}}$','') }", "cost": 40 }
+    ]
+}

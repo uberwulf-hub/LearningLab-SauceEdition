@@ -1,0 +1,72 @@
+# Lab: lab-14 | Shares and permissions on FS1 | u14 | 40
+The file server FS1 needs a new share for Sales, a fix for HR, and tighter rules for the Public share. Remember that over the network both the share permissions and the NTFS permissions count, and the more restrictive wins.
+
+@vars
+folder = Projects | Tenders | Contracts
+hruser = gkim | knovak
+@endvars
+
+@setup FS1
+New-Item -Path D:\Shares\HR\Policies -ItemType Directory
+icacls D:\Shares\HR\Policies /deny 'CORP\HR:(OI)(CI)W'
+
+@task t01 | File and storage | 30 | FS1
+Create `D:\Shares\{folder}` and share it as **{folder}** with **Authenticated Users: Full Control** on the share and access-based enumeration. In NTFS, the folder must not inherit anything: only Administrators and SYSTEM (Full control) and the **Sales** group (Modify).
+@check admin | Sales can change files; Finance can't get in
+access(user=dpatel, path="\\FS1\{folder}") == Modify
+access(user=ewalsh, path="\\FS1\{folder}") == "No access"
+@check admin | the share and the folder's inheritance
+share["FS1\{folder}"].abe == Yes
+ntfs(FS1, "D:\Shares\{folder}").protected == Yes
+ntfs(FS1, "D:\Shares\{folder}").aces has "BUILTIN\Administrators:F"
+@hint icacls /inheritance:r, then /grant entries with (OI)(CI) for Administrators, SYSTEM and CORP\Sales; New-SmbShare -FullAccess 'Authenticated Users' -FolderEnumerationMode AccessBased.
+@solution FS1
+New-Item -Path D:\Shares\{folder} -ItemType Directory
+icacls D:\Shares\{folder} /inheritance:r
+icacls D:\Shares\{folder} /grant 'BUILTIN\Administrators:(OI)(CI)F'
+icacls D:\Shares\{folder} /grant 'NT AUTHORITY\SYSTEM:(OI)(CI)F'
+icacls D:\Shares\{folder} /grant 'CORP\Sales:(OI)(CI)M'
+New-SmbShare -Name {folder} -Path D:\Shares\{folder} -FullAccess 'Authenticated Users' -FolderEnumerationMode AccessBased
+@explain
+Without removing inheritance, the folder would inherit Users: Read and execute from D:, and everyone could read it. With the share wide open, NTFS alone decides.
+@endtask
+
+@task t02 | File and storage | 25 | FS1
+HR people can open but not save documents in `\\FS1\HR\Policies`. Find out why and fix it so that **{hruser}** can change files there again, without giving HR more than Modify.
+@check admin | {hruser} has Modify in Policies again
+access(user={hruser}, path="\\FS1\HR\Policies") == Modify
+@hint icacls D:\Shares\HR\Policies shows a deny entry; icacls /remove:d removes deny entries for an account.
+@solution FS1
+icacls D:\Shares\HR\Policies
+icacls D:\Shares\HR\Policies /remove:d 'CORP\HR'
+@explain
+An explicit deny of Write for HR sat on the subfolder and overruled the Modify HR inherits from D:\Shares\HR. Removing the deny is enough: the inherited allow does the rest.
+@endtask
+
+@task t03 | File and storage | 20 | FS1
+The HR share holds personal data. Encrypt its SMB traffic and hide the folders people can't open.
+@check admin | the HR share is encrypted with access-based enumeration
+share["FS1\HR"].encrypt == Yes
+share["FS1\HR"].abe == Yes
+@hint Set-SmbShare -EncryptData -FolderEnumerationMode.
+@solution FS1
+Set-SmbShare -Name HR -EncryptData $true -FolderEnumerationMode AccessBased -Force
+@explain
+Encryption protects the data on the network (SMB 3.0 and later); access-based enumeration only changes what people see, not what they may open.
+@endtask
+
+@task t04 | File and storage | 25 | FS1
+On `\\FS1\Public`, everyone may read but only the **IT Admins** may change files from now on. Do it with the share permissions alone: Everyone gets Read, `CORP\IT Admins` gets Full Control. (NTFS stays as it is: Domain Users have Modify.)
+@check admin | Brian can only read, Alex can still change files
+access(user=bcole, path="\\FS1\Public") == "Read and execute"
+access(user=arivera, path="\\FS1\Public").rights has Write
+@check admin | the share permissions
+share["FS1\Public"].access["Everyone"] == Read
+share["FS1\Public"].access["CORP\IT Admins"] == Full
+@hint Grant-SmbShareAccess replaces an account's existing allow entry: Everyone Read, then CORP\IT Admins Full.
+@solution FS1
+Grant-SmbShareAccess -Name Public -AccountName Everyone -AccessRight Read -Force
+Grant-SmbShareAccess -Name Public -AccountName 'CORP\IT Admins' -AccessRight Full -Force
+@explain
+NTFS still gives Domain Users Modify, but over the network the share's Read is more restrictive. At the server's console, NTFS alone would apply, so this only works because people use the share.
+@endtask

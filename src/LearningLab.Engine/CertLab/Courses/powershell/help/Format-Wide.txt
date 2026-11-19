@@ -1,0 +1,28 @@
+SYNOPSIS: Shows one property of each object, in several columns across the screen.
+DESCRIPTION:
+Format-Wide shows a single value per object (by default the type's key property, often Name) and fills the screen in columns, like a list of file names. It is useful when you only need to see names and there are many of them.
+
+By default there are two columns. Choose the number with -Column, or let -AutoSize fit as many as the values allow.
+
+Like the other Format- cmdlets, it produces formatting objects for the screen. Put it last in a pipeline.
+PARAMETER Property:
+The one property to show. Position 0.
+PARAMETER Column:
+How many columns to use.
+PARAMETER AutoSize:
+Fits as many columns as the longest value allows.
+PARAMETER GroupBy:
+Starts a new group, with a heading, each time this property changes. Sort by it first.
+PARAMETER InputObject:
+The object to show. Usually it comes through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Wide Name -Column 3
+Shows the employee names in three columns.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Wide Office -AutoSize
+Shows the offices, fitting the columns to the values.
+NOTES:
+The alias is fw.
+
+Format-Wide shows only one property. Ask for two and you get an error; use Format-Table for several.
+
+-Column and -AutoSize cannot be used together.
+RELATED: Format-Table, Format-List, Format-Custom, about_Format.ps1xml

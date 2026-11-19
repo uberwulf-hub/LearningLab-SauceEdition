@@ -1,0 +1,22 @@
+SYNOPSIS: Lists the modules loaded in this session, or with -ListAvailable the modules installed on the computer.
+DESCRIPTION:
+A module is a package of commands (functions or cmdlets), often with variables and aliases. Get-Module on its own shows only the modules already loaded in your session. Windows PowerShell loads a module by itself the first time you run one of its commands, so the list grows as you work.
+
+With -ListAvailable, Get-Module searches every folder in $env:PSModulePath and lists what it finds there, grouped by folder. A module lives in a folder named after the module, which holds its .psd1 manifest or .psm1 file.
+
+The ExportedCommands property tells you which commands a module gives you.
+PARAMETER Name:
+The module name or a pattern with wildcards, for example Net* or SmbShare.
+PARAMETER ListAvailable:
+Lists the installed modules instead of the loaded ones, without loading them.
+EXAMPLE: Get-Module
+Shows the modules loaded right now, with their version and the first few exported commands.
+EXAMPLE: Get-Module -ListAvailable
+Lists every installed module, grouped by folder: C:\Program Files\WindowsPowerShell\Modules, then the modules that come with Windows.
+EXAMPLE: (Get-Module -ListAvailable LabTools).ExportedCommands.Keys
+Shows the names of the commands an installed module would give you, without importing it.
+NOTES:
+$env:PSModulePath is a list of folders separated by semicolons. Modules for everyone on the computer go in C:\Program Files\WindowsPowerShell\Modules; modules just for you go in Documents\WindowsPowerShell\Modules.
+Some modules exist only on servers: ServerManager is listed on WIN-SRV1 but not on WIN-CL1.
+PowerShell 7 adds its own folders (C:\Program Files\PowerShell\Modules and Documents\PowerShell\Modules) in front of the Windows PowerShell ones.
+RELATED: Import-Module, Remove-Module, Get-Command, about_Modules

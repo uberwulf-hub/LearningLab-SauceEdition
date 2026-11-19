@@ -1,0 +1,88 @@
+# Lab: lab-04 | Logs and journals | u04 | 35
+The payroll application on server1 has been misbehaving and the team wants answers from the logs, plus better logging from now on. Work on server1 unless a task says otherwise; server2's root password is redhat.
+
+@setup server1
+logger -p user.info -t payroll 'payroll run started'
+logger -p user.err -t payroll 'cannot open /srv/payroll/rates.db'
+logger -p user.warning -t payroll 'payroll run took 52 minutes'
+logger -p user.crit -t payroll 'payroll totals do not balance'
+logger -p user.err -t inventory 'inventory import failed'
+logger -p authpriv.notice -t sshd 'Failed password for root from 192.168.50.77 port 41022 ssh2'
+logger -p authpriv.notice -t sshd 'Failed password for payroll from 192.168.50.77 port 41030 ssh2'
+logger -p authpriv.info -t sshd 'Accepted password for student from 192.168.50.12 port 40112 ssh2'
+logger -p authpriv.notice -t sshd 'Failed password for invalid user test from 192.168.50.78 port 50400 ssh2'
+logger -p authpriv.notice -t sshd 'Failed password for root from 192.168.50.77 port 41044 ssh2'
+
+@task t01 | Running systems | 10 | server1
+Save the journal messages of the program payroll (it logs with the tag `payroll`) that have the priority err or more serious into /root/payroll-errors.txt. Messages of other programs must not be in the file.
+@check server1 | the err and crit messages of payroll are in the file
+grep -q 'cannot open /srv/payroll/rates.db' /root/payroll-errors.txt && grep -q 'payroll totals do not balance' /root/payroll-errors.txt
+@check server1 | no less serious messages and no other programs
+! grep -q 'took 52 minutes\|run started\|inventory' /root/payroll-errors.txt
+@hint journalctl -t selects a tag and -p a priority; both filters must match.
+@solution server1
+journalctl -t payroll -p err > /root/payroll-errors.txt
+cat /root/payroll-errors.txt
+@explain
+-t matches the SYSLOG_IDENTIFIER (the tag logger -t sets) and -p err shows err and everything more serious (crit, alert, emerg). Filters of different kinds are combined with "and". journalctl -p err | grep payroll works too, as long as the lines are kept whole.
+@endtask
+
+@task t02 | Running systems | 10 | server1
+Write the number of failed ssh password attempts recorded in the security log into /root/failed-count.txt. The file must hold only the number.
+@check server1 | the file holds 4
+test "$(tr -d ' \n' < /root/failed-count.txt)" = 4
+@hint grep -c counts the matching lines instead of printing them.
+@solution server1
+grep -c 'Failed password' /var/log/secure > /root/failed-count.txt
+cat /root/failed-count.txt
+@explain
+Login and ssh messages go to /var/log/secure. grep -c prints the number of matching lines; grep ... | wc -l does the same. The Accepted password line does not match, so the count is 4.
+@endtask
+
+@task t03 | Running systems | 10 | server1
+Save the journal messages with the priority warning or more serious into /root/warnings-iso.txt, with full ISO 8601 time stamps (like 2026-03-02T04:00:00-05:00) at the start of each line.
+@check server1 | the warning of payroll is in the file with an ISO time stamp
+grep -qE '^2026-[0-9]{2}-[0-9]{2}T[0-9:]{8}[-+][0-9]{2}:?[0-9]{2} .*payroll run took 52 minutes' /root/warnings-iso.txt
+@check server1 | the err message of inventory is in it too
+grep -q 'inventory import failed' /root/warnings-iso.txt
+@check server1 | info messages are not
+! grep -q 'payroll run started' /root/warnings-iso.txt
+@hint -o short-iso changes the time format.
+@solution server1
+journalctl -p warning -o short-iso > /root/warnings-iso.txt
+@explain
+-o picks the output format: short-iso prints the date and time in ISO 8601 with the offset from UTC. Other useful formats are cat (only the message), verbose (every field) and json-pretty.
+@endtask
+
+@task t04 | Running systems | 15 | server1
+Configure rsyslog on server1 so that messages of the facility local2 with the priority warning or more serious are written to /var/log/payroll-warn.log. Less serious local2 messages must not go there.
+@check server1 | a local2.warning test message reaches the file
+logger -p local2.warning -t certlab "probe warn $$" && grep -q "probe warn $$" /var/log/payroll-warn.log
+@check server1 | a local2.err message reaches it too
+logger -p local2.err -t certlab "probe err $$" && grep -q "probe err $$" /var/log/payroll-warn.log
+@check server1 | a local2.info message does not
+logger -p local2.info -t certlab "probe info $$" && ! grep -q "probe info $$" /var/log/payroll-warn.log
+@hint A file in /etc/rsyslog.d with local2.warning and the log file name, then restart rsyslog. Test with logger -p.
+@solution server1
+echo 'local2.warning    /var/log/payroll-warn.log' > /etc/rsyslog.d/payroll.conf
+systemctl restart rsyslog
+logger -p local2.err -t payroll "rsyslog rule test"
+cat /var/log/payroll-warn.log
+@explain
+facility.priority matches that priority and everything more serious, so local2.warning also catches err, crit, alert and emerg, but not notice, info or debug. local2.=warning would match warning only. rsyslog reads its rules when it starts, so restart it after a change.
+@endtask
+
+@task t05 | Running systems | 15 | server2
+Make the systemd journal of server2 persistent, so that the messages of a boot can still be read after the next reboot.
+@check server2 | the journal has its folder in /var/log/journal
+test -d /var/log/journal
+@check server2 | journald is not set to keep the journal in memory only
+! grep -qsE '^\s*Storage=(volatile|none)' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf
+@hint Either create /var/log/journal or set Storage=persistent in /etc/systemd/journald.conf, then restart systemd-journald.
+@solution server2
+sed -i 's/^#Storage=auto/Storage=persistent/' /etc/systemd/journald.conf
+systemctl restart systemd-journald
+ls /var/log/journal
+@explain
+With Storage=persistent, journald keeps the journal in /var/log/journal and creates the folder itself. With the default Storage=auto, creating the folder is enough. Restart journald (or reboot) so it starts writing there; after the next reboot, journalctl --list-boots shows the old boot as -1.
+@endtask

@@ -1,0 +1,30 @@
+# One-time cleanup after the repository went public (2026-11-19): deletes the releases and tags v0.1.0-v0.4.0, which
+# point at the old history. Run it from Actions > Clean up old releases > Run workflow. Safe to run again.
+# (The old key cache is deleted by hand once backup-android-key.yml has moved the key into the secrets.)
+name: Clean up old releases
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the old releases and tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          for tag in v0.1.0 v0.2.0 v0.2.1 v0.3.0 v0.4.0; do
+            if gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
+              gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag && echo "Deleted release and tag $tag"
+            elif gh api "repos/$REPO/git/refs/tags/$tag" >/dev/null 2>&1; then
+              gh api -X DELETE "repos/$REPO/git/refs/tags/$tag" && echo "Deleted tag $tag"
+            else
+              echo "$tag already gone"
+            fi
+          done
+          echo "Releases left:"; gh release list --repo "$REPO"

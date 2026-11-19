@@ -1,0 +1,34 @@
+NAME
+       getsebool - show the values of SELinux booleans
+
+SYNOPSIS
+       getsebool BOOLEAN...
+       getsebool -a
+
+DESCRIPTION
+       Booleans are on/off switches in the SELinux policy that allow or forbid
+       optional behaviour, for example whether the web server may serve
+       users' home directories (httpd_enable_homedirs) or connect to the
+       network (httpd_can_network_connect). getsebool prints each one as
+
+           httpd_enable_homedirs --> off
+
+       Change them with setsebool; add -P to keep the change after a reboot.
+       semanage boolean -l lists them with a short description and the
+       value they have by default.
+
+OPTIONS
+       -a     List all booleans.
+
+EXAMPLES
+       Find the booleans about home directories:
+
+           getsebool -a | grep home
+
+       Turn one on for good and check:
+
+           setsebool -P httpd_enable_homedirs on
+           getsebool httpd_enable_homedirs
+
+SEE ALSO
+       setsebool(8), semanage(8), booleans(8)

@@ -1,0 +1,15 @@
+SYNOPSIS: Shows the actual current values of every resource in this computer's DSC configuration.
+DESCRIPTION:
+Get-DscConfiguration runs the Get part of each resource in the current configuration and returns one object per resource. The objects show what the computer has right now, for example whether a file is Present or Absent, its size and dates, or a registry value's data, next to the resource's ID ([File]Tools) and the configuration's name.
+
+It reads only; nothing is changed. Test-DscConfiguration answers "does it match?"; Get-DscConfiguration answers "what is there?".
+EXAMPLE: Get-DscConfiguration
+Lists every resource of the current configuration with its current values.
+EXAMPLE: Get-DscConfiguration | Where-Object ResourceId -eq '[File]Tools' | Format-List *
+Shows everything about one resource.
+EXAMPLE: Get-DscConfiguration | Select-Object ResourceId, Ensure
+Shows whether each resource is present on the computer.
+NOTES:
+If no configuration was applied yet, it reports that the current configuration does not exist.
+PowerShell 7 has no Get-DscConfiguration; DSC 3's dsc.exe has its own get command.
+RELATED: Test-DscConfiguration, Start-DscConfiguration, Get-DscConfigurationStatus

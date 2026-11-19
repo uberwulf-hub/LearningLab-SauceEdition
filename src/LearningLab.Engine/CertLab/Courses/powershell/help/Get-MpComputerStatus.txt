@@ -1,0 +1,9 @@
+SYNOPSIS: Shows the state of Microsoft Defender Antivirus on the computer.
+DESCRIPTION:
+Get-MpComputerStatus reports whether antivirus and real-time protection are enabled (AntivirusEnabled, RealTimeProtectionEnabled), how old the security intelligence is (AntivirusSignatureAge, AntivirusSignatureLastUpdated), whether tamper protection is on (IsTamperProtected) and the running mode (AMRunningMode).
+Compliance policies that require real-time protection or up-to-date security intelligence check these same things.
+EXAMPLE: Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled, AntivirusSignatureAge
+The three things a compliance policy usually looks at.
+EXAMPLE: (Get-MpComputerStatus).IsTamperProtected
+True when tamper protection stops local changes to Defender's settings.
+RELATED: Get-MpPreference, Start-MpScan, Update-MpSignature

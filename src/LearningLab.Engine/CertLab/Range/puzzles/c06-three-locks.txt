@@ -1,0 +1,38 @@
+title: Three locks
+level: Expert
+kind: Decoding
+topic: Crypto & Encoding
+teaser: an encoding, a byte and a word
+points: 100
+order: 75
+answer: flag
+var: KW = word
+var: K = num:1-255
+var: SHIP = pick:the Petrel|the Wren|the Gannet|the Kestrel|the Heron
+
+@intro
+~/locked.txt was locked three times. The logbook ~/logbook.txt may help with the last
+lock.
+
+@setup
+printf '%s' '{{VIG:KW:FLAG}}' | xorcat -e -k {{K}} | base32 > /home/player/locked.txt
+printf 'Logbook of {{SHIP}}\nDay 3: calm seas.\nDay 4: the captain changed the word to "{{KW}}". Byte stays the same: 0x%x.\n' {{K}} > /home/player/logbook.txt
+chown player: /home/player/locked.txt /home/player/logbook.txt
+
+@solution
+cat logbook.txt
+base32 -d locked.txt | xorcat -k {{K}} | vigenere -d -k {{KW}}
+
+@walkthrough
+Peel the locks from the outside in:
+
+1. locked.txt uses only A-Z, 2-7 and =: base32. base32 -d gives hex digits.
+2. Hex plus "the byte" in the logbook: a single-byte XOR with key {{K}} (xorcat -k).
+   The result has the shape of a flag, but the letters are wrong.
+3. Letters wrong, punctuation kept: a letter cipher with "the word" {{KW}}:
+   vigenere -d -k {{KW}}.
+
+    base32 -d locked.txt | xorcat -k {{K}} | vigenere -d -k {{KW}}
+
+@hint 30
+Outside in: base32, then one byte of XOR, then a Vigenere word. The logbook gives the byte and the word.

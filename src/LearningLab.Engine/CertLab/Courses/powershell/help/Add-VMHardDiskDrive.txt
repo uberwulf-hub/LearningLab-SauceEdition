@@ -1,0 +1,20 @@
+SYNOPSIS: Attaches a virtual hard disk to a virtual machine.
+DESCRIPTION:
+Add-VMHardDiskDrive connects a disk file to a VM's controller. On a SCSI controller (every Generation 2 VM, and the SCSI controller of a Generation 1 VM) disks can be added while the VM runs. IDE disks (Generation 1 only, needed for its boot disk) can only be added while the VM is off.
+
+Without -Path an empty drive is added. -ControllerNumber and -ControllerLocation pick the exact slot; by default the first free one is used.
+PARAMETER VMName:
+The VM. Position 0.
+PARAMETER Path:
+The disk file. Position 1.
+PARAMETER ControllerType:
+IDE or SCSI.
+PARAMETER ControllerNumber:
+Which controller.
+PARAMETER ControllerLocation:
+Which slot on the controller.
+EXAMPLE: Add-VMHardDiskDrive -VMName WEB-TEST -Path "D:\Hyper-V\Virtual Hard Disks\WEB-DATA.vhdx" -ControllerType SCSI -ComputerName HV1
+WEB-TEST gets a data disk, even while running.
+EXAMPLE: Get-VMHardDiskDrive -VMName WEB-TEST
+Checks its disks.
+RELATED: Get-VMHardDiskDrive, New-VHD, Get-VHD

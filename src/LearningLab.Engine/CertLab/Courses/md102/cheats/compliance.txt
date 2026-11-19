@@ -1,0 +1,42 @@
+# Sheet: compliance | Compliance and Conditional Access | Compliance
+## Portal paths
+Devices > Compliance :: compliance policies, one platform each
+Devices > Compliance > Notifications :: email message templates
+Tenant administration > Settings, Compliance policy settings :: no-policy mark and validity period (Intune: Devices > Compliance > Compliance settings)
+Conditional Access > Policies :: policies and the What If tool
+Conditional Access > Named locations :: IP ranges (CIDR) and countries; mark as trusted
+## Windows compliance settings
+Device Health :: Require BitLocker, Secure Boot, code integrity
+Device Properties :: minimum and maximum OS version (10.0.26100 = Windows 11 24H2)
+System Security :: password, firewall, TPM, antivirus, antispyware
+Microsoft Defender :: antimalware, real-time protection, security intelligence up to date
+Microsoft Defender for Endpoint :: highest machine risk score allowed (Clear, Low, Medium, High)
+## Phones
+iOS/iPadOS :: block jailbroken devices, OS versions, passcode
+Android Enterprise :: block rooted devices, Play Integrity verdict, passcode, OS version
+## Results and actions
+Compliant / Not compliant / In grace period / Not evaluated :: the device states
+Mark device noncompliant after N days :: the grace period (still compliant for Conditional Access)
+Send email to end user :: uses a notification template
+Add device to retire list :: lists the device; an administrator retires it
+Mark devices with no compliance policy assigned as :: Compliant by default; Not compliant is safer
+Compliance status validity period :: 30 days by default without a check-in
+Default Device Compliance Policy :: built-in checks: has a policy, is active, enrolled user exists
+## Checking on a device
+Confirm-SecureBootUEFI :: True when Secure Boot is on
+Get-MpComputerStatus :: Defender's state, real-time protection, signature age
+Get-BitLockerVolume -MountPoint C: :: encryption and protection status
+## Conditional Access
+Assignments :: users (include, exclude), target resources, conditions
+Conditions :: device platforms, locations, client apps, risk, device filters
+Grant :: Block access, or Grant access with controls (all of them or one of them)
+Report-only :: evaluated and logged, never enforced
+Require device to be marked as compliant :: enrolled and compliant (or in grace period)
+Require Microsoft Entra hybrid joined device :: domain PC registered in Entra ID
+Require app protection policy :: app protection on iOS and Android, no enrolment needed
+Exchange ActiveSync clients + Other clients :: legacy authentication: block it
+All trusted locations :: include or exclude the named locations marked as trusted
+Emergency access account :: excluded from every policy
+What If :: which policies would apply to a pretend sign-in, and why
+Security defaults :: free fixed protections; turn off to use Conditional Access
+Microsoft Intune Enrollment :: the cloud app for the enrolment sign-in (for example MFA at enrolment); "require compliant device" doesn't block enrolment

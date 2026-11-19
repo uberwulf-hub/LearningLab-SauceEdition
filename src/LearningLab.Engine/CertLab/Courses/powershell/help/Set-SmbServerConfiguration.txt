@@ -1,0 +1,23 @@
+SYNOPSIS: Changes the SMB server settings of this computer.
+DESCRIPTION:
+Set-SmbServerConfiguration changes settings for every share on the server:
+-EnableSMB1Protocol $false turns SMB 1 off. Before that, -AuditSmb1Access $true logs which clients still use it (in the SMBServer Audit event log).
+-EncryptData $true encrypts all SMB traffic to this server; with RejectUnencryptedAccess $true (the default) clients that can't do SMB 3 encryption are refused.
+-RequireSecuritySignature $true requires signed SMB packets, which stops tampering and relay attacks.
+
+It asks for confirmation; -Force skips it.
+PARAMETER EnableSMB1Protocol:
+$false to turn off SMB 1.
+PARAMETER EncryptData:
+$true to encrypt every share.
+PARAMETER RejectUnencryptedAccess:
+$true to refuse clients that can't encrypt.
+PARAMETER RequireSecuritySignature:
+$true to require SMB signing.
+PARAMETER AuditSmb1Access:
+$true to log SMB 1 connections.
+EXAMPLE: Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
+SMB 1 is off on this server.
+EXAMPLE: Set-SmbServerConfiguration -RequireSecuritySignature $true -Force
+Every SMB session must be signed.
+RELATED: Get-SmbServerConfiguration, Set-SmbShare

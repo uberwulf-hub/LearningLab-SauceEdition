@@ -1,0 +1,61 @@
+TOPIC
+    about_Foreach
+
+SHORT DESCRIPTION
+    The foreach loop, which runs a block once for every item in a list.
+
+LONG DESCRIPTION
+    The foreach statement walks through a collection. In each round, the
+    loop variable holds the next item:
+
+        $servers = 'WIN-SRV1', 'WIN-CL1'
+        foreach ($name in $servers) {
+            "Checking $name"
+            Test-Connection -ComputerName $name -Count 1 -Quiet
+        }
+
+    The part after "in" can be any expression that gives a list, such as
+    a variable, a range or a command in parentheses:
+
+        foreach ($n in 1..5) { $n * $n }
+        foreach ($file in (Get-ChildItem C:\LabFiles -File)) {
+            '{0} is {1} bytes' -f $file.Name, $file.Length
+        }
+
+    If the list is empty or $null, the block does not run at all.
+
+  break and continue
+    continue skips to the next item; break leaves the loop.
+
+        foreach ($svc in Get-Service) {
+            if ($svc.Status -ne 'Running') { continue }
+            if ($svc.Name -eq 'Spooler') { 'Found it'; break }
+        }
+
+  The foreach statement and ForEach-Object
+    They look alike but are different things:
+
+    - The foreach statement first collects the whole list, then loops.
+      It is usually faster, and its output cannot be piped directly
+      (wrap it in $( ) or assign it to a variable first).
+    - ForEach-Object is a cmdlet in a pipeline. It handles each object as
+      it arrives, using $_, and uses less memory for long lists.
+
+        Get-Service | ForEach-Object { $_.Name.ToUpper() }
+
+    To add to the confusion, "foreach" and "%" are also aliases of
+    ForEach-Object when they appear after a pipe.
+
+  Collecting the results
+    Everything the loop outputs can go into one variable:
+
+        $sizes = foreach ($f in Get-ChildItem C:\LabFiles) { $f.Length }
+
+  PowerShell 7
+    PowerShell 7 adds ForEach-Object -Parallel, which runs the script
+    block for several objects at once. It does not exist in 5.1.
+
+SEE ALSO
+    ForEach-Object
+    about_Pipelines
+    about_Automatic_Variables

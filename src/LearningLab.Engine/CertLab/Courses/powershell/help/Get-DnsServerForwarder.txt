@@ -1,0 +1,10 @@
+SYNOPSIS: Shows the forwarders a DNS server sends outside questions to.
+DESCRIPTION:
+Forwarders are the DNS servers (often the internet provider's) that this server asks about names it has no zone for. Get-DnsServerForwarder shows their addresses, whether the server falls back to root hints when they don't answer (UseRootHint) and how many seconds it waits for each one (Timeout).
+
+On DC1 and DC2 the lab's forwarder is the provider's server 203.0.113.53. Conditional forwarders for single domains are zones and show up in Get-DnsServerZone instead.
+PARAMETER ComputerName:
+The DNS server to ask.
+EXAMPLE: Get-DnsServerForwarder -ComputerName DC1
+Lists DC1's forwarders and its root hint setting.
+RELATED: Add-DnsServerForwarder, Set-DnsServerForwarder, Remove-DnsServerForwarder, Get-DnsServerRecursion, Add-DnsServerConditionalForwarderZone

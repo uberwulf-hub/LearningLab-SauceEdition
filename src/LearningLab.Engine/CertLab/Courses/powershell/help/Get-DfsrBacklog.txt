@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the files still waiting to replicate from one member to another.
+DESCRIPTION:
+Get-DfsrBacklog compares two members and lists the files the source has that the destination hasn't received yet. An empty result means they are in step. A backlog that keeps growing points to a problem: a stopped connection, a full staging area, or a member that hasn't picked up its settings.
+
+Pipe it to Measure-Object to just count the files.
+PARAMETER GroupName:
+The replication group.
+PARAMETER FolderName:
+The replicated folder.
+PARAMETER SourceComputerName:
+The member that sends.
+PARAMETER DestinationComputerName:
+The member that receives.
+EXAMPLE: Get-DfsrBacklog -GroupName Sales-Replication -FolderName Sales -SourceComputerName FS1 -DestinationComputerName SRV1
+The Sales files SRV1 doesn't have yet.
+EXAMPLE: (Get-DfsrBacklog -GroupName Sales-Replication -FolderName Sales -SourceComputerName FS1 -DestinationComputerName SRV1 | Measure-Object).Count
+How many there are.
+RELATED: Get-DfsrMembership, Update-DfsrConfigurationFromAD, Set-DfsrMembership

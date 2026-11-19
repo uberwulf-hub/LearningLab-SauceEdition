@@ -1,0 +1,52 @@
+title: Words inside a program
+level: Beginner
+kind: File forensics
+topic: Forensics
+teaser: readable text hiding in a binary file
+points: 45
+order: 9
+packages: binutils
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/tool.bin looks like a program - mostly unreadable bytes. But programs still contain
+bits of plain text (messages, file names, the odd secret). The command strings pulls
+out the readable runs. Somewhere in there is a line like "key: WORD" - find the word.
+
+@setup
+cat > /home/player/tool.bin <<BIN
+ELFxx usage: tool [options] vvvv config loaded
+xx key: {{SECRET}} done rrrr build-id 9f2a
+BIN
+chown player: /home/player/tool.bin
+
+@solution
+strings tool.bin
+strings tool.bin | grep key
+
+@walkthrough
+cat would spew unreadable bytes. strings reads a file and prints only the runs of
+printable characters (four or more in a row by default):
+
+    strings tool.bin
+
+Among the messages is a line "key: WORD". To jump straight to it:
+
+    strings tool.bin | grep key
+
+That word is the answer. The lesson for forensics: even a compiled program or a disk
+image is full of readable clues - error messages, paths, and sometimes secrets.
+
+@hint 2
+What to think about first: a program file is mostly instructions for the processor, which look like gibberish to people. But programs also carry plain text inside them - messages they print, file names, and sometimes things that should never have been left there. You want to see only those readable parts.
+
+@hint 3
+The strings command reads any file and prints only the runs of normal, readable characters (four or more in a row), skipping everything else. It is one of the first tools people use to look inside an unknown file, because it never runs the file - it only reads it.
+
+@hint 4
+Run strings tool.bin and read down the list. You'll see things like a usage message and "config loaded". One line looks like a setting with a value after a colon.
+
+@hint 6
+To jump straight to it, pass the output through grep, which keeps only lines containing a word: strings tool.bin | grep key
+The word after "key:" is the answer.

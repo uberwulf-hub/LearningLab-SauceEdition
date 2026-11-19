@@ -1,0 +1,27 @@
+NAME
+       init - switch the run level (old System V interface to systemd)
+
+SYNOPSIS
+       init RUNLEVEL
+
+DESCRIPTION
+       On RHEL 9 the first process (PID 1) is systemd; /sbin/init is a link to
+       it. Typed by root as a command, "init N" is kept for old habits and asks
+       systemd to switch to the target that matches the old run level N:
+
+       0        poweroff.target (switch off)
+       1, s, S  rescue.target (single user)
+       2, 3, 4  multi-user.target (text console, network)
+       5        graphical.target (graphical login)
+       6        reboot.target (restart)
+
+       The change lasts until the next boot. The systemd way is
+       "systemctl isolate multi-user.target" for now, and
+       "systemctl set-default multi-user.target" for every boot.
+
+EXAMPLES
+              # init 3          (same as: systemctl isolate multi-user.target)
+              # init 6          (same as: systemctl reboot)
+
+SEE ALSO
+       systemctl(1), systemd.special(7), runlevel(8), shutdown(8)

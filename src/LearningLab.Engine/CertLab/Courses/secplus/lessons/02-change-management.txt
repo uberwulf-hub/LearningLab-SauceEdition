@@ -1,0 +1,160 @@
+# Unit: u02 | 2. Change management | General security concepts
+
+Most outages and many security holes start with a change: a firewall rule added in a hurry, a patch that breaks a service, a setting nobody wrote down. **Change management** is the process that makes changes planned, approved, tested, reversible and recorded. Security+ treats it as a security control, because an unmanaged change can open a door as easily as an attacker can.
+
+This unit covers the business side of the process (who approves, who owns, what must be prepared), the technical side (what a change can affect and how to limit that), and the documentation and version control that tie it together.
+
+## Lesson: l0201 | The change management process
+
+A typical change goes through these steps:
+
+- **Request**: someone writes up the change: what, why, which systems, when, and who will do it.
+- **Impact analysis**: what could this change affect, and how badly? What is the risk of making it, and the risk of not making it?
+- **Testing**: try the change in a test or staging environment first and record the **test results**.
+- **Approval**: the right people sign off, often a **change advisory board** (CAB) for significant changes.
+- **Scheduling**: the change goes into a **maintenance window**.
+- **Implementation**: carry out the change as written.
+- **Verification**: check that it worked and nothing else broke.
+- **Documentation and closure**: update diagrams, configuration records and the change ticket.
+
+### The business processes Security+ names
+
+- **Approval process**: changes need sign-off before they happen. Small, routine, low-risk changes may be **pre-approved** ("standard changes"); urgent fixes may use an **emergency change** path with approval after the fact, but they are still recorded and reviewed.
+- **Ownership**: every change has an owner who is responsible for it from request to closure. Every system also has an owner who must agree to changes to it.
+- **Stakeholders**: everyone affected by the change: users, the business unit, the help desk, other IT teams, sometimes customers. They are told in advance and may be asked for input.
+- **Impact analysis**: rates the risk (for example low, medium, high) and lists what could go wrong, including security effects such as a port being opened.
+- **Test results**: evidence from the test environment that the change works and does not break anything. Approvers use them to decide.
+- **Backout plan**: written steps to undo the change and return to the previous working state if something goes wrong. A change with no backout plan should not be approved. Backups or snapshots taken just before the change are part of it.
+- **Maintenance window**: an agreed time when changes may be made, chosen to disturb the business least (nights, weekends). Users are warned in advance.
+- **Standard operating procedure (SOP)**: written step-by-step instructions for a routine task, so it is done the same, safe way every time. Many standard changes follow an SOP.
+
+> No backout plan, no approval. The backout plan is how a failed change becomes a short outage instead of a long one.
+
+```file
+Change CHG-20417   Owner: R. Patel (network team)   Risk: Medium
+Summary: allow HTTPS from 10.20.0.0/24 to new app server 10.30.5.12
+Impact: branch users gain access to the app; no other rules change
+Tests: staging firewall fw-test-01, 2026-04-02, passed (see attachment)
+Window: Saturday 2026-04-05 22:00-23:00
+Backout: delete rule 4120, reload saved config fw-01-2026-04-05.cfg
+Approvals: CAB 2026-04-03, app owner J. Moreno
+```
+
+@quiz
+? A change to the payroll database fails halfway and the system stops working. Which part of the change request should the team follow now?
+- The impact analysis
+- The stakeholder list
++ The backout plan
+- The maintenance window
+! The backout plan contains the steps to undo the change and return to the last working state.
+? Why are most changes scheduled in a maintenance window?
++ To make the change at an agreed time when it disturbs the business least
+- So that no approval is needed
+- Because changes outside it are not logged
+- To skip testing
+! A maintenance window is a planned, announced time with low business impact; approval and testing are still needed.
+? The help desk wasn't told about a new sign-in page and spent a morning handling confused calls. Which part of change management was missed?
+- Backout plan
+- Test results
++ Informing stakeholders
+- Version control
+! The help desk is a stakeholder: people affected by a change should hear about it in advance.
+? A server team resets local administrator passwords every month using the same written steps each time. What are these written steps called?
+- A backout plan
++ A standard operating procedure
+- An impact analysis
+- A maintenance window
+! An SOP describes how to do a routine task the same way every time.
+@end
+
+## Lesson: l0202 | Technical implications of changes
+
+A change that looks simple can have side effects. Before approving it, think through these:
+
+- **Allow lists and deny lists**: a new application may need to be added to an application allow list, or a new server's address to a firewall allow list. Forget, and it is blocked; add too much, and you open a hole. A change might also need an entry removed from a deny list (for example a vendor's update site that a web filter blocks).
+- **Restricted activities**: the change should do only what was approved. An engineer who "also tidies up" other settings during the window has made unapproved changes. Some activities may be forbidden during a change, such as disabling logging or security tools.
+- **Downtime**: how long will the service be unavailable? Plan for it, tell users, and keep it inside the window.
+- **Service restart**: many changes need a service to restart, which drops connections and sessions.
+- **Application restart**: an application may need to restart to load new settings or code; users may lose unsaved work.
+- **Legacy applications**: old applications may break with a new library, protocol or setting (for example when old TLS versions are turned off). They often have little documentation and no vendor support, so test carefully.
+- **Dependencies**: services rely on each other. Restarting a database restarts every app that needs it; changing a certificate affects every system that trusts it; patching one component may require updating another first. Map dependencies before the change.
+
+> Questions about "a change also broke an unrelated app" usually point to dependencies that weren't analysed.
+
+### A short example
+
+The team plans to turn off TLS 1.0 and 1.1 on a web server. Implications: an old point-of-sale application that only speaks TLS 1.0 will fail (legacy application); the web service must restart (service restart, short downtime); a partner's integration might depend on the old protocol (dependencies); a monitoring probe may need an updated allow list entry. Each item goes into the impact analysis and the test plan.
+
+@quiz
+? After a database patch, three web applications stop working until the database finishes restarting. Which technical implication should the impact analysis have covered?
+- Restricted activities
++ Dependencies
+- Deny lists
+- Version control
+! The web applications depend on the database, so restarting it affected them too.
+? During an approved change to one firewall rule, an engineer also deletes several old rules "while he was there". What is the main problem?
+- The maintenance window was too short
++ He made changes that were not approved
+- The backout plan was missing
+- The change had no stakeholders
+! Only the approved change should be made; extra changes bypass review and can open or close things unexpectedly.
+? A company installs a new reporting tool on workstations that enforce an application allow list. What must the change include?
+- Removing the tool from the deny list of the email gateway
++ Adding the new tool to the application allow list
+- A restart of every server
+- Disabling the allow list during the window
+! On allow-listed systems only listed applications run, so the new tool must be added.
+@end
+
+## Lesson: l0203 | Documentation and version control
+
+A change isn't finished until the records match reality. Out-of-date documents lead to wrong decisions in the next change and slow down incident response.
+
+### Documentation
+
+- **Update diagrams**: network diagrams, data flows and architecture drawings must show the new state.
+- **Update policies and procedures**: if the change alters how something is done, the SOP or policy is revised too.
+- **Configuration records**: a configuration management database (CMDB) or baseline records each system's approved settings; a change updates them.
+- **Change log**: every change ticket, with approvals, results and the time it was done, is kept. Auditors use it, and so do investigators: an unexpected change with no ticket is an indicator of compromise or of someone bypassing the process.
+
+### Version control
+
+**Version control** tracks every version of a file over time: who changed what, when, and why, and lets you go back to any earlier version. It is used for source code, but also for configuration files, scripts, infrastructure as code templates and documents.
+
+- Each change is recorded as a version (in Git, a commit) with an author and a message.
+- You can compare versions to see exactly what changed.
+- Rolling back is easy: restore the previous version (useful as part of a backout plan).
+- Branches let people work on changes separately, and reviews can be required before a change is merged.
+
+```file
+commit 7c41e9a   Author: R. Patel   Date: 2026-04-05 22:14
+    CHG-20417: allow HTTPS from branch subnet to app server
+
+-  # rule 4120 reserved
++  rule 4120 permit tcp 10.20.0.0/24 host 10.30.5.12 eq 443
+```
+
+The commit message names the change ticket, so anyone can trace the configuration line back to its approval.
+
+> Version control answers "who changed this, when, and what did it look like before?"
+
+@quiz
+? An investigator finds a firewall rule that allows remote desktop from the internet. No change ticket mentions it. What does this most likely show?
++ A change was made outside the change management process, possibly by an attacker
+- The maintenance window was too long
+- The rule was a standard change
+- Version control was used correctly
+! Every approved change has a record; an unexplained change is a warning sign that the process was bypassed.
+? Which practice lets a team see exactly who edited a configuration file, what lines changed, and restore the earlier version?
+- An impact analysis
+- A maintenance window
++ Version control
+- Stakeholder sign-off
+! Version control keeps every version with its author and lets you compare and roll back.
+? A network was redesigned last month, but the network diagram still shows the old layout. Why is this a security concern?
+- Diagrams are needed for the change to work
++ Wrong documentation leads to bad decisions in later changes and slows incident response
+- Out-of-date diagrams void the backout plan
+- It means the change had no owner
+! Documentation must match reality; people rely on it to plan changes and to respond to incidents.
+@end

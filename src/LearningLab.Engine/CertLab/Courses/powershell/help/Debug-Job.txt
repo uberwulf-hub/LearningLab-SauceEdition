@@ -1,0 +1,16 @@
+SYNOPSIS: Opens the debugger on a running job.
+DESCRIPTION:
+Debug-Job attaches the PowerShell debugger to a job that is running a script, so you can step through it and look at its variables while it runs. It works for background jobs and remote jobs whose script has breakpoints or is waiting in the debugger.
+PARAMETER Id:
+The job's Id number.
+PARAMETER Name:
+The job's name.
+PARAMETER Job:
+The job object, for example from Get-Job.
+PARAMETER BreakAll:
+Stops the job at the next statement, even without a breakpoint.
+EXAMPLE: Debug-Job -Name Report
+Attaches the debugger to the job named Report.
+NOTES:
+The Cert Lab practice console does not simulate the debugger, so this command reports that and does nothing.
+RELATED: Get-Job, Start-Job, about_Jobs

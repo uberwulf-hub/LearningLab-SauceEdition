@@ -1,0 +1,16 @@
+SYNOPSIS: Shows which commands a given user can run in a JEA endpoint.
+DESCRIPTION:
+Get-PSSessionCapability works out what a user would get after connecting to an endpoint: the basic commands of a RestrictedRemoteServer session plus the commands of every role that the user, or a group the user is in, has in RoleDefinitions. Wildcards in the roles (such as Get-*) are expanded to the matching commands.
+
+Use it to test a JEA setup before anyone connects. If the user has no role at all, it reports an error: that user's connection would be refused.
+PARAMETER ConfigurationName:
+The endpoint, for example HelpDesk.
+PARAMETER Username:
+The user to check, for example LAB\alice.
+EXAMPLE: Get-PSSessionCapability -ConfigurationName HelpDesk -Username LAB\alice
+Lists every command alice could run in the HelpDesk endpoint.
+EXAMPLE: Get-PSSessionCapability HelpDesk LAB\bob | Where-Object Name -like 'Restart-*'
+Checks whether bob can restart anything.
+NOTES:
+It reads the role capability files at the moment you run it, so a change to a .psrc file shows up here (and for new connections) without registering the endpoint again.
+RELATED: Register-PSSessionConfiguration, New-PSRoleCapabilityFile, New-PSSessionConfigurationFile, Get-PSSessionConfiguration

@@ -1,0 +1,19 @@
+1. Look around. nmap -sn 10.10.11.0/24 finds store1 at 10.10.11.20; nmap -sV 10.10.11.20 shows ssh (22)
+   and FTP (21).
+
+2. Anonymous FTP. ftp 10.10.11.20, user anonymous, any password. The pub folder's new-staff.txt has
+   {{USER}}'s temporary password, never changed.
+
+3. Foothold. ssh {{USER}}@10.10.11.20 with that password. The user flag is in /home/{{USER}}/flag.txt.
+
+4. Privilege escalation. sudo -l shows you may run {{SUDOBIN}} as root with no password. That tool can be
+   driven to read any file (or run a command), so it reads root's flag. On this run:
+
+       {{SUDORUN}}
+
+   (Each run picks a different tool - find, awk, tar or sed - but the idea is the same: a file tool or one
+   that can run other programs must never be handed root rights.)
+
+How to fix it: turn off anonymous FTP (or keep nothing private in it), expire new passwords at first
+sign-in, and never grant sudo on a program that can read any file or start another program. Allow the exact
+command that is actually needed instead.

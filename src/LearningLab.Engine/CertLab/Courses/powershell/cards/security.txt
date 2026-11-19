@@ -1,0 +1,26 @@
+# Deck: security | Security | Security
+Show the execution policy of every scope :: `Get-ExecutionPolicy -List`
+Allow local scripts and signed downloads for your account only, without a question :: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force`
+Allow scripts in this PowerShell window only :: `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force`
+The execution policy scopes, from the one that wins first :: MachinePolicy, UserPolicy, Process, CurrentUser, LocalMachine (the first that is not Undefined wins)
+Default execution policy on Windows 11 and on Windows Server :: Restricted on Windows 10/11, RemoteSigned on Windows Server
+Is the execution policy a security boundary? :: no: it prevents accidents; anyone can still run the commands another way
+Run one script with no execution policy checks, from cmd or a scheduled task :: `powershell.exe -ExecutionPolicy Bypass -File C:\Scripts\nightly.ps1`
+Which scripts must be signed under RemoteSigned? :: scripts with the internet zone mark (downloaded files)
+Show the alternate data streams of a downloaded file :: `Get-Item C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream *`
+Remove the download mark from every file in C:\Tools :: `Get-ChildItem C:\Tools -Recurse | Unblock-File`
+Create a self-signed code signing certificate in your personal store :: `New-SelfSignedCertificate -Subject 'CN=Lab Code Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My`
+Sign C:\Scripts\hello.ps1 with the certificate in $cert :: `Set-AuthenticodeSignature -FilePath C:\Scripts\hello.ps1 -Certificate $cert`
+Check the signature of C:\Scripts\hello.ps1 :: `Get-AuthenticodeSignature C:\Scripts\hello.ps1`
+A signed script was edited afterwards. Its signature status? :: HashMismatch (sign it again)
+Signed with a self-signed certificate that is not in Root. Its status? :: UnknownError (the chain ends in an untrusted root)
+Two stores that make a code signing certificate trusted for AllSigned :: Root (Trusted Root Certification Authorities) and TrustedPublisher
+Ask for a password without showing it :: `Read-Host -Prompt 'Password' -AsSecureString`
+Save the SecureString $pw encrypted for your account :: `ConvertFrom-SecureString $pw | Set-Content C:\Secure\pw.txt`
+Who can read a SecureString saved with ConvertFrom-SecureString and no key? :: only the same user on the same computer (DPAPI)
+Build a credential from a user name and the SecureString $pw :: `New-Object System.Management.Automation.PSCredential('LAB\svc_backup', $pw)`
+The three pieces of a JEA endpoint :: a role capability file (.psrc), a session configuration file (.pssc), and registering it with Register-PSSessionConfiguration
+Where must a JEA role capability file be? :: in a RoleCapabilities folder inside a module folder in PSModulePath
+Register the JEA endpoint PrintDesk from C:\JEA\PrintDesk.pssc :: `Register-PSSessionConfiguration -Name PrintDesk -Path C:\JEA\PrintDesk.pssc -Force`
+See what LAB\alice may run on the endpoint PrintDesk :: `Get-PSSessionCapability -ConfigurationName PrintDesk -Username LAB\alice`
+Connect to the JEA endpoint PrintDesk on WIN-SRV1 :: `Enter-PSSession -ComputerName WIN-SRV1 -ConfigurationName PrintDesk`

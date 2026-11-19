@@ -1,0 +1,16 @@
+1. siem alerts: "New scheduled task" on {{GOODH}} and on {{BADH}}, and "Program set to start at sign-in" on {{BADH}}.
+2. siem search source=proclog image=*schtasks*: on {{GOODH}} the task \Inkwell\UpdateCheck was made by
+   inkwell-setup.exe, run as SYSTEM by IT's deployment agent, and runs a program in Program Files once a week:
+   a printer driver's update check. A false alarm.
+   On {{BADH}} the task \{{TASK}} was made by {{BIN}} from {{BADU}}'s AppData folder and runs it every 30 minutes. Real.
+3. The family tree on {{BADH}}, from {{T0}}:
+     explorer.exe -> wscript.exe runs {{JS}} from inside {{ZIP}} in Downloads (a script, not a document)
+     wscript.exe -> powershell.exe downloads {{BIN}} from http://{{C2IP}}:8443 and starts it
+     {{BIN}} -> reg.exe adds the Run key value {{RUNNAME}} (starts it at every sign-in)
+     {{BIN}} -> schtasks.exe creates \{{TASK}} (starts it every 30 minutes)
+   Two ways back in, in case one is found.
+4. siem search source=firewall src={{BADIP}} --count-by dst: {{C2IP}} again and again on port 8443 - every five
+   minutes since the download. The program checks in with whoever controls it. No DNS lookup: it uses a bare address.
+
+Clean-up for a real team: isolate {{BADH}}, remove the Run value {{RUNNAME}}, the task \{{TASK}} and {{BIN}}, block
+{{C2IP}}, and reset {{BADU}}'s password.

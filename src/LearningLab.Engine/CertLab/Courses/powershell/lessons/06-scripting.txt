@@ -1,0 +1,434 @@
+# Unit: u06 | 6. Scripting | Scripting
+
+A script is a text file with the extension .ps1 holding the same commands you type at the prompt. This unit turns one-liners into scripts and functions: running a script, making decisions and loops, parameters, advanced functions that behave like cmdlets, help for your own commands, and splatting.
+
+## Lesson: l0601 | Your first script
+
+Write the file with any editor (`notepad C:\Scripts\Get-Report.ps1` opens Cert Lab's editor in the practice console), or with `Set-Content` and a here-string as below. Then run it by its **path**.
+
+```terminal
+PS C:\Windows\system32> New-Item -ItemType Directory C:\Scripts | Out-Null
+PS C:\Windows\system32> Set-Content C:\Scripts\Hello.ps1 -Value @'
+>> # Hello.ps1: greets someone
+>> param([string]$Name = 'world')
+>> "Hello, $Name! This is $env:COMPUTERNAME."
+>> "The script is in $PSScriptRoot"
+>> '@
+PS C:\Windows\system32> C:\Scripts\Hello.ps1
+Hello, world! This is WIN-SRV1.
+The script is in C:\Scripts
+PS C:\Windows\system32> C:\Scripts\Hello.ps1 -Name Ada
+Hello, Ada! This is WIN-SRV1.
+The script is in C:\Scripts
+PS C:\Windows\system32> cd C:\Scripts
+PS C:\Scripts> Hello.ps1
+Hello.ps1 : The term 'Hello.ps1' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Hello.ps1
++ ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Hello.ps1:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+
+Suggestion [3,General]: The command Hello.ps1 was not found, but does exist in the current location. Windows PowerShell does not load commands from the current location by default. If you trust this command, instead type: ".\Hello.ps1". See "get-help about_Command_Precedence" for more details.
+PS C:\Scripts> .\Hello.ps1 Grace
+Hello, Grace! This is WIN-SRV1.
+The script is in C:\Scripts
+```
+
+- PowerShell does **not** run scripts from the current folder by name alone. Type `.\Hello.ps1`; this protects you from a script named like a command.
+- A script can start with a `param( )` block, like a function. Named (`-Name Ada`) and positional (`Grace`) arguments both work.
+- `$PSScriptRoot` is the folder the script is in, `$PSCommandPath` its full path.
+- A script runs in its own **scope**: its variables are gone when it ends. `. .\Hello.ps1` ("dot-sourcing") runs it in your current scope instead, so its variables and functions stay.
+- Whether scripts may run at all is decided by the **execution policy** (unit 12). Windows Server's default is RemoteSigned (your own scripts run); Windows 11's default is Restricted (no scripts at all).
+
+@try machines=1
+@task t1 | Scripting | 10 | WIN-SRV1
+Create the script `C:\Scripts\Get-Square.ps1` with a parameter `[int]$Number` that outputs the square of the number, so that `C:\Scripts\Get-Square.ps1 -Number 7` outputs `49`.
+@check WIN-SRV1 | the script exists
+Test-Path C:\Scripts\Get-Square.ps1
+@check WIN-SRV1 | it squares the number
+(& C:\Scripts\Get-Square.ps1 -Number 7) -eq 49 -and (& C:\Scripts\Get-Square.ps1 -Number 3) -eq 9
+@hint Set-Content C:\Scripts\Get-Square.ps1 -Value 'param([int]$Number) $Number * $Number'
+@solution WIN-SRV1
+New-Item -ItemType Directory C:\Scripts -Force | Out-Null
+Set-Content C:\Scripts\Get-Square.ps1 -Value 'param([int]$Number) $Number * $Number'
+C:\Scripts\Get-Square.ps1 -Number 7
+@endtask
+@end
+
+@quiz
+? You are in C:\Scripts. How do you run Hello.ps1 from there?
+- Hello.ps1
++ .\Hello.ps1
+- run Hello.ps1
+! PowerShell does not look in the current folder for commands; give the path.
+? What does dot-sourcing (`. .\Tools.ps1`) do?
++ Runs the script in your current scope, so its functions and variables stay
+- Runs the script in the background
+- Checks the script for errors without running it
+! A normal run has its own scope that disappears when the script ends.
+? What is $PSScriptRoot inside a script?
+- The current location
++ The folder that contains the script
+- The PowerShell installation folder
+! Use it to find files that sit next to the script, whatever the current location is.
+@end
+
+## Lesson: l0602 | Decisions and loops
+
+### if, elseif, else
+
+```terminal
+PS C:\Windows\system32> $free = 12
+PS C:\Windows\system32> if ($free -lt 10) { 'critical' } elseif ($free -lt 20) { 'low' } else { 'fine' }
+low
+```
+
+The condition is anything that can be true or false. `$null`, `0`, `''` and an empty collection count as **false**; almost everything else as **true** (careful: the text `'False'` is true, because it is not empty).
+
+### switch
+
+`switch` compares one value (or each item of a collection) with several cases and runs **every** case that matches, unless a case ends with `break`. `-Wildcard` and `-Regex` change how cases compare; a script block case is a condition with `$_`.
+
+```terminal
+PS C:\Windows\system32> switch ('report.csv', 'notes.txt', 'big.iso') {
+>>   '*.csv' { "$_ is a table" }
+>>   { $_ -like '*.txt' } { "$_ is text" }
+>>   default { "$_ is something else" }
+>> }
+report.csv is something else
+notes.txt is text
+big.iso is something else
+PS C:\Windows\system32> switch -Wildcard ('report.csv', 'notes.txt', 'big.iso') { '*.csv' { "$_ is a table" } '*.txt' { "$_ is text" } default { "$_ is something else" } }
+report.csv is a table
+notes.txt is text
+big.iso is something else
+```
+
+The first `switch` compared `'*.csv'` as plain text (no file is called `*.csv`), so only the script block case and `default` matched. With `-Wildcard`, `*` works.
+
+### Loops
+
+| Loop | Use |
+|---|---|
+| `foreach ($x in $list) { }` | every item of a collection you already have |
+| `ForEach-Object { }` | every object coming down a pipeline (unit 2) |
+| `for ($i = 0; $i -lt 5; $i++) { }` | counting |
+| `while (condition) { }` | as long as the condition holds (checked first) |
+| `do { } while (condition)` / `do { } until (condition)` | at least once, checked after |
+
+`break` leaves the loop, `continue` jumps to the next round.
+
+```terminal
+PS C:\Windows\system32> foreach ($n in 1..10) { if ($n % 2) { continue }; if ($n -gt 6) { break }; "even: $n" }
+even: 2
+even: 4
+even: 6
+PS C:\Windows\system32> for ($i = 3; $i -gt 0; $i--) { "countdown $i" }
+countdown 3
+countdown 2
+countdown 1
+PS C:\Windows\system32> $tries = 0; do { $tries++ } until ($tries -ge 3); "tried $tries times"
+tried 3 times
+```
+
+> `break` inside a `ForEach-Object` script block does not stop just the pipeline: it leaves the nearest enclosing *loop* or ends the whole script. Use `foreach (...) { }` when you need break and continue.
+
+@try machines=1
+@task t1 | Scripting | 10 | WIN-SRV1
+Write a function `Get-Grade` with a parameter `[int]$Score` that returns `A` for 90 and more, `B` for 75 to 89, `C` for 50 to 74, and `F` below 50.
+@check WIN-SRV1 | the four grades
+(Get-Grade 95) -eq 'A' -and (Get-Grade 90) -eq 'A' -and (Get-Grade 80) -eq 'B' -and (Get-Grade 74) -eq 'C' -and (Get-Grade 12) -eq 'F'
+@hint if ($Score -ge 90) { 'A' } elseif ($Score -ge 75) { 'B' } ...
+@solution WIN-SRV1
+function Get-Grade([int]$Score) { if ($Score -ge 90) { 'A' } elseif ($Score -ge 75) { 'B' } elseif ($Score -ge 50) { 'C' } else { 'F' } }
+Get-Grade 80
+@endtask
+@end
+
+@quiz
+? `if ('False') { 'yes' } else { 'no' }` prints...
++ yes
+- no
+- An error
+! Any non-empty string is true, whatever it says.
+? A switch has two cases that both match the value and no break. What runs?
+- Only the first
++ Both, in order
+- Only the default
+! switch runs every matching case; add break to stop after the first.
+? Which loop always runs its body at least once?
+- while
+- for
++ do { } until ( )
+! The do loops check their condition after the body.
+@end
+
+## Lesson: l0603 | Functions and parameters
+
+A function is a named script block. Define it once (in a script, a profile or a module) and call it like a command.
+
+```terminal
+PS C:\Windows\system32> function Get-Area {
+>>   param(
+>>     [double]$Width,
+>>     [double]$Height = 1,
+>>     [switch]$Round
+>>   )
+>>   $a = $Width * $Height
+>>   if ($Round) { [math]::Round($a) } else { $a }
+>> }
+PS C:\Windows\system32> Get-Area -Width 2.5 -Height 4
+10
+PS C:\Windows\system32> Get-Area 2.5 1.7
+4.25
+PS C:\Windows\system32> Get-Area 2.5 1.7 -Round
+4
+PS C:\Windows\system32> Get-Area -Width 3
+3
+```
+
+- Parameters come from the `param( )` block: a type, a name, an optional default value.
+- Without anything else, parameters are **positional** in the order written: `Get-Area 2.5 1.7`.
+- A `[switch]` parameter is on when you name it (`-Round`) and off otherwise.
+- **Everything** a function outputs is returned, not only what follows `return`. `return` just leaves early.
+
+### Calling functions: no commas, no parentheses
+
+```terminal
+PS C:\Windows\system32> function Join-Name($First, $Last) { "$Last, $First" }
+PS C:\Windows\system32> Join-Name Ada Lovelace
+Lovelace, Ada
+PS C:\Windows\system32> Join-Name('Ada', 'Lovelace')
+, Ada Lovelace
+```
+
+`Join-Name('Ada', 'Lovelace')` passed **one** argument (an array) to `$First`. Call functions like cmdlets: names and values separated by spaces.
+
+### Scope
+
+A function can read the variables of the code that called it, but assigning to a variable creates a new one inside the function. Use `$script:name` (or `$global:name`) to change the outer one on purpose, or better, return a value.
+
+```terminal
+PS C:\Windows\system32> $count = 1
+PS C:\Windows\system32> function Add-One { $count = $count + 1; "inside: $count" }
+PS C:\Windows\system32> Add-One
+inside: 2
+PS C:\Windows\system32> "outside: $count"
+outside: 1
+```
+
+@try machines=1
+@task t1 | Scripting | 10 | WIN-SRV1
+Write a function `New-UserName` with parameters `$First` and `$Last` and a switch `-Upper`. It returns the first letter of the first name followed by the last name, in lower case (`New-UserName Ada Lovelace` returns `alovelace`), or in upper case with `-Upper` (`ALOVELACE`).
+@check WIN-SRV1 | lower case by default
+(New-UserName Ada Lovelace) -ceq 'alovelace' -and (New-UserName -Last Hopper -First Grace) -ceq 'ghopper'
+@check WIN-SRV1 | -Upper
+(New-UserName Ada Lovelace -Upper) -ceq 'ALOVELACE'
+@hint $n = ($First.Substring(0,1) + $Last).ToLower(); if ($Upper) { $n.ToUpper() } else { $n }
+@solution WIN-SRV1
+function New-UserName { param($First, $Last, [switch]$Upper) $n = ($First.Substring(0, 1) + $Last).ToLower(); if ($Upper) { $n.ToUpper() } else { $n } }
+New-UserName Ada Lovelace
+@endtask
+@end
+
+@quiz
+? How do you call `function Add($a, $b)` with 2 and 3?
++ Add 2 3
+- Add(2, 3)
+- Add(2 3)
+! Add(2, 3) passes one array to $a and leaves $b empty.
+? A function writes 'a' on one line and ends with `return 'b'`. What does it return?
+- Only 'b'
++ 'a' and 'b'
+- Only 'a'
+! All output of a function is returned; return only ends it.
+? How does a [switch] parameter get turned on?
++ By naming it: -Round
+- By passing $true after it
+- By giving it a default value
+! A switch is false unless it is named (you can also write -Round:$true).
+@end
+
+## Lesson: l0604 | Advanced functions
+
+Add `[CmdletBinding()]` and `[Parameter()]` attributes and your function behaves like a cmdlet: common parameters (`-Verbose`, `-ErrorAction`...), mandatory parameters, validation and pipeline input.
+
+```terminal
+PS C:\Windows\system32> function Get-Double {
+>>   [CmdletBinding()]
+>>   param(
+>>     [Parameter(Mandatory, ValueFromPipeline)]
+>>     [int]$Number,
+>>     [ValidateRange(1, 10)]
+>>     [int]$Times = 2
+>>   )
+>>   begin   { Write-Verbose 'Starting' }
+>>   process { $Number * $Times }
+>>   end     { Write-Verbose 'Done' }
+>> }
+PS C:\Windows\system32> 1, 2, 3 | Get-Double
+2
+4
+6
+PS C:\Windows\system32> Get-Double -Number 5 -Times 3 -Verbose
+VERBOSE: Starting
+15
+VERBOSE: Done
+PS C:\Windows\system32> Get-Double -Number 5 -Times 20
+Get-Double : Cannot validate argument on parameter 'Times'. The 20 argument is greater than the maximum allowed range of 10. Supply an argument that is less than or equal to 10 and then try the command again.
+At line:1 char:29
++ Get-Double -Number 5 -Times 20
++                             ~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Double], ParameterBindingValidationException
+    + FullyQualifiedErrorId : ParameterArgumentValidationError,Get-Double
+```
+
+- `Mandatory`: PowerShell asks for the value if it is missing (also when the call is in a script). Where nobody can answer, for example in `powershell.exe -NonInteractive` or a scheduled task, the call fails instead.
+- `ValueFromPipeline`: the parameter takes whole pipeline objects; `ValueFromPipelineByPropertyName`: it takes the value of a property with the same name.
+- **begin** runs once before the first object, **process** once per pipeline object, **end** once at the end. Without a process block, a function sees all its pipeline input only in `$input`, after the fact.
+- Validation attributes check values before your code runs: `[ValidateSet('a','b')]`, `[ValidateRange(1,10)]`, `[ValidatePattern('^\d+$')]`, `[ValidateNotNullOrEmpty()]`, `[ValidateScript({ Test-Path $_ })]`, `[ValidateLength(3,15)]`.
+- `Write-Verbose` messages appear only with `-Verbose`.
+
+### -WhatIf and -Confirm for free
+
+`[CmdletBinding(SupportsShouldProcess)]` adds `-WhatIf` and `-Confirm`. Ask `$PSCmdlet.ShouldProcess(target, action)` before changing anything:
+
+```terminal
+PS C:\Windows\system32> function Clear-Temp {
+>>   [CmdletBinding(SupportsShouldProcess)]
+>>   param([string]$Folder = 'C:\Temp')
+>>   if ($PSCmdlet.ShouldProcess($Folder, 'Delete all files')) { "deleting in $Folder" }
+>> }
+PS C:\Windows\system32> Clear-Temp -WhatIf
+What if: Performing the operation "Delete all files" on target "C:\Temp".
+PS C:\Windows\system32> Clear-Temp
+deleting in C:\Temp
+```
+
+@try machines=1
+@task t1 | Scripting | 10 | WIN-SRV1
+Write an advanced function `Get-Initial` that takes strings from the pipeline (a mandatory parameter `[string]$Name` with `ValueFromPipeline`) and outputs the first letter of each, so that `'Ada', 'Bob' | Get-Initial` outputs `A` and `B`.
+@check WIN-SRV1 | pipeline input works
+('Ada', 'Bob' | Get-Initial) -join '' -ceq 'AB'
+@check WIN-SRV1 | it is an advanced function with a process block
+$t = ${function:Get-Initial}.ToString(); $t -match 'ValueFromPipeline' -and $t -match 'process'
+@hint function Get-Initial { [CmdletBinding()] param([Parameter(Mandatory, ValueFromPipeline)][string]$Name) process { $Name.Substring(0, 1) } }
+@solution WIN-SRV1
+function Get-Initial { [CmdletBinding()] param([Parameter(Mandatory, ValueFromPipeline)][string]$Name) process { $Name.Substring(0, 1) } }
+'Ada', 'Bob' | Get-Initial
+@endtask
+@end
+
+@quiz
+? In an advanced function, which block runs once for every pipeline object?
+- begin
++ process
+- end
+! begin and end run once each.
+? What does `[CmdletBinding(SupportsShouldProcess)]` give the function?
++ The -WhatIf and -Confirm parameters
+- Pipeline input
+- A help page
+! Inside, $PSCmdlet.ShouldProcess() returns $false for -WhatIf (and prints "What if: ...").
+? A parameter has `[ValidateSet('Small','Large')]`. What happens with -Size Medium?
+- Medium is accepted and converted to Small
++ The call fails before the function body runs
+- The function runs with $Size empty
+! Validation happens while binding parameters.
+@end
+
+## Lesson: l0605 | Help for your functions, and splatting
+
+### Comment-based help
+
+A comment block with keywords at the top of a function (or just above it) becomes its help: `Get-Help Get-Uptime2` shows it like a cmdlet's help, with the SYNTAX built from the parameters.
+
+```terminal
+PS C:\Windows\system32> function Get-Uptime2 {
+>> <#
+>> .SYNOPSIS
+>> Shows how long this computer has been running.
+>> .DESCRIPTION
+>> Reads the boot time from Win32_OperatingSystem and subtracts it from now.
+>> .EXAMPLE
+>> Get-Uptime2
+>> #>
+>>   [CmdletBinding()] param()
+>>   'up a while'
+>> }
+PS C:\Windows\system32> Get-Help Get-Uptime2
+
+NAME
+    Get-Uptime2
+
+SYNOPSIS
+    Shows how long this computer has been running.
+
+
+SYNTAX
+    Get-Uptime2 [<CommonParameters>]
+
+
+DESCRIPTION
+    Reads the boot time from Win32_OperatingSystem and subtracts it from now.
+
+
+RELATED LINKS
+
+REMARKS
+    To see the examples, type: "get-help Get-Uptime2 -examples".
+    For more information, type: "get-help Get-Uptime2 -detailed".
+    For technical information, type: "get-help Get-Uptime2 -full".
+```
+
+The usual keywords: `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER Name`, `.EXAMPLE` (one per example), `.NOTES`, `.LINK`.
+
+### Splatting
+
+Many parameters on one command make a long line. Put them in a hashtable and pass it with `@` instead of `$`:
+
+```terminal
+PS C:\Windows\system32> $params = @{ Name = 'ErrorActionPreference'; ValueOnly = $true }
+PS C:\Windows\system32> Get-Variable @params
+Continue
+```
+
+Keys are parameter names, values are their values (`$true` for a switch). An array splatted with `@` passes positional arguments. Splatting also lets you build the parameters step by step: `if ($Verbose) { $params.Verbose = $true }`.
+
+@try machines=1
+@task t1 | Scripting | 10 | WIN-SRV1
+Write a function `Get-Circle` with a parameter `[double]$Radius` that returns the area of a circle (`[math]::PI * $Radius * $Radius`), with comment-based help whose `.SYNOPSIS` is exactly `Returns the area of a circle.`
+@check WIN-SRV1 | the area
+[math]::Round((Get-Circle -Radius 2), 4) -eq 12.5664
+@check WIN-SRV1 | the synopsis in Get-Help
+(Get-Help Get-Circle | Out-String) -match 'Returns the area of a circle\.'
+@hint Put <# .SYNOPSIS ... #> as the first thing inside the function body.
+@solution WIN-SRV1
+function Get-Circle {
+<#
+.SYNOPSIS
+Returns the area of a circle.
+#>
+param([double]$Radius)
+[math]::PI * $Radius * $Radius
+}
+Get-Help Get-Circle
+@endtask
+@end
+
+@quiz
+? Which keyword gives the one-line summary in comment-based help?
++ .SYNOPSIS
+- .SUMMARY
+- .NOTES
+! .DESCRIPTION is the longer text.
+? `$p = @{ Name = 'x'; Force = $true }`. How do you pass it to a command?
+- Cmd $p
++ Cmd @p
+- Cmd -Splat $p
+! @p splats the hashtable: each key becomes a parameter.
+@end
+
+

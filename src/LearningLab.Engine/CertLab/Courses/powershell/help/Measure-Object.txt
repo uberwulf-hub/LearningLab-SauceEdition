@@ -1,0 +1,44 @@
+SYNOPSIS: Counts objects and works out the sum, average, smallest and largest values, or counts lines, words and characters.
+DESCRIPTION:
+Measure-Object answers "how many" and "how much" questions about what comes through the pipeline. With no options it just counts. Add -Sum, -Average, -Maximum and -Minimum to work out those values, either of the objects themselves (numbers) or of one property (-Property Salary).
+
+For text, -Line, -Word and -Character count lines, words and characters.
+
+The result is a single measurement object; read one value with dot notation, such as (... | Measure-Object -Sum).Sum.
+PARAMETER Property:
+The property to measure. Position 0.
+PARAMETER Sum:
+Adds the values together.
+PARAMETER Average:
+Works out the mean value.
+PARAMETER Maximum:
+Finds the largest value.
+PARAMETER Minimum:
+Finds the smallest value.
+PARAMETER Line:
+Counts lines of text.
+PARAMETER Word:
+Counts words (anything separated by spaces, tabs or new lines).
+PARAMETER Character:
+Counts characters.
+PARAMETER IgnoreWhiteSpace:
+With -Character, leaves spaces and tabs out of the count.
+PARAMETER InputObject:
+The objects to measure. Usually they come through the pipeline.
+EXAMPLE: 1..10 | Measure-Object -Sum -Average -Maximum -Minimum
+Count 10, Average 5.5, Sum 55, Maximum 10, Minimum 1.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Measure-Object -Property Salary -Sum -Average -Maximum
+Totals the salary column. The text values are read as numbers for the sum and average.
+EXAMPLE: (Import-Csv C:\LabFiles\employees.csv | Measure-Object).Count
+Just the number of employees: 10.
+EXAMPLE: 'one two three', 'four five' | Measure-Object -Line -Word -Character
+Two lines, five words, 22 characters.
+NOTES:
+The alias is measure.
+
+-Sum and -Average need numbers. A value that cannot be read as a number stops Measure-Object with an error.
+
+(... | Measure-Object).Count works even when there is only one object or none. In 5.1, an array's .Count also works on single objects, but Measure-Object makes it explicit.
+
+PowerShell 7 adds -AllStats and -StandardDeviation, and allows -Property to be a script block or have wildcards.
+RELATED: Group-Object, Sort-Object, Measure-Command, Select-Object

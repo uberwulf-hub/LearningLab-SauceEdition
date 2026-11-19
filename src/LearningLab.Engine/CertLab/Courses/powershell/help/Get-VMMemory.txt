@@ -1,0 +1,14 @@
+SYNOPSIS: Shows a virtual machine's memory settings.
+DESCRIPTION:
+Get-VMMemory shows whether dynamic memory is on (DynamicMemoryEnabled) and the Startup, Minimum and Maximum amounts, Buffer and Priority. With static memory only Startup counts.
+
+On HV1, LAB-HOST uses dynamic memory between 2 GB and 16 GB.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMMemory -VMName LAB-HOST -ComputerName HV1
+Shows LAB-HOST's dynamic memory settings.
+EXAMPLE: Get-VM | Get-VMMemory
+The memory settings of every VM.
+RELATED: Set-VMMemory, Set-VM, Get-VMProcessor

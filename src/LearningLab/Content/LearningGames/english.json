@@ -1,0 +1,848 @@
+{
+  "id": "english",
+  "name": "English",
+  "levels": {
+    "prek": [
+      {
+        "name": "Letters",
+        "questions": [
+          {"q":"Which one is the letter A?","say":"Which one is the letter A?","choices":["A","M","S","K"],"answer":0,"explain":"A is the first letter of the alphabet.","tip":"A is shaped like a tent with a bar across the middle."},
+          {"q":"Which letter comes first in the alphabet?","say":"Which letter comes first in the alphabet?","choices":["A","Z","M","C"],"answer":0,"explain":"The alphabet starts A, B, C.","tip":"Sing the ABC song: it always starts with A!"},
+          {"q":"Which letter comes after A?","say":"Which letter comes right after A?","choices":["B","D","Z","P"],"answer":0,"explain":"A, B, C. B comes after A.","tip":"A, B, C: B buzzes right behind A like a busy bee."},
+          {"q":"Which one is the letter M?","say":"Which one is the letter M?","choices":["M","W","N","H"],"answer":0,"explain":"M has two pointy tops. W is like an upside-down M.","tip":"M looks like two mountains side by side: M for mountains!"},
+          {"q":"Which one is the letter O?","say":"Which one is the letter O?","choices":["O","Q","C","U"],"answer":0,"explain":"O is a round circle with no tail and no opening.","tip":"O is round, just like your mouth when you say 'Oh!'"},
+          {"q":"Which letter comes after X?","say":"Which letter comes after X?","choices":["Y","W","V","B"],"answer":0,"explain":"The alphabet ends X, Y, Z.","tip":"X, Y, Z are the little caboose at the end of the alphabet train."},
+          {"q":"Which one is a small b?","say":"Which one is a small, lowercase b?","choices":["b","d","p","q"],"answer":0,"explain":"A small b has a tall line with a bump on the right side at the bottom.","tip":"A small b is a bat and a ball: first the bat, then the ball."},
+          {"q":"Which letter is last in the alphabet?","say":"Which letter is the very last letter of the alphabet?","choices":["Z","Y","A","X"],"answer":0,"explain":"Z is the last of the 26 letters.","tip":"Z is last, so it is time to go zzz and sleep!"}
+        ]
+      },
+      {
+        "name": "Beginning Sounds",
+        "questions": [
+          {"q":"Cat starts with which letter?","say":"Cat. What letter does cat start with?","choices":["C","D","M","S"],"answer":0,"explain":"Cat starts with the k sound, made by the letter C.","tip":"C can say k, like cat, car, and cookie."},
+          {"q":"Ball starts with which letter?","say":"Ball. What letter does ball start with?","choices":["B","D","P","T"],"answer":0,"explain":"Ball starts with the b sound: b, b, ball.","tip":"Bounce, bounce: B says buh, like ball and bounce."},
+          {"q":"Sun starts with which letter?","say":"Sun. What letter does sun start with?","choices":["S","Z","F","M"],"answer":0,"explain":"Sun starts with the s sound, like a snake: sss.","tip":"S looks like a snake and says sss."},
+          {"q":"Dog starts with which letter?","say":"Dog. What letter does dog start with?","choices":["D","B","G","T"],"answer":0,"explain":"Dog starts with the d sound: d, d, dog.","tip":"D says duh, like dog, duck, and dad."},
+          {"q":"Which word starts like map?","say":"Which word starts with the same sound as map?","choices":["moon","cap","sun","top"],"answer":0,"explain":"Map and moon both start with the m sound.","tip":"Mmm, yummy: M says mmm, like map, moon, and mom."},
+          {"q":"Which word starts like fish?","say":"Which word starts with the same sound as fish?","choices":["fan","dish","wish","pan"],"answer":0,"explain":"Fish and fan both start with the f sound.","tip":"F sounds like air from a fan: fff."},
+          {"q":"Apple starts with which letter?","say":"Apple. What letter does apple start with?","choices":["A","E","P","L"],"answer":0,"explain":"Apple starts with the letter A.","tip":"A is for apple: a, a, apple!"},
+          {"q":"Which word starts like toy?","say":"Which word starts with the same sound as toy?","choices":["tent","boy","joy","soy"],"answer":0,"explain":"Toy and tent both start with the t sound. Boy and joy rhyme with toy, but they start differently.","tip":"Listen to the very first sound, not the end."}
+        ]
+      },
+      {
+        "name": "Rhyming Words",
+        "questions": [
+          {"q":"Which word rhymes with cat?","say":"Which word rhymes with cat?","choices":["hat","dog","cup","sun"],"answer":0,"explain":"Cat and hat both end with the at sound.","tip":"Rhyming words sound the same at the end: cat, hat, bat, sat!"},
+          {"q":"Which word rhymes with bee?","say":"Which word rhymes with bee?","choices":["tree","bug","bed","bat"],"answer":0,"explain":"Bee and tree both end with the ee sound.","tip":"A bee in a tree, buzzing with glee!"},
+          {"q":"Which word rhymes with sun?","say":"Which word rhymes with sun?","choices":["run","sit","sock","sand"],"answer":0,"explain":"Sun and run both end with the un sound.","tip":"Have fun in the sun: run, run, run!"},
+          {"q":"Which word rhymes with frog?","say":"Which word rhymes with frog?","choices":["log","fish","frame","bug"],"answer":0,"explain":"Frog and log both end with the og sound.","tip":"A frog sat on a log!"},
+          {"q":"Which word rhymes with cake?","say":"Which word rhymes with cake?","choices":["lake","cat","cook","kite"],"answer":0,"explain":"Cake and lake both end with the ake sound.","tip":"Bake a cake by the lake!"},
+          {"q":"Which word rhymes with star?","say":"Which word rhymes with star?","choices":["car","sun","stop","moon"],"answer":0,"explain":"Star and car both end with the ar sound.","tip":"Twinkle, twinkle, little star, I can see you from my car!"},
+          {"q":"Do mouse and house rhyme?","say":"Do the words mouse and house rhyme?","choices":["Yes","No"],"answer":0,"explain":"Mouse and house both end with the ouse sound, so they rhyme.","tip":"A mouse in a house!"},
+          {"q":"Do pig and cow rhyme?","say":"Do the words pig and cow rhyme?","choices":["No","Yes"],"answer":0,"explain":"Pig ends with ig and cow ends with ow, so they do not rhyme.","tip":"Say the ends out loud: ig and ow do not match."}
+        ]
+      },
+      {
+        "name": "Color and Shape Words",
+        "questions": [
+          {"q":"What color is a ripe banana?","say":"What color is a ripe banana?","choices":["Yellow","Blue","Purple","Black"],"answer":0,"explain":"A ripe banana is yellow.","tip":"Yellow like a banana, yellow like the sun!"},
+          {"q":"What color is grass?","say":"What color is grass?","choices":["Green","Red","Orange","Pink"],"answer":0,"explain":"Healthy grass is green.","tip":"Green grass, green frog, green leaves: go, green!"},
+          {"q":"What color is the sky on a sunny day?","say":"What color is the sky on a sunny day?","choices":["Blue","Green","Brown","Red"],"answer":0,"explain":"On a clear, sunny day the sky looks blue.","tip":"Look up on a sunny day: blue, blue sky!"},
+          {"q":"Which shape is round like a cookie?","say":"Which shape is round like a cookie?","choices":["Circle","Square","Triangle","Star"],"answer":0,"explain":"A circle is round with no corners.","tip":"A circle goes round and round with no corners at all."},
+          {"q":"How many sides does a triangle have?","say":"How many sides does a triangle have?","choices":["3","4","5","2"],"answer":0,"explain":"Tri means three. A triangle has 3 sides.","tip":"Tri means three, like a tricycle with three wheels."},
+          {"q":"Which shape has 4 sides that are all the same?","say":"Which shape has four sides that are all the same size?","choices":["Square","Circle","Triangle","Oval"],"answer":0,"explain":"A square has 4 equal sides and 4 corners.","tip":"A square is like a box: four sides, all the same."},
+          {"q":"Which word is a color?","say":"Which word is a color?","choices":["Red","Dog","Run","Big"],"answer":0,"explain":"Red is a color, like an apple or a fire truck.","tip":"Colors are what you see in a rainbow."},
+          {"q":"Which word is a shape?","say":"Which word is a shape?","choices":["Circle","Blue","Jump","Happy"],"answer":0,"explain":"A circle is a shape. Blue is a color.","tip":"Shapes are what you can draw: circles, squares, and stars."}
+        ]
+      }
+    ],
+    "k2": [
+      {
+        "name": "Sight Words",
+        "questions": [
+          {"q":"Find the word: said","say":"Find the word said.","choices":["said","sed","siad","sayd"],"answer":0,"explain":"Said is spelled s-a-i-d, even though it sounds like sed.","tip":"Silly said has 'ai' but says 'eh'."},
+          {"q":"Find the word: was","say":"Find the word was.","choices":["was","wuz","saw","wos"],"answer":0,"explain":"Was is spelled w-a-s. Saw has the same letters backward.","tip":"Was backward is saw: I saw it, and it was fun!"},
+          {"q":"Find the word: they","say":"Find the word they.","choices":["they","thay","tehy","thei"],"answer":0,"explain":"They is spelled t-h-e-y.","tip":"They starts with 'the' and ends with y: the-y."},
+          {"q":"Find the word: come","say":"Find the word come.","choices":["come","kum","coom","comb"],"answer":0,"explain":"Come is spelled c-o-m-e. Comb is a different word.","tip":"Come ends with a quiet e that makes no sound."},
+          {"q":"Find the word: where","say":"Find the word where, as in where is my hat.","choices":["where","wear","were","whear"],"answer":0,"explain":"Where, asking about a place, is spelled w-h-e-r-e.","tip":"Where has 'here' inside it, because it asks about a place."},
+          {"q":"Find the word: because","say":"Find the word because.","choices":["because","becuz","becaus","beacuse"],"answer":0,"explain":"Because is spelled b-e-c-a-u-s-e.","tip":"Big Elephants Can Always Understand Small Elephants spells because!"},
+          {"q":"Fill in: I ___ a dog.","say":"Fill in the missing word. I blank a dog.","choices":["have","has","haves","having"],"answer":0,"explain":"We say I have a dog. We use has with he, she, or it.","tip":"I have, you have, we have; but he has and she has."},
+          {"q":"Fill in: We ___ to the park yesterday.","say":"Fill in the missing word. We blank to the park yesterday.","choices":["went","want","when","what"],"answer":0,"explain":"Went tells about going in the past.","tip":"Today I go, yesterday I went."},
+          {"q":"Find the word: friend","say":"Find the word friend.","choices":["friend","freind","frend","frind"],"answer":0,"explain":"Friend is spelled f-r-i-e-n-d. A trick: a friend is there to the end.","tip":"A friend is there to the END: fri-END."}
+        ]
+      },
+      {
+        "name": "Short and Long Vowels",
+        "questions": [
+          {"q":"Which word has a short a sound, like apple?","say":"Which word has a short a sound, like in apple?","choices":["cat","cake","rain","play"],"answer":0,"explain":"Cat has the short a sound. Cake, rain, and play have the long a sound.","tip":"Short a is the first sound in apple: a, a, apple, a, a, cat!"},
+          {"q":"Which word has a long a sound, like cake?","say":"Which word has a long a sound, like in cake?","choices":["rain","cat","hat","man"],"answer":0,"explain":"Rain says the name of the letter A. Cat, hat, and man have short a.","tip":"Long vowels say their own name: A says A!"},
+          {"q":"Which word has a short e sound?","say":"Which word has a short e sound, like in egg?","choices":["bed","bee","seat","me"],"answer":0,"explain":"Bed has the short e sound. Bee, seat, and me have long e.","tip":"Short e says 'eh', like in egg and bed."},
+          {"q":"Which word has a long i sound?","say":"Which word has a long i sound, like in ice?","choices":["kite","sit","pig","fin"],"answer":0,"explain":"Kite says the name of the letter I.","tip":"Long i says its name, just like the I in kite."},
+          {"q":"Which word has a short i sound?","say":"Which word has a short i sound, like in igloo?","choices":["fish","bike","ice","pie"],"answer":0,"explain":"Fish has the short i sound. Bike, ice, and pie have long i.","tip":"Short i is in fish: ih, ih, igloo."},
+          {"q":"Which word has a short o sound?","say":"Which word has a short o sound, like in octopus?","choices":["hot","boat","go","rope"],"answer":0,"explain":"Hot has the short o sound. Boat, go, and rope say the name of O.","tip":"Short o is what you say at the doctor: open wide and say ahh, like hot!"},
+          {"q":"Which word has a long u sound?","say":"Which word has a long u sound, like in unicorn?","choices":["cute","cup","bus","sun"],"answer":0,"explain":"Cute says the name of the letter U.","tip":"Long u says 'you', like in cute and unicorn."},
+          {"q":"Add a silent e to cap. What word do you get?","say":"Add a silent e to the end of cap. What word do you get?","choices":["cape","cop","cup","caps"],"answer":0,"explain":"The silent e makes the a say its name: cap becomes cape.","tip":"Magic e makes the vowel say its name: cap becomes cape!"},
+          {"q":"Add a silent e to kit. What word do you get?","say":"Add a silent e to the end of kit. What word do you get?","choices":["kite","kitten","cat","kits"],"answer":0,"explain":"The silent e makes the i say its name: kit becomes kite.","tip":"Magic e waves its wand: kit becomes kite!"},
+          {"q":"Which letters are the vowels?","say":"Which letters are the vowels?","choices":["A, E, I, O, U","B, C, D, F, G","A, B, C, D, E","V, W, X, Y, Z"],"answer":0,"explain":"The vowels are A, E, I, O, and U. Sometimes Y acts like a vowel too.","tip":"A, E, I, O, U, and sometimes Y too!"}
+        ]
+      },
+      {
+        "name": "Spelling Simple Words",
+        "questions": [
+          {"q":"Which is the right spelling of the pet that barks?","say":"How do you spell dog, the pet that barks?","choices":["dog","dawg","dogg","dag"],"answer":0,"explain":"Dog is spelled d-o-g.","tip":"Sound it out: d, o, g, dog!"},
+          {"q":"Which is the right spelling of the pet that says meow?","say":"How do you spell cat, the pet that says meow?","choices":["cat","kat","catt","cet"],"answer":0,"explain":"Cat is spelled c-a-t.","tip":"Cat is c-a-t: three little letters for a little cat."},
+          {"q":"Which is the right spelling of the red fruit?","say":"How do you spell apple?","choices":["apple","aple","appel","apul"],"answer":0,"explain":"Apple has two p's: a-p-p-l-e.","tip":"Apple has two p's, like two seeds side by side."},
+          {"q":"Which is the right spelling of the number after two?","say":"How do you spell three, the number after two?","choices":["three","thre","tree","threy"],"answer":0,"explain":"Three is spelled t-h-r-e-e. A tree is a plant.","tip":"Three is a tree with an h: t-h-r-e-e."},
+          {"q":"Which is the right spelling of the opposite of no?","say":"How do you spell yes?","choices":["yes","yess","yez","yas"],"answer":0,"explain":"Yes is spelled y-e-s.","tip":"Say yes with a smile: y-e-s."},
+          {"q":"Which is the right spelling of the thing you read?","say":"How do you spell book, the thing you read?","choices":["book","buk","boook","bok"],"answer":0,"explain":"Book is spelled b-o-o-k with two o's.","tip":"Book has two o's, like two eyes reading a page."},
+          {"q":"Which is the right spelling of the color of grass?","say":"How do you spell green?","choices":["green","grean","gren","greene"],"answer":0,"explain":"Green is spelled g-r-e-e-n with two e's.","tip":"Green has two e's, like two green peas in a pod."},
+          {"q":"Which is the right spelling of the thing that shines in the day sky?","say":"How do you spell sun, the thing that shines in the sky?","choices":["sun","son","sunn","sone"],"answer":0,"explain":"The sun in the sky is spelled s-u-n. Son means a boy child.","tip":"The sun has a u because it is up in the sky."},
+          {"q":"Which is the right spelling of the place where you live?","say":"How do you spell home?","choices":["home","hom","hoam","hoem"],"answer":0,"explain":"Home is spelled h-o-m-e. The silent e makes the o say its name.","tip":"Home has a sleepy e at the end that is quiet, like a house at night."}
+        ]
+      },
+      {
+        "name": "Opposites",
+        "questions": [
+          {"q":"What is the opposite of hot?","say":"What is the opposite of hot?","choices":["cold","warm","sunny","wet"],"answer":0,"explain":"Hot and cold are opposites.","tip":"Hot cocoa and cold ice cream are at opposite ends!"},
+          {"q":"What is the opposite of big?","say":"What is the opposite of big?","choices":["small","tall","huge","wide"],"answer":0,"explain":"Big and small are opposites.","tip":"An elephant is big, a mouse is small."},
+          {"q":"What is the opposite of up?","say":"What is the opposite of up?","choices":["down","over","top","high"],"answer":0,"explain":"Up and down are opposites.","tip":"What goes up must come down!"},
+          {"q":"What is the opposite of happy?","say":"What is the opposite of happy?","choices":["sad","glad","silly","kind"],"answer":0,"explain":"Happy and sad are opposites. Glad means almost the same as happy.","tip":"Turn a smile upside down: happy becomes sad."},
+          {"q":"What is the opposite of fast?","say":"What is the opposite of fast?","choices":["slow","quick","far","loud"],"answer":0,"explain":"Fast and slow are opposites.","tip":"The rabbit is fast, the turtle is slow."},
+          {"q":"What is the opposite of day?","say":"What is the opposite of day?","choices":["night","morning","sun","week"],"answer":0,"explain":"Day and night are opposites.","tip":"The sun shines in the day, the moon glows at night."},
+          {"q":"What is the opposite of full?","say":"What is the opposite of full?","choices":["empty","heavy","big","round"],"answer":0,"explain":"A full cup has lots in it. An empty cup has nothing in it.","tip":"Before snack the bowl is full, after snack it is empty!"},
+          {"q":"What is the opposite of wet?","say":"What is the opposite of wet?","choices":["dry","cold","rain","soft"],"answer":0,"explain":"Wet and dry are opposites.","tip":"Splash in the bath to get wet, grab a towel to get dry."},
+          {"q":"What is the opposite of open?","say":"What is the opposite of open?","choices":["closed","door","wide","out"],"answer":0,"explain":"Open and closed are opposites.","tip":"Open the door to go out, close it to keep the cold out."}
+        ]
+      },
+      {
+        "name": "Nouns and Verbs",
+        "questions": [
+          {"q":"Which word is a noun (a person, place, or thing)?","say":"Which word is a noun, a person, place, or thing?","choices":["dog","run","jump","sing"],"answer":0,"explain":"A dog is a thing, so dog is a noun. The others are actions.","tip":"If you can put 'the' in front of it, it is probably a noun: the dog."},
+          {"q":"Which word is a verb (an action word)?","say":"Which word is a verb, an action word?","choices":["jump","table","cat","house"],"answer":0,"explain":"Jump is something you do, so it is a verb.","tip":"If you can do it, it is a verb: Can you jump? Yes!"},
+          {"q":"The bird sings. Which word is the verb?","say":"The bird sings. Which word is the verb?","choices":["sings","bird","The"],"answer":0,"explain":"Sings is the action the bird does.","tip":"Ask what the bird DOES: it sings!"},
+          {"q":"Sam kicks the ball. Which word is a noun?","say":"Sam kicks the ball. Which word is a noun?","choices":["ball","kicks","the"],"answer":0,"explain":"A ball is a thing, so it is a noun. Kicks is the action.","tip":"Can you hold it or point to it? Then it is a noun."},
+          {"q":"Which word names a place?","say":"Which word names a place?","choices":["school","eat","green","fast"],"answer":0,"explain":"School is a place, so it is a noun.","tip":"Places are nouns: you can go to school."},
+          {"q":"Which word is an action word?","say":"Which word is an action word?","choices":["swim","chair","blue","happy"],"answer":0,"explain":"Swim is something you do.","tip":"Verbs are doing words: swim, splash, kick!"},
+          {"q":"Which word names a person?","say":"Which word names a person?","choices":["teacher","run","soft","under"],"answer":0,"explain":"A teacher is a person, so teacher is a noun.","tip":"People are nouns: teacher, mom, doctor."},
+          {"q":"The dog runs fast. Which word is the action?","say":"The dog runs fast. Which word is the action?","choices":["runs","dog","fast"],"answer":0,"explain":"Runs is what the dog does, so it is the verb.","tip":"Ask what the dog is doing: it runs!"},
+          {"q":"Which word is a noun?","say":"Which word is a noun?","choices":["apple","eat","quickly","big"],"answer":0,"explain":"An apple is a thing, so apple is a noun.","tip":"You can touch an apple, so it is a noun."}
+        ]
+      },
+      {
+        "name": "Capital Letters and Periods",
+        "questions": [
+          {"q":"Which sentence is written correctly?","say":"Which sentence is written correctly?","choices":["The cat is big.","the cat is big.","The cat is big","the cat is big"],"answer":0,"explain":"A sentence starts with a capital letter and ends with a mark like a period.","tip":"Start tall, end with a dot: a capital at the start, a period at the stop."},
+          {"q":"What goes at the end of a telling sentence?","say":"What goes at the end of a telling sentence?","choices":["A period","A comma","A question mark","Nothing"],"answer":0,"explain":"A telling sentence ends with a period.","tip":"A period is the stop sign of a sentence."},
+          {"q":"What goes at the end of an asking sentence?","say":"What goes at the end of an asking sentence?","choices":["A question mark","A period","A comma"],"answer":0,"explain":"A question ends with a question mark.","tip":"Asking? Hook it with a question mark."},
+          {"q":"Which name is written correctly?","say":"Which name is written correctly?","choices":["Maria","maria","mAria"],"answer":0,"explain":"Names of people start with a capital letter.","tip":"Names are special, so they get a big capital letter."},
+          {"q":"Which word is always written with a capital letter?","say":"Which word is always written with a capital letter?","choices":["I","cat","run","blue"],"answer":0,"explain":"When you mean yourself, I is always a capital letter.","tip":"You are important, so I always stands tall!"},
+          {"q":"A sentence should begin with a...","say":"A sentence should begin with a what?","choices":["capital letter","period","question mark","comma"],"answer":0,"explain":"The first word of every sentence starts with a capital letter.","tip":"The capital letter leads the sentence, like the line leader in class."},
+          {"q":"Which sentence is correct?","say":"Which asking sentence is written correctly?","choices":["Is it raining?","Is it raining.","is it raining?"],"answer":0,"explain":"It starts with a capital letter and ends with a question mark because it asks something.","tip":"An asking sentence ends with the curly question mark."},
+          {"q":"Which day is written correctly?","say":"Which day of the week is written correctly?","choices":["Monday","monday","mONDAY"],"answer":0,"explain":"Days of the week always start with a capital letter.","tip":"Days of the week are names, so they get capitals too."},
+          {"q":"What mark shows strong feeling, like Wow!","say":"What mark shows strong feeling, like when you say wow?","choices":["Exclamation point","Period","Comma","Question mark"],"answer":0,"explain":"An exclamation point shows excitement or strong feeling.","tip":"An exclamation point is a sentence jumping up and shouting!"}
+        ]
+      },
+      {
+        "name": "Rhyme Time",
+        "questions": [
+          {"q":"Which word rhymes with light?","choices":["night","lamp","sun","bulb"],"answer":0,"explain":"Light and night both end with the same sound: -ight.","tip":"Turn off the light, it's time to say good night!"},
+          {"q":"Which word rhymes with boat?","choices":["goat","ship","fish","sail"],"answer":0,"explain":"Boat and goat both end with -oat. A ship and a sail go with boats, but they do not rhyme.","tip":"Picture a goat in a boat wearing a coat!"},
+          {"q":"Which word rhymes with rain?","choices":["train","cloud","snow","wet"],"answer":0,"explain":"Rain and train both end with -ain.","tip":"Rain, rain, falling on the train!"},
+          {"q":"Which word rhymes with bug?","choices":["rug","ant","fly","bee"],"answer":0,"explain":"Bug and rug both end with -ug. Ants, flies and bees are bugs, but they do not rhyme with bug.","tip":"Snug as a bug in a rug!"},
+          {"q":"Which word rhymes with king?","choices":["ring","queen","crown","duke"],"answer":0,"explain":"King and ring both end with -ing.","tip":"The king wears a shiny ring."},
+          {"q":"Which word rhymes with moon?","choices":["spoon","star","sky","night"],"answer":0,"explain":"Moon and spoon both end with -oon.","tip":"The cow jumped over the moon, and the dish ran away with the spoon!"},
+          {"q":"Which word rhymes with bell?","choices":["shell","ring","loud","gold"],"answer":0,"explain":"Bell and shell both end with -ell.","tip":"Ring the bell, then find a shell!"},
+          {"q":"Which word does NOT rhyme with cake?","say":"Which word does not rhyme with cake?","choices":["cook","lake","make","rake"],"answer":0,"explain":"Lake, make and rake all end with -ake, like cake. Cook ends with -ook.","tip":"Rhyming words sound the same at the END, not at the start."},
+          {"q":"Do log and dog rhyme?","choices":["Yes","No"],"answer":0,"explain":"Log and dog both end with -og, so they rhyme.","tip":"A dog sat on a log in the fog!"}
+        ]
+      },
+      {
+        "name": "Contractions",
+        "questions": [
+          {"q":"Which contraction means do not?","choices":["don't","didn't","doesn't","won't"],"answer":0,"explain":"Do not becomes don't. The apostrophe takes the place of the o in not.","tip":"Don't is do plus n't: the apostrophe sits where the o fell out."},
+          {"q":"Which contraction means cannot?","choices":["can't","don't","isn't","won't"],"answer":0,"explain":"Cannot becomes can't. The apostrophe takes the place of the missing letters.","tip":"Can't is cannot squished small."},
+          {"q":"Which contraction means is not?","choices":["isn't","it's","aren't","wasn't"],"answer":0,"explain":"Is not becomes isn't.","tip":"Isn't is is plus n't."},
+          {"q":"Which contraction means I am?","choices":["I'm","I'll","I'd","I've"],"answer":0,"explain":"I am becomes I'm. The apostrophe takes the place of the a.","tip":"I'm: the a in am hides behind the apostrophe."},
+          {"q":"Which contraction means it is?","choices":["it's","its","it'll","isn't"],"answer":0,"explain":"It is becomes it's, with an apostrophe. Its with no apostrophe means belonging to it, like the dog wagged its tail.","tip":"If you can say it is, write it's."},
+          {"q":"Which contraction means we are?","choices":["we're","were","we'll","where"],"answer":0,"explain":"We are becomes we're. Were and where are different words with no apostrophe.","tip":"We're has an apostrophe because two words got squeezed together."},
+          {"q":"Which contraction means they are?","choices":["they're","their","there","they'll"],"answer":0,"explain":"They are becomes they're. Their and there sound the same but mean different things.","tip":"They're = they are. The apostrophe is the glue."},
+          {"q":"Which contraction means you are?","choices":["you're","your","you'll","you've"],"answer":0,"explain":"You are becomes you're. Your, with no apostrophe, means belonging to you.","tip":"You're = you are; your = belonging to you."},
+          {"q":"Which contraction means I will?","choices":["I'll","ill","I'm","I'd"],"answer":0,"explain":"I will becomes I'll. The apostrophe takes the place of the w and the i.","tip":"I'll: will loses its w and i, and the apostrophe fills the gap."},
+          {"q":"Which contraction means let us?","choices":["let's","lets","we'll","it's"],"answer":0,"explain":"Let us becomes let's, as in let's play! Lets with no apostrophe means allows.","tip":"Let's go! The apostrophe stands in for the u in us."},
+          {"q":"In a contraction, what does the apostrophe show?","choices":["Where letters are missing","Where the sentence ends","That a word is a name","That something is loud"],"answer":0,"explain":"In a contraction, the apostrophe stands in for the letters that were taken out.","tip":"The apostrophe is a little patch over the hole where letters were."}
+        ]
+      },
+      {
+        "name": "Plurals: More Than One",
+        "questions": [
+          {"q":"One fox, two ___","say":"One fox, two what?","choices":["foxes","foxs","fox","foxies"],"answer":0,"explain":"Words that end in x add -es: one fox, two foxes.","tip":"Add -es after x, s, sh and ch so you can hear the extra sound: fox-es!"},
+          {"q":"One dish, two ___","say":"One dish, two what?","choices":["dishes","dishs","dishies","dish"],"answer":0,"explain":"Words that end in sh add -es: dish, dishes.","tip":"Wash the dish-es: you can hear the extra sound at the end."},
+          {"q":"One bench, two ___","say":"One bench, two what?","choices":["benches","benchs","bench","benchies"],"answer":0,"explain":"Words that end in ch add -es: bench, benches.","tip":"Bench-es, lunch-es, peach-es: ch words add -es."},
+          {"q":"One puppy, two ___","say":"One puppy, two what?","choices":["puppies","puppys","puppyes","puppy"],"answer":0,"explain":"When a word ends in a consonant and y, change the y to i and add -es: puppy, puppies.","tip":"The y turns into ies: one puppy, many puppies!"},
+          {"q":"One story, two ___","say":"One story, two what?","choices":["stories","storys","storyes","story"],"answer":0,"explain":"Story ends in r and y, so change the y to i and add -es: stories.","tip":"Bedtime stories: y says bye-bye and ies comes in."},
+          {"q":"One wolf, two ___","say":"One wolf, two what?","choices":["wolves","wolfs","wolfes","wolf"],"answer":0,"explain":"Some words that end in f change the f to v and add -es: wolf, wolves.","tip":"Wolves howl with a v: f turns into v."},
+          {"q":"One knife, two ___","say":"One knife, two what?","choices":["knives","knifes","knife","knifs"],"answer":0,"explain":"Knife changes the f to v and adds -es: knives.","tip":"Knife and wife: both turn f into v, knives and wives."},
+          {"q":"One man, two ___","say":"One man, two what?","choices":["men","mans","mens","manes"],"answer":0,"explain":"Man has a special plural: men. You do not add s.","tip":"One man, two men: just swap the a for an e."},
+          {"q":"One woman, two ___","say":"One woman, two what?","choices":["women","womans","womens","woman"],"answer":0,"explain":"Woman has a special plural: women.","tip":"Woman becomes women, just like man becomes men."},
+          {"q":"One goose, two ___","say":"One goose, two what?","choices":["geese","gooses","goose","geeses"],"answer":0,"explain":"Goose has a special plural: geese.","tip":"Goose to geese, tooth to teeth, foot to feet: oo turns into ee!"}
+        ]
+      },
+      {
+        "name": "Same Meaning",
+        "questions": [
+          {"q":"Which word means almost the same as shout?","choices":["yell","whisper","sleep","sit"],"answer":0,"explain":"Shout and yell both mean to say something very loudly. Whisper is the opposite.","tip":"Synonyms are word twins: shout and yell are both LOUD."},
+          {"q":"Which word means almost the same as mad?","choices":["angry","calm","glad","sleepy"],"answer":0,"explain":"Mad and angry name the same feeling.","tip":"Mad and angry both make your face red like a tomato."},
+          {"q":"Which word means almost the same as jump?","choices":["leap","sit","crawl","sleep"],"answer":0,"explain":"To leap is to jump.","tip":"A frog can jump or leap: same big hop!"},
+          {"q":"Which word means almost the same as speak?","choices":["talk","listen","run","eat"],"answer":0,"explain":"Speak and talk both mean to say words out loud.","tip":"Speak and talk both use your mouth to make words."},
+          {"q":"Which word means almost the same as end?","choices":["finish","start","begin","middle"],"answer":0,"explain":"The end of a race is the finish. Start and begin are opposites of end.","tip":"At the finish line, the race comes to an end."},
+          {"q":"Which word means almost the same as smart?","choices":["clever","silly","slow","tired"],"answer":0,"explain":"Clever means smart and quick to think.","tip":"A clever fox is a smart fox."},
+          {"q":"Which word means almost the same as cold?","choices":["chilly","hot","warm","sunny"],"answer":0,"explain":"Chilly means cold.","tip":"Chilly has chill in it: brrr!"},
+          {"q":"Which word means almost the same as sad?","choices":["unhappy","glad","excited","proud"],"answer":0,"explain":"Unhappy means not happy, which is sad.","tip":"Un- means not: unhappy is not happy."},
+          {"q":"Which word means almost the same as pretty?","choices":["beautiful","messy","ugly","plain"],"answer":0,"explain":"Pretty and beautiful both mean nice to look at.","tip":"A beautiful butterfly is a pretty butterfly."}
+        ]
+      },
+      {
+        "name": "Describing Words",
+        "questions": [
+          {"q":"Which word is a describing word?","choices":["fuzzy","jump","table","run"],"answer":0,"explain":"Fuzzy tells what something is like, so it is a describing word, called an adjective.","tip":"Describing words paint a picture: fuzzy, tiny, red."},
+          {"q":"The tiny bug crawled. Which word describes the bug?","choices":["tiny","bug","crawled","The"],"answer":0,"explain":"Tiny tells what the bug is like.","tip":"Ask: what kind of bug? A tiny one!"},
+          {"q":"The red ball bounced. Which word describes the ball?","choices":["red","ball","bounced","The"],"answer":0,"explain":"Red tells the color of the ball. Color words are describing words.","tip":"Colors are describing words: red, blue, green."},
+          {"q":"The sleepy cat yawned. Which word is the describing word?","choices":["sleepy","cat","yawned","The"],"answer":0,"explain":"Sleepy tells what the cat is like. Yawned is the action.","tip":"Adjectives answer the question: what kind? A sleepy cat."},
+          {"q":"Which word describes a sound?","choices":["loud","eat","river","jump"],"answer":0,"explain":"Loud tells what a sound is like.","tip":"Cover your ears: loud describes a big sound."},
+          {"q":"Which word describes how something feels when you touch it?","choices":["soft","read","garden","swim"],"answer":0,"explain":"Soft tells how something feels, like a pillow or a kitten.","tip":"Pet a kitten: soft!"},
+          {"q":"Which word describes how something looks?","choices":["shiny","sing","pencil","under"],"answer":0,"explain":"Shiny tells how something looks, like a new coin.","tip":"Shiny things sparkle, and shiny describes them."},
+          {"q":"Which word is NOT a describing word?","say":"Which word is not a describing word?","choices":["truck","huge","sticky","bright"],"answer":0,"explain":"Truck names a thing, so it is a noun. Huge, sticky and bright describe things.","tip":"Does it name a person, place or thing? Then it is a noun, not a describing word."},
+          {"q":"Which word fits? The ___ ice cream melted in the sun.","say":"Which word fits? The blank ice cream melted in the sun.","choices":["cold","run","table","sing"],"answer":0,"explain":"Cold describes the ice cream. Run, table and sing are not describing words.","tip":"Try each word: the cold ice cream. That sounds right!"}
+        ]
+      },
+      {
+        "name": "ABC Order",
+        "questions": [
+          {"q":"Which word comes first in ABC order: cow, egg, ant, fish?","say":"Which word comes first in A B C order? cow, egg, ant, fish.","choices":["ant","cow","egg","fish"],"answer":0,"explain":"Ant starts with a, and a comes first in the alphabet.","tip":"Sing the ABC song: the first letter you sing comes first."},
+          {"q":"Which word comes first in ABC order: green, water, many, house?","say":"Which word comes first in A B C order? green, water, many, house.","choices":["green","house","many","water"],"answer":0,"explain":"G comes before h, m and w in the alphabet.","tip":"A, B, C, D, E, F, G: g comes along before h!"},
+          {"q":"Which word comes first in ABC order: bus, bed, bat, big?","say":"Which word comes first in A B C order? bus, bed, bat, big.","choices":["bat","bed","big","bus"],"answer":0,"explain":"They all start with b, so look at the second letter: a comes before e, i and u.","tip":"Same first letter? Peek at the second letter!"},
+          {"q":"Which word comes first in ABC order: sun, star, snow, sock?","say":"Which word comes first in A B C order? sun, star, snow, sock.","choices":["snow","sock","star","sun"],"answer":0,"explain":"They all start with s. The second letters are u, t, n and o, and n comes first.","tip":"Same first letter? Line up the second letters: n, o, t, u."},
+          {"q":"Which word comes first in ABC order: cup, cat, cow, city?","say":"Which word comes first in A B C order? cup, cat, cow, city.","choices":["cat","city","cow","cup"],"answer":0,"explain":"They all start with c. The second letters are u, a, o and i, and a comes first.","tip":"A is always first: cat beats city, cow and cup."},
+          {"q":"Which word comes last in ABC order: moon, apple, zebra, yellow?","say":"Which word comes last in A B C order? moon, apple, zebra, yellow.","choices":["zebra","yellow","moon","apple"],"answer":0,"explain":"Z is the last letter of the alphabet, so zebra comes last.","tip":"X, Y and Z close the alphabet, and Z is the very end."},
+          {"q":"Which letter comes right after M?","choices":["N","L","O","P"],"answer":0,"explain":"The alphabet goes L, M, N, O, P. N comes right after M.","tip":"L, M, N, O, P: say it fast, like one word: elemenopee!"},
+          {"q":"Put these words in ABC order: dog, ant, cat","say":"Put these words in A B C order: dog, ant, cat.","choices":["ant, cat, dog","cat, ant, dog","dog, cat, ant","ant, dog, cat"],"answer":0,"explain":"A comes first, then c, then d: ant, cat, dog.","tip":"A, B, C, D: ant, then cat, then dog."},
+          {"q":"Which word comes first in ABC order: school, people, water, friend?","say":"Which word comes first in A B C order? school, people, water, friend.","choices":["friend","people","school","water"],"answer":0,"explain":"F comes before p, s and w in the alphabet.","tip":"Friends come first!"}
+        ]
+      },
+      {
+        "name": "Missing Letters",
+        "questions": [
+          {"q":"Which letter is missing? fr_end (a word for a pal)","say":"Which letter is missing from the word friend? f, r, blank, e, n, d.","choices":["i","e","a","o"],"answer":0,"explain":"Friend is spelled f-r-i-e-n-d.","tip":"A friend is there to the END: fri-END."},
+          {"q":"Which letter is missing? sch_ol (where kids learn)","say":"Which letter is missing from the word school? s, c, h, blank, o, l.","choices":["o","u","e","a"],"answer":0,"explain":"School is spelled s-c-h-o-o-l, with two o's.","tip":"School has two o's, like two big eyes looking at the board."},
+          {"q":"Which letter is missing? wat_r (you drink it)","say":"Which letter is missing from the word water? w, a, t, blank, r.","choices":["e","a","u","i"],"answer":0,"explain":"Water is spelled w-a-t-e-r.","tip":"Water ends in -er, just like river."},
+          {"q":"Which letter is missing? pe_ple (men, women and kids)","say":"Which letter is missing from the word people? p, e, blank, p, l, e.","choices":["o","a","e","u"],"answer":0,"explain":"People is spelled p-e-o-p-l-e.","tip":"People has e and o side by side: p-E-O-ple."},
+          {"q":"Which letter is missing? an_mal (a dog or a cat)","say":"Which letter is missing from the word animal? a, n, blank, m, a, l.","choices":["i","e","a","u"],"answer":0,"explain":"Animal is spelled a-n-i-m-a-l.","tip":"An-I-mal: I love animals!"},
+          {"q":"Which letter is missing? aga_n (one more time)","say":"Which letter is missing from the word again? a, g, a, blank, n.","choices":["i","e","y","u"],"answer":0,"explain":"Again is spelled a-g-a-i-n.","tip":"Again ends with the word gain: a-GAIN."},
+          {"q":"Which letter is missing? _very (each one)","say":"Which letter is missing from the word every? blank, v, e, r, y.","choices":["e","a","i","o"],"answer":0,"explain":"Every is spelled e-v-e-r-y. It has the word very inside it.","tip":"Every is e plus very."},
+          {"q":"Which letter is missing? wr_te (to put words on paper)","say":"Which letter is missing from the word write? w, r, blank, t, e.","choices":["i","y","e","a"],"answer":0,"explain":"Write is spelled w-r-i-t-e. It starts with a quiet w.","tip":"Write has a quiet w at the front and a quiet e at the end."}
+        ]
+      },
+      {
+        "name": "Compound Words",
+        "questions": [
+          {"q":"sun + flower = ?","say":"Sun plus flower makes what word?","choices":["sunflower","sunshine","flowerpot","rainbow"],"answer":0,"explain":"Sun and flower join to make sunflower, a tall yellow flower.","tip":"A compound word is two small words holding hands."},
+          {"q":"rain + bow = ?","say":"Rain plus bow makes what word?","choices":["rainbow","raincoat","rainy","elbow"],"answer":0,"explain":"Rain and bow join to make rainbow.","tip":"After the rain, a bow of colors: rainbow!"},
+          {"q":"cup + cake = ?","say":"Cup plus cake makes what word?","choices":["cupcake","pancake","cupboard","cake"],"answer":0,"explain":"Cup and cake join to make cupcake, a little cake.","tip":"A cupcake is a cake the size of a cup."},
+          {"q":"foot + ball = ?","say":"Foot plus ball makes what word?","choices":["football","baseball","footprint","balloon"],"answer":0,"explain":"Foot and ball join to make football.","tip":"Kick the ball with your foot: football!"},
+          {"q":"snow + man = ?","say":"Snow plus man makes what word?","choices":["snowman","snowball","snowy","mailman"],"answer":0,"explain":"Snow and man join to make snowman.","tip":"A man made of snow is a snowman."},
+          {"q":"star + fish = ?","say":"Star plus fish makes what word?","choices":["starfish","goldfish","starlight","fishing"],"answer":0,"explain":"Star and fish join to make starfish, a sea animal shaped like a star.","tip":"A starfish looks like a star living in the sea."},
+          {"q":"tooth + brush = ?","say":"Tooth plus brush makes what word?","choices":["toothbrush","hairbrush","toothpaste","brushing"],"answer":0,"explain":"Tooth and brush join to make toothbrush.","tip":"You brush your teeth with a toothbrush."},
+          {"q":"butter + fly = ?","say":"Butter plus fly makes what word?","choices":["butterfly","dragonfly","butter","firefly"],"answer":0,"explain":"Butter and fly join to make butterfly.","tip":"A butterfly flutters by!"},
+          {"q":"Which word is a compound word?","choices":["backpack","happy","running","table"],"answer":0,"explain":"Backpack is made of two words: back and pack.","tip":"Cut a compound word in two and you get two real words."},
+          {"q":"Which two words make bedroom?","choices":["bed + room","be + droom","bedr + oom","bead + room"],"answer":0,"explain":"Bedroom is bed plus room: the room with your bed in it.","tip":"Find the two real words hiding inside."}
+        ]
+      },
+      {
+        "name": "Syllables",
+        "questions": [
+          {"q":"What is a syllable?","choices":["A beat in a word","A kind of letter","A period","A long sentence"],"answer":0,"explain":"A syllable is one beat in a word. Ti-ger has two beats, so it has two syllables.","tip":"Clap the beats of your name: each clap is a syllable."},
+          {"q":"How many syllables are in cat?","say":"How many syllables, or beats, are in the word cat?","choices":["1","2","3","4"],"answer":0,"explain":"Cat has one beat: cat.","tip":"Put your hand under your chin: your chin drops once for cat."},
+          {"q":"How many syllables are in apple?","say":"How many syllables, or beats, are in the word apple?","choices":["2","1","3","4"],"answer":0,"explain":"Apple has two beats: ap-ple.","tip":"Clap it: ap-ple. Two claps!"},
+          {"q":"How many syllables are in tiger?","say":"How many syllables, or beats, are in the word tiger?","choices":["2","1","3","4"],"answer":0,"explain":"Tiger has two beats: ti-ger.","tip":"Roar it: ti-GER! Two beats."},
+          {"q":"How many syllables are in rabbit?","say":"How many syllables, or beats, are in the word rabbit?","choices":["2","1","3","4"],"answer":0,"explain":"Rabbit has two beats: rab-bit.","tip":"Hop it out: rab-bit, two hops!"},
+          {"q":"How many syllables are in banana?","say":"How many syllables, or beats, are in the word banana?","choices":["3","2","1","4"],"answer":0,"explain":"Banana has three beats: ba-na-na.","tip":"Ba-na-na: three beats, like a monkey dance."},
+          {"q":"How many syllables are in elephant?","say":"How many syllables, or beats, are in the word elephant?","choices":["3","2","1","4"],"answer":0,"explain":"Elephant has three beats: el-e-phant.","tip":"Stomp like an elephant: el-e-phant, three stomps!"},
+          {"q":"How many syllables are in dinosaur?","say":"How many syllables, or beats, are in the word dinosaur?","choices":["3","2","1","4"],"answer":0,"explain":"Dinosaur has three beats: di-no-saur.","tip":"Di-no-saur: three big dino steps."},
+          {"q":"How many syllables are in butterfly?","say":"How many syllables, or beats, are in the word butterfly?","choices":["3","2","1","4"],"answer":0,"explain":"Butterfly has three beats: but-ter-fly.","tip":"Flap three times: but-ter-fly."},
+          {"q":"How many syllables are in watermelon?","say":"How many syllables, or beats, are in the word watermelon?","choices":["4","3","2","1"],"answer":0,"explain":"Watermelon has four beats: wa-ter-mel-on.","tip":"Wa-ter-mel-on: four claps for a big fruit!"}
+        ]
+      },
+      {
+        "name": "Prefixes and Suffixes",
+        "questions": [
+          {"q":"What does unkind mean?","choices":["not kind","very kind","kind again","kind before"],"answer":0,"explain":"The prefix un- means not, so unkind means not kind.","tip":"Un- is like a big NO in front of a word."},
+          {"q":"What does unsafe mean?","choices":["not safe","very safe","safe again","full of safety"],"answer":0,"explain":"Un- means not, so unsafe means not safe.","tip":"Un- flips the word: safe becomes not safe."},
+          {"q":"What does unlock mean?","choices":["open the lock","lock it again","lock it before","full of locks"],"answer":0,"explain":"Un- can mean to do the opposite. Unlock is the opposite of lock.","tip":"Lock the door, then unlock it to open it again."},
+          {"q":"What does rewrite mean?","choices":["write again","not write","write before","without writing"],"answer":0,"explain":"The prefix re- means again, so rewrite means write again.","tip":"Re- means do it again, like a replay."},
+          {"q":"What does refill mean?","choices":["fill again","not full","full of fill","fill before"],"answer":0,"explain":"Re- means again, so refill means fill again.","tip":"Empty cup? Refill it: fill it again!"},
+          {"q":"Which word means read again?","choices":["reread","unread","readful","readless"],"answer":0,"explain":"Re- means again, so reread means read again.","tip":"Re- plus read: read it one more time."},
+          {"q":"What does preheat mean?","choices":["heat before","heat again","not heat","without heat"],"answer":0,"explain":"The prefix pre- means before. You preheat the oven before you bake.","tip":"Pre- comes before, like a preview before a movie."},
+          {"q":"What does joyful mean?","choices":["full of joy","without joy","joy again","not joy"],"answer":0,"explain":"The suffix -ful means full of, so joyful means full of joy.","tip":"-ful means full: a cup full of joy!"},
+          {"q":"What does helpful mean?","choices":["giving lots of help","giving no help","helping again","helping before"],"answer":0,"explain":"-ful means full of, so a helpful person gives lots of help.","tip":"Helpful is full of help."},
+          {"q":"What does fearless mean?","choices":["without fear","full of fear","fear again","fear before"],"answer":0,"explain":"The suffix -less means without, so fearless means without fear.","tip":"-less means less and less, until there is none."},
+          {"q":"What does useless mean?","choices":["having no use","full of uses","used again","used before"],"answer":0,"explain":"-less means without, so useless means it has no use.","tip":"A pencil with no tip is useless: you can't use it."}
+        ]
+      },
+      {
+        "name": "Sound-Alike Words",
+        "questions": [
+          {"q":"I ___ a good book last night.","say":"I blank a good book last night. Which word fits?","choices":["read","red","reed"],"answer":0,"explain":"Read can sound like red when it happened in the past. Red is a color, and a reed is a tall grass.","tip":"You read a book; red is the color of a fire truck."},
+          {"q":"The ___ shone in the sky.","say":"The blank shone in the sky. Which word fits?","choices":["sun","son","sing"],"answer":0,"explain":"The sun is the star in our sky. A son is a boy child.","tip":"The sUn is Up in the sky."},
+          {"q":"I can ___ the music.","say":"I can blank the music. Which word fits?","choices":["hear","here","hair"],"answer":0,"explain":"Hear is what you do with your ears. Here means in this place.","tip":"You hEAR with your EAR!"},
+          {"q":"The wind ___ my hat off.","say":"The wind blank my hat off. Which word fits?","choices":["blew","blue","blow"],"answer":0,"explain":"Blew is the past form of blow: the wind already pushed my hat. Blue is a color.","tip":"The wind blew; the sky is blue."},
+          {"q":"Look at the big ships on the ___.","say":"Look at the big ships on the blank. Which word fits?","choices":["sea","see","seed"],"answer":0,"explain":"The sea is the ocean. See is what you do with your eyes.","tip":"You SEE with two E's, like two eyes."},
+          {"q":"A ___ ran into the forest.","say":"A blank ran into the forest. Which word fits?","choices":["deer","dear","door"],"answer":0,"explain":"A deer is an animal. Dear is a kind word, like Dear Grandma.","tip":"Dear starts a letter; a deer runs in the forest."},
+          {"q":"I have ___ hands.","say":"I have blank hands. Which word fits?","choices":["two","to","too"],"answer":0,"explain":"Two is the number 2.","tip":"Two, twins and twice all start with tw."},
+          {"q":"Mom has one ___ and one daughter.","say":"Mom has one blank and one daughter. Which word fits?","choices":["son","sun","sing"],"answer":0,"explain":"A son is a boy child. The sun is in the sky.","tip":"The sun is Up high; a son is a boy."},
+          {"q":"I ___ the answer!","say":"I blank the answer! Which word fits?","choices":["know","no","now"],"answer":0,"explain":"Know means to have it in your head. No is the opposite of yes.","tip":"Know has a quiet k: you KNOW it in your head."}
+        ]
+      },
+      {
+        "name": "Story Time",
+        "questions": [
+          {"q":"What did Max build?","passageTitle":"Max the Miner","passage":"Max wanted to build a house. First he chopped wood. Then he dug for stone. Last, he built the walls and put in a red door. Max was proud of his new house.","choices":["A house","A boat","A bridge","A fence"],"answer":0,"explain":"The story says Max wanted to build a house, and at the end he was proud of his new house.","tip":"The first sentence often tells what the story is about."},
+          {"q":"What did Max do first?","passageTitle":"Max the Miner","passage":"Max wanted to build a house. First he chopped wood. Then he dug for stone. Last, he built the walls and put in a red door. Max was proud of his new house.","choices":["Chopped wood","Dug for stone","Built the walls","Put in a door"],"answer":0,"explain":"The story says: First he chopped wood. Then he dug for stone.","tip":"Look for the order words: first, then, last."},
+          {"q":"How did Max feel at the end?","passageTitle":"Max the Miner","passage":"Max wanted to build a house. First he chopped wood. Then he dug for stone. Last, he built the walls and put in a red door. Max was proud of his new house.","choices":["Proud","Scared","Sleepy","Angry"],"answer":0,"explain":"The last sentence says Max was proud of his new house.","tip":"How a character feels at the end is often in the last sentence."},
+          {"q":"Where did Lily find the kitten?","passageTitle":"The Lost Kitten","passage":"Lily heard a tiny cry from the bushes. She looked and found a gray kitten. It was cold and wet. Lily wrapped it in a towel and gave it warm milk. She named it Pebble.","choices":["In the bushes","In a tree","At school","In the garage"],"answer":0,"explain":"Lily heard a cry from the bushes and found the kitten there.","tip":"Where questions ask about a place: look for words like in, on and at."},
+          {"q":"Why did Lily wrap the kitten in a towel?","passageTitle":"The Lost Kitten","passage":"Lily heard a tiny cry from the bushes. She looked and found a gray kitten. It was cold and wet. Lily wrapped it in a towel and gave it warm milk. She named it Pebble.","choices":["It was cold and wet","It was hungry","It was dirty","It was sleepy"],"answer":0,"explain":"The kitten was cold and wet, so the towel could dry it and keep it warm.","tip":"Why questions ask for a reason: look right before the action."},
+          {"q":"What did Lily name the kitten?","passageTitle":"The Lost Kitten","passage":"Lily heard a tiny cry from the bushes. She looked and found a gray kitten. It was cold and wet. Lily wrapped it in a towel and gave it warm milk. She named it Pebble.","choices":["Pebble","Gray","Towel","Milky"],"answer":0,"explain":"The last sentence says: She named it Pebble.","tip":"Look for the word named in the story."},
+          {"q":"Why did Jo stop running?","passageTitle":"The Race","passage":"Sam and Jo raced to the big oak tree. Jo was fast, but she tripped on a root. Sam stopped to help her up. Then they walked to the tree together and laughed.","choices":["She tripped on a root","She got tired","She saw a dog","She won"],"answer":0,"explain":"The story says Jo was fast, but she tripped on a root.","tip":"The word but often tells you that something went wrong."},
+          {"q":"What did Sam do when Jo fell?","passageTitle":"The Race","passage":"Sam and Jo raced to the big oak tree. Jo was fast, but she tripped on a root. Sam stopped to help her up. Then they walked to the tree together and laughed.","choices":["Helped her up","Kept running","Called for help","Went home"],"answer":0,"explain":"Sam stopped racing to help Jo up.","tip":"Look back at the sentence right after Jo tripped."},
+          {"q":"What does this story teach?","passageTitle":"The Race","passage":"Sam and Jo raced to the big oak tree. Jo was fast, but she tripped on a root. Sam stopped to help her up. Then they walked to the tree together and laughed.","choices":["Being kind matters more than winning","Always run fast","Trees are big","Never race"],"answer":0,"explain":"Sam gave up winning to help Jo, and they finished together, laughing.","tip":"The lesson is what the characters show us, not just what happens."},
+          {"q":"What happened to Sam's tower?","passageTitle":"Creeper Trouble","passage":"Sam built a tall tower. A creeper sneaked up behind him. Boom! The tower was gone. Sam did not give up. He built it again, and this time he put a fence around it.","choices":["A creeper blew it up","It fell into water","Sam sold it","It grew too tall"],"answer":0,"explain":"A creeper sneaked up, there was a boom, and the tower was gone.","tip":"Put the clues together: creeper plus boom means the tower blew up."},
+          {"q":"What did Sam add the second time?","passageTitle":"Creeper Trouble","passage":"Sam built a tall tower. A creeper sneaked up behind him. Boom! The tower was gone. Sam did not give up. He built it again, and this time he put a fence around it.","choices":["A fence","A door","A roof","A pool"],"answer":0,"explain":"The last sentence says he put a fence around the tower.","tip":"The second time comes later in the story, so look near the end."},
+          {"q":"Which word best describes Sam?","passageTitle":"Creeper Trouble","passage":"Sam built a tall tower. A creeper sneaked up behind him. Boom! The tower was gone. Sam did not give up. He built it again, and this time he put a fence around it.","choices":["Determined","Lazy","Mean","Sleepy"],"answer":0,"explain":"Sam did not give up and built his tower again. Someone who keeps trying is determined.","tip":"Determined means you keep going even when it is hard."}
+        ]
+      },
+      {
+        "name": "More Stories",
+        "questions": [
+          {"q":"Where did Mia's friends hide?","passageTitle":"The Birthday Surprise","passage":"Mia's friends hid behind the couch. When Mia opened the door, they jumped out and yelled, \"Surprise!\" Mia laughed so hard she dropped her backpack. Then everyone ate cake.","choices":["Behind the couch","In the closet","Under the bed","Outside"],"answer":0,"explain":"The first sentence says the friends hid behind the couch.","tip":"Where questions are answered by a place."},
+          {"q":"Why did Mia drop her backpack?","passageTitle":"The Birthday Surprise","passage":"Mia's friends hid behind the couch. When Mia opened the door, they jumped out and yelled, \"Surprise!\" Mia laughed so hard she dropped her backpack. Then everyone ate cake.","choices":["She was laughing so hard","It was heavy","She was scared","It broke"],"answer":0,"explain":"The story says Mia laughed so hard she dropped her backpack.","tip":"The word so often comes before what happened because of it."},
+          {"q":"What happened last?","passageTitle":"The Birthday Surprise","passage":"Mia's friends hid behind the couch. When Mia opened the door, they jumped out and yelled, \"Surprise!\" Mia laughed so hard she dropped her backpack. Then everyone ate cake.","choices":["Everyone ate cake","Mia opened the door","The friends hid","The friends yelled Surprise"],"answer":0,"explain":"The story ends with: Then everyone ate cake.","tip":"What happened last is usually in the last sentence."},
+          {"q":"How many times did Kai fall into the lava?","passageTitle":"The Hard Obby","passage":"Kai played a very hard obby. He fell into the lava ten times. His sister said, \"Take your time and look before you jump.\" Kai tried it. He reached the flag at last!","choices":["Ten","Two","Five","Twenty"],"answer":0,"explain":"The story says he fell into the lava ten times.","tip":"Number questions: look for a number word in the story."},
+          {"q":"Who gave Kai advice?","passageTitle":"The Hard Obby","passage":"Kai played a very hard obby. He fell into the lava ten times. His sister said, \"Take your time and look before you jump.\" Kai tried it. He reached the flag at last!","choices":["His sister","His dad","A friend","His teacher"],"answer":0,"explain":"His sister told him to take his time.","tip":"Who questions are answered by a person."},
+          {"q":"What advice did Kai get?","passageTitle":"The Hard Obby","passage":"Kai played a very hard obby. He fell into the lava ten times. His sister said, \"Take your time and look before you jump.\" Kai tried it. He reached the flag at last!","choices":["Take your time and look before you jump","Jump faster","Give up","Play a new game"],"answer":0,"explain":"His sister said: Take your time and look before you jump. It worked!","tip":"Advice is a helpful idea someone gives you."},
+          {"q":"What did Ben have at the start?","passageTitle":"The Trade","passage":"Ben had two apples. Zoe had two cookies. Ben liked cookies, and Zoe liked apples. They traded one apple for one cookie. Now both of them had a snack they liked.","choices":["Two apples","Two cookies","One apple","A sandwich"],"answer":0,"explain":"The first sentence says Ben had two apples.","tip":"At the start means look at the beginning of the story."},
+          {"q":"What did Ben and Zoe trade?","passageTitle":"The Trade","passage":"Ben had two apples. Zoe had two cookies. Ben liked cookies, and Zoe liked apples. They traded one apple for one cookie. Now both of them had a snack they liked.","choices":["One apple for one cookie","Two apples for two cookies","A cookie for a drink","Nothing"],"answer":0,"explain":"They traded one apple for one cookie.","tip":"A trade is a swap: I give you one, you give me one."},
+          {"q":"How did Ben and Zoe most likely feel at the end?","passageTitle":"The Trade","passage":"Ben had two apples. Zoe had two cookies. Ben liked cookies, and Zoe liked apples. They traded one apple for one cookie. Now both of them had a snack they liked.","choices":["Happy","Sad","Angry","Scared"],"answer":0,"explain":"Both of them had a snack they liked, so they were most likely happy.","tip":"Think how you would feel if you got a snack you like."},
+          {"q":"Why was school closed?","passageTitle":"The Snow Day","passage":"It snowed all night. In the morning, school was closed. Leo and his dad built a snow fort. Then they drank hot cocoa by the fire. It was the best day of winter.","choices":["It snowed all night","It was Sunday","It was a holiday","The power went out"],"answer":0,"explain":"It snowed all night, so in the morning school was closed for a snow day.","tip":"The cause often comes first, and what happens because of it comes next."},
+          {"q":"What did Leo and his dad build?","passageTitle":"The Snow Day","passage":"It snowed all night. In the morning, school was closed. Leo and his dad built a snow fort. Then they drank hot cocoa by the fire. It was the best day of winter.","choices":["A snow fort","A snowman","A sled","A fire"],"answer":0,"explain":"The story says Leo and his dad built a snow fort.","tip":"Look for the word built in the story."},
+          {"q":"What did they do after they built the fort?","passageTitle":"The Snow Day","passage":"It snowed all night. In the morning, school was closed. Leo and his dad built a snow fort. Then they drank hot cocoa by the fire. It was the best day of winter.","choices":["Drank hot cocoa","Went to school","Went to bed","Built a bigger fort"],"answer":0,"explain":"Then they drank hot cocoa by the fire.","tip":"After means next: look for the word then."}
+        ]
+      },
+      {
+        "name": "Read and Learn",
+        "questions": [
+          {"q":"What do bees collect from flowers?","passageTitle":"Busy Bees","passage":"Honeybees are busy insects. They fly from flower to flower to collect nectar. Back at the hive, they turn the nectar into honey. Bees also help plants grow by spreading pollen.","choices":["Nectar","Water","Leaves","Seeds"],"answer":0,"explain":"Bees fly from flower to flower to collect nectar, a sweet juice.","tip":"Nectar is the flower's sweet drink."},
+          {"q":"What do honeybees make from nectar?","passageTitle":"Busy Bees","passage":"Honeybees are busy insects. They fly from flower to flower to collect nectar. Back at the hive, they turn the nectar into honey. Bees also help plants grow by spreading pollen.","choices":["Honey","Milk","Pollen","Flowers"],"answer":0,"explain":"Back at the hive, bees turn the nectar into honey.","tip":"Nectar in, honey out!"},
+          {"q":"What is this passage mostly about?","passageTitle":"Busy Bees","passage":"Honeybees are busy insects. They fly from flower to flower to collect nectar. Back at the hive, they turn the nectar into honey. Bees also help plants grow by spreading pollen.","choices":["How bees are busy and helpful","How to grow flowers","Where honey is sold","Why bees sting"],"answer":0,"explain":"Every sentence tells something busy or helpful that bees do.","tip":"The main idea is what most of the sentences are about."},
+          {"q":"What warms the water in lakes and oceans?","passageTitle":"Where Rain Comes From","passage":"The sun warms the water in lakes and oceans. The water rises into the air as vapor. High up, it cools and forms clouds. When the drops get heavy, they fall as rain.","choices":["The sun","The wind","The moon","The clouds"],"answer":0,"explain":"The first sentence says the sun warms the water.","tip":"The sun is Earth's big heater."},
+          {"q":"What forms when the water cools high up?","passageTitle":"Where Rain Comes From","passage":"The sun warms the water in lakes and oceans. The water rises into the air as vapor. High up, it cools and forms clouds. When the drops get heavy, they fall as rain.","choices":["Clouds","Lakes","Rivers","Oceans"],"answer":0,"explain":"High up, the water cools and forms clouds.","tip":"Up, up, up the water goes, and clouds are what it makes."},
+          {"q":"When does the rain fall?","passageTitle":"Where Rain Comes From","passage":"The sun warms the water in lakes and oceans. The water rises into the air as vapor. High up, it cools and forms clouds. When the drops get heavy, they fall as rain.","choices":["When the drops get heavy","When it is sunny","When the wind stops","When it is night"],"answer":0,"explain":"When the drops in the clouds get heavy, they fall as rain.","tip":"Heavy drops can't float, so down they come!"},
+          {"q":"What do penguins use their wings for?","passageTitle":"Penguins","passage":"Penguins are birds, but they cannot fly. They use their wings to swim very fast. Many penguins live where it is very cold. A thick layer of fat keeps them warm.","choices":["Swimming","Flying","Digging","Climbing"],"answer":0,"explain":"Penguins use their wings to swim very fast.","tip":"A penguin's wings work like flippers."},
+          {"q":"What keeps penguins warm?","passageTitle":"Penguins","passage":"Penguins are birds, but they cannot fly. They use their wings to swim very fast. Many penguins live where it is very cold. A thick layer of fat keeps them warm.","choices":["A thick layer of fat","A nest","Warm water","Their beaks"],"answer":0,"explain":"The last sentence says a thick layer of fat keeps them warm.","tip":"Fat under the skin is like a warm coat inside the body."},
+          {"q":"Can penguins fly?","passageTitle":"Penguins","passage":"Penguins are birds, but they cannot fly. They use their wings to swim very fast. Many penguins live where it is very cold. A thick layer of fat keeps them warm.","choices":["No, but they swim fast","Yes, very high","Only at night","Only when it is cold"],"answer":0,"explain":"Penguins are birds, but they cannot fly. They swim instead.","tip":"Penguins fly through the water, not the air!"},
+          {"q":"What does a seed need to start growing?","passageTitle":"How a Seed Grows","passage":"A seed needs water, air, and warmth to start growing. First, a root grows down. Next, a stem pushes up. Then leaves open in the sunlight, and the plant can make its own food.","choices":["Water, air, and warmth","Only sunlight","Only rocks","Nothing at all"],"answer":0,"explain":"The first sentence says a seed needs water, air, and warmth to start growing.","tip":"A seed wakes up with a drink, a breath, and a warm blanket of soil."},
+          {"q":"What grows first?","passageTitle":"How a Seed Grows","passage":"A seed needs water, air, and warmth to start growing. First, a root grows down. Next, a stem pushes up. Then leaves open in the sunlight, and the plant can make its own food.","choices":["A root","A leaf","A flower","A stem"],"answer":0,"explain":"First, a root grows down. Next comes the stem.","tip":"Roots first, like the anchor of a boat."},
+          {"q":"What can the plant do after its leaves open?","passageTitle":"How a Seed Grows","passage":"A seed needs water, air, and warmth to start growing. First, a root grows down. Next, a stem pushes up. Then leaves open in the sunlight, and the plant can make its own food.","choices":["Make its own food","Walk around","Sleep all day","Fly away"],"answer":0,"explain":"Leaves use sunlight to make food for the plant.","tip":"Leaves are the plant's kitchen."},
+          {"q":"When do most owls hunt?","passageTitle":"Night Hunters","passage":"Most owls hunt at night. Their big eyes help them see in the dark. Owls can turn their heads almost all the way around. They fly almost without a sound, so mice do not hear them coming.","choices":["At night","In the morning","At noon","Only in winter"],"answer":0,"explain":"The first sentence says most owls hunt at night.","tip":"Night hunters hunt at night!"},
+          {"q":"Why don't mice hear the owls coming?","passageTitle":"Night Hunters","passage":"Most owls hunt at night. Their big eyes help them see in the dark. Owls can turn their heads almost all the way around. They fly almost without a sound, so mice do not hear them coming.","choices":["Owls fly almost without a sound","Mice are asleep","Owls are tiny","Mice have no ears"],"answer":0,"explain":"Owls fly almost without a sound, so mice do not hear them.","tip":"The word so connects a reason to what happens."},
+          {"q":"What helps owls see in the dark?","passageTitle":"Night Hunters","passage":"Most owls hunt at night. Their big eyes help them see in the dark. Owls can turn their heads almost all the way around. They fly almost without a sound, so mice do not hear them coming.","choices":["Their big eyes","Their wings","Their claws","Their feathers"],"answer":0,"explain":"Their big eyes help them see in the dark.","tip":"Big eyes catch more light, like big windows."},
+          {"q":"Why do dolphins come up to the top of the water?","passageTitle":"Dolphins","passage":"Dolphins live in the ocean, but they are not fish. They are mammals, so they breathe air. Dolphins come up to the top of the water to breathe. They talk to each other with clicks and whistles.","choices":["To breathe air","To eat fish","To sleep","To find friends"],"answer":0,"explain":"Dolphins are mammals that breathe air, so they come up to breathe.","tip":"Dolphins breathe through a blowhole on top of their heads."},
+          {"q":"What kind of animal is a dolphin?","passageTitle":"Dolphins","passage":"Dolphins live in the ocean, but they are not fish. They are mammals, so they breathe air. Dolphins come up to the top of the water to breathe. They talk to each other with clicks and whistles.","choices":["A mammal","A fish","A bird","A reptile"],"answer":0,"explain":"The passage says dolphins are not fish. They are mammals.","tip":"Mammals breathe air and feed their babies milk, just like people."},
+          {"q":"How do dolphins talk to each other?","passageTitle":"Dolphins","passage":"Dolphins live in the ocean, but they are not fish. They are mammals, so they breathe air. Dolphins come up to the top of the water to breathe. They talk to each other with clicks and whistles.","choices":["With clicks and whistles","With words","With songs on the radio","With colors"],"answer":0,"explain":"The last sentence says they talk with clicks and whistles.","tip":"Click, click, wheee: dolphin talk!"}
+        ]
+      }
+    ],
+    "g35": [
+      {
+        "name": "Parts of Speech",
+        "questions": [
+          {"q":"In 'The fluffy cat slept,' which word is an adjective?","choices":["fluffy","cat","slept"],"answer":0,"explain":"Fluffy describes the noun cat, so it is an adjective.","tip":"Adjectives Add details to nouns: fluffy, red, tiny."},
+          {"q":"In 'She ran quickly,' which word is an adverb?","choices":["quickly","She","ran"],"answer":0,"explain":"Quickly tells how she ran, so it is an adverb.","tip":"Many adverbs end in -ly, and they ADD to the verb."},
+          {"q":"In 'The ball is under the bed,' what part of speech is 'under'?","choices":["Preposition","Verb","Noun","Adjective"],"answer":0,"explain":"Under shows the relationship between the ball and the bed, so it is a preposition.","tip":"A preposition is anywhere a cat can go with a box: in, on, under, by."},
+          {"q":"What part of speech is 'and'?","choices":["Conjunction","Preposition","Adverb","Noun"],"answer":0,"explain":"And joins words or groups of words, so it is a conjunction.","tip":"Conjunction junction: and, but, and or hook words together like train cars."},
+          {"q":"Which word is a pronoun?","choices":["they","table","quickly","jump"],"answer":0,"explain":"They takes the place of a noun, so it is a pronoun.","tip":"Pronouns are PROs at replacing nouns: he, she, it, they."},
+          {"q":"A word that describes a noun is called a(n)...","choices":["adjective","adverb","verb","conjunction"],"answer":0,"explain":"Adjectives describe nouns, like red, tall, or happy.","tip":"Adjectives describe nouns: a red ball, a big dog."},
+          {"q":"A word that tells how, when, or where an action happens is a(n)...","choices":["adverb","adjective","noun","pronoun"],"answer":0,"explain":"Adverbs describe verbs, like slowly, yesterday, or here.","tip":"Adverbs answer how, when, and where: quickly, today, here."},
+          {"q":"Which word is a proper noun?","choices":["Texas","city","river","teacher"],"answer":0,"explain":"Texas names a specific place, so it is a proper noun and starts with a capital letter.","tip":"Proper nouns are proper names, so they wear a capital letter."},
+          {"q":"In 'Wow, that is amazing!' what part of speech is 'Wow'?","choices":["Interjection","Conjunction","Pronoun","Preposition"],"answer":0,"explain":"An interjection is a word that shows sudden feeling, like wow or oops.","tip":"Interjections Interrupt with feeling: Wow! Oops! Hooray!"},
+          {"q":"In 'The children laughed loudly,' which word is the verb?","choices":["laughed","children","loudly"],"answer":0,"explain":"Laughed is the action the children did.","tip":"Find the verb by asking: what did they do?"}
+        ]
+      },
+      {
+        "name": "Plurals",
+        "questions": [
+          {"q":"What is the plural of 'child'?","choices":["children","childs","childes","childrens"],"answer":0,"explain":"Child has an irregular plural: children.","tip":"One child, two children, a whole playground of children."},
+          {"q":"What is the plural of 'mouse' (the animal)?","choices":["mice","mouses","mices","meese"],"answer":0,"explain":"Mouse has an irregular plural: mice.","tip":"One mouse, two mice: the mice think cheese is nice."},
+          {"q":"What is the plural of 'box'?","choices":["boxes","boxs","boxen","boxies"],"answer":0,"explain":"Words ending in x, s, sh, ch, or z usually add -es.","tip":"If adding just s sounds like a hiss you can't say (boxs), add -es."},
+          {"q":"What is the plural of 'baby'?","choices":["babies","babys","babyes","babis"],"answer":0,"explain":"When a word ends in a consonant plus y, change the y to i and add -es.","tip":"Consonant plus y? Y flies away and -ies takes its place: babies."},
+          {"q":"What is the plural of 'day'?","choices":["days","daies","dayes","dayys"],"answer":0,"explain":"When a word ends in a vowel plus y, just add -s.","tip":"Vowel plus y? Y stays: days, toys, keys."},
+          {"q":"What is the plural of 'leaf'?","choices":["leaves","leafs","leafes","leavs"],"answer":0,"explain":"Many words ending in f change the f to v and add -es: leaf, leaves.","tip":"In fall the leaves fall, and the f turns into v."},
+          {"q":"What is the plural of 'tooth'?","choices":["teeth","tooths","teeths","toothes"],"answer":0,"explain":"Tooth has an irregular plural: teeth.","tip":"One tooth, two teeth: just like one goose, two geese."},
+          {"q":"What is the plural of 'sheep'?","choices":["sheep","sheeps","sheepes","shoop"],"answer":0,"explain":"Sheep stays the same for one or many.","tip":"Sheep, deer, and fish: count a flock of them and they still sound the same."},
+          {"q":"What is the plural of 'tomato'?","choices":["tomatoes","tomatos","tomatoe","tomatoies"],"answer":0,"explain":"Tomato adds -es: tomatoes. Potato works the same way.","tip":"Tomatoes and potatoes both have toes!"},
+          {"q":"What is the plural of 'foot'?","choices":["feet","foots","feets","footes"],"answer":0,"explain":"Foot has an irregular plural: feet.","tip":"One foot, two feet: oo turns to ee, like tooth and teeth."}
+        ]
+      },
+      {
+        "name": "Homophones",
+        "questions": [
+          {"q":"___ going to the park after school.","choices":["They're","Their","There"],"answer":0,"explain":"They're is short for they are: They are going to the park.","tip":"They're has an apostrophe because a letter is missing: they are."},
+          {"q":"The book is over ___.","choices":["there","their","they're"],"answer":0,"explain":"There tells about a place.","tip":"There has 'here' inside it, so it points to a place."},
+          {"q":"The kids rode ___ bikes.","choices":["their","there","they're"],"answer":0,"explain":"Their shows that something belongs to them.","tip":"Their has 'heir' inside, and an heir owns things."},
+          {"q":"She has ___ cats.","choices":["two","to","too"],"answer":0,"explain":"Two is the number 2.","tip":"Two has a w, like twin and twice: words that are all about two."},
+          {"q":"This soup is ___ hot to eat.","choices":["too","to","two"],"answer":0,"explain":"Too means more than enough, or also.","tip":"Too has an extra o, so it means extra or also."},
+          {"q":"The dog wagged ___ tail.","choices":["its","it's"],"answer":0,"explain":"Its shows ownership. It's always means it is or it has.","tip":"Its, his, hers: possessive pronouns never use an apostrophe."},
+          {"q":"___ raining outside.","choices":["It's","Its"],"answer":0,"explain":"It's is short for it is: It is raining outside.","tip":"Try 'it is': if it fits, use it's."},
+          {"q":"Did you ___ the thunder?","choices":["hear","here"],"answer":0,"explain":"Hear is what you do with your ear. Here means this place.","tip":"You hear with your ear, and 'hear' has 'ear' inside."},
+          {"q":"___ ready for the trip?","choices":["You're","Your"],"answer":0,"explain":"You're is short for you are: Are you ready? You are ready.","tip":"Try 'you are': you are ready, so you're ready."},
+          {"q":"___ backpack is this?","choices":["Whose","Who's"],"answer":0,"explain":"Whose asks who owns something. Who's means who is or who has.","tip":"Who's means who is; whose asks who owns it."}
+        ]
+      },
+      {
+        "name": "Synonyms and Antonyms",
+        "questions": [
+          {"q":"Synonyms are words that...","choices":["mean the same or nearly the same","mean the opposite","sound the same but are spelled differently","rhyme"],"answer":0,"explain":"Synonyms have similar meanings, like big and large. Antonyms are opposites.","tip":"Synonym and Same both start with S; Antonym and Anti (against) both start with A."},
+          {"q":"Which word is a synonym for 'happy'?","choices":["glad","sad","angry","tired"],"answer":0,"explain":"Glad means about the same as happy.","tip":"Happy and glad both make you smile."},
+          {"q":"Which word is an antonym for 'brave'?","choices":["cowardly","bold","strong","heroic"],"answer":0,"explain":"Cowardly is the opposite of brave. Bold and heroic are synonyms.","tip":"Antonym starts like 'anti', which means against: opposites."},
+          {"q":"Which word is a synonym for 'big'?","choices":["large","tiny","short","thin"],"answer":0,"explain":"Large means about the same as big.","tip":"Big and large both fill up the room."},
+          {"q":"Which word is an antonym for 'ancient'?","choices":["modern","old","historic","antique"],"answer":0,"explain":"Ancient means very old. Modern means new or recent.","tip":"Ancient dinosaurs, modern cars."},
+          {"q":"Which word is a synonym for 'quick'?","choices":["fast","slow","late","calm"],"answer":0,"explain":"Fast and quick mean nearly the same thing.","tip":"Quick and fast both win the race."},
+          {"q":"Which word is an antonym for 'generous'?","choices":["selfish","kind","giving","friendly"],"answer":0,"explain":"A generous person shares. A selfish person does not.","tip":"Generous gives, selfish keeps."},
+          {"q":"Which word is a synonym for 'begin'?","choices":["start","finish","stop","end"],"answer":0,"explain":"Begin and start mean the same thing.","tip":"Begin and start are both how you start!"},
+          {"q":"Which word is an antonym for 'difficult'?","choices":["easy","hard","tough","tricky"],"answer":0,"explain":"Easy is the opposite of difficult. Hard, tough, and tricky are synonyms.","tip":"Easy as pie is the opposite of difficult."},
+          {"q":"Which word is a synonym for 'tiny'?","choices":["small","huge","wide","tall"],"answer":0,"explain":"Tiny means very small.","tip":"A tiny ant is very small."}
+        ]
+      },
+      {
+        "name": "Prefixes and Suffixes",
+        "questions": [
+          {"q":"What does the prefix 'un-' mean in 'unhappy'?","choices":["not","again","before","very"],"answer":0,"explain":"Unhappy means not happy.","tip":"Un- undoes things: unhappy, untie, unlock."},
+          {"q":"What does the prefix 're-' mean in 'redo'?","choices":["again","not","before","after"],"answer":0,"explain":"Redo means to do again.","tip":"Re- is like replay: do it again!"},
+          {"q":"What does the prefix 'pre-' mean in 'preview'?","choices":["before","after","again","not"],"answer":0,"explain":"A preview is a look at something before it happens.","tip":"Pre- comes before, like preschool comes before kindergarten."},
+          {"q":"What does the suffix '-less' mean in 'careless'?","choices":["without","full of","one who","again"],"answer":0,"explain":"Careless means without care.","tip":"Careless means you care less: without care."},
+          {"q":"What does the suffix '-ful' mean in 'hopeful'?","choices":["full of","without","not","before"],"answer":0,"explain":"Hopeful means full of hope.","tip":"Hopeful is full of hope, but the suffix -ful keeps only one l."},
+          {"q":"What does the suffix '-er' mean in 'teacher'?","choices":["one who","not","again","before"],"answer":0,"explain":"A teacher is one who teaches.","tip":"Teacher, baker, painter: -er is the one who does it."},
+          {"q":"What does the prefix 'dis-' mean in 'disagree'?","choices":["not, or the opposite of","again","before","together"],"answer":0,"explain":"Disagree means to not agree.","tip":"Dis- dismisses things: disagree, dislike, disappear."},
+          {"q":"What does 'misspell' mean?","choices":["to spell wrongly","to spell again","to spell before","to spell aloud"],"answer":0,"explain":"The prefix mis- means wrongly or badly. Note the two s's: mis + spell.","tip":"Mis- is like mistake, so misspell means spelling by mistake."},
+          {"q":"Which word has a prefix?","choices":["unlock","lock","locker","locked"],"answer":0,"explain":"Unlock has the prefix un- at the start. Locker and locked have suffixes at the end.","tip":"A prefix comes first, because pre means before."},
+          {"q":"Which suffix turns 'slow' into an adverb?","choices":["-ly","-ness","-ment"],"answer":0,"explain":"Adding -ly makes slowly, which tells how something is done.","tip":"Add -ly to tell how: slowly, quietly, happily."}
+        ]
+      },
+      {
+        "name": "Punctuation",
+        "questions": [
+          {"q":"Which sentence uses commas correctly in a list?","choices":["I bought apples, bananas, and grapes.","I bought, apples bananas and grapes.","I bought apples bananas, and, grapes."],"answer":0,"explain":"Commas separate the items in a list of three or more.","tip":"Commas are little breaths between items, like reading a grocery list aloud."},
+          {"q":"Which is the correct contraction for 'do not'?","choices":["don't","do'nt","dont'","dont"],"answer":0,"explain":"The apostrophe goes where the letter o was removed: don't.","tip":"The apostrophe sits where the o went missing: do not, don't."},
+          {"q":"Which is the correct contraction for 'I will'?","choices":["I'll","Il'l","I'wl","Ill"],"answer":0,"explain":"The apostrophe replaces the missing letters wi: I'll.","tip":"An apostrophe is a patch where letters fell out: I wi-ll becomes I'll."},
+          {"q":"Which sentence uses quotation marks correctly?","choices":["Mom said, \"Dinner is ready.\"","Mom said \"Dinner is ready\".","Mom said, Dinner is ready.\""],"answer":0,"explain":"Put a comma before the quote, and in American English the period goes inside the closing quotation mark.","tip":"In America, periods and commas tuck inside the quotation marks like kids in bed."},
+          {"q":"How do you show that a bike belongs to Sam?","choices":["Sam's bike","Sams' bike","Sams bike"],"answer":0,"explain":"Add an apostrophe and s to a singular name to show ownership.","tip":"Apostrophe-s means it belongs to someone: Sam's bike."},
+          {"q":"How do you write the toys that belong to several dogs?","choices":["the dogs' toys","the dog's toys","the dogs toys'"],"answer":0,"explain":"For a plural noun ending in s, add just an apostrophe after the s.","tip":"Many dogs? The s comes first, then the apostrophe hugs it from behind."},
+          {"q":"Which date is punctuated correctly?","choices":["July 4, 1776","July, 4 1776","July 4 1776,"],"answer":0,"explain":"Put a comma between the day and the year.","tip":"A comma keeps the day and year from bumping into each other."},
+          {"q":"Which is the correct greeting for a friendly letter?","choices":["Dear Grandma,","Dear Grandma.","Dear, Grandma"],"answer":0,"explain":"A friendly letter greeting ends with a comma.","tip":"A friendly letter waves hello with a comma."},
+          {"q":"Which sentence uses a comma correctly?","choices":["Yes, I would like some juice.","Yes I, would like some juice.","Yes I would, like some juice."],"answer":0,"explain":"Put a comma after an introductory word like yes, no, or well.","tip":"Yes, no, and well take a little comma breath."},
+          {"q":"What does an exclamation point show?","choices":["Strong feeling or excitement","A question","A list","Ownership"],"answer":0,"explain":"An exclamation point ends a sentence with strong feeling, like 'We won!'","tip":"An exclamation point is a sentence jumping with excitement!"}
+        ]
+      },
+      {
+        "name": "Vocabulary and Reading",
+        "questions": [
+          {"q":"What does 'enormous' mean?","choices":["very large","very small","very fast","very loud"],"answer":0,"explain":"Enormous means huge or very large.","tip":"Enormous is a big word for something big."},
+          {"q":"What does 'fragile' mean?","choices":["easily broken","very heavy","brightly colored","very old"],"answer":0,"explain":"Fragile things, like glass, break easily.","tip":"Boxes with glass inside are stamped FRAGILE: handle with care!"},
+          {"q":"What does 'cautious' mean?","choices":["careful","careless","angry","lucky"],"answer":0,"explain":"A cautious person is careful to avoid danger or mistakes.","tip":"Cautious sounds like caution, like a yellow caution sign."},
+          {"q":"'The weary hikers rested after the long climb.' What does 'weary' mean?","choices":["tired","excited","lost","hungry"],"answer":0,"explain":"The clues 'rested' and 'long climb' show that weary means tired.","tip":"Weary hikers are worn out: weary and worn both start with w."},
+          {"q":"'The arid desert had not seen rain in months.' What does 'arid' mean?","choices":["very dry","very cold","very wet","very crowded"],"answer":0,"explain":"No rain for months is the clue: arid means very dry.","tip":"Arid: A Really Incredibly Dry place."},
+          {"q":"What does 'predict' mean?","choices":["to say what will happen","to remember the past","to draw a picture","to argue"],"answer":0,"explain":"When you predict, you make a smart guess about what will happen next.","tip":"Pre means before and dict means say: predict means to say it before it happens."},
+          {"q":"Words around an unknown word that help you figure out its meaning are called...","choices":["context clues","captions","headings","glossaries"],"answer":0,"explain":"Context clues are hints in the nearby words and sentences.","tip":"Context clues are detective clues hiding in nearby words."},
+          {"q":"The main idea of a passage is...","choices":["what it is mostly about","always the first word","the title of the book","a small detail"],"answer":0,"explain":"The main idea is the most important point the passage is about.","tip":"The main idea is the umbrella; the details are the raindrops under it."},
+          {"q":"What does 'reluctant' mean?","choices":["unwilling","eager","proud","quiet"],"answer":0,"explain":"A reluctant person does not want to do something.","tip":"Reluctant is how you feel being dragged to clean your room."},
+          {"q":"If an author's purpose is to persuade, the author wants to...","choices":["convince the reader","make the reader laugh","only list facts","describe a place"],"answer":0,"explain":"Persuade means to convince someone to believe or do something.","tip":"Persuasive ads want you to buy something: they persuade."}
+        ]
+      }
+    ],
+    "g68": [
+      {
+        "name": "Subject-Verb Agreement",
+        "questions": [
+          {"q":"Each of the students ___ a book.","choices":["has","have"],"answer":0,"explain":"The subject is 'each', which is singular, so it takes 'has'.","tip":"Each, every, and everyone are singular: each one has."},
+          {"q":"The dogs in the yard ___ barking.","choices":["are","is"],"answer":0,"explain":"The subject is 'dogs', which is plural. 'In the yard' does not change it.","tip":"Cross out the prepositional phrase, then match the verb: the dogs are."},
+          {"q":"Neither the teacher nor the students ___ ready.","choices":["were","was"],"answer":0,"explain":"With neither/nor, the verb agrees with the nearer subject, 'students', which is plural.","tip":"Neither/nor: the closest subject is the boss of the verb."},
+          {"q":"Either my brothers or my sister ___ coming.","choices":["is","are"],"answer":0,"explain":"With either/or, the verb agrees with the nearer subject, 'sister', which is singular.","tip":"Closest subject wins: my sister is."},
+          {"q":"The box of crayons ___ on the shelf.","choices":["is","are"],"answer":0,"explain":"The subject is 'box', not 'crayons', so the verb is singular.","tip":"Cross out 'of crayons': the box is."},
+          {"q":"Everyone ___ invited to the party.","choices":["is","are"],"answer":0,"explain":"Everyone is a singular indefinite pronoun.","tip":"Every ONE is one, so everyone is."},
+          {"q":"Mathematics ___ my favorite subject.","choices":["is","are"],"answer":0,"explain":"Mathematics ends in s but names one subject, so it takes a singular verb.","tip":"Math is one subject even with an s, just like the news is."},
+          {"q":"Tom and Maria ___ on the team.","choices":["are","is"],"answer":0,"explain":"Two subjects joined by 'and' make a plural subject.","tip":"And adds up: Tom plus Maria equals they, and they are."},
+          {"q":"There ___ three apples on the table.","choices":["are","is"],"answer":0,"explain":"In a 'there' sentence, the subject comes after the verb. Here it is 'apples', which is plural.","tip":"Flip it around: three apples are there."},
+          {"q":"One of my friends ___ a cat.","choices":["has","have"],"answer":0,"explain":"The subject is 'one', which is singular. 'Of my friends' is a prepositional phrase.","tip":"Spot the ONE: one of my friends has."}
+        ]
+      },
+      {
+        "name": "Pronouns",
+        "questions": [
+          {"q":"Sam and ___ went to the store.","choices":["I","me","myself"],"answer":0,"explain":"Use the subject pronoun 'I'. Test it alone: 'I went to the store.'","tip":"Drop the other person: you'd say 'I went,' not 'me went'."},
+          {"q":"The coach gave the ball to Jake and ___.","choices":["me","I","myself"],"answer":0,"explain":"After a preposition like 'to', use the object pronoun 'me'. Test: 'gave the ball to me.'","tip":"Drop Jake: 'gave the ball to me'."},
+          {"q":"Between you and ___, this test is easy.","choices":["me","I"],"answer":0,"explain":"'Between' is a preposition, so it takes the object pronoun 'me'.","tip":"Between you and me: prepositions take 'me'."},
+          {"q":"Which word is a possessive pronoun?","choices":["theirs","them","they","themselves"],"answer":0,"explain":"Theirs shows ownership: The house is theirs.","tip":"Theirs, ours, yours, his, hers: possessive pronouns never need an apostrophe."},
+          {"q":"Which pronoun is reflexive?","choices":["himself","him","his","he"],"answer":0,"explain":"Reflexive pronouns end in -self or -selves and refer back to the subject.","tip":"Reflexive pronouns reflect back like a mirror: himself, herself."},
+          {"q":"Which pronoun is in the objective case?","choices":["us","we","our","ours"],"answer":0,"explain":"Us is used as an object: They invited us.","tip":"Objects get acted on: they invited us, just like the ball gets kicked."},
+          {"q":"'Maria lost her phone, but she found it later.' What does 'it' refer to?","choices":["the phone","Maria","later"],"answer":0,"explain":"The antecedent of 'it' is the noun it replaces: the phone.","tip":"Look back for the noun that makes sense in its place."},
+          {"q":"___ is going to the game tonight?","choices":["Who","Whom"],"answer":0,"explain":"Who is the subject of 'is going', so use 'who'.","tip":"Answer with he: 'He is going,' so use who."},
+          {"q":"A pronoun takes the place of a...","choices":["noun","verb","adverb","preposition"],"answer":0,"explain":"Pronouns like he, she, and it replace nouns.","tip":"A pronoun works FOR a noun, like a substitute teacher."},
+          {"q":"Which sentence uses pronouns correctly?","choices":["She and I studied together.","Her and me studied together.","Me and her studied together."],"answer":0,"explain":"The subject of a sentence needs subject pronouns: she and I.","tip":"Test each alone: she studied, I studied."}
+        ]
+      },
+      {
+        "name": "Clauses and Sentence Types",
+        "questions": [
+          {"q":"An independent clause...","choices":["can stand alone as a sentence","cannot stand alone","never has a verb","always begins with 'because'"],"answer":0,"explain":"An independent clause has a subject and a verb and expresses a complete thought.","tip":"Independent clauses are independent: they stand on their own two feet."},
+          {"q":"Which is a dependent clause?","choices":["because it was raining","The game stopped.","We went home.","She smiled."],"answer":0,"explain":"'Because it was raining' has a subject and verb but cannot stand alone.","tip":"A dependent clause depends on a buddy, like a little kid holding a hand."},
+          {"q":"'I wanted to play, but it was raining.' What type of sentence is this?","choices":["Compound","Simple","Complex","Fragment"],"answer":0,"explain":"Two independent clauses joined by 'but' make a compound sentence.","tip":"Compound means combined: two complete sentences joined with a FANBOYS word."},
+          {"q":"'Although I was tired, I finished my homework.' What type of sentence is this?","choices":["Complex","Simple","Compound","Run-on"],"answer":0,"explain":"One dependent clause plus one independent clause makes a complex sentence.","tip":"Complex sentences have a helper clause, often starting with 'although' or 'because'."},
+          {"q":"Which is a sentence fragment?","choices":["Running down the street.","The dog ran down the street.","Run!","She ran."],"answer":0,"explain":"'Running down the street' has no subject or main verb. 'Run!' is a command with an understood subject, you.","tip":"No subject or no main verb? It is just a fragment, a broken piece."},
+          {"q":"Which is a run-on sentence?","choices":["I like pizza I eat it every day.","I like pizza, and I eat it every day.","I like pizza; I eat it every day.","I like pizza."],"answer":0,"explain":"Two independent clauses with no punctuation or conjunction between them form a run-on.","tip":"Run-ons run right through the stop sign."},
+          {"q":"Which word is a subordinating conjunction?","choices":["because","and","but","or"],"answer":0,"explain":"'Because' begins a dependent clause. And, but, and or are coordinating conjunctions.","tip":"AAAWWUBBIS: after, although, as, when, while, until, because, before, if, since."},
+          {"q":"FANBOYS lists the coordinating conjunctions. Which word is one of them?","choices":["so","although","because","while"],"answer":0,"explain":"FANBOYS: for, and, nor, but, or, yet, so.","tip":"FANBOYS: For, And, Nor, But, Or, Yet, So."},
+          {"q":"What is the complete subject of 'The tall girl with red hair won the race'?","choices":["The tall girl with red hair","won the race","the race","red hair"],"answer":0,"explain":"The complete subject is who or what the sentence is about, with all its describing words.","tip":"Ask who or what did it: the whole group of words is the complete subject."},
+          {"q":"Which correctly joins two independent clauses?","choices":["I studied hard; I passed the test.","I studied hard, I passed the test.","I studied hard I passed the test."],"answer":0,"explain":"A semicolon can join two closely related independent clauses. A comma alone creates a comma splice.","tip":"A semicolon is a period stacked on a comma: strong enough to join two full sentences."}
+        ]
+      },
+      {
+        "name": "Figurative Language",
+        "questions": [
+          {"q":"'Her smile was as bright as the sun' is an example of...","choices":["simile","metaphor","personification","onomatopoeia"],"answer":0,"explain":"A simile compares two things using 'like' or 'as'.","tip":"SImile is SImilar: it compares using like or as."},
+          {"q":"'The classroom was a zoo' is an example of...","choices":["metaphor","simile","onomatopoeia","alliteration"],"answer":0,"explain":"A metaphor says one thing is another, without 'like' or 'as'.","tip":"A metaphor just says it IS the thing."},
+          {"q":"'The wind whispered through the trees' is an example of...","choices":["personification","simile","hyperbole","alliteration"],"answer":0,"explain":"Personification gives human actions, like whispering, to non-human things.","tip":"Personification gives a thing a PERSONality."},
+          {"q":"'I've told you a million times!' is an example of...","choices":["hyperbole","simile","personification","onomatopoeia"],"answer":0,"explain":"Hyperbole is extreme exaggeration for effect.","tip":"Hyperbole is hyper: super-duper exaggerated."},
+          {"q":"Words like 'buzz,' 'sizzle,' and 'pop' are examples of...","choices":["onomatopoeia","alliteration","metaphor","idiom"],"answer":0,"explain":"Onomatopoeia is a word that imitates the sound it names.","tip":"Onomatopoeia: Boom! Pow! Splash! The word sounds like itself."},
+          {"q":"'Sally sells seashells by the seashore' is an example of...","choices":["alliteration","onomatopoeia","simile","personification"],"answer":0,"explain":"Alliteration repeats the same beginning consonant sound in nearby words.","tip":"Alliteration: lots of letters lining up."},
+          {"q":"'It's raining cats and dogs' is an example of...","choices":["an idiom","a simile","onomatopoeia","personification"],"answer":0,"explain":"An idiom is a phrase whose meaning differs from its literal words. This one means it is raining hard.","tip":"Picture an idiom literally: cats and dogs falling from the sky!"},
+          {"q":"What is the difference between a simile and a metaphor?","choices":["A simile uses 'like' or 'as'; a metaphor does not","A metaphor uses 'like' or 'as'; a simile does not","A simile always exaggerates; a metaphor never does","There is no difference"],"answer":0,"explain":"Both compare things, but only a simile uses 'like' or 'as'.","tip":"Simile is similar, with like or as; metaphor just says it is."},
+          {"q":"'Time is a thief' is an example of...","choices":["metaphor","simile","onomatopoeia","alliteration"],"answer":0,"explain":"It says time is a thief, without 'like' or 'as', so it is a metaphor.","tip":"No like or as? It is a metaphor."}
+        ]
+      },
+      {
+        "name": "Commonly Confused Words",
+        "questions": [
+          {"q":"The weather will ___ our plans.","choices":["affect","effect"],"answer":0,"explain":"Affect is usually a verb meaning to influence. Effect is usually a noun meaning a result.","tip":"Affect is the Action (verb), Effect is the End result (noun)."},
+          {"q":"I would rather walk ___ drive.","choices":["than","then"],"answer":0,"explain":"Than is used for comparisons. Then is about time or order.","tip":"ThAn compAres; thEn tells whEn."},
+          {"q":"Don't ___ your keys.","choices":["lose","loose"],"answer":0,"explain":"Lose means to misplace. Loose means not tight.","tip":"Lose lost an o."},
+          {"q":"My shoelace is ___.","choices":["loose","lose"],"answer":0,"explain":"Loose (rhymes with goose) means not tight.","tip":"Loose is as loose as a goose."},
+          {"q":"I ___ your apology.","choices":["accept","except"],"answer":0,"explain":"Accept means to receive or agree to.","tip":"Accept means Agree to take; Except means Exclude."},
+          {"q":"Everyone came ___ Tom.","choices":["except","accept"],"answer":0,"explain":"Except means 'but not' or 'other than'.","tip":"Except and exclude both start with ex."},
+          {"q":"Honesty is an important ___.","choices":["principle","principal"],"answer":0,"explain":"A principle is a rule or belief. A principal is the head of a school, or main.","tip":"A principle is a ruLE; the principal is your PAL."},
+          {"q":"She wrote the letter on fancy ___.","choices":["stationery","stationary"],"answer":0,"explain":"Stationery (with an e, like envelope) is writing paper. Stationary means not moving.","tip":"StationEry with an E is for Envelopes; stationAry with an A means it stAys put."},
+          {"q":"The runner ___ the finish line.","choices":["passed","past"],"answer":0,"explain":"Passed is the past tense of the verb pass. Past is a noun, adjective, or preposition.","tip":"Passed is something you did; past is time behind you."},
+          {"q":"He gave me a kind ___ on my drawing.","choices":["compliment","complement"],"answer":0,"explain":"A compliment is praise. A complement completes or goes well with something.","tip":"A complIment is praise, and I like compliments."}
+        ]
+      },
+      {
+        "name": "Greek and Latin Roots",
+        "questions": [
+          {"q":"The root 'bio' (as in biology) means...","choices":["life","earth","water","sound"],"answer":0,"explain":"Bio comes from Greek for life. Biology is the study of life.","tip":"A biography is the story of someone's life."},
+          {"q":"The root 'graph' (as in autograph) means...","choices":["write or draw","see","hear","carry"],"answer":0,"explain":"Graph comes from Greek for write. An autograph is your own signature.","tip":"A paragraph is writing, and a graph is a drawing."},
+          {"q":"The root 'tele' (as in telephone) means...","choices":["far","near","small","many"],"answer":0,"explain":"Tele is Greek for far. A telephone carries sound far away.","tip":"A television lets you see things far away."},
+          {"q":"The root 'port' (as in transport) means...","choices":["carry","break","look","build"],"answer":0,"explain":"Port comes from Latin portare, to carry.","tip":"A porter carries your bags, and transport carries you."},
+          {"q":"The root 'aqua' (as in aquarium) means...","choices":["water","fish","glass","blue"],"answer":0,"explain":"Aqua is Latin for water.","tip":"Aquarium, aqua blue: think water!"},
+          {"q":"The root 'spect' (as in inspect) means...","choices":["look or see","speak","write","throw"],"answer":0,"explain":"Spect comes from Latin for look. Spectators watch.","tip":"Spectacles help you see, and spectators watch."},
+          {"q":"The root 'dict' (as in dictate) means...","choices":["say or speak","carry","see","hear"],"answer":0,"explain":"Dict comes from Latin for say. A dictionary tells what words say.","tip":"A dictionary is full of words you can say."},
+          {"q":"The root 'geo' (as in geography) means...","choices":["earth","life","time","star"],"answer":0,"explain":"Geo is Greek for earth.","tip":"Geography is drawing maps of the earth."},
+          {"q":"The root 'phon' (as in phonics) means...","choices":["sound","light","write","far"],"answer":0,"explain":"Phon is Greek for sound, as in telephone and microphone.","tip":"Headphones bring sound to your ears."},
+          {"q":"The root 'chron' means time. Which word uses it?","choices":["chronology","phonics","geography","biology"],"answer":0,"explain":"Chronology is the order in which events happen in time.","tip":"A chronicle records events in time order."}
+        ]
+      },
+      {
+        "name": "Literary Terms",
+        "questions": [
+          {"q":"The protagonist of a story is...","choices":["the main character","the problem in the story","the time and place","the lesson"],"answer":0,"explain":"The protagonist is the central character the story follows.","tip":"The PROtagonist is the PRO, the star player."},
+          {"q":"The antagonist of a story is...","choices":["a character or force that opposes the main character","the hero","the narrator","the author"],"answer":0,"explain":"The antagonist creates conflict for the protagonist.","tip":"The ANTagonist is ANTI the hero."},
+          {"q":"The setting of a story is...","choices":["the time and place it happens","the main character","the turning point","the message"],"answer":0,"explain":"Setting tells when and where a story takes place.","tip":"The setting is where and when you set up camp."},
+          {"q":"The climax of a story is...","choices":["the turning point or moment of greatest tension","the opening scene","the list of characters","the title"],"answer":0,"explain":"The climax is the high point of the conflict, after the rising action.","tip":"The climax is the climb to the top of the story mountain."},
+          {"q":"The theme of a story is...","choices":["its central message or lesson about life","the main character","where it takes place","its title"],"answer":0,"explain":"Theme is the big idea the author wants readers to understand.","tip":"The theme is the lesson you take home with you."},
+          {"q":"A story told in first-person point of view uses...","choices":["'I' and 'we'","only 'he' and 'she'","only 'you'","no pronouns"],"answer":0,"explain":"In first person, the narrator is a character telling the story as 'I'.","tip":"First person: I am telling my own story."},
+          {"q":"Foreshadowing is...","choices":["hints about what will happen later","a scene from the past","extreme exaggeration","a comparison using 'like'"],"answer":0,"explain":"Foreshadowing gives clues to future events in a story.","tip":"Foreshadowing: the shadow of what is coming falls on the story early."},
+          {"q":"A flashback is...","choices":["a scene that shows events from the past","a hint about the future","the end of the story","a funny scene"],"answer":0,"explain":"A flashback interrupts the story to show something that happened earlier.","tip":"A flashback flashes BACK in time."},
+          {"q":"The resolution of a story is...","choices":["the part where the conflict is resolved","the rising action","the setting","the climax"],"answer":0,"explain":"The resolution comes at the end and wraps up the conflict.","tip":"The resolution resolves things: the problem gets solved."},
+          {"q":"Which is an example of a character versus nature conflict?","choices":["A sailor fights to survive a storm at sea.","Two friends argue about a game.","A girl struggles with a hard choice.","A student competes against a rival."],"answer":0,"explain":"The storm is a force of nature working against the character.","tip":"Ask who or what the enemy is: a storm is nature."}
+        ]
+      }
+    ],
+    "g912": [
+      {
+        "name": "Advanced Grammar",
+        "questions": [
+          {"q":"Which sentence contains a dangling modifier?","choices":["Walking to school, the rain soaked my shoes.","Walking to school, I got soaked by the rain.","The rain soaked my shoes as I walked to school."],"answer":0,"explain":"The first sentence says the rain was walking to school. A modifier must clearly attach to the right word.","tip":"Ask who is doing the -ing: if it is the wrong noun, the modifier dangles."},
+          {"q":"Which sentence has correct parallel structure?","choices":["She likes hiking, swimming, and biking.","She likes hiking, swimming, and to bike.","She likes to hike, swimming, and biking."],"answer":0,"explain":"Items in a series should share the same grammatical form, here all gerunds.","tip":"Parallel structure is like parallel lines: every item runs in the same form."},
+          {"q":"Which sentence uses a semicolon correctly?","choices":["I have a test tomorrow; I need to study.","I have a test; tomorrow.","Because I have a test; I need to study."],"answer":0,"explain":"A semicolon joins two independent clauses. Neither side can be a fragment.","tip":"A semicolon is a balanced seesaw: a full sentence must sit on each side."},
+          {"q":"Which sentence uses a colon correctly?","choices":["Bring three things: a pen, a notebook, and a calculator.","Bring: a pen, a notebook, and a calculator.","Bring three things a pen: a notebook, and a calculator."],"answer":0,"explain":"A colon should follow a complete independent clause that introduces a list or explanation.","tip":"A colon is a drumroll: complete sentence first, then the reveal."},
+          {"q":"What is a gerund?","choices":["A verb form ending in -ing used as a noun","A verb form used as an adjective","The word 'to' plus a verb","A word that joins clauses"],"answer":0,"explain":"In 'Swimming is fun,' swimming is a gerund acting as the subject.","tip":"Gerunds are -ing verbs dressed up as nouns: Swimming is fun."},
+          {"q":"In 'She wants to win,' the phrase 'to win' is...","choices":["an infinitive","a gerund","a participle","a prepositional phrase"],"answer":0,"explain":"An infinitive is 'to' plus the base form of a verb.","tip":"To plus a verb is an infinitive: to be, to win, to go."},
+          {"q":"Which sentence correctly uses the subjunctive mood?","choices":["If I were you, I would apologize.","If I was you, I would apologize."],"answer":0,"explain":"For hypothetical or contrary-to-fact conditions, formal English uses 'were' for all subjects.","tip":"'If I were a rich man': wishes and what-ifs take were."},
+          {"q":"In 'My brother, a talented chef, made dinner,' what is the appositive?","choices":["a talented chef","My brother","made dinner"],"answer":0,"explain":"An appositive is a noun phrase that renames the noun beside it.","tip":"An appositive is a name tag pinned beside a noun."},
+          {"q":"Which sentence avoids a comma splice?","choices":["The movie ended, and we went home.","The movie ended, we went home.","The movie ended we went home."],"answer":0,"explain":"Two independent clauses need a comma plus a coordinating conjunction, a semicolon, or a period.","tip":"A comma alone can't hold two sentences: add a FANBOYS word or use a semicolon."},
+          {"q":"In 'The book that I borrowed is overdue,' the words 'that I borrowed' form a(n)...","choices":["adjective (relative) clause","adverb clause","independent clause","infinitive phrase"],"answer":0,"explain":"The clause describes the noun 'book', so it acts as an adjective.","tip":"A clause that describes a noun is an adjective clause, often starting with who, which, or that."}
+        ]
+      },
+      {
+        "name": "Rhetoric",
+        "questions": [
+          {"q":"Ethos is an appeal to...","choices":["credibility or character","emotion","logic","timing"],"answer":0,"explain":"Ethos persuades by showing the speaker is trustworthy or qualified.","tip":"Ethos sounds like ethics: it is about trusting the speaker's character."},
+          {"q":"Pathos is an appeal to...","choices":["emotion","credibility","logic","authority of law"],"answer":0,"explain":"Pathos persuades by stirring the audience's feelings.","tip":"Pathos is in sympathy and empathy: it is about feelings."},
+          {"q":"Logos is an appeal to...","choices":["logic and evidence","emotion","character","humor"],"answer":0,"explain":"Logos persuades with reasons, facts, and statistics.","tip":"Logos sounds like logic."},
+          {"q":"A speaker begins, 'As a doctor with 20 years of experience...' Which appeal is this?","choices":["Ethos","Pathos","Logos"],"answer":0,"explain":"Stating qualifications builds the speaker's credibility.","tip":"Credentials build credibility, and credibility is ethos."},
+          {"q":"A rhetorical question is...","choices":["a question asked for effect, not to get an answer","a question that has no correct answer","a question asked in a debate rebuttal","a question that ends an essay"],"answer":0,"explain":"Rhetorical questions make a point, like 'Who doesn't want to be happy?'","tip":"A rhetorical question answers itself."},
+          {"q":"Repeating a word or phrase at the start of successive clauses is called...","choices":["anaphora","antithesis","hyperbole","litotes"],"answer":0,"explain":"Anaphora, as in 'We shall fight... we shall fight...', builds rhythm and emphasis.","tip":"Anaphora repeats at the start, like 'I have a dream' said again and again."},
+          {"q":"Kairos refers to...","choices":["the timeliness or opportune moment of an argument","the speaker's credibility","emotional appeal","logical structure"],"answer":0,"explain":"Kairos is about saying the right thing at the right time.","tip":"Kairos is timing: strike while the iron is hot."},
+          {"q":"In an argumentative essay, a counterargument is...","choices":["an opposing view that the writer addresses","the writer's main claim","the conclusion","the evidence for the thesis"],"answer":0,"explain":"Addressing counterarguments and rebutting them makes an argument stronger.","tip":"Counter means against: the counterargument is the other side's punch."},
+          {"q":"A thesis statement is...","choices":["a sentence stating the essay's main claim","the title of the essay","a quotation that opens the essay","the list of sources"],"answer":0,"explain":"The thesis tells readers the central argument the essay will support.","tip":"Your thesis is the GPS for the whole essay."},
+          {"q":"Speaker, audience, purpose, and context together make up the...","choices":["rhetorical situation","plot structure","meter","citation"],"answer":0,"explain":"Analyzing the rhetorical situation helps explain the choices a writer makes.","tip":"Think SOAPS: Speaker, Occasion, Audience, Purpose, Subject."}
+        ]
+      },
+      {
+        "name": "Literary Devices",
+        "questions": [
+          {"q":"A fire station burns down. This is an example of...","choices":["situational irony","dramatic irony","verbal irony","foreshadowing"],"answer":0,"explain":"Situational irony is when the outcome is the opposite of what you would expect.","tip":"Situational irony: the situation flips the opposite way you expect."},
+          {"q":"When the audience knows something a character does not, it is called...","choices":["dramatic irony","situational irony","verbal irony","satire"],"answer":0,"explain":"In Romeo and Juliet, the audience knows Juliet is not dead, but Romeo does not.","tip":"Dramatic irony: in the drama, the audience is in on the secret."},
+          {"q":"An allusion is...","choices":["a reference to a well-known person, place, event, or work","an extreme exaggeration","repetition of consonant sounds","a long speech by one character"],"answer":0,"explain":"Calling someone 'a Romeo' is an allusion to Shakespeare's character.","tip":"An allusion alludes, or points, to something famous."},
+          {"q":"A soliloquy is...","choices":["a speech in which a character alone on stage speaks their thoughts aloud","a conversation between two characters","a 14-line poem","a stage direction"],"answer":0,"explain":"Hamlet's 'To be, or not to be' is a famous soliloquy.","tip":"Solo plus loquy (speaking): a soliloquy is a solo speech."},
+          {"q":"How many lines does a traditional sonnet have?","choices":["14","12","10","16"],"answer":0,"explain":"Shakespearean and Petrarchan sonnets both have 14 lines.","tip":"A sonnet is a fortnight of lines: 14."},
+          {"q":"'Jumbo shrimp' is an example of...","choices":["oxymoron","metaphor","alliteration","onomatopoeia"],"answer":0,"explain":"An oxymoron puts contradictory words together.","tip":"Oxymoron comes from Greek for 'sharp' plus 'dull', so the word itself is a contradiction!"},
+          {"q":"An object that represents a larger idea, like a dove for peace, is a...","choices":["symbol","simile","stanza","setting"],"answer":0,"explain":"A symbol stands for something beyond its literal meaning.","tip":"A symbol is a stand-in, like a heart for love."},
+          {"q":"A line of iambic pentameter usually has how many syllables?","choices":["10","8","12","14"],"answer":0,"explain":"Pentameter means five feet, and each iamb has two syllables: 5 x 2 = 10.","tip":"Penta means five, like a pentagon: five da-DUMs make 10 syllables."},
+          {"q":"The author's attitude toward the subject is called...","choices":["tone","mood","theme","plot"],"answer":0,"explain":"Tone is the author's attitude. Mood is the feeling the reader gets.","tip":"Tone is the author's tone of voice; mood is how Me, the reader, feels."},
+          {"q":"Satire is...","choices":["using humor, irony, or exaggeration to criticize","a poem mourning someone's death","a true account of one's own life","a story with talking animals and a moral"],"answer":0,"explain":"Satire mocks people, institutions, or ideas to expose flaws. Those other options describe an elegy, an autobiography, and a fable.","tip":"Think of a comedy sketch that mocks something to make a serious point."}
+        ]
+      },
+      {
+        "name": "Famous Works and Authors",
+        "questions": [
+          {"q":"Who wrote 'Romeo and Juliet'?","choices":["William Shakespeare","Charles Dickens","Mark Twain","Jane Austen"],"answer":0,"explain":"Shakespeare wrote the tragedy in the 1590s.","tip":"Shakespeare's star-crossed lovers lived in fair Verona."},
+          {"q":"Who wrote 'Pride and Prejudice'?","choices":["Jane Austen","Charlotte Bronte","Mary Shelley","Virginia Woolf"],"answer":0,"explain":"Jane Austen published Pride and Prejudice in 1813.","tip":"Austen's perfect pair, Elizabeth and Darcy, need to drop their pride and their prejudice."},
+          {"q":"Who wrote 'The Great Gatsby'?","choices":["F. Scott Fitzgerald","Ernest Hemingway","John Steinbeck","William Faulkner"],"answer":0,"explain":"Fitzgerald published The Great Gatsby in 1925.","tip":"Fitzgerald's Gatsby throws glittering Jazz Age parties."},
+          {"q":"Who wrote 'To Kill a Mockingbird'?","choices":["Harper Lee","Toni Morrison","Maya Angelou","Flannery O'Connor"],"answer":0,"explain":"Harper Lee's novel was published in 1960 and won the Pulitzer Prize.","tip":"Harper Lee gave us Atticus, Scout, and a mockingbird you should never harm."},
+          {"q":"Who wrote the novel '1984'?","choices":["George Orwell","Aldous Huxley","Ray Bradbury","H. G. Wells"],"answer":0,"explain":"George Orwell published 1984 in 1949.","tip":"Orwell's 1984: Big Brother is watching you."},
+          {"q":"Who wrote 'Adventures of Huckleberry Finn'?","choices":["Mark Twain","Herman Melville","Jack London","Nathaniel Hawthorne"],"answer":0,"explain":"Mark Twain was the pen name of Samuel Clemens.","tip":"Twain sent Huck down the Mississippi, the river where Twain once piloted steamboats."},
+          {"q":"Who wrote 'Of Mice and Men'?","choices":["John Steinbeck","F. Scott Fitzgerald","J. D. Salinger","Harper Lee"],"answer":0,"explain":"Steinbeck published Of Mice and Men in 1937.","tip":"Steinbeck's George and Lennie dream of a farm of their own."},
+          {"q":"The ancient Greek epic 'The Odyssey' is traditionally credited to...","choices":["Homer","Virgil","Sophocles","Plato"],"answer":0,"explain":"Homer is credited with both the Iliad and the Odyssey.","tip":"Homer's hero Odysseus spends ten years trying to get home: Homer, home."},
+          {"q":"Who wrote 'Frankenstein'?","choices":["Mary Shelley","Bram Stoker","Edgar Allan Poe","Emily Bronte"],"answer":0,"explain":"Mary Shelley published Frankenstein in 1818.","tip":"Mary Shelley started Frankenstein at 18 during a ghost-story contest."},
+          {"q":"Who wrote the poem 'The Raven'?","choices":["Edgar Allan Poe","Robert Frost","Walt Whitman","Emily Dickinson"],"answer":0,"explain":"Poe published The Raven in 1845.","tip":"Poe's raven only ever says 'Nevermore'."},
+          {"q":"Who wrote 'The Scarlet Letter'?","choices":["Nathaniel Hawthorne","Herman Melville","Henry James","Washington Irving"],"answer":0,"explain":"Hawthorne published The Scarlet Letter in 1850.","tip":"Hawthorne's Hester Prynne wears a scarlet letter A."}
+        ]
+      },
+      {
+        "name": "SAT-Style Vocabulary",
+        "questions": [
+          {"q":"What does 'ubiquitous' mean?","choices":["found everywhere","very rare","extremely old","hard to understand"],"answer":0,"explain":"Something ubiquitous seems to be present everywhere at once.","tip":"Ubiquitous sounds like 'you be quick to find it', because it is everywhere."},
+          {"q":"What does 'ephemeral' mean?","choices":["lasting a very short time","lasting forever","very heavy","easily seen"],"answer":0,"explain":"Ephemeral things, like a soap bubble, are fleeting.","tip":"Mayflies live about a day, and their scientific order is Ephemeroptera."},
+          {"q":"What does 'benevolent' mean?","choices":["kind and generous","cruel","nervous","lazy"],"answer":0,"explain":"Benevolent comes from Latin for wishing well.","tip":"Bene means good, like benefit: a benevolent person wishes you well."},
+          {"q":"What does 'candid' mean?","choices":["frank and honest","secretive","sweet-tasting","angry"],"answer":0,"explain":"A candid answer is open and straightforward.","tip":"A candid photo catches you being your real self."},
+          {"q":"What does 'meticulous' mean?","choices":["very careful and precise","sloppy","quick","loud"],"answer":0,"explain":"A meticulous person pays close attention to every detail.","tip":"A meticulous person ticks every tiny box."},
+          {"q":"What does 'pragmatic' mean?","choices":["practical and realistic","idealistic","dramatic","forgetful"],"answer":0,"explain":"A pragmatic approach focuses on what will actually work.","tip":"Pragmatic and practical both start with P-R-A."},
+          {"q":"What does 'ambivalent' mean?","choices":["having mixed feelings","using both hands equally","very excited","completely certain"],"answer":0,"explain":"Ambivalent means torn between opposite feelings. Using both hands equally is ambidextrous.","tip":"Ambi means both: ambivalent feelings pull both ways."},
+          {"q":"What does 'eloquent' mean?","choices":["fluent and persuasive in speaking or writing","quiet and shy","elegant in dress","very old"],"answer":0,"explain":"An eloquent speaker expresses ideas clearly and movingly.","tip":"Eloquent contains 'loqu', Latin for speak, like loquacious."},
+          {"q":"What does 'obsolete' mean?","choices":["no longer in use","brand new","very popular","hidden"],"answer":0,"explain":"Obsolete things, like floppy disks, have been replaced.","tip":"Obsolete: absolutely out of date."},
+          {"q":"What does 'scrutinize' mean?","choices":["to examine closely","to ignore","to scribble","to praise"],"answer":0,"explain":"To scrutinize is to inspect carefully and critically.","tip":"Scrutinize: screw up your eyes and inspect every detail."},
+          {"q":"What does 'tenacious' mean?","choices":["persistent and determined","tense and nervous","easily discouraged","thin"],"answer":0,"explain":"A tenacious person does not give up easily.","tip":"Tenacious grips like tentacles that won't let go."}
+        ]
+      },
+      {
+        "name": "Citations Basics",
+        "questions": [
+          {"q":"What does MLA stand for?","choices":["Modern Language Association","Modern Literature Archive","Multiple Language Authors","Media Library Association"],"answer":0,"explain":"MLA style is common in English and the humanities.","tip":"MLA: Modern Language, the style of English class."},
+          {"q":"What does APA stand for?","choices":["American Psychological Association","Academic Paper Association","American Publishing Authority","Association of Professional Authors"],"answer":0,"explain":"APA style is common in psychology and the social sciences.","tip":"APA: the P is for Psychology."},
+          {"q":"In MLA style, the list of sources at the end of a paper is titled...","choices":["Works Cited","References","Sources Used","Endnotes"],"answer":0,"explain":"MLA uses 'Works Cited'. APA uses 'References'.","tip":"MLA lists the Works you Cited."},
+          {"q":"In APA style, the list of sources at the end of a paper is titled...","choices":["References","Works Cited","Citations Page","Sources"],"answer":0,"explain":"APA uses a 'References' page.","tip":"APA: References for Research."},
+          {"q":"An MLA in-text citation usually includes...","choices":["the author's last name and page number","the author's full name and publisher","the title and year only","the full URL"],"answer":0,"explain":"For example: (Smith 42).","tip":"MLA cares about the page: (Smith 42), no comma, no year."},
+          {"q":"An APA in-text citation usually includes...","choices":["the author's last name and year of publication","the author's first name only","the title and publisher","the full URL"],"answer":0,"explain":"For example: (Smith, 2020). Add a page number for direct quotes.","tip":"APA cares about when: Author, Year."},
+          {"q":"Plagiarism is...","choices":["presenting someone else's words or ideas as your own","quoting a source with a citation","paraphrasing a source with a citation","summarizing your own earlier notes"],"answer":0,"explain":"Plagiarism includes copying without credit, even accidentally.","tip":"If it is not your idea, give credit where credit is due."},
+          {"q":"If you paraphrase a source in your own words, do you need to cite it?","choices":["Yes","No"],"answer":0,"explain":"The ideas still belong to the original author, so paraphrases need citations.","tip":"Your words, their idea: still cite it."},
+          {"q":"Which is common knowledge that usually does not need a citation?","choices":["The Earth orbits the Sun.","A statistic from a recent survey","A line quoted from a novel","An expert's opinion"],"answer":0,"explain":"Widely known, easily verified facts usually need no citation. Specific data, quotes, and opinions do.","tip":"If most people know it and it is easy to check, you usually don't need a citation."},
+          {"q":"How are entries in an MLA Works Cited list ordered?","choices":["Alphabetically","By publication date","In the order they appear in the paper","By page count"],"answer":0,"explain":"Entries are alphabetized, usually by the author's last name.","tip":"A Works Cited list is alphabetical, like a dictionary."}
+        ]
+      }
+    ],
+    "college": [
+      {
+        "name": "Rhetoric and Argument",
+        "questions": [
+          {"q":"In the Toulmin model, the assumption that connects the evidence to the claim is the...","choices":["warrant","backing","qualifier","rebuttal"],"answer":0,"explain":"The warrant explains why the data supports the claim.","tip":"The warrant is the bridge from evidence to claim."},
+          {"q":"In the Toulmin model, a qualifier...","choices":["limits the strength of a claim, using words like 'usually'","provides the evidence","states the opposing view","restates the thesis"],"answer":0,"explain":"Qualifiers like 'probably' or 'in most cases' keep a claim from overreaching.","tip":"Qualifiers qualify: usually, often, probably."},
+          {"q":"Deductive reasoning moves...","choices":["from general premises to a specific conclusion","from specific observations to a general conclusion","from emotion to logic","from the conclusion back to the evidence"],"answer":0,"explain":"All humans are mortal; Socrates is human; so Socrates is mortal.","tip":"Deduction drills down: general to specific."},
+          {"q":"Inductive reasoning...","choices":["draws a general conclusion from specific observations","guarantees a certain conclusion","starts from a universal rule","relies only on emotion"],"answer":0,"explain":"Inductive conclusions are probable, not certain, and depend on the strength of the evidence.","tip":"Induction inches up: examples to a general rule."},
+          {"q":"A categorical syllogism consists of...","choices":["two premises and a conclusion","one premise and two conclusions","a claim with no premises","three conclusions"],"answer":0,"explain":"A syllogism has a major premise, a minor premise, and a conclusion.","tip":"A syllogism is two steps up and one conclusion out."},
+          {"q":"A deductive argument is valid when...","choices":["the conclusion must be true if the premises are true","all of its premises are true","most people accept it","it cites recent evidence"],"answer":0,"explain":"Validity is about logical form. An argument can be valid even with false premises.","tip":"Valid means the logic machine works, even if you feed it bad parts."},
+          {"q":"A deductive argument is sound when...","choices":["it is valid and all of its premises are true","it is emotionally persuasive","it is long and detailed","it has a qualifier"],"answer":0,"explain":"Soundness requires both valid form and true premises.","tip":"Sound equals valid plus true: a working machine with good parts."},
+          {"q":"Aristotle's three modes of persuasion are...","choices":["ethos, pathos, and logos","thesis, antithesis, and synthesis","claim, data, and warrant","exposition, climax, and resolution"],"answer":0,"explain":"In his Rhetoric, Aristotle described appeals to character, emotion, and reason.","tip":"Ethos, pathos, logos: character, heart, and head."},
+          {"q":"A Rogerian argument emphasizes...","choices":["finding common ground with opponents","attacking the opponent's character","appeals to emotion only","statistics only"],"answer":0,"explain":"Based on Carl Rogers's ideas, it seeks understanding and compromise.","tip":"Rogerian: 'Roger that, I hear you.'"},
+          {"q":"In argument, a concession is...","choices":["acknowledging a valid point made by the other side","abandoning your claim entirely","restating your thesis","citing an expert"],"answer":0,"explain":"A concession admits a point while still maintaining the overall claim.","tip":"Concede the battle to win the war."}
+        ]
+      },
+      {
+        "name": "Logical Fallacies",
+        "questions": [
+          {"q":"Attacking the person making an argument instead of the argument itself is...","choices":["ad hominem","straw man","red herring","false dilemma"],"answer":0,"explain":"Ad hominem is Latin for 'to the person'.","tip":"Ad hominem aims at the man, not the argument."},
+          {"q":"Misrepresenting an opponent's position to make it easier to attack is...","choices":["straw man","ad hominem","slippery slope","begging the question"],"answer":0,"explain":"A straw man argues against a distorted version of the real claim.","tip":"A straw man is easy to knock down because it is fake."},
+          {"q":"'Everyone is buying this phone, so it must be the best.' This is...","choices":["bandwagon (appeal to popularity)","ad hominem","red herring","post hoc"],"answer":0,"explain":"Popularity alone does not prove something is true or best.","tip":"Bandwagon: hop on because everyone else did."},
+          {"q":"'Either you support this plan, or you want the city to fail.' This is...","choices":["false dilemma","straw man","hasty generalization","tu quoque"],"answer":0,"explain":"It presents only two options when others exist.","tip":"A false dilemma pretends there are only two doors."},
+          {"q":"'If we allow phones in class, soon students will never learn anything.' This is...","choices":["slippery slope","false dilemma","ad hominem","circular reasoning"],"answer":0,"explain":"It claims one step will inevitably lead to an extreme outcome without support.","tip":"Slippery slope: take one step and you slide all the way down."},
+          {"q":"'I wore my lucky socks and we won, so the socks caused the win.' This is...","choices":["post hoc ergo propter hoc","red herring","straw man","appeal to authority"],"answer":0,"explain":"It assumes that because one event followed another, the first caused the second.","tip":"Post hoc means 'after this', and after is not the same as because."},
+          {"q":"'I met two rude people from that city, so everyone there is rude.' This is...","choices":["hasty generalization","slippery slope","tu quoque","false dilemma"],"answer":0,"explain":"It draws a broad conclusion from too small a sample.","tip":"A hasty generalization jumps to conclusions too fast."},
+          {"q":"'He is trustworthy because he is an honest person.' This is...","choices":["circular reasoning (begging the question)","red herring","straw man","hasty generalization"],"answer":0,"explain":"The conclusion is simply restated as the premise.","tip":"Circular reasoning chases its own tail."},
+          {"q":"Introducing an irrelevant topic to divert attention from the issue is...","choices":["red herring","straw man","ad hominem","bandwagon"],"answer":0,"explain":"A red herring leads the discussion away from the real question.","tip":"A red herring is a smelly fish dragged across the trail to throw the hounds off."},
+          {"q":"'You say I shouldn't eat junk food, but you eat it too.' This is...","choices":["tu quoque","straw man","false dilemma","post hoc"],"answer":0,"explain":"Tu quoque ('you too') dismisses a claim by pointing to the speaker's hypocrisy.","tip":"Tu quoque means 'you too', but two wrongs don't make a right."},
+          {"q":"'A famous actor says this medicine works, so it must.' This is...","choices":["appeal to (false) authority","ad hominem","slippery slope","tu quoque"],"answer":0,"explain":"The actor is not an expert on medicine, so the endorsement is not evidence.","tip":"Famous is not the same as expert."}
+        ]
+      },
+      {
+        "name": "Literary Movements",
+        "questions": [
+          {"q":"Romanticism emphasized...","choices":["emotion, nature, and the individual","scientific objectivity","fragmented stream of consciousness","strict classical rules"],"answer":0,"explain":"Romantics reacted against Enlightenment rationalism and industrialization.","tip":"Romantics romanticize nature and feelings."},
+          {"q":"Which poet was a key figure of English Romanticism?","choices":["William Wordsworth","T. S. Eliot","Sylvia Plath","Alexander Pope"],"answer":0,"explain":"Wordsworth and Coleridge's Lyrical Ballads (1798) helped launch the movement.","tip":"Wordsworth 'wandered lonely as a cloud' among the daffodils."},
+          {"q":"Which writer is associated with American Transcendentalism?","choices":["Henry David Thoreau","Ernest Hemingway","Toni Morrison","F. Scott Fitzgerald"],"answer":0,"explain":"Thoreau, author of Walden, and Ralph Waldo Emerson led the movement.","tip":"Thoreau went to the woods at Walden Pond to live deliberately."},
+          {"q":"Realism in literature aimed to...","choices":["depict everyday life and ordinary people accurately","focus on the supernatural","imitate ancient epics","celebrate idealized heroes"],"answer":0,"explain":"Realists like William Dean Howells and Henry James portrayed life as it is.","tip":"Realism keeps it real."},
+          {"q":"Literary Naturalism portrays characters as...","choices":["shaped by heredity, environment, and forces beyond their control","masters of their own fate","purely symbolic figures","heroes from mythology"],"answer":0,"explain":"Writers like Stephen Crane and Theodore Dreiser applied a deterministic view to fiction.","tip":"Naturalism: nature and nurture decide your fate."},
+          {"q":"Gothic literature typically features...","choices":["dark settings, mystery, and the supernatural","peaceful country life","realistic office life","lighthearted romance"],"answer":0,"explain":"Examples include Frankenstein and Dracula.","tip":"Gothic: think gargoyles, crumbling castles, and ghosts."},
+          {"q":"Which writer is closely associated with Modernism and stream of consciousness?","choices":["Virginia Woolf","Jane Austen","Charles Dickens","Geoffrey Chaucer"],"answer":0,"explain":"Woolf's Mrs Dalloway and To the Lighthouse experiment with inner consciousness.","tip":"Woolf's characters' thoughts flow like a stream."},
+          {"q":"The 'Lost Generation' refers to writers who came of age during...","choices":["World War I","the Civil War","the Vietnam War","the 1960s counterculture"],"answer":0,"explain":"Gertrude Stein's phrase described writers like Hemingway and Fitzgerald.","tip":"The Lost Generation felt lost after the Great War."},
+          {"q":"Which poet was a leading figure of the Harlem Renaissance?","choices":["Langston Hughes","Walt Whitman","Robert Frost","Emily Dickinson"],"answer":0,"explain":"The Harlem Renaissance flourished in the 1920s and 1930s.","tip":"Hughes was the heartbeat of Harlem."},
+          {"q":"Which writer is associated with the Beat Generation?","choices":["Jack Kerouac","Nathaniel Hawthorne","Edith Wharton","John Milton"],"answer":0,"explain":"Kerouac's On the Road (1957) is a defining Beat novel.","tip":"Kerouac's Beats hit the road."},
+          {"q":"Which writer is most associated with magical realism?","choices":["Gabriel García Márquez","Jane Austen","Ernest Hemingway","Mark Twain"],"answer":0,"explain":"One Hundred Years of Solitude blends the fantastic with the everyday.","tip":"Magical realism: García Márquez makes magic feel ordinary."}
+        ]
+      },
+      {
+        "name": "Advanced Vocabulary",
+        "questions": [
+          {"q":"What does 'obfuscate' mean?","choices":["to make unclear or confusing","to explain simply","to make fat","to delay"],"answer":0,"explain":"Jargon is sometimes used to obfuscate a simple idea.","tip":"Obfuscate sounds like fog: it clouds things up."},
+          {"q":"What does 'perfunctory' mean?","choices":["done routinely with little care or interest","done perfectly","done in advance","done with great enthusiasm"],"answer":0,"explain":"A perfunctory nod is given out of duty, not interest.","tip":"Perfunctory: it functions, but with zero heart."},
+          {"q":"What is a 'sycophant'?","choices":["a person who flatters powerful people to gain favor","a type of musical instrument","a fortune teller","a harsh critic"],"answer":0,"explain":"Sycophants tell those in power what they want to hear.","tip":"A sycophant is a flattering suck-up."},
+          {"q":"What does 'recalcitrant' mean?","choices":["stubbornly uncooperative","easily calculated","returning often","calm and relaxed"],"answer":0,"explain":"A recalcitrant student resists authority or guidance.","tip":"Recalcitrant comes from Latin for kicking back with the heel, like a stubborn mule."},
+          {"q":"What does 'laconic' mean?","choices":["using very few words","very talkative","lacking energy","made of lace"],"answer":0,"explain":"The word comes from Laconia, home of the famously terse Spartans.","tip":"Laconic speakers lack words."},
+          {"q":"What does 'pernicious' mean?","choices":["harmful, especially in a gradual or subtle way","very picky","long-lasting and pleasant","obvious"],"answer":0,"explain":"A pernicious influence does damage that may go unnoticed.","tip":"Pernicious sounds like poison, and it works slowly like one."},
+          {"q":"What does 'equivocate' mean?","choices":["to use vague language to avoid committing","to make equal","to speak loudly","to apologize"],"answer":0,"explain":"A politician who equivocates avoids giving a clear answer.","tip":"Equivocate: equal voices on both sides, so you say nothing."},
+          {"q":"What does 'magnanimous' mean?","choices":["generous and forgiving, especially toward a rival","very large","magnetic","arrogant"],"answer":0,"explain":"A magnanimous winner is gracious to the loser.","tip":"Magna plus animus: a big soul."},
+          {"q":"What does 'esoteric' mean?","choices":["understood by only a small group with special knowledge","widely popular","outdated","outdoors"],"answer":0,"explain":"Esoteric topics require specialized knowledge.","tip":"Esoteric comes from Greek for 'inner': only for the inner circle."},
+          {"q":"What does 'juxtapose' mean?","choices":["to place side by side for comparison or contrast","to argue against","to justify","to jump over"],"answer":0,"explain":"Writers juxtapose images or ideas to highlight differences.","tip":"Juxtapose: just pose them side by side."},
+          {"q":"What does 'didactic' mean?","choices":["intended to teach, often with a moral lesson","dictatorial","doubtful","decorative"],"answer":0,"explain":"Fables are didactic: they exist to teach a lesson.","tip":"Didactic comes from Greek didaskein, 'to teach'."}
+        ]
+      },
+      {
+        "name": "Style and Concision",
+        "questions": [
+          {"q":"Which sentence is in the active voice?","choices":["The chef cooked the meal.","The meal was cooked by the chef.","The meal was cooked."],"answer":0,"explain":"In active voice, the subject performs the action.","tip":"Active voice: the actor acts first."},
+          {"q":"Which sentence is in the passive voice?","choices":["The window was broken by the ball.","The ball broke the window.","The window broke."],"answer":0,"explain":"Passive voice uses a form of 'be' plus a past participle, and the subject receives the action.","tip":"Zombie test: if 'by zombies' fits after the verb, it is passive."},
+          {"q":"When is the passive voice an appropriate choice?","choices":["When the doer is unknown or unimportant","Always, because it sounds more formal","Never; it is grammatically incorrect","Only in questions"],"answer":0,"explain":"Passive voice is grammatical; it is useful when the action matters more than the actor.","tip":"Passive works when the 'who' doesn't matter: Mistakes were made."},
+          {"q":"Most concise revision: 'Due to the fact that it was raining, we stayed inside.'","choices":["Because it was raining, we stayed inside.","Owing to the fact that it was raining, we stayed inside.","Due to the fact of the rain, we stayed inside."],"answer":0,"explain":"'Due to the fact that' can almost always be replaced with 'because'.","tip":"'Because' says it in one word."},
+          {"q":"Most concise revision: 'In my personal opinion, I think the plan will work.'","choices":["I think the plan will work.","In my opinion, I think the plan will work.","It is my personal opinion that the plan will work."],"answer":0,"explain":"'In my personal opinion' and 'I think' say the same thing.","tip":"Say it once: 'I think' already means it is your opinion."},
+          {"q":"Which phrase is redundant?","choices":["past history","recent history","brief history","family history"],"answer":0,"explain":"All history is in the past, so 'past' adds nothing.","tip":"'Past history' is like saying 'wet water'."},
+          {"q":"Which single verb replaces the wordy 'make a decision'?","choices":["decide","decision-make","decisive","decided upon"],"answer":0,"explain":"Turning a nominalization back into a verb makes writing more direct.","tip":"Free the verb hiding inside the noun: decision becomes decide."},
+          {"q":"Most concise revision: 'There are many students who want to join.'","choices":["Many students want to join.","There are many students wanting to join.","There exist many students who want to join."],"answer":0,"explain":"Removing the empty 'there are... who' construction puts the real subject first.","tip":"'There are... who' is scaffolding: tear it down."},
+          {"q":"'At this point in time' can usually be replaced with...","choices":["now","then","later","always"],"answer":0,"explain":"One word does the work of five.","tip":"Five words, one meaning: now."},
+          {"q":"Which sentence uses the strongest, most concise verb?","choices":["She sprinted to the bus.","She ran very quickly to the bus.","She made her way very fast to the bus."],"answer":0,"explain":"A precise verb like 'sprinted' replaces a weak verb plus adverbs.","tip":"Pick a verb that paints a picture."}
+        ]
+      }
+    ],
+    "adult": [
+      {
+        "name": "Who/Whom and Fewer/Less",
+        "questions": [
+          {"q":"___ should I call about the leak?","choices":["Whom","Who"],"answer":0,"explain":"It is the object of 'call' (I should call him), so formal English uses 'whom'. Tip: him = whom.","tip":"Him equals whom: both end in m."},
+          {"q":"___ is at the door?","choices":["Who","Whom"],"answer":0,"explain":"It is the subject of 'is' (he is at the door), so use 'who'.","tip":"He equals who: 'He is at the door.'"},
+          {"q":"To ___ it may concern:","choices":["whom","who"],"answer":0,"explain":"After a preposition like 'to', use the object form 'whom'.","tip":"Prepositions want the m: to whom, for whom, with whom."},
+          {"q":"She is the candidate ___ we believe will win.","choices":["who","whom"],"answer":0,"explain":"Ignore 'we believe': who will win. 'Who' is the subject of 'will win'.","tip":"Cross out 'we believe' and test: he will win, so who."},
+          {"q":"Give the award to ___ deserves it most.","choices":["whoever","whomever"],"answer":0,"explain":"The pronoun is the subject of 'deserves', so use 'whoever', even after 'to'.","tip":"Look at the verb inside the clause: he deserves it, so whoever."},
+          {"q":"This stays between you and ___.","choices":["me","I"],"answer":0,"explain":"'Between' is a preposition, so it takes the object pronoun 'me'.","tip":"Between you and me, 'between you and I' is a classic slip."},
+          {"q":"There are ___ people here than yesterday.","choices":["fewer","less"],"answer":0,"explain":"Use 'fewer' with things you can count individually, like people.","tip":"Fewer for things you can count; less for stuff you can't."},
+          {"q":"I have ___ patience than I used to.","choices":["less","fewer"],"answer":0,"explain":"Use 'less' with uncountable quantities, like patience or water.","tip":"You can't count patience, so less."},
+          {"q":"We had ___ than five dollars left.","choices":["less","fewer"],"answer":0,"explain":"Sums of money, time, and distance are treated as amounts, so 'less' is standard.","tip":"Money is an amount: less money, but fewer coins."}
+        ]
+      },
+      {
+        "name": "Affect/Effect, Lay/Lie, i.e./e.g.",
+        "questions": [
+          {"q":"The new policy will ___ everyone.","choices":["affect","effect"],"answer":0,"explain":"Affect is usually the verb (to influence).","tip":"Affect is the Action, Effect is the End result."},
+          {"q":"The medicine had a strong ___.","choices":["effect","affect"],"answer":0,"explain":"Effect is usually the noun (a result).","tip":"Effect is the End result."},
+          {"q":"The new manager wants to ___ real change.","choices":["effect","affect"],"answer":0,"explain":"As a verb, 'effect' means to bring about. To effect change is to cause it.","tip":"To effect change is to Execute it."},
+          {"q":"I'm going to ___ down for a nap.","choices":["lie","lay"],"answer":0,"explain":"'Lie' means to recline and takes no object. 'Lay' means to put something down.","tip":"People lie down; you lay an object down."},
+          {"q":"Please ___ the book on the table.","choices":["lay","lie"],"answer":0,"explain":"You lay an object somewhere. The book is the object.","tip":"Lay means place: both have an a."},
+          {"q":"Yesterday, I ___ down for an hour.","choices":["lay","laid","lied"],"answer":0,"explain":"The past tense of 'lie' (recline) is 'lay'. 'Laid' is the past of 'lay', and 'lied' means told a falsehood.","tip":"Lie, lay, lain: yesterday I lay down."},
+          {"q":"He has ___ the tiles in the bathroom.","choices":["laid","lain","layed"],"answer":0,"explain":"'Laid' is the past participle of 'lay' (to put). 'Lain' belongs to 'lie', and 'layed' is a misspelling.","tip":"Lay, laid, laid works like pay, paid, paid."},
+          {"q":"Which abbreviation means 'for example'?","choices":["e.g.","i.e."],"answer":0,"explain":"e.g. stands for Latin exempli gratia, 'for the sake of example'.","tip":"e.g. = example given."},
+          {"q":"What does 'i.e.' mean?","choices":["that is; in other words","for example","and so on","note well"],"answer":0,"explain":"i.e. stands for Latin id est, 'that is'. It restates or clarifies.","tip":"i.e. = in essence."},
+          {"q":"I love citrus fruits, ___ oranges and lemons.","choices":["e.g.","i.e."],"answer":0,"explain":"Oranges and lemons are examples, not the complete list of citrus fruits.","tip":"e.g. = example given: just some of the list."},
+          {"q":"She visited the capital of France, ___ Paris.","choices":["i.e.","e.g."],"answer":0,"explain":"Paris is the one specific thing meant, so 'i.e.' (that is) fits.","tip":"i.e. = in essence: exactly that one."}
+        ]
+      },
+      {
+        "name": "Apostrophes",
+        "questions": [
+          {"q":"The ___ bone is buried in the yard. (one dog)","choices":["dog's","dogs'","dogs"],"answer":0,"explain":"For a singular noun, add apostrophe plus s.","tip":"One dog: dog plus apostrophe-s."},
+          {"q":"What is the possessive of 'children'?","choices":["children's","childrens'","childrens"],"answer":0,"explain":"For a plural that does not end in s, add apostrophe plus s.","tip":"Children is already plural, so just add apostrophe-s."},
+          {"q":"We're going to the ___ house. (the Smith family)","choices":["Smiths'","Smith's","Smiths"],"answer":0,"explain":"The family is plural (the Smiths), so add just an apostrophe after the s.","tip":"Make it plural first (Smiths), then add the apostrophe."},
+          {"q":"Which is the correct plural of the last name Johnson?","choices":["the Johnsons","the Johnson's","the Johnsons'"],"answer":0,"explain":"Plurals never take an apostrophe. Use one only for possession.","tip":"Apostrophes show ownership, not crowds."},
+          {"q":"The company changed ___ logo.","choices":["its","it's"],"answer":0,"explain":"Possessive 'its' has no apostrophe, like his and hers.","tip":"It's means it is; its works like his."},
+          {"q":"___ been a long day.","choices":["It's","Its"],"answer":0,"explain":"It's is a contraction of 'it has' here.","tip":"Expand it to check: it has been."},
+          {"q":"Which is the standard way to write the decade?","choices":["the 1990s","the 1990's"],"answer":0,"explain":"Major American style guides (AP, Chicago, MLA, APA) write decades without an apostrophe.","tip":"The 1990s are many years, not one year owning something."},
+          {"q":"Which possessive form of 'James' is incorrect?","choices":["Jame's car","James's car","James' car"],"answer":0,"explain":"The name is James, so the apostrophe can't go inside it. Chicago prefers James's, and AP uses James'.","tip":"Never cut a name in half with an apostrophe."},
+          {"q":"Which grocery sign is correct?","choices":["Fresh apples for sale","Fresh apple's for sale","Fresh apples' for sale"],"answer":0,"explain":"Simple plurals take no apostrophe. Adding one is called the grocer's apostrophe.","tip":"Apples don't own anything, so no apostrophe."},
+          {"q":"Sam and Ana share one car. Which is correct?","choices":["Sam and Ana's car","Sam's and Ana's car"],"answer":0,"explain":"For joint ownership, only the last name gets the apostrophe. 'Sam's and Ana's cars' would mean separate cars.","tip":"One car, one apostrophe."}
+        ]
+      },
+      {
+        "name": "Comma Rules",
+        "questions": [
+          {"q":"Which sentence is punctuated correctly?","choices":["I was tired, so I went to bed.","I was tired so, I went to bed.","I was, tired so I went to bed."],"answer":0,"explain":"Put a comma before a coordinating conjunction that joins two independent clauses.","tip":"Comma plus FANBOYS is strong enough glue for two sentences."},
+          {"q":"Which sentence is a comma splice?","choices":["I love coffee, I drink it daily.","I love coffee, and I drink it daily.","I love coffee; I drink it daily."],"answer":0,"explain":"A comma alone cannot join two independent clauses.","tip":"A comma is too weak to hold two sentences on its own: that's a splice."},
+          {"q":"The Oxford (serial) comma is the comma...","choices":["before the final 'and' or 'or' in a list of three or more","after an introductory phrase","between two adjectives","before a quotation"],"answer":0,"explain":"Chicago and MLA require it; AP style generally omits it.","tip":"Without it, 'I thank my parents, a superhero and a pirate' makes your parents sound pretty exciting."},
+          {"q":"You have one mother. Which sentence is correct?","choices":["My mother, who lives in Ohio, is visiting.","My mother who lives in Ohio, is visiting.","My mother, who lives in Ohio is visiting."],"answer":0,"explain":"A nonessential clause is set off by a pair of commas.","tip":"Extra info gets a comma hug on both sides."},
+          {"q":"To say that only the students who studied passed, which is correct?","choices":["The students who studied passed.","The students, who studied, passed."],"answer":0,"explain":"An essential (restrictive) clause takes no commas. With commas, it implies all the students studied.","tip":"Essential info gets no commas: you need it to know which students."},
+          {"q":"Which sentence correctly invites Grandma to dinner?","choices":["Let's eat, Grandma.","Let's eat Grandma."],"answer":0,"explain":"Use a comma before a name in direct address. Commas save lives.","tip":"Let's eat, Grandma. Commas save lives!"},
+          {"q":"Which sentence is punctuated correctly?","choices":["When the meeting ended, everyone left.","When the meeting ended everyone, left.","When, the meeting ended everyone left."],"answer":0,"explain":"Put a comma after an introductory dependent clause.","tip":"Intro clause, then a comma pause."},
+          {"q":"Which sentence correctly punctuates coordinate adjectives?","choices":["It was a long, hot day.","It was a long hot, day.","It was a, long hot day."],"answer":0,"explain":"If you could put 'and' between the adjectives (long and hot), separate them with a comma.","tip":"If 'and' fits between the adjectives, a comma fits too."},
+          {"q":"Which sentence is punctuated correctly?","choices":["On July 4, 1776, the Declaration of Independence was adopted.","On July 4 1776, the Declaration of Independence was adopted.","On July, 4, 1776 the Declaration of Independence was adopted."],"answer":0,"explain":"In American style, a comma goes after the day and also after the year when the sentence continues.","tip":"Year in the middle of a sentence? Wrap it in commas."},
+          {"q":"Which sentence is punctuated correctly?","choices":["She moved to Austin, Texas, last year.","She moved to Austin Texas, last year.","She moved to Austin, Texas last year."],"answer":0,"explain":"Set off the state with commas on both sides when the sentence continues.","tip":"The state gets a comma before and after it."},
+          {"q":"Should a comma separate a subject from its verb, as in 'The man in the blue coat, called me'?","choices":["No","Yes"],"answer":0,"explain":"Never put a single comma between a subject and its verb, even when the subject is long.","tip":"Never split a subject from its verb with a single comma."}
+        ]
+      },
+      {
+        "name": "Commonly Misspelled Words",
+        "questions": [
+          {"q":"Which spelling is correct (meaning 'without doubt')?","choices":["definitely","definately","definatly","definitly"],"answer":0,"explain":"Think of 'finite': de-FINITE-ly.","tip":"Definitely is definite plus ly: there is no a in sight."},
+          {"q":"Which spelling is correct (meaning 'apart')?","choices":["separate","seperate","separete","seprate"],"answer":0,"explain":"There is 'a rat' in sep-a-rate.","tip":"There's a rat in separate."},
+          {"q":"Which spelling is correct (meaning 'required')?","choices":["necessary","neccessary","necessery","neccesary"],"answer":0,"explain":"One c, two s's: like a shirt with one collar and two sleeves.","tip":"One collar, two sleeves: one c, two s's."},
+          {"q":"Which spelling is correct (meaning 'to make room for')?","choices":["accommodate","accomodate","acommodate","acomodate"],"answer":0,"explain":"It is big enough to accommodate two c's and two m's.","tip":"Accommodate has room for two c's and two m's."},
+          {"q":"Which spelling is correct (meaning 'an event')?","choices":["occurrence","occurence","ocurrence","occurance"],"answer":0,"explain":"Double c, double r, and -ence: occurrence.","tip":"Occurrence: double c, double r, because things keep happening twice!"},
+          {"q":"Which spelling is correct (meaning 'to get')?","choices":["receive","recieve","receeve","receve"],"answer":0,"explain":"I before e, except after c: receive.","tip":"I before e, except after c."},
+          {"q":"Which spelling is correct (meaning 'to make someone feel awkward')?","choices":["embarrass","embarass","embarras","embaress"],"answer":0,"explain":"Embarrass has double r and double s.","tip":"Embarrass: you turn really red, so so shy: two r's, two s's."},
+          {"q":"Which spelling is correct (meaning 'a thousand years')?","choices":["millennium","millenium","milennium","millenniem"],"answer":0,"explain":"Double l and double n: from Latin mille (thousand) and annus (year).","tip":"A millennium is lots of years, so it gets lots of letters: two l's, two n's."},
+          {"q":"Which spelling is correct (meaning 'a special right')?","choices":["privilege","priviledge","privelege","privilage"],"answer":0,"explain":"There is no d in privilege.","tip":"Privilege alternates its vowels i, i, e, e, and has no d."},
+          {"q":"Which spelling is correct (meaning 'a regular beat')?","choices":["rhythm","rythm","rhythym","rhytm"],"answer":0,"explain":"Rhythm Helps Your Two Hips Move.","tip":"Rhythm Helps Your Two Hips Move."},
+          {"q":"Which spelling is correct (meaning 'a go-between')?","choices":["liaison","liason","liasion","laison"],"answer":0,"explain":"Liaison has an i on both sides of the a: l-i-a-i-s-o-n.","tip":"Liaison has an i on each side of the a, like the two people it connects."},
+          {"q":"Which spelling is correct (meaning 'a written survey')?","choices":["questionnaire","questionaire","questionnair","questionare"],"answer":0,"explain":"Questionnaire has double n and ends in -aire.","tip":"So many questions need two n's: questionnaire."},
+          {"q":"Which spelling is correct (meaning 'now and then')?","choices":["occasionally","occassionally","ocasionally","occasionaly"],"answer":0,"explain":"Two c's, one s, two l's: occasionally.","tip":"Occasionally: two c's, one s, two l's."}
+        ]
+      },
+      {
+        "name": "Vocabulary",
+        "questions": [
+          {"q":"In traditional usage, 'nonplussed' means...","choices":["confused and unsure how to react","calm and unbothered","very pleased","uninvited"],"answer":0,"explain":"Nonplussed traditionally means bewildered. Using it to mean 'unfazed' is a newer, informal sense many readers consider an error.","tip":"Nonplussed: no plus, no idea what to add or say."},
+          {"q":"In careful usage, 'disinterested' means...","choices":["impartial, having no personal stake","bored","rude","unemployed"],"answer":0,"explain":"A disinterested judge is fair. Someone bored is 'uninterested'.","tip":"A DISinterested judge has no stake; an UNinterested listener is just bored."},
+          {"q":"What does 'penultimate' mean?","choices":["second to last","the very best","the very last","the first"],"answer":0,"explain":"Penultimate means next to last. It does not mean ultimate or supreme.","tip":"Pen means almost, as in peninsula (almost an island): penultimate is almost last."},
+          {"q":"What does 'sanguine' mean?","choices":["optimistic","furious","gloomy","sacred"],"answer":0,"explain":"A sanguine outlook is cheerful and hopeful.","tip":"Sanguine and sunny both start with S."},
+          {"q":"What does 'pedantic' mean?","choices":["overly concerned with minor rules and details","walking on foot","related to children","very generous"],"answer":0,"explain":"A pedantic person corrects small points to show off learning.","tip":"A pedant is a pain about tiny details."},
+          {"q":"What does 'ameliorate' mean?","choices":["to make better","to make worse","to love","to delay"],"answer":0,"explain":"New policies may ameliorate a bad situation.","tip":"Ameliorate: like a good meal that makes you feel better."},
+          {"q":"What does 'erudite' mean?","choices":["having great knowledge from study","rude","worn away","easily angered"],"answer":0,"explain":"An erudite professor is deeply learned.","tip":"Erudite looks like 'e-rude', but erudite people are learned, not rude."},
+          {"q":"What does 'hubris' mean?","choices":["excessive pride or self-confidence","humility","a type of plant","deep sadness"],"answer":0,"explain":"In Greek tragedy, hubris often leads to a hero's downfall.","tip":"Hubris is the pride before the fall, like Icarus flying too close to the sun."},
+          {"q":"What does 'cogent' mean?","choices":["clear, logical, and convincing","confusing","related to gears","aware"],"answer":0,"explain":"A cogent argument is persuasive because its reasoning is sound.","tip":"A cogent argument fits together like well-oiled cogs."},
+          {"q":"What does 'verbose' mean?","choices":["using more words than needed","spoken aloud","true to the original","silent"],"answer":0,"explain":"Verbose writing could say the same thing in fewer words.","tip":"Verbose writing is overloaded with words."},
+          {"q":"In logic, 'begging the question' means...","choices":["assuming the conclusion in the premise","raising an obvious question","asking politely","avoiding a question"],"answer":0,"explain":"It is circular reasoning. Using it to mean 'raises the question' is common but not the original sense.","tip":"Begging the question: the argument begs you to grant its own conclusion."}
+        ]
+      }
+    ]
+  }
+}

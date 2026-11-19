@@ -1,0 +1,477 @@
+# Exam: exam-2 | Practice exam 2 | 180
+Two machines: server1 and server2 (lab.example.com). This time the root password of server1 is unknown (task 1); server2's root password is redhat. Network repositories are on http://repo.lab.example.com (BaseOS and AppStream); server2 gets its software from the RHEL DVD in its drive instead. The container registry is registry.lab.example.com (user student, password student). Everything must still work after a reboot: the grader restarts both machines before checking.
+
+@vars
+rootpw = Gr4nite#7 | Pl4net!sky | Hel1um*dust
+ip6 = fd00:cafe::11 | fd00:42::a1 | fd00:beef::5
+dom = corp.example.net | eng.example.org | ops.example.com
+maxdays = 45 | 60 | 90
+u1 = julia | omar | priya
+u2 = kevin | sofia | dmitri
+upw = Rhcs4pass! | Ex4mReady! | Lab0ratory!
+expday = 10-28
+u3 = ravi | greta | tomas
+uid = 2201-2299
+umask = 027 | 077
+kuser = deploy | builder | release
+kpw = Srv2-key!pw | Tw0-hosts! | Rem0te-pw!
+label = WEBFILES | MEDIA01 | DATAVOL
+lmnt = /library | /mediafiles | /volume1
+apath = /nethome | /remote | /homes
+site = portal | intranet | docs
+bool = httpd_can_network_connect_db | httpd_can_sendmail | httpd_use_nfs
+cuser = dbadmin | sqlops | datakeeper
+cname = inventory | ledger | catalog
+db = stock | sales | orders
+dbpw = Sh0p-pass | M4ria-db | Qu3ry-key
+script = dircount | filecount | countfiles
+big = 2 | 5 | 8
+lvl = ERROR | WARN | CRIT
+dvd = /repo | /media/dvd | /mnt/rhel9
+vg2 = vgsys | vgpaging | vgextra
+swaplv = lvswap | swap2 | lvpaging
+swapsize = 256 | 512 | 768
+newsize = 800 | 900 | 1000
+tname = diskreport | usagelog | dfreport
+mins = 10 | 15 | 20 | 30
+atday = 16-27
+@endvars
+
+@nologin server1
+
+@setup server1
+echo 'Lost-{rootpw}-pw' | passwd --stdin root
+mkdir -p /var/projects/alpha /var/projects/beta/old /var/projects/gamma
+truncate -s 1M /var/projects/alpha/notes.bin
+truncate -s 10M /var/projects/alpha/video.mp4
+truncate -s 3M /var/projects/beta/build.img
+truncate -s 7M /var/projects/beta/old/backup.tar
+truncate -s 4M /var/projects/gamma/data.db
+mkdir -p /var/log/app
+printf 'ERROR disk /dev/vdb not found\nINFO service started\nWARN 85%% of /var used\nERRORLOG rotated\nCRIT temperature high\nWARNING is only a longer word\nCRITICAL path updated\nINFO user login, ERROR count 0\nERROR backup failed\nWARN clock drift 2s\nCRIT fan stopped\ninfo lowercase error line\n' > /var/log/app/events.log
+
+@setup server2
+useradd {kuser}
+echo '{kpw}' | passwd --stdin {kuser}
+parted -s /dev/vdc mklabel gpt mkpart archive 1MiB 601MiB
+pvcreate /dev/vdc1
+vgcreate vgarchive /dev/vdc1
+lvcreate -n lvarchive -L 500M vgarchive
+mkfs.ext4 -q /dev/vgarchive/lvarchive
+mkdir /archive
+echo '/dev/vgarchive/lvarchive /archive ext4 defaults 0 0' >> /etc/fstab
+mount /archive
+echo 'archive data: do not lose' > /archive/keep.txt
+
+@task t01 | Running systems | 15 | server1
+Nobody knows the root password of server1. Interrupt the boot process of server1 and set the root password to `{rootpw}`. SELinux must stay enforcing and the machine must boot normally afterwards.
+@check server1 | root can log in with the new password
+certlab-check password root '{rootpw}'
+@check server1 | the machine boots normally and SELinux is enforcing
+certlab-check booted && test "$(getenforce)" = Enforcing
+@solution server1
+#reset
+#key e
+#key Down Down Down End
+#type  rd.break
+#key Ctrl+X
+mount -o remount,rw /sysroot
+chroot /sysroot
+echo '{rootpw}' | passwd --stdin root
+touch /.autorelabel
+exit
+exit
+#password {rootpw}
+@explain
+At the boot menu press e, add rd.break to the end of the line that starts with linux, and boot with Ctrl+X. The boot stops in the initramfs, before the real root file system is used: it is mounted read-only on /sysroot. Remount it read-write, chroot into it so that passwd changes the right /etc/shadow, set the password, and create /.autorelabel. No SELinux policy is loaded at that point, so the new shadow file has no label; the relabel at the next boot fixes it. Forget it and nobody can log in with SELinux enforcing. Two exits leave the chroot and then the initramfs shell, and the boot continues.
+@endtask
+
+@task t02 | Deploy and maintain | 10 | server1
+Configure server1 to install software from the repositories http://repo.lab.example.com/BaseOS and http://repo.lab.example.com/AppStream.
+@check server1 | a BaseOS package (zsh) is available
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh
+@check server1 | an AppStream package (httpd) is available
+dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@solution server1
+dnf config-manager --add-repo http://repo.lab.example.com/BaseOS
+dnf config-manager --add-repo http://repo.lab.example.com/AppStream
+echo gpgcheck=0 >> /etc/yum.repos.d/repo.lab.example.com_BaseOS.repo
+echo gpgcheck=0 >> /etc/yum.repos.d/repo.lab.example.com_AppStream.repo
+dnf repolist
+@explain
+dnf config-manager --add-repo writes one .repo file per address. The packages are signed but the signing key is not imported on a fresh machine, so add gpgcheck=0 (or gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release). Do this early: later tasks on server1 need packages.
+@endtask
+
+@task t03 | Networking | 15 | server1
+Give server1's connection enp1s0 the static IPv6 address {ip6}/64 as well (its IPv4 settings must stay as they are). Add `{dom}` to the DNS search domains, after lab.example.com, so that short names are also looked up in {dom}. The settings must survive a reboot.
+@check server1 | the connection has the IPv6 address
+nmcli -g ipv6.addresses con show enp1s0 | grep -q '{ip6}/64'
+@check server1 | after the reboot {ip6} is active and the IPv4 address is still there
+ip -6 -br addr show enp1s0 | grep -q '{ip6}/64' && ip -4 -br addr show enp1s0 | grep -q '192.168.50.11/24'
+@check server1 | resolv.conf searches lab.example.com and {dom}
+grep '^search' /etc/resolv.conf | grep -qw 'lab\.example\.com' && grep '^search' /etc/resolv.conf | grep -q '{dom}'
+@solution server1
+nmcli con mod enp1s0 ipv6.method manual ipv6.addresses {ip6}/64
+nmcli con mod enp1s0 ipv4.dns-search lab.example.com,{dom}
+nmcli con up enp1s0
+ip -6 -br addr show enp1s0
+cat /etc/resolv.conf
+@explain
+An IPv6 address needs ipv6.method manual together with ipv6.addresses (the prefix length /64 is part of the address). ipv4.dns-search holds the list of search domains, separated by commas; NetworkManager writes them into the search line of /etc/resolv.conf. Never edit resolv.conf by hand: NetworkManager rewrites it. nmcli con up applies the changes now, and the keyfile keeps them for the next boot.
+@endtask
+
+@task t04 | Users and groups | 15 | server1
+On server1, new accounts must get a maximum password age of {maxdays} days by default. After making that change, create the users `{u1}` and `{u2}`, both with the password `{upw}`. The account `{u2}` must expire on 2026-12-{expday}.
+@check server1 | login.defs sets PASS_MAX_DAYS to {maxdays}
+grep -Eq '^PASS_MAX_DAYS[[:space:]]+{maxdays}$' /etc/login.defs
+@check server1 | {u1} and {u2} have a maximum password age of {maxdays} days
+test "$(getent shadow {u1} | cut -d: -f5)" = {maxdays} && test "$(getent shadow {u2} | cut -d: -f5)" = {maxdays}
+@check server1 | {u2}'s account expires on 2026-12-{expday}
+test "$(getent shadow {u2} | cut -d: -f8)" = "$(( $(date -d 2026-12-{expday} +%s) / 86400 ))"
+@check server1 | the passwords work
+certlab-check password {u1} '{upw}' && certlab-check password {u2} '{upw}'
+@solution server1
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t{maxdays}/' /etc/login.defs
+grep ^PASS_MAX_DAYS /etc/login.defs
+useradd {u1}
+useradd {u2}
+echo '{upw}' | passwd --stdin {u1}
+echo '{upw}' | passwd --stdin {u2}
+chage -E 2026-12-{expday} {u2}
+chage -l {u2}
+@explain
+/etc/login.defs holds the defaults useradd copies into /etc/shadow when it creates an account; changing it later does not touch existing accounts (use chage -M for those). That is why the order matters here. chage -E sets the date the account stops working; chage -l shows all the aging values of a user.
+@endtask
+
+@task t05 | Users and groups | 15 | server1
+Create the user `{u3}` with the UID {uid} and the home folder /srv/staff/{u3}, password `{upw}`. {u3} may run the command /usr/sbin/useradd as root with sudo, without being asked for a password, and no other command as root.
+@check server1 | {u3} has UID {uid} and the home /srv/staff/{u3}, which belongs to {u3}
+test "$(getent passwd {u3} | cut -d: -f3,6)" = "{uid}:/srv/staff/{u3}" && test "$(stat -c %U /srv/staff/{u3})" = {u3}
+@check server1 | {u3} can run useradd with sudo without a password
+su - {u3} -c 'sudo -n /usr/sbin/useradd gradeuser7' && id gradeuser7
+@check server1 | {u3} cannot run other commands as root
+! su - {u3} -c 'sudo -n /usr/bin/cat /etc/shadow' >/dev/null 2>&1
+@check server1 | the sudoers files are valid
+visudo -c >/dev/null
+@solution server1
+mkdir -p /srv/staff
+useradd -u {uid} -d /srv/staff/{u3} -m {u3}
+echo '{upw}' | passwd --stdin {u3}
+echo '{u3} ALL=(root) NOPASSWD: /usr/sbin/useradd' > /etc/sudoers.d/{u3}
+chmod 440 /etc/sudoers.d/{u3}
+visudo -c
+@explain
+useradd -u picks the UID, -d the home folder and -m creates it (with the files from /etc/skel). A sudoers rule lists who, on which hosts, as whom, and which commands: naming one command with its full path allows only that command. NOPASSWD: skips the password question. Check with visudo -c, and with sudo -l as the user.
+@endtask
+
+@task t06 | Security | 10 | server1
+When `{u1}` logs in, the default umask must be {umask}, so that new files are not readable by everyone. Other users keep the system default.
+@check server1 | {u1}'s login shell has the umask 0{umask}
+test "$(certlab-check umask {u1})" = "0{umask}"
+@check server1 | other users keep 0022
+test "$(certlab-check umask {u2})" = "0022"
+@solution server1
+echo 'umask {umask}' >> /home/{u1}/.bashrc
+@explain
+The umask removes permission bits from new files and folders: with 027 the group loses write and others lose everything; with 077 only the owner keeps access. A line in the user's own ~/.bashrc (or ~/.bash_profile) applies to that user only; /etc/profile.d/*.sh or /etc/bashrc would change it for everybody.
+@endtask
+
+@task t07 | Security | 15 | server1
+The user `{kuser}` exists on server2 with the password `{kpw}`. Create `{kuser}` on server1 too (password `{upw}`) and set it up so that {kuser} on server1 can log in to server2 as {kuser} with an SSH key, without typing a password.
+@check server1 | key login from server1 to server2 works for {kuser}
+certlab-check sshkey {kuser} {kuser}@server2
+@solution server1
+useradd {kuser}
+echo '{upw}' | passwd --stdin {kuser}
+su - {kuser}
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=no {kuser}@server2
+{kpw}
+ssh {kuser}@server2 hostname
+exit
+@explain
+ssh-keygen makes a key pair in ~/.ssh: the private key stays on server1, the .pub file is the public half. ssh-copy-id appends the public key to ~/.ssh/authorized_keys on server2 (this is the last time the password is needed) and sets safe permissions. Do it as the user, not as root, or the keys end up in root's folder.
+@endtask
+
+@task t08 | Local storage | 15 | server1
+On server1, create a 1 GiB partition on /dev/vdb with an xfs file system whose label is `{label}`. Mount it on {lmnt} at every boot, using the label (not the device name) in /etc/fstab.
+@check server1 | fstab mounts LABEL={label} on {lmnt}
+grep -Eq '^LABEL="?{label}"?[[:space:]]+{lmnt}/?[[:space:]]' /etc/fstab
+@check server1 | after the reboot an xfs file system labelled {label} is mounted on {lmnt}
+test "$(findmnt -n -o FSTYPE {lmnt})" = xfs && test "$(findmnt -n -o LABEL {lmnt})" = {label}
+@solution server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart data 1MiB 1025MiB
+mkfs.xfs -L {label} /dev/vdb1
+mkdir -p {lmnt}
+echo 'LABEL={label} {lmnt} xfs defaults 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt {lmnt}
+@explain
+mkfs.xfs -L sets the label when the file system is made (xfs_admin -L changes it later; e2label for ext4, fatlabel for vfat). A label, like a UUID, stays the same when disks are added and device names move, which makes it safe in fstab. blkid and lsblk -f show labels.
+@endtask
+
+@task t09 | File systems | 15 | server1
+utility.lab.example.com exports the home folders /exports/home/remoteuser1, remoteuser2 and remoteuser3 over NFS. Configure server1 so that {apath}/remoteuser1, {apath}/remoteuser2 and {apath}/remoteuser3 mount the matching export automatically when they are used. Use one wildcard entry in the map, not one line per user. Read-write access.
+@check server1 | autofs is enabled
+systemctl is-enabled autofs
+@check server1 | each of the three folders mounts its own export
+for n in 1 2 3; do ls {apath}/remoteuser$n >/dev/null 2>&1; test "$(findmnt -n -o SOURCE {apath}/remoteuser$n)" = "utility.lab.example.com:/exports/home/remoteuser$n" || exit 1; done
+@check server1 | the map uses a wildcard
+cat /etc/auto.master /etc/auto.master.d/*.autofs 2>/dev/null | grep -q '^{apath}' && grep -rqs '^\*[[:space:]].*&' /etc/auto.*
+@solution server1
+dnf -y install autofs
+echo '{apath} /etc/auto.remote' > /etc/auto.master.d/remote.autofs
+echo '* -rw,sync utility.lab.example.com:/exports/home/&' > /etc/auto.remote
+systemctl enable --now autofs
+ls {apath}/remoteuser2
+@explain
+A line in /etc/auto.master.d/*.autofs names the parent folder and the map file. In the map, the key * matches any name someone asks for under {apath}, and & in the location is replaced by that name, so one line serves every user. Do not create {apath} or its subfolders yourself: autofs makes them. Remember systemctl enable, or nothing mounts after the reboot.
+@endtask
+
+@task t10 | Security | 20 | server1
+Install the Apache web server on server1 and make it serve the folder /srv/{site} (instead of /var/www/html) on port 80. Put a file index.html with the text `{site} served from /srv/{site}` in it. httpd must start at boot and SELinux must stay enforcing: give the folder the right SELinux type permanently, so that a relabel keeps it.
+@check server1 | httpd is enabled and active
+systemctl is-enabled httpd && systemctl is-active httpd
+@check server1 | the page is served from /srv/{site}
+curl -s -m 5 http://localhost/ | grep -q '{site} served from /srv/{site}'
+@check server1 | SELinux is enforcing and the folder has a permanent httpd_sys_content_t rule
+test "$(getenforce)" = Enforcing && semanage fcontext -l -C | grep '^/srv/{site}' | grep -q httpd_sys_content_t && ls -Z /srv/{site}/index.html | grep -q httpd_sys_content_t
+@solution server1
+dnf -y install httpd
+mkdir -p /srv/{site}
+echo '{site} served from /srv/{site}' > /srv/{site}/index.html
+printf '<VirtualHost *:80>\n    DocumentRoot /srv/{site}\n    <Directory /srv/{site}>\n        Require all granted\n    </Directory>\n</VirtualHost>\n' > /etc/httpd/conf.d/{site}.conf
+semanage fcontext -a -t httpd_sys_content_t '/srv/{site}(/.*)?'
+restorecon -Rv /srv/{site}
+systemctl enable --now httpd
+curl http://localhost/
+@explain
+Files made in /srv get the type var_t, which httpd may not read: the page answers 403 Forbidden and audit.log shows an AVC denial. semanage fcontext -a adds a permanent rule to the policy (the regular expression (/.*)? covers the folder and everything in it), and restorecon applies it. chcon would also fix the label, but only until the next relabel. Apache needs a Require all granted for a folder outside /var/www.
+@endtask
+
+@task t11 | Security | 10 | server1
+SELinux on server1 must allow the web server the access that the boolean `{bool}` controls. The setting must survive a reboot.
+@check server1 | {bool} is on after the reboot
+getsebool {bool} | grep -q -- '--> on$'
+@solution server1
+setsebool -P {bool} on
+getsebool {bool}
+@explain
+Booleans switch optional parts of the SELinux policy on or off. getsebool -a lists them all, semanage boolean -l adds a short description. Without -P the change is lost at the next boot.
+@endtask
+
+@task t12 | Networking | 10 | server1
+The web server on server1 must be reachable over HTTP from server2 (192.168.50.12) only. Use a firewalld rich rule; do not open the http service or port 80 for everybody.
+@check server2 | server2 gets the page
+curl -s -m 5 http://server1.lab.example.com/ | grep -q '{site} served'
+@check server1 | there is a rich rule for 192.168.50.12
+firewall-cmd --list-rich-rules | grep -q '192\.168\.50\.12'
+@check server1 | http is not open to everybody
+! firewall-cmd --list-services | grep -qw http && ! firewall-cmd --list-ports | grep -qw '80/tcp'
+@solution server1
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.12/32" service name="http" accept'
+firewall-cmd --reload
+firewall-cmd --list-rich-rules
+@explain
+A rich rule combines a source, a service (or port) and an action in one line. With --permanent the rule is saved but only applied after firewall-cmd --reload. A source-based zone (firewall-cmd --zone=trusted --add-source=...) would let server2 reach every port, which is more than the task asks.
+@endtask
+
+@task t13 | Containers | 30 | server1
+Create the user `{cuser}` (password `{upw}`). As that user, run a rootless MariaDB container named `{cname}` from the image registry.lab.example.com/rhel9/mariadb-105, with these settings:
+- environment variables MYSQL_USER=app, MYSQL_PASSWORD={dbpw}, MYSQL_DATABASE={db} and MYSQL_ROOT_PASSWORD={dbpw}
+- container port 3306 published on host port 3306
+- the database files kept in /home/{cuser}/dbdata, mounted on /var/lib/mysql in the container
+The container must run as a systemd user service that starts at boot, even when {cuser} is not logged in.
+@check server1 | lingering is on for {cuser}
+test -e /var/lib/systemd/linger/{cuser}
+@check server1 | after the reboot the container {cname} is running
+certlab-check login {cuser} 'podman ps --format "{{.Names}}"' | grep -qx {cname}
+@check server1 | the environment variables are set
+env=$(certlab-check login {cuser} 'podman inspect {cname} --format "{{.Config.Env}}"'); for v in MYSQL_USER=app MYSQL_PASSWORD={dbpw} MYSQL_DATABASE={db} MYSQL_ROOT_PASSWORD={dbpw}; do echo "$env" | grep -q "$v" || exit 1; done
+@check server1 | port 3306 is published and /home/{cuser}/dbdata is the volume, labelled for containers
+certlab-check login {cuser} 'podman port {cname}' | grep -q '3306' && certlab-check login {cuser} 'podman inspect {cname}' | grep -q '/home/{cuser}/dbdata' && ls -Zd /home/{cuser}/dbdata | grep -q container_file_t
+@solution server1
+dnf -y install container-tools
+useradd {cuser}
+echo '{upw}' | passwd --stdin {cuser}
+loginctl enable-linger {cuser}
+ssh -o StrictHostKeyChecking=no {cuser}@localhost
+{upw}
+podman login -u student -p student registry.lab.example.com
+mkdir -p ~/dbdata ~/.config/containers/systemd
+podman unshare chown 27:27 ~/dbdata
+cat > ~/.config/containers/systemd/{cname}.container <<'EOF'
+[Container]
+ContainerName={cname}
+Image=registry.lab.example.com/rhel9/mariadb-105
+Environment=MYSQL_USER=app
+Environment=MYSQL_PASSWORD={dbpw}
+Environment=MYSQL_DATABASE={db}
+Environment=MYSQL_ROOT_PASSWORD={dbpw}
+PublishPort=3306:3306
+Volume=/home/{cuser}/dbdata:/var/lib/mysql:Z
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload
+systemctl --user start {cname}.service
+podman ps
+exit
+@explain
+Quadlet turns a .container file in ~/.config/containers/systemd into a user service named after the file ({cname}.service) at every systemctl --user daemon-reload. The [Install] section with WantedBy=default.target makes it start with the user's systemd; such a generated unit cannot be enabled with systemctl enable, the [Install] section does that job. loginctl enable-linger starts the user's systemd at boot without a login. Log in with ssh (not su) so that systemctl --user has a session. The :Z on the volume relabels the folder container_file_t; without it SELinux keeps MariaDB out of its own files. MariaDB runs as the user mysql (UID 27) inside the container, and in a rootless container the folder you made belongs to the container's root, so mysqld could not write there: podman unshare chown 27:27 gives the folder to UID 27 as the container sees it (the volume option :U does the same). podman run with -e, -p and -v, then podman generate systemd --new --files, is the older way and works too.
+@endtask
+
+@task t14 | Shell scripts | 20 | server1
+Write the script /usr/local/bin/{script}. It takes one or more folder names as arguments. For each argument it prints one line: `NAME: N files`, where N is the number of regular files directly in that folder (not in its subfolders), or `NAME: not a folder` when the argument is not a folder. Run without arguments, it prints `Usage: {script} FOLDER...` and exits with status 2.
+@check server1 | without arguments: the usage line and exit status 2
+out=$(/usr/local/bin/{script} 2>&1); rc=$?; test $rc -eq 2 && echo "$out" | grep -q "Usage: {script} FOLDER"
+@check server1 | it counts only the files directly in a folder
+mkdir -p /tmp/gr1/sub; touch /tmp/gr1/a /tmp/gr1/b /tmp/gr1/c /tmp/gr1/sub/d; /usr/local/bin/{script} /tmp/gr1 | grep -qx '/tmp/gr1: 3 files'
+@check server1 | several arguments, and a name that is not a folder
+mkdir -p /tmp/gr2; touch /tmp/gr2/x; out=$(/usr/local/bin/{script} /tmp/gr2 /tmp/nothing-here 2>&1); echo "$out" | grep -qx '/tmp/gr2: 1 files' && echo "$out" | grep -qx '/tmp/nothing-here: not a folder'
+@solution server1
+cat > /usr/local/bin/{script} <<'EOF'
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Usage: {script} FOLDER..."
+    exit 2
+fi
+for d in "$@"; do
+    if [ -d "$d" ]; then
+        n=$(find "$d" -maxdepth 1 -type f | wc -l)
+        echo "$d: $n files"
+    else
+        echo "$d: not a folder"
+    fi
+done
+EOF
+chmod +x /usr/local/bin/{script}
+{script} /etc /nowhere
+@explain
+"$@" expands to all the arguments, each one kept whole even if it contains spaces, and for d in "$@" walks through them. $(...) captures a command's output into a variable: find -maxdepth 1 -type f lists only the regular files at the top level, and wc -l counts the lines. [ -d NAME ] is true for a folder. Do not forget the #! line and chmod +x.
+@endtask
+
+@task t15 | Essential tools | 10 | server1
+Find every regular file under /var/projects that is larger than {big} MiB and write their full paths into /root/bigfiles.txt, one per line.
+@check server1 | /root/bigfiles.txt lists exactly the files larger than {big} MiB
+test -s /root/bigfiles.txt && test "$(sort /root/bigfiles.txt)" = "$(find /var/projects -type f -size +{big}M | sort)"
+@solution server1
+find /var/projects -type f -size +{big}M > /root/bigfiles.txt
+cat /root/bigfiles.txt
+@explain
+-size +NM means more than N mebibytes (k, M and G are the units; without a sign it means exactly that size, rounded up). find prints the full path when it starts from a full path, and > sends the list into the file.
+@endtask
+
+@task t16 | Essential tools | 10 | server1
+Copy every line of /var/log/app/events.log that begins with the whole word `{lvl}` into /root/{lvl}-lines.txt, in the original order. Lines that begin with a longer word starting with the same letters (such as {lvl}LOG or {lvl}ING) do not count, and neither do lines that have {lvl} only somewhere in the middle.
+@check server1 | the file has exactly those lines
+test -s /root/{lvl}-lines.txt && test "$(grep -E '^{lvl}( |$)' /var/log/app/events.log)" = "$(cat /root/{lvl}-lines.txt)"
+@solution server1
+grep -E '^{lvl}\b' /var/log/app/events.log > /root/{lvl}-lines.txt
+cat /root/{lvl}-lines.txt
+@explain
+^ anchors the match to the start of the line. \b is a word boundary, so ^{lvl}\b does not match a longer word; '^{lvl} ' (with the space) works here too. grep -w would not be enough on its own for this file, since it also needs the ^.
+@endtask
+
+@task t17 | Deploy and maintain | 15 | server2
+server2 has no network repositories. Mount the RHEL DVD (/dev/sr0) on {dvd} at every boot, and configure dnf to install from the BaseOS and AppStream repositories on it.
+@check server2 | after the reboot the DVD is mounted on {dvd}
+test "$(findmnt -n -o SOURCE {dvd})" = /dev/sr0
+@check server2 | the repository files point at the DVD
+grep -rhs '^baseurl' /etc/yum.repos.d/ | grep -q 'file://{dvd}/BaseOS' && grep -rhs '^baseurl' /etc/yum.repos.d/ | grep -q 'file://{dvd}/AppStream'
+@check server2 | packages from both repositories are available
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh && dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@solution server2
+mkdir -p {dvd}
+echo '/dev/sr0 {dvd} iso9660 ro 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+ls {dvd}
+printf '[dvd-BaseOS]\nname=DVD BaseOS\nbaseurl=file://{dvd}/BaseOS\ngpgcheck=0\nenabled=1\n\n[dvd-AppStream]\nname=DVD AppStream\nbaseurl=file://{dvd}/AppStream\ngpgcheck=0\nenabled=1\n' > /etc/yum.repos.d/dvd.repo
+dnf repolist
+@explain
+A DVD has the file system iso9660 and is read-only (ro). A local repository uses file:// followed by the full path, so file:///repo/BaseOS has three slashes. The DVD holds two repositories, BaseOS and AppStream, each a folder with its own repodata; pointing baseurl at the top of the DVD does not work. The signing key is on the DVD too: gpgkey=file://{dvd}/RPM-GPG-KEY-redhat-release is the alternative to gpgcheck=0.
+@endtask
+
+@task t18 | Local storage | 20 | server2
+On server2, create a partition on /dev/vdb and use it for a new volume group `{vg2}`. In it create the logical volume `{swaplv}` of {swapsize} MiB and use it as swap space, active at every boot. The existing swap must stay active too.
+@check server2 | {vg2}/{swaplv} is {swapsize} MiB
+test "$(lvs --noheadings --units m -o lv_size {vg2}/{swaplv} | tr -d ' ')" = "{swapsize}.00m"
+@check server2 | after the reboot the LV is active swap, next to the old swap
+swapon --show --noheadings | grep -q "^$(readlink -f /dev/{vg2}/{swaplv}) " && test "$(swapon --show --noheadings | wc -l)" -ge 2
+@solution server2
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm 1MiB 2049MiB
+parted -s /dev/vdb set 1 lvm on
+pvcreate /dev/vdb1
+vgcreate {vg2} /dev/vdb1
+lvcreate -n {swaplv} -L {swapsize}M {vg2}
+mkswap /dev/{vg2}/{swaplv}
+echo '/dev/{vg2}/{swaplv} none swap defaults 0 0' >> /etc/fstab
+swapon -a
+swapon --show
+@explain
+Swap on LVM works like a swap partition: mkswap writes the swap signature, an fstab line with mount point none and type swap makes it permanent, and swapon -a turns on everything fstab lists. swapon --show names the device /dev/dm-N, the kernel's name for the logical volume.
+@endtask
+
+@task t19 | File systems | 15 | server2
+The logical volume vgarchive/lvarchive (ext4, mounted on /archive) must grow to {newsize} MiB together with its file system, keeping its data. The volume group is too small: use free space on /dev/vdc to make it bigger.
+@check server2 | the LV is {newsize} MiB
+test "$(lvs --noheadings --units m -o lv_size vgarchive/lvarchive | tr -d ' ')" = "{newsize}.00m"
+@check server2 | the file system uses the new size and the data is still there
+test "$(df -m --output=size /archive | tail -1 | tr -d ' ')" -ge $(({newsize} - 60)) && grep -q 'do not lose' /archive/keep.txt
+@check server2 | vgarchive now has two physical volumes
+test "$(vgs --noheadings -o pv_count vgarchive | tr -d ' ')" -ge 2
+@solution server2
+vgs vgarchive
+parted -s /dev/vdc mkpart more 601MiB 1625MiB
+pvcreate /dev/vdc2
+vgextend vgarchive /dev/vdc2
+lvextend -r -L {newsize}M vgarchive/lvarchive
+df -h /archive
+@explain
+vgs shows that the group has less than 100 MiB free. A new partition becomes a physical volume (pvcreate) and joins the group (vgextend); then lvextend -r grows the volume and the ext4 file system in one go (without -r, run resize2fs yourself). ext4 can grow while it is mounted.
+@endtask
+
+@task t20 | Deploy and maintain | 15 | server2
+On server2:
+- Create a systemd service `{tname}.service` that writes the output of `df -h` into /var/log/{tname}.txt, and a timer `{tname}.timer` that starts it every {mins} minutes (minute 0, {mins}, ... of every hour). The timer must be active and start at boot.
+- With at, schedule a one-time job for 10:00 on 2026-03-{atday} that runs `logger "{tname} at job"`.
+@check server2 | the timer is enabled and active
+systemctl is-enabled {tname}.timer && systemctl is-active {tname}.timer
+@check server2 | the timer runs every {mins} minutes
+systemctl cat {tname}.timer | grep -Eq '^OnCalendar=.*:0?0/{mins}([^0-9]|$)'
+@check server2 | the service writes the report
+rm -f /var/log/{tname}.txt; systemctl start {tname}.service; grep -q Filesystem /var/log/{tname}.txt
+@check server2 | the at job is queued for 10:00 on March {atday}
+atq | grep -q 'Mar {atday} 10:00:00 2026' && for j in $(atq | awk '{print $1}'); do at -c $j | grep -q '{tname} at job' && exit 0; done; exit 1
+@solution server2
+cat > /etc/systemd/system/{tname}.service <<'EOF'
+[Unit]
+Description=Write a disk usage report
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'df -h > /var/log/{tname}.txt'
+EOF
+cat > /etc/systemd/system/{tname}.timer <<'EOF'
+[Unit]
+Description=Disk usage report every {mins} minutes
+
+[Timer]
+OnCalendar=*:00/{mins}
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now {tname}.timer
+systemctl list-timers {tname}.timer
+echo 'logger "{tname} at job"' | at 10:00 2026-03-{atday}
+atq
+@explain
+A timer starts the service with the same name. OnCalendar=*:00/{mins} means every hour, starting at minute 0 and then every {mins} minutes (systemctl list-timers shows when it fires next). The timer, not the service, is enabled: WantedBy=timers.target starts it at boot. A Type=oneshot service runs its command and ends. at reads the commands from standard input; atq lists the queue and at -c N shows a job's commands. at jobs are kept in /var/spool/at and survive a reboot.
+@endtask

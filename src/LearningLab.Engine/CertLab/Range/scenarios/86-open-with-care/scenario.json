@@ -1,0 +1,71 @@
+{
+    "id": "open-with-care",
+    "title": "Open With Care",
+    "category": "blue",
+    "level": "Advanced",
+    "order": 5,
+    "summary": "Someone opened an 'invoice' from an email. It wasn't an invoice: it installed a service that reports to an outside address. Trace it from the attachment to the service and pull it all out.",
+    "story": "{{VIC_FULL}} at {{CO}} (made up) opened an email attachment yesterday and their PC, {{PC}} on 10.10.26.0/24, has been busy since. You are at soc on the same network with the PC's administrator password: {{ADMPW}} (winrm-shell -i 10.10.26.30 -u Administrator -p {{ADMPW}}).",
+    "goal": "Name the attachment, the service it installed and the address the service reports to; capture the flag in the service's folder; then stop and delete the service and remove both the attachment and the agent before it sends {{VIC}}'s documents out.",
+    "skills": "Downloads folders, double file extensions, Get-Service, sc.exe qc, the System log (7045), Stop-Service, sc.exe delete",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 35,
+    "attackerIp": "{{C2}}",
+    "goalName": "send the documents to the outside address",
+    "goalPoints": 80,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-SALES4|WIN-BUY02|WIN-FRONT9|WIN-OPS11",
+        "VIC": "person",
+        "VICPW": "word",
+        "ADMPW": "word",
+        "C2": "ip",
+        "NUM": "num:1000-9999",
+        "FAKEDOM": "pick:billing-notice.example|invoices-portal.example|pay-docs.example",
+        "KIND": "pick:ps1|vbs|cmd",
+        "SVC": "pick:WinUpdHelper|SpoolAssist|DiagTrackPlus"
+    },
+    "variants": {
+        "KIND": {
+            "ps1": { "ATT": "Invoice-{{NUM}}.pdf.ps1" },
+            "vbs": { "ATT": "Invoice-{{NUM}}.pdf.vbs" },
+            "cmd": { "ATT": "Invoice-{{NUM}}.doc.cmd" } },
+        "SVC": {
+            "WinUpdHelper": { "SVC_DISP": "Windows Update Helper" },
+            "SpoolAssist": { "SVC_DISP": "Print Spooler Assistant" },
+            "DiagTrackPlus": { "SVC_DISP": "Diagnostics Tracking Plus" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.26.5/24" ] },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "{{VIC_FULL}}'s PC (yours to look after)", "nics": [ "10.10.26.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{VIC}}", "password": "{{VICPW}}", "remote": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "26h", "message": "An account was successfully logged on. Account Name: {{VIC}} Source Network Address: 10.10.26.30 Logon Type: 2" },
+            { "log": "Security", "id": 4688, "level": 0, "ago": "25h", "message": "A new process has been created. Creator Process Name: C:\\Program Files\\Mail\\mail.exe Account Name: {{VIC}} New Process Name: C:\\Users\\{{VIC}}\\Downloads\\{{ATT}}" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "agent", "name": "The flag in the service's folder", "points": 70, "machine": "{{PC}}", "path": "C:\\ProgramData\\{{SVC}}\\id.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "att", "ask": "What is the file name of the attachment that was opened?", "answer": "{{ATT}}", "points": 50, "explain": "It sits in {{VIC}}'s Downloads folder; the second extension (.{{KIND}}) is the real one - it is a script, not a document. Event 4688 shows it being started from the mail program." },
+        { "id": "svc", "ask": "What is the name of the service it installed?", "answer": "{{SVC}}", "points": 50, "explain": "System log event 7045 (a service was installed) and Get-Service; its program is PowerShell running a script from C:\\ProgramData." },
+        { "id": "c2", "ask": "What outside address does the agent report to?", "answer": "{{C2}}", "points": 50, "explain": "Written in the attachment and in agent.ps1." }
+    ],
+    "tasks": [
+        { "id": "svc", "name": "Stop and delete the service", "machine": "{{PC}}", "check": "if (Get-Service -Name '{{SVC}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 60, "explain": "Stop-Service {{SVC}}, then sc.exe delete {{SVC}}" },
+        { "id": "files", "name": "Remove the attachment and the agent script", "machine": "{{PC}}", "check": "if ((Test-Path 'C:\\Users\\{{VIC}}\\Downloads\\{{ATT}}') -or (Test-Path 'C:\\ProgramData\\{{SVC}}\\agent.ps1')) { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-Item both files." }
+    ],
+    "attacker": [
+        { "at": "360s", "machine": "{{PC}}", "run": "New-Item -ItemType Directory -Path 'C:\\ProgramData\\{{SVC}}\\out' -Force | Out-Null; Copy-Item 'C:\\Users\\{{VIC}}\\Documents\\*' 'C:\\ProgramData\\{{SVC}}\\out' -ErrorAction SilentlyContinue", "unless": "if (Get-Service -Name '{{SVC}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "note": "The service was still installed, so its agent was told to collect {{VIC}}'s documents for {{C2}}.", "goal": true }
+    ],
+    "hints": [
+        { "text": "Start where the user started: their Downloads folder. A name like report.pdf.ps1 is a script wearing a document's name - Windows hides known extensions, so the person saw only 'report.pdf'. Read it with Get-Content: it says what it did.", "cost": 15 },
+        { "text": "Services that start with Windows are a favourite place to stay. Get-WinEvent -FilterHashtable @{ LogName='System'; Id=7045 } shows services installed recently; sc.exe qc NAME shows the program a service runs. Remove it with Stop-Service then sc.exe delete NAME, and delete the two script files.", "cost": 25 }
+    ]
+}

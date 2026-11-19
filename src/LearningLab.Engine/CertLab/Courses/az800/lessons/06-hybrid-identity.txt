@@ -1,0 +1,229 @@
+# Unit: u06 | 6. Hybrid identity and AD DS in Azure | Hybrid identity
+
+Most companies that use Microsoft 365 or Azure keep Active Directory on premises and copy their people into **Microsoft Entra ID** (the cloud directory that used to be called Azure AD), so that one account and one password work for both. That is **hybrid identity**. This unit covers the two sync tools, the ways people's cloud sign-ins are checked, and running domain controllers as virtual machines in Azure. Harborline's tenant is `harborline.onmicrosoft.example`, and it has verified the company's public domain `harborline.example`.
+
+## Lesson: l0601 | Microsoft Entra Connect Sync and Cloud Sync
+
+Two Microsoft tools copy (synchronize) users, groups and contacts from AD DS to Microsoft Entra ID:
+
+- **Microsoft Entra Connect Sync** (the older full product, once "Azure AD Connect"): installed on a domain-joined Windows Server, with its own sync engine and database (SQL Server Express LocalDB, fine up to about 100,000 objects). It can do everything: password hash sync, pass-through authentication, federation with AD FS, password writeback, device writeback, Exchange hybrid, attribute filtering and custom sync rules. One active server per tenant; others can wait in **staging mode** (next lesson).
+- **Microsoft Entra Cloud Sync**: a small **provisioning agent** on one or more servers, and the configuration lives in the cloud. Several agents give high availability with nothing to fail over by hand, and it handles several forests that can't see each other (for example after a merger). It syncs every 2 minutes and supports password hash sync, but not pass-through authentication, device objects or advanced custom rules.
+
+> Exam pattern: "lightest footprint, several disconnected forests, high availability without staging servers" = Cloud Sync. "Pass-through authentication", "federation", "device writeback" or "custom sync rules" = Connect Sync.
+
+### Installing Connect Sync
+
+- Run the installer on a member server (a domain controller works, but Microsoft prefers a separate server). It needs an account with **Hybrid Identity Administrator** (or Global Administrator) in the tenant and, for the express settings, an **Enterprise Admins** member on premises: the wizard creates the AD DS connector account it will use afterwards.
+- **Express settings** sync the whole forest with password hash sync. **Customize** lets you choose the sign-in method, **domain and OU filtering**, and optional features.
+- **OU filtering** decides which OUs are in scope. Service accounts, test users and admin accounts usually stay out. A user who leaves the scope is deleted in the cloud at the next sync.
+- The service is `ADSync` (Microsoft Azure AD Sync). The **Synchronization Service Manager** shows each run; the PowerShell module is `ADSync`.
+
+### UPN suffixes and verified domains
+
+The cloud sign-in name comes from the on-premises **userPrincipalName**. If its suffix is a domain the tenant has **verified** (`harborline.example`), the cloud user gets the same name. If not (an internal name such as `corp.example` or `corp.local`), the user gets the tenant's initial domain instead: `bcole@harborline.onmicrosoft.example`. So before the first sync, add the public domain as a UPN suffix to the forest (unit 1) and give it to the users.
+
+```terminal
+#setup admin:connect install server=SRV1 signin=PHS ous="OU=Staff,DC=corp,DC=example"
+#machine SRV1
+PS C:\Windows\system32> Get-Service ADSync
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  ADSync             Microsoft Azure AD Sync
+```
+
+@try
+@setup admin
+new user name="Lab Tester" sam=labtest upn=labtest@corp.example password=Harbor#2026 path="CN=Users,DC=corp,DC=example"
+@task t1 | Hybrid identity | 10 | admin
+Install **Microsoft Entra Connect Sync** on **SRV1** with **password hash synchronization** and **seamless single sign-on**. Only the people in the OU `Staff` may be synced (the test account in Users must stay out).
+@check admin | Connect Sync runs on SRV1 with password hash sync and seamless SSO
+connect.server == SRV1
+connect.signin == PHS
+connect.sso == Yes
+@check admin | Staff is synced, the test account is not
+cloud.user["bcole"]
+not cloud.user["labtest"]
+@hint In the Connect wizard: Customize, sign-in Password Hash Synchronization with Enable single sign-on, then Domain and OU filtering with only Staff ticked (signin=PHS sso=yes ous=...).
+@solution admin
+connect install server=SRV1 signin=PHS sso=yes ous="OU=Staff,DC=corp,DC=example"
+@explain
+Customize is the way to get OU filtering and seamless SSO at install time. Seamless SSO creates the computer account AZUREADSSOACC in AD DS: protect it like any other sensitive account.
+@endtask
+@task t2 | Hybrid identity | 10 | DC1
+The Sales people's cloud names end in `harborline.onmicrosoft.example`. Add the UPN suffix **harborline.example** to the forest, give it to everyone in `Staff/Sales`, and run a delta sync on SRV1 so the cloud names change now.
+@check admin | the Sales users' cloud names use the verified domain
+cloud.user["bcole"].upn == bcole@harborline.example
+cloud.user["imoreau"].upn == imoreau@harborline.example
+cloud.user["dpatel"].upn == dpatel@harborline.example
+@hint Set-ADForest -UPNSuffixes @{Add='harborline.example'}, then Get-ADUser -SearchBase ... | ForEach-Object { Set-ADUser ... }, then on SRV1 Start-ADSyncSyncCycle -PolicyType Delta.
+@solution DC1
+Set-ADForest -Identity corp.example -UPNSuffixes @{Add='harborline.example'}
+Get-ADUser -Filter * -SearchBase 'OU=Sales,OU=Staff,DC=corp,DC=example' | ForEach-Object { Set-ADUser $_ -UserPrincipalName ($_.SamAccountName + '@harborline.example') }
+@solution SRV1
+Start-ADSyncSyncCycle -PolicyType Delta
+@explain
+The cloud name follows the on-premises UPN once its suffix is a verified domain. A delta sync picks up changes; an Initial (full) sync is only needed after changing the sync configuration, such as the OU filter or sync rules.
+@endtask
+@end
+
+@quiz
+? Harborline buys a company whose forest has no network connection to Harborline's. Both must sync to the same tenant with as little to install as possible. What do you use?
+- A second Connect Sync server in staging mode
++ Microsoft Entra Cloud Sync with a provisioning agent in each forest
+- A forest trust and one Connect Sync server
+! Cloud Sync's agents only talk out to the cloud, so disconnected forests are no problem, and its configuration lives in the tenant.
+? A user's on-premises UPN is `kim@corp.local`. The tenant has verified only `harborline.example`. What is the cloud sign-in name after sync?
+- kim@corp.local
+- kim@harborline.example
++ kim@<tenant>.onmicrosoft.example (the initial domain)
+! A suffix that isn't verified is replaced by the tenant's initial onmicrosoft domain. Add a routable UPN suffix and set it on the users first.
+? You remove an OU from Connect Sync's OU filtering. What happens to the cloud users that came from it?
+- Nothing: OU filtering only affects new users
++ They are deleted in Microsoft Entra ID at the next sync
+- They become cloud-only users
+! Objects that leave the sync scope are removed from the tenant (they go to the deleted users for 30 days).
+@end
+
+## Lesson: l0602 | Cloud sign-in: password hash sync, pass-through authentication and federation
+
+Syncing makes the account exist in the cloud. How the **password** is checked when someone signs in to Microsoft 365 is a separate choice:
+
+- **Password hash synchronization (PHS)**: Connect copies a hash of each password's hash to the tenant, every 2 minutes. The cloud checks passwords itself, so sign-in keeps working when the office is offline. It is the simplest method, enables leaked-credential detection in Microsoft Entra ID Protection, and Microsoft recommends turning it on even when you use another method, as a backup.
+- **Pass-through authentication (PTA)**: the password stays on premises. A lightweight **authentication agent** on a server takes the sign-in request from a queue in the cloud (outbound HTTPS only, no open ports) and checks it against a DC. On-premises rules apply at once: a disabled or locked account, logon hours, an expired password. If no agent is reachable, nobody can sign in, so install **at least three agents** on different servers (the Connect server has the first one).
+- **Federation** with **AD FS** (or another identity provider): the tenant sends people to your own sign-in servers (an AD FS farm plus Web Application Proxy servers in the perimeter network). Needed only for things the other methods can't do, such as certain smart card or third-party MFA set-ups; it is the most work to run, and Microsoft recommends moving to PHS or PTA.
+
+**Seamless single sign-on** (with PHS or PTA) lets domain-joined PCs on the company network sign in to cloud apps without typing the password, using Kerberos: Connect creates the computer account `AZUREADSSOACC` in each forest, and the site `https://autologon.microsoftazuread-sso.com` is added to the browsers' Intranet zone by Group Policy. Roll over its Kerberos key regularly.
+
+### Staging mode and sync cycles
+
+A second Connect Sync server in **staging mode** has the same configuration and imports and syncs everything, but **exports nothing** and doesn't sync passwords. If the active server dies, you turn staging mode off on the standby (and on the old one when it returns). It is also the safe way to test a configuration change or an upgrade.
+
+The **scheduler** runs a **delta sync** every 30 minutes. In PowerShell on the Connect server:
+
+- `Get-ADSyncScheduler`: the interval, the next run, `SyncCycleEnabled`, `StagingModeEnabled`.
+- `Start-ADSyncSyncCycle -PolicyType Delta` (changes only) or `-PolicyType Initial` (a full sync, after a configuration change).
+- `Set-ADSyncScheduler -SyncCycleEnabled $false` stops the schedule for maintenance; set it back to `$true` afterwards.
+
+```terminal
+#setup admin:connect install server=SRV1 signin=PTA
+#machine SRV1
+PS C:\Windows\system32> Get-ADSyncScheduler | Format-List NextSyncCycleStartTimeInUTC, SyncCycleEnabled, StagingModeEnabled
+
+NextSyncCycleStartTimeInUTC : 3/2/2026 9:30:00 AM
+SyncCycleEnabled            : True
+StagingModeEnabled          : False
+
+
+PS C:\Windows\system32> Start-ADSyncSyncCycle -PolicyType Delta
+
+Result
+------
+Success
+```
+
+@try
+@setup admin
+connect install server=SRV1 signin=PTA ous="OU=Staff,DC=corp,DC=example"
+@task t1 | Hybrid identity | 10 | admin
+Harborline uses **pass-through authentication** with its only agent on SRV1. Make cloud sign-ins survive SRV1 going down: add authentication agents on **FS1** and **CORE1**.
+@check admin | three agents
+connect.ptaagents has SRV1
+connect.ptaagents has FS1
+connect.ptaagents has CORE1
+@solution admin
+connect ptaagent FS1
+connect ptaagent CORE1
+@explain
+Each agent works on its own; the cloud hands a sign-in to any agent that is up. Three agents on different servers is Microsoft's recommendation.
+@endtask
+@task t2 | Hybrid identity | 10 | DC1
+Dev Patel (`dpatel`) moves to the team **Sales Operations**. Change his department in AD DS and make the change reach Microsoft Entra ID now instead of in up to 30 minutes.
+@check admin | the cloud has the new department
+cloud.user["dpatel"].department == "Sales Operations"
+@hint Set-ADUser on a DC, then Start-ADSyncSyncCycle -PolicyType Delta on the Connect server (SRV1).
+@solution DC1
+Set-ADUser dpatel -Department 'Sales Operations'
+@solution SRV1
+Start-ADSyncSyncCycle -PolicyType Delta
+@endtask
+@end
+
+@quiz
+? The head office's internet link fails for a day. Which sign-in method lets people keep using Microsoft 365 from home?
++ Password hash synchronization
+- Pass-through authentication
+- Federation with AD FS at the head office
+! With PHS the cloud checks the password itself. PTA and AD FS need servers at the office to answer.
+? A user is disabled on premises. With which method is a cloud sign-in refused at once, before any sync runs?
+- Password hash synchronization
++ Pass-through authentication
+- Seamless single sign-on
+! PTA checks every sign-in against a domain controller, so on-premises account state applies immediately.
+? What does a Connect Sync server in staging mode do?
+- Exports changes only when the active server is down
++ Imports and syncs but exports nothing, ready to take over
+- Syncs only passwords
+! Staging mode keeps a warm standby; you switch it over by turning staging mode off.
+? You changed the OU filtering. Which cycle makes sure every object is evaluated again?
+- Start-ADSyncSyncCycle -PolicyType Delta
++ Start-ADSyncSyncCycle -PolicyType Initial
+- Set-ADSyncScheduler -SyncCycleEnabled $true
+! A configuration change needs a full (Initial) sync; Delta only looks at changed objects.
+@end
+
+## Lesson: l0603 | AD DS on Azure virtual machines
+
+Some companies put a domain controller in Azure, next to servers that run there, so they don't depend on the VPN for every sign-in. A DC in an Azure VM is an ordinary DC, with a few Azure rules:
+
+- **Static private IP**: set the NIC's private IP allocation to **Static** in Azure (the VM's network settings). Inside Windows, leave the adapter on DHCP: Azure always hands the VM that address. Never set a static IP inside the guest.
+- **A data disk for the directory**: put the AD DS database, logs and SYSVOL on a separate **data disk** with **host caching None**, and choose that drive when you promote (`-DatabasePath`, `-LogPath`, `-SysvolPath`). The OS disk uses write caching, which can lose directory writes.
+- **DNS for the virtual network**: set the VNet's **custom DNS servers** to the domain's DNS servers (the Azure DC first, an on-premises DC second) instead of Azure-provided DNS, so VMs can find the domain. VMs pick the change up when they restart or renew.
+- **Sites and subnets**: create an AD site for Azure (for example `Azure`) with the VNet's address range as its subnet, and a site link to the head office, so clients in Azure use the Azure DC and replication follows the link's schedule (unit 3).
+- **Connectivity**: a site-to-site VPN or ExpressRoute between the office and the VNet. Keep RDP closed to the internet; use Azure Bastion or the VPN.
+- Back DCs up with Azure Backup; never restore a DC from an old disk copy. Windows Server's **VM-GenerationID** support protects a DC when a hypervisor rolls it back, but that is a safety net, not a backup method.
+- Where you only need a managed domain for Azure apps and don't want to run DCs, **Microsoft Entra Domain Services** is the alternative (no Domain Admins, no schema changes).
+
+@try
+@task t1 | Hybrid identity | 10 | admin
+AZ-DC3 will become a domain controller in Azure. Make its private IP address **static** and attach a 32 GB data disk named **ntds** for the directory, with the right host caching.
+@check admin | static IP and a data disk without caching
+azure.vm["AZ-DC3"].ipallocation == Static
+azure.vm["AZ-DC3"].disk["ntds"].caching == None
+@hint Azure portal: the VM's network interface (IP configuration: Static) and Disks > Create and attach a new disk (Host caching: None).
+@solution admin
+azure vm AZ-DC3 ipallocation=Static
+azure vm AZ-DC3 disk name=ntds size=32 caching=None
+@endtask
+@task t2 | Hybrid identity | 10 | admin
+Make the VMs in `vnet-hybrid` use AZ-DC3 (`10.50.1.5`) and then DC1 (`10.10.0.10`) for DNS. Create the AD site **Azure** with the subnet **10.50.0.0/16**.
+@check admin | the VNet uses the domain's DNS servers
+azure.vnetdns has 10.50.1.5
+azure.vnetdns has 10.10.0.10
+@check admin | Azure has its own site and subnet
+subnet["10.50.0.0/16"].site == Azure
+@solution admin
+azure vnetdns 10.50.1.5,10.10.0.10
+new site name=Azure link=DEFAULTIPSITELINK
+new subnet name=10.50.0.0/16 site=Azure
+@endtask
+@end
+
+@quiz
+? Where do you set the static IP address of a domain controller that runs in an Azure VM?
+- In Windows, with New-NetIPAddress
++ On the VM's network interface in Azure (private IP allocation Static), leaving Windows on DHCP
+- In the virtual network's DHCP options
+! Azure's DHCP always gives the VM its reserved address; a static address inside the guest can cut the VM off.
+? Which host caching should the data disk with NTDS.dit and SYSVOL use?
++ None
+- ReadOnly
+- ReadWrite
+! AD DS needs its writes to reach the disk; host caching None makes sure they do.
+? New VMs in the VNet can't join the domain: they can't find a domain controller. What is the likely cause?
+- The VMs use a static IP
++ The VNet still uses Azure-provided DNS instead of the domain's DNS servers
+- The Azure site has no site link
+! Joining a domain starts with DNS (the DC's SRV records); set the VNet's custom DNS servers to the domain's DNS servers.
+@end
+

@@ -1,0 +1,75 @@
+# Lab: lab-13 | BitLocker and LAPS | u13 | 35
+An auditor found two gaps at Riverbend: laptops without disk encryption, and the same local administrator password on every PC. Close both: silent BitLocker with the keys in Microsoft Entra ID and compliance that checks it, key rotation, and Windows LAPS, with the hybrid joined desktop backing up to Active Directory instead.
+
+@vars
+age = 14 | 21 | 30
+adage = 7 | 10 | 15
+@endvars
+
+@task t01 | Protection | 30 | portal
+Create a disk encryption policy **Encrypt laptops** that encrypts silently, also for standard users, with **XTS-AES 128-bit**, backing up the recovery key to Microsoft Entra ID before encrypting. Create a Windows compliance policy **Require BitLocker** that requires BitLocker. Assign both to **Windows devices**, sync **RB-LT-001**, let the encryption finish, and sync again so it reports compliant.
+@check portal | RB-LT-001 is encrypted, its key is in Entra ID, and it is compliant
+device["RB-LT-001"].bitlocker == On
+device["RB-LT-001"].recoveryKeyIn == "Microsoft Entra ID"
+device["RB-LT-001"].policy["Require BitLocker"] == Compliant
+@check RB-LT-001 | drive C: is fully encrypted
+"$((Get-BitLockerVolume -MountPoint C:).VolumeStatus)" -eq 'FullyEncrypted'
+@hint Require Device Encryption Enabled, Allow Warning For Other Disk Encryption Disabled, Allow Standard User Encryption Enabled, backup to Entra ID and "do not enable until stored". Sync, Skip time 2 hours, Sync.
+@solution portal
+create diskEncryption name="Encrypt laptops" requireEncryption=Enabled allowWarning=Disabled standardUser=Enabled osMethod="XTS-AES 128-bit" backup=Enabled backupFirst=Enabled
+create compliance name="Require BitLocker" platform="Windows 10 and later" bitlocker=Require
+assign diskEncryption "Encrypt laptops" "Windows devices"
+assign compliance "Require BitLocker" "Windows devices"
+remote sync RB-LT-001
+#wait 7200
+remote sync RB-LT-001
+@explain
+The configuration (disk encryption policy) turns BitLocker on; the compliance policy only checks it. Right after the first sync the laptop is still encrypting, so it is noncompliant; once encryption has finished, the next check-in reports compliant.
+@endtask
+
+@task t02 | Protection | 15 | portal
+Jordan had to type his recovery key at the help desk yesterday, so the key is no longer secret. Turn on **recovery password rotation** for Microsoft Entra joined devices in **Encrypt laptops**, and rotate RB-LT-001's key from the portal.
+@check portal | rotation is on and RB-LT-001 has a new key
+diskEncryption["Encrypt laptops"].rotation == "Refresh on for Microsoft Entra joined devices"
+device["RB-LT-001"].log contains "BitLocker recovery password rotated"
+@hint Configure Recovery Password Rotation in the policy; then the device's BitLocker key rotation remote action.
+@solution portal
+set diskEncryption "Encrypt laptops" rotation="Refresh on for Microsoft Entra joined devices"
+remote rotate-bitlocker RB-LT-001
+@explain
+Key rotation needs the policy setting first; then the remote action makes the PC create a new recovery password and back it up to Entra ID. With rotation on, Windows also replaces a key by itself after it has been used to unlock the drive.
+@endtask
+
+@task t03 | Protection | 25 | portal
+Turn on Microsoft Entra LAPS in the tenant, then create a LAPS policy **LAPS cloud** that backs up the built-in Administrator's password to **Microsoft Entra ID only** and changes it every **{age}** days. Assign it to **Windows devices**, except the hybrid joined desktop: create an assigned group **Hybrid desktops** with **RB-DT-010** and exclude it. Sync **RB-LT-001**.
+@check portal | RB-LT-001's password is managed and stored in Entra ID
+device["RB-LT-001"].laps == On
+device["RB-LT-001"].laps.backup == "Microsoft Entra ID"
+laps["LAPS cloud"].ageDays == {age}
+laps["LAPS cloud"].exclude has "Hybrid desktops"
+@hint The tenant switch first (Tenant administration > Settings: Enable Microsoft Entra LAPS). Exclude a device group from a device group assignment: that mix is supported.
+@solution portal
+tenant lapsEnabled=Yes
+create group name="Hybrid desktops" type=Security membership=Assigned members=RB-DT-010
+create laps name="LAPS cloud" backup="Backup the password to Microsoft Entra ID only" ageDays={age}
+assign laps "LAPS cloud" "Windows devices"
+assign laps "LAPS cloud" "Hybrid desktops" intent=exclude
+remote sync RB-LT-001
+@explain
+Without the tenant switch the devices can't store their passwords in Entra ID and the policy fails. Excluding a device group from a device group assignment works; a device with two LAPS policies would report a conflict, which is why the desktop is left out here.
+@endtask
+
+@task t04 | Protection | 30 | portal
+Sam's hybrid joined desktop **RB-DT-010** must keep its LAPS password in the on-premises **Active Directory**, changed every **{adage}** days. Create a LAPS policy **LAPS on-premises** for the **Hybrid desktops** group and sync the desktop.
+@check portal | the desktop's password is managed and backed up to Active Directory
+device["RB-DT-010"].laps == On
+device["RB-DT-010"].laps.backup == "Active Directory"
+device["RB-DT-010"].policy["LAPS cloud"] == "Not assigned"
+@hint Backup Directory: Backup the password to Active Directory only. Assign it to Hybrid desktops (the group from the previous task).
+@solution portal
+create laps name="LAPS on-premises" backup="Backup the password to Active Directory only" ageDays={adage}
+assign laps "LAPS on-premises" "Hybrid desktops"
+remote sync RB-DT-010
+@explain
+Backing up to Active Directory needs a domain joined device, which a hybrid joined desktop is. Password ages below 7 days are allowed only with Active Directory. In a real domain, an admin first extends the AD schema (`Update-LapsADSchema`) and lets the computers write their own password (`Set-LapsADComputerSelfPermission`); Cert Lab skips that. The cloud policy excludes this group, so the desktop gets exactly one LAPS policy.
+@endtask

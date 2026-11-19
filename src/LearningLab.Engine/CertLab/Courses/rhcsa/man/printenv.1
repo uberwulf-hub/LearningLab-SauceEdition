@@ -1,0 +1,20 @@
+NAME
+       printenv - print environment variables
+
+SYNOPSIS
+       printenv [NAME...]
+
+DESCRIPTION
+       Without arguments, printenv prints every environment variable as
+       NAME=VALUE, one per line. With names, it prints only their values.
+       It exits with 1 when a named variable is not set.
+
+       Only exported variables are in the environment; a variable set in the
+       shell without export is not shown. "echo $NAME" shows either kind.
+
+EXAMPLES
+           printenv PATH
+           printenv | grep -i lang
+
+SEE ALSO
+       env(1), bash(1), export(1)

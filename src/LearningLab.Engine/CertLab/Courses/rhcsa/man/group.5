@@ -1,0 +1,33 @@
+NAME
+       group - the local group file
+
+SYNOPSIS
+       /etc/group
+
+DESCRIPTION
+       /etc/group has one line per local group, readable by everyone, with
+       four fields separated by colons:
+
+           NAME:PASSWORD:GID:MEMBERS
+
+       NAME      the group's name.
+       PASSWORD  x: a group password, if any, is in /etc/gshadow. Group
+                 passwords are rarely used.
+       GID       the group ID number.
+       MEMBERS   the users who have this group as a SUPPLEMENTARY group,
+                 separated by commas. Users whose PRIMARY group it is (the
+                 GID field of /etc/passwd) are not listed here, but they
+                 belong to it as well.
+
+       Create and change groups with groupadd, groupmod, groupdel, and add
+       members with usermod -aG GROUP USER or gpasswd -a USER GROUP. Show a
+       group with getent group NAME.
+
+EXAMPLES
+           wheel:x:10:student
+           admins:x:2000:harry,natasha
+
+           getent group wheel
+
+SEE ALSO
+       passwd(5), gshadow(5), groupadd(8), usermod(8), gpasswd(1), vigr(8)

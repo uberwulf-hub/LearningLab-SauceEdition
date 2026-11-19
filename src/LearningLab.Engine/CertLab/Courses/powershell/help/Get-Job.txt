@@ -1,0 +1,34 @@
+SYNOPSIS: Lists the background jobs of this session and shows how they are doing.
+DESCRIPTION:
+A background job runs a command while you keep using the console. Get-Job lists the jobs started in this session (by Start-Job, by Invoke-Command -AsJob and by other -AsJob commands), with their Id, Name, type, State and whether they have results waiting (HasMoreData).
+
+The State is Running, Completed, Failed, Stopped or Blocked. HasMoreData is True until you collect the results with Receive-Job.
+
+Jobs belong to the session that started them. Close the PowerShell window and its jobs, finished or not, are gone.
+PARAMETER Id:
+The job numbers to show. Position 0.
+PARAMETER Name:
+The job names to show. Wildcards work.
+PARAMETER Job:
+Job objects, for example from a variable. They can come through the pipeline.
+PARAMETER State:
+Shows only jobs in this state, for example -State Running or -State Failed.
+PARAMETER IncludeChildJob:
+Also lists each job's child jobs. Every job has at least one child that does the real work (one per computer for remote jobs).
+EXAMPLE: Get-Job
+Lists all jobs of this session.
+EXAMPLE: $j = Start-Job { Start-Sleep 5; 'done' }; Get-Job -Id $j.Id
+Shows one job; its State is Running until the five seconds have passed.
+EXAMPLE: Get-Job -State Failed
+Lists the jobs that failed. Receive-Job shows their errors.
+EXAMPLE: Get-Job | Remove-Job
+Removes every job (finished ones; running ones need -Force).
+NOTES:
+The alias is gjb.
+
+Job Ids count up through the session, and each child job takes a number too, so your first two jobs are usually 1 and 3.
+
+A completed job with HasMoreData True still holds its output: run Receive-Job to collect it.
+
+Real 5.1 also has -Newest, -Before, -After, -HasMoreData and -ChildJobState; PowerShell 7 adds thread jobs (Start-ThreadJob) and the & operator at the end of a line to start a job.
+RELATED: Start-Job, Receive-Job, Wait-Job, Stop-Job, Remove-Job, about_Jobs

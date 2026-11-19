@@ -1,0 +1,39 @@
+# Sheet: configuration | Configuration profiles and scripts | Configuration
+## Portal
+Devices > Configuration > Create :: a configuration profile: platform, then profile type
+Settings catalog :: searchable list of Windows settings; the first place to look
+Templates :: Device restrictions, Administrative templates, Wi-Fi, VPN, Kiosk, Domain Join, Edition upgrade, Delivery Optimization, Custom
+Custom :: OMA-URI + data type + value for any CSP setting
+Tenant administration > Filters :: assignment filters on device properties, one platform each
+Devices > Scripts and remediations :: platform scripts and remediations
+Devices > Group Policy analytics :: import a GPO backup, see MDM support, migrate to the settings catalog
+## OMA-URIs
+./Device/Vendor/MSFT/Policy/Config/AREA/SETTING :: a Policy CSP setting for the device
+./User/Vendor/MSFT/Policy/Config/AREA/SETTING :: the same for the signed-in user
+./Device/Vendor/MSFT/Policy/Config/Camera/AllowCamera :: Integer: 0 not allowed, 1 allowed
+## Assignments
+Device group :: the profile applies to the device, whoever signs in
+User group :: the profile follows the user to each enrolled device
+Include + exclude, same kind of group :: the exclusion wins
+Include users + exclude devices (or the reverse) :: not supported: the exclusion is ignored
+Filter, include mode :: only matching devices get it
+Filter, exclude mode :: matching devices don't get it
+Filters :: one per assignment, included groups only, same platform as the profile
+## Troubleshooting
+Device page > Device configuration :: each profile's state: Succeeded, Error, Conflict, Not applicable, Pending
+Conflict :: two profiles set one setting differently; the setting isn't applied
+Settings > Accounts > Access work or school > Info :: Sync, and Create report (MDM diagnostic report)
+Get-ChildItem HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device :: the policy areas that reached the PC
+Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Camera :: the values of one area
+mdmdiagnosticstool -out C:\Temp\MDM :: an MDM diagnostic report in a folder
+mdmdiagnosticstool -area 'DeviceEnrollment;TPM' -cab C:\Temp\mdm.cab :: logs of some areas in a cab file
+DeviceManagement-Enterprise-Diagnostics-Provider > Admin :: the Event Viewer log of MDM errors
+## Scripts
+Platform script :: runs once per device or user (again if changed); SYSTEM unless "logged on credentials"
+Run script in 64 bit PowerShell Host :: No means the 32-bit host (32-bit registry view)
+Enforce script signature check :: only scripts signed by a trusted publisher run
+Remediation :: detection + remediation script on a schedule (once, hourly, daily)
+Detection exit 1 :: issue found: the remediation script runs
+Detection exit 0 :: no issue
+Remediation licences :: Windows Enterprise E3/E5 or Education A3/A5
+C:\ProgramData\Microsoft\IntuneManagementExtension\Logs :: the IME's logs (scripts, remediations, Win32 apps)

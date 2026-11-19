@@ -1,0 +1,26 @@
+NAME
+       md5sum - compute and check MD5 checksums
+
+SYNOPSIS
+       md5sum [FILE...]
+       md5sum -c CHECKSUM-FILE
+
+DESCRIPTION
+       md5sum prints the MD5 checksum (32 hexadecimal digits) of each file,
+       then its name. With -c it checks the files listed in a checksum file
+       and prints OK or FAILED for each. MD5 can be forged on purpose, so use
+       it only to spot accidental damage; prefer sha256sum.
+
+OPTIONS
+       -c, --check
+              Check the files listed in CHECKSUM-FILE.
+
+       --quiet, --status
+              With -c, print only failures, or nothing at all.
+
+EXAMPLES
+           md5sum /etc/hosts
+           md5sum *.iso > sums.md5; md5sum -c sums.md5
+
+SEE ALSO
+       sha256sum(1), cksum(1)

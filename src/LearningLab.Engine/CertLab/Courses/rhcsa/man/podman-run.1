@@ -1,0 +1,106 @@
+NAME
+       podman-run - create and start a new container
+
+SYNOPSIS
+       podman run [OPTIONS] IMAGE [COMMAND [ARGUMENT...]]
+
+DESCRIPTION
+       podman run makes a new container from IMAGE and starts it. When the
+       image is not stored locally, it is pulled first. Without COMMAND the
+       container runs the image's default command (CMD / ENTRYPOINT).
+
+       In the foreground, the output appears in your terminal and podman run
+       returns when the command ends. With -d (detached) it prints the new
+       container's ID and the container keeps running in the background.
+
+       A container's own files disappear with the container. Data that must
+       last goes into a volume: a host directory or a named volume mounted
+       into the container with -v.
+
+OPTIONS
+       -d, --detach
+              Run in the background and print the container ID.
+
+       --name NAME
+              Name the container (otherwise podman makes up a name). Names
+              are easier to use in later commands and in systemd units.
+
+       -p, --publish HOSTPORT:CONTAINERPORT
+              Make a port of the container reachable on the host, such as
+              -p 8080:80. Rootless users can only use host ports from 1024 up.
+              Open the host port in the firewall when other machines must
+              reach it.
+
+       -v, --volume HOSTDIR:CONTAINERDIR[:OPTIONS]
+              Mount a host directory (or a named volume) inside the
+              container. Options, separated by commas: ro (read-only), Z
+              (relabel the directory for this container only, with the
+              SELinux type container_file_t), z (relabel for sharing between
+              containers). Without Z or z, SELinux usually blocks the
+              container from reading the directory.
+
+       -e, --env NAME=VALUE
+              Set an environment variable in the container (repeatable).
+              Database images such as rhel9/mariadb-105 read their settings
+              this way.
+
+       -i, -t, -it
+              Keep standard input open and give the container a terminal,
+              for an interactive shell.
+
+       --rm   Remove the container when it ends.
+
+       -u, --user USER[:GROUP]
+              Run the command as this user inside the container.
+
+       -w, --workdir DIR
+              The working directory inside the container.
+
+       --restart POLICY
+              What podman does when the container exits: no, on-failure,
+              always. For starting at boot, use a systemd unit instead.
+
+       --replace
+              If a container with the same name exists, remove it first.
+
+       --network, --hostname, --label, --memory, --entrypoint, --privileged
+              Network mode, host name, labels, memory limit, a different
+              entry point, extra privileges.
+
+EXAMPLES
+       Run a command once and throw the container away:
+
+           podman run --rm registry.lab.example.com/ubi9/ubi cat /etc/redhat-release
+
+       An interactive shell in a new container:
+
+           podman run -it --name test registry.lab.example.com/ubi9/ubi /bin/bash
+
+       A web server whose pages live in the user's ~/web directory:
+
+           mkdir ~/web
+           echo hello > ~/web/index.html
+           podman run -d --name web -p 8080:8080 -v ~/web:/var/www/html:Z \
+               registry.lab.example.com/ubi9/httpd-24
+
+       A database with settings in environment variables and its data in a
+       host directory (MariaDB runs as UID 27 inside, so the directory is
+       given to that UID first):
+
+           mkdir ~/dbdata
+           podman unshare chown 27:27 ~/dbdata
+           podman run -d --name db -p 3306:3306 -v ~/dbdata:/var/lib/mysql:Z \
+               -e MYSQL_USER=student -e MYSQL_PASSWORD=student \
+               -e MYSQL_DATABASE=inventory -e MYSQL_ROOT_PASSWORD=redhat \
+               registry.lab.example.com/rhel9/mariadb-105
+
+NOTES
+       A rootless container's processes run under UIDs from the user's
+       range in /etc/subuid. When the image's program runs as a non-root
+       user (httpd-24 uses UID 1001), a mounted directory may need to be
+       owned by that UID inside the container: podman unshare chown -R
+       1001:1001 ~/web.
+
+SEE ALSO
+       podman(1), podman-build(1), podman-generate-systemd(1),
+       podman-systemd.unit(5)

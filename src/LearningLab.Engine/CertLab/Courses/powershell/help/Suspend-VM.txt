@@ -1,0 +1,14 @@
+SYNOPSIS: Pauses a running virtual machine.
+DESCRIPTION:
+Suspend-VM freezes a VM: it keeps its memory on the host but runs no instructions until Resume-VM. Network connections in the guest may time out while it is paused.
+
+Use it for a short break, for example to look at something while the VM doesn't change. To free the host's memory, use Save-VM.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Suspend-VM -Name APP-OLD -ComputerName HV1
+APP-OLD is now Paused.
+EXAMPLE: Resume-VM -Name APP-OLD
+And running again.
+RELATED: Resume-VM, Save-VM, Stop-VM

@@ -1,0 +1,62 @@
+# Practice: pbq-place | Network placement
+Drag each device into the zone where it belongs. Zones are drawn from the internet inwards, with the device that separates each zone from the one before it.
+
+@place p01 | Security architecture | 6
+Copperfield Toys is building a three-tier online shop: web servers that customers reach, application servers that run the shop's logic, and a database that stores orders and card tokens. Only the web tier may be reached from the internet, and only the application tier may reach the database. Place each device in the zone where it belongs.
+zone internet | Internet
+zone dmz | Screened subnet (web tier) | Edge firewall
+zone app | Application tier | Internal firewall
+zone data | Database tier | Internal firewall
+device Load balancer that shares customer traffic between the web servers -> dmz
+device Web application firewall (WAF) that inspects requests before they reach the web servers -> dmz
+device Web servers that show the shop pages -> dmz
+device Application servers that work out prices, stock and payments -> app
+device Database cluster with orders and card tokens -> data
+device Honeypot that pretends to be an old, exposed file transfer server -> dmz
+! Everything customers connect to directly belongs in the screened subnet: the load balancer (the address customers reach), the WAF in front of the web servers (it filters SQL injection, XSS and similar requests on their way in) and the web servers themselves. The application servers sit one step further in, reachable only from the web tier, and the database sits deepest, reachable only from the application tier, so a break-in on a web server still has two firewalls to cross before it reaches the data. A honeypot meant to attract and study attackers from the internet must be reachable from the internet, so it goes in the screened subnet too, kept away from real data.
+
+@place p02 | Security operations | 6
+Brookside Council uses network access control (NAC): when a device plugs in or joins Wi-Fi, 802.1X checks who it is and a health check looks at its patches and antivirus. Devices that fail are put on a remediation VLAN where they can only fix themselves. The security team has its own network for its tools. Place each device or group of devices in the zone where it belongs.
+zone internet | Internet
+zone dmz | Screened subnet | Edge firewall
+zone staff | Staff network | Internal firewall
+zone remed | Remediation VLAN | NAC (802.1X switch)
+zone secops | Security operations network | Internal firewall
+device Laptops that passed the NAC health check -> staff
+device A laptop that failed the health check because it is missing three months of patches -> remed
+device Patch and antivirus update server that failed devices can still reach -> remed
+device SIEM that collects and correlates logs from every zone -> secops
+device Vulnerability scanner that scans all internal networks every week -> secops
+device Web server for the public bin-collection timetable -> dmz
+! Devices that pass the NAC check join the normal staff network. A device that fails is quarantined on the remediation VLAN, where the only thing it can reach is the update server it needs to fix itself (so that server, or a copy of it, must sit there too); once patched, it is checked again and moved to the staff network. The SIEM and the vulnerability scanner are security tools that reach into every zone and hold sensitive findings, so they belong on the protected security operations network, not among ordinary PCs. The public web server must be reachable from the internet, so it goes in the screened subnet.
+
+@place p03 | Security architecture | 6
+Hillcrest Hospital is splitting its flat network. Medical devices must be kept apart from office PCs, building systems from both, and patients' own phones from everything inside. Place each device or group of devices in the zone where it belongs.
+zone internet | Internet
+zone guest | Patient and visitor Wi-Fi | Edge firewall
+zone office | Staff office network | Internal firewall
+zone clinical | Medical device network | Internal firewall
+zone building | Building systems network | Internal firewall
+device Patients' own phones and tablets -> guest
+device Infusion pumps and bedside patient monitors -> clinical
+device Central station that shows every monitor's readings to the nurses -> clinical
+device Staff PCs used for email and rota planning -> office
+device Heating and air conditioning controllers -> building
+device Door badge readers and their controller -> building
+! Patients' devices are unmanaged and untrusted, so they get their own Wi-Fi that reaches only the internet. Infusion pumps and monitors often run embedded software that can't be patched quickly, so they are segmented into their own network, and the central monitoring station that talks to them belongs there too. Staff PCs, which read email and browse the web (the most common way malware arrives), stay on the office network, away from the medical devices. Heating controllers and badge readers are IoT and building control systems with their own weaknesses; putting them in a separate zone means a flaw in one of them can't be used to reach patients' devices or staff PCs.
+
+@place p04 | Security operations | 6
+Ashgrove Engineering wants to catch attackers early. It is adding decoys and sensors and moving its security tools to their own network. Place each device in the zone where it belongs.
+zone internet | Internet
+zone dmz | Screened subnet | Edge firewall
+zone servers | Server network | Internal firewall
+zone staff | Staff network | Internal firewall
+zone secops | Security operations network | Internal firewall
+device Honeypot that looks like an exposed database, to study scans and attacks from the internet -> dmz
+device Decoy file server with fake "salary" folders, placed among the real servers to catch an intruder moving inside -> servers
+device Network IDS sensor on a mirror (SPAN) port of the server switch -> servers
+device Public website -> dmz
+device Engineers' laptops -> staff
+device SIEM that receives logs and alerts from every zone -> secops
+device EDR management console that controls the agents on every laptop and server -> secops
+! A honeypot meant for internet attackers must be reachable from the internet, so it sits in the screened subnet like the public website. An internal decoy (a honeypot with honeyfiles) only works where an intruder who is already inside would look, so it goes among the real servers; nobody has a reason to touch it, so any access is an alert. A network IDS sensor must see the traffic it watches, so it is connected to a mirror port in the server network, where it copies traffic passively and can't block or slow it. Laptops belong on the staff network. The SIEM and the EDR console control and see everything, which makes them prime targets, so they belong on the protected security operations network.

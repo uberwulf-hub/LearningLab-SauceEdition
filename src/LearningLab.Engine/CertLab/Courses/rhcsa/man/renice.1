@@ -1,0 +1,57 @@
+NAME
+       renice - change the nice value of running processes
+
+SYNOPSIS
+       renice [-n] PRIORITY [-p] PID...
+       renice [-n] PRIORITY -u USER...
+       renice [-n] PRIORITY -g PGRP...
+
+DESCRIPTION
+       renice sets the nice value (-20 to 19) of processes that are already
+       running. Unlike nice, the number is the new value itself, not an
+       amount to add. For each process it prints the old and the new value.
+
+       A normal user can only renice their own processes, and only to a
+       higher (nicer) value than they have. Root can set any value. The
+       process keeps running; only its share of the CPU changes.
+
+       The usual steps: find the process (top, sorted by CPU, or ps aux
+       --sort=-%cpu, or pgrep), then renice it by its PID.
+
+OPTIONS
+       -n, --priority N
+              The new nice value. The -n may be left out: "renice 10 1234".
+
+       -p, --pid
+              The following arguments are process IDs (the default).
+
+       -u, --user
+              The following arguments are user names or UIDs: renice all
+              their processes.
+
+       -g, --pgrp
+              The following arguments are process group IDs.
+
+EXAMPLES
+       Give process 2481 the nice value 10:
+
+           renice -n 10 -p 2481
+
+       Find the process using the most CPU and make it nicer:
+
+           ps aux --sort=-%cpu | head -3
+           renice -n 15 -p 3172
+
+       Make every process of the user student nicer:
+
+           renice -n 5 -u student
+
+       Change the nice value of every process named dd, then check:
+
+           renice -n 19 $(pgrep dd)
+           ps -o pid,ni,comm -p $(pgrep dd)
+
+       In top, the r key does the same: type the PID, then the value.
+
+SEE ALSO
+       nice(1), ps(1), top(1), pgrep(1)

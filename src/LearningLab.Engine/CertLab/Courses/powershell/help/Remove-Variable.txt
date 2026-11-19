@@ -1,0 +1,24 @@
+SYNOPSIS: Deletes variables.
+DESCRIPTION:
+Remove-Variable deletes a variable and its value. Afterwards the name does not exist at all: reading $name gives $null, and Get-Variable name reports that it cannot find it. To keep the variable but empty it, use Clear-Variable.
+
+Give the name without the dollar sign.
+PARAMETER Name:
+The variables to remove, without the $. Position 0, required. Several names may be separated by commas.
+PARAMETER Force:
+Removes a read-only variable too. Constant variables can never be removed.
+EXAMPLE: $color = 'blue'; Remove-Variable -Name color; Get-Variable color
+The variable is gone, so Get-Variable shows an error.
+EXAMPLE: Remove-Variable a, b, c
+Removes three variables at once.
+EXAMPLE: New-Variable -Name Limit -Value 10 -Option ReadOnly; Remove-Variable Limit -Force
+A read-only variable needs -Force.
+NOTES:
+The alias is rv.
+
+Automatic variables (such as $PSHOME) and constants cannot be removed.
+
+Remove-Variable * at the prompt tries to remove everything and shows many errors for the protected ones. It is a rough way to "start clean"; opening a new PowerShell window is better.
+
+Real 5.1 also has -Scope, -Include and -Exclude.
+RELATED: Clear-Variable, Get-Variable, New-Variable, Set-Variable, about_Variables, about_Scopes

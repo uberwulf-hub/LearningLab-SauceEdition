@@ -1,0 +1,34 @@
+SYNOPSIS: Reads a CSV file and makes one object per line.
+DESCRIPTION:
+Import-Csv opens a file of comma-separated values and turns every line into an object. The column names in the first line become the property names, so after importing you can use Where-Object, Sort-Object, Select-Object and the rest on the data straight away.
+
+Every value comes in as a string, even numbers and dates. When you compare or sort numbers, cast them: [int]$_.Salary. Sorting the text "98000" against "124000" puts 124000 first, because 1 comes before 9.
+
+A #TYPE line written by Export-Csv is skipped.
+PARAMETER Path:
+The file (or files) to read. Position 0.
+PARAMETER Delimiter:
+The character between values when it is not a comma, for example ';' or "`t" for tab-separated files. Position 1.
+PARAMETER Header:
+Property names to use when the file has no header line. The first line is then read as data.
+PARAMETER Encoding:
+The file's text encoding, when PowerShell does not detect it correctly.
+PARAMETER UseCulture:
+Uses the list separator from the computer's region settings.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv
+Shows the ten employees as objects (as a list, because they have six properties).
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq 'IT' | Select-Object Name, Office
+The IT employees and their offices.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Sort-Object { [int]$_.Salary } -Descending | Select-Object -First 3 Name, Salary
+The three best-paid employees: the script block sorts the salaries as numbers.
+EXAMPLE: Import-Csv C:\LabFiles\servers.txt -Header Name
+Reads a plain list of names, one per line, as objects with a Name property.
+NOTES:
+The alias is ipcsv.
+
+Values are plain strings, so (Import-Csv file)[0].Salary.GetType() shows String. To keep numbers as numbers, convert them, for example with a calculated property in Select-Object.
+
+A file of names (one per line) is easiest to read with Get-Content; Import-Csv -Header is handy when you want objects.
+
+If accented letters come out wrong in 5.1, the file is probably UTF-8 without a byte order mark: add -Encoding UTF8. PowerShell 7 reads UTF-8 by default.
+RELATED: Export-Csv, ConvertFrom-Csv, ConvertTo-Csv, Select-Object, Where-Object

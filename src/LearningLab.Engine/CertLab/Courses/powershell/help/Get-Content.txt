@@ -1,0 +1,32 @@
+SYNOPSIS: Reads a file (or an Env:, Variable: or Function: item) line by line.
+DESCRIPTION:
+Get-Content (cat, gc, type) outputs one string per line, so the result of $lines = Get-Content file is an array you can index or pipe. Each line also carries PSPath and a ReadCount (its line number). -Raw gives the whole file as one string instead.
+
+Windows PowerShell 5.1 detects a byte order mark; a UTF-8 file without one is read as ANSI unless you say -Encoding UTF8, so accented letters come out wrong.
+PARAMETER Path:
+The files to read. Wildcards are allowed. Square brackets are wildcards too: use -LiteralPath for names like summary [old].txt.
+PARAMETER LiteralPath:
+The file, taken exactly as typed.
+PARAMETER TotalCount:
+Only the first N lines (aliases -First and -Head).
+PARAMETER Tail:
+Only the last N lines (alias -Last).
+PARAMETER ReadCount:
+How many lines go down the pipeline together: 1 (the default) sends lines one by one, 0 sends all of them as one array.
+PARAMETER Raw:
+The whole file as one string, line breaks included.
+PARAMETER Encoding:
+How to read the bytes: ASCII, Default (the Windows ANSI code page), OEM, UTF8 (with a byte order mark), UTF7, UTF32, Unicode (UTF-16), BigEndianUnicode, String, Unknown or Byte.
+PARAMETER Delimiter:
+Splits the file at this text instead of at line ends.
+PARAMETER Stream:
+Reads an alternate data stream, for example Zone.Identifier.
+PARAMETER Wait:
+On a real PC, keeps the command running and shows new lines as they arrive (stop with Ctrl+C). Cert Lab shows the file once.
+EXAMPLE: Get-Content C:\LabFiles\app.log -Tail 3
+The last three lines of a log.
+EXAMPLE: (Get-Content C:\LabFiles\servers.txt).Count
+How many lines the file has.
+EXAMPLE: Get-Content -LiteralPath 'C:\LabFiles\Reports\summary [old].txt'
+Reads a file whose name has brackets.
+RELATED: Set-Content, Add-Content, Select-String, Out-File

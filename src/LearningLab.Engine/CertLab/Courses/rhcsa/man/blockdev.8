@@ -1,0 +1,26 @@
+NAME
+       blockdev - ask the kernel about a block device, or tell it to reread one
+
+SYNOPSIS
+       blockdev --getsize64 DEVICE
+       blockdev --rereadpt DEVICE
+
+DESCRIPTION
+       blockdev talks to the kernel's block device layer directly. It is run
+       as root.
+
+OPTIONS
+       --getsize64
+              Print the size of the device in bytes.
+
+       --rereadpt
+              Ask the kernel to read the partition table again, after a
+              partitioning tool changed it. This fails if a partition of the
+              disk is in use; partprobe is the usual alternative.
+
+EXAMPLES
+           blockdev --getsize64 /dev/vdb
+           blockdev --rereadpt /dev/vdb
+
+SEE ALSO
+       lsblk(8), partprobe(8), fdisk(8)

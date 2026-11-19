@@ -1,0 +1,53 @@
+NAME
+       podman-generate-systemd - write a systemd unit file for a container
+
+SYNOPSIS
+       podman generate systemd [--name] [--new] [--files] [--restart-policy POLICY]
+                               CONTAINER
+
+DESCRIPTION
+       podman generate systemd prints a systemd service unit that starts and
+       stops an existing container, so the container can start at boot like
+       any service. Podman 5 marks the command as deprecated and prints a
+       warning: Quadlet files (podman-systemd.unit(5)) are the newer way, but
+       this one still works.
+
+       For a rootless container, the unit is a user unit: it goes in
+       ~/.config/systemd/user/ and is handled with systemctl --user. A user's
+       units run only while the user is logged in, unless lingering is
+       turned on with loginctl enable-linger USER; then they start at boot.
+
+OPTIONS
+       -n, --name
+              Use the container's name, not its ID, in the unit (the file is
+              then container-NAME.service).
+
+       --new  The unit creates a fresh container at each start (podman run)
+              and removes it at stop, instead of starting and stopping the
+              existing one. The unit then works even after the container is
+              removed.
+
+       -f, --files
+              Write the unit to a file in the current directory instead of
+              printing it, and print the file's path.
+
+       --restart-policy POLICY
+              The unit's Restart= setting (default on-failure).
+
+EXAMPLES
+       As student (log in with ssh student@localhost, not su), run a
+       container, turn it into a service that starts at boot, and test it:
+
+           podman run -d --name web -p 8080:8080 registry.lab.example.com/ubi9/httpd-24
+           mkdir -p ~/.config/systemd/user
+           cd ~/.config/systemd/user
+           podman generate systemd --name web --new --files
+           podman stop web
+           podman rm web
+           systemctl --user daemon-reload
+           systemctl --user enable --now container-web.service
+           loginctl enable-linger student
+           systemctl --user status container-web.service
+
+SEE ALSO
+       podman-systemd.unit(5), podman(1), systemctl(1), loginctl(1)

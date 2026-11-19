@@ -1,0 +1,21 @@
+NAME
+       tracepath - show the routers on the way to a host
+
+SYNOPSIS
+       tracepath [-n] HOST
+
+DESCRIPTION
+       tracepath lists each router (hop) that packets pass on their way to
+       HOST, with the time each one took to answer and the largest packet
+       size (MTU) of the path. It needs no root rights and is part of
+       iputils, so it is installed even where traceroute is not. A line of
+       "no reply" marks a hop that did not answer, often a firewall.
+
+OPTIONS
+       -n     Print addresses only; do not look up names.
+
+EXAMPLES
+           tracepath -n 192.168.50.254
+
+SEE ALSO
+       traceroute(8), ping(8), ip(8)

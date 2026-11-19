@@ -1,0 +1,26 @@
+SYNOPSIS: Sets this computer up so other computers can run PowerShell commands on it.
+DESCRIPTION:
+PowerShell remoting travels over WinRM (Windows Remote Management, the WS-Management protocol on TCP port 5985 for HTTP or 5986 for HTTPS). Enable-PSRemoting does the setup in one go: it starts the WinRM service and sets it to start automatically, creates a listener for requests, turns on the firewall exception for WinRM and enables the session configurations (endpoints) that remote users connect to.
+
+You run it on the computer that should accept connections, in a PowerShell window opened as an administrator. The computer you connect from needs nothing extra.
+
+Windows Server 2012 and later have remoting turned on already. Windows 10 and 11 do not: on a client you must run Enable-PSRemoting first.
+PARAMETER Force:
+Skips the "Are you sure?" questions.
+PARAMETER SkipNetworkProfileCheck:
+On a client, lets the setup go ahead when a network adapter is set to Public. The firewall rule then accepts connections only from the local subnet.
+EXAMPLE: Enable-PSRemoting -Force
+Sets up remoting without asking. If it was already set up, it says so.
+EXAMPLE: Enable-PSRemoting -Force; Test-WSMan
+Sets up remoting and checks that WinRM now answers on this computer.
+NOTES:
+On a real PC this needs an elevated (administrator) PowerShell; otherwise it fails with "Access is denied".
+
+On Windows 10 and 11, Enable-PSRemoting fails while any network is marked Public. Change the network to Private, or use -SkipNetworkProfileCheck.
+
+Being able to connect is not the same as being allowed: by default only members of the Administrators and Remote Management Users groups may connect.
+
+In a domain, an administrator usually turns remoting on for many computers at once with Group Policy instead.
+
+PowerShell 7 has its own endpoints: running Enable-PSRemoting in pwsh adds PowerShell 7 endpoints without changing the 5.1 ones.
+RELATED: Disable-PSRemoting, Test-WSMan, New-PSSession, Invoke-Command, Enter-PSSession, about_Remote

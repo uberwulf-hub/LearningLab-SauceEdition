@@ -1,0 +1,59 @@
+NAME
+       nice - start a program with a different scheduling priority
+
+SYNOPSIS
+       nice [-n ADJUSTMENT] COMMAND [ARGUMENT...]
+       nice
+
+DESCRIPTION
+       Every process has a nice value from -20 to 19. It tells the scheduler
+       how generous the process is towards others: a high nice value (up to
+       19) means "let the others go first", a low or negative one means "give
+       me more of the CPU". New processes inherit the nice value of the shell
+       that starts them, normally 0. The value only matters when the CPU is
+       busy: an idle CPU runs everything at full speed.
+
+       nice starts COMMAND with its nice value raised by ADJUSTMENT (10 when
+       -n is not given). Without a command, it prints the current nice value.
+
+       Anyone can make their own processes nicer (a higher value). Only root
+       can lower the value, below 0 included: for a normal user nice warns
+       and runs the command anyway with the value unchanged.
+
+       To change the nice value of a process that is already running, use
+       renice. ps and top show the value in the NI column.
+
+OPTIONS
+       -n, --adjustment=N
+              Add N to the nice value. N can be negative (root only). The
+              result is kept between -20 and 19.
+
+       -N     Old short form of -n N, such as nice -5 (meaning +5) or
+              nice --5 (meaning -5). Prefer -n, which is clearer.
+
+EXAMPLES
+       Run a long compression job without slowing down the rest of the
+       system:
+
+           nice -n 19 tar -czf /root/backup.tar.gz /home
+
+       Start a job with nice value 5 in the background, then check it:
+
+           nice -n 5 sha256sum /dev/zero &
+           ps -o pid,ni,comm -C sha256sum
+
+       As root, start a program with a higher priority (nice -10):
+
+           nice -n -10 /usr/local/bin/important-job
+
+       Show the nice value of the current shell:
+
+           nice
+
+NOTES
+       Exam tasks sometimes say "priority" when they mean the nice value. ps
+       -l shows both: PRI (the kernel's priority, derived from the nice
+       value) and NI (the nice value you set).
+
+SEE ALSO
+       renice(1), ps(1), top(1), kill(1), tuned-adm(8)

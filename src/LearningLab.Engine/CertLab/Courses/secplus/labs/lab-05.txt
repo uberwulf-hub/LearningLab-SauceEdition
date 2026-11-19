@@ -1,0 +1,81 @@
+# Lab: lab-05 | Hardening SSH | u12 | 40
+server2 is reached over SSH from server1, which acts as the jump host. Right now server2 accepts root logins with a password and password logins for everyone, which makes it a target for password guessing. Harden it: the administrator `opsadmin` logs in from server1 with a key, root cannot log in over SSH at all, passwords are no longer accepted, and an old key that nobody can account for is removed. Do the tasks in order: if you turn off passwords before the key works, you lock opsadmin out.
+
+@setup server1
+useradd opsadmin
+echo 'Granite-Path-63' | passwd --stdin opsadmin
+
+@setup server2
+useradd opsadmin
+echo 'Granite-Path-63' | passwd --stdin opsadmin
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBackupKeyForNightlyJobsOnServer1xxxxxxxxxx backup@server1' > /root/.ssh/authorized_keys
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOldLaptopKeyNobodyCanAccountForAnymorexxxxxx dave@old-laptop' >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+
+@task t01 | Security operations | 15 | server1
+On server1, set up key-based login for `opsadmin`: opsadmin on server1 must be able to log in to opsadmin@server2 with an Ed25519 key and no password. (Its password is Granite-Path-63 on both machines.) For this lab, leave the key without a passphrase.
+@check server1 | opsadmin@server1 logs in to opsadmin@server2 with a key
+certlab-check sshkey opsadmin opsadmin@server2
+@hint As opsadmin: ssh-keygen -t ed25519 -N '' makes the key pair, ssh-copy-id opsadmin@server2 installs the public half (it asks for the password once).
+@solution server1
+su - opsadmin
+ssh-keygen -t ed25519 -N '' -f /home/opsadmin/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=accept-new opsadmin@server2
+Granite-Path-63
+ssh opsadmin@server2 hostname
+exit
+@explain
+The private key stays on server1 (mode 600) and the public key goes into ~/.ssh/authorized_keys on server2. A key cannot be guessed the way a password can, and it is never sent to the server, so a fake server cannot capture it. In real life protect the private key with a passphrase (and ssh-agent), or keep it on a hardware security key.
+@endtask
+
+@task t02 | Security operations | 10 | server2
+On server2, root must not be able to log in over SSH at all, with a password or a key. Administrators log in as themselves and use sudo.
+@check server2 | the PermitRootLogin value sshd uses is no
+test "$(sshd -T | awk '$1 == "permitrootlogin" {print $2}')" = no
+@check server2 | sshd is running
+systemctl is-active sshd
+@hint sshd keeps the first value it reads, and the files in /etc/ssh/sshd_config.d are read before the rest of sshd_config. sshd -T shows the values in effect.
+@solution server2
+grep -ri permitrootlogin /etc/ssh/sshd_config /etc/ssh/sshd_config.d
+sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+sshd -t
+systemctl restart sshd
+sshd -T | grep -i permitrootlogin
+@explain
+root exists on every Linux system, so attackers only have to guess its password. With PermitRootLogin no, nobody can log in as root directly, and every administrative action can be traced to a person through sudo's log. The installer's drop-in file said yes, and because the first value wins, changing only sshd_config would have done nothing: sshd -T is the way to see what really applies.
+@endtask
+
+@task t03 | Security operations | 15 | server2
+On server2, turn off password logins for SSH entirely, so that only keys are accepted. opsadmin's key login from server1 must keep working.
+@check server2 | the PasswordAuthentication value sshd uses is no
+test "$(sshd -T | awk '$1 == "passwordauthentication" {print $2}')" = no
+@check server2 | sshd is running and the configuration is valid
+sshd -t && systemctl is-active sshd
+@check server1 | opsadmin still logs in with the key
+certlab-check sshkey opsadmin opsadmin@server2
+@hint Write PasswordAuthentication no into a new file in /etc/ssh/sshd_config.d whose name sorts before 50-redhat.conf, check it with sshd -t, restart sshd.
+@solution server2
+echo 'PasswordAuthentication no' > /etc/ssh/sshd_config.d/10-hardening.conf
+sshd -t
+systemctl restart sshd
+sshd -T | grep -i passwordauthentication
+@explain
+Without password logins, password spraying and brute force against SSH stop working, because there is nothing to guess. Before you switch it off, make sure every person who needs access has a working key (and keep a console or out-of-band way in), or you lock yourself out. A file of your own in sshd_config.d survives package updates better than edits to sshd_config.
+@endtask
+
+@task t04 | Security operations | 10 | server2
+root's /root/.ssh/authorized_keys on server2 holds two keys. The key of the nightly backup job (backup@server1) is still needed. The other one, from dave@old-laptop, belongs to nobody who works here. Remove that key only.
+@check server2 | the old laptop's key is gone
+! grep -q 'old-laptop' /root/.ssh/authorized_keys
+@check server2 | the backup key is still there
+grep -q 'backup@server1' /root/.ssh/authorized_keys
+@hint sed -i '/old-laptop/d' FILE deletes the lines that contain old-laptop.
+@solution server2
+cat /root/.ssh/authorized_keys
+sed -i '/old-laptop/d' /root/.ssh/authorized_keys
+cat /root/.ssh/authorized_keys
+@explain
+Forgotten keys are a common back door: they keep working after the person has left, even when the account's password is changed or locked. Review authorized_keys files as part of offboarding and of regular access reviews. (With PermitRootLogin no, root's keys are not accepted over SSH anyway, but a key that should not exist must still go: settings change, keys stay.)
+@endtask

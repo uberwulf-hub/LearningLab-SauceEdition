@@ -1,0 +1,38 @@
+NAME
+       audit2allow - turn SELinux denials into policy rules, or explain them (audit2why)
+
+SYNOPSIS
+       audit2allow [-a]
+       audit2why [-a]
+       ausearch -m AVC ... | audit2allow
+
+DESCRIPTION
+       When SELinux blocks something, the kernel writes an AVC denial to the
+       audit log (/var/log/audit/audit.log). audit2allow reads such denials,
+       from standard input or from the whole log with -a, and prints the
+       allow rules that would permit them, grouped by the process's type.
+
+       audit2why (another name for the same program) reads the same input but
+       explains each denial instead: whether a boolean would allow it, or
+       whether a rule is missing.
+
+       Read the output as a diagnosis, not as the fix. Most denials on a
+       well-run system mean a file has the wrong label (fix it with
+       semanage fcontext and restorecon), a service uses a port it is not
+       labelled for (semanage port), or a boolean is off (setsebool -P). A
+       new allow rule is the last resort.
+
+OPTIONS
+       -a     Read every denial in the audit log instead of standard input.
+
+EXAMPLES
+       Explain the most recent denials:
+
+           ausearch -m AVC -ts recent | audit2why
+
+       Show the rules that every logged denial would need:
+
+           audit2allow -a
+
+SEE ALSO
+       ausearch(8), sealert(8), semanage(8), restorecon(8), setsebool(8)

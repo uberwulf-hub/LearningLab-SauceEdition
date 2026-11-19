@@ -1,0 +1,18 @@
+NAME
+       sync - write data waiting in memory to the disks
+
+SYNOPSIS
+       sync [FILE]...
+
+DESCRIPTION
+       Linux keeps recently written data in memory for a short time before it
+       goes to disk, which makes writing fast. sync makes the kernel write all
+       of it out now (or only the data of the files named). Use it before
+       pulling out a USB disk or before forcing a machine off. A normal
+       shutdown or umount does this by itself.
+
+EXAMPLES
+           cp /root/backup.tar /mnt/usb/ && sync
+
+SEE ALSO
+       umount(8), shutdown(8)

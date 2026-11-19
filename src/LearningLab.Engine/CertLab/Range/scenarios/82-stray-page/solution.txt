@@ -1,0 +1,11 @@
+## read the web log: who uploaded something, and what did they ask for after
+grep -E 'POST|uploads' /var/log/httpd/access_log
+## what is in the uploads folder (one file is not a photo) and who may write there
+ls -l /var/www/html/uploads
+ls -ld /var/www/html/uploads
+## read the stray file: the flag is inside
+cat /var/www/html/uploads/{{FILE}}
+## clean up: delete it and close the folder
+rm -f /var/www/html/uploads/{{FILE}}
+chmod 755 /var/www/html/uploads
+ls -ld /var/www/html/uploads

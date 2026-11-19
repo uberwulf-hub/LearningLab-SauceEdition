@@ -1,0 +1,35 @@
+NAME
+       base64 - encode data as text, or decode it again
+
+SYNOPSIS
+       base64 [-w COLS] [FILE]
+       base64 -d [-i] [FILE]
+
+DESCRIPTION
+       base64 turns any data (also binary data) into plain letters, digits,
+       + and /, so it can travel safely through e-mail, JSON or a terminal.
+       With -d it turns such text back into the original bytes. It reads FILE,
+       or standard input when no file is given, and writes to standard output.
+
+       Encoding is not encryption: anyone can decode the text.
+
+OPTIONS
+       -d, --decode
+              Decode instead of encode.
+
+       -i, --ignore-garbage
+              When decoding, skip characters that are not part of the
+              alphabet.
+
+       -w COLS, --wrap=COLS
+              Break encoded lines after COLS characters (76 by default);
+              -w 0 writes one long line.
+
+EXAMPLES
+       Encode a word and decode it again:
+
+           echo -n redhat | base64
+           echo cmVkaGF0 | base64 -d
+
+SEE ALSO
+       od(1), xxd(1)

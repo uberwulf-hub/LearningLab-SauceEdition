@@ -1,0 +1,380 @@
+# Exam: exam-3 | Practice exam 3 | 100
+The third full practice exam: Microsoft-style questions, a case study and six hands-on tasks on the Harborline network. The grader restarts every machine before it checks your work.
+
+@vars
+n = 1 | 2 | 3
+len = 14 | 15 | 16
+@endvars
+
+@task t01 | AD DS | 4 | DC1
+Members of **IT Admins** must use passwords of at least **{len}** characters, while the rest of the domain keeps its policy. Create the fine-grained password policy **Admins-{n}** with precedence **10** and apply it to the group.
+@check admin | the policy and who it applies to
+pso["Admins-{n}"].appliesto has "IT Admins"
+passwordpolicy(user=arivera).minlength == {len}
+@check admin | others keep the domain policy
+passwordpolicy(user=bcole).minlength == 7
+@solution DC1
+New-ADFineGrainedPasswordPolicy -Name Admins-{n} -Precedence 10 -MinPasswordLength {len} -ComplexityEnabled $true
+Add-ADFineGrainedPasswordPolicySubject -Identity Admins-{n} -Subjects "IT Admins"
+@explain
+Fine-grained password policies (password settings objects) apply to users and global security groups; when several apply, the lowest precedence number wins, and one linked to the user directly beats those through groups.
+@endtask
+
+@task t02 | Group Policy | 4 | admin
+Anyone who signs in to a PC in the **Workstations** OU must have the command prompt blocked, and must not get the user settings of the GPOs linked to their own OU. Create the GPO **Kiosk desktop {n}** for this and link it to Workstations.
+@check admin | the kiosk settings apply to a staff member on CL1
+rsop(computer=CL1, user=bcole).setting["NoCmd"] == Enabled
+rsop(computer=CL1, user=bcole).loopback == Replace
+@check admin | the staff OU's user settings don't
+rsop(computer=CL1, user=bcole).setting["NoRegedit"] == "Not configured"
+@solution admin
+gpo new "Kiosk desktop {n}"
+gpo set "Kiosk desktop {n}" setting=NoCmd state=Enabled
+gpo set "Kiosk desktop {n}" setting=Loopback state=Enabled value=Replace
+gpo link "Kiosk desktop {n}" Workstations
+@explain
+Loopback processing (a computer setting) applies user settings from GPOs linked to the computer's OU. Replace ignores the user's own GPOs (here Staff desktop's registry tools setting); Merge would apply both, the computer's side winning conflicts.
+@endtask
+
+@task t03 | Networking | 4 | DC1
+Create a reverse lookup zone for the branch subnet **10.20.0.0/24**, stored in Active Directory and replicated to all DNS servers in the domain, and add the pointer record for **dc2.corp.example** (10.20.0.11).
+@check admin | the zone on both DCs
+dns(DC2).zone["0.20.10.in-addr.arpa"].adintegrated == Yes
+dns(DC1).zone["0.20.10.in-addr.arpa"].scope == Domain
+@check admin | the pointer resolves
+resolve(client=CL1, name=10.20.0.11, type=PTR) == dc2.corp.example
+@solution DC1
+Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 -ReplicationScope Domain
+Add-DnsServerResourceRecordPtr -ZoneName 0.20.10.in-addr.arpa -Name 11 -PtrDomainName dc2.corp.example
+@explain
+-NetworkId builds the zone name (0.20.10.in-addr.arpa); the Domain replication scope stores it in the DomainDnsZones partition so every DNS server that is a DC in the domain loads it. The PTR record's name is the last octet.
+@endtask
+
+@task t04 | File and storage | 4 | FS1
+The archive volume **E:** on FS1 holds many copies of the same files. Install Data Deduplication, enable it on E: for general file server use, and run an optimization job now (waiting for it to finish).
+@check admin | deduplication is on and saving space
+dedup(FS1, E).enabled == Yes
+dedup(FS1, E).usage == Default
+dedup(FS1, E).savedgb > 1
+@solution FS1
+Install-WindowsFeature FS-Data-Deduplication
+Enable-DedupVolume -Volume E: -UsageType Default
+Start-DedupJob -Volume E: -Type Optimization -Wait
+@explain
+Default is the usage type for general purpose file servers (HyperV and Backup are for VDI and backup targets). Only files older than the minimum file age (3 days by default) are optimized, which these archive files are. Deduplication can't be enabled on the system volume.
+@endtask
+
+@task t05 | File and storage | 4 | FS1
+Create the domain-based namespace **\\corp.example\Files** (Windows Server 2008 mode) hosted on FS1, with its root in a new share **Files** for the folder **D:\DfsRoots\Files**, and a namespace folder **Sales** that points to **\\FS1\Sales**.
+@check admin | the namespace and its folder
+namespace["\\corp.example\Files"].folders has Sales
+namespace["\\corp.example\Files"].targets["Sales"] has "\\FS1\Sales"
+@check admin | the path leads to the Sales share
+dfsresolve("\\corp.example\Files\Sales") == "\\FS1\Sales"
+@solution FS1
+Install-WindowsFeature FS-DFS-Namespace -IncludeManagementTools
+New-Item -Path D:\DfsRoots\Files -ItemType Directory
+New-SmbShare -Name Files -Path D:\DfsRoots\Files -ReadAccess Everyone
+New-DfsnRoot -Path \\corp.example\Files -TargetPath \\FS1\Files -Type DomainV2
+New-DfsnFolder -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales
+@explain
+A domain-based namespace's root target is a share on a namespace server that runs the DFS Namespaces role service; DomainV2 is "Windows Server 2008 mode" (access-based enumeration, more folders). Folders point users to existing shares.
+@endtask
+
+@task t06 | Server management | 3 | SRV1
+From **SRV1**, install the DHCP Server role on the Server Core box **CORE1** with its management tools, and authorize CORE1 in Active Directory.
+@check admin | CORE1 runs an authorized DHCP server
+feature(CORE1, "DHCP") == Installed
+dhcp(CORE1).authorized == Yes
+service(CORE1, "DHCPServer") == Running
+@solution SRV1
+Install-WindowsFeature DHCP -ComputerName CORE1 -IncludeManagementTools
+Add-DhcpServerInDC -DnsName core1.corp.example -IPAddress 10.10.0.40
+@explain
+Server Core has no local console tools for most roles; install roles remotely (Install-WindowsFeature -ComputerName, Windows Admin Center or Server Manager) and authorize the DHCP server in AD before it serves clients.
+@endtask
+
+@case cs3 | Pinecrest School District
+## Overview
+Pinecrest School District (made up) runs a district office and six schools. The IT department of five people manages 3,000 student and staff accounts and 1,800 shared PCs.
+
+## Existing environment
+The forest pinecrest.example has one domain. The district office hosts two domain controllers, DNS and DHCP. Each school has a Windows Server 2022 Hyper-V host with a domain controller VM and a file server VM. Student accounts are in OU=Students, staff accounts in OU=Staff, and PCs in one OU per school. Staff use Microsoft 365; Microsoft Entra Connect Sync runs on a single server at the district office with password hash synchronization.
+
+## Requirements
+- If the Microsoft Entra Connect server fails, another server must be able to take over synchronization quickly.
+- Teachers must not be able to change Group Policy, but the help desk must be able to edit the GPOs of the schools' PC OUs only.
+- Students on any PC must not reach Control Panel; staff on the same PCs must.
+- When the school's Hyper-V host restarts for updates, each school's domain controller VM must come back by itself afterwards, resuming where it left off. Checkpoints must never be applied to the DC VMs in production.
+- The district wants to update all servers, including the schools' hosts, from Azure without opening inbound ports.
+
+## Technical constraints
+Minimise cost and the number of new servers.
+@endcase
+
+@choice c1 | Hybrid identity | 2 | case=cs3
+What should you do for the synchronization requirement?
+- Install a second Microsoft Entra Connect Sync server in active mode
++ Install a second Microsoft Entra Connect Sync server in staging mode
+- Switch to pass-through authentication with three agents
+- Enable seamless single sign-on
+! Only one Connect Sync server may export to a tenant; a staging server keeps an up-to-date copy and is switched to active when needed.
+
+@choice c2 | Group Policy | 2 | case=cs3
+How should you let the help desk edit only the schools' GPOs?
+- Add the help desk to Group Policy Creator Owners
++ Grant the help desk Edit settings (GpoEdit) on those GPOs in their Delegation tab
+- Add the help desk to Domain Admins
+- Link the GPOs with Enforced
+! GPO delegation sets who may read, apply, edit or fully manage each GPO; Group Policy Creator Owners can create GPOs but only edit their own.
+
+@yesno c3 | Group Policy | 3 | case=cs3
+You plan the Control Panel requirement. Decide whether each statement is true.
+Y A GPO linked to OU=Students with "Prohibit access to Control Panel and PC settings" enabled meets it.
+N A GPO linked to the schools' PC OUs with the same setting meets it without loopback processing.
+Y Security filtering a GPO linked to the PC OUs to a Students group, with loopback processing, would also work.
+! The setting is a user setting: linked to the students' OU it reaches students on any PC. Linked to PC OUs, user settings apply only with loopback processing, and then filtering decides who gets them (the loopback setting itself must reach the PCs, for example from a separate GPO, and the computers still need Read on the filtered GPO).
+
+@multi c4 | Virtualization | 2 | case=cs3
+Which two VM settings meet the requirements for the DC VMs? Each correct answer is part of the solution.
++ Automatic stop action Save, and automatic start action Always start (or start if it was running)
++ Checkpoint type Disabled
+- Dynamic memory enabled
+- Generation 1
+- Checkpoint type Standard
+! Save keeps the VM's state across a host restart and the start action brings it back. Applying an old checkpoint to a DC can roll back its directory; disabling checkpoints for production DCs prevents that (VM-generation ID gives some protection, but checkpoints aren't a backup).
+
+@choice c5 | Server management | 2 | case=cs3
+What should you use to update all servers from Azure?
++ Azure Arc on the on-premises servers, with Azure Update Manager
+- Windows Server Update Services in Azure
+- Azure Automation State Configuration
+- A site-to-site VPN and Remote Desktop
+! Arc-enabled servers connect outbound (HTTPS) to Azure; Update Manager then assesses and installs updates on them and on Azure VMs.
+
+@choice q01 | AD DS | 1
+Which group scope can contain users and groups from any domain in the forest and be used to grant permissions in any domain?
+- Domain local
+- Global
++ Universal
+- Local
+! Universal groups can hold members from any domain in the forest and be used anywhere in it; their membership is stored in the global catalog.
+
+@choice q02 | AD DS | 1
+You must stop an OU and the objects in it from being deleted by mistake, and later delete it on purpose. What do you change first when you delete it?
++ Clear "Protect object from accidental deletion" (Set-ADObject -ProtectedFromAccidentalDeletion $false)
+- Disable the Recycle Bin
+- Move the OU to the Users container
+- Run Remove-ADOrganizationalUnit -Force
+! The protection adds a deny-delete permission; it must be cleared before the OU can be deleted (with -Recursive if it has children).
+
+@multi q03 | AD DS | 1
+Which two operations master roles exist once per forest? Each correct answer is part of the solution.
++ Schema master
++ Domain naming master
+- PDC emulator
+- RID master
+- Infrastructure master
+! The schema and domain naming masters are forest-wide; PDC emulator, RID master and infrastructure master exist in each domain.
+
+@choice q04 | AD DS | 1
+Which tool shows, for each DC, when it last replicated successfully with each partner?
++ repadmin /showrepl
+- nltest /dclist
+- netdom query fsmo
+- Get-ADDomain
+! repadmin /showrepl lists the inbound partners and the last attempt and success; /replsummary gives an overview of all DCs.
+
+@order q05 | AD DS | 1
+Put the steps for creating a forest trust with the partner forest tidewater.example in order.
+1 Configure name resolution (a conditional forwarder for tidewater.example, and one for corp.example on their side)
+2 Create the trust in Active Directory Domains and Trusts, choosing Forest trust and the direction
+3 Choose selective authentication if only some resources should be reachable
+4 Verify the trust (netdom trust /verify, or the trust's properties)
+x Raise both forests to the same functional level as the partner
+! Each forest's DCs must find the other's DCs in DNS before the trust can be created; forest trusts need at least Windows Server 2003 forest functional level, not matching levels.
+
+@choice q06 | Group Policy | 1
+Where is a GPO's version stored that the client compares to decide whether to process it again?
+- Only in the registry of the client
++ In the GPO's container in Active Directory and in GPT.INI in SYSVOL
+- In the GPO's WMI filter
+- In the domain's Default Domain Policy
+! Each GPO has a Group Policy container (in AD) and a template (in SYSVOL) with version numbers; if they differ on a DC, replication of one of them is behind.
+
+@choice q07 | Group Policy | 1
+How often do domain member computers refresh Group Policy in the background by default?
+- Every 5 minutes
++ Every 90 minutes, with a random offset of up to 30 minutes
+- Once a day
+- Only at startup and logon
+! Members refresh every 90 minutes plus 0-30 minutes; domain controllers every 5 minutes. Some settings (software installation, folder redirection) apply only at startup or logon.
+
+@yesno q08 | Group Policy | 1
+Decide whether each statement about WMI filters is true.
+Y A GPO can have only one WMI filter.
+Y A WMI filter is evaluated on the client computer.
+N A WMI filter can select users by their department.
+! A GPO links to at most one filter (one filter can serve many GPOs); the query runs on the computer, so it tests the computer's properties.
+
+@choice q09 | Hybrid identity | 1
+What does seamless single sign-on add to password hash sync or pass-through authentication?
++ Users on domain-joined PCs inside the network sign in to Microsoft 365 without typing their password
+- Passwords are synchronized more often
+- Users can reset their passwords in the cloud
+- Sign-in works when Microsoft Entra ID is offline
+! Seamless SSO uses Kerberos with a computer account (AZUREADSSOACC) in AD so domain-joined, corporate-network PCs sign in automatically.
+
+@choice q10 | Hybrid identity | 1
+After you added a new UPN suffix and changed users' UPNs, how can you make the change reach Microsoft Entra ID at once?
+- Start-ADSyncSyncCycle -PolicyType Initial on a DC
++ Start-ADSyncSyncCycle -PolicyType Delta on the Microsoft Entra Connect server
+- gpupdate /force on the Connect server
+- Restart the Microsoft Entra Connect server
+! A delta sync picks up changes since the last cycle; an initial (full) sync is for configuration changes such as new OU filtering. The ADSync module is on the Connect server.
+
+@choice q11 | Server management | 1
+Which command lists what an endpoint registered with Register-PSSessionConfiguration lets a JEA user run, from the user's point of view?
++ Get-PSSessionCapability -ConfigurationName HelpDesk -Username CORP\jprice
+- Get-PSSessionConfiguration -Name HelpDesk
+- Test-PSSessionConfigurationFile
+- Get-Command -Module JEA
+! Get-PSSessionCapability shows the commands a given user gets on a JEA endpoint, combining every role capability mapped to their groups.
+
+@multi q12 | Server management | 1
+Which two can you do with Windows Admin Center's Azure hybrid services? Each correct answer is part of the solution.
++ Onboard the server to Azure Arc
++ Add an Azure Network Adapter for a point-to-site connection to an Azure virtual network
+- Join the server to Microsoft Entra ID as a hybrid joined device
+- Convert the server to Server Core
+- Create a new Active Directory forest in Azure
+! Windows Admin Center registered with Azure can onboard Arc, set up Azure Network Adapter, Azure File Sync, Azure Backup, Update Manager and more.
+
+@choice q13 | Server management | 1
+How do you run the same command on DC1, DC2 and FS1 at once with PowerShell remoting?
++ Invoke-Command -ComputerName DC1, DC2, FS1 -ScriptBlock { Get-Service W32Time }
+- Enter-PSSession -ComputerName DC1, DC2, FS1
+- Get-Service -Name W32Time -ComputerName *
+- New-PSSessionConfigurationFile -Path all.pssc
+! Invoke-Command fans out to several computers in parallel and returns their output tagged with PSComputerName; Enter-PSSession connects to one computer.
+
+@choice q14 | Virtualization | 1
+A VM must keep running on another Hyper-V host if its own host fails, using a copy that is a few minutes old, without shared storage or a cluster. What should you use?
+- Live migration
++ Hyper-V Replica
+- Production checkpoints
+- Storage Spaces Direct
+! Hyper-V Replica sends changes to a replica VM on another host every 30 seconds, 5 minutes or 15 minutes; you fail over to it when the primary host is lost.
+
+@choice q15 | Virtualization | 1
+What does enhanced session mode give a Virtual Machine Connection session?
++ Local resources such as the clipboard, drives and audio, over an RDP-based connection
+- More memory for the VM
+- Nested virtualization
+- Faster live migration
+! Enhanced session mode (Set-VMHost -EnableEnhancedSessionMode $true) uses the RDP protocol through VMBus to redirect clipboard, drives, printers and audio.
+
+@yesno q16 | Virtualization | 1
+Decide whether each statement about virtual hard disks is true.
+Y A VHDX file can be up to 64 TB.
+N A VHD file can be larger than 2 TB.
+Y A dynamically expanding disk grows as data is written.
+! VHD is limited to 2040 GB; VHDX to 64 TB and is more resilient to power failures. Dynamic disks start small and grow; fixed disks allocate their full size.
+
+@choice q17 | Virtualization | 1
+Which isolation mode should you use for containers from untrusted tenants on the same host?
+- Process isolation
++ Hyper-V isolation
+- No isolation with a NAT network
+- Host networking
+! Hyper-V isolation gives each container its own kernel in a lightweight VM, a stronger security boundary than process isolation's shared kernel.
+
+@order q18 | Networking | 1
+Put the steps for configuring DHCP failover between SRV1 and CORE1 in order.
+1 Install the DHCP Server role on CORE1
+2 Authorize CORE1 in Active Directory
+3 On SRV1, create the failover relationship with CORE1 for the scope (mode, MCLT, shared secret)
+4 Check that the scope and its leases appear on CORE1
+x Create the same scope on CORE1 by hand first
+! The partner needs the role and must be authorized; creating the relationship copies the scope to the partner, which must not already have it.
+
+@choice q19 | Networking | 1
+What does the Maximum Client Lead Time (MCLT) control in DHCP failover?
++ How long a server may extend a lease beyond what its partner knows, and how long to wait before taking over all addresses in partner-down state
+- The lease duration of the scope
+- How often the partners replicate their configuration
+- The share of clients each server serves in load balance mode
+! MCLT (one hour by default) limits how far one server can run ahead of its partner; after a partner is declared down, the remaining server waits the MCLT before using the whole pool.
+
+@choice q20 | Networking | 1
+Where must a conditional forwarder be stored so that every DNS server that is a DC in the forest has it?
+- In a file on one DNS server
++ In Active Directory with the scope "all DNS servers in this forest"
+- In the DomainDnsZones partition only
+- In the registry of each client
+! AD-integrated conditional forwarders replicate like zones; the Forest scope (ForestDnsZones) reaches every DNS server that is a DC in the forest.
+
+@multi q21 | Networking | 1
+Which two record types does a DC register so that clients can find domain controllers? Each correct answer is part of the solution.
++ SRV records such as _ldap._tcp.dc._msdcs
++ A records for the DC's host name
+- MX records
+- PTR records only
+- TXT records
+! The Netlogon service registers SRV records that point to DC host names, which A records resolve to addresses.
+
+@choice q22 | Networking | 1
+A secondary zone on DC2 stays empty. The master is a file-backed primary zone on DC1. What should you check on DC1 first?
++ The zone's Zone Transfers setting allows DC2
+- That the zone is stored in Active Directory
+- That DC2 is a global catalog
+- That DNSSEC is enabled
+! A secondary zone loads by zone transfer; the master must allow transfers to that server (any server, name servers listed on the NS tab, or listed servers).
+
+@choice q23 | File and storage | 1
+At the console of FS1, a user with NTFS Modify on a folder opens it locally. The share's permission is Read. What can the user do?
++ Modify files
+- Read files only
+- Nothing
+- Full control
+! Share permissions apply only to access over the network; locally only NTFS counts.
+
+@choice q24 | File and storage | 1
+You disable inheritance on a folder and choose "Convert inherited permissions into explicit permissions". What happens?
++ The folder keeps the same entries, now explicit, and stops receiving changes from its parent
+- All entries are removed and only Administrators keep access
+- The parent folder's entries are deleted
+- Child folders lose their permissions
+! Convert keeps the current access as explicit entries; Remove deletes the inherited entries, which can lock people out.
+
+@yesno q25 | File and storage | 1
+Decide whether each statement about Data Deduplication is true.
+Y It can be enabled on a data volume formatted with NTFS or ReFS.
+N It can be enabled on the boot or system volume.
+Y The HyperV usage type is meant for VDI virtual hard disks.
+! Deduplication works on non-system NTFS and (since Windows Server 2019) ReFS volumes; usage types Default, HyperV and Backup tune it for the workload.
+
+@multi q26 | File and storage | 1
+Which two statements about SMB on Windows Server 2022 are true? Each correct answer is part of the solution.
++ SMB 1.0 isn't installed by default and should stay off
++ A share can require SMB encryption (EncryptData)
+- SMB encryption requires IPsec
+- Shares use port 139 only
+- Access-based enumeration requires SMB 1.0
+! SMB 1.0 is insecure and removed by default; SMB 3 encryption can be required per share or for the whole server, over TCP 445.
+
+@choice q27 | File and storage | 1
+Azure File Sync's cloud tiering is on with a volume free space policy of 20 percent. What happens when the volume has only 10 percent free?
++ The least recently used files are tiered (replaced by pointers) until 20 percent is free
+- Sync stops until space is freed
+- New files are written directly to Azure only
+- The oldest files are deleted from the server and Azure
+! Tiered files remain visible and come back when opened; the volume free space policy takes priority over the date policy.
+
+@choice q28 | File and storage | 1
+Which command creates a new DFS replication group?
++ New-DfsReplicationGroup -GroupName Sales-Replication
+- New-DfsnRoot -Path \\corp.example\Sales
+- Add-DfsrMember -GroupName Sales-Replication
+- Update-DfsrConfigurationFromAD
+! Then add replicated folders (New-DfsReplicatedFolder), members (Add-DfsrMember), connections (Add-DfsrConnection) and memberships with content paths and the primary member (Set-DfsrMembership).

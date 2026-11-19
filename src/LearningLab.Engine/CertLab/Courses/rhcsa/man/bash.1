@@ -1,0 +1,128 @@
+NAME
+       bash - the GNU Bourne-Again shell, the standard command line of RHEL
+
+SYNOPSIS
+       bash [-l] [-x] [-n] [-e] [SCRIPT [ARGUMENT...]]
+       bash -c COMMANDS [NAME [ARGUMENT...]]
+
+DESCRIPTION
+       bash reads command lines, from the keyboard or from a script file, and
+       runs them. It is the login shell of new users on RHEL (sh is another
+       name for it). This page is a short tour of the parts used most; the
+       real reference is much longer.
+
+   Command lines
+       A simple command is a program name followed by its arguments,
+       separated by spaces. Join commands with:
+
+       A ; B      run A, then B
+       A && B     run B only if A succeeded (exit status 0)
+       A || B     run B only if A failed
+       A | B      send A's output into B's input
+       A &        run A in the background (see jobs, fg, bg)
+
+       Every command ends with an exit status: 0 means success, anything
+       else a failure. $? holds the status of the last command.
+
+   Quoting
+       'text'     nothing inside is changed
+       "text"     $variables and $(commands) are expanded, spaces are kept
+       \c         the next character loses its special meaning
+
+   Expansion
+       $NAME, ${NAME}      the value of a variable
+       $(command)          the output of a command
+       $((1 + 2))          arithmetic
+       *, ?, [abc]         file names that match the pattern
+       {a,b}, {1..5}       brace expansion: a b, 1 2 3 4 5
+       ~                   your home directory
+
+   Redirection
+       > FILE     standard output to FILE (replacing it)
+       >> FILE    standard output appended to FILE
+       2> FILE    error messages to FILE; 2>/dev/null throws them away
+       &> FILE    both output and errors to FILE
+       2>&1       errors to wherever output goes now
+       < FILE     standard input from FILE
+       <<EOF      a here document: the next lines up to EOF are the input
+
+   Variables
+       NAME=value sets a variable (no spaces around =). export NAME makes it
+       part of the environment of programs started from this shell. Special
+       ones in scripts: $1 $2 ... the arguments, $# their number, $@ all of
+       them (write "$@"), $0 the script name, $$ the shell's process ID.
+
+   Tests and conditions
+       if COMMAND; then ...; elif COMMAND; then ...; else ...; fi
+       [ EXPRESSION ] or test EXPRESSION: -f FILE (a regular file), -d (a
+       directory), -e (exists), -z STRING (empty), S1 = S2, N1 -eq N2,
+       -ne, -lt, -le, -gt, -ge. [[ ... ]] adds pattern matching (==) and
+       regular expressions (=~).
+       case WORD in PATTERN) ...;; *) ...;; esac
+
+   Loops
+       for NAME in WORDS; do ...; done
+       for ((i=1; i<=3; i++)); do ...; done
+       while COMMAND; do ...; done
+       until COMMAND; do ...; done
+       while read -r line; do ...; done < FILE
+       break and continue leave or restart a loop.
+
+   Scripts
+       A script is a text file starting with #!/bin/bash. Make it executable
+       (chmod +x) and run it by path (./script.sh), or run bash script.sh.
+       exit N ends it with status N.
+
+OPTIONS
+       -c COMMANDS
+              Run COMMANDS and exit.
+
+       -l, --login
+              Act as a login shell (read the login files below).
+
+       -x     Print each command before running it, with a + in front: the
+              easiest way to see what a script really does.
+
+       -n     Read the script and check its syntax without running it.
+
+       -e     Stop at the first command that fails.
+
+       -v     Print the lines as they are read.
+
+       --norc, --noprofile
+              Do not read the start-up files.
+
+       --version
+              Print the version and exit.
+
+EXAMPLES
+       Check a script's syntax, then trace it:
+
+           bash -n /root/backup.sh
+           bash -x /root/backup.sh
+
+       A script that prints the size of every file given as an argument:
+
+           #!/bin/bash
+           if [ $# -eq 0 ]; then echo "usage: $0 FILE..."; exit 1; fi
+           for f in "$@"; do
+               echo "$f: $(stat -c %s "$f") bytes"
+           done
+
+       Run a command line as another user:
+
+           su - student -c 'echo $HOME'
+
+FILES
+       /etc/profile, ~/.bash_profile
+              Read by login shells.
+
+       /etc/bashrc, ~/.bashrc
+              Read by interactive shells (~/.bash_profile usually reads
+              ~/.bashrc too). Put aliases and functions here.
+
+       ~/.bash_history
+              The commands you typed.
+
+SEE ALSO
+       sh(1), test(1), env(1), su(1), sudo(8)

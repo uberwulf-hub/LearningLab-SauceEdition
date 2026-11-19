@@ -1,0 +1,64 @@
+NAME
+       less - page through a file or a command's output
+
+SYNOPSIS
+       less [-N] [-S] [-R] [-F] [-X] [-i] [FILE...]
+       COMMAND | less
+
+DESCRIPTION
+       less shows text one screen at a time and lets you move back and
+       forward and search. It does not read the whole file first, so it opens
+       big log files at once. man and journalctl use less to show their
+       output.
+
+   Keys
+       Space, f, Page Down    one screen forward
+       b, Page Up             one screen back
+       Down, j, Enter         one line forward
+       Up, k                  one line back
+       g, <                   go to the start
+       G, >                   go to the end
+       /TEXT                  search forward for TEXT (a regular expression)
+       ?TEXT                  search backward
+       n, N                   the next match, the previous match
+       &TEXT                  show only the lines that match
+       -N                     turn line numbers on or off while reading
+       F                      follow the end of a growing file (like
+                              tail -f; Ctrl+C to stop)
+       h                      help
+       q                      quit
+
+OPTIONS
+       -N     Show line numbers.
+
+       -S     Cut long lines instead of wrapping them (scroll with the left
+              and right arrows).
+
+       -R     Show colour codes as colours.
+
+       -F     Quit at once if the text fits on one screen.
+
+       -X     Leave the text on the screen after quitting.
+
+       -i     Searches ignore case unless the search has capitals.
+
+       -E     Quit at the end of the file.
+
+       -M     A longer prompt with the position in the file.
+
+EXAMPLES
+       Read the system log and search for errors:
+
+           less /var/log/messages
+           /error
+
+       Page through a long listing:
+
+           ls -lR /etc | less
+
+       Show a configuration file with line numbers:
+
+           less -N /etc/ssh/sshd_config
+
+SEE ALSO
+       more(1), head(1), tail(1), man(1)

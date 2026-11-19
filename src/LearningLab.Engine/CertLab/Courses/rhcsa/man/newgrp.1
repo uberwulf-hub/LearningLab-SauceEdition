@@ -1,0 +1,24 @@
+NAME
+       newgrp - start a shell with another primary group
+
+SYNOPSIS
+       newgrp [GROUP]
+
+DESCRIPTION
+       newgrp starts a new shell in which GROUP is your primary group, so new
+       files you create belong to GROUP. You must be a member of the group
+       (or know the group's password). Without GROUP, it uses your own
+       primary group from /etc/passwd. Type exit to get back to the previous
+       shell.
+
+       It is also how a user picks up a group they were just added to,
+       without logging out and in again.
+
+EXAMPLES
+           newgrp devs
+           touch shared.txt
+           ls -l shared.txt
+           exit
+
+SEE ALSO
+       id(1), groups(1), usermod(8), sg(1)

@@ -1,0 +1,33 @@
+NAME
+       column - line up text in columns
+
+SYNOPSIS
+       column -t [-s SEPARATORS] [-o OUTPUT-SEPARATOR] [FILE...]
+
+DESCRIPTION
+       With -t, column reads lines, splits each into fields and prints them
+       as a table with every column as wide as its longest entry. Fields are
+       split at white space unless -s names other characters. It makes files
+       like /etc/passwd or a CSV much easier to read.
+
+OPTIONS
+       -t, --table
+              Print a table.
+
+       -s CHARS, --separator CHARS
+              Split fields at these characters, for example -s : or -s ,.
+
+       -o TEXT, --output-separator TEXT
+              Put TEXT between columns (two spaces by default).
+
+EXAMPLES
+       Show /etc/passwd as a table:
+
+           column -t -s : /etc/passwd
+
+       Line up the output of mount:
+
+           mount | column -t
+
+SEE ALSO
+       cut(1), awk(1), paste(1)

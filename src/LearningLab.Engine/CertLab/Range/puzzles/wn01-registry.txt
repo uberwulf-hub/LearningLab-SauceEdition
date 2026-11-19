@@ -1,0 +1,59 @@
+title: A password in the registry
+level: Beginner
+kind: Windows
+topic: Windows
+teaser: Windows remembers a sign-in where it shouldn't
+points: 50
+order: 50
+host: windows
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+This puzzle is on a pretend Windows computer - you are already connected to it in a
+PowerShell window (notice the prompt PS C:\...). Windows keeps settings in a big tree
+called the registry. One old convenience feature stores a sign-in password there in
+plain text, under
+HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon. Read that key and find
+the password. (Give the password.)
+
+@winsetup
+$p = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+New-Item -Path $p -Force | Out-Null
+Set-ItemProperty -Path $p -Name AutoAdminLogon -Value '1'
+Set-ItemProperty -Path $p -Name DefaultUserName -Value 'kiosk'
+Set-ItemProperty -Path $p -Name DefaultPassword -Value '{{SECRET}}'
+
+@solution
+Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').DefaultPassword
+
+@walkthrough
+Windows can be set to sign a user in automatically at boot (AutoAdminLogon). To do
+that it must keep the password, and the old way keeps it in plain text in the
+registry under Winlogon.
+
+    Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+
+lists the values there; DefaultPassword holds the answer. Read just that one with:
+
+    (Get-ItemProperty '...\Winlogon').DefaultPassword
+
+The lesson: automatic sign-in stores a password where any administrator (and much
+malware) can read it. Use it only on throwaway kiosks, never for an account that
+matters.
+
+@hint 3
+What to think about first: you are in a PowerShell window on a pretend Windows computer (the prompt starts with PS). Windows keeps most of its settings in the registry, a big tree of "keys" (like folders) that each hold named values (like small files). Some old features store more there than they should.
+
+@hint 4
+PowerShell lets you walk the registry like a drive: HKLM: is the part for the whole machine (HKEY_LOCAL_MACHINE). Get-ItemProperty PATH prints all the values in one key. The key you need is named in the puzzle's text.
+
+@hint 5
+Run: Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+Keep the quotes, because the path has spaces in it. You will see values such as AutoAdminLogon and DefaultUserName - this computer is set to sign someone in automatically.
+
+@hint 8
+To sign in automatically, Windows must keep the password - and this old method keeps it in plain text as DefaultPassword. Read just that value:
+(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').DefaultPassword
+The word it prints is the answer.

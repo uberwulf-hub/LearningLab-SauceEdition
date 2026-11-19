@@ -1,0 +1,26 @@
+NAME
+       partprobe - tell the kernel about partition table changes
+
+SYNOPSIS
+       partprobe [-s] [-d] [DEVICE...]
+
+DESCRIPTION
+       partprobe reads the partition tables of the given disks (all disks
+       when none is given) and asks the kernel to update its view, so new or
+       changed partitions appear in /dev and lsblk without a reboot. fdisk
+       and gdisk try this when they write; when the disk is in use, the
+       kernel may still have the old table, and partprobe fixes that.
+
+OPTIONS
+       -s, --summary
+              Print a summary of the partitions found.
+
+       -d, --dry-run
+              Do not ask the kernel to update.
+
+EXAMPLES
+           partprobe /dev/vdb
+           lsblk /dev/vdb
+
+SEE ALSO
+       partx(8), parted(8), fdisk(8), gdisk(8), udevadm(8)

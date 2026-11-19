@@ -1,0 +1,409 @@
+# Exam: exam-1 | Practice exam 1 | 100
+A full practice exam in the style of Microsoft's: questions with one or several answers, drag-and-order questions, Yes / No statements, a case study, and six hands-on tasks on the Harborline network (the servers' PowerShell consoles and the practice consoles). The grader restarts every machine before it checks your work.
+
+@vars
+p = Atlas | Beacon | Comet
+n = 1 | 2 | 3
+@endvars
+
+@task t01 | AD DS | 4 | DC1
+Following the AGDLP model, create the global security group **Project-{p}** in the **Groups** OU with **bcole** and **ewalsh** as members, and the domain local security group **FS-Project-{p}-Modify** in the same OU with **Project-{p}** as its only member.
+@check admin | the global group and its members
+group["Project-{p}"].scope == Global
+group["Project-{p}"].members has bcole
+group["Project-{p}"].members has ewalsh
+@check admin | the domain local group holds the global group
+group["FS-Project-{p}-Modify"].scope == DomainLocal
+group["FS-Project-{p}-Modify"].members has Project-{p}
+group["FS-Project-{p}-Modify"].allmembers has bcole
+@solution DC1
+New-ADGroup -Name "Project-{p}" -GroupScope Global -GroupCategory Security -Path "OU=Groups,DC=corp,DC=example"
+Add-ADGroupMember -Identity "Project-{p}" -Members bcole, ewalsh
+New-ADGroup -Name "FS-Project-{p}-Modify" -GroupScope DomainLocal -Path "OU=Groups,DC=corp,DC=example"
+Add-ADGroupMember -Identity "FS-Project-{p}-Modify" -Members "Project-{p}"
+@explain
+AGDLP: Accounts go into Global groups (who people are), global groups into Domain Local groups (what they may do), and the domain local group gets the Permission on the resource. A global group can't contain a domain local group, so the nesting only works in this direction.
+@endtask
+
+@task t02 | Group Policy | 4 | admin
+Create a GPO named **Finance lockdown {n}** that prohibits access to Control Panel and PC settings, link it to the **Staff/Finance** OU, and make it apply only to members of the **Finance** group. Computers must still be able to read the GPO.
+@check admin | Finance users get the setting
+rsop(computer=CL1, user=ewalsh).setting["NoControlPanel"] == Enabled
+@check admin | other people in the OU don't
+gpo["Finance lockdown {n}"].filter has Finance
+gpo["Finance lockdown {n}"].filter !has "Authenticated Users"
+@solution admin
+gpo new "Finance lockdown {n}"
+gpo set "Finance lockdown {n}" setting=NoControlPanel state=Enabled
+gpo link "Finance lockdown {n}" Staff/Finance
+gpo filter "Finance lockdown {n}" remove "Authenticated Users"
+gpo filter "Finance lockdown {n}" add Finance
+gpo perm "Finance lockdown {n}" "Domain Computers" GpoRead
+@explain
+Security filtering lists who gets Read and Apply. Since the MS16-072 update, user policy is read with the computer's account, so after removing Authenticated Users you must give Domain Computers (or Authenticated Users) Read, or the GPO stops applying to anyone.
+@endtask
+
+@task t03 | Networking | 4 | DC1
+Both domain controllers must resolve names in the partner forest **tidewater.example**, whose DNS server is **192.168.50.10**. Configure it once, on DC1, so that it is stored in Active Directory and reaches DC2 by replication.
+@check admin | DC1 and DC2 forward tidewater.example
+dns(DC1).conditional["tidewater.example"] has 192.168.50.10
+resolve(name=files.tidewater.example, server=DC2) == 192.168.50.20
+@check admin | a client gets the answer
+resolve(client=CL1, name=files.tidewater.example) == 192.168.50.20
+@solution DC1
+Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Domain
+@explain
+A conditional forwarder sends queries for one domain to the servers you name. Stored in Active Directory with the Domain scope, it replicates to every DC that runs DNS in the domain; a file-backed one would exist on DC1 only.
+@endtask
+
+@task t04 | Virtualization | 4 | HV1
+The training team will run Hyper-V inside the virtual machine **LAB-HOST**, and its nested VMs need network access through the VM's adapter. Prepare LAB-HOST and start it.
+@check admin | nested virtualization is on
+vm["LAB-HOST"].nested == Yes
+vm["LAB-HOST"].dynamic == No
+@check admin | its nested VMs can reach the network and it runs
+vm["LAB-HOST"].spoofing == On
+vm["LAB-HOST"].state == Running
+@solution HV1
+Set-VMMemory -VMName LAB-HOST -DynamicMemoryEnabled $false
+Set-VMProcessor -VMName LAB-HOST -ExposeVirtualizationExtensions $true
+Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On
+Start-VM -Name LAB-HOST
+@explain
+Nested virtualization needs the VM switched off while you expose the processor's virtualization extensions, and it doesn't work with dynamic memory. MAC address spoofing lets the nested VMs' traffic, with their own MAC addresses, leave through the outer VM's adapter (the alternative is NAT inside the VM).
+@endtask
+
+@task t05 | File and storage | 4 | FS1
+The Finance team reports that they can open but not save files in **\\FS1\Finance**. The NTFS permissions are correct. Fix the share so that members of **Finance** can change files there, without giving anyone else access.
+@check admin | Finance can change files over the network
+access(user=ewalsh, path="\\FS1\Finance") == Modify
+access(user=fhaddad, path="\\FS1\Finance").rights has Write
+@check admin | others still can't
+access(user=bcole, path="\\FS1\Finance") == "No access"
+@solution FS1
+Grant-SmbShareAccess -Name Finance -AccountName "CORP\FS-Finance-Modify" -AccessRight Change -Force
+@explain
+Over the network the more restrictive of the share and NTFS permissions wins. The share gave Everyone only Read, so Finance's NTFS Modify was cut down to read. Granting Change on the share to the group that already has Modify on NTFS fixes it; NTFS still keeps everyone else out.
+@endtask
+
+@task t06 | Server management | 3 | admin
+Connect **SRV1** to Azure Arc in the resource group **rg-hybrid** so that it can be managed from the Azure portal.
+@check admin | SRV1 is an Azure Arc-enabled server and connected
+arc["SRV1"].status == Connected
+arc["SRV1"].rg == rg-hybrid
+@solution admin
+arc onboard SRV1 rg=rg-hybrid
+@explain
+Onboarding installs the Azure Connected Machine agent on the server and connects it (with a script from the portal or Windows Admin Center). The agent's Hybrid Instance Metadata Service (himds) keeps the server Connected; if it stops, the server shows as Disconnected.
+@endtask
+
+@case cs1 | Fairwind Ferries
+## Overview
+Fairwind Ferries (a made-up company) runs passenger ferries from a head office in Halifax and two harbour offices, Dartmouth and Sydney. It has 400 staff and an IT team of four.
+
+## Existing environment
+The Active Directory forest fairwind.example has one domain and two domain controllers, both in the head office, in the default site. DC-HFX1 holds all the operations master roles. The harbour offices connect to the head office over slow VPN links and have no servers; their PCs get addresses from a router there. All servers run Windows Server 2022. Users sign in to Microsoft 365 with separate cloud accounts.
+
+## Requirements
+- Each harbour office gets a read-only domain controller that also runs DNS. Sign-ins at a harbour office must use the local DC when it works.
+- Replication to the harbour offices must happen at most every 30 minutes, and only over the VPN links.
+- Users must sign in to Microsoft 365 with their Active Directory user name and password. Passwords must not be checked by an on-premises server during sign-in, and sign-in must keep working if the head office is offline.
+- Each harbour office gets its own DHCP server; if one fails, the head office's DHCP server must take over its clients.
+- The PCs in the harbour offices' crew rooms are shared: anyone who signs in to them must get the same locked-down desktop, whatever OU their account is in.
+
+## Technical constraints
+Keep the number of servers and the administrative effort low.
+@endcase
+
+@choice c1 | AD DS | 2 | case=cs1
+What must you create in Active Directory Sites and Services so that sign-ins at a harbour office use the local domain controller?
+- A site link for each harbour office, and nothing else
++ A site for each harbour office with its IP subnet, and the RODC's server object in that site
+- A connection object from each RODC to DC-HFX1
+- A subnet object for each office in the default site
+! Clients find a DC in their own site through the subnet that holds their address. Each office needs a site, its subnet assigned to that site, and the DC in the site. Site links come next, for replication between sites.
+
+@multi c2 | AD DS | 2 | case=cs1
+Which two actions meet the replication requirement? Each correct answer is part of the solution.
++ Add each harbour office's site to a site link with the head office's site
++ Set the replication interval of those site links to 30 minutes
+- Set the replication interval to 10 minutes
+- Disable change notification within the head office site
+- Enable universal group membership caching
+! A site gets replication from other sites only through a site link that contains it. The interval is set on the link (15 minutes is the shortest allowed, 180 the default); 30 minutes meets "at most every 30 minutes".
+
+@yesno c3 | Hybrid identity | 3 | case=cs1
+You plan Microsoft Entra Connect Sync for the sign-in requirement. Decide whether each statement is true.
+Y Password hash synchronization meets the requirement.
+N Pass-through authentication meets the requirement.
+Y The users' UPN suffix must be a domain verified in the tenant, or they will sign in with the tenant's initial domain.
+! Password hash sync lets Microsoft Entra ID check passwords itself, so sign-in keeps working when the office is offline. Pass-through authentication sends each sign-in to an agent on premises, which the requirement rules out. A UPN suffix that isn't verified in the tenant (such as a .local suffix) is replaced by the initial onmicrosoft domain.
+
+@choice c4 | Networking | 2 | case=cs1
+Which DHCP failover configuration should you use between each harbour office's DHCP server and the head office's server?
+- Load balance mode with 50 percent on each server
++ Hot standby mode, with the harbour office's server active and the head office's server as standby
+- Hot standby mode, with the head office's server active
+- Split scopes with an 80/20 ratio, without failover
+! In a hub-and-spoke design the hub server is the hot standby partner of each branch server: the branch serves its clients, and the hub takes over (from its reserve, then all addresses after the MCLT) only when the branch server fails.
+
+@choice c5 | Group Policy | 2 | case=cs1
+What should you configure for the crew room PCs?
+- A GPO linked to the domain with security filtering set to the crew room computers
++ A GPO with the desktop settings linked to the crew room PCs' OU, with user Group Policy loopback processing in Replace mode
+- Loopback processing in Merge mode in the Default Domain Policy
+- A WMI filter on the users' GPOs that selects the crew room PCs
+! Loopback processing applies the user settings of GPOs linked to the computer's OU. Replace mode ignores the GPOs of the user's own OU, so everyone gets the same desktop; Merge would add them on top of the user's normal settings.
+
+@choice q01 | AD DS | 1
+DC1 holds every operations master role and has failed for good. You need DC2 to hold the RID master role. What should you run on DC2?
+- Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole RIDMaster
++ Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole RIDMaster -Force
+- netdom query fsmo
+- Set-ADDomain -RIDMaster DC2
+! A transfer needs the current holder to agree, which it can't when it is gone; -Force seizes the role. A DC whose RID master role was seized must never come back online with its old copy of the directory.
+
+@multi q02 | AD DS | 1
+Which two are requirements for creating a group managed service account? Each correct answer is part of the solution.
++ A KDS root key that is in effect in the forest
++ The hosts that will use it are allowed to retrieve its managed password
+- The account is created in the Users container
+- Every domain controller runs Windows Server 2022
+- The service account has a password that never expires
+! gMSA passwords are derived from the KDS root key, which must exist and be in effect (normally 10 hours after it is added). The hosts (or a group of them) are listed in PrincipalsAllowedToRetrieveManagedPassword; on each host, Install-ADServiceAccount then Test-ADServiceAccount.
+
+@choice q03 | AD DS | 1
+You delete an OU by mistake. The Active Directory Recycle Bin was enabled last year. What restores the OU's users with their group memberships?
+- An authoritative restore from last night's backup with ntdsutil
++ Restore-ADObject on the deleted OU, then on its deleted users
+- Undo the deletion in Active Directory Users and Computers
+- Re-create the OU and its users with the same names
+! With the Recycle Bin, deleted objects keep their attributes, including group memberships, until they are recycled. Restore the parent first (Get-ADObject -IncludeDeletedObjects | Restore-ADObject); re-created objects would get new SIDs.
+
+@choice q04 | AD DS | 1
+A user in the Sales group must get a stricter password policy than the rest of the domain. What should you use?
+- A GPO with password settings linked to the Sales OU
++ A fine-grained password policy applied to the Sales global group
+- A fine-grained password policy applied to the Sales OU
+- Set-ADDefaultDomainPasswordPolicy
+! Password settings in GPOs only count for domain accounts when the GPO is linked to the domain. Fine-grained password policies apply to users and global groups (not OUs); the lowest precedence number wins.
+
+@order q05 | AD DS | 1
+You are adding SRV1 as an additional domain controller in the domain corp.example. Put the steps in order.
+1 Install the Active Directory Domain Services role with its management tools
+2 Run Install-ADDSDomainController -DomainName corp.example -InstallDns with the DSRM password
+3 Let the server restart
+4 Check replication with repadmin /replsummary
+x Run Install-ADDSForest -DomainName corp.example
+! The role must be installed before promotion; promotion replicates the directory, makes the server a DC (and DNS server with -InstallDns) and restarts it. Install-ADDSForest would create a new forest.
+
+@yesno q06 | Group Policy | 1
+A GPO linked to the domain is Enforced. The Staff OU blocks inheritance. Decide whether each statement is true.
+Y Users in the Staff OU still get the enforced GPO's settings.
+N A GPO linked to the Staff OU wins over the enforced GPO when they set the same setting.
+Y GPOs linked to the domain that aren't enforced don't reach the Staff OU.
+! Block Inheritance stops non-enforced GPOs from above; Enforced links ignore it and win over every GPO linked lower down.
+
+@choice q07 | Group Policy | 1
+Two GPOs are linked to the same OU and set the desktop wallpaper differently. Which one wins?
++ The GPO with link order 1
+- The GPO with the highest link order number
+- The GPO that was created first
+- The GPO whose name comes first alphabetically
+! Within one container, link order 1 has the highest precedence: it is applied last, so its value wins.
+
+@multi q08 | Group Policy | 1
+A GPO linked to the Workstations OU doesn't apply to CL1. Which two tools show you why? Each correct answer is part of the solution.
++ gpresult /r on CL1
++ Group Policy Results in Group Policy Management
+- repadmin /showrepl
+- Get-GPO -All
+- dcdiag /test:replications
+! gpresult and Group Policy Results show the GPOs that applied and those filtered out, with the reason (security, WMI filter, disabled link, empty). Group Policy Modeling answers "what would apply" without a computer.
+
+@choice q09 | Group Policy | 1
+You want every administrator's Group Policy Management Editor to use the same, newest Administrative Templates. What should you do?
+- Copy the ADMX files to C:\Windows\PolicyDefinitions on each admin PC
++ Create the central store: copy the PolicyDefinitions folder into the Policies folder of the domain's SYSVOL
+- Import the ADMX files with Import-GPO
+- Install the Group Policy Management feature on every DC
+! The central store is \\domain\SYSVOL\domain\Policies\PolicyDefinitions; when it exists the editor uses it instead of the local folder, and DFS Replication copies it to every DC.
+
+@choice q10 | Group Policy | 1
+You run Invoke-GPUpdate -Computer CL1 from DC1 without other parameters. When does CL1 refresh its policy?
+- At once
++ At a random time within the next 10 minutes
+- At the next restart
+- At the next background refresh, up to 120 minutes later
+! Invoke-GPUpdate schedules a gpupdate on the remote computer after a random delay of up to 10 minutes by default; -RandomDelayInMinutes 0 makes it run at once.
+
+@choice q11 | Hybrid identity | 1
+A company has three disconnected Active Directory forests after mergers and wants the simplest way to synchronise all of them to one Microsoft Entra tenant, with agents that are easy to make highly available. What should it use?
+- Microsoft Entra Connect Sync with one server per forest
++ Microsoft Entra Cloud Sync with provisioning agents in each forest
+- Microsoft Entra Connect Sync in staging mode
+- Password hash synchronization only
+! Cloud Sync keeps its configuration in the cloud and runs lightweight agents; it handles disconnected forests well and you add more agents for high availability. Connect Sync needs line of sight from one server to every forest.
+
+@multi q12 | Hybrid identity | 1
+You will promote an Azure virtual machine to a domain controller of corp.example. Which three settings should you make? Each correct answer is part of the solution.
++ Give the VM's network interface a static private IP address in Azure
++ Store the AD DS database on a data disk with host caching set to None
++ Set the virtual network's DNS servers to the domain's DNS servers
+- Set a static IP address inside Windows on the network adapter
+- Store the database on the temporary disk
+! Azure keeps the address assigned in Azure (static allocation), not one typed inside the guest. Host caching other than None can lose directory writes, and the temporary disk is wiped. The VNet's DNS must point to the domain's DNS so the VM can find the domain.
+
+@choice q13 | Hybrid identity | 1
+After you change a user's department on premises, when does the change appear in Microsoft Entra ID with Microsoft Entra Connect Sync's default schedule?
+- Within 2 minutes
++ At the next delta sync cycle, about every 30 minutes
+- Only after Start-ADSyncSyncCycle -PolicyType Initial
+- At the next password hash sync
+! The scheduler runs a delta sync every 30 minutes by default; Start-ADSyncSyncCycle -PolicyType Delta runs one now. Password hash sync runs separately, about every 2 minutes.
+
+@choice q14 | Server management | 1
+You manage CORE1 (Server Core) from SRV1 with PowerShell. Which command opens an interactive session on CORE1?
++ Enter-PSSession -ComputerName CORE1
+- Invoke-Command -ComputerName CORE1
+- New-PSSessionConfigurationFile -Path CORE1
+- sconfig CORE1
+! Enter-PSSession gives an interactive prompt on the remote machine over WinRM; Invoke-Command runs a script block and returns its output.
+
+@choice q15 | Server management | 1
+Help desk staff must restart one service on file servers through PowerShell remoting, without being administrators and without seeing other commands. What should you configure?
+- A GPO that adds the help desk to the local Administrators group
++ Just Enough Administration: a role capability allowing that command and a session configuration that maps the help desk group to it
+- The help desk group in Remote Management Users only
+- Constrained delegation on the file servers
+! JEA endpoints run as a temporary virtual account with only the commands the role capability allows; Register-PSSessionConfiguration publishes the endpoint and the help desk connects with -ConfigurationName.
+
+@yesno q16 | Server management | 1
+Decide whether each statement about Azure Arc-enabled servers is true.
+Y The Azure Connected Machine agent must be installed on each server.
+N Arc-enabled servers must run in Azure.
+Y Azure Update Manager can assess and install updates on Arc-enabled servers.
+! Azure Arc projects servers that run anywhere into Azure through the agent; once connected, services such as Update Manager, Azure Policy guest configuration and extensions work with them.
+
+@choice q17 | Virtualization | 1
+You must create a VM that boots from UEFI with Secure Boot and uses a VHDX on a SCSI controller. Which generation should you choose?
+- Generation 1
++ Generation 2
+- Either; you can change it later
+- Generation 1 with Secure Boot enabled afterwards
+! Generation 2 VMs use UEFI firmware, support Secure Boot and boot from SCSI. A VM's generation can't be changed after it is created.
+
+@order q18 | Virtualization | 1
+Put the steps for enabling nested virtualization on a VM in order.
+1 Turn the VM off
+2 Run Set-VMProcessor -VMName VM1 -ExposeVirtualizationExtensions $true
+3 Turn on MAC address spoofing on the VM's network adapter
+4 Start the VM and install the Hyper-V role inside it
+x Enable dynamic memory on the VM
+! Processor settings change only while the VM is off; nested virtualization doesn't work with dynamic memory, so it must stay off.
+
+@choice q19 | Virtualization | 1
+A production checkpoint of a running VM is applied. In which state is the VM afterwards?
++ Off, as after a clean shutdown
+- Running, with its memory restored
+- Saved
+- Paused
+! Production checkpoints use the guest's backup technology (VSS) and keep no memory state, so applying one leaves the VM off. Standard checkpoints include memory and restore a running state.
+
+@choice q20 | Virtualization | 1
+On a Windows Server 2022 host, a container must run an image built for Windows Server 2019. Which option is needed?
+- --isolation=process
++ --isolation=hyperv
+- --network=nat
+- -p 8080:80
+! Process isolation shares the host's kernel, so the image's Windows version must match the host's. Hyper-V isolation runs the container in a small utility VM with its own kernel, so older images work.
+
+@choice q21 | Networking | 1
+You need clients to keep using DNS records in a zone while the zone's master server is offline for maintenance. Which server should hold a copy of the zone?
+- A DNS server with a stub zone for it
++ A DNS server with a secondary zone for it
+- A DNS server with a conditional forwarder for it
+- A caching-only DNS server
+! A secondary zone keeps a full read-only copy obtained by zone transfer and answers from it; a stub zone only holds the name servers, and a conditional forwarder holds nothing.
+
+@multi q22 | Networking | 1
+Which two DNS zone settings require the zone to be stored in Active Directory? Each correct answer is part of the solution.
++ Secure dynamic updates only
++ Replication to all DNS servers in the domain through Active Directory
+- Zone transfers to listed servers
+- Aging and scavenging
+- DNSSEC signing
+! Secure updates use Active Directory permissions, and AD replication scopes exist only for AD-integrated zones. Zone transfers, aging and DNSSEC also work with file-backed zones.
+
+@choice q23 | Networking | 1
+Clients in the 10.20.0.0/24 subnet must get a different address for app.corp.example than everyone else. What should you configure on the DNS servers?
+- A conditional forwarder for app.corp.example
+- Netmask ordering
++ A client subnet, a zone scope with the other record, and a query resolution policy
+- A second primary zone named app.corp.example
+! DNS policies: Add-DnsServerClientSubnet, Add-DnsServerZoneScope with its own record, and Add-DnsServerQueryResolutionPolicy that sends queries from that subnet to the zone scope.
+
+@choice q24 | Networking | 1
+A new DHCP server in the domain hands out no addresses, although its scope is active. What is the most likely cause?
++ It isn't authorized in Active Directory
+- The scope has no exclusions
+- Its lease duration is 8 days
+- DNS dynamic updates are off
+! A domain member DHCP server won't serve clients until it is authorized (Add-DhcpServerInDC or the console's Authorize).
+
+@yesno q25 | Networking | 1
+Two DHCP servers share a scope in load balance failover. You add a reservation on the first server. Decide whether each statement is true.
+N The reservation appears on the partner automatically.
+Y Invoke-DhcpServerv4FailoverReplication copies the scope's settings, including reservations, to the partner.
+Y Leases are kept in step between the partners automatically.
+! Failover synchronises leases, but configuration changes such as reservations and options must be replicated to the partner (in the console: Replicate Scope / Replicate Relationship).
+
+@choice q26 | Networking | 1
+SRV1 must reach a virtual network in Azure through a point-to-site VPN that Windows Admin Center sets up for that one server. What is it called?
+- Azure Extended Network
++ Azure Network Adapter
+- Azure ExpressRoute
+- A site-to-site VPN
+! Azure Network Adapter (from Windows Admin Center) creates the virtual network gateway if needed and a point-to-site connection for one server. A site-to-site VPN connects whole networks; Azure Extended Network stretches a subnet.
+
+@choice q27 | File and storage | 1
+A user's NTFS permission on a folder is Modify; the share permission for Everyone is Read. What can the user do over the network?
++ Read files only
+- Modify files
+- Full control
+- Nothing
+! Over the network the more restrictive of the share and NTFS permissions applies; at the console only NTFS counts.
+
+@choice q28 | File and storage | 1
+An inherited Allow entry and an explicit Deny entry for the same right meet on a file. Which wins?
++ The explicit Deny
+- The inherited Allow
+- Whichever was added last
+- Neither: access is denied by default
+! Windows checks explicit entries before inherited ones and, among them, deny before allow. Note that an explicit allow also beats an inherited deny.
+
+@multi q29 | File and storage | 1
+You create a three-way mirror virtual disk in a standalone storage pool. Which two statements are true? Each correct answer is part of the solution.
++ The pool needs at least five physical disks
++ The data uses three times its size in the pool
+- The pool needs exactly three physical disks
+- It survives the loss of any three disks
+- It can be created only with ReFS
+! A three-way mirror keeps three copies and survives two disk failures; in a standalone pool it needs at least five disks. A two-way mirror needs two disks, parity three.
+
+@order q30 | File and storage | 1
+The Storage Sync Service and a sync group with its Azure file share as the cloud endpoint already exist. Put the steps for adding FS1's folder as a server endpoint in order.
+1 Install the Azure File Sync agent on FS1
+2 Register FS1 with the Storage Sync Service (from the agent's registration tool)
+3 Add FS1's folder as a server endpoint of the sync group, with cloud tiering if wanted
+4 Wait for the first sync to finish and check the endpoint's health in the portal
+x Map the Azure file share as a drive on the server
+! Registration is done by the agent, and only a registered server's paths (on an NTFS volume) can be added as server endpoints; a mapped drive plays no part in Azure File Sync.
+
+@choice q31 | File and storage | 1
+Data Deduplication is enabled on E: with default settings, but files copied there yesterday aren't optimized. Why?
+- Deduplication only works on ReFS volumes
++ Files younger than the minimum file age (3 days by default) aren't optimized yet
+- The volume must be the system volume
+- Optimization runs only once a month
+! The default policy waits until files are 3 days old (MinimumFileAgeDays), so recently written files aren't touched; the background optimization job runs regularly afterwards.

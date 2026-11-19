@@ -1,0 +1,36 @@
+SYNOPSIS: Sets the value of a variable, creating it if needed, and can change its options.
+DESCRIPTION:
+Set-Variable assigns a value to a variable, like $name = value, but with extra control: you can set a description or an option (ReadOnly, Constant), choose the scope, change a read-only variable with -Force, or set a variable whose name is itself in a variable.
+
+If the variable does not exist yet, Set-Variable creates it.
+
+Give the name without the dollar sign.
+PARAMETER Name:
+The variables to set, without the $. Position 0, required.
+PARAMETER Value:
+The new value. Position 1. It can also come through the pipeline.
+PARAMETER Option:
+ReadOnly, Constant, Private or None. A read-only variable can be changed only with -Force; a constant one never.
+PARAMETER Description:
+A note about what the variable is for.
+PARAMETER Scope:
+Where to set it: Global, Script, Local, or a number (0 the current scope, 1 its parent).
+PARAMETER PassThru:
+Outputs the variable after setting it.
+PARAMETER Force:
+Changes a read-only variable.
+EXAMPLE: Set-Variable -Name color -Value 'blue' -PassThru
+Sets $color and shows it.
+EXAMPLE: $which = 'color'; Set-Variable -Name $which -Value 'green'; $color
+Sets the variable named in $which: $color is now green.
+EXAMPLE: New-Variable Limit 10 -Option ReadOnly; Set-Variable -Name Limit -Value 20 -Force; $Limit
+A read-only variable changes only with -Force: 20.
+EXAMPLE: function Set-Total { Set-Variable -Name total -Value 99 -Scope Global }; Set-Total; $total
+A function sets a variable in the global scope, so it is still there after the function ends.
+NOTES:
+The alias is set.
+
+Setting variables in other scopes from functions makes scripts harder to follow; returning a value is usually clearer.
+
+The $global:name = value form does the same as -Scope Global.
+RELATED: Get-Variable, New-Variable, Clear-Variable, Remove-Variable, about_Variables, about_Scopes

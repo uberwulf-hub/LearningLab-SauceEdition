@@ -1,0 +1,54 @@
+NAME
+       toyvm - a toy virtual machine for reverse-engineering practice (Cyber Range)
+
+SYNOPSIS
+       toyvm asm SOURCE [-o PROGRAM]
+       toyvm disasm PROGRAM
+       toyvm run PROGRAM [INPUT]
+
+DESCRIPTION
+       toyvm is a tiny pretend computer made up for Cyber Range - not a real
+       processor. A program is a list of bytes; the machine works with a stack
+       (a pile of numbers from 0 to 255: PUSH puts one on top, most
+       instructions take the top ones off and put a result back).
+
+       Reverse engineering means working out what a program does by reading
+       it rather than running it. disasm ("disassemble") turns the bytes back
+       into instructions you can read, so you can see what a program checks
+       and what it would print.
+
+       A program file is the line TOYVM 1 followed by its bytes in hex.
+
+INSTRUCTIONS
+       00        HALT    stop
+       01 n      PUSH n  put the number n on the stack
+       02        ADD     take two numbers, put back their sum (0-255)
+       03        SUB     take b then a, put back a - b
+       04        XOR     take two numbers, put back a XOR b
+       05        OUT     take a number and print it as a character
+       06        IN      put the next character of the input on the stack
+                         (0 when the input has run out)
+       07        DUP     copy the top number
+       08 hi lo  JMP a   jump to address a (hi * 256 + lo)
+       09 hi lo  JZ a    take a number; jump to a when it is 0
+       0A        EQ      take two numbers, put back 1 if they are equal, else 0
+       0B        DROP    throw the top number away
+       0C        SWAP    swap the two top numbers
+
+       XOR with the same number twice gives the original back, so
+       PUSH x, PUSH k, XOR, OUT prints the character x XOR k - a common way to
+       hide text from a quick look.
+
+ASSEMBLY
+       One instruction per line (PUSH 65, JZ fail), labels such as fail:,
+       comments after ; and numbers in decimal, 0x hex or 'c'. Helpers:
+       .text "abc" prints abc; .xortext KEY "abc" prints abc but keeps it
+       XORed with KEY; .check KEY "abc" LABEL reads three input characters and
+       jumps to LABEL unless they are abc.
+
+EXAMPLES
+           toyvm disasm checker.tvm
+           toyvm run checker.tvm guess
+
+SEE ALSO
+       xorcat(1), xxd(1)

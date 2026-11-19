@@ -1,0 +1,135 @@
+# Lab: lab-05 | Partitions, LVM and swap | u05 | 45
+Practice for unit 5 on server1. The disks vdb and vdc are yours, except for an old volume group on vdc that you clear away first in task 4. Do the tasks in order: later ones use the free space that earlier ones leave. Everything you set up must also work after a reboot, so test /etc/fstab with mount -a and swapon -a as you go.
+
+@vars
+vg = vgstore | vglab | vgpool
+ext = 8 | 16
+lv = lvfiles | lvarchive | lvproj
+lvext = 12-30
+swap = 256 | 512
+@endvars
+
+@setup server1
+parted -s /dev/vdc mklabel msdos
+parted -s /dev/vdc mkpart primary 1MiB 513MiB
+pvcreate /dev/vdc1
+vgcreate vgold /dev/vdc1
+lvcreate -n lvold -L 100M vgold
+
+@task t01 | Local storage | 15 | server1
+Give /dev/vdb a GPT partition table with two partitions: partition 1 of 1 GiB (it will hold a file system) and partition 2 of 2 GiB, marked for LVM.
+@check server1 | vdb has a GPT table
+fdisk -l /dev/vdb | grep -q '^Disklabel type: gpt'
+@check server1 | vdb1 is 1 GiB and vdb2 is 2 GiB
+test "$(lsblk -b -d -n -o SIZE /dev/vdb1)" = 1073741824 && test "$(lsblk -b -d -n -o SIZE /dev/vdb2)" = 2147483648
+@check server1 | vdb2 is marked for LVM
+parted -s /dev/vdb print | grep -Eq '^ 2 .* lvm'
+@hint parted -s works without questions: mklabel gpt, mkpart NAME START END (positions, with MiB), set 2 lvm on.
+@solution server1
+lsblk
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart data 1MiB 1025MiB
+parted -s /dev/vdb mkpart lvm 1025MiB 3073MiB
+parted -s /dev/vdb set 2 lvm on
+parted -s /dev/vdb unit MiB print
+@explain
+START and END are places on the disk, so partition 2 starts where partition 1 ends (1025 MiB) and ends 2048 MiB later. Starting at 1 MiB keeps the partitions aligned. gdisk works just as well: n, +1G, then n, +2G with the code 8e00, then w.
+@endtask
+
+@task t02 | Local storage | 20 | server1
+On /dev/vdb2 create the volume group `{vg}` with physical extents of {ext} MiB. In it create the logical volume `{lv}` of exactly {lvext} extents. Format it with ext4 and mount it on /mnt/{lv}, now and at every boot, using the file system's UUID in /etc/fstab.
+@check server1 | {vg} uses {ext} MiB extents and sits on /dev/vdb2
+test "$(vgs --noheadings -o vg_extent_size {vg} | tr -d ' ')" = "{ext}.00m" && test "$(pvs --noheadings -o vg_name /dev/vdb2 | tr -d ' ')" = {vg}
+@check server1 | {lv} is {lvext} extents
+test "$(lvs --noheadings -o seg_size_pe {vg}/{lv} | tr -d ' ')" = "{lvext}"
+@check server1 | ext4 is mounted on /mnt/{lv}
+test "$(findmnt -n -o FSTYPE /mnt/{lv})" = ext4
+@check server1 | /etc/fstab mounts it by UUID
+findmnt -s -n -o SOURCE /mnt/{lv} | grep -q '^UUID='
+@hint vgcreate -s {ext}M, lvcreate -l {lvext}. blkid -s UUID -o value prints the UUID for the fstab line.
+@solution server1
+pvcreate /dev/vdb2
+vgcreate -s {ext}M {vg} /dev/vdb2
+lvcreate -n {lv} -l {lvext} {vg}
+mkfs.ext4 /dev/{vg}/{lv}
+mkdir -p /mnt/{lv}
+echo "UUID=$(blkid -s UUID -o value /dev/{vg}/{lv}) /mnt/{lv} ext4 defaults 0 0" >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /mnt/{lv}
+@explain
+The extent size can only be chosen when the VG is created. -l counts extents, so the LV is exactly {lvext} x {ext} MiB. In the echo line, the double quotes let $(...) put the UUID into the line, and >> adds to fstab instead of replacing it. mount -a tests the new line before any reboot does.
+@endtask
+
+@task t03 | Local storage | 15 | server1
+Format /dev/vdb1 with xfs and the label `LABDATA`, and mount it on /labdata at every boot, using the label in /etc/fstab.
+@check server1 | vdb1 is xfs with the label LABDATA
+test "$(blkid -s TYPE -o value /dev/vdb1)" = xfs && test "$(blkid -s LABEL -o value /dev/vdb1)" = LABDATA
+@check server1 | /etc/fstab mounts LABEL=LABDATA on /labdata
+test "$(findmnt -s -n -o SOURCE /labdata)" = "LABEL=LABDATA"
+@check server1 | /labdata is mounted from vdb1
+test "$(findmnt -n -o SOURCE /labdata)" = /dev/vdb1
+@hint mkfs.xfs -L sets the label. The fstab line starts with LABEL=LABDATA.
+@solution server1
+mkfs.xfs -L LABDATA /dev/vdb1
+mkdir -p /labdata
+echo 'LABEL=LABDATA /labdata xfs defaults 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /labdata
+@explain
+A label, like a UUID, belongs to the file system, so the line keeps working when disk names change. Labels must be unique on the machine. To change the label of an existing xfs, unmount it and run xfs_admin -L.
+@endtask
+
+@task t04 | Local storage | 15 | server1
+The disk /dev/vdc has an MBR table with one partition, which holds the old volume group `vgold` (with the logical volume `lvold`). Nobody needs it: remove the logical volume and the volume group, wipe the LVM label from /dev/vdc1, and delete the partition. Keep the MBR table on vdc.
+@check server1 | vgold no longer exists
+! vgs vgold >/dev/null 2>&1
+@check server1 | vdc still has an MBR (dos) table
+fdisk -l /dev/vdc | grep -q '^Disklabel type: dos'
+@hint Top down: lvremove, vgremove, pvremove, then fdisk d (or parted rm 1).
+@solution server1
+lvremove -y vgold/lvold
+vgremove vgold
+pvremove /dev/vdc1
+parted -s /dev/vdc rm 1
+lsblk /dev/vdc
+@explain
+LVM comes apart in the reverse order of creation: LV, VG, PV label, and only then the partition. If the LV had been mounted, you would first unmount it and remove its line from /etc/fstab. pvremove leaves the partition in place; parted rm (or fdisk d and w) deletes it.
+@endtask
+
+@task t05 | Local storage | 20 | server1
+On /dev/vdc create partition 1, a primary partition of {swap} MiB at the start of the disk with the type Linux swap (82). Use it as additional swap space, active now and at every boot. The existing swap must stay active.
+@check server1 | vdc1 is {swap} MiB with the type 82
+test "$(lsblk -b -d -n -o SIZE /dev/vdc1)" = "$(({swap} * 1048576))" && fdisk -l /dev/vdc | grep -Eq '^/dev/vdc1 .* 82 Linux swap'
+@check server1 | vdc1 is active swap, and /etc/fstab turns it on again (swapoff, then swapon -a)
+grep -q '^/dev/vdc1 ' /proc/swaps && swapoff /dev/vdc1 && swapon -a && grep -q '^/dev/vdc1 ' /proc/swaps
+@check server1 | the old swap is still active
+grep -q '^/dev/dm-1 ' /proc/swaps
+@hint fdisk: n, p, 1, Enter, +{swap}M, t, 82, w (or parted with linux-swap from 1MiB to {swap} MiB further). Then mkswap, a line with none and swap in /etc/fstab, swapon -a.
+@solution server1
+parted -s /dev/vdc mkpart primary linux-swap 1MiB $((1 + {swap}))MiB
+fdisk -l /dev/vdc
+mkswap /dev/vdc1
+echo "UUID=$(blkid -s UUID -o value /dev/vdc1) none swap defaults 0 0" >> /etc/fstab
+swapon -a
+swapon --show
+@explain
+The shell works out $((1 + {swap})) for you: the partition ends {swap} MiB after its start. The partition type 82 (which parted sets for linux-swap) tells tools the partition is swap; mkswap actually prepares it. In fstab, swap has no mount point (none) and the type swap. swapon -a turns on every swap area fstab lists, so it doubles as a test of the line. The old swap line was not touched, so both are active.
+@endtask
+
+@task t06 | Local storage | 15 | server1
+Create a new primary partition of 1 GiB on /dev/vdc in the free space after the swap partition, and add it to the volume group `{vg}`, without changing the logical volumes that are already in it.
+@check server1 | a 1 GiB vdc2 belongs to {vg}
+test "$(lsblk -b -d -n -o SIZE /dev/vdc2)" = 1073741824 && test "$(pvs --noheadings -o vg_name /dev/vdc2 | tr -d ' ')" = {vg}
+@check server1 | {vg} has two physical volumes and still holds {lv}
+test "$(vgs --noheadings -o pv_count {vg} | tr -d ' ')" = 2 && lvs {vg}/{lv} >/dev/null 2>&1
+@hint parted -s /dev/vdc unit MiB print shows where the swap partition ends. Then vgextend.
+@solution server1
+parted -s /dev/vdc unit MiB print
+parted -s /dev/vdc mkpart primary 1025MiB 2049MiB
+vgextend {vg} /dev/vdc2
+vgs {vg}
+@explain
+vgextend adds a PV to a VG (running pvcreate for you if needed); the new extents are free for any LV in the group to grow into, and the existing LVs are not touched. The partition may start anywhere after the swap partition; leaving a small gap is harmless.
+@endtask

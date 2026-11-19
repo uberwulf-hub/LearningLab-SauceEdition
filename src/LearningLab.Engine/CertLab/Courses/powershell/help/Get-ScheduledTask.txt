@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the scheduled tasks of Task Scheduler.
+DESCRIPTION:
+A scheduled task runs a program at set times or events: every night, at startup, when someone signs in. Tasks live in folders (TaskPath) such as \ for your own tasks and \Microsoft\Windows\... for Windows' tasks. Get-ScheduledTask returns task objects with their State (Ready, Running, Disabled), Actions, Triggers, Principal (who it runs as) and Settings.
+
+When a task last ran and what it returned is not in this object: use Get-ScheduledTaskInfo.
+PARAMETER TaskName:
+Task names; wildcards are allowed. Position 0.
+PARAMETER TaskPath:
+Task folders, for example '\Microsoft\Windows\Defrag\'. Wildcards are allowed.
+PARAMETER CimSession:
+Reads the tasks of another computer through a CIM session.
+EXAMPLE: Get-ScheduledTask -TaskPath \
+Your own tasks (the root folder).
+EXAMPLE: Get-ScheduledTask | Where-Object State -eq Disabled
+Disabled tasks.
+EXAMPLE: (Get-ScheduledTask -TaskName Nightly).Actions
+What a task runs.
+RELATED: Get-ScheduledTaskInfo, Register-ScheduledTask, Start-ScheduledTask

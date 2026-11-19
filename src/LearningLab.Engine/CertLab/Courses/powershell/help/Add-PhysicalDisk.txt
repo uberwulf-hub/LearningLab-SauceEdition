@@ -1,0 +1,12 @@
+SYNOPSIS: Adds physical disks to an existing storage pool.
+DESCRIPTION:
+Add-PhysicalDisk puts more empty disks into a pool, making room for new or bigger virtual disks. Existing virtual disks don't spread onto the new disks by themselves; on Windows Server, Optimize-StoragePool rebalances them.
+PARAMETER StoragePoolFriendlyName:
+The pool.
+PARAMETER PhysicalDisks:
+The disks to add.
+EXAMPLE: Add-PhysicalDisk -StoragePoolFriendlyName Data -PhysicalDisks (Get-PhysicalDisk -SerialNumber LMN04186)
+Adds one more disk to the Data pool.
+EXAMPLE: Get-PhysicalDisk -CanPool $true
+Shows which disks are still free.
+RELATED: New-StoragePool, Get-StoragePool, Get-PhysicalDisk

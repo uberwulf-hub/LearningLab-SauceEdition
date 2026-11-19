@@ -1,0 +1,15 @@
+1. siem alerts: "Office program started another program" on {{GOODH}} and on {{BADH}}.
+2. siem search source=proclog parent=*winword* shows what Word started on each:
+   - {{GOODH}}: splwow64.exe, Word's own helper for printing, and PRINT01 logged a print job (event 5145) from
+     {{GOODU}} at the same minute. A false alarm.
+   - {{BADH}}: cmd.exe running PowerShell with "iwr" (Invoke-WebRequest, a download) from {{C2DOM}}. Real.
+3. The real chain on {{BADH}}, from {{T0}}:
+     outlook.exe -> winword.exe opens C:\Users\{{BADU}}\Downloads\{{DOC}} (a .docm can carry macros)
+     winword.exe -> cmd.exe -> powershell.exe downloads {{DLL}} into the Temp folder
+     powershell.exe -> rundll32.exe loads {{DLL}} (rundll32 runs code inside a DLL file)
+4. The network: a DNS lookup of {{C2DOM}} answered {{C2IP}}; the firewall let the download out on port 80, then a
+   small connection to {{C2IP}}:443 every 60 seconds - the loaded file checking in with whoever sent it ("calling
+   home", or beaconing).
+
+Block {{C2IP}} (and the name {{C2DOM}}), take {{BADH}} off the network, reset {{BADU}}'s password, and search the
+mail for the same attachment name: others may have received it.

@@ -1,0 +1,17 @@
+NAME
+       lsmod - list the kernel modules that are loaded
+
+SYNOPSIS
+       lsmod
+
+DESCRIPTION
+       lsmod prints the modules in the running kernel (drivers, file systems,
+       firewall parts) from /proc/modules: the name, the memory it uses, and
+       how many users it has and which other modules use it. modinfo NAME
+       describes a module; modprobe loads or removes one.
+
+EXAMPLES
+           lsmod | grep xfs
+
+SEE ALSO
+       modprobe(8), modinfo(8)

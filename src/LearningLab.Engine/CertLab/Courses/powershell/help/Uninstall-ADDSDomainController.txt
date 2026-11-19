@@ -1,0 +1,25 @@
+SYNOPSIS: Demotes a domain controller back to a member server.
+DESCRIPTION:
+Uninstall-ADDSDomainController removes Active Directory from this server: it stops being a domain controller and becomes an ordinary member server. Afterwards the AD-Domain-Services role can be removed with Uninstall-WindowsFeature.
+Before demoting, move any operations master roles it holds to another DC, or add -DemoteOperationMasterRole to let it hand them over. Make sure clients and other servers don't use it as their DNS server any more.
+-LastDomainControllerInDomain removes the domain itself; use it only when you really mean to.
+It asks for a new local Administrator password, because a DC has no local accounts of its own.
+PARAMETER Credential:
+A Domain Admins account, if you aren't signed in as one.
+PARAMETER LocalAdministratorPassword:
+The password of the local Administrator account the server will get back.
+PARAMETER DemoteOperationMasterRole:
+Moves its operations master roles to another DC during the demotion.
+PARAMETER RemoveDnsDelegation:
+Removes the DNS delegations pointing to this server.
+PARAMETER LastDomainControllerInDomain:
+This is the last DC of the domain, so the domain goes too.
+PARAMETER NoRebootOnCompletion:
+Doesn't restart at the end.
+PARAMETER Force:
+Doesn't ask for confirmation.
+EXAMPLE: Uninstall-ADDSDomainController -DemoteOperationMasterRole -LocalAdministratorPassword (Read-Host -AsSecureString "Local admin password")
+Demotes this DC, passing its roles on.
+EXAMPLE: Get-ADDomainController DC2 | Select-Object Name, OperationMasterRoles
+Checks first which roles DC2 holds.
+RELATED: Install-ADDSDomainController, Move-ADDirectoryServerOperationMasterRole, Uninstall-WindowsFeature

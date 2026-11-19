@@ -1,0 +1,14 @@
+1. siem alerts: "Shell started by the web server" on WEB02 (earlier) and on WEB01 (later).
+2. siem search source=proclog parent=/usr/sbin/httpd shows the shells:
+   - WEB02: "cd /var/www/site && git pull --ff-only". The web log shows why: BUILD01 ({{NET}}.30, the company's own
+     build server) called /hooks/deploy, which the developers set up to fetch the newest version of the site after
+     every change. A false alarm (this rule could skip that one hook).
+   - WEB01: "{{FIRST}}", then "ls /var/www/html/config", then "cat .../db.php". Real.
+3. The web log on WEB01: {{ATKIP}} opened the profile-picture page, POSTed to /upload.php at {{T0}} (file={{SHELL}}),
+   then asked for /uploads/{{SHELL}}?c=... - each ?c= is a command the uploaded PHP file runs. The upload form
+   didn't check that the "picture" was really a picture. The commands ran as apache, the web server's account.
+4. It read the database settings file (with its password), and four minutes in, ssh from WEB01 signed in to DB01 as
+   {{DBUSER}} with that password and dumped every database (mysqldump --all-databases).
+
+Next steps: take WEB01 off the internet, delete /uploads/{{SHELL}}, block {{ATKIP}}, change the database password,
+check DB01, and fix the upload form so it accepts only real pictures and never runs uploaded files.

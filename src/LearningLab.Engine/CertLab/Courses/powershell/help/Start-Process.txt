@@ -1,0 +1,34 @@
+SYNOPSIS: Starts a program, or opens a file with its program.
+DESCRIPTION:
+Start-Process starts a program in a new process. Unlike typing the program's name, it does not wait for it and does not show its output unless you ask: -Wait waits until it ends, -NoNewWindow shows a console program's output in your console, -PassThru returns the Process object so you can check it later (its ExitCode after it ends).
+
+Giving a document such as a .txt or .ps1 file opens it with its program (Notepad). To run a script, start powershell.exe with -File in -ArgumentList.
+PARAMETER FilePath:
+The program or document. Position 0, required.
+PARAMETER ArgumentList:
+The arguments for the program. Position 1.
+PARAMETER WorkingDirectory:
+The folder the program starts in.
+PARAMETER Credential:
+Runs the program as another user.
+PARAMETER PassThru:
+Returns the Process object.
+PARAMETER Wait:
+Waits until the program ends.
+PARAMETER NoNewWindow:
+Runs a console program in the current window.
+PARAMETER RedirectStandardOutput:
+Saves a console program's output to a file.
+PARAMETER Verb:
+How to open it, for example RunAs (as an administrator).
+PARAMETER WindowStyle:
+Normal, Hidden, Minimized or Maximized.
+EXAMPLE: Start-Process notepad -PassThru
+Starts Notepad and shows its process.
+EXAMPLE: Start-Process powershell.exe -ArgumentList '-File','C:\Scripts\report.ps1' -Wait -PassThru
+Runs a script in a new PowerShell, waits, and returns the process with its ExitCode.
+EXAMPLE: Start-Process ipconfig -ArgumentList '/all' -NoNewWindow -Wait
+Shows a console program's output here.
+NOTES:
+On the practice machines Notepad and Calculator keep running until you stop them, so -Wait does not wait for them.
+RELATED: Stop-Process, Get-Process, Wait-Process

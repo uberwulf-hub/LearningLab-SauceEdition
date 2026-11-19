@@ -1,0 +1,20 @@
+This intruder was careful and left several ways back in. Miss one and they still have a key.
+
+1. The way in. /var/log/secure shows "Accepted password for {{USER}} from {{ATKIP}}" - a reused database
+   account password. The account's own history (cat /home/{{USER}}/.bash_history) shows what they did:
+   a mysqldump and an scp of it to {{ATKIP}}, then history -c to try to hide it (the file on disk still
+   has the lines).
+
+2. Three footholds.
+   - An extra SSH key: the last line of /home/{{USER}}/.ssh/authorized_keys is a key you did not add; its
+     comment ({{KEYCMT}}) is the attacker's handle.
+   - A scheduled beacon: /etc/cron.d/{{CRONF}} dumps the database on a timer, ready to send out.
+   - A dropped note: /var/tmp/.cache/.loot.txt holds the flag.
+
+3. Shut every door. sed -i '/{{KEYCMT}}/d' the authorized_keys line, rm -f /etc/cron.d/{{CRONF}}, and
+   usermod -L {{USER}}. If you leave the beacon, it stages a fresh database dump to send out.
+
+For real: a reused password plus shell access lets a patient attacker plant multiple persistence
+mechanisms and try to erase their tracks. Unique credentials, keys over passwords, alerting on new cron
+jobs and authorized_keys changes, and shipping logs off the host (so clearing local history doesn't help
+them) are the defences.

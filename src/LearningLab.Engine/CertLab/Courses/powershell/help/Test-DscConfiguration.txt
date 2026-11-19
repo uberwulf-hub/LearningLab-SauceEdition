@@ -1,0 +1,24 @@
+SYNOPSIS: Checks whether a computer is still in the state its DSC configuration describes.
+DESCRIPTION:
+Test-DscConfiguration runs the Test part of every resource in the computer's current configuration, without changing anything. It returns True when everything matches and False when something has drifted, for example a file deleted or a registry value changed by hand.
+
+With -Detailed it lists which resources are in the desired state and which are not.
+PARAMETER ComputerName:
+The computers to test. The default is this computer.
+PARAMETER Detailed:
+Returns an object with ResourcesInDesiredState, ResourcesNotInDesiredState and InDesiredState.
+PARAMETER ReferenceConfiguration:
+Tests against a .mof file instead of the current configuration, for example C:\DSC\WIN-SRV1.mof.
+PARAMETER Verbose:
+Shows each resource's test and its result.
+EXAMPLE: Test-DscConfiguration
+Returns True if this computer still matches its configuration.
+EXAMPLE: Test-DscConfiguration -Detailed | Select-Object -ExpandProperty ResourcesNotInDesiredState
+Shows the resources that have drifted, such as [File]Tools.
+EXAMPLE: Test-DscConfiguration -ReferenceConfiguration C:\DSC\WIN-SRV1.mof
+Checks a .mof file against the computer before applying it.
+NOTES:
+If no configuration was applied yet, it reports that the current configuration does not exist. Apply one with Start-DscConfiguration first.
+To fix drift, run Start-DscConfiguration -UseExisting -Wait.
+PowerShell 7 has no Test-DscConfiguration; DSC 3's dsc.exe has its own test command.
+RELATED: Start-DscConfiguration, Get-DscConfiguration, Get-DscConfigurationStatus

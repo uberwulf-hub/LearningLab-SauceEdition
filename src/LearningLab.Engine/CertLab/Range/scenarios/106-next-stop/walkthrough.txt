@@ -1,0 +1,13 @@
+1. siem alerts: "New service installed" on PRINT01 (in the night) and on FILE01 (this afternoon).
+2. siem search source=winsec event=7045 compares them:
+   - PRINT01: "PrintFleet Agent", C:\Program Files\PrintFleet\pfagent.exe, installed by svc_deploy from DEPLOY01 during
+     the night - the planned update window. A false alarm.
+   - FILE01: {{SVCNAME}}, running C:\Windows\Temp\{{EXE}}, installed by adm_{{ADMP}}. A program in a Temp folder run as
+     a service is a classic intruder's move. Real.
+3. siem search host=FILE01 source=winsec user=adm_{{ADMP}} shows the steps on FILE01 in order: a network sign-in
+   (4624, logon_type=3) at {{T0}} from WS-{{HA}} ({{NET}}.{{HA}}), administrator rights (4672), {{EXE}} written through
+   the ADMIN$ share (5145), then the service (7045) that runs it as SYSTEM.
+4. Follow the account: siem search source=winsec user=adm_{{ADMP}} event=4624 shows it next signed in to DC01, the
+   domain controller, from FILE01's address. The intruder is moving towards the computer that controls every account.
+
+Next steps: disable adm_{{ADMP}} and reset it, isolate WS-{{HA}} and FILE01, remove {{SVCNAME}}, and check DC01 urgently.

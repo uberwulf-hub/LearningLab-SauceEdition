@@ -1,0 +1,67 @@
+title: Piecing it together
+level: Intermediate
+kind: OSINT
+topic: OSINT
+teaser: three harmless files, one password
+points: 65
+order: 46
+answer: {{PW}}
+var: FIRST = pool:first
+var: LAST = pool:last
+var: YEAR = num:1990-2005
+var: PW = {{LOWER:FIRST}}{{YEAR}}
+
+@intro
+In ~/leak are three files that were "found online" about a made-up company and a made-up
+person: a staff page, a press release, and a config snippet. None of them is a password
+on its own, but together they give one person's password. Work it out. (Everyone here is
+invented.)
+
+@setup
+mkdir -p /home/player/leak
+cat > /home/player/leak/staff.html <<HTML
+<h2>Our team</h2>
+<ul>
+<li>{{FIRST}} {{LAST}} - IT support - username: {{FIRST}}.{{LAST}}</li>
+<li>Pat Rivera - reception</li>
+</ul>
+HTML
+cat > /home/player/leak/press.txt <<TXT
+{{LAST}} Joinery is proud to welcome {{FIRST}} {{LAST}}, a lifelong fan of the
+class of '{{YEAR}} - "I still use my graduation year in everything," they joked.
+TXT
+cat > /home/player/leak/config.sample <<CFG
+# example only - real password is <firstname><graduationyear>, all lowercase
+db_user = {{FIRST}}.{{LAST}}
+db_pass = CHANGEME
+CFG
+chown -R player: /home/player/leak
+
+@solution
+cat /home/player/leak/staff.html
+cat /home/player/leak/press.txt
+cat /home/player/leak/config.sample
+echo {{PW}}
+
+@walkthrough
+Read the three files together:
+
+- staff.html names the IT person, {{FIRST}} {{LAST}}.
+- press.txt mentions they use their graduation year, '{{YEAR}}, "in everything".
+- config.sample says the password format is <firstname><graduationyear>, lowercase.
+
+Put the pieces together: {{FIRST}} + {{YEAR}} = {{PW}}. No single file was a password,
+but public details plus a known pattern reveal it. That is open-source intelligence: the
+lesson is that "harmless" public facts combine, and passwords must never follow a
+guessable personal pattern.
+
+@hint 5
+Open-source intelligence is joining small public facts. No single file is the answer; note what each one tells you about the person.
+
+@hint 10
+Read all three files (cat ~/leak/*). One names the person, one gives a number they reuse, and one gives
+the password format.
+
+@hint 20
+The format is firstname + graduation year, all lowercase: {{FIRST}} and the year from the
+press release.

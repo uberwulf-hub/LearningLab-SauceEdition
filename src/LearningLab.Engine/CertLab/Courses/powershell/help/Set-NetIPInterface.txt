@@ -1,0 +1,28 @@
+SYNOPSIS: Changes an IP interface: DHCP on or off, metric and MTU.
+DESCRIPTION:
+Set-NetIPInterface changes the settings Get-NetIPInterface shows. The most common use is -Dhcp Enabled, which turns a fixed address back into one the DHCP server hands out.
+
+In the practice network, turning DHCP on removes the fixed IPv4 addresses and the gateway of the adapter; the DHCP server then gives WIN-SRV1 10.0.10.111 and WIN-CL1 10.0.10.121, with the gateway 10.0.10.1. Turning DHCP off removes the DHCP address: add a fixed one with New-NetIPAddress.
+PARAMETER InterfaceAlias:
+The adapter, for example Ethernet.
+PARAMETER InterfaceIndex:
+The ifIndex of the adapter.
+PARAMETER Dhcp:
+Enabled or Disabled.
+PARAMETER InterfaceMetric:
+The metric, a number; lower means preferred.
+PARAMETER NlMtuBytes:
+The largest packet size in bytes (normally 1500).
+PARAMETER InputObject:
+An interface piped from Get-NetIPInterface or Get-NetAdapter.
+PARAMETER PassThru:
+Outputs the interface after the change.
+EXAMPLE: Set-NetIPInterface -InterfaceAlias Ethernet -AddressFamily IPv4 -Dhcp Enabled
+Lets the adapter get its address from DHCP. Follow it with Set-DnsClientServerAddress -InterfaceAlias Ethernet -ResetServerAddresses so the DNS server comes from DHCP too.
+EXAMPLE: Set-NetIPInterface -InterfaceAlias Ethernet -Dhcp Disabled
+Stops using DHCP; the adapter has no IPv4 address until you add one with New-NetIPAddress.
+EXAMPLE: Set-NetIPInterface -InterfaceAlias Ethernet -InterfaceMetric 10 -PassThru
+Changes the metric and shows the result.
+NOTES:
+Servers normally keep fixed addresses; clients normally use DHCP. CIM-based command, Windows only. Needs an administrator on a real PC.
+RELATED: Get-NetIPInterface, New-NetIPAddress, Set-DnsClientServerAddress

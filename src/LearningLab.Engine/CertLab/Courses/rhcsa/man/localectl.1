@@ -1,0 +1,38 @@
+NAME
+       localectl - show or set the system language and keyboard layout
+
+SYNOPSIS
+       localectl [status]
+       localectl list-locales
+       localectl set-locale LANG=LOCALE
+       localectl set-keymap MAP
+
+DESCRIPTION
+       localectl shows the system-wide locale (language, number and date
+       formats) and the keyboard layout for the text console and for
+       graphical sessions. The settings are stored in /etc/locale.conf and
+       /etc/vconsole.conf and apply to new logins.
+
+COMMANDS
+       status
+              Show the current settings (the default).
+
+       list-locales
+              List the locales that are installed. More come with the
+              glibc-langpack-* packages.
+
+       set-locale LANG=LOCALE
+              Set the system locale, for example LANG=en_US.UTF-8.
+
+       set-keymap MAP
+              Set the console keyboard layout, for example us or de.
+
+EXAMPLES
+           localectl
+           localectl list-locales
+
+FILES
+       /etc/locale.conf, /etc/vconsole.conf
+
+SEE ALSO
+       timedatectl(1), hostnamectl(1), locale(1)

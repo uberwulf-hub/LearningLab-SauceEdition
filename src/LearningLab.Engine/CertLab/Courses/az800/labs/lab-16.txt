@@ -1,0 +1,87 @@
+# Lab: lab-16 | One path for every file, at both sites | u16 | 45
+Harborline wants people to use one path for the department shares wherever they work, a copy of the Sales files at the branch (DC2 also serves as the branch's file server), and the HR archive moved to Azure with only recent files kept on FS1. DC2 has just been moved into the **Branch** site.
+
+@vars
+ns = Files | Data | Company
+days = 30 | 45 | 90
+@endvars
+
+@setup admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+move dc DC2 Branch
+
+@task t01 | File and storage | 30 | FS1
+Create the domain-based namespace `\\corp.example\{ns}` (Windows Server 2008 mode, access-based enumeration on) on FS1, with its root share `\\FS1\{ns}` in `D:\DFSRoots\{ns}`. Add the folders **Sales** (`\\FS1\Sales`) and **Finance** (`\\FS1\Finance`).
+@check admin | the namespace and its folders
+namespace["\\corp.example\{ns}"].type == DomainV2
+namespace["\\corp.example\{ns}"].abe == Yes
+namespace["\\corp.example\{ns}"].folders has Sales
+namespace["\\corp.example\{ns}"].folders has Finance
+@check admin | Brian reaches the Sales files through the namespace
+access(user=bcole, path="\\corp.example\{ns}\Sales") == Modify
+@hint Install-WindowsFeature FS-DFS-Namespace; New-Item and New-SmbShare for the root; New-DfsnRoot -Type DomainV2 -EnableAccessBasedEnumeration $true; New-DfsnFolder twice.
+@solution FS1
+Install-WindowsFeature FS-DFS-Namespace -IncludeManagementTools
+New-Item -Path D:\DFSRoots\{ns} -ItemType Directory
+New-SmbShare -Name {ns} -Path D:\DFSRoots\{ns} -ReadAccess Everyone
+New-DfsnRoot -Path \\corp.example\{ns} -TargetPath \\FS1\{ns} -Type DomainV2 -EnableAccessBasedEnumeration $true
+New-DfsnFolder -Path \\corp.example\{ns}\Sales -TargetPath \\FS1\Sales
+New-DfsnFolder -Path \\corp.example\{ns}\Finance -TargetPath \\FS1\Finance
+@explain
+Access-based enumeration on the namespace hides the namespace folders a person has no permission on. Those permissions are set on the namespace folders themselves (DFS Management, or Grant-DfsnAccess / Set-DfsnAccess), not read from the target shares, so to hide Finance from Brian you would also limit who may see the Finance folder.
+@endtask
+
+@task t02 | File and storage | 25 | FS1
+Replicate the Sales files to DC2 with DFS Replication: the group **Sales-RG**, the replicated folder **Sales**, FS1 (`D:\Shares\Sales`, the **primary member**) and DC2 (`C:\Shares\Sales`), connected both ways. Make both members pick up the configuration now.
+@check admin | the group finished its first sync to DC2
+dfsr["Sales-RG"].primary has FS1
+dfsr["Sales-RG"].synced has DC2
+@check DC2 | the files are on DC2
+Test-Path 'C:\Shares\Sales\Price list 2026.xlsx'
+@hint Install FS-DFS-Replication on both servers (Install-WindowsFeature -ComputerName DC2 works from FS1), then New-DfsReplicationGroup, New-DfsReplicatedFolder, Add-DfsrMember, Add-DfsrConnection, Set-DfsrMembership (twice) and Update-DfsrConfigurationFromAD.
+@solution FS1
+Install-WindowsFeature FS-DFS-Replication -IncludeManagementTools
+Install-WindowsFeature FS-DFS-Replication -ComputerName DC2
+New-DfsReplicationGroup -GroupName Sales-RG
+New-DfsReplicatedFolder -GroupName Sales-RG -FolderName Sales
+Add-DfsrMember -GroupName Sales-RG -ComputerName FS1,DC2
+Add-DfsrConnection -GroupName Sales-RG -SourceComputerName FS1 -DestinationComputerName DC2
+Set-DfsrMembership -GroupName Sales-RG -FolderName Sales -ComputerName FS1 -ContentPath D:\Shares\Sales -PrimaryMember $true -Force
+Set-DfsrMembership -GroupName Sales-RG -FolderName Sales -ComputerName DC2 -ContentPath C:\Shares\Sales -Force
+Update-DfsrConfigurationFromAD -ComputerName FS1,DC2
+@explain
+Add-DfsrConnection makes connections in both directions unless -CreateOneWay is given. The primary member's files win the initial sync; afterwards changes flow both ways.
+@endtask
+
+@task t03 | File and storage | 20 | DC2
+Share DC2's copy as `\\DC2\Sales` (Authenticated Users: Full Control) and add it as a second target of `\\corp.example\{ns}\Sales`, so that the branch is referred to DC2 and head office to FS1.
+@check admin | each site is referred to its own copy
+dfsresolve("\\corp.example\{ns}\Sales", Branch) == \\DC2\Sales
+dfsresolve("\\corp.example\{ns}\Sales", HQ) == \\FS1\Sales
+@hint New-SmbShare on DC2, then New-DfsnFolderTarget (from FS1, which has the DFSN tools).
+@solution DC2
+New-SmbShare -Name Sales -Path C:\Shares\Sales -FullAccess 'Authenticated Users'
+@solution FS1
+New-DfsnFolderTarget -Path \\corp.example\{ns}\Sales -TargetPath \\DC2\Sales
+@explain
+Referrals put targets in the client's own site first. DFS Replication keeps the two targets the same, so it doesn't matter which one a person lands on.
+@endtask
+
+@task t04 | File and storage | 25 | admin
+Move the HR archive to Azure: create the Storage Sync Service **harbor-sync**, register **FS1**, create the sync group **HRArchive** with the Azure file share `hrarchive` in `stharborfiles`, and add `E:\Archive\HR` on FS1 as a server endpoint with cloud tiering: keep 20% of the volume free and tier files not opened for **{days} days**.
+@check admin | the sync group and FS1's endpoint
+filesync["HRArchive"].share == stharborfiles/hrarchive
+filesync["HRArchive"].tiering["FS1"] == Yes
+filesync["HRArchive"].tierdays["FS1"] == {days}
+@check admin | old reports are only pointers on FS1 now
+file(FS1, "E:\Archive\HR\2023\Report Q2.pdf").tiered == Yes
+@hint Azure portal: Storage Sync Service, registered servers, sync group (cloud endpoint), server endpoint with cloud tiering and a date policy.
+@solution admin
+filesync service name=harbor-sync
+filesync register FS1
+filesync group name=HRArchive account=stharborfiles share=hrarchive
+filesync endpoint group=HRArchive server=FS1 path=E:\Archive\HR tiering=yes free=20 days={days}
+@explain
+The whole archive is now in the Azure file share; FS1 keeps the files people opened recently and pointers for the rest, recalled from Azure when someone opens them.
+@endtask

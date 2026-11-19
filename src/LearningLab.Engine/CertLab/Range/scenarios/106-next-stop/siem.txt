@@ -1,0 +1,16 @@
+# Next Stop (offsets from {{T0}}, the intruder's first sign-in to FILE01)
+# planned: the deployment server installs the printer agent update in the night
+-11h host=PRINT01 source=winsec event=4624 user=svc_deploy logon_type=3 src_ip={{NET}}.5 workstation=DEPLOY01 note="An account signed in over the network"
+-11h host=PRINT01 source=winsec event=7045 user=svc_deploy service="PrintFleet Agent" path="C:\Program Files\PrintFleet\pfagent.exe" start=auto note="A service was installed"
+-11h host=PRINT01 source=alert severity=medium rule="New service installed" service="PrintFleet Agent" note="A new service was installed on PRINT01"
+-11h host=PRINT01 source=proclog event=1 user=SYSTEM image="C:\Program Files\PrintFleet\pfagent.exe" parent=C:\Windows\System32\services.exe cmdline="pfagent.exe --service"
+# the intruder, already on WS-{{HA}}, uses an administrator account to reach FILE01
+-6m host=WS-{{HA}} source=proclog event=1 user=adm_{{ADMP}} image=C:\Windows\System32\cmd.exe parent=C:\Windows\explorer.exe cmdline="cmd.exe /c copy C:\Users\Public\{{EXE}} \\FILE01\ADMIN$\Temp\{{EXE}}"
++0 host=FILE01 source=winsec event=4624 user=adm_{{ADMP}} logon_type=3 src_ip={{NET}}.{{HA}} workstation=WS-{{HA}} note="An account signed in over the network"
++1s host=FILE01 source=winsec event=4672 user=adm_{{ADMP}} note="An administrator signed in (special rights)"
++5s host=FILE01 source=winsec event=5145 user=adm_{{ADMP}} share=\\*\ADMIN$ file=Temp\{{EXE}} src_ip={{NET}}.{{HA}} note="A file was written over a shared folder"
++20s host=FILE01 source=winsec event=7045 user=adm_{{ADMP}} service={{SVCNAME}} path=C:\Windows\Temp\{{EXE}} start=demand note="A service was installed"
++21s host=FILE01 source=alert severity=medium rule="New service installed" service={{SVCNAME}} note="A new service was installed on FILE01"
++22s host=FILE01 source=proclog event=1 user=SYSTEM image=C:\Windows\Temp\{{EXE}} parent=C:\Windows\System32\services.exe cmdline="{{EXE}}"
++4m host=DC01 source=winsec event=4624 user=adm_{{ADMP}} logon_type=3 src_ip={{NET}}.8 workstation=FILE01 note="An account signed in over the network"
++4m host=DC01 source=winsec event=4672 user=adm_{{ADMP}} note="An administrator signed in (special rights)"

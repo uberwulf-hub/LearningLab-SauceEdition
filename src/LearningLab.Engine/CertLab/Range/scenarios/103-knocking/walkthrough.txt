@@ -1,0 +1,12 @@
+1. siem alerts (add --fields time,rule,client to see the addresses) shows two "Many pages not found" alerts:
+   one for {{BOTIP}}, one for {{SCANIP}}.
+2. siem search source=web client={{BOTIP}} shows a polite visitor: it asked for /robots.txt first, then old product
+   and news pages from years ago (404: they were removed), then normal pages. Its agent says FindItBot with a web
+   address explaining it: a search engine's crawler following old links. False alarm.
+3. siem search source=web client={{SCANIP}} shows a list of places where websites sometimes leave secrets: /admin,
+   /.env, /.git/HEAD, /config.php, /backup.tar... The agent names a scanning tool, {{TOOL}}. Real.
+4. --count-by status shows that one of its requests worked; status=200 shows it: {{LEAK}} ({{LEAKBYTES}} bytes) at
+   {{T0}}. A backup file was left in the website's folder and the scanner found it.
+
+What a real team would do next: remove {{LEAK}} from the website, find out what was in it (passwords? customer
+data?), change anything it exposed, and block {{SCANIP}}.

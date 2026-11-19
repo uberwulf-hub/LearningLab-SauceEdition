@@ -1,0 +1,100 @@
+# Lab: lab-09 | Users, groups, passwords and sudo | u09 | 40
+You run the accounts on server1. A small team is joining: create their group and accounts, set their password rules, give the right people administrator rights and tidy up old accounts. Work as root on server1. Check each result with id, getent, chage -l and visudo -c before you move on.
+
+@setup server1
+useradd -u 3001 -c "J. Doe (temp)" jdoe
+useradd tempuser
+echo 'old notes' > /home/tempuser/notes.txt
+chown tempuser: /home/tempuser/notes.txt
+useradd deploy
+
+@task t01 | Users and groups | 15 | server1
+Create the group `sysadmins` with the GID 5000. Create the users `natasha` and `harry`, both with `sysadmins` as a secondary group. Create the user `sarah`, who must not get an interactive shell and must not be a member of `sysadmins`. All three get the password `Tr0ub4dor!`.
+@check server1 | sysadmins exists with GID 5000
+test "$(getent group sysadmins | cut -d: -f3)" = 5000
+@check server1 | natasha and harry are members of sysadmins
+id -nG natasha | grep -qw sysadmins && id -nG harry | grep -qw sysadmins
+@check server1 | sarah has no interactive shell and is not in sysadmins
+test "$(getent passwd sarah | cut -d: -f7)" = /sbin/nologin && ! id -nG sarah | grep -qw sysadmins
+@check server1 | the three passwords work
+certlab-check password natasha 'Tr0ub4dor!' && certlab-check password harry 'Tr0ub4dor!' && certlab-check password sarah 'Tr0ub4dor!'
+@hint groupadd -g sets the GID, useradd -G the secondary groups and -s the shell. chpasswd sets several passwords from user:password lines.
+@solution server1
+groupadd -g 5000 sysadmins
+useradd -G sysadmins natasha
+useradd -G sysadmins harry
+useradd -s /sbin/nologin sarah
+printf 'natasha:Tr0ub4dor!\nharry:Tr0ub4dor!\nsarah:Tr0ub4dor!\n' | chpasswd
+id natasha
+id harry
+id sarah
+@explain
+-G adds secondary groups; the primary group stays the user's private group, which is what "secondary group" asks for. /sbin/nologin is the RHEL shell for accounts that must not log in interactively. chpasswd reads user:password lines, so one command sets all three; passwd --stdin once per user works as well. Watch the trap: sarah must not be in sysadmins, so give her no -G.
+@endtask
+
+@task t02 | Users and groups | 10 | server1
+harry must change his password every 30 days and be warned 5 days before it expires. natasha's whole account must expire at the end of 2026-12-31.
+@check server1 | harry: maximum age 30 days, warning 5 days
+test "$(getent shadow harry | cut -d: -f5,6)" = "30:5"
+@check server1 | natasha's account expires on Dec 31, 2026
+chage -l natasha | grep 'Account expires' | grep -q 'Dec 31, 2026'
+@hint chage -M is the maximum age, -W the warning, -E the account expiry date.
+@solution server1
+chage -M 30 -W 5 harry
+chage -E 2026-12-31 natasha
+chage -l harry
+chage -l natasha
+@explain
+Password aging (-M, -m, -W, -I) is about the password; -E is about the account as a whole. After the -E date nobody can log in as natasha, whatever her password. chage -l shows the values in plain words; /etc/shadow keeps them as numbers (field 5 is the maximum, 6 the warning, 8 the expiry day counted from 1970-01-01).
+@endtask
+
+@task t03 | Users and groups | 10 | server1
+Every user created from now on must change the password at least every 90 days and must wait at least 1 day between two changes. Users that exist already are not affected.
+@check server1 | /etc/login.defs has PASS_MAX_DAYS 90 and PASS_MIN_DAYS 1
+grep -Eq '^PASS_MAX_DAYS[[:space:]]+90$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS[[:space:]]+1$' /etc/login.defs
+@check server1 | a new user gets these values
+userdel -r labcheck09 2>/dev/null; useradd labcheck09 && test "$(getent shadow labcheck09 | cut -d: -f4,5)" = "1:90"; r=$?; userdel -r labcheck09; exit $r
+@hint The defaults for new accounts are in /etc/login.defs.
+@solution server1
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t90/' /etc/login.defs
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS\t1/' /etc/login.defs
+grep ^PASS_ /etc/login.defs
+@explain
+useradd copies PASS_MAX_DAYS, PASS_MIN_DAYS and PASS_WARN_AGE from /etc/login.defs into the new user's /etc/shadow line. Existing users keep their values, so the wording "from now on" points to login.defs, while "the user X" points to chage.
+@endtask
+
+@task t04 | Users and groups | 15 | server1
+Members of the group `sysadmins` must be able to run every command as root with sudo (typing their own password). The user `deploy` (it exists) may run only `/usr/bin/systemctl` and `/usr/bin/journalctl` as root, without a password. Do not edit /etc/sudoers itself.
+@check server1 | a sudoers.d rule exists for %sysadmins and the files are valid
+grep -rqsE '^%sysadmins[[:space:]]+ALL[[:space:]]*=[[:space:]]*\(ALL(:ALL)?\)[[:space:]]+ALL' /etc/sudoers.d/ && visudo -c >/dev/null
+@check server1 | deploy may run systemctl and journalctl without a password
+su - deploy -c 'sudo -n -l' > /tmp/.deploy-sudo; grep -q 'NOPASSWD' /tmp/.deploy-sudo && grep -q '/usr/bin/systemctl' /tmp/.deploy-sudo && grep -q '/usr/bin/journalctl' /tmp/.deploy-sudo
+@check server1 | deploy may not run everything
+su - deploy -c 'sudo -n -l' | grep -q 'NOPASSWD: ALL$' && exit 1; ! id -nG deploy | grep -qw wheel
+@hint One file per rule in /etc/sudoers.d, mode 440, then visudo -c. A % in front of the name means a group; NOPASSWD: goes in front of the command list.
+@solution server1
+echo '%sysadmins ALL=(ALL) ALL' > /etc/sudoers.d/sysadmins
+echo 'deploy ALL=(root) NOPASSWD: /usr/bin/systemctl, /usr/bin/journalctl' > /etc/sudoers.d/deploy
+chmod 440 /etc/sudoers.d/sysadmins /etc/sudoers.d/deploy
+visudo -c
+su - deploy -c 'sudo -n -l'
+@explain
+Files in /etc/sudoers.d are read by sudo every time, so no restart is needed; visudo -c checks every file, because one syntax error can break sudo for everyone. The deploy rule lists full paths: sudo compares the program that would run, so "systemctl" alone is not accepted. Adding deploy to wheel would give him everything, which the task forbids.
+@endtask
+
+@task t05 | Users and groups | 10 | server1
+Clean up two older accounts. The user `jdoe` must get the UID 3500 and the comment `Jane Doe`, and must become a member of the group `wheel` without losing any other group. The user `tempuser` must be removed together with its home folder.
+@check server1 | jdoe has UID 3500 and the comment Jane Doe
+test "$(getent passwd jdoe | cut -d: -f3,5)" = "3500:Jane Doe"
+@check server1 | jdoe is in wheel and keeps the group jdoe
+id -nG jdoe | grep -qw wheel && id -nG jdoe | grep -qw jdoe
+@check server1 | tempuser and its home folder are gone
+! getent passwd tempuser && test ! -e /home/tempuser
+@hint usermod -u, -c and -aG change an existing account. userdel needs one option to take the home folder with it.
+@solution server1
+usermod -u 3500 -c "Jane Doe" -aG wheel jdoe
+userdel -r tempuser
+id jdoe
+@explain
+usermod -u changes the UID and updates the files in the home folder; files elsewhere keep the old number (find / -uid 3001 finds them). -aG appends: without the -a, -G would replace jdoe's secondary groups. userdel -r removes the home folder and the mail spool along with the account.
+@endtask

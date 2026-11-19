@@ -1,0 +1,49 @@
+title: One byte of key
+level: Intermediate
+kind: Decoding
+topic: Crypto & Encoding
+teaser: XOR with the key written next to it
+points: 55
+order: 72
+answer: flag
+var: K = num:20-240
+var: STYLE = pick:hex|dec
+
+@vars STYLE=hex
+KEYFMT = key byte (hex): 0x%x
+@vars STYLE=dec
+KEYFMT = key byte (decimal): %d
+
+@intro
+A small tool "protected" its settings by XOR-ing them with a single byte, and wrote the
+result as hex digits in ~/settings.hex. Whoever wrote it left the key in ~/README.
+Undo the XOR to read the flag.
+
+@setup
+printf '%s\n' '{{XOR:K:FLAG}}' > /home/player/settings.hex
+printf 'settings.hex is XOR-protected.\n{{KEYFMT}}\n' {{K}} > /home/player/README
+chown player: /home/player/settings.hex /home/player/README
+
+@solution
+cat README
+cat settings.hex
+xorcat -k {{K}} settings.hex
+
+@walkthrough
+XOR combines each byte with the key byte; doing it again with the same key gives the
+original back. README gives the key ({{K}} - xorcat takes it in decimal or as 0x..
+hex), and xorcat applies it to hex text:
+
+    xorcat -k {{K}} settings.hex
+
+prints the flag. A single-byte XOR is not real encryption: there are only 255 keys, so
+even without the README it falls to trying them all (xorcat --brute).
+
+@hint 5
+Read README first. The settings are XOR-ed with one byte; XOR-ing again with the same byte undoes it.
+
+@hint 10
+xorcat reads hex digits and XORs every byte with a key: xorcat -k KEY settings.hex (man xorcat).
+
+@hint 15
+xorcat -k {{K}} settings.hex

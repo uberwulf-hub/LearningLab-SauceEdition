@@ -1,0 +1,16 @@
+SYNOPSIS: Downloads the newest help files for the installed modules.
+DESCRIPTION:
+A new Windows installation has only short help: Update-Help downloads the full help files from the internet and installs them. It must run as an administrator, because the help files go into the system's module folders.
+
+The practice machines have no internet, and Cert Lab's help pages are already complete, so here Update-Help only says so.
+PARAMETER Module:
+Only these modules.
+PARAMETER Force:
+Downloads even if the help was updated in the last 24 hours.
+PARAMETER SourcePath:
+A folder with help files saved by Save-Help on another computer.
+EXAMPLE: Update-Help
+Updates all help (on a real PC with internet, as an administrator).
+EXAMPLE: Update-Help -Module Microsoft.PowerShell.Management -Force
+Updates the help of one module now.
+RELATED: Save-Help, Get-Help

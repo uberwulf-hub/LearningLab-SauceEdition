@@ -1,0 +1,57 @@
+title: Step 17: Read the manual
+level: Expert
+category: ladder
+login: step17
+kind: Manual pages
+teaser: a program that only opens if you call it the right way, and its manual
+points: 50
+order: 17
+answer: {{PW}}
+var: PW = hex:10
+var: SPOT = hex:8
+
+@intro
+You are step17. The program ladder-vault keeps the password for step 18. Run it and
+it tells you it is locked. Linux programs come with a manual page that explains how to
+use them - including this one.
+
+@setup
+useradd -m step18
+echo 'step18:{{PW}}' | chpasswd
+mkdir -p /var/lib/ladder/vault-{{SPOT}}
+printf '%s\n' '{{PW}}' > /var/lib/ladder/vault-{{SPOT}}/step18
+chown step17: /var/lib/ladder/vault-{{SPOT}}/step18
+chmod 400 /var/lib/ladder/vault-{{SPOT}}/step18
+cat > /usr/local/bin/ladder-vault <<'VAULT'
+#!/bin/bash
+# the Linux Ladder's vault - see: man ladder-vault
+if [ "$1" = "--open" ] && [ "$2" = "--step" ] && [ "$3" = "17" ] && [ "$(whoami)" = "step17" ]; then
+  echo "The vault opens. The password for step 18 is:"
+  cat /var/lib/ladder/vault-{{SPOT}}/step18
+  exit 0
+fi
+echo "ladder-vault: the vault is locked."
+echo "Its manual page says how to open it: man ladder-vault"
+exit 1
+VAULT
+chmod 755 /usr/local/bin/ladder-vault
+
+@solution
+ladder-vault
+man ladder-vault
+ladder-vault --open --step 17
+
+@walkthrough
+man NAME shows a program's manual page: what it does, its options and examples
+(Space goes down a page, q quits). man ladder-vault explains that the vault opens with
+
+    ladder-vault --open --step 17
+
+when the person on step 17 runs it. Reading the manual first is a real skill: almost
+every command on a Linux computer has a page, including man itself (man man).
+
+@hint 15
+Most commands have a manual page you can read with: man followed by the command's name. Look for the OPTIONS and EXAMPLES parts.
+
+@hint 25
+man ladder-vault, then run the example it gives for your step number.

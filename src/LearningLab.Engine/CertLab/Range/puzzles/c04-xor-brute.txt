@@ -1,0 +1,38 @@
+title: No key this time
+level: Advanced
+kind: Decoding
+topic: Crypto & Encoding
+teaser: 255 keys is not many
+points: 75
+order: 73
+answer: flag
+var: K = num:1-255
+var: NAME = pick:beacon|implant|config|loader|stage2
+
+@intro
+A malware sample's configuration was saved as ~/{{NAME}}.hex. Analysts say it is
+"encrypted" with a single-byte XOR, but nobody knows the key.
+
+@setup
+printf '%s\n' '{{XOR:K:FLAG}}' > /home/player/{{NAME}}.hex
+chown player: /home/player/{{NAME}}.hex
+
+@solution
+cat {{NAME}}.hex
+xorcat --brute {{NAME}}.hex
+
+@walkthrough
+One byte has only 255 useful values, so try them all and keep the results that look
+like plain text:
+
+    xorcat --brute {{NAME}}.hex
+
+Only a few keys give printable text, and one of them (key {{K}}) reads FLAG{...}. Real
+malware often uses a single-byte XOR to hide strings from a quick look; analysts break
+it exactly like this.
+
+@hint 15
+A single byte can only be 1 to 255. Trying every key is quick - and xorcat can do it for you (man xorcat).
+
+@hint 25
+xorcat --brute {{NAME}}.hex - look for the line that reads FLAG{...}.

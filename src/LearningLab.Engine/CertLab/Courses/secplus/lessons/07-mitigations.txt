@@ -1,0 +1,194 @@
+# Unit: u07 | 7. Mitigation techniques | Threats, vulnerabilities and mitigations
+
+Knowing the attacks is half the job; the other half is choosing defences. This unit covers the mitigation techniques Security+ lists to protect an enterprise: dividing the network (**segmentation**, **isolation**), controlling who can do what (**access control**, **least privilege**, **application allow lists**), keeping systems current and consistent (**patching**, **configuration enforcement**), protecting and watching data and systems (**encryption**, **monitoring**), retiring systems safely (**decommissioning**), and the **hardening** steps that shrink each system's attack surface.
+
+A good answer on the exam usually matches the mitigation to the specific weakness in the scenario. "Unpatchable" suggests isolation or segmentation; "users installing unknown software" suggests an allow list; "too many people can change payroll" suggests least privilege.
+
+## Lesson: l0701 | Segmentation, isolation and access control
+
+### Segmentation
+
+**Segmentation** divides a network into smaller zones (with VLANs, subnets, firewalls or software-defined rules) and controls the traffic between them. Benefits:
+
+- An attacker who gets into one segment can't freely reach the others (it limits **lateral movement**).
+- Sensitive systems (payment, HR, industrial controls) get stricter rules.
+- Problems such as broadcast storms or a worm stay contained.
+
+**Microsegmentation** takes this further, down to individual workloads or applications, often enforced by software in data centers and the cloud.
+
+### Isolation
+
+**Isolation** cuts a system off more completely than segmentation:
+
+- An **air-gapped** network has no connection at all to other networks.
+- A compromised machine can be **quarantined**: moved to a network where it can talk only to remediation tools.
+- **Sandboxing** runs untrusted code or attachments in an isolated environment where they can't touch the real system.
+
+Isolation is the classic compensating control for systems that can't be patched.
+
+### Access control
+
+- **Access control lists (ACLs)**: ordered lists of rules on routers, firewalls and files that allow or deny access. Network ACLs filter by address, port and protocol; most end with an implicit "deny everything else".
+- **Permissions**: the rights given to users and groups on files, folders, shares and applications (read, write, modify, full control, execute). Assign them to groups rather than individual users, and review them regularly.
+
+### Application allow list
+
+An **application allow list** (formerly whitelist) lets only approved programs run; everything else is blocked by default. A **deny list** (blocklist) does the opposite: everything runs except the listed bad programs.
+
+- Allow lists are stronger, because new, unknown malware isn't on the list and can't run. They need maintenance as software changes.
+- Programs can be identified by file hash, by publisher signature, or by path (path rules are the weakest, since a user may copy a file into an allowed folder).
+
+> Allow list = default deny, strongest against unknown malware. Deny list = default allow, only blocks what you already know is bad.
+
+```file
+Rule  Action  Source          Destination      Port
+10    allow   10.10.20.0/24   10.10.50.15      443/tcp   # HR staff to HR app
+20    allow   10.10.99.5      10.10.50.0/24    22/tcp    # jump server admin
+99    deny    any             10.10.50.0/24    any       # everything else
+```
+
+@quiz
+? A factory has controllers that can't be patched. The company places them on their own network segment that only the engineering workstation can reach. Which mitigation is this?
++ Segmentation used as a compensating control
+- Application allow listing
+- Decommissioning
+- Configuration enforcement
+! Restricting traffic to the unpatchable systems with a separate segment limits what an attacker can reach.
+? Users keep running unapproved programs they download, and some contained new malware that antivirus didn't recognise. What is the strongest fix?
+- A deny list of known bad programs
++ An application allow list
+- More frequent antivirus updates
+- Full disk encryption
+! An allow list blocks everything not approved, including malware no one has seen before.
+? A laptop is found to be infected. The team moves it to a network where it can reach only the antivirus update server. What is this?
+- Patching
++ Quarantine (isolation)
+- Least privilege
+- Data masking
+! Quarantine isolates the device so the infection can't spread while it is cleaned.
+@end
+
+## Lesson: l0702 | Patching, configuration, monitoring and least privilege
+
+### Patching
+
+Most successful attacks use vulnerabilities that already have patches. A **patch management** process:
+
+- Keep an inventory of systems and software, so nothing is forgotten.
+- Watch for new patches and advisories.
+- Prioritise by severity and exposure (internet-facing and critical flaws first).
+- Test patches before wide deployment, then deploy (often in rings: a pilot group first).
+- Verify that patches installed, and rescan.
+- Include firmware, applications and third-party libraries, not just the operating system.
+
+### Encryption
+
+Encrypt data **at rest** (disks, databases, backups) and **in transit** (TLS, VPNs, SSH) so stolen data is useless without the keys. Replace plain-text protocols (Telnet, FTP, HTTP) with secure ones (SSH, SFTP, HTTPS).
+
+### Monitoring
+
+Watching systems and networks so attacks are noticed quickly: collecting logs in a SIEM, IDS/IPS alerts, endpoint detection and response (EDR), file integrity monitoring, and someone actually reviewing alerts. Monitoring doesn't stop an attack, but it shortens how long an attacker goes unnoticed.
+
+### Least privilege
+
+Give every user, service and system only the access it needs for its job, for only as long as needed. Examples: staff use normal accounts day to day and a separate admin account only when needed; services run under dedicated low-privilege accounts; access is removed when people change jobs (avoiding **privilege creep**, where rights pile up over time). Least privilege limits the damage from a compromised account and from mistakes.
+
+### Configuration enforcement
+
+Decide a **secure baseline** (approved settings) and make every system follow it, automatically:
+
+- Tools such as Group Policy, configuration management systems, MDM for mobiles, and cloud policies apply and re-apply settings.
+- Systems are checked for **drift** (settings that have changed) and corrected.
+- Benchmarks such as the CIS Benchmarks or vendor security baselines are good starting points.
+
+### Decommissioning
+
+Retiring a system safely:
+
+- Remove it from service, DNS, monitoring and the inventory, and revoke its accounts, certificates and firewall rules.
+- Back up or migrate any data that must be kept.
+- **Sanitize** or destroy its storage so no data remains (overwriting, cryptographic erase, shredding), and record it.
+
+Forgotten "zombie" systems still on the network, unpatched and unmonitored, are a favourite target.
+
+> Least privilege limits what a stolen account can do. Configuration enforcement keeps systems from drifting back to unsafe settings.
+
+@quiz
+? An analyst finds that a user who moved from Sales to Finance two years ago still has access to all the old Sales folders. Which principle has been ignored?
+- Configuration enforcement
++ Least privilege (her access has crept)
+- Encryption
+- Decommissioning
+! Rights should match the current job; leftover access from past roles is privilege creep.
+? A company wants every Windows workstation to keep the approved security settings, and to reset any that users change. What should it use?
+- Decommissioning
+- An air gap
++ Configuration enforcement with a secure baseline (for example Group Policy)
+- A honeypot
+! Configuration enforcement applies the baseline and corrects drift automatically.
+? A retired file server is unplugged and sold. Later, customer records from its disks appear online. Which step was missed?
++ Sanitizing the storage during decommissioning
+- Patching before retirement
+- Monitoring
+- Segmentation
+! Decommissioning must include wiping or destroying storage before a device leaves the organization.
+? A scanner reports a critical, actively exploited flaw on an internet-facing server and a low-risk flaw on an internal printer. What should patch management do?
+- Patch the printer first because it is quicker
++ Patch the internet-facing server first, then the printer
+- Wait for the next monthly cycle for both
+- Ignore both until an audit
+! Prioritise by severity and exposure: the exploited, internet-facing flaw comes first.
+@end
+
+## Lesson: l0703 | Hardening techniques
+
+**Hardening** reduces a system's attack surface: fewer ways in, and stronger defences on the ways that remain. Security+ lists these techniques:
+
+- **Encryption**: turn on full disk encryption, encrypt sensitive files and databases, require encrypted protocols for management.
+- **Installation of endpoint protection**: antivirus/anti-malware and, increasingly, **EDR** (endpoint detection and response), which watches behaviour, records activity and can isolate the device.
+- **Host-based firewall**: a firewall on the device itself (Windows Defender Firewall, `firewalld` on Linux) that allows only the needed inbound (and sometimes outbound) traffic. It protects the device even on an untrusted network, and stops attackers moving between devices on the same segment.
+- **Host-based intrusion prevention system (HIPS)**: software on the host that watches for and blocks malicious activity (suspicious process behaviour, attacks on local services, changes to protected files). A HIDS only detects; a HIPS also blocks.
+- **Disabling ports and protocols**: close every listening port the system doesn't need, and turn off unneeded or insecure protocols (Telnet, SMBv1, old TLS versions). On switches, shut down unused physical ports.
+- **Default password changes**: change every default account password (or disable the default account) before deployment.
+- **Removal of unnecessary software**: uninstall programs, features, services and sample files that aren't needed. Less software means fewer vulnerabilities to patch and exploit.
+
+Other common hardening steps: apply all patches, use secure baselines and benchmarks, enable logging, set strong password and lockout policies, enable secure boot, and restrict administrator rights.
+
+```file
+Hardening checklist - new Linux web server web-03
+[x] All updates installed
+[x] SSH: root login disabled, keys only
+[x] firewalld: allow 443/tcp, 22/tcp from 10.10.99.5 only
+[x] Removed: telnet server, sample web pages, compilers
+[x] Default admin password changed on the management card
+[ ] Disk encryption key escrowed
+```
+
+> Host-based firewall = filters traffic to and from the host. HIPS = watches and blocks malicious behaviour on the host.
+
+@quiz
+? An administrator wants a laptop to be protected from other devices on hotel and airport networks, allowing only the inbound traffic it needs. What should she enable?
+- A network-based IDS in the head office
++ A host-based firewall
+- Data masking
+- A wildcard certificate
+! A host-based firewall filters traffic at the device itself, wherever it is connected.
+? A server scan shows Telnet and an FTP service listening, though nobody uses them. What is the best hardening step?
++ Disable the services and close the ports
+- Change their banners
+- Move them to different port numbers
+- Add a deny list for antivirus
+! Removing unneeded services shrinks the attack surface; changing ports only hides them.
+? What does a HIPS do that a HIDS does not?
+- It encrypts the disk
++ It blocks the malicious activity it detects
+- It only works on network traffic between sites
+- It removes default passwords
+! Both watch the host, but a prevention system can also stop the activity.
+? A new router is about to be deployed. Which step should come first, before it connects to the network?
+- Install bloatware
++ Change the default administrator credentials
+- Enable Telnet for remote management
+- Turn off logging to save space
+! Default credentials are publicly known; change them before the device goes live.
+@end

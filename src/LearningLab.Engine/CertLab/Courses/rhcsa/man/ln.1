@@ -1,0 +1,78 @@
+NAME
+       ln - make hard links or symbolic links
+
+SYNOPSIS
+       ln [-s] [-f] [-v] [-r] [-n] TARGET LINKNAME
+       ln [-s] [-f] [-v] TARGET... DIRECTORY
+       ln [-s] -t DIRECTORY TARGET...
+
+DESCRIPTION
+       ln makes a new name for TARGET. Without -s it makes a hard link, with
+       -s a symbolic (soft) link. When the last argument is a directory, the
+       links are made inside it with the targets' names.
+
+   Hard links
+       A file's data lives in an inode; a directory entry is just a name that
+       points to it. A hard link is one more such name. Both names are equal:
+       there is no "original", the data stays until the last name is
+       removed, and ls -l shows the number of names (the link count) in the
+       second column. ls -i shows the inode number, which is the same for
+       both.
+
+       Hard links work only inside one file system, and not for
+       directories.
+
+   Symbolic links
+       A symbolic link is a small file that holds a path. Opening it opens
+       whatever is at that path. It may point to a directory or to another
+       file system, and it breaks (dangles) if the target is moved or
+       removed. ls -l shows it as l...  name -> target.
+
+       The path is stored as you type it. A relative target is read from
+       the link's own directory, not from where you ran ln, so ln -s
+       ../data/file /srv/link points to /srv/../data/file. When in doubt,
+       give an absolute target, or use -r.
+
+OPTIONS
+       -s, --symbolic
+              Make a symbolic link.
+
+       -f, --force
+              Replace an existing LINKNAME.
+
+       -v, --verbose
+              Print each link made.
+
+       -r, --relative
+              With -s, store the target as a path relative to the link.
+
+       -n, --no-dereference
+              If LINKNAME is a symbolic link to a directory, replace it
+              (with -f) rather than create the link inside the directory.
+
+       -T, --no-target-directory
+              Always treat LINKNAME as the name of the link.
+
+       -t DIR, --target-directory=DIR
+              Make the links in DIR.
+
+EXAMPLES
+       A hard link, and how to see that it is one:
+
+           ln /root/data.txt /root/data-link.txt
+           ls -li /root/data*.txt
+
+       A symbolic link to a directory:
+
+           ln -s /var/log/httpd /root/weblogs
+
+       Point an existing link somewhere else:
+
+           ln -sfn /srv/release-2 /srv/current
+
+       Find every hard link to a file:
+
+           find / -samefile /root/data.txt 2>/dev/null
+
+SEE ALSO
+       link(1), readlink(1), ls(1), find(1), rm(1)

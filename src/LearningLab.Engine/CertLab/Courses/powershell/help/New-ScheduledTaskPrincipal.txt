@@ -1,0 +1,14 @@
+SYNOPSIS: Describes the account a scheduled task runs as.
+DESCRIPTION:
+The principal says who runs the task and how. SYSTEM (LogonType ServiceAccount) runs without a password and without anyone signed in. A user with LogonType Interactive runs only while that user is signed in; LogonType Password stores the password so the task runs anyway. -RunLevel Highest runs with administrator rights.
+PARAMETER UserId:
+The account, for example SYSTEM or LAB\svc_backup. Position 0.
+PARAMETER GroupId:
+A group instead of a user.
+PARAMETER LogonType:
+ServiceAccount, Interactive, Password, S4U, InteractiveOrPassword or Group.
+PARAMETER RunLevel:
+Limited (the default) or Highest.
+EXAMPLE: New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+The usual choice for maintenance tasks.
+RELATED: Register-ScheduledTask, New-ScheduledTaskAction

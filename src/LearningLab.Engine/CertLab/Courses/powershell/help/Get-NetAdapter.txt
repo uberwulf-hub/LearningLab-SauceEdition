@@ -1,0 +1,22 @@
+SYNOPSIS: Lists the network adapters (network cards) of the computer.
+DESCRIPTION:
+Get-NetAdapter shows each network adapter with its name, description, interface index (ifIndex), status, MAC address and link speed. The name, for example "Ethernet", is what most other networking commands take as -InterfaceAlias, and the ifIndex is the number they take as -InterfaceIndex.
+
+Status is Up when the adapter is working and Disabled after Disable-NetAdapter. The loopback adapter (the computer talking to itself) is hidden unless you add -IncludeHidden.
+PARAMETER Name:
+The adapter name, for example Ethernet. Wildcards are allowed (Eth*). A name that matches nothing is an error.
+PARAMETER InterfaceDescription:
+Filters by the description, for example *Hyper-V*.
+PARAMETER InterfaceIndex:
+Picks adapters by their ifIndex number.
+PARAMETER IncludeHidden:
+Also shows hidden adapters such as the loopback pseudo-interface.
+EXAMPLE: Get-NetAdapter
+Lists the adapters. On WIN-SRV1 there is one, "Ethernet".
+EXAMPLE: Get-NetAdapter -Name Ethernet | Format-List *
+Shows every property of one adapter, including MtuSize and MediaConnectionState.
+EXAMPLE: Get-NetAdapter | Where-Object Status -ne 'Up'
+Finds adapters that are disabled or disconnected.
+NOTES:
+The NetAdapter commands are CIM-based functions that exist only on Windows (Windows PowerShell 5.1 and PowerShell 7 on Windows); errors therefore look like "No MSFT_NetAdapter objects found". The practice machines are virtual, so the adapter is a "Microsoft Hyper-V Network Adapter".
+RELATED: Disable-NetAdapter, Enable-NetAdapter, Rename-NetAdapter, Get-NetIPConfiguration, Get-NetIPInterface

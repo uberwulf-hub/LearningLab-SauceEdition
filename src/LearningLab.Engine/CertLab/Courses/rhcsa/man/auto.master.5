@@ -1,0 +1,90 @@
+NAME
+       auto.master - the master map of autofs, and the format of its maps
+
+SYNOPSIS
+       /etc/auto.master
+       /etc/auto.master.d/*.autofs
+       map files such as /etc/auto.misc
+
+DESCRIPTION
+       autofs (the automounter, package autofs, service autofs) mounts file
+       systems when someone first goes into their directory, and unmounts
+       them again after a while of not being used. It is mostly used for NFS
+       shares and home directories on a file server: nothing is mounted
+       until it is needed, and a server that is down does not slow the boot.
+
+       The master map lists mount points and, for each, the map file that
+       says what to mount under it. RHEL 9 reads /etc/auto.master, which
+       includes every file in /etc/auto.master.d whose name ends in
+       .autofs. Put your own entries in such a file. After changes run
+       systemctl restart autofs (and enable it so it starts at boot).
+
+   Master map lines
+           MOUNT-POINT  MAP-FILE  [OPTIONS]
+
+       MOUNT-POINT
+              An indirect map: the directory under which autofs creates
+              entries (such as /shares or /rhome). autofs owns this directory;
+              create nothing in it yourself.
+              A direct map: the special name /- , and the map file then holds
+              full paths.
+
+       MAP-FILE
+              The map file, usually /etc/auto.NAME.
+
+       OPTIONS
+              Mount options for every entry of the map, and autofs options
+              such as --timeout=SECONDS (unmount after this idle time; 300 by
+              default).
+
+   Map file lines
+           KEY  [-OPTIONS]  LOCATION
+
+       KEY    In an indirect map, the name of the subdirectory under the
+              mount point (/shares/KEY). * matches any name, and & in the
+              location is replaced by that name (wildcard map). In a direct
+              map, the full path of the mount point.
+
+       OPTIONS
+              Mount options, after a dash: -rw,sync or -fstype=nfs4,rw. The
+              type is nfs when no fstype is given.
+
+       LOCATION
+              What to mount: HOST:/PATH for NFS, or :/dev/DEVICE for a local
+              device.
+
+EXAMPLES
+       Mount the NFS export /exports/shared at /shares/work when it is used:
+
+           dnf install -y autofs
+           echo '/shares /etc/auto.shares' > /etc/auto.master.d/shares.autofs
+           echo 'work -rw,sync nfs.lab.example.com:/exports/shared' > /etc/auto.shares
+           systemctl enable --now autofs
+           ls /shares/work
+
+       Home directories for remoteuser1, remoteuser2 ... from the NFS server
+       (wildcard map):
+
+           echo '/rhome /etc/auto.rhome' > /etc/auto.master.d/rhome.autofs
+           echo '* -rw nfs.lab.example.com:/exports/home/&' > /etc/auto.rhome
+           systemctl restart autofs
+           su - remoteuser1
+
+       A direct map that mounts /mnt/public:
+
+           echo '/- /etc/auto.direct' > /etc/auto.master.d/direct.autofs
+           echo '/mnt/public -ro nfs.lab.example.com:/exports/public' > /etc/auto.direct
+           systemctl restart autofs
+
+NOTES
+       ls /shares shows nothing until an entry is used: autofs mounts on
+       access. Test by going into the full path (cd /shares/work or
+       ls /shares/work), then check with mount | grep shares.
+
+       autofs mount points must not also be in /etc/fstab.
+
+FILES
+       /etc/auto.master, /etc/auto.master.d/, /etc/autofs.conf
+
+SEE ALSO
+       autofs(8), automount(8), nfs(5), mount(8), showmount(8)

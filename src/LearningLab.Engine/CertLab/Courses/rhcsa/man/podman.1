@@ -1,0 +1,148 @@
+NAME
+       podman - manage containers and container images without a daemon
+
+SYNOPSIS
+       podman COMMAND [OPTIONS] [ARGUMENTS]
+
+DESCRIPTION
+       Podman runs containers: programs packed with everything they need (an
+       image) and started in their own isolated environment. It needs no
+       background service; each podman command does its work and exits, and
+       a container is a normal process tree that systemd can manage.
+
+       Podman comes with the container-tools package (dnf install
+       container-tools), which also brings skopeo and buildah.
+
+       Rootless and rootful. Any user can run podman. Each user has their own
+       images and containers, stored in ~/.local/share/containers/storage;
+       root's are in /var/lib/containers/storage, and neither sees the
+       other's. Rootless containers cannot bind ports below 1024 and their
+       root user is mapped to the real user. Run podman as the user who
+       should own the containers: log in as that user (ssh user@localhost)
+       rather than using su or sudo, so the user's session and
+       XDG_RUNTIME_DIR are set up.
+
+       Images are named REGISTRY/PATH:TAG, such as
+       registry.lab.example.com/ubi9/ubi:latest. Without a tag, latest is
+       used. A short name without a registry is looked up in the
+       unqualified-search-registries of /etc/containers/registries.conf (or
+       ~/.config/containers/registries.conf).
+
+COMMANDS
+       login [-u USER] [-p PASSWORD] [--password-stdin] REGISTRY
+              Log in to a registry; the credentials are saved in
+              $XDG_RUNTIME_DIR/containers/auth.json. --get-login shows who is
+              logged in.
+
+       logout REGISTRY
+              Forget the saved credentials.
+
+       search [--list-tags] TERM
+              Search registries for images.
+
+       pull IMAGE
+              Download an image.
+
+       images [-q]
+              List local images (podman image ls).
+
+       rmi [-f] IMAGE...
+              Remove images (-f also removes containers using them).
+
+       tag IMAGE NEWNAME
+              Give an image another name.
+
+       build -t NAME [-f FILE] DIRECTORY
+              Build an image from a Containerfile; see podman-build(1).
+
+       run [OPTIONS] IMAGE [COMMAND]
+              Create and start a container; see podman-run(1).
+
+       create [OPTIONS] IMAGE [COMMAND]
+              Create a container without starting it.
+
+       ps [-a] [-q] [--format TEMPLATE]
+              List running containers (-a: also stopped ones).
+
+       start, stop [-t SECONDS], restart, kill CONTAINER...
+              Start, stop (TERM, then KILL after the timeout), restart or
+              kill containers. -a acts on all of them.
+
+       rm [-f] CONTAINER...
+              Remove containers (-f also stops a running one).
+
+       logs [-f] CONTAINER
+              Show what the container printed (-f: keep following).
+
+       exec [-it] CONTAINER COMMAND
+              Run a command inside a running container, such as
+              podman exec -it web /bin/bash.
+
+       inspect [-f TEMPLATE] NAME
+              Show the details of a container or image as JSON, or only the
+              fields a Go template picks, such as -f '{{.Config.User}}'.
+
+       port CONTAINER
+              Show the published ports.
+
+       cp SOURCE TARGET
+              Copy files between the host and a container (CONTAINER:PATH).
+
+       volume create|ls|inspect|rm NAME
+              Manage named volumes.
+
+       generate systemd [OPTIONS] CONTAINER
+              Write a systemd unit for a container (deprecated in favour of
+              Quadlet); see podman-generate-systemd(1).
+
+       unshare COMMAND
+              Run a command inside the user namespace of rootless podman,
+              for example to chown a directory to a UID inside the container.
+
+       info   Show the configuration: storage, registries, rootless or not.
+
+       system prune
+              Remove stopped containers and unused data.
+
+EXAMPLES
+       Log in, find and download an image:
+
+           podman login -u student registry.lab.example.com
+           podman search registry.lab.example.com/ubi9
+           podman pull registry.lab.example.com/ubi9/ubi:latest
+           podman images
+
+       Run a web server in the background on port 8080 and test it:
+
+           podman run -d --name web -p 8080:8080 registry.lab.example.com/ubi9/httpd-24
+           podman ps
+           curl http://localhost:8080/
+
+       Look inside, read the logs, clean up:
+
+           podman exec -it web /bin/bash
+           podman logs web
+           podman stop web
+           podman rm web
+
+       Read one value from an image's settings:
+
+           podman inspect -f '{{.Config.User}}' registry.lab.example.com/ubi9/httpd-24
+
+       Inspect an image in the registry without downloading it:
+
+           skopeo inspect docker://registry.lab.example.com/ubi9/ubi
+
+FILES
+       /etc/containers/registries.conf
+              Registries for short names, insecure registries.
+
+       ~/.local/share/containers/storage
+              A rootless user's images, containers and volumes.
+
+       ~/.config/containers/systemd/
+              A rootless user's Quadlet files.
+
+SEE ALSO
+       podman-run(1), podman-build(1), podman-generate-systemd(1),
+       podman-systemd.unit(5), skopeo(1), buildah(1), loginctl(1)

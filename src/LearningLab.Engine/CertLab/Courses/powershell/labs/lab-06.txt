@@ -1,0 +1,78 @@
+# Lab: lab-06 | Scripts and functions | u06 | 40
+Write the scripts in C:\Scripts on WIN-SRV1 (create the folder first) and the functions in the console. Every script must work when it is run by its full path from any folder.
+
+@vars
+dept = Engineering | Research | IT
+@endvars
+
+@task t01 | Scripting | 10 | WIN-SRV1
+Write the script `C:\Scripts\Get-DeptCount.ps1` with a mandatory parameter `[string]$Department`. It reads `C:\LabFiles\employees.csv` and outputs **only the number** of employees in that department. For example `C:\Scripts\Get-DeptCount.ps1 -Department {dept}` outputs a single number.
+@check WIN-SRV1 | the script exists
+Test-Path C:\Scripts\Get-DeptCount.ps1
+@check WIN-SRV1 | it counts the employees of {dept}
+$want = @(Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}').Count; $got = & C:\Scripts\Get-DeptCount.ps1 -Department '{dept}'; "$got" -eq "$want"
+@check WIN-SRV1 | and of another department
+(& C:\Scripts\Get-DeptCount.ps1 -Department 'IT') -eq 3
+@hint @(Import-Csv ... | Where-Object Department -eq $Department).Count
+@solution WIN-SRV1
+New-Item -ItemType Directory C:\Scripts -Force | Out-Null
+Set-Content C:\Scripts\Get-DeptCount.ps1 -Value @'
+param([Parameter(Mandatory)][string]$Department)
+@(Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq $Department).Count
+'@
+C:\Scripts\Get-DeptCount.ps1 -Department IT
+@explain
+The param block at the top of a script works like a function's. @( ) makes sure .Count works even when only one employee matches. Run scripts by path: C:\Scripts\Get-DeptCount.ps1, or .\Get-DeptCount.ps1 from inside C:\Scripts.
+@endtask
+
+@task t02 | Scripting | 10 | WIN-SRV1
+Define a function `Get-Size` with the parameters `[long]$Bytes` and `[ValidateSet('KB','MB','GB')][string]$Unit = 'MB'`. It returns the size converted to that unit and rounded to 2 decimals, so that `Get-Size -Bytes 5242880` returns `5` and `Get-Size 1536 -Unit KB` returns `1.5`.
+@check WIN-SRV1 | MB by default
+(Get-Size -Bytes 5242880) -eq 5
+@check WIN-SRV1 | KB and GB
+(Get-Size 1536 -Unit KB) -eq 1.5 -and (Get-Size -Bytes 1073741824 -Unit GB) -eq 1
+@check WIN-SRV1 | an unknown unit is refused
+try { Get-Size 1 -Unit TB -ErrorAction Stop; $false } catch { $true }
+@hint PowerShell understands 1KB, 1MB and 1GB as numbers. switch ($Unit) { 'KB' { $d = 1KB } ... }; [math]::Round($Bytes / $d, 2)
+@solution WIN-SRV1
+function Get-Size { param([long]$Bytes, [ValidateSet('KB','MB','GB')][string]$Unit = 'MB') switch ($Unit) { 'KB' { $d = 1KB } 'MB' { $d = 1MB } 'GB' { $d = 1GB } }; [math]::Round($Bytes / $d, 2) }
+Get-Size 1536 -Unit KB
+@explain
+ValidateSet refuses any value outside the list before your code runs, and the default value is used when -Unit is left out. 1KB, 1MB and 1GB are number literals in PowerShell (1024, 1048576, 1073741824).
+@endtask
+
+@task t03 | Scripting | 10 | WIN-SRV1
+Define an advanced function `ConvertTo-Upper` that takes strings from the pipeline (`[Parameter(Mandatory, ValueFromPipeline)][string]$Text`) and outputs each in capital letters. It must also write the verbose message `Converting TEXT` for each string when it is called with `-Verbose`.
+@check WIN-SRV1 | pipeline input
+('ab', 'cd' | ConvertTo-Upper) -join ',' -ceq 'AB,CD'
+@check WIN-SRV1 | verbose messages with -Verbose
+$v = 'xy' | ConvertTo-Upper -Verbose 4>&1; ($v | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] -or "$_" -eq 'Converting xy' }).Count -ge 1
+@hint [CmdletBinding()], then process { Write-Verbose "Converting $Text"; $Text.ToUpper() }
+@solution WIN-SRV1
+function ConvertTo-Upper { [CmdletBinding()] param([Parameter(Mandatory, ValueFromPipeline)][string]$Text) process { Write-Verbose "Converting $Text"; $Text.ToUpper() } }
+'ab', 'cd' | ConvertTo-Upper -Verbose
+@explain
+The process block runs once per pipeline object. [CmdletBinding()] gives the function the common parameters, so -Verbose turns on Write-Verbose's messages inside it.
+@endtask
+
+@task t04 | Scripting | 10 | WIN-SRV1
+Write the script `C:\Scripts\Get-LogErrors.ps1` with comment-based help (its `.SYNOPSIS` must contain the words `error lines`) and a parameter `[string]$Path` (default `C:\LabFiles\app.log`). It outputs the lines of the log that contain `ERROR`, so that it outputs 3 lines for the default log.
+@check WIN-SRV1 | it outputs the three ERROR lines
+@(& C:\Scripts\Get-LogErrors.ps1).Count -eq 3 -and (@(& C:\Scripts\Get-LogErrors.ps1) -join "`n") -match 'Timeout talking to WEB01'
+@check WIN-SRV1 | Get-Help shows the synopsis
+(Get-Help C:\Scripts\Get-LogErrors.ps1 | Out-String) -match 'error lines'
+@hint A script's help comment goes at the very top, before param( ).
+@solution WIN-SRV1
+New-Item -ItemType Directory C:\Scripts -Force | Out-Null
+Set-Content C:\Scripts\Get-LogErrors.ps1 -Value @'
+<#
+.SYNOPSIS
+Shows the error lines of a log file.
+#>
+param([string]$Path = 'C:\LabFiles\app.log')
+Get-Content $Path | Where-Object { $_ -match 'ERROR' }
+'@
+C:\Scripts\Get-LogErrors.ps1
+@explain
+Comment-based help at the top of a script works like in a function: Get-Help with the script's path shows it. Select-String -Pattern ERROR -Path $Path would find the same lines, but outputs MatchInfo objects instead of plain strings.
+@endtask

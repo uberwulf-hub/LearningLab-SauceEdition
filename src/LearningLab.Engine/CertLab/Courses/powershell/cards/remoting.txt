@@ -1,0 +1,21 @@
+# Deck: remoting | Remoting and jobs | Remoting
+Turn on PowerShell remoting on a Windows client (run on that client) :: `Enable-PSRemoting -Force`
+Check that WinRM on WIN-CL1 answers :: `Test-WSMan -ComputerName WIN-CL1`
+Which port does WinRM use over HTTP? :: 5985 (5986 for HTTPS)
+Run hostname on WIN-CL1 :: `Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { hostname }`
+Use the local variable $dir inside a remote script block :: `Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { Get-ChildItem $using:dir }`
+Pass a value to the param( ) block of a remote script block :: `Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { param($p) $p } -ArgumentList 5`
+Which property tells you which computer a remote result came from? :: PSComputerName
+Why can you not call methods on objects that came back from Invoke-Command? :: they are deserialized property bags (type names start with Deserialized.)
+Open a session to WIN-CL1 that stays open :: `$s = New-PSSession -ComputerName WIN-CL1`
+Run a command in an existing session $s :: `Invoke-Command -Session $s -ScriptBlock { Get-Date }`
+List the open sessions :: `Get-PSSession`
+Close the sessions :: `Get-PSSession | Remove-PSSession`
+Work interactively on WIN-CL1 :: `Enter-PSSession -ComputerName WIN-CL1`
+Leave an interactive session :: `Exit-PSSession` (or exit)
+Run a script block in the background :: `Start-Job -ScriptBlock { Get-Process }`
+List the jobs and their state :: `Get-Job`
+Wait for job 1 and collect its output :: `Receive-Job -Id 1 -Wait`
+Collect a job's output but keep it for later :: `Receive-Job -Id 1 -Keep`
+Run a remote command as a background job :: `Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { hostname } -AsJob`
+Delete a job that is still running :: `Remove-Job -Id 1 -Force`

@@ -1,0 +1,55 @@
+NAME
+       nmap - network exploration tool and security / port scanner
+
+SYNOPSIS
+       nmap [-sT | -sS] [-sV] [-sn] [-Pn] [-p PORTS] [--open] TARGET...
+
+DESCRIPTION
+       nmap finds which hosts are up and which network ports they answer on.
+       For each port it reports a state:
+
+       open      a program accepts connections on the port.
+       closed    the host answered, but nothing listens on the port.
+       filtered  a firewall blocked the probe, so nmap cannot tell.
+
+       Scan only systems you own or have written permission to test: a port
+       scan of someone else's network can break the law and their policies.
+       On the practice servers nmap scans the simulated lab network only.
+
+       By default nmap scans the 1000 most common TCP ports and lists the ones
+       that are not in the most common state ("Not shown: ..."). nmap is in
+       the nmap package (dnf install nmap).
+
+OPTIONS
+       -sT    A TCP connect scan (completes the handshake; any user may run it).
+
+       -sS    A SYN ("half-open") scan; needs root. On the practice servers it
+              gives the same results as -sT.
+
+       -sV    Probe open ports to find the service and its version.
+
+       -sn    Host discovery only: is the host up? No port scan.
+
+       -Pn    Treat the host as up (skip discovery).
+
+       -p PORTS
+              Scan these ports: 22, 22,80,443 or a range 1-1024.
+
+       --open Show only open ports.
+
+EXAMPLES
+       Which common ports answer on server2?
+
+           nmap server2
+
+       Which hosts answer on a whole network (a TARGET may be a network
+       written ADDRESS/BITS, up to /22)?
+
+           nmap -sn 10.10.1.0/24
+
+       Is SSH, HTTP or HTTPS open, and what software is behind it?
+
+           nmap -sV -p 22,80,443 server2
+
+SEE ALSO
+       ss(8), firewall-cmd(1), curl(1)

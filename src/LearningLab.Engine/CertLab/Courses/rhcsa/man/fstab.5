@@ -1,0 +1,102 @@
+NAME
+       fstab - the list of file systems mounted at boot
+
+SYNOPSIS
+       /etc/fstab
+
+DESCRIPTION
+       /etc/fstab tells the system which file systems and swap areas to use
+       at every boot, and where. At boot, systemd turns each line into a
+       mount (or swap) unit and mounts them in the right order. mount -a
+       mounts every listed file system that is not mounted yet, and a mount
+       command naming only the mount point (mount /mnt/data) takes the rest
+       from this file.
+
+       Each line describes one file system, in six fields separated by spaces
+       or tabs. Lines starting with # are comments; empty lines are ignored.
+
+           DEVICE  MOUNT-POINT  TYPE  OPTIONS  DUMP  PASS
+
+   1. DEVICE
+       What to mount. Prefer a name that does not change when disks are added
+       or reordered:
+
+       UUID=f3c1...   the file system's UUID (blkid shows it). The usual
+                      choice on RHEL 9.
+       LABEL=data     the file system's label (set with xfs_admin -L,
+                      e2label or tune2fs -L, or mkfs -L).
+       /dev/VG/LV, /dev/mapper/VG-LV
+                      a logical volume; LVM names stay stable.
+       /dev/vdb1      a plain device name; may change when disks change.
+       HOST:/PATH     an NFS export, such as nfs.lab.example.com:/exports/shared.
+
+   2. MOUNT-POINT
+       The directory to mount on. It must exist. For swap write none.
+
+   3. TYPE
+       The file system type: xfs, ext4, vfat, nfs (or nfs4), swap, iso9660,
+       and others.
+
+   4. OPTIONS
+       Comma separated, no spaces. defaults is the usual choice. Common ones:
+
+       defaults      rw, suid, dev, exec, auto, nouser, async.
+       ro, rw        read-only, or read-write.
+       noauto        do not mount at boot or with mount -a (only by hand).
+       nofail        do not stop the boot if the device is missing.
+       _netdev       a network file system: wait for the network first
+                     (implied for nfs).
+       noexec, nosuid, nodev
+                     forbid running programs, set-ID bits, device files.
+       x-systemd.automount
+                     mount only when someone first uses the directory.
+       pri=N         for swap: the priority.
+       Type-specific options also go here, such as vers=4.2 or sec=sys for
+       NFS, or uid=1000,umask=077 for vfat.
+
+   5. DUMP
+       Whether the old dump backup program saves it: 0 (always use 0).
+
+   6. PASS
+       The order for checking at boot: 0 never check (always for xfs, swap
+       and nfs), 1 the root file system, 2 other ext4 file systems.
+
+       After editing fstab, run systemctl daemon-reload so systemd notices,
+       and test with mount -a (and swapon -a for swap) before rebooting.
+
+EXAMPLES
+       An XFS file system on a partition, by UUID:
+
+           UUID=5b1e9c3a-3d2f-4c55-9d1e-7a0c2b6e1f44  /mnt/data  xfs  defaults  0 0
+
+       An ext4 logical volume:
+
+           /dev/vgdata/lvweb   /var/www   ext4   defaults   0 2
+
+       A file system by label:
+
+           LABEL=archive   /archive   xfs   defaults   0 0
+
+       A swap partition:
+
+           UUID=0e7c8f61-2a4b-4b1e-8f3a-9d2e6c5b7a10  none  swap  defaults  0 0
+
+       An NFS share:
+
+           nfs.lab.example.com:/exports/shared  /mnt/shared  nfs  defaults,_netdev  0 0
+
+       Test the file after editing:
+
+           systemctl daemon-reload
+           mount -a
+           findmnt --verify
+
+NOTES
+       A wrong line (a missing device, a typo in the type) can stop the next
+       boot in emergency mode. Always run mount -a after an edit; if it
+       complains, fix the line before rebooting. In emergency mode, the root
+       password lets you fix the file (mount -o remount,rw / first if needed).
+
+SEE ALSO
+       mount(8), umount(8), swapon(8), blkid(8), findmnt(8), nfs(5),
+       systemd.mount(5)

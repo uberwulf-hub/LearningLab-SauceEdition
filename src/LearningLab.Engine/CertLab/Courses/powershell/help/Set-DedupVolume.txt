@@ -1,0 +1,12 @@
+SYNOPSIS: Changes the Data Deduplication settings of a volume.
+DESCRIPTION:
+Set-DedupVolume changes how a volume is deduplicated. -MinimumFileAgeDays (default 3) is how old a file must be before it is optimized; 0 optimizes every file, which suits archives that rarely change. -UsageType switches between Default, HyperV and Backup defaults.
+PARAMETER Volume:
+The volume or volumes. Position 0.
+PARAMETER MinimumFileAgeDays:
+Days since a file last changed before it is optimized.
+PARAMETER UsageType:
+Default, HyperV or Backup.
+EXAMPLE: Set-DedupVolume -Volume E: -MinimumFileAgeDays 0
+Every file in the archive is optimized, however new.
+RELATED: Get-DedupVolume, Enable-DedupVolume, Start-DedupJob

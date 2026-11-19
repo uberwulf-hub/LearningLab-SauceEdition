@@ -1,0 +1,15 @@
+SYNOPSIS: Shows information about an Active Directory domain.
+DESCRIPTION:
+Get-ADDomain returns the domain's DNS name (DNSRoot), NetBIOS name, distinguished name, functional level (DomainMode), the default containers for new users and computers, and the domain-wide operations master roles: PDCEmulator, RIDMaster and InfrastructureMaster.
+Without -Identity it describes the domain of the computer you are on.
+PARAMETER Identity:
+A domain, by DNS name (corp.example), NetBIOS name (CORP) or distinguished name. Position 0.
+PARAMETER Current:
+LocalComputer (the computer's domain) or LoggedOnUser (your account's domain).
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADDomain | Select-Object DNSRoot, NetBIOSName, DomainMode
+The domain's names and functional level.
+EXAMPLE: Get-ADDomain | Format-List PDCEmulator, RIDMaster, InfrastructureMaster
+Which domain controllers hold the three domain-wide roles.
+RELATED: Get-ADForest, Get-ADDomainController, Move-ADDirectoryServerOperationMasterRole

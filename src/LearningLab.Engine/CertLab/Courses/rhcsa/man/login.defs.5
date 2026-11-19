@@ -1,0 +1,64 @@
+NAME
+       login.defs - default settings for new accounts and passwords
+
+SYNOPSIS
+       /etc/login.defs
+
+DESCRIPTION
+       /etc/login.defs holds settings read by useradd, passwd, chage and the
+       other account tools. Each line is a NAME and a VALUE; # starts a
+       comment. Changes apply to accounts created (or passwords set) from
+       then on; existing accounts keep their values (change those with
+       chage).
+
+       The settings that matter most:
+
+       PASS_MAX_DAYS N
+              How many days a new password stays valid (99999: forever).
+              Goes into the MAX field of /etc/shadow for new users.
+
+       PASS_MIN_DAYS N
+              Days before a password may be changed again.
+
+       PASS_WARN_AGE N
+              Days of warning before a password expires.
+
+       UID_MIN, UID_MAX
+              The range of UIDs for ordinary users (1000 to 60000).
+
+       GID_MIN, GID_MAX
+              The same for groups.
+
+       SYS_UID_MIN, SYS_UID_MAX
+              The range for system accounts (useradd -r).
+
+       CREATE_HOME yes|no
+              Whether useradd makes the home directory by default.
+
+       USERGROUPS_ENAB yes|no
+              Whether useradd creates a private group for each user, and
+              userdel removes it.
+
+       UMASK N
+              The umask useradd uses for new home directories when HOME_MODE
+              is not set (022 on RHEL 9). The umask of login sessions comes
+              from the shell start-up files (/etc/profile, /etc/bashrc,
+              ~/.bashrc), not from here.
+
+       ENCRYPT_METHOD SHA512
+              How new passwords are hashed.
+
+       HOME_MODE N
+              The permissions of new home directories (0700 on RHEL 9, so
+              homes are private; overrides UMASK).
+
+EXAMPLES
+       Make new users' passwords expire after 90 days, with 7 days' warning:
+
+           sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   90/' /etc/login.defs
+           sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE   7/' /etc/login.defs
+           useradd testuser
+           chage -l testuser
+
+SEE ALSO
+       useradd(8), chage(1), shadow(5), passwd(1)

@@ -1,0 +1,12 @@
+SYNOPSIS: Turns off an integration service for a VM.
+DESCRIPTION:
+Disable-VMIntegrationService turns a service off. An example: a VM that should take its time only from its own source (such as a domain controller that syncs with the domain hierarchy) can have Time Synchronization turned off.
+
+Turning off Shutdown means Stop-VM can no longer shut the guest down cleanly; turning off VSS breaks Production checkpoints and host backups.
+PARAMETER Name:
+The service or services. Position 0.
+PARAMETER VMName:
+The VM or VMs. Position 1.
+EXAMPLE: Disable-VMIntegrationService -Name "Time Synchronization" -VMName APP-OLD -ComputerName HV1
+APP-OLD no longer takes the host's time.
+RELATED: Enable-VMIntegrationService, Get-VMIntegrationService

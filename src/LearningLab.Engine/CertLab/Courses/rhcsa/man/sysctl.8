@@ -1,0 +1,74 @@
+NAME
+       sysctl - show and change kernel settings at run time
+
+SYNOPSIS
+       sysctl [-n] NAME...
+       sysctl [-w] NAME=VALUE...
+       sysctl -a
+       sysctl -p [FILE]
+       sysctl --system
+
+DESCRIPTION
+       The kernel has hundreds of settings (kernel parameters) that can be
+       changed while the system runs: whether it forwards network packets
+       between interfaces, how eagerly it uses swap, how many files may be
+       open. They appear as files under /proc/sys; the name
+       net.ipv4.ip_forward is the file /proc/sys/net/ipv4/ip_forward.
+
+       sysctl NAME prints a setting; sysctl NAME=VALUE (or -w) changes it at
+       once. Such a change lasts only until the next reboot.
+
+       To keep a setting, write NAME = VALUE in a file in /etc/sysctl.d whose
+       name ends in .conf (for example /etc/sysctl.d/90-lab.conf). Those
+       files are applied at every boot; sysctl --system applies them now.
+       Lines starting with # or ; are comments.
+
+OPTIONS
+       -n, --values
+              Print only the value, without the name. Good for tests.
+
+       -w, --write
+              Change the settings given as NAME=VALUE.
+
+       -a, --all
+              Print every setting and its value.
+
+       -p, --load[=FILE]
+              Apply the settings in FILE (by default /etc/sysctl.conf).
+
+       --system
+              Apply the settings from all the system's configuration
+              directories: /usr/lib/sysctl.d, /run/sysctl.d, /etc/sysctl.d and
+              finally /etc/sysctl.conf.
+
+       -q, --quiet
+              Do not print the values that were set.
+
+EXAMPLES
+       Show whether the system forwards IPv4 packets:
+
+           sysctl net.ipv4.ip_forward
+
+       Make the kernel less eager to swap, now and at every boot:
+
+           sysctl -w vm.swappiness=10
+           echo 'vm.swappiness = 10' > /etc/sysctl.d/90-swap.conf
+           sysctl --system
+
+       Find all settings about IPv6:
+
+           sysctl -a | grep ipv6
+
+FILES
+       /etc/sysctl.d/*.conf
+              Your settings, applied at boot (files sorted by name).
+
+       /etc/sysctl.conf
+              Read last; on RHEL 9 it only holds comments.
+
+       /usr/lib/sysctl.d/*.conf
+              Defaults from packages. Do not edit them; override them in
+              /etc/sysctl.d with a file of the same name or a later one.
+
+SEE ALSO
+       sysctl.d(5), tuned-adm(8), proc(5)

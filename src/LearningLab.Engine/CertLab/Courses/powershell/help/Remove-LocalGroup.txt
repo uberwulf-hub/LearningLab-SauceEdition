@@ -1,0 +1,9 @@
+SYNOPSIS: Deletes local groups.
+DESCRIPTION:
+Deletes groups you created. The built-in groups cannot be deleted.
+PARAMETER Name:
+The groups. Position 0.
+PARAMETER InputObject:
+LocalGroup objects.
+EXAMPLE: Remove-LocalGroup -Name WebAdmins
+RELATED: New-LocalGroup

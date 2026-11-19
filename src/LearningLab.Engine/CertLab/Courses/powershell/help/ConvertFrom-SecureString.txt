@@ -1,0 +1,19 @@
+SYNOPSIS: Turns a SecureString into an encrypted string that can be saved to a file.
+DESCRIPTION:
+ConvertFrom-SecureString encrypts a SecureString and returns it as a long string of letters and digits. You can save that string in a file and turn it back into a SecureString later with ConvertTo-SecureString.
+
+Without -Key, Windows encrypts it for your account on this computer (DPAPI): another user, or the same user on another computer, cannot read it back. With -Key, anyone who has the key can read it, so the key must be kept as safe as the password itself.
+
+It does not give you the plain text back.
+PARAMETER SecureString:
+The SecureString to encrypt. You can pipe it in.
+PARAMETER Key:
+A key of 16, 24 or 32 bytes, for strings that must be read on another computer or by another account.
+EXAMPLE: Read-Host 'Password' -AsSecureString | ConvertFrom-SecureString | Set-Content C:\LabFiles\pw.txt
+Saves a password so that only you, on this computer, can use it later.
+EXAMPLE: $key = 1..32; $cred.Password | ConvertFrom-SecureString -Key $key
+Encrypts the password of a credential with a 32-byte key.
+NOTES:
+In Cert Lab the encryption is a stand-in that behaves like the real one but protects nothing.
+PowerShell 7 adds -AsPlainText, which returns the plain text of a SecureString.
+RELATED: ConvertTo-SecureString, Get-Credential, Read-Host

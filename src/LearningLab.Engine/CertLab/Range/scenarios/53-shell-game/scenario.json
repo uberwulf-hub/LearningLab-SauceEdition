@@ -1,0 +1,55 @@
+{
+    "id": "shell-game",
+    "title": "Shell Game",
+    "category": "blue",
+    "level": "Advanced",
+    "order": 3,
+    "summary": "Someone uploaded a web shell to your site and used it to plant a service that keeps them connected. Trace it through the web log, find everything they left, and pull it all out before it beacons out again.",
+    "story": "You run web2, the public web server for {{CO}} (made up), on 10.10.8.0/24. Traffic looked odd and a strange process was spotted. You have a root console on web2. The web server's access log and the attacker's files are all still here.",
+    "goal": "From the web access log work out the attacker's address and the web shell they uploaded, find the service they left to stay connected, capture the flag hidden in the web shell, and remove both the shell and the service before the service beacons out and pulls down more tools.",
+    "skills": "reading a web access log, finding recently changed files, systemd units, cleaning up a service and a file",
+    "defender": "none",
+    "start": "web2",
+    "minutes": 40,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "beacon out and pull down more tools",
+    "goalPoints": 90,
+    "vars": {
+        "CO": "company",
+        "ATKIP": "ip",
+        "SHELL": "pick:up|img|thumb|cache|view",
+        "SVC": "pick:netcheck|sys-update|telemetryd|cupsd-helper|ntpsync"
+    },
+    "machines": [
+        {
+            "name": "web2",
+            "os": "linux",
+            "hostname": "web2.{{CO_DOMAIN}}",
+            "role": "public web server (yours)",
+            "nics": [ "10.10.8.10/24" ],
+            "packages": [ "httpd" ],
+            "motd": "{{CO}} web2 - staff only.",
+            "setup": "web2.sh"
+        }
+    ],
+    "flags": [
+        { "id": "shell", "name": "The flag hidden in the web shell", "points": 70, "machine": "web2", "path": "/var/www/html/uploads/{{SHELL}}.php", "owner": "apache", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "addr", "ask": "What address uploaded and used the web shell?", "answer": "{{ATKIP}}", "points": 50, "explain": "In the access log this address POSTs to the upload page, then repeatedly requests the dropped .php file." },
+        { "id": "shellpath", "ask": "What is the path of the web shell they dropped (under the web root)?", "answer": "/uploads/{{SHELL}}.php", "accept": [ "{{SHELL}}.php", "/var/www/html/uploads/{{SHELL}}.php", "uploads/{{SHELL}}.php" ], "points": 50, "explain": "The access log shows repeated requests to this file; it is also the newest file under the web root." },
+        { "id": "svc", "ask": "What is the name of the service they left running (without .service)?", "answer": "{{SVC}}", "points": 50, "explain": "A systemd unit you did not install, enabled to start at boot." }
+    ],
+    "tasks": [
+        { "id": "delshell", "name": "Remove the web shell", "machine": "web2", "check": "test ! -e /var/www/html/uploads/{{SHELL}}.php", "points": 50, "explain": "rm -f /var/www/html/uploads/{{SHELL}}.php." },
+        { "id": "stopsvc", "name": "Stop and remove the rogue service", "machine": "web2", "check": "test ! -e /etc/systemd/system/{{SVC}}.service && ! systemctl is-enabled {{SVC}} >/dev/null 2>&1", "points": 60, "explain": "systemctl disable --now {{SVC}}; rm the unit file; systemctl daemon-reload." }
+    ],
+    "attacker": [
+        { "at": "360s", "machine": "web2", "run": "mkdir -p /tmp/.stage; echo pulled > /tmp/.stage/tools 2>/dev/null; true", "unless": "! systemctl is-active {{SVC}} >/dev/null 2>&1", "note": "The service was still running, so it beaconed out and staged more tools in /tmp/.stage.", "goal": true }
+    ],
+    "hints": [
+        { "text": "The web server logs every request. Read /var/log/httpd/access_log (or access.log). Look for an address that POSTs to an upload page and then asks for a .php file in /uploads again and again - normal visitors never do that. That address is the attacker and that .php file is their web shell.", "cost": 12 },
+        { "text": "Find the dropped file quickly with 'ls -lat /var/www/html/uploads' (newest first) or 'find /var/www -name \"*.php\" -newermt \"2 hours ago\"'. Open it (cat) - the flag is in a comment inside it.", "cost": 20 },
+        { "text": "They also left a service to stay connected. 'systemctl list-units --type=service' and 'ls /etc/systemd/system/*.service' show units; the odd name is theirs. Clean up: rm the web shell, then 'systemctl disable --now {{SVC}}', remove /etc/systemd/system/{{SVC}}.service and run 'systemctl daemon-reload'. Do it before the service beacons out again.", "cost": 28 }
+    ]
+}

@@ -1,0 +1,10 @@
+SYNOPSIS: Shows whether a DNS server answers questions about other domains for its clients.
+DESCRIPTION:
+Recursion means the server does the legwork for a client: it asks forwarders or the internet's root servers and returns the final answer. Get-DnsServerRecursion shows whether it is on (Enable) and its timeouts.
+
+A DNS server that your own computers use needs recursion. A server that only hosts zones for the outside world (for example in a perimeter network) usually has it off so it can't be abused.
+PARAMETER ComputerName:
+The DNS server to ask.
+EXAMPLE: Get-DnsServerRecursion -ComputerName DC1
+Shows Enable : True and the timeout values.
+RELATED: Set-DnsServerRecursion, Get-DnsServerForwarder, Clear-DnsServerCache

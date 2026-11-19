@@ -1,0 +1,13 @@
+## read the sign-in log: failures then a success tell you the account and the address
+grep -Ei 'failed|accepted' /var/log/secure
+## look for what they left behind
+ls -la /etc/cron.d
+cat /etc/cron.d/sync
+cat /opt/.sync.sh
+ls -la /opt/.sync
+## read the dropped file to get the flag
+cat /opt/.sync/payload.txt
+## clean up: remove the job and its script, then lock the account
+rm -f /etc/cron.d/sync /opt/.sync.sh
+usermod -L {{USER}}
+passwd -S {{USER}}

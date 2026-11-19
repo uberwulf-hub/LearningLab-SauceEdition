@@ -1,0 +1,15 @@
+SYNOPSIS: Lists the modules that were installed with Install-Module.
+DESCRIPTION:
+Get-InstalledModule shows only modules that PowerShellGet installed (with Install-Module), with their version and the repository they came from. Modules that come with Windows, or that someone copied into a modules folder by hand, are not in this list.
+
+To see every module on the computer, whatever put it there, use Get-Module -ListAvailable.
+PARAMETER Name:
+The module to look for. Without it, every module installed by Install-Module is listed.
+EXAMPLE: Get-InstalledModule
+Lists the modules installed from a repository. On the lab machines the list is empty: nothing was installed from the Gallery.
+EXAMPLE: Get-Module -ListAvailable
+Lists all installed modules instead, including the ones that came with Windows.
+NOTES:
+The practice network has no internet, so no module on the lab machines came from Install-Module; asking for a name gives a "No match was found" error.
+In PowerShell 7.4 and later, PSResourceGet's Get-InstalledPSResource does the same.
+RELATED: Install-Module, Update-Module, Get-Module

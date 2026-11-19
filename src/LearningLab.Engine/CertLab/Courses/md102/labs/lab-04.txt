@@ -1,0 +1,70 @@
+# Lab: lab-04 | Conditional Access | u04 | 35
+Riverbend's security team has signed off its Conditional Access plan: MFA for everyone except in the office, company mail only from compliant PCs, no legacy authentication, and the Intune admin center only from the office. Keep the emergency access account `breakglass` out of every policy.
+
+@vars
+office = Head office | Portland office | Main office
+range = 203.0.113.0/24 | 198.51.100.0/24
+@endvars
+
+@setup portal
+create ca name="Block legacy authentication" usersInclude="All users" usersExclude=breakglass apps="All cloud apps" clientApps="Exchange ActiveSync clients,Other clients" grant="Block access" state=Report-only
+
+@task t01 | Compliance | 30 | portal
+Create a trusted named location **{office}** for **{range}**. Then create the policy **MFA outside the office**: all users except `breakglass`, all cloud apps, multifactor authentication required, but not from trusted locations. Switch it on.
+@check portal | the location is trusted
+location["{office}"].ranges has {range}
+location["{office}"].trusted == Yes
+@check portal | MFA everywhere except the office
+signin(user=sam, location="{office}") == Allowed
+signin(user=sam, location=Other) == "Allowed after MFA"
+signin(user=breakglass, location=Other) == Allowed
+@hint In the policy: Conditions > Locations, include Any location, exclude All trusted locations.
+@solution portal
+create location name="{office}" ranges={range} trusted=Yes
+create ca name="MFA outside the office" usersInclude="All users" usersExclude=breakglass apps="All cloud apps" locations="Any location" locationsExclude="All trusted locations" grant="Grant access" controls="Require multifactor authentication" state=On
+@explain
+A location only becomes useful to "All trusted locations" once it is marked as trusted. Excluding trusted locations keeps the policy everywhere else; the emergency account stays outside the policy so it can always sign in.
+@endtask
+
+@task t02 | Compliance | 30 | portal
+Sales may read company mail and files (**Office 365**) only from a **compliant** device. Phones are handled by app protection later, so leave **iOS and Android** out of this policy. Name it **Office 365 from compliant devices** and switch it on.
+@check portal | Jordan's compliant laptop is allowed
+signin(user=jordan, device=RB-LT-001, mfa=yes) == Allowed
+@check portal | Priya on Sam's unmanaged home PC is blocked
+signin(user=priya, device=SAM-HOME-PC, mfa=yes) == Blocked
+@check portal | phones and other teams aren't affected by it
+signin(user=jordan, device="Jordan's iPhone", client=mobile, mfa=yes) == Allowed
+signin(user=sam, device=SAM-HOME-PC, mfa=yes) == Allowed
+@hint Users: Sales. Target: Office 365. Conditions: device platforms, exclude iOS and Android. Grant: Require device to be marked as compliant.
+@solution portal
+create ca name="Office 365 from compliant devices" usersInclude=Sales apps="Office 365" platformsExclude="iOS,Android" grant="Grant access" controls="Require device to be marked as compliant" state=On
+@explain
+"Require device to be marked as compliant" needs a device that is enrolled in Intune and compliant. Sam's home PC is only registered, so anyone in Sales is blocked there. Excluding the phone platforms leaves them to an app protection policy (unit 11).
+@endtask
+
+@task t03 | Compliance | 20 | portal
+The policy **Block legacy authentication** has run in report-only mode for two weeks and the sign-in logs show only old scripts and an old mail client using legacy protocols. Enforce it.
+@check portal | the policy is on and blocks legacy clients
+ca["Block legacy authentication"].state == On
+signin(user=sam, client=eas, mfa=yes) == Blocked
+signin(user=sam, client=browser, mfa=yes) == Allowed
+@hint Change Enable policy from Report-only to On.
+@solution portal
+set ca "Block legacy authentication" state=On
+@explain
+Report-only policies are evaluated and logged but never enforced. Legacy protocols can't do MFA, which is why blocking them is one of the first policies every tenant should have.
+@endtask
+
+@task t04 | Compliance | 20 | portal
+The **IT Admins** may open the **Microsoft Intune** admin center only from trusted locations. Create the policy **Intune admin from the office** that blocks them anywhere else, and switch it on.
+@check portal | Alex from the office gets in, from elsewhere is blocked
+signin(user=alex, app="Microsoft Intune", location="{office}", mfa=yes) == Allowed
+signin(user=alex, app="Microsoft Intune", location=Other, mfa=yes) == Blocked
+@check portal | other people and apps aren't blocked by it
+signin(user=jordan, device=RB-LT-001, app="Microsoft Intune", location=Other, mfa=yes) == Allowed
+@hint Users: IT Admins. Target: Microsoft Intune. Locations: include Any location, exclude All trusted locations. Grant: Block access.
+@solution portal
+create ca name="Intune admin from the office" usersInclude="IT Admins" apps="Microsoft Intune" locations="Any location" locationsExclude="All trusted locations" grant="Block access" state=On
+@explain
+A block policy with "exclude trusted locations" means "block unless the sign-in comes from a trusted location". The breakglass account isn't in IT Admins, so it isn't affected; in a real tenant you would still add it as an exclusion out of habit.
+@endtask

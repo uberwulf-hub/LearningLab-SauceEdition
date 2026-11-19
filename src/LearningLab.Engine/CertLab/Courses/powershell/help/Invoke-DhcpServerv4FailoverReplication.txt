@@ -1,0 +1,16 @@
+SYNOPSIS: Copies scope settings from this DHCP server to its failover partner.
+DESCRIPTION:
+Failover partners share leases automatically, but not configuration. When you change a scope's options, exclusions, reservations or lease time on one server, the partner keeps the old settings until you run Invoke-DhcpServerv4FailoverReplication on the server where you made the change.
+
+Name a relationship (every scope in it is copied) or single scopes. The settings on this server overwrite the partner's.
+PARAMETER Name:
+The relationship to copy.
+PARAMETER ScopeId:
+Only these scopes.
+PARAMETER Force:
+Copies without asking.
+EXAMPLE: Invoke-DhcpServerv4FailoverReplication -ScopeId 10.10.0.0 -ComputerName SRV1 -Force
+After adding a reservation on SRV1, the partner gets it too.
+EXAMPLE: Invoke-DhcpServerv4FailoverReplication -Name HQ-Failover
+Copies every scope of the relationship.
+RELATED: Add-DhcpServerv4Failover, Get-DhcpServerv4Failover, Add-DhcpServerv4Reservation, Set-DhcpServerv4OptionValue

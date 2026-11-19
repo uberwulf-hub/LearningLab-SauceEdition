@@ -1,0 +1,15 @@
+SYNOPSIS: Shows the GPOs linked to an OU or the domain and the ones it inherits.
+DESCRIPTION:
+Get-GPInheritance answers "which GPOs reach this OU, and in what order?". GpoLinks lists the GPOs linked directly to the target. InheritedGpoLinks lists every GPO that applies, including those from parent OUs and the domain, in precedence order (the first one wins). GpoInheritanceBlocked says whether the OU blocks inheritance.
+Site-linked GPOs are not part of the list.
+PARAMETER Target:
+The OU or domain, as a distinguished name. Position 0.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-GPInheritance "OU=Sales,OU=Staff,DC=corp,DC=example"
+The GPOs linked to Sales and those it inherits.
+EXAMPLE: (Get-GPInheritance "OU=Sales,OU=Staff,DC=corp,DC=example").InheritedGpoLinks | Select-Object Order, DisplayName, Enforced
+Every GPO that applies to Sales, in precedence order.
+RELATED: Set-GPInheritance, New-GPLink, Get-GPResultantSetOfPolicy

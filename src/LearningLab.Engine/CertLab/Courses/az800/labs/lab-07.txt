@@ -1,0 +1,68 @@
+# Lab: lab-07 | Managing servers remotely | u07 | 35
+Harborline's administrators want to stop signing in at server consoles. Bring the Server Core machine back under remote management, add it to Windows Admin Center, roll a change out to several servers at once, and give the help desk a limited endpoint on the member server.
+
+@vars
+endpoint = ServiceDesk | HelpdeskOps
+feature = Windows-Server-Backup | Telnet-Client
+@endvars
+
+@setup CORE1
+Disable-PSRemoting -Force
+Stop-Service WinRM
+Set-Service WinRM -StartupType Disabled
+
+@task t01 | Server management | 25 | CORE1
+**CORE1** can't be managed remotely. At its console, turn remote management back on so that WinRM runs, starts automatically and accepts PowerShell remoting.
+@check DC1 | DC1 can open a session on CORE1
+(Invoke-Command -ComputerName CORE1 -ScriptBlock { hostname }) -eq 'CORE1'
+@check admin | WinRM runs and starts automatically
+service(CORE1, "WinRM") == Running
+service(CORE1, "WinRM").starttype == Automatic
+@hint sconfig option 4 (Remote management) or Enable-PSRemoting.
+@solution CORE1
+Enable-PSRemoting -Force
+@explain
+Enable-PSRemoting does everything at once: the service, its start type, the listener, the firewall rule and remote access to the PowerShell endpoints. Starting the service by hand would leave the endpoints closed to remote users, as Disable-PSRemoting left them.
+@endtask
+
+@task t02 | Server management | 20 | admin
+Add **CORE1** and **HV1** to Windows Admin Center, and register the gateway with Azure so the hybrid services can be used later.
+@check admin | the connections and the registration
+wac.connections has CORE1
+wac.connections has HV1
+wac.registered == Yes
+@solution admin
+wac add CORE1
+wac add HV1
+wac register
+@explain
+WAC reaches servers over WinRM, so CORE1 had to have remote management back first. Registration links the gateway to the Azure subscription.
+@endtask
+
+@task t03 | Server management | 25 | DC1
+From **DC1**, install the feature **{feature}** on **FS1** and **SRV1** with a single command that runs on both servers.
+@check admin | the feature is on both servers
+feature(FS1, "{feature}") == Installed
+feature(SRV1, "{feature}") == Installed
+@hint Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { Install-WindowsFeature ... }
+@solution DC1
+Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { Install-WindowsFeature {feature} }
+@explain
+Invoke-Command runs the script block on every computer in the list in parallel. Install-WindowsFeature -ComputerName works too, but only for one server per command.
+@endtask
+
+@task t04 | Server management | 30 | SRV1
+On **SRV1**, create a JEA endpoint named **{endpoint}** for the **Helpdesk** group: a restricted session, run as a virtual account, in which they can use only `Get-Service` and `Restart-Service`. The role capability is **Helpdesk** in the module **HelpdeskJEA**.
+@check SRV1 | the endpoint is restricted, runs as a virtual account and admits CORP\Helpdesk
+$c = Get-PSSessionConfiguration -Name {endpoint} -ErrorAction Stop; $c.RunAsVirtualAccount -eq 'true' -and $c.SessionType -eq 'RestrictedRemoteServer' -and ($c.Permission -like '*Helpdesk*')
+@check SRV1 | the role allows exactly the two cmdlets
+$t = Get-Content 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc' -Raw; $t -match 'Restart-Service' -and $t -match 'Get-Service' -and $t -notmatch 'Stop-Computer'
+@hint The .psrc goes in C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities.
+@solution SRV1
+New-Item -ItemType Directory 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities' -Force | Out-Null
+New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc' -VisibleCmdlets 'Get-Service', 'Restart-Service'
+New-PSSessionConfigurationFile -Path C:\{endpoint}.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'CORP\Helpdesk' = @{ RoleCapabilities = 'Helpdesk' } }
+Register-PSSessionConfiguration -Name {endpoint} -Path C:\{endpoint}.pssc -Force
+@explain
+The endpoint's name is what people pass to -ConfigurationName; the role's name is the .psrc file's name. With a virtual account the help desk needs no rights of its own on SRV1.
+@endtask

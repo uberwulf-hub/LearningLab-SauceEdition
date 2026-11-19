@@ -1,0 +1,30 @@
+NAME
+       realpath - print the full absolute path of a file
+
+SYNOPSIS
+       realpath [-e] [-m] [-s] [-q] FILE...
+
+DESCRIPTION
+       realpath prints the absolute path of each FILE, with symbolic links
+       followed and . and .. removed. Only the last part may be missing
+       unless -e or -m says otherwise.
+
+OPTIONS
+       -e, --canonicalize-existing
+              Every part of the path must exist.
+
+       -m, --canonicalize-missing
+              No part needs to exist.
+
+       -s, --no-symlinks
+              Do not follow symbolic links; just tidy the path.
+
+       -q, --quiet
+              Do not print errors.
+
+EXAMPLES
+           realpath ../notes.txt
+           realpath -s /etc/../usr/./bin
+
+SEE ALSO
+       readlink(1), pwd(1), basename(1), dirname(1)

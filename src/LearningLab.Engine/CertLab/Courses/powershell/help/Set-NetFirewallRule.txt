@@ -1,0 +1,40 @@
+SYNOPSIS: Changes existing Windows Firewall rules.
+DESCRIPTION:
+Set-NetFirewallRule changes the settings of rules that already exist: the port, the allowed addresses, the profile, the action and so on. Pick the rules with -Name, -DisplayName or -DisplayGroup, or pipe them from Get-NetFirewallRule. Only the settings you give change; the rest stay as they were.
+
+To rename a rule use -NewDisplayName (-DisplayName picks the rule to change). To only switch rules on or off, Enable-NetFirewallRule and Disable-NetFirewallRule are shorter.
+PARAMETER Name:
+The rule's Name (id). Wildcards are allowed.
+PARAMETER DisplayName:
+Picks rules by display name.
+PARAMETER DisplayGroup:
+Picks every rule of a group, for example "Windows Remote Management".
+PARAMETER InputObject:
+Rules piped from Get-NetFirewallRule.
+PARAMETER NewDisplayName:
+The new display name.
+PARAMETER Enabled:
+True or False.
+PARAMETER Action:
+Allow or Block.
+PARAMETER Direction:
+Inbound or Outbound.
+PARAMETER Profile:
+Domain, Private, Public or Any.
+PARAMETER Protocol:
+TCP, UDP, ICMPv4, ICMPv6 or Any.
+PARAMETER LocalPort:
+The local port or ports.
+PARAMETER RemoteAddress:
+Who the rule applies to: an address, a network, LocalSubnet or Any.
+PARAMETER PassThru:
+Outputs each rule after the change.
+EXAMPLE: Set-NetFirewallRule -Name WebApp-8080 -LocalPort 8081
+Moves the rule to port 8081.
+EXAMPLE: Set-NetFirewallRule -DisplayName 'Remote Desktop - User Mode (TCP-In)' -RemoteAddress 10.0.10.0/24 -PassThru
+Allows Remote Desktop only from the lab network.
+EXAMPLE: Get-NetFirewallRule -DisplayGroup 'File and Printer Sharing' | Set-NetFirewallRule -Profile Domain
+Limits the whole group to the domain profile.
+NOTES:
+Needs an administrator on a real PC. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Get-NetFirewallRule, New-NetFirewallRule, Enable-NetFirewallRule, Disable-NetFirewallRule

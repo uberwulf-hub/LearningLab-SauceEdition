@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the Storage Spaces pools.
+DESCRIPTION:
+A storage pool groups physical disks into one block of capacity that virtual disks are carved from. Get-StoragePool shows each pool's FriendlyName, OperationalStatus, HealthStatus, IsPrimordial, IsReadOnly, Size and AllocatedSize.
+
+The Primordial pool is not a real pool: it simply holds every disk that isn't in one yet. -IsPrimordial $false leaves it out.
+PARAMETER FriendlyName:
+Only this pool. Position 0.
+PARAMETER IsPrimordial:
+$false to hide the primordial pool.
+EXAMPLE: Get-StoragePool -IsPrimordial $false
+The real pools.
+EXAMPLE: Get-StoragePool -FriendlyName Data | Get-PhysicalDisk
+The disks in the Data pool.
+RELATED: New-StoragePool, Remove-StoragePool, Add-PhysicalDisk, New-VirtualDisk

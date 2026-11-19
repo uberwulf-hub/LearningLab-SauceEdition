@@ -1,0 +1,121 @@
+# Lab: lab-11 | Rootless containers from image to service | u11 | 50
+The user `appuser` (password `Contain3r!`) on server1 will run the team's containers. Everything container-related happens as appuser, in appuser's own image store: log in with ssh appuser@localhost (not su). The registry is registry.lab.example.com (user student, password student). The repositories BaseOS and AppStream on http://repo.lab.example.com are already configured.
+
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+useradd appuser
+echo 'Contain3r!' | passwd --stdin appuser
+
+@task t01 | Containers | 10 | server1
+Install the container tools on server1. Then, as appuser, log in to the registry and download the images `ubi9/httpd-24` and `rhel9/mariadb-105` from registry.lab.example.com.
+@check server1 | podman and skopeo are installed
+rpm -q podman skopeo
+@check server1 | appuser has both images
+certlab-check login appuser 'podman images' > /tmp/.l11img; grep -q 'registry.lab.example.com/ubi9/httpd-24' /tmp/.l11img && grep -q 'registry.lab.example.com/rhel9/mariadb-105' /tmp/.l11img
+@hint dnf install container-tools as root, then ssh appuser@localhost, podman login and podman pull with the full image names.
+@solution server1
+dnf -y install container-tools
+ssh -o StrictHostKeyChecking=no appuser@localhost
+Contain3r!
+podman login -u student -p student registry.lab.example.com
+podman pull registry.lab.example.com/ubi9/httpd-24
+podman pull registry.lab.example.com/rhel9/mariadb-105
+podman images
+exit
+@explain
+container-tools brings podman, skopeo and buildah. Images belong to the user who pulls them: root's images would not count for appuser. The login is stored per user too (in the user's runtime folder), so appuser logs in himself.
+@endtask
+
+@task t02 | Containers | 10 | server1
+As appuser, save the registry's description of the image `registry.lab.example.com/library/nginx`, exactly as skopeo inspect prints it, into the file /home/appuser/nginx.json, without pulling that image.
+@check server1 | the file holds the image's name and digest
+grep -q '"Name": "registry.lab.example.com/library/nginx"' /home/appuser/nginx.json && grep -q '"Digest": "sha256:' /home/appuser/nginx.json
+@check server1 | the image was not pulled
+! certlab-check login appuser 'podman images' | grep -q 'library/nginx'
+@hint skopeo inspect docker://IMAGE reads the registry directly.
+@solution server1
+ssh -o StrictHostKeyChecking=no appuser@localhost
+Contain3r!
+skopeo inspect docker://registry.lab.example.com/library/nginx > ~/nginx.json
+exit
+@explain
+skopeo inspect shows tags, labels, layers and environment from the registry, so you can check an image before you download hundreds of megabytes. podman inspect only works on images and containers that are already local.
+@endtask
+
+@task t03 | Containers | 15 | server1
+As appuser, write a Containerfile in /home/appuser/motd that starts from `registry.lab.example.com/ubi9/ubi-minimal`, writes the text `Welcome to the lab` into /etc/motd during the build, and shows that file when a container starts. Build it as the image `localhost/motd` with the tag `2.0`.
+@check server1 | appuser has the image localhost/motd:2.0
+certlab-check login appuser 'podman images' | grep -Eq '^localhost/motd +2\.0 '
+@check server1 | a container from it prints the text
+certlab-check login appuser 'podman run --rm localhost/motd:2.0' | grep -q 'Welcome to the lab'
+@hint FROM, then RUN echo ... > /etc/motd, then CMD ["cat", "/etc/motd"]. podman build -t NAME:TAG . in the folder.
+@solution server1
+ssh -o StrictHostKeyChecking=no appuser@localhost
+Contain3r!
+mkdir ~/motd
+cd ~/motd
+printf 'FROM registry.lab.example.com/ubi9/ubi-minimal\nRUN echo "Welcome to the lab" > /etc/motd\nCMD ["cat", "/etc/motd"]\n' > Containerfile
+cat Containerfile
+podman build -t motd:2.0 .
+podman run --rm motd:2.0
+cd
+exit
+@explain
+RUN is carried out once, while the image is built, and its result (the new /etc/motd) is stored in a layer of the image. CMD is only stored as the default command. podman build looks for a file named Containerfile (or Dockerfile) in the folder you give it, and images you build get the localhost/ prefix.
+@endtask
+
+@task t04 | Containers | 15 | server1
+As appuser, run a MariaDB container named `appdb` in the background from registry.lab.example.com/rhel9/mariadb-105, with the database `shop`, the user `shop` and the password `Sh0p!pw`, publishing port 3306. Its data (the folder /var/lib/mysql in the container) must be kept in /home/appuser/dbdata on the host. MariaDB runs as UID 27 inside the container.
+@check server1 | appdb is running
+certlab-check login appuser 'podman ps' | grep -qw appdb
+@check server1 | the settings are passed to the container
+certlab-check login appuser 'podman exec appdb env' > /tmp/.l11env; grep -qx MYSQL_DATABASE=shop /tmp/.l11env && grep -qx MYSQL_USER=shop /tmp/.l11env && grep -qx 'MYSQL_PASSWORD=Sh0p!pw' /tmp/.l11env
+@check server1 | /home/appuser/dbdata is mounted on /var/lib/mysql
+certlab-check login appuser 'podman inspect appdb' > /tmp/.l11ins; grep -q '"Source": "/home/appuser/dbdata"' /tmp/.l11ins && grep -q '"Destination": "/var/lib/mysql"' /tmp/.l11ins
+@hint -e for each variable (quote the one with the !), -p 3306:3306, -v ~/dbdata:/var/lib/mysql:Z. podman unshare chown 27:27 gives the folder to UID 27 as the container sees it.
+@solution server1
+ssh -o StrictHostKeyChecking=no appuser@localhost
+Contain3r!
+mkdir ~/dbdata
+podman unshare chown 27:27 ~/dbdata
+podman run -d --name appdb -e MYSQL_DATABASE=shop -e MYSQL_USER=shop -e 'MYSQL_PASSWORD=Sh0p!pw' -p 3306:3306 -v ~/dbdata:/var/lib/mysql:Z registry.lab.example.com/rhel9/mariadb-105
+podman ps
+exit
+@explain
+The :Z relabels ~/dbdata as container_file_t so the container (container_t) may use it with SELinux enforcing. In a rootless container, UID 27 inside is a high UID outside (from /etc/subuid), so a plain chown 27 would give the folder to the wrong user: podman unshare runs chown with the container's view of the numbers. Typed at an interactive prompt, an unquoted ! starts bash's history expansion: put that -e argument in single quotes.
+@endtask
+
+@task t05 | Containers | 20 | server1
+As appuser, run a web container named `webapp` from registry.lab.example.com/ubi9/httpd-24 that serves the folder /home/appuser/html (Apache's folder in the container is /var/www/html) on port 8080 of the host (8080 in the container). Put an index.html with the text `webapp is up` in that folder. Make the container a systemd user service named `container-webapp.service` that starts at boot even when appuser is not logged in. Other machines must be able to reach the page.
+@check server1 | the user service is active
+certlab-check login appuser 'systemctl --user is-active container-webapp.service' | grep -qx active
+@check server1 | it starts at boot (enabled, or generated by Quadlet)
+certlab-check login appuser 'systemctl --user is-enabled container-webapp.service' | grep -Eq '^(enabled|generated)$'
+@check server1 | lingering is on for appuser
+test -e /var/lib/systemd/linger/appuser
+@check server1 | port 8080/tcp is open in the firewall, now and permanently
+firewall-cmd --list-ports | grep -qw 8080/tcp && firewall-cmd --permanent --list-ports | grep -qw 8080/tcp
+@check server2 | server2 gets the page
+curl -s -m 5 http://server1:8080/ | grep -q 'webapp is up'
+@hint loginctl enable-linger appuser and the firewall as root; then as appuser: podman run (with -v ...:Z), podman generate systemd --name webapp --files --new in ~/.config/systemd/user, podman rm -f webapp, systemctl --user daemon-reload, systemctl --user enable --now.
+@solution server1
+loginctl enable-linger appuser
+firewall-cmd --permanent --add-port=8080/tcp
+firewall-cmd --reload
+ssh -o StrictHostKeyChecking=no appuser@localhost
+Contain3r!
+mkdir ~/html
+echo 'webapp is up' > ~/html/index.html
+podman run -d --name webapp -p 8080:8080 -v ~/html:/var/www/html:Z registry.lab.example.com/ubi9/httpd-24
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name webapp --files --new
+podman rm -f webapp
+systemctl --user daemon-reload
+systemctl --user enable --now container-webapp.service
+curl -s http://localhost:8080/
+cd
+exit
+@explain
+Four pieces make a rootless container start at boot: a real login for the setup (ssh, so systemctl --user can reach appuser's manager), a unit in ~/.config/systemd/user (podman generate systemd --new writes one that creates a fresh container each time), the unit enabled for default.target, and lingering, which starts appuser's manager at boot without a login. Remove the hand-made container before starting the service, or the name and the port are taken. A Quadlet file ~/.config/containers/systemd/container-webapp.container with an [Install] section does the same job. The firewall rule is needed for server2, because published ports are ordinary host ports.
+@endtask

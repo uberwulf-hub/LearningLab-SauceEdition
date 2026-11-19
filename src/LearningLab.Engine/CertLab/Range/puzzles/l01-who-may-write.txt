@@ -1,0 +1,57 @@
+title: Who may write here?
+level: Beginner
+kind: Permissions
+topic: Linux
+teaser: read the letters at the start of ls -l
+points: 40
+order: 60
+answer: {{WFILE}}
+var: WFILE = pick:prices.csv|rota.txt|menu.txt|contacts.csv|orders.txt|stock.csv
+
+@intro
+The shared folder /srv/drop holds a few files owned by other people. Most of them you
+(the user player) can only read - but one was left so that anyone at all can change it.
+That is a classic mistake. Which file can you write to? (Give its name, for example
+notes.txt.)
+
+@setup
+mkdir -p /srv/drop
+for f in prices.csv rota.txt menu.txt contacts.csv orders.txt stock.csv; do
+  echo "shared file $f" > /srv/drop/$f
+  chmod 644 /srv/drop/$f
+done
+useradd -M -s /sbin/nologin kitchen 2>/dev/null || true
+chown kitchen: /srv/drop/menu.txt /srv/drop/stock.csv
+chmod 640 /srv/drop/contacts.csv
+chmod 666 /srv/drop/{{WFILE}}
+chmod 755 /srv/drop
+
+@solution
+ls -l /srv/drop
+echo {{WFILE}}
+
+@walkthrough
+ls -l shows each file's permissions as ten characters, for example -rw-r--r--:
+
+    ls -l /srv/drop
+
+After the first character (- for a file) come three groups of three: what the owner
+may do, what the file's group may do, and what everybody else ("others") may do. r is
+read, w is write, - is "not allowed". You are not the owner and not in the group of
+these files, so the last three letters are the ones that apply to you.
+
+Almost every file ends in r-- (others may read only). {{WFILE}} ends in rw- (-rw-rw-rw-,
+mode 666): anyone on the computer may change it. That is the answer. The fix is
+chmod 644 (or 664 with a proper group) so only the right people can write.
+
+@hint 2
+What to think about first: Linux keeps, for every file, a short list of who may read it and who may change ("write") it. It splits people into three kinds: the file's owner, the members of the file's group, and everybody else. You are "everybody else" for these files.
+
+@hint 3
+The command ls lists a folder; ls -l (a small L) lists it "long", with one line per file. The first column of each line, like -rw-r--r--, is the permission list. Run: ls -l /srv/drop
+
+@hint 4
+Read that column in three groups of three after the first character: owner (rw-), group (r--), others (r--). r means read, w means write, and - means not allowed. Because you are neither the owner nor in the group, only the last three letters count for you.
+
+@hint 6
+Look for the one line whose last three letters are rw- instead of r-- or ---. It looks like -rw-rw-rw- (the number 666). The name at the end of that line is the answer.

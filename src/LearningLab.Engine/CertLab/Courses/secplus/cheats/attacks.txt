@@ -1,0 +1,65 @@
+# Sheet: attacks | Attacks and mitigations | Threats, vulnerabilities and mitigations
+## Social engineering
+Phishing :: urgent email with a link or attachment, mismatched sender or link address -> awareness training, email filtering, SPF/DKIM/DMARC, MFA
+Spear phishing / whaling :: message tailored to one person or an executive, using real names and projects -> training for high-value staff, verification by phone
+Vishing :: a caller claims to be IT, the bank or a manager and wants codes or a password -> hang up and call back on a known number
+Smishing :: text message with a short link about a parcel, bank or prize -> don't tap links; report and delete
+Business email compromise :: a "boss" or supplier asks to change bank details or pay quickly -> out-of-band verification, two-person approval for payments
+Pretexting :: a believable invented story to gain trust and information -> verify identity, follow procedures, never skip checks
+Impersonation / brand impersonation :: someone or something posing as a trusted person, company or website -> verify through official channels, takedown of fake sites
+Watering hole :: an industry website the targets use starts serving malware -> patching, browser isolation, web filtering, EDR
+Typosquatting :: a lookalike domain such as examp1e.com -> register common misspellings, DNS filtering, check URLs
+Tailgating / piggybacking :: someone follows an authorised person through a door -> access control vestibule, guards, training to challenge strangers
+Shoulder surfing :: someone watches a screen or keypad -> privacy screens, awareness, shield PIN entry
+Dumpster diving :: documents or drives taken from the rubbish -> shredding, secure disposal bins, media sanitization
+## Malware
+Ransomware :: files renamed and unreadable, ransom note, mass file changes -> offline and immutable backups, EDR, patching, least privilege
+Trojan / RAT :: useful-looking program that opens a hidden remote connection -> application allow list, download only from trusted sources, EDR
+Worm :: fast spread between hosts, spikes in scanning traffic -> patching, segmentation, close unused ports
+Virus :: attaches to files and spreads when they run -> antivirus, allow lists, macro blocking
+Spyware / keylogger :: unexplained outbound traffic, stolen passwords used elsewhere -> EDR, MFA (stolen passwords alone aren't enough)
+Rootkit :: tools disagree about running processes, system files changed, hidden drivers -> Secure Boot, measured boot, reimage the system
+Logic bomb :: damage triggered by a date or an event, often planted by an insider -> code review, separation of duties, change management
+Fileless malware :: suspicious PowerShell or script activity in memory, no file on disk -> script logging, constrained language, EDR
+Bloatware / PUP :: unwanted preinstalled or bundled software -> clean baseline images, remove unneeded software
+## Network attacks
+DDoS (volumetric) :: huge traffic from many sources, service unreachable -> upstream scrubbing service, CDN, rate limiting, RTBH
+Reflected / amplified DDoS :: big DNS, NTP or memcached replies the victim never asked for -> close open resolvers, egress filtering against spoofing (BCP 38)
+On-path (man-in-the-middle) :: certificate warnings, duplicate MAC addresses, odd ARP entries -> TLS everywhere, dynamic ARP inspection, 802.1X
+ARP poisoning :: one MAC address claims many IP addresses -> dynamic ARP inspection, static entries for key hosts
+DNS poisoning / hijacking :: names resolve to wrong addresses, registrar settings changed -> DNSSEC, registrar lock, MFA on registrar accounts
+DNS tunneling :: many long, random-looking queries to one domain -> DNS monitoring and filtering, block direct outside DNS
+Rogue access point / evil twin :: a Wi-Fi network with the company's name but a strange BSSID -> WIDS/WIPS, WPA3-Enterprise with certificate checks
+Deauthentication attack :: clients keep getting kicked off Wi-Fi -> WPA3 and protected management frames (802.11w)
+Bluejacking / bluesnarfing :: unwanted Bluetooth messages / data taken over Bluetooth -> turn off discoverable mode, patch devices
+MAC flooding :: switch table fills and the switch floods every frame -> port security limiting MAC addresses per port
+VLAN hopping :: traffic reaching a VLAN it shouldn't (double tagging, switch spoofing) -> turn off auto trunking, unused native VLAN
+Credential replay / pass-the-hash :: a hash or token reused from another machine -> Kerberos over NTLM, Credential Guard, MFA, short-lived tokens
+## Application attacks
+SQL injection :: quotes, OR 1=1 or UNION SELECT in input, database errors -> parameterized queries, input validation, least-privilege DB account, WAF
+Cross-site scripting (XSS) :: script tags or event handlers in input that show up in pages -> output encoding, input validation, Content Security Policy
+CSRF / XSRF :: actions done in a signed-in session without the user meaning to -> anti-CSRF tokens, SameSite cookies, re-authentication for key actions
+SSRF :: server requests internal addresses such as 169.254.169.254 -> allow list of destinations, block metadata addresses, IMDSv2 in the cloud
+Directory traversal :: ../ or %2e%2e%2f in paths, requests for system files -> path normalization, allow lists, run with least privilege
+Command injection :: ; or | followed by OS commands in input -> avoid shell calls, validate input, least privilege
+Buffer overflow :: crashes, very long input, unexpected code running -> bounds checking, safe languages, ASLR, DEP, stack canaries
+Race condition (TOC/TOU) :: results that change depending on timing -> locking, atomic operations, check and use in one step
+Privilege escalation :: a normal account suddenly running admin tasks -> patching, least privilege, monitor admin group changes
+Replay attack :: the same request or token accepted twice -> nonces, timestamps, session tokens that expire
+Malicious update :: a trusted vendor's update carries malware -> code signing checks, SBOM, staged rollout, vendor monitoring
+## Password attacks
+Brute force (online) :: many failed sign-ins on one account, lockouts -> account lockout, rate limiting, MFA
+Password spraying :: one or two common passwords tried across many accounts, few failures each -> MFA, banned password lists, watch for failures across accounts
+Dictionary attack :: guesses taken from word lists -> long passphrases, banned common passwords
+Credential stuffing :: passwords leaked elsewhere tried on your site -> MFA, breached-password checks, no password reuse
+Offline cracking / rainbow tables :: stolen hash database cracked away from your systems -> salted, slow hashes (bcrypt, PBKDF2, Argon2)
+## Cryptographic attacks
+Downgrade :: a connection settles on an old protocol or weak cipher -> turn off old versions (SSL, TLS 1.0, 1.1), strict cipher lists, HSTS
+Collision :: two different files with the same hash -> SHA-256 or SHA-3, never MD5 or SHA-1 for security
+Birthday attack :: finding any two inputs with the same hash is easier than a chosen one -> longer hash outputs
+Brute force of keys :: trying every key -> long keys (AES-256), retire DES and short RSA keys
+## Physical attacks
+Brute force (physical) :: forced doors, broken locks or windows -> strong doors and locks, sensors, cameras, guards
+RFID cloning / skimming :: duplicate badges, readers hidden near doors -> encrypted smart cards, badge plus PIN, shielded holders
+Environmental attack :: power, cooling or fire systems tampered with -> secure HVAC and power controls, monitoring, UPS and generators
+Malicious USB drive or cable :: unknown drive left in the car park, cable that acts as a keyboard -> block USB storage, awareness training, device control

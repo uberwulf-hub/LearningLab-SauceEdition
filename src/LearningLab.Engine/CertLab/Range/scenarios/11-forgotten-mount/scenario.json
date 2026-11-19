@@ -1,0 +1,41 @@
+{
+    "id": "forgotten-mount",
+    "title": "The Forgotten Backup",
+    "category": "red",
+    "level": "Intermediate",
+    "order": 5,
+    "summary": "A web server leaves an old backup where anyone can download it. Inside is a config file with a database password - and that same password opens a shell. One careless tool finishes the job.",
+    "story": "{{CO}} (made up) runs web3 on 10.10.12.0/24. You start on scout. Somewhere on the web server is a backup archive that was never meant to be public.",
+    "goal": "Capture the user flag in {{SVCUSER}}'s home folder and the root flag in /root.",
+    "skills": "web folder listings, downloading and unpacking a backup, finding a password in a config, ssh, sudo -l",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 35,
+    "vars": {
+        "CO": "company",
+        "SVCUSER": "pick:webapp|appsvc|portal|cms",
+        "DBPW": "word",
+        "WEAK": "pick:find|awk|sed"
+    },
+    "variants": {
+        "WEAK": {
+            "find": { "SUDOBIN": "/usr/bin/find", "SUDORUN": "sudo find /root -name flag.txt -exec cat {} \\;" },
+            "awk":  { "SUDOBIN": "/usr/bin/awk",  "SUDORUN": "sudo awk '{ print }' /root/flag.txt" },
+            "sed":  { "SUDOBIN": "/usr/bin/sed",  "SUDORUN": "sudo sed -n p /root/flag.txt" }
+        }
+    },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.12.5/24" ] },
+        { "name": "web3", "os": "linux", "hostname": "web3.{{CO_DOMAIN}}", "role": "web server", "nics": [ "10.10.12.30/24" ], "packages": [ "httpd" ], "setup": "web3.sh",
+          "versions": { "80": "Apache httpd 2.4.62 ((Red Hat Enterprise Linux))" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "{{SVCUSER}}'s flag", "points": 130, "machine": "web3", "path": "/home/{{SVCUSER}}/flag.txt", "owner": "{{SVCUSER}}", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 170, "machine": "web3", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "Scan the server (nmap -sV 10.10.12.30) and look at its web folders. webscan http://10.10.12.30/ tries common names; one folder lists a file you can download.", "cost": 12 },
+        { "text": "The backup folder has site-backup.tar.gz. Download it (curl -o), unpack it (tar xzf), and read the config inside - it has a database password. That password also works for the account {{SVCUSER}} over ssh.", "cost": 20 },
+        { "text": "After ssh {{SVCUSER}}@10.10.12.30, run sudo -l: you may run {{SUDOBIN}} as root, which reads any file. On this run: {{SUDORUN}}", "cost": 30 }
+    ]
+}

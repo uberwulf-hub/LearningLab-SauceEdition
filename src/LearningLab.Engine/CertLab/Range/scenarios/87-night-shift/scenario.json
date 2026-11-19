@@ -1,0 +1,56 @@
+{
+    "id": "night-shift",
+    "title": "Night Shift",
+    "category": "blue",
+    "level": "Advanced",
+    "order": 6,
+    "summary": "Three people share one operations account, all on the day shift. One sign-in came in the middle of the night from outside - and it left itself a key and a job. Find it among the normal ones and clean up without locking the team out.",
+    "story": "{{CO}} (made up) runs ops1 on 10.10.27.0/24. Three colleagues share the account ops from their desks during the day (/etc/ops-desks.txt). You have a root console on ops1.",
+    "goal": "Find the night-time sign-in (address and time), the extra key and the scheduled job it left in the shared account, capture the flag in the job's folder, then remove the key and the job and change the shared password - before the job copies the order book.",
+    "skills": "reading /var/log/secure against what is normal, authorized_keys, user crontabs (crontab -l -u), chpasswd",
+    "defender": "none",
+    "start": "ops1",
+    "minutes": 35,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the order book",
+    "goalPoints": 80,
+    "vars": {
+        "CO": "company",
+        "A": "person", "B": "person", "C": "person",
+        "PW": "word",
+        "NEWPW": "Ops-{{SUFFIX}}",
+        "SUFFIX": "hex:8",
+        "ATKIP": "ip",
+        "ODD": "time:1-4",
+        "KEYCMT": "pick:moth@night|owl@van|bat@cave",
+        "DIR": "pick:.thumbs|.fontcache|.recent2"
+    },
+    "variants": { "DIR": {
+        ".thumbs": { "JOB": "refresh.sh" },
+        ".fontcache": { "JOB": "indexer.sh" },
+        ".recent2": { "JOB": "tidy.sh" } } },
+    "machines": [
+        { "name": "ops1", "os": "linux", "hostname": "ops1.{{CO_DOMAIN}}", "role": "operations server (yours)", "nics": [ "10.10.27.10/24" ],
+          "motd": "{{CO}} ops1 - staff only.", "setup": "ops.sh" }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag in the job's folder", "points": 70, "machine": "ops1", "path": "/home/ops/.local/share/{{DIR}}/.note", "owner": "ops", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "addr", "ask": "What address signed in to ops outside the day shift?", "answer": "{{ATKIP}}", "points": 50, "explain": "Every other sign-in comes from one of the three desks in /etc/ops-desks.txt during the day." },
+        { "id": "time", "ask": "At what time did that night sign-in happen (HH:MM:SS)?", "answer": "{{ODD}}", "points": 40, "explain": "The Accepted password line from that address on 8 April." },
+        { "id": "key", "ask": "What is the comment at the end of the key it added?", "answer": "{{KEYCMT}}", "points": 40, "explain": "/home/ops/.ssh/authorized_keys has one key nobody on the team added; the later 'Accepted publickey' line from the same address used it." }
+    ],
+    "tasks": [
+        { "id": "key", "name": "Remove the added key", "machine": "ops1", "check": "! grep -q '{{KEYCMT}}' /home/ops/.ssh/authorized_keys 2>/dev/null", "points": 40, "explain": "Delete that line (or the whole file, if the team uses passwords only)." },
+        { "id": "job", "name": "Remove the scheduled job from the ops account", "machine": "ops1", "check": "! crontab -l -u ops 2>/dev/null | grep -q '{{JOB}}' && test ! -e /home/ops/.local/share/{{DIR}}/{{JOB}}", "points": 40, "explain": "crontab -r -u ops (or edit it), and rm the script." },
+        { "id": "pw", "name": "Change the shared password (the old one is known outside)", "machine": "ops1", "check": "id ops >/dev/null 2>&1 && ! /usr/libexec/certlab/certlab-check password ops '{{PW}}'", "points": 40, "explain": "echo 'ops:A-NEW-PASSWORD' | chpasswd - and tell the three colleagues in person." }
+    ],
+    "attacker": [
+        { "at": "360s", "machine": "ops1", "run": "/home/ops/.local/share/{{DIR}}/{{JOB}}; true", "unless": "! crontab -l -u ops 2>/dev/null | grep -q '{{JOB}}'", "note": "The job in the ops account's crontab ran and copied the order book into its hidden folder.", "goal": true }
+    ],
+    "hints": [
+        { "text": "A shared account makes the log look busy and normal. Compare each 'Accepted' line in /var/log/secure with /etc/ops-desks.txt: right desk, right hours? One line fails both tests. The same address comes back later with a key instead of a password.", "cost": 15 },
+        { "text": "A key lives in /home/ops/.ssh/authorized_keys; a job can live in the account's own crontab, which /etc/cron.d doesn't show: crontab -l -u ops. Remove both, and change the password with chpasswd (locking would lock the team out too).", "cost": 25 }
+    ]
+}

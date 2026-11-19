@@ -1,0 +1,35 @@
+NAME
+       subscription-manager - register the system with Red Hat and manage its content
+
+SYNOPSIS
+       subscription-manager COMMAND [OPTIONS]
+
+DESCRIPTION
+       subscription-manager connects a RHEL system to Red Hat's customer
+       portal (or a Satellite server). Once registered, the system receives
+       Red Hat's package repositories, which dnf then uses.
+
+       Practice and exam systems are usually not registered. They get their
+       packages from local repositories instead: a repository server on the
+       network, or the installation DVD, set up with .repo files in
+       /etc/yum.repos.d.
+
+COMMANDS
+       status Show whether the system is registered and has access to
+              content.
+
+       register
+              Register the system with a user name and password or an
+              activation key.
+
+       repos --list
+              List the repositories available through the subscription.
+
+       unregister
+              Remove the registration.
+
+EXAMPLES
+           subscription-manager status
+
+SEE ALSO
+       dnf(8), yum.conf(5)

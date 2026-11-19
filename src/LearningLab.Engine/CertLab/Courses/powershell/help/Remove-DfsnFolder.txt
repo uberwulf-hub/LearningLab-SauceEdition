@@ -1,0 +1,10 @@
+SYNOPSIS: Removes a folder from a DFS namespace.
+DESCRIPTION:
+Remove-DfsnFolder deletes the folder and its targets from the namespace. The shares and files on the servers are not touched; users simply can't reach them through that path any more. Clients that cached the referral may keep using it until their cache times out.
+PARAMETER Path:
+The folder. Position 0.
+PARAMETER Force:
+Removes without asking.
+EXAMPLE: Remove-DfsnFolder -Path \\corp.example\Files\Sales -Force
+The namespace no longer shows Sales; \\FS1\Sales still works.
+RELATED: New-DfsnFolder, Get-DfsnFolder

@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the IPv4 scopes of a DHCP server.
+DESCRIPTION:
+A scope is a range of addresses the server leases to one subnet. Get-DhcpServerv4Scope shows each scope's ScopeId (the network address, such as 10.10.0.0), SubnetMask, Name, State (Active or Inactive), StartRange, EndRange and LeaseDuration.
+
+An Inactive scope leases nothing. On SRV1 the lab has one scope, HQ clients, 10.10.0.100 to 10.10.0.199.
+PARAMETER ScopeId:
+Shows only this scope. Position 0.
+PARAMETER ComputerName:
+The DHCP server to ask, for example SRV1.
+EXAMPLE: Get-DhcpServerv4Scope -ComputerName SRV1
+Lists SRV1's scopes.
+EXAMPLE: Get-DhcpServerv4Scope -ScopeId 10.10.0.0 | Format-List *
+Every setting of the HQ scope.
+RELATED: Add-DhcpServerv4Scope, Set-DhcpServerv4Scope, Remove-DhcpServerv4Scope, Get-DhcpServerv4ScopeStatistics, Get-DhcpServerv4Lease

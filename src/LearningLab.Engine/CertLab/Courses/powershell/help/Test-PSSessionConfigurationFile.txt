@@ -1,0 +1,14 @@
+SYNOPSIS: Checks that a session configuration file (.pssc) is valid.
+DESCRIPTION:
+Test-PSSessionConfigurationFile reads a .pssc file and returns True when it is a valid data file whose keys are all known and whose SessionType is Default, Empty or RestrictedRemoteServer. Otherwise it returns False.
+
+Add -Verbose to see why a file is not valid, for example a misspelled key.
+PARAMETER Path:
+The .pssc file to check. You can pipe in paths.
+EXAMPLE: Test-PSSessionConfigurationFile -Path C:\LabFiles\HelpDesk.pssc
+Returns True when the file can be registered.
+EXAMPLE: Test-PSSessionConfigurationFile C:\LabFiles\HelpDesk.pssc -Verbose
+Shows the reason when the result is False.
+NOTES:
+It checks the .pssc file only, not the role capability (.psrc) files it names. Use Get-PSSessionCapability after registering to see what a user really gets.
+RELATED: New-PSSessionConfigurationFile, Register-PSSessionConfiguration, Get-PSSessionCapability

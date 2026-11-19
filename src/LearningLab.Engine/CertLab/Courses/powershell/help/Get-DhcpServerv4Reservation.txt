@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the address reservations of a DHCP server.
+DESCRIPTION:
+Get-DhcpServerv4Reservation shows each reservation with its IPAddress, ClientId (MAC address), Name and Type. Filter by scope, address or MAC address.
+PARAMETER ScopeId:
+Shows the reservations of this scope.
+PARAMETER IPAddress:
+Shows the reservation for this address.
+PARAMETER ClientId:
+Shows the reservation for this MAC address.
+EXAMPLE: Get-DhcpServerv4Reservation -ScopeId 10.10.0.0 -ComputerName SRV1
+Every reservation in the HQ scope.
+EXAMPLE: Get-DhcpServerv4Reservation -IPAddress 10.10.0.150
+Who has 10.10.0.150 reserved.
+RELATED: Add-DhcpServerv4Reservation, Remove-DhcpServerv4Reservation, Get-DhcpServerv4Lease

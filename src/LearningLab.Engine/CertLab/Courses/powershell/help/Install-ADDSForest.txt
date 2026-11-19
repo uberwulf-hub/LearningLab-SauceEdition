@@ -1,0 +1,26 @@
+SYNOPSIS: Creates a new Active Directory forest and makes this server its first domain controller.
+DESCRIPTION:
+Install-ADDSForest promotes a server to the first domain controller of a brand-new forest. Install the role first: Install-WindowsFeature AD-Domain-Services -IncludeManagementTools.
+Plan the names well: the DNS name (corp.example) and the NetBIOS name (CORP) are hard to change later. Use a domain you own or a subdomain of one, never a name that might exist on the internet.
+The server needs a static IP address. It asks for the Directory Services Restore Mode (DSRM) password, which is used to start the DC in repair mode; keep it safe. It restarts when done unless you add -NoRebootOnCompletion.
+PARAMETER DomainName:
+The forest root domain's DNS name, such as corp.example.
+PARAMETER DomainNetbiosName:
+The short name, such as CORP (15 characters at most).
+PARAMETER ForestMode:
+The forest functional level, such as WinThreshold (Windows Server 2016, the highest level for Windows Server 2022).
+PARAMETER DomainMode:
+The domain functional level; it can't be lower than the forest's.
+PARAMETER InstallDns:
+Also installs the DNS Server role with an AD-integrated zone; normally wanted.
+PARAMETER SafeModeAdministratorPassword:
+The DSRM password, as a SecureString.
+PARAMETER NoRebootOnCompletion:
+Doesn't restart at the end.
+PARAMETER Force:
+Doesn't ask for confirmation.
+EXAMPLE: Install-ADDSForest -DomainName corp.example -DomainNetbiosName CORP -InstallDns -SafeModeAdministratorPassword (Read-Host -AsSecureString "DSRM password")
+Creates the corp.example forest with DNS on this server.
+EXAMPLE: Install-ADDSForest -DomainName corp.example -ForestMode WinThreshold -DomainMode WinThreshold -InstallDns -WhatIf
+Shows what would happen without changing anything.
+RELATED: Install-ADDSDomainController, Uninstall-ADDSDomainController, Install-WindowsFeature, Get-ADForest

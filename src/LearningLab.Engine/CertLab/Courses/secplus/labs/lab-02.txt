@@ -1,0 +1,73 @@
+# Lab: lab-02 | Inspecting and verifying certificates | u03 | 35
+Copperleaf Books runs its own certificate authority, "Copperleaf Root CA", whose certificate is /etc/pki/lab/ca.pem. Four web certificates are in /etc/pki/lab, and /etc/pki/lab/sites.txt says which host name each one is used for. A web browser warned users about some of them. Use openssl on server1 to find out what is wrong, write your findings into /root/cert-findings.txt (one line per finding, as each task says), and install a good replacement.
+
+@setup server1
+mkdir -p /etc/pki/lab /root/incoming
+certlab-mkcert /etc/pki/lab/ca.pem subject="CN=Copperleaf Root CA,O=Copperleaf Books" ca=yes days=3650 bits=4096 serial=1000
+certlab-mkcert /etc/pki/lab/www.pem subject="CN=www.copperleaf.example,O=Copperleaf Books" issuer="CN=Copperleaf Root CA,O=Copperleaf Books" san=www.copperleaf.example,copperleaf.example days=21 serial=1a01
+certlab-mkcert /etc/pki/lab/portal.pem subject="CN=portal.copperleaf.example,O=Copperleaf Books" issuer="CN=Copperleaf Root CA,O=Copperleaf Books" san=portal.copperleaf.example notbefore=2024-02-01 notafter=2025-02-01 serial=1a02
+certlab-mkcert /etc/pki/lab/intranet.pem subject="CN=intranet.copperleaf.example" san=intranet.copperleaf.example days=730 serial=5c33
+certlab-mkcert /etc/pki/lab/api.pem subject="CN=app.copperleaf.example,O=Copperleaf Books" issuer="CN=Copperleaf Root CA,O=Copperleaf Books" san=app.copperleaf.example days=365 serial=1a04
+printf 'www.copperleaf.example      www.pem\nportal.copperleaf.example   portal.pem\nintranet.copperleaf.example intranet.pem\napi.copperleaf.example      api.pem\n' > /etc/pki/lab/sites.txt
+certlab-mkcert /root/incoming/api-new-1.pem subject="CN=api.copperleaf.example,O=Copperleaf Books" issuer="CN=QuickCert Online CA" san=api.copperleaf.example days=365 serial=77e1
+certlab-mkcert /root/incoming/api-new-2.pem subject="CN=api.copperleaf.example,O=Copperleaf Books" issuer="CN=Copperleaf Root CA,O=Copperleaf Books" san=api.copperleaf.example days=365 serial=1a05
+
+@task t01 | General security concepts | 10 | server1
+One of the four certificates has already expired. Add the line `expired FILE` to /root/cert-findings.txt, where FILE is its file name (for example `expired www.pem`).
+@check server1 | the expired certificate is named, and only it
+grep '^expired' /root/cert-findings.txt | grep -q 'portal.pem' && ! grep '^expired' /root/cert-findings.txt | grep -Eq 'www|intranet|api'
+@hint openssl x509 -in FILE -noout -dates prints notBefore and notAfter. The date command tells you today's date on the server.
+@solution server1
+date
+for c in www portal intranet api; do echo $c; openssl x509 -in /etc/pki/lab/$c.pem -noout -enddate; done
+echo 'expired portal.pem' >> /root/cert-findings.txt
+@explain
+A certificate is only valid between its notBefore and notAfter dates. After notAfter, clients refuse it even though nothing else is wrong. Expired certificates are one of the most common causes of outages, which is why many organisations now use short-lived certificates renewed automatically (ACME).
+@endtask
+
+@task t02 | General security concepts | 10 | server1
+One certificate was not issued by any certificate authority: it is self-signed. Add the line `self-signed FILE` to /root/cert-findings.txt.
+@check server1 | the self-signed certificate is named, and only it
+grep '^self-signed' /root/cert-findings.txt | grep -q 'intranet.pem' && ! grep '^self-signed' /root/cert-findings.txt | grep -Eq 'www|portal|api'
+@hint In a self-signed certificate the issuer is the same as the subject. openssl x509 -noout -subject -issuer shows both.
+@solution server1
+for c in www portal intranet api; do openssl x509 -in /etc/pki/lab/$c.pem -noout -subject -issuer; done
+openssl verify -CAfile /etc/pki/lab/ca.pem /etc/pki/lab/intranet.pem
+echo 'self-signed intranet.pem' >> /root/cert-findings.txt
+@explain
+A self-signed certificate signs itself, so nothing ties it to a trusted root and browsers warn about it. That is fine for a test or for a root CA (a root is always self-signed), but not for a site people use: users learn to click through warnings, which is exactly what an on-path attacker needs. openssl verify reports error 18, "self-signed certificate".
+@endtask
+
+@task t03 | General security concepts | 10 | server1
+One certificate is used for a host name that it does not cover. Add the line `wrong-name FILE` to /root/cert-findings.txt. Then find which certificate expires within the next 30 days (2592000 seconds) and add the line `renew-soon FILE`.
+@check server1 | the certificate with the wrong name is named, and only it
+grep '^wrong-name' /root/cert-findings.txt | grep -q 'api.pem' && ! grep '^wrong-name' /root/cert-findings.txt | grep -Eq 'www|portal|intranet'
+@check server1 | the certificate that expires within 30 days is named, and only it
+grep '^renew-soon' /root/cert-findings.txt | grep -q 'www.pem' && ! grep '^renew-soon' /root/cert-findings.txt | grep -Eq 'portal|intranet|api'
+@hint Browsers check the Subject Alternative Name (openssl x509 -noout -ext subjectAltName), not the CN. -checkend 2592000 says whether a certificate expires within that many seconds.
+@solution server1
+cat /etc/pki/lab/sites.txt
+for c in www portal intranet api; do echo $c; openssl x509 -in /etc/pki/lab/$c.pem -noout -ext subjectAltName; done
+echo 'wrong-name api.pem' >> /root/cert-findings.txt
+for c in www intranet api; do echo $c; openssl x509 -in /etc/pki/lab/$c.pem -noout -checkend 2592000; done
+echo 'renew-soon www.pem' >> /root/cert-findings.txt
+cat /root/cert-findings.txt
+@explain
+Modern browsers match the host name only against the Subject Alternative Name list; the CN is ignored. api.pem covers app.copperleaf.example, not api.copperleaf.example, so the browser shows a name mismatch. A wildcard (*.copperleaf.example) would cover one level of names, but a SAN list with exact names is more precise. -checkend exits with status 1 when the certificate will expire within the time given, which makes it easy to use in a monitoring script.
+@endtask
+
+@task t04 | General security concepts | 15 | server1
+Two replacement certificates for api.copperleaf.example arrived in /root/incoming. Only one of them chains to Copperleaf Root CA. Use `openssl verify` with the CA certificate to find it, and install it as /etc/pki/lab/api.pem (replacing the old one).
+@check server1 | /etc/pki/lab/api.pem verifies against Copperleaf Root CA
+openssl verify -CAfile /etc/pki/lab/ca.pem /etc/pki/lab/api.pem
+@check server1 | it covers api.copperleaf.example
+openssl x509 -in /etc/pki/lab/api.pem -noout -ext subjectAltName | grep -q 'DNS:api.copperleaf.example'
+@hint openssl verify -CAfile /etc/pki/lab/ca.pem FILE prints FILE: OK for a good chain, or an error such as "unable to get local issuer certificate".
+@solution server1
+openssl verify -CAfile /etc/pki/lab/ca.pem /root/incoming/api-new-1.pem
+openssl verify -CAfile /etc/pki/lab/ca.pem /root/incoming/api-new-2.pem
+cat /root/incoming/api-new-2.pem > /etc/pki/lab/api.pem
+openssl verify -CAfile /etc/pki/lab/ca.pem /etc/pki/lab/api.pem
+@explain
+A client trusts a certificate when it can build a chain from it up to a root it already trusts (the root of trust). api-new-1.pem was issued by a different CA, so the chain stops with "unable to get local issuer certificate" (error 20): a client that trusts only Copperleaf Root CA would refuse it. Checking a new certificate before you install it avoids an outage, and checking the SAN avoids a second one.
+@endtask

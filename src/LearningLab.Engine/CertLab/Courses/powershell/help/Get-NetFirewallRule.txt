@@ -1,0 +1,32 @@
+SYNOPSIS: Lists Windows Firewall rules.
+DESCRIPTION:
+Get-NetFirewallRule shows the firewall rules, each with Name (a fixed id), DisplayName (the text you see in the Windows Firewall window), DisplayGroup (the feature it belongs to, such as Remote Desktop), Enabled, Profile, Direction (Inbound or Outbound) and Action (Allow or Block).
+
+Inbound traffic that no enabled Allow rule matches is blocked, and a Block rule wins over an Allow rule. A rule only counts when it is enabled and its Profile matches the network profile in use.
+
+The rule itself does not show the port or address: pipe it to Get-NetFirewallPortFilter or Get-NetFirewallAddressFilter for those.
+PARAMETER Name:
+The rule's Name (id). Wildcards are allowed.
+PARAMETER DisplayName:
+The rule's display name, for example "Remote Desktop - User Mode (TCP-In)". Wildcards are allowed.
+PARAMETER DisplayGroup:
+All rules of one group, for example "File and Printer Sharing".
+PARAMETER Group:
+The group as Windows stores it (often a resource string like @FirewallAPI.dll,-28502).
+PARAMETER Enabled:
+True or False (as text, not $true).
+PARAMETER Direction:
+Inbound or Outbound.
+PARAMETER Action:
+Allow or Block.
+PARAMETER Description:
+Filters by description. Wildcards are allowed.
+EXAMPLE: Get-NetFirewallRule -DisplayGroup 'Remote Desktop' | Format-Table Name, DisplayName, Enabled, Profile
+The Remote Desktop rules in a short table.
+EXAMPLE: Get-NetFirewallRule -Direction Inbound -Enabled True -Action Allow | Measure-Object
+How many inbound Allow rules are on.
+EXAMPLE: Get-NetFirewallRule -DisplayName '*ICMPv4-In*' | Format-Table DisplayName, Enabled
+Is ping allowed in? On WIN-CL1 the Echo Request rule starts disabled.
+NOTES:
+A name that matches nothing is an error ("No MSFT_NetFirewallRule objects found"). The NetSecurity commands are CIM-based and exist only on Windows (also in PowerShell 7 on Windows). The older netsh advfirewall command does the same jobs.
+RELATED: New-NetFirewallRule, Set-NetFirewallRule, Enable-NetFirewallRule, Get-NetFirewallPortFilter, Get-NetFirewallProfile

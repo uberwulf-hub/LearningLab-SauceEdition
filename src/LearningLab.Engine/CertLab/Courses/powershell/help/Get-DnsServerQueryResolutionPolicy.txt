@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the DNS policies that control how questions are answered.
+DESCRIPTION:
+Get-DnsServerQueryResolutionPolicy shows the query resolution policies with their action, conditions, processing order and whether they are enabled. Without -ZoneName it shows the server-level policies; with it, the policies of that zone.
+PARAMETER Name:
+Shows only this policy.
+PARAMETER ZoneName:
+Shows the policies of this zone.
+EXAMPLE: Get-DnsServerQueryResolutionPolicy -ZoneName corp.example -ComputerName DC1
+The zone-level policies of the company zone.
+EXAMPLE: Get-DnsServerQueryResolutionPolicy -ComputerName DC1
+The server-level policies, such as blocks.
+RELATED: Add-DnsServerQueryResolutionPolicy, Remove-DnsServerQueryResolutionPolicy, Get-DnsServerClientSubnet, Get-DnsServerZoneScope

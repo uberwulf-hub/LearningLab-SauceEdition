@@ -1,0 +1,23 @@
+# New Faces (offsets from {{T0}}, when the intruder's account was made)
+# the morning's onboarding by the help desk
+-7h host=DC01 source=winsec event=4624 user=hd_{{HD}} logon_type=3 src_ip={{NET}}.{{HH}} workstation=WS-{{HH}} note="An account signed in over the network"
+-7h host=DC01 source=winsec event=4720 user=hd_{{HD}} target={{N1}} src_ip={{NET}}.{{HH}} note="An account was made"
+-7h host=DC01 source=alert severity=medium rule="New account created" target={{N1}} note="The account {{N1}} was made by hd_{{HD}}"
+-419m host=DC01 source=winsec event=4732 user=hd_{{HD}} target={{N1}} group=Staff note="An account was added to a group"
+-418m host=DC01 source=winsec event=4720 user=hd_{{HD}} target={{N2}} src_ip={{NET}}.{{HH}} note="An account was made"
+-418m host=DC01 source=alert severity=medium rule="New account created" target={{N2}} note="The account {{N2}} was made by hd_{{HD}}"
+-417m host=DC01 source=winsec event=4732 user=hd_{{HD}} target={{N2}} group=Staff note="An account was added to a group"
+# the intruder: a stolen administrator password, used over remote desktop from outside
+-40m host=RDGW01 source=winsec event=4624 user=adm_{{ADMP}} logon_type=10 src_ip={{ATKIP}} note="An account signed in over remote desktop"
+-40m host=RDGW01 source=winsec event=4672 user=adm_{{ADMP}} note="An administrator signed in (special rights)"
+-30m host=RDGW01 source=proclog event=1 user=adm_{{ADMP}} image=C:\Windows\System32\mstsc.exe parent=C:\Windows\explorer.exe cmdline="mstsc.exe /v:DC01"
+-30m host=DC01 source=winsec event=4624 user=adm_{{ADMP}} logon_type=10 src_ip={{NET}}.9 workstation=RDGW01 note="An account signed in over remote desktop"
+-5s host=DC01 source=proclog event=1 user=adm_{{ADMP}} image=C:\Windows\System32\net.exe parent=C:\Windows\System32\cmd.exe cmdline="net user {{ROGUE}} * /add /domain"
++0 host=DC01 source=winsec event=4720 user=adm_{{ADMP}} target={{ROGUE}} src_ip={{NET}}.9 note="An account was made"
++0 host=DC01 source=alert severity=medium rule="New account created" target={{ROGUE}} note="The account {{ROGUE}} was made by adm_{{ADMP}}"
++30s host=DC01 source=proclog event=1 user=adm_{{ADMP}} image=C:\Windows\System32\net.exe parent=C:\Windows\System32\cmd.exe cmdline="net group \"Domain Admins\" {{ROGUE}} /add /domain"
++30s host=DC01 source=winsec event=4728 user=adm_{{ADMP}} target={{ROGUE}} group="Domain Admins" note="An account was added to a group"
++31s host=DC01 source=alert severity=high rule="Account added to an admin group" target={{ROGUE}} group="Domain Admins" note="{{ROGUE}} was added to Domain Admins"
++10m host=RDGW01 source=proclog event=1 user=adm_{{ADMP}} image=C:\Windows\System32\wevtutil.exe parent=C:\Windows\System32\cmd.exe cmdline="wevtutil cl Security"
++10m host=RDGW01 source=winsec event=1102 user=adm_{{ADMP}} note="The security log was cleared"
++10m host=RDGW01 source=alert severity=high rule="Security log cleared" note="Someone wiped the security log on RDGW01"

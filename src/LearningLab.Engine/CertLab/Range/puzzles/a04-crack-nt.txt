@@ -1,0 +1,38 @@
+title: A Windows-style hash
+level: Advanced
+kind: Password cracking
+points: 70
+order: 23
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/sam.txt is an export of Windows-style account hashes, one per line, in the form
+USER:RID:LM:NT::: The part that matters is the NT hash (the fourth field). Tell
+hashcrack it is an nt export and crack the user "svc" password. (These are Cyber
+Range's own simulated hashes.)
+
+@setup
+printf 'guest:501:aad3b435b51404eeaad3b435b51404ee:%s:::\n' '{{SIMHASH:SECRET}}' > /home/player/sam.txt
+printf 'svc:1104:aad3b435b51404eeaad3b435b51404ee:%s:::\n' '{{SIMHASH:SECRET}}' >> /home/player/sam.txt
+chown player: /home/player/sam.txt
+
+@solution
+cat sam.txt
+hashcrack --format=nt sam.txt
+
+@walkthrough
+Each line is USER:RID:LM:NT::: hashcrack reads the NT field (the fourth) and tries
+the word list against it:
+
+    hashcrack --format=nt sam.txt
+
+In the range these are a simulated NT format, but the idea is real: weak Windows
+passwords fall to a word list, and a captured hash is enough to try (no need to log
+in each time). Long passphrases defeat it.
+
+@hint 10
+hashcrack reads the USER:RID:LM:NT::: format when you say --format=nt.
+
+@hint 14
+Run: hashcrack --format=nt sam.txt

@@ -1,0 +1,47 @@
+title: Step 16: Carried in the environment
+level: Expert
+category: ladder
+login: step16
+kind: Environment variables
+teaser: no file to find this time: the password travels with your shell
+points: 50
+order: 16
+answer: {{PW}}
+var: PW = hex:10
+var: VNAME = pick:LADDER_KEY|NEXT_STEP_CODE|STEP17_PASS|CLIMB_TOKEN|RUNG_SECRET
+
+@intro
+You are step16. There is no file with the password in your home folder this time.
+When you signed in, your shell picked up a list of named settings, its environment,
+and one of them was added just for you. It holds the password for step 17.
+
+@setup
+useradd -m step17
+echo 'step17:{{PW}}' | chpasswd
+cat >> /home/step16/.bashrc <<'RC'
+
+# added for the ladder
+export {{VNAME}}={{PW}}
+RC
+chown step16: /home/step16/.bashrc
+
+@solution
+env | sort
+printenv {{VNAME}}
+
+@walkthrough
+Every program inherits a set of environment variables from the shell that starts it:
+HOME, USER, PATH, LANG and so on. env (or printenv) lists them all:
+
+    env | sort
+
+One name isn't a usual one: {{VNAME}}. printenv {{VNAME}} (or echo ${{VNAME}}) prints
+just its value. It was set by a line in ~/.bashrc, the file your shell reads every time
+it starts. Programs leak secrets this way surprisingly often, so on a real system keep
+passwords out of the environment.
+
+@hint 15
+env lists every environment variable as NAME=value; sort puts them in order so the unusual one is easy to spot. Where do they come from? Look at ~/.bashrc.
+
+@hint 25
+env | sort, then printenv with the name that isn't a standard one.

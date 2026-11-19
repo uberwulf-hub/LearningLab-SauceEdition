@@ -1,0 +1,31 @@
+# Deck: containers | Containers | Containers
+Install podman, skopeo and buildah :: `dnf install container-tools`
+Which file lists the registries searched for short image names? :: /etc/containers/registries.conf (per user: ~/.config/containers/registries.conf)
+Log in to the registry registry.lab.example.com :: `podman login registry.lab.example.com`
+Search the registry registry.lab.example.com for images :: `podman search registry.lab.example.com/`
+Download the image ubi9/ubi from registry.lab.example.com :: `podman pull registry.lab.example.com/ubi9/ubi`
+List the images you have locally :: `podman images`
+Show an image's details in the registry without pulling it :: `skopeo inspect docker://registry.lab.example.com/ubi9/httpd-24`
+Show the default command of a local image :: `podman image inspect registry.lab.example.com/ubi9/ubi --format '{{.Config.Cmd}}'`
+Remove the image registry.lab.example.com/ubi9/ubi :: `podman rmi registry.lab.example.com/ubi9/ubi`
+Run httpd-24 in the background as web1, host port 8080 to container port 8080 :: `podman run -d --name web1 -p 8080:8080 registry.lab.example.com/ubi9/httpd-24`
+In -p 8081:8080, which number is the host port? :: The first: 8081 on the host leads to 8080 in the container.
+Pass the variable MYSQL_USER=app to a new container :: -e MYSQL_USER=app on the podman run line
+Run a one-off command in a container that is removed afterwards :: `podman run --rm registry.lab.example.com/ubi9/ubi cat /etc/os-release`
+List running containers :: `podman ps`
+List all containers, also the stopped ones :: `podman ps -a`
+Show what the container web1 printed :: `podman logs web1`
+Open a shell inside the running container web1 :: `podman exec -it web1 /bin/bash`
+Remove the running container web1 :: `podman rm -f web1`
+Mount ~/web on /var/www/html with an SELinux label for this container :: -v ~/web:/var/www/html:Z
+Difference between :Z and :z on a volume :: :Z labels it for one container only, :z so several containers can share it
+Give ~/dbdata to UID 27 as a rootless container sees it :: `podman unshare chown 27:27 ~/dbdata`
+Build the image greeter:1.0 from the Containerfile in the current folder :: `podman build -t greeter:1.0 .`
+Containerfile: RUN or CMD - which one runs during the build? :: RUN. CMD is only the default command when a container starts.
+Prefix of images you build yourself :: localhost/ (for example localhost/greeter:1.0)
+How do you log in as a user before using systemctl --user? :: With ssh user@localhost (su does not start a user session)
+Write a user unit for the container web1 that creates a new container each start :: `podman generate systemd --name web1 --files --new`
+Folder for a rootless user's systemd units :: ~/.config/systemd/user
+Folder for a rootless user's Quadlet .container files :: ~/.config/containers/systemd
+Enable and start the user service container-web1.service :: `systemctl --user enable --now container-web1.service`
+Let student's user services start at boot without a login :: `loginctl enable-linger student`

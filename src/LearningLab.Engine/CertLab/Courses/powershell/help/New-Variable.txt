@@ -1,0 +1,36 @@
+SYNOPSIS: Creates a variable, with options such as read-only or constant.
+DESCRIPTION:
+Most variables are made just by assigning to them: $limit = 10. New-Variable does the same but lets you add more: a description, an option that protects the value (ReadOnly or Constant), or a scope other than the current one.
+
+New-Variable fails if a variable with that name already exists in the scope, which also protects you from reusing a name by mistake.
+
+Give the name without the dollar sign.
+PARAMETER Name:
+The name of the new variable, without the $. Position 0, required.
+PARAMETER Value:
+Its value. Position 1. It can also come through the pipeline.
+PARAMETER Option:
+ReadOnly: the value can be changed only with Set-Variable -Force, and the variable removed only with Remove-Variable -Force. Constant: the value can never change and the variable cannot be removed until PowerShell closes.
+PARAMETER Description:
+A note about what the variable is for, shown by Get-Variable name | Format-List.
+PARAMETER Scope:
+Where to create it: Global, Script, Local, or a number (0 the current scope, 1 its parent).
+PARAMETER PassThru:
+Outputs the new variable.
+PARAMETER Force:
+Replaces an existing variable with the same name (but never a constant one).
+EXAMPLE: New-Variable -Name Limit -Value 10 -Option ReadOnly -Description 'Max items'
+Makes a read-only variable. $Limit = 5 then fails with "Cannot overwrite variable Limit because it is read-only or constant."
+EXAMPLE: Set-Variable -Name Limit -Value 20 -Force
+Changes the read-only variable anyway, because of -Force.
+EXAMPLE: New-Variable -Name Pi2 -Value 6.28 -Option Constant
+Makes a constant. Nothing can change or remove it in this session, not even -Force.
+EXAMPLE: New-Variable -Name total -Value 0 -PassThru
+Creates $total and shows it.
+NOTES:
+The alias is nv.
+
+Constants have to be created as constants; you cannot turn an existing variable into one.
+
+Other options in real 5.1 are Private (visible only in its own scope) and AllScope (copied into every child scope).
+RELATED: Set-Variable, Get-Variable, Clear-Variable, Remove-Variable, about_Variables, about_Scopes

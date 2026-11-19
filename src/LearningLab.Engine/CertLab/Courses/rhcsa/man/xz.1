@@ -1,0 +1,56 @@
+NAME
+       xz, unxz, xzcat - compress or uncompress .xz files
+
+SYNOPSIS
+       xz [-d] [-k] [-c] [-f] [-v] [-l] [-t] [-1...-9] [-T N] [FILE]...
+       unxz [FILE]...
+       xzcat [FILE]...
+
+DESCRIPTION
+       xz compresses each FILE and replaces it with FILE.xz, keeping the
+       owner, permissions and times. It usually makes smaller files than gzip
+       and bzip2, but takes longer. unxz (or xz -d) turns FILE.xz back into
+       FILE; xzcat prints the uncompressed contents without changing the
+       file. With no FILE they work from standard input to standard output.
+
+       tar -J (or tar -a with a .tar.xz name) uses xz for a whole archive.
+
+OPTIONS
+       -d, --decompress
+              Uncompress.
+
+       -k, --keep
+              Keep the original file.
+
+       -c, --stdout
+              Write to standard output and keep the files.
+
+       -f, --force
+              Overwrite existing files.
+
+       -l, --list
+              Show the compressed and uncompressed sizes of .xz files.
+
+       -t, --test
+              Check that the files are complete and undamaged.
+
+       -1 ... -9
+              Faster (-1) or smaller (-9) compression; -6 is the default.
+
+       -T, --threads=N
+              Use N threads (0: one per CPU).
+
+       -v, --verbose
+              Show progress and the compression ratio.
+
+       -q, --quiet
+              Print no warnings.
+
+EXAMPLES
+           xz /root/big.log
+           xz -l /root/big.log.xz
+           xzcat /root/big.log.xz | grep error
+           unxz /root/big.log.xz
+
+SEE ALSO
+       gzip(1), bzip2(1), tar(1)

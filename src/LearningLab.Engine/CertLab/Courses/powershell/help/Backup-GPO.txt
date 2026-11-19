@@ -1,0 +1,23 @@
+SYNOPSIS: Backs up Group Policy Objects to a folder.
+DESCRIPTION:
+Backup-GPO saves a GPO's settings, permissions and other information to a folder, each backup in its own subfolder named by a backup ID (a GUID). Links are not part of a GPO, so they aren't in the backup; write them down separately (Get-GPInheritance) if you need them.
+The folder must exist already. Back up before every big change and before Remove-GPO.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER All:
+Backs up every GPO of the domain.
+PARAMETER Path:
+The folder for the backups, such as C:\GPOBackups or \\FS1\Backups\GPO.
+PARAMETER Comment:
+A note stored with the backup.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to read from.
+EXAMPLE: Backup-GPO "Sales Desktop" -Path C:\GPOBackups -Comment "Before the wallpaper change"
+One GPO with a note.
+EXAMPLE: Backup-GPO -All -Path C:\GPOBackups
+Every GPO of corp.example.
+RELATED: Restore-GPO, Remove-GPO, Copy-GPO

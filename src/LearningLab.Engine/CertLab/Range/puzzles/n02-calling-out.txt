@@ -1,0 +1,52 @@
+title: Who is calling out?
+level: Intermediate
+kind: Network
+topic: Network
+teaser: a saved list of open connections
+points: 55
+order: 80
+answer: {{PROC}}
+var: PROC = pick:updater-x|svc-helper|winsvc|backupd2|cachesync
+var: RIP = ip
+var: RPORT = pick:4444|8081|9001|1337|6667|31337
+
+@intro
+During an incident, a colleague saved the list of this server's network connections
+(the output of ss -tnp) into ~/connections.txt before unplugging it. Normal traffic here
+is web (443), ssh (22) and DNS (53). One program was talking to an outside address on
+an unusual port. Which program? (Give its name as shown.)
+
+@setup
+cat > /home/player/connections.txt <<TXT
+State  Recv-Q Send-Q Local Address:Port   Peer Address:Port   Process
+ESTAB  0      0      10.0.4.15:22         10.0.4.2:51522      users:(("sshd",pid=1201,fd=4))
+ESTAB  0      0      10.0.4.15:44312      192.0.2.80:443      users:(("dnf",pid=2290,fd=7))
+ESTAB  0      36     10.0.4.15:39880      {{RIP}}:{{RPORT}}    users:(("{{PROC}}",pid=3117,fd=3))
+ESTAB  0      0      10.0.4.15:51044      192.0.2.53:53       users:(("systemd-resolve",pid=811,fd=12))
+ESTAB  0      0      10.0.4.15:44320      192.0.2.81:443      users:(("curl",pid=2301,fd=5))
+LISTEN 0      128    0.0.0.0:22           0.0.0.0:*           users:(("sshd",pid=1001,fd=3))
+TXT
+chown player: /home/player/connections.txt
+
+@solution
+cat connections.txt
+grep ESTAB connections.txt | grep -v -E ':(22|443|53) '
+
+@walkthrough
+Each ESTAB (established) line has your end, the other end ("peer") and the program.
+Remove the normal ports and only one line is left:
+
+    grep ESTAB connections.txt | grep -v -E ':(22|443|53) '
+
+{{PROC}} (pid 3117) is connected to {{RIP}}:{{RPORT}}. Programs that "phone home" on odd
+ports from a server are a classic sign of a backdoor; saving ss -tnp before pulling the
+plug keeps this evidence.
+
+@hint 5
+Look at the Peer Address:Port column. Most connections go to ports 22, 443 or 53.
+
+@hint 10
+grep -v hides lines that match: grep ESTAB connections.txt | grep -v -E ':(22|443|53) '
+
+@hint 15
+The one line left names the program inside users:(("NAME",...)). NAME is the answer.

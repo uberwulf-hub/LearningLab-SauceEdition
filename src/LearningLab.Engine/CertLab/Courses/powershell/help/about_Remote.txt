@@ -1,0 +1,73 @@
+TOPIC
+    about_Remote
+
+SHORT DESCRIPTION
+    Running PowerShell commands on other computers.
+
+LONG DESCRIPTION
+    PowerShell remoting runs commands on another computer and brings the
+    results back. It uses WinRM (Windows Remote Management), which listens
+    on TCP port 5985 for HTTP and 5986 for HTTPS. Even over HTTP, the
+    traffic is encrypted once Kerberos or NTLM has signed you in.
+
+  Turning it on
+    Windows Server has remoting on by default. On Windows 10 and 11, an
+    administrator runs Enable-PSRemoting. Test-WSMan checks that a
+    computer answers.
+
+        Enable-PSRemoting -Force
+        Test-WSMan -ComputerName WIN-SRV1
+
+  One to one: Enter-PSSession
+    Enter-PSSession gives you a prompt on the other computer. The prompt
+    shows its name. Exit-PSSession (or exit) comes back.
+
+        Enter-PSSession -ComputerName WIN-SRV1
+        [WIN-SRV1]: PS C:\Users\Admin\Documents> Get-Service Spooler
+        [WIN-SRV1]: PS C:\Users\Admin\Documents> Exit-PSSession
+
+  One to many: Invoke-Command
+    Invoke-Command runs a script block on one or many computers at once
+    (32 at a time by default, see -ThrottleLimit):
+
+        Invoke-Command -ComputerName WIN-SRV1, WIN-CL1 -ScriptBlock {
+            Get-Service -Name WinRM
+        }
+        Invoke-Command -ComputerName WIN-SRV1 -FilePath C:\LabFiles\a.ps1
+
+    Each result has a PSComputerName property saying where it came from.
+
+  Sessions that stay open: New-PSSession
+    A PSSession keeps one connection and its variables open between
+    commands, which is faster when you run several:
+
+        $s = New-PSSession -ComputerName WIN-SRV1
+        Invoke-Command -Session $s -ScriptBlock { $n = 5 }
+        Invoke-Command -Session $s -ScriptBlock { $n * 2 }
+        Remove-PSSession $s
+
+  Results come back as copies
+    Remote output travels as XML and is rebuilt here as deserialized
+    objects. Their type names start with "Deserialized." and they have
+    their properties but not their methods: a deserialized service cannot
+    Stop(). Do the work on the remote side, inside the script block.
+
+  Signing in and trust
+    -Credential (Get-Credential) uses another account. Outside a domain,
+    or with an IP address, add the computer to the TrustedHosts list or
+    use HTTPS. Many cmdlets also have their own -ComputerName that does
+    not use remoting (for example Get-Service in 5.1).
+
+  PowerShell 7
+    PowerShell 7 can also do remoting over SSH (-HostName), and its
+    Get-Service has no -ComputerName.
+
+SEE ALSO
+    about_Remote_Variables
+    Enter-PSSession
+    Exit-PSSession
+    Invoke-Command
+    New-PSSession
+    Remove-PSSession
+    Enable-PSRemoting
+    Test-WSMan

@@ -1,0 +1,1647 @@
+{
+ "format": 1,
+ "common": {
+  "sí": "yes",
+  "no": "no, not",
+  "y": "and",
+  "muy": "very",
+  "mucho": "a lot, much",
+  "mucha": "a lot of",
+  "qué": "what; how (¡Qué...!)",
+  "a": "to, at",
+  "de": "of, from",
+  "el": "the",
+  "la": "the",
+  "los": "the",
+  "las": "the",
+  "un": "a, an",
+  "una": "a, an; one",
+  "en": "in, at",
+  "con": "with",
+  "mi": "my",
+  "tú": "you",
+  "yo": "I",
+  "usted": "you (polite)",
+  "me": "me, myself",
+  "te": "you, yourself",
+  "le": "you (polite), him, her",
+  "es": "is (ser)",
+  "son": "are (ser)",
+  "soy": "I am (ser)",
+  "eres": "you are (ser)",
+  "está": "is (estar)",
+  "estoy": "I am (estar)",
+  "ay": "oh!, ouch!",
+  "ja": "ha (a laugh)",
+  "ah": "oh",
+  "mmm": "mmm",
+  "bien": "well, fine",
+  "buenos días": "good morning",
+  "buenas tardes": "good afternoon",
+  "días": "days (buenos días = good morning)",
+  "buenos": "good",
+  "buenas": "good",
+  "tardes": "afternoons (buenas tardes = good afternoon)",
+  "por favor": "please",
+  "favor": "favor (por favor = please)",
+  "por": "for, by (por favor = please)",
+  "cómo": "how",
+  "hora": "hour, time",
+  "tan": "so",
+  "hace": "it is (weather: hace sol, hace viento)",
+  "feliz": "happy",
+  "triste": "sad",
+  "color": "color",
+  "robot": "robot",
+  "robots": "robots",
+  "pizza": "pizza",
+  "pizzas": "pizzas",
+  "tomate": "tomato",
+  "cactus": "cactus",
+  "doctor": "doctor",
+  "día": "day",
+  "todo": "all",
+  "dólar": "dollar",
+  "esta": "this",
+  "esas": "those",
+  "mí": "me (a mí = to me)",
+  "tiene": "has (tener)",
+  "tengo": "I have (tener)",
+  "gusta": "likes, pleases (me gusta = I like)",
+  "gustan": "like (me gustan = I like them)",
+  "gusto": "pleasure (mucho gusto = nice to meet you)",
+  "llamo": "I call (me llamo = my name is)",
+  "dónde": "where",
+  "fue": "went (ir); te fue = it went for you",
+  "duele": "hurts (doler)",
+  "pasa": "happens (¿qué le pasa? = what's the matter?)",
+  "chocar": "to bump, to hit (chocar esas cinco = to high-five)",
+  "también": "too, also",
+  "vas": "you go (ir); vas a = you're going to",
+  "voy": "I go (ir); voy a = I'm going to",
+  "arizona": "Arizona",
+  "bip": "beep"
+ },
+ "cartoons": [
+  {
+   "id": "frog-meets-chicken",
+   "level": 1,
+   "title": "Pepe y Lola",
+   "titleEn": "Pepe and Lola",
+   "after": "names",
+   "scene": "park",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Pepe",
+     "kind": "frog",
+     "color": "#22C55E",
+     "voice": 0,
+     "pitch": 1.2
+    },
+    {
+     "id": "b",
+     "name": "Lola",
+     "kind": "chicken",
+     "color": "#FEF3C7",
+     "voice": 1,
+     "pitch": 1.1
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "¡Hola! Me llamo Pepe.",
+     "en": "Hi! My name is Pepe.",
+     "act": "wave"
+    },
+    {
+     "who": "b",
+     "es": "Hola, Pepe. Soy Lola.",
+     "en": "Hi, Pepe. I'm Lola.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "Mucho gusto, Lola.",
+     "en": "Nice to meet you, Lola.",
+     "act": "jump"
+    },
+    {
+     "who": "b",
+     "es": "Igualmente. ¿De dónde eres?",
+     "en": "Likewise. Where are you from?",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "Soy de Arizona. ¡Del parque!",
+     "en": "I'm from Arizona. From the park!",
+     "act": "dance"
+    },
+    {
+     "who": "b",
+     "es": "¿Del parque? ¡Yo también!",
+     "en": "From the park? Me too!",
+     "act": "surprise"
+    },
+    {
+     "who": "a",
+     "es": "¡Mira! Salto muy alto.",
+     "en": "Look! I jump really high.",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "¡Ay!",
+     "en": "Ouch!",
+     "act": "fall"
+    },
+    {
+     "who": "b",
+     "es": "Pepe, ¿estás bien?",
+     "en": "Pepe, are you okay?",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "Sí, estoy bien. ¡Ja, ja!",
+     "en": "Yes, I'm fine. Ha ha!",
+     "act": "laugh"
+    }
+   ],
+   "words": {
+    "salto": "I jump (saltar)",
+    "alto": "high",
+    "mira": "look!",
+    "ay": "ouch!",
+    "del": "from the (de + el)",
+    "parque": "park",
+    "yo también": "me too",
+    "también": "too, also",
+    "estás bien": "are you okay"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "A frog and a chicken meet in the park, and the frog falls over showing off his jump.",
+    "wrong": [
+     "Two friends argue about whose park it is.",
+     "A chicken is lost and asks a frog the way home."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What is the frog's name?",
+     "answer": "Pepe",
+     "wrong": [
+      "Lola",
+      "Pablo"
+     ]
+    },
+    {
+     "q": "Where are they both from?",
+     "answer": "The park, in Arizona",
+     "wrong": [
+      "A big city in Mexico",
+      "The beach"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "orange-robot",
+   "level": 1,
+   "title": "El robot anaranjado",
+   "titleEn": "The orange robot",
+   "after": "colors",
+   "scene": "space",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Robi",
+     "kind": "robot",
+     "color": "#94A3B8",
+     "voice": 0,
+     "pitch": 0.9
+    },
+    {
+     "id": "b",
+     "name": "Mimi",
+     "kind": "cat",
+     "color": "#F97316",
+     "voice": 1,
+     "pitch": 1.2
+    }
+   ],
+   "lines": [
+    {
+     "who": "b",
+     "es": "Hola, robot. ¿De qué color eres?",
+     "en": "Hi, robot. What color are you?",
+     "act": "wave"
+    },
+    {
+     "who": "a",
+     "es": "Soy gris. Gris y azul.",
+     "en": "I'm gray. Gray and blue.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Yo soy anaranjada.",
+     "en": "I'm orange.",
+     "act": "dance"
+    },
+    {
+     "who": "a",
+     "es": "¿Anaranjado? ¡Qué bonito!",
+     "en": "Orange? How pretty!",
+     "act": "surprise"
+    },
+    {
+     "who": "a",
+     "es": "Quiero ser anaranjado también.",
+     "en": "I want to be orange too.",
+     "act": "think"
+    },
+    {
+     "who": "b",
+     "es": "¡Pero tú eres un robot!",
+     "en": "But you're a robot!",
+     "act": "laugh"
+    },
+    {
+     "who": "a",
+     "es": "Un robot anaranjado. ¡Sí!",
+     "en": "An orange robot. Yes!",
+     "act": "jump"
+    },
+    {
+     "who": "b",
+     "es": "No, Robi. Eres gris.",
+     "en": "No, Robi. You're gray.",
+     "act": "shake"
+    },
+    {
+     "who": "a",
+     "es": "Estoy triste.",
+     "en": "I'm sad.",
+     "act": "cry"
+    },
+    {
+     "who": "b",
+     "es": "Pero eres mi amigo gris favorito.",
+     "en": "But you're my favorite gray friend.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¡Ahora estoy feliz!",
+     "en": "Now I'm happy!",
+     "act": "spin"
+    }
+   ],
+   "words": {
+    "eres": "you are (ser)",
+    "soy": "I am (ser)",
+    "quiero": "I want (querer)",
+    "ser": "to be",
+    "pero": "but",
+    "amigo": "friend",
+    "favorito": "favorite",
+    "ahora": "now",
+    "qué bonito": "how pretty",
+    "bonito": "pretty",
+    "también": "too, also",
+    "anaranjada": "orange",
+    "anaranjado": "orange"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The robot wants to be orange like the cat, but the cat cheers him up as he is.",
+    "wrong": [
+     "The cat wants to become a robot.",
+     "They are painting their spaceship."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What colors is the robot?",
+     "answer": "Gray and blue",
+     "wrong": [
+      "Orange and white",
+      "Red and green"
+     ]
+    },
+    {
+     "q": "How does the robot feel at the end?",
+     "answer": "Happy",
+     "wrong": [
+      "Sad",
+      "Tired"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "toby-family",
+   "level": 1,
+   "title": "La familia de Toby",
+   "titleEn": "Toby's family",
+   "after": "family",
+   "scene": "park",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Toby",
+     "kind": "dog",
+     "color": "#B45309",
+     "voice": 0,
+     "pitch": 0.95
+    },
+    {
+     "id": "b",
+     "name": "Rita",
+     "kind": "frog",
+     "color": "#4ADE80",
+     "voice": 1,
+     "pitch": 1.25
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "Mira, Rita. Es mi familia.",
+     "en": "Look, Rita. It's my family.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "¿Quién es él?",
+     "en": "Who is he?",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "Es mi papá. Se llama Max.",
+     "en": "That's my dad. His name is Max.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "¿Y ella?",
+     "en": "And her?",
+     "act": "point"
+    },
+    {
+     "who": "a",
+     "es": "Es mi abuela. ¡Tiene doce perros!",
+     "en": "That's my grandma. She has twelve dogs!",
+     "act": "jump"
+    },
+    {
+     "who": "b",
+     "es": "¿Doce perros? ¡Qué grande es tu familia!",
+     "en": "Twelve dogs? Your family is so big!",
+     "act": "surprise"
+    },
+    {
+     "who": "a",
+     "es": "Sí. Y tengo nueve hermanos.",
+     "en": "Yes. And I have nine brothers.",
+     "act": "dance"
+    },
+    {
+     "who": "b",
+     "es": "¿Cómo se llaman?",
+     "en": "What are their names?",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "Todos se llaman Toby.",
+     "en": "They're all called Toby.",
+     "act": "laugh"
+    },
+    {
+     "who": "b",
+     "es": "¡Ay, no! ¡Qué confusión!",
+     "en": "Oh, no! What a mix-up!",
+     "act": "fall"
+    }
+   ],
+   "words": {
+    "mira": "look!",
+    "quién": "who",
+    "él": "he",
+    "ella": "she, her",
+    "tiene": "has (tener)",
+    "tengo": "I have (tener)",
+    "doce": "twelve",
+    "nueve": "nine",
+    "perros": "dogs",
+    "qué grande": "how big",
+    "grande": "big",
+    "tu": "your",
+    "todos": "all of them, everyone",
+    "se llaman": "they are called (llamarse)",
+    "se llama": "his / her name is",
+    "confusión": "mix-up, confusion"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The dog shows the frog his huge family, and all his brothers are called Toby.",
+    "wrong": [
+     "The frog is looking for her lost family.",
+     "The dog and the frog find out they are brothers."
+    ]
+   },
+   "questions": [
+    {
+     "q": "How many brothers does Toby have?",
+     "answer": "Nine",
+     "wrong": [
+      "Twelve",
+      "Two"
+     ]
+    },
+    {
+     "q": "Who has twelve dogs?",
+     "answer": "His grandma",
+     "wrong": [
+      "His dad",
+      "Rita"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "no-eggs",
+   "level": 2,
+   "title": "¡Huevos no!",
+   "titleEn": "No eggs!",
+   "after": "food",
+   "scene": "kitchen",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Doña Clara",
+     "kind": "chicken",
+     "color": "#FFFFFF",
+     "voice": 0,
+     "pitch": 1.1
+    },
+    {
+     "id": "b",
+     "name": "Paco",
+     "kind": "dog",
+     "color": "#A16207",
+     "voice": 1,
+     "pitch": 0.95
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "Buenos días, Paco. ¿Quieres desayuno?",
+     "en": "Good morning, Paco. Do you want breakfast?",
+     "act": "wave"
+    },
+    {
+     "who": "b",
+     "es": "¡Sí! Tengo mucha hambre.",
+     "en": "Yes! I'm really hungry.",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "Hay pan, arroz y frijoles.",
+     "en": "There's bread, rice and beans.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "Mmm. ¿Y huevos?",
+     "en": "Mmm. And eggs?",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "¿Huevos? ¡No, no, no!",
+     "en": "Eggs? No, no, no!",
+     "act": "shake"
+    },
+    {
+     "who": "b",
+     "es": "¿Por qué no?",
+     "en": "Why not?",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¡Porque soy una gallina!",
+     "en": "Because I'm a hen!",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "Ah... perdón. Pan, por favor.",
+     "en": "Oh... sorry. Bread, please.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "Aquí tienes. Y un vaso de leche.",
+     "en": "Here you go. And a glass of milk.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "¡Gracias! Está muy rico.",
+     "en": "Thanks! It's really tasty.",
+     "act": "eat"
+    }
+   ],
+   "words": {
+    "quieres": "do you want (querer)",
+    "desayuno": "breakfast",
+    "tengo mucha hambre": "I'm really hungry",
+    "hambre": "hunger",
+    "hay": "there is, there are",
+    "huevos": "eggs",
+    "por qué": "why",
+    "porque": "because",
+    "gallina": "hen",
+    "perdón": "sorry",
+    "aquí tienes": "here you go",
+    "vaso": "glass",
+    "rico": "tasty (food)",
+    "está muy rico": "it's really tasty"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The dog asks the hen for eggs for breakfast, and she says no, because she's a hen.",
+    "wrong": [
+     "The hen burns the breakfast.",
+     "The dog cooks breakfast for the hen."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What does the hen offer first?",
+     "answer": "Bread, rice and beans",
+     "wrong": [
+      "Eggs and milk",
+      "Tortillas and cheese"
+     ]
+    },
+    {
+     "q": "What does the dog have in the end?",
+     "answer": "Bread and a glass of milk",
+     "wrong": [
+      "Eggs",
+      "Nothing at all"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "late-frog",
+   "level": 2,
+   "title": "¿Qué hora es, Ramón?",
+   "titleEn": "What time is it, Ramón?",
+   "after": "time",
+   "scene": "classroom",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Maestra Espina",
+     "kind": "cactus",
+     "color": "#16A34A",
+     "voice": 1,
+     "pitch": 1.0
+    },
+    {
+     "id": "b",
+     "name": "Ramón",
+     "kind": "frog",
+     "color": "#84CC16",
+     "voice": 0,
+     "pitch": 1.25
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "Ramón, ¿qué hora es?",
+     "en": "Ramón, what time is it?",
+     "act": "think"
+    },
+    {
+     "who": "b",
+     "es": "Son las ocho y media.",
+     "en": "It's eight thirty.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¿Y a qué hora empieza la escuela?",
+     "en": "And what time does school start?",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "A las ocho.",
+     "en": "At eight.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "Entonces, ¿llegas tarde?",
+     "en": "So, are you late?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "¡No! Llego temprano... para mañana.",
+     "en": "No! I'm early... for tomorrow.",
+     "act": "dance"
+    },
+    {
+     "who": "a",
+     "es": "¿Para mañana? ¡Ja, ja!",
+     "en": "For tomorrow? Ha ha!",
+     "act": "laugh"
+    },
+    {
+     "who": "b",
+     "es": "Sí. Mañana llego a las siete.",
+     "en": "Yes. Tomorrow I'll get here at seven.",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "Muy bien. Ahora, siéntate, por favor.",
+     "en": "Very good. Now, sit down, please.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "¡Ay! ¡Perdón, maestra! ¡Usted tiene espinas!",
+     "en": "Ouch! Sorry, teacher! You've got spines!",
+     "act": "fall"
+    }
+   ],
+   "words": {
+    "qué hora es": "what time is it",
+    "son las ocho y media": "it's eight thirty",
+    "media": "half",
+    "empieza": "starts (empezar)",
+    "escuela": "school",
+    "a las ocho": "at eight",
+    "entonces": "so, then",
+    "llegas": "you arrive (llegar)",
+    "tarde": "late",
+    "llego": "I arrive (llegar)",
+    "temprano": "early",
+    "para": "for",
+    "mañana": "tomorrow",
+    "siete": "seven",
+    "siéntate": "sit down",
+    "usted": "you (polite)",
+    "espinas": "spines, thorns",
+    "maestra": "teacher (a woman)"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "A frog is late for school and makes a silly excuse, then bumps into his cactus teacher.",
+    "wrong": [
+     "The teacher is late and the frog is upset.",
+     "The frog teaches the class how to tell time."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What time is it when the teacher asks?",
+     "answer": "Eight thirty",
+     "wrong": [
+      "Eight o'clock",
+      "Seven o'clock"
+     ]
+    },
+    {
+     "q": "What happens when the frog sits down?",
+     "answer": "He gets poked by the cactus teacher's spines",
+     "wrong": [
+      "He falls asleep",
+      "He breaks the chair"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "robot-cleans",
+   "level": 2,
+   "title": "El robot limpia la casa",
+   "titleEn": "The robot cleans the house",
+   "after": "home",
+   "scene": "kitchen",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Robi",
+     "kind": "robot",
+     "color": "#94A3B8",
+     "voice": 0,
+     "pitch": 0.9
+    },
+    {
+     "id": "b",
+     "name": "Mimi",
+     "kind": "cat",
+     "color": "#F97316",
+     "voice": 1,
+     "pitch": 1.2
+    }
+   ],
+   "lines": [
+    {
+     "who": "b",
+     "es": "¡Robi! ¿Dónde está mi cama?",
+     "en": "Robi! Where's my bed?",
+     "act": "surprise"
+    },
+    {
+     "who": "a",
+     "es": "Está en el baño. Está muy limpia.",
+     "en": "It's in the bathroom. It's very clean.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "¿En el baño? ¿Por qué?",
+     "en": "In the bathroom? Why?",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "Porque el baño es para limpiar.",
+     "en": "Because the bathroom is for cleaning.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "¿Y el sofá?",
+     "en": "And the sofa?",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "El sofá está en la cocina.",
+     "en": "The sofa is in the kitchen.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "¿Y la tele?",
+     "en": "And the TV?",
+     "act": "shake"
+    },
+    {
+     "who": "a",
+     "es": "La tele está en el refrigerador.",
+     "en": "The TV is in the fridge.",
+     "act": "dance"
+    },
+    {
+     "who": "b",
+     "es": "¡Robi! ¡Qué desastre!",
+     "en": "Robi! What a mess!",
+     "act": "cry"
+    },
+    {
+     "who": "a",
+     "es": "No, Mimi. ¡Qué limpio!",
+     "en": "No, Mimi. How clean!",
+     "act": "spin"
+    }
+   ],
+   "words": {
+    "dónde": "where",
+    "está": "is (estar: where something is)",
+    "cama": "bed",
+    "baño": "bathroom",
+    "limpia": "clean",
+    "limpio": "clean",
+    "limpiar": "to clean",
+    "por qué": "why",
+    "porque": "because",
+    "para": "for",
+    "sofá": "sofa",
+    "cocina": "kitchen",
+    "tele": "TV",
+    "refrigerador": "fridge",
+    "qué desastre": "what a mess",
+    "desastre": "disaster, mess"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The robot 'cleaned' the house by putting everything in the wrong rooms.",
+    "wrong": [
+     "The cat can't find the robot anywhere.",
+     "They are moving into a new house."
+    ]
+   },
+   "questions": [
+    {
+     "q": "Where is the cat's bed now?",
+     "answer": "In the bathroom",
+     "wrong": [
+      "In the kitchen",
+      "In the living room"
+     ]
+    },
+    {
+     "q": "Where is the TV?",
+     "answer": "In the fridge",
+     "wrong": [
+      "On the sofa",
+      "In the bathroom"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "crazy-weather",
+   "level": 3,
+   "title": "¡Qué tiempo tan loco!",
+   "titleEn": "What crazy weather!",
+   "after": "weather",
+   "scene": "beach",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Paco",
+     "kind": "dog",
+     "color": "#A16207",
+     "voice": 0,
+     "pitch": 0.95
+    },
+    {
+     "id": "b",
+     "name": "Doña Clara",
+     "kind": "chicken",
+     "color": "#FFFFFF",
+     "voice": 1,
+     "pitch": 1.1
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "¡Qué calor! Hace mucho sol.",
+     "en": "It's so hot! It's very sunny.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Sí. Vamos al agua.",
+     "en": "Yes. Let's go in the water.",
+     "act": "point"
+    },
+    {
+     "who": "a",
+     "es": "¡Mira! Está nublado.",
+     "en": "Look! It's cloudy.",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "Y hace viento.",
+     "en": "And it's windy.",
+     "act": "shake"
+    },
+    {
+     "who": "a",
+     "es": "¿Está lloviendo?",
+     "en": "Is it raining?",
+     "act": "think"
+    },
+    {
+     "who": "b",
+     "es": "¡Sí! ¡Está lloviendo mucho!",
+     "en": "Yes! It's raining a lot!",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "¡Rápido! ¡Al carro!",
+     "en": "Quick! To the car!",
+     "act": "run"
+    },
+    {
+     "who": "b",
+     "es": "Espera... ahora hace sol otra vez.",
+     "en": "Wait... now it's sunny again.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¡Ay, qué tiempo tan loco!",
+     "en": "Oh, what crazy weather!",
+     "act": "laugh"
+    }
+   ],
+   "words": {
+    "qué calor": "it's so hot",
+    "hace sol": "it's sunny",
+    "vamos": "let's go",
+    "agua": "water",
+    "mira": "look!",
+    "está nublado": "it's cloudy",
+    "hace viento": "it's windy",
+    "está lloviendo": "it's raining",
+    "al": "to the (a + el)",
+    "carro": "car",
+    "espera": "wait!",
+    "otra vez": "again",
+    "tiempo": "weather",
+    "loco": "crazy",
+    "rápido": "quick!, fast"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "Their day at the beach keeps changing: sun, wind, rain, then sun again.",
+    "wrong": [
+     "The hen can't swim, so the dog teaches her.",
+     "They lose the car at the beach."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What is the weather like at the start?",
+     "answer": "Hot and sunny",
+     "wrong": [
+      "Cold and windy",
+      "Cloudy and rainy"
+     ]
+    },
+    {
+     "q": "What does the dog want to do when it rains?",
+     "answer": "Run to the car",
+     "wrong": [
+      "Swim in the water",
+      "Sleep under the umbrella"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "doctor-bip",
+   "level": 3,
+   "title": "El doctor Bip",
+   "titleEn": "Doctor Bip",
+   "after": "health",
+   "scene": "park",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Doctor Bip",
+     "kind": "robot",
+     "color": "#E2E8F0",
+     "voice": 1,
+     "pitch": 0.9
+    },
+    {
+     "id": "b",
+     "name": "Pepe",
+     "kind": "frog",
+     "color": "#22C55E",
+     "voice": 0,
+     "pitch": 1.2
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "Buenas tardes. ¿Qué le pasa?",
+     "en": "Good afternoon. What's the matter?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Me duele la cabeza, doctor.",
+     "en": "My head hurts, doctor.",
+     "act": "cry"
+    },
+    {
+     "who": "a",
+     "es": "¿Y le duele el estómago?",
+     "en": "And does your stomach hurt?",
+     "act": "think"
+    },
+    {
+     "who": "b",
+     "es": "Sí. Y me duelen los pies.",
+     "en": "Yes. And my feet hurt.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¿Qué come usted?",
+     "en": "What do you eat?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Moscas. Cien moscas al día.",
+     "en": "Flies. A hundred flies a day.",
+     "act": "eat"
+    },
+    {
+     "who": "a",
+     "es": "¿Cien moscas? ¡Bip, bip!",
+     "en": "A hundred flies? Beep, beep!",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "Y salto todo el día.",
+     "en": "And I jump all day long.",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "Usted necesita descansar. Y comer menos moscas.",
+     "en": "You need to rest. And eat fewer flies.",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "Está bien, doctor. Solo noventa y nueve.",
+     "en": "Okay, doctor. Only ninety-nine.",
+     "act": "laugh"
+    }
+   ],
+   "words": {
+    "qué le pasa": "what's the matter (polite)",
+    "me duele": "it hurts me",
+    "me duelen": "they hurt me",
+    "le duele": "does it hurt you (polite)",
+    "cabeza": "head",
+    "estómago": "stomach",
+    "pies": "feet",
+    "come": "eat (comer)",
+    "usted": "you (polite)",
+    "moscas": "flies",
+    "cien": "a hundred",
+    "al día": "a day",
+    "salto": "I jump (saltar)",
+    "todo el día": "all day",
+    "necesita": "need (necesitar)",
+    "descansar": "to rest",
+    "comer": "to eat",
+    "menos": "fewer, less",
+    "está bien": "okay",
+    "solo": "only",
+    "noventa y nueve": "ninety-nine"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "A frog visits a robot doctor because he feels sick from eating a hundred flies a day.",
+    "wrong": [
+     "A robot is sick and the frog takes care of it.",
+     "A frog wants to be a doctor."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What hurts?",
+     "answer": "His head, his stomach and his feet",
+     "wrong": [
+      "His eyes and his teeth",
+      "His arm and his back"
+     ]
+    },
+    {
+     "q": "What does the doctor tell him?",
+     "answer": "To rest and eat fewer flies",
+     "wrong": [
+      "To jump more",
+      "To eat more fruit"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "magic-apple",
+   "level": 3,
+   "title": "La manzana mágica",
+   "titleEn": "The magic apple",
+   "after": "shopping",
+   "scene": "market",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Mimi",
+     "kind": "cat",
+     "color": "#F97316",
+     "voice": 0,
+     "pitch": 1.2
+    },
+    {
+     "id": "b",
+     "name": "Doña Clara",
+     "kind": "chicken",
+     "color": "#FFFFFF",
+     "voice": 1,
+     "pitch": 1.05
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "Buenos días. ¿Cuánto cuesta esta manzana?",
+     "en": "Good morning. How much is this apple?",
+     "act": "point"
+    },
+    {
+     "who": "b",
+     "es": "Cuesta cinco dólares.",
+     "en": "It costs five dollars.",
+     "act": "talk"
+    },
+    {
+     "who": "a",
+     "es": "¿Cinco dólares? ¡Es muy caro!",
+     "en": "Five dollars? That's really expensive!",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "Es una manzana mágica.",
+     "en": "It's a magic apple.",
+     "act": "dance"
+    },
+    {
+     "who": "a",
+     "es": "¿Mágica? ¿Qué hace?",
+     "en": "Magic? What does it do?",
+     "act": "think"
+    },
+    {
+     "who": "b",
+     "es": "Si la comes, puedes volar.",
+     "en": "If you eat it, you can fly.",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "Pero usted es una gallina. ¡Y no vuela!",
+     "en": "But you're a hen. And you don't fly!",
+     "act": "laugh"
+    },
+    {
+     "who": "b",
+     "es": "Bueno... cuesta un dólar.",
+     "en": "Well... it costs one dollar.",
+     "act": "cry"
+    },
+    {
+     "who": "a",
+     "es": "¡Trato hecho! Aquí tiene.",
+     "en": "Deal! Here you go.",
+     "act": "eat"
+    }
+   ],
+   "words": {
+    "cuánto cuesta": "how much is it",
+    "cuesta": "it costs (costar)",
+    "manzana": "apple",
+    "dólares": "dollars",
+    "caro": "expensive",
+    "mágica": "magic",
+    "qué hace": "what does it do",
+    "si": "if",
+    "la comes": "you eat it",
+    "puedes": "you can (poder)",
+    "volar": "to fly",
+    "pero": "but",
+    "gallina": "hen",
+    "vuela": "fly, flies (volar; usted / she)",
+    "bueno": "well, okay",
+    "trato hecho": "deal!",
+    "aquí tiene": "here you go (polite)"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "A cat bargains for a 'magic' apple that makes you fly, and gets it for one dollar.",
+    "wrong": [
+     "A hen buys apples from a cat.",
+     "A cat can't find the market."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What does the hen say the apple does?",
+     "answer": "It makes you fly",
+     "wrong": [
+      "It makes you rich",
+      "It makes you sleep"
+     ]
+    },
+    {
+     "q": "How much does the cat pay in the end?",
+     "answer": "One dollar",
+     "wrong": [
+      "Five dollars",
+      "Nothing"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "screw-pizza",
+   "level": 4,
+   "title": "Pizza con tornillos",
+   "titleEn": "Pizza with screws",
+   "after": "plans",
+   "scene": "kitchen",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Paco",
+     "kind": "dog",
+     "color": "#A16207",
+     "voice": 0,
+     "pitch": 0.95
+    },
+    {
+     "id": "b",
+     "name": "Robi",
+     "kind": "robot",
+     "color": "#94A3B8",
+     "voice": 1,
+     "pitch": 0.9
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "¿Qué vas a hacer hoy, Robi?",
+     "en": "What are you going to do today, Robi?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Voy a hacer una pizza.",
+     "en": "I'm going to make a pizza.",
+     "act": "dance"
+    },
+    {
+     "who": "a",
+     "es": "¡Me gusta la pizza! ¿Con queso?",
+     "en": "I like pizza! With cheese?",
+     "act": "jump"
+    },
+    {
+     "who": "b",
+     "es": "Con queso, tomate y... tornillos.",
+     "en": "With cheese, tomato and... screws.",
+     "act": "point"
+    },
+    {
+     "who": "a",
+     "es": "¿Tornillos? ¡No me gustan los tornillos!",
+     "en": "Screws? I don't like screws!",
+     "act": "shake"
+    },
+    {
+     "who": "b",
+     "es": "Pero son muy ricos.",
+     "en": "But they're really tasty.",
+     "act": "eat"
+    },
+    {
+     "who": "a",
+     "es": "Para robots, sí. Para perros, no.",
+     "en": "For robots, yes. For dogs, no.",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Bueno. Voy a hacer dos pizzas.",
+     "en": "Okay. I'm going to make two pizzas.",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "¡Una con tornillos y otra sin tornillos!",
+     "en": "One with screws and one without screws!",
+     "act": "laugh"
+    }
+   ],
+   "words": {
+    "vas a hacer": "you are going to do",
+    "voy a hacer": "I'm going to make",
+    "hacer": "to do, to make",
+    "hoy": "today",
+    "me gusta": "I like",
+    "no me gustan": "I don't like (them)",
+    "queso": "cheese",
+    "tornillos": "screws",
+    "pero": "but",
+    "ricos": "tasty",
+    "para": "for",
+    "perros": "dogs",
+    "bueno": "okay",
+    "dos": "two",
+    "sin": "without",
+    "una": "one",
+    "otra": "another, the other one"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The robot wants to put screws on the pizza, so it will make two pizzas: one with screws and one without.",
+    "wrong": [
+     "The dog and the robot burn the pizza.",
+     "The dog wants to eat screws too."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What does the robot want to put on the pizza?",
+     "answer": "Cheese, tomato and screws",
+     "wrong": [
+      "Cheese and chicken",
+      "Only tomato"
+     ]
+    },
+    {
+     "q": "How many pizzas will the robot make?",
+     "answer": "Two",
+     "wrong": [
+      "One",
+      "Three"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cheese-moon",
+   "level": 4,
+   "title": "Un viaje a la luna",
+   "titleEn": "A trip to the moon",
+   "after": "past",
+   "scene": "space",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Rita",
+     "kind": "frog",
+     "color": "#4ADE80",
+     "voice": 0,
+     "pitch": 1.25
+    },
+    {
+     "id": "b",
+     "name": "Mimi",
+     "kind": "cat",
+     "color": "#F97316",
+     "voice": 1,
+     "pitch": 1.15
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "¿Qué hiciste hoy, Mimi?",
+     "en": "What did you do today, Mimi?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Fui a la luna.",
+     "en": "I went to the moon.",
+     "act": "point"
+    },
+    {
+     "who": "a",
+     "es": "¿A la luna? ¿Y qué viste?",
+     "en": "To the moon? And what did you see?",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "Vi un queso enorme.",
+     "en": "I saw a huge cheese.",
+     "act": "think"
+    },
+    {
+     "who": "a",
+     "es": "¿Comiste el queso?",
+     "en": "Did you eat the cheese?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Sí. Comí mucho queso.",
+     "en": "Yes. I ate a lot of cheese.",
+     "act": "eat"
+    },
+    {
+     "who": "a",
+     "es": "¿Y cómo te fue?",
+     "en": "And how did it go?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "Muy bien... pero ahora me duele el estómago.",
+     "en": "Really well... but now my stomach hurts.",
+     "act": "cry"
+    },
+    {
+     "who": "a",
+     "es": "¡Ja, ja! ¡La luna no es de queso!",
+     "en": "Ha ha! The moon isn't made of cheese!",
+     "act": "laugh"
+    },
+    {
+     "who": "b",
+     "es": "¿No? Entonces... ¿qué comí?",
+     "en": "No? Then... what did I eat?",
+     "act": "fall"
+    }
+   ],
+   "words": {
+    "qué hiciste": "what did you do",
+    "hoy": "today",
+    "fui": "I went (ir)",
+    "luna": "moon",
+    "viste": "you saw (ver)",
+    "vi": "I saw (ver)",
+    "queso": "cheese",
+    "enorme": "huge",
+    "comiste": "you ate (comer)",
+    "comí": "I ate (comer)",
+    "cómo te fue": "how did it go",
+    "pero": "but",
+    "ahora": "now",
+    "me duele el estómago": "my stomach hurts",
+    "de queso": "made of cheese",
+    "entonces": "then, so"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "The cat says she went to the moon and ate its cheese, and now her stomach hurts.",
+    "wrong": [
+     "The frog and the cat build a rocket.",
+     "The cat is afraid of the moon."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What did the cat see on the moon?",
+     "answer": "A huge cheese",
+     "wrong": [
+      "A big rocket",
+      "A frog"
+     ]
+    },
+    {
+     "q": "How does she feel now?",
+     "answer": "Her stomach hurts",
+     "wrong": [
+      "She's very happy",
+      "She's sleepy"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cactus-hug",
+   "level": 4,
+   "title": "Un abrazo para el cactus",
+   "titleEn": "A hug for the cactus",
+   "after": "likes",
+   "scene": "desert",
+   "cast": [
+    {
+     "id": "a",
+     "name": "Don Nopal",
+     "kind": "cactus",
+     "color": "#22C55E",
+     "voice": 1,
+     "pitch": 0.85
+    },
+    {
+     "id": "b",
+     "name": "Toby",
+     "kind": "dog",
+     "color": "#B45309",
+     "voice": 0,
+     "pitch": 1.0
+    }
+   ],
+   "lines": [
+    {
+     "who": "a",
+     "es": "¿Te gustan los abrazos?",
+     "en": "Do you like hugs?",
+     "act": "talk"
+    },
+    {
+     "who": "b",
+     "es": "¡Sí! ¡Me gustan mucho los abrazos!",
+     "en": "Yes! I really like hugs!",
+     "act": "jump"
+    },
+    {
+     "who": "a",
+     "es": "A mí también me gustan.",
+     "en": "I like them too.",
+     "act": "dance"
+    },
+    {
+     "who": "b",
+     "es": "¡Entonces, un abrazo!",
+     "en": "Then, a hug!",
+     "act": "run"
+    },
+    {
+     "who": "a",
+     "es": "¡Espera! ¡Espera!",
+     "en": "Wait! Wait!",
+     "act": "surprise"
+    },
+    {
+     "who": "b",
+     "es": "¡Ay, ay, ay! ¡Espinas!",
+     "en": "Ow, ow, ow! Spines!",
+     "act": "fall"
+    },
+    {
+     "who": "a",
+     "es": "Lo siento. Soy un cactus.",
+     "en": "I'm sorry. I'm a cactus.",
+     "act": "cry"
+    },
+    {
+     "who": "b",
+     "es": "Está bien. ¿Te gusta chocar esas cinco?",
+     "en": "It's okay. Do you like high fives?",
+     "act": "wave"
+    },
+    {
+     "who": "a",
+     "es": "¡Sí! Eso me gusta más.",
+     "en": "Yes! I like that better.",
+     "act": "laugh"
+    }
+   ],
+   "words": {
+    "te gustan": "do you like (them)",
+    "me gustan": "I like (them)",
+    "abrazos": "hugs",
+    "abrazo": "hug",
+    "a mí también": "me too",
+    "entonces": "then, so",
+    "espera": "wait!",
+    "ay": "ow!",
+    "espinas": "spines, thorns",
+    "lo siento": "I'm sorry",
+    "está bien": "it's okay",
+    "eso": "that",
+    "más": "more, better",
+    "chocar esas cinco": "to high-five"
+   },
+   "gist": {
+    "q": "What's going on?",
+    "answer": "A dog runs to hug a cactus, gets poked, and they do a high five instead.",
+    "wrong": [
+     "A cactus is looking for water in the desert.",
+     "A dog and a cactus have a race."
+    ]
+   },
+   "questions": [
+    {
+     "q": "What do they both like?",
+     "answer": "Hugs",
+     "wrong": [
+      "Rain",
+      "Running"
+     ]
+    },
+    {
+     "q": "What do they do at the end?",
+     "answer": "A high five",
+     "wrong": [
+      "A hug",
+      "A dance"
+     ]
+    }
+   ]
+  }
+ ]
+}

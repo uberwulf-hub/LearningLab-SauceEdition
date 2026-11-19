@@ -1,0 +1,13 @@
+Same leaked key as A Key Left Out, but now the server is watched, so the quiet path matters.
+
+1. Pointed recon. nmap -sV 10.10.4.30 (just the server). A few web requests to list its folders are
+   normal; webscan here is fine. Grab the exposed key from the backup folder and chmod 600 it.
+
+2. Foothold with the key. ssh -i id_rsa webadmin@10.10.4.30 - a key sign-in looks like any other login.
+
+3. Root, quietly. root runs /opt/maint/rotate.sh on a timer and it is world-writable; append a line that
+   copies the flag out and wait for the next minute.
+
+Why the noisy way fails: a full -p- sweep, webscan hammering, and pwguess throwing the word list at ssh
+add up past the watcher's patience. It raises the alarm and blocks your address, and your connections time
+out. Use what you find (the key); never guess.

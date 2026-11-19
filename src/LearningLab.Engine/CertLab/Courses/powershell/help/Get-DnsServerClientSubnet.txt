@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the named client subnets used by DNS policies.
+DESCRIPTION:
+Get-DnsServerClientSubnet shows each client subnet with the networks it contains. Policies match these names in their -ClientSubnet condition.
+PARAMETER Name:
+Shows only this client subnet.
+PARAMETER ComputerName:
+The DNS server to ask.
+EXAMPLE: Get-DnsServerClientSubnet -ComputerName DC1
+Lists every client subnet on DC1.
+EXAMPLE: Get-DnsServerClientSubnet -Name Branch
+Shows which networks count as Branch.
+RELATED: Add-DnsServerClientSubnet, Get-DnsServerQueryResolutionPolicy

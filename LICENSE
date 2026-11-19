@@ -1,0 +1,9 @@
+Copyright (c) 2026 the Learning Lab (Sauce Edition) authors. All rights reserved.
+
+This repository is public so it can be read, but it is not open source. No licence is granted to copy, modify,
+publish, distribute or sell this software or any part of it, in source or built form, without written permission.
+
+Bundled third-party code keeps its own licence (see CREDITS.md):
+- Avalonia UI, SkiaSharp, HarfBuzzSharp, the .NET runtime: MIT
+- Inter typeface: SIL Open Font License 1.1
+- AndroidX libraries: Apache License 2.0

@@ -1,0 +1,495 @@
+# Exam: exam-4 | Practice exam 4 | 180
+Two machines: server1 and server2 (lab.example.com). The root password of both is redhat. This exam builds one small service from end to end: server2 serves a web site from its own logical volume, server1 runs the containers, and the two machines trust each other through SSH keys and firewall rules. The repositories are on http://repo.lab.example.com (BaseOS and AppStream) and the container registry is registry.lab.example.com (user student, password student). Everything must still work after a reboot: the grader restarts both machines before checking.
+
+@vars
+site = portal | intranet | catalog
+vgweb = vgweb | vgsrv | vgsite
+lvweb = lvsite | lvpages | lvhtml
+lvsize = 512 | 640 | 768
+port = 8090 | 8095 | 8099
+webname = {site}.example.internal
+p6 = fd00:50 | fd00:aa | fd00:1234
+grp = webteam | sitecrew | contentops
+gid = 3100-3199
+u1 = lina | paolo | ines
+u2 = matt | yara | kenji
+aud = rosa | viktor | nadia
+upw = W3b-team! | Site-0wner! | Pr0ject-pw!
+maxdays = 60 | 75 | 120
+mindays = 1 | 2 | 3
+warn = 10 | 14
+svc = svcweb | webops | sitesync
+spw = Sync-pw-42 | K3y-pass-7 | Rem0te-svc!
+rep = daily-sales | weekly-stats | load-summary
+cname = frontweb | webfront | edgeweb
+cport = 8088 | 8180 | 8280
+vol = webdata | sitedata | htmlvol
+dbname = appdb | shopdb | stockdb
+db = shop | stock | orders
+dbpw = Db-pass-1 | M4ria-pw | Qu3ry-key
+dbvol = dbfiles | mariadata | dbstore
+script = mkbackup | dirbackup | savefolder
+hh = 20-23
+mm = 5-55
+logf = webapp | siteevents | appaudit
+flabel = PHOTOS | SHARED01 | EXCHANGE
+fmnt = /photos | /exchange | /transfer
+swap = 256 | 384 | 512
+profile = throughput-performance | network-throughput | latency-performance
+tz = Europe/Berlin | Asia/Tokyo | America/Chicago
+@endvars
+
+@setup server2
+useradd {svc}
+echo '{spw}' | passwd --stdin {svc}
+
+@setup server1
+mkdir -p /srv/reports
+printf 'report {rep} for {site}\ntotal 42\n' > /srv/reports/{rep}.txt
+chmod 755 /srv/reports
+chmod 644 /srv/reports/{rep}.txt
+
+@task t01 | Deploy and maintain | 10 | server1
+Configure server1 to install software from the repositories http://repo.lab.example.com/BaseOS and http://repo.lab.example.com/AppStream.
+@check server1 | a BaseOS package (zsh) is available
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh
+@check server1 | an AppStream package (httpd) is available
+dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@solution server1
+dnf config-manager --add-repo http://repo.lab.example.com/BaseOS
+dnf config-manager --add-repo http://repo.lab.example.com/AppStream
+echo gpgcheck=0 >> /etc/yum.repos.d/repo.lab.example.com_BaseOS.repo
+echo gpgcheck=0 >> /etc/yum.repos.d/repo.lab.example.com_AppStream.repo
+dnf repolist
+@explain
+dnf config-manager --add-repo writes one .repo file per address. The packages are signed, but the signing key is not imported on a fresh machine, so either add gpgcheck=0 or point gpgkey= at file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release. Set up the repositories first: the container tasks need packages from them.
+@endtask
+
+@task t02 | Deploy and maintain | 10 | server2
+Configure server2 to use the same two repositories. Write the repository file yourself: /etc/yum.repos.d/lab.repo with one section for BaseOS and one for AppStream.
+@check server2 | /etc/yum.repos.d/lab.repo names both repositories
+grep -q '^baseurl *= *http://repo\.lab\.example\.com/BaseOS' /etc/yum.repos.d/lab.repo && grep -q '^baseurl *= *http://repo\.lab\.example\.com/AppStream' /etc/yum.repos.d/lab.repo
+@check server2 | packages from both repositories are available
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh && dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@solution server2
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\nenabled=1\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\nenabled=1\n' > /etc/yum.repos.d/lab.repo
+dnf repolist
+@explain
+A repository file holds one [section] per repository. Each section needs a unique id in the brackets, a name=, the baseurl= and a gpgcheck= setting; enabled=1 is the default but makes the file clearer. dnf repolist shows what dnf found, and dnf clean all helps when you fix a typo and dnf still remembers the old metadata.
+@endtask
+
+@task t03 | Networking | 15 | server2
+Give server2's connection enp1s0 a static IPv6 setup as well: the address {p6}::12/64 with the IPv6 gateway {p6}::1. The IPv4 settings must stay static as they are now (192.168.50.12/24, gateway and DNS 192.168.50.254), so that server1 can still reach server2. The settings must survive a reboot.
+@check server2 | the connection uses manual IPv6 with the address and gateway
+test "$(nmcli -g ipv6.method con show enp1s0)" = manual && nmcli -g ipv6.addresses con show enp1s0 | grep -q '{p6}::12/64' && test "$(nmcli -g ipv6.gateway con show enp1s0)" = '{p6}::1'
+@check server2 | after the reboot both addresses are active on enp1s0
+ip -6 -br addr show enp1s0 | grep -q '{p6}::12/64' && ip -4 -br addr show enp1s0 | grep -q '192\.168\.50\.12/24'
+@check server2 | IPv4 is still static with the lab gateway
+test "$(nmcli -g ipv4.method con show enp1s0)" = manual && test "$(nmcli -g ipv4.gateway con show enp1s0)" = 192.168.50.254
+@check server1 | server1 still reaches server2
+ping -c 1 -W 2 192.168.50.12 >/dev/null
+@solution server2
+nmcli -g ipv4.method,ipv4.addresses con show enp1s0
+nmcli con mod enp1s0 ipv6.method manual ipv6.addresses {p6}::12/64 ipv6.gateway {p6}::1
+nmcli con up enp1s0
+ip -br addr show enp1s0
+@explain
+Look before you change: the IPv4 side is already manual, so leave it alone. For IPv6, ipv6.method manual goes together with ipv6.addresses (the /64 is part of the address) and ipv6.gateway. nmcli con mod only changes the saved profile; nmcli con up applies it now. Changing ipv4.method or the IPv4 address by mistake is the classic way to lose the machine in the middle of an exam, so read the current values with nmcli -g first.
+@endtask
+
+@task t04 | Local storage | 20 | server2
+On server2, create a partition on /dev/vdb and use it for a new volume group `{vgweb}`. In it create the logical volume `{lvweb}` of {lvsize} MiB, format it with xfs, and mount it on /srv/{site} at every boot. In /etc/fstab use the file system's UUID, not the device name.
+@check server2 | {vgweb}/{lvweb} is {lvsize} MiB
+test "$(lvs --noheadings --units m -o lv_size {vgweb}/{lvweb} | tr -d ' ')" = "{lvsize}.00m"
+@check server2 | fstab mounts the UUID of {lvweb} on /srv/{site}
+u=$(blkid -s UUID -o value /dev/{vgweb}/{lvweb}); test -n "$u" && grep -Eq "^UUID=\"?$u\"?[[:space:]]+/srv/{site}/?[[:space:]]+xfs" /etc/fstab
+@check server2 | after the reboot xfs from {lvweb} is mounted on /srv/{site}
+test "$(findmnt -n -o FSTYPE /srv/{site})" = xfs && test "$(findmnt -n -o UUID /srv/{site})" = "$(blkid -s UUID -o value /dev/{vgweb}/{lvweb})"
+@solution server2
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart web 1MiB 1025MiB
+parted -s /dev/vdb set 1 lvm on
+pvcreate /dev/vdb1
+vgcreate {vgweb} /dev/vdb1
+lvcreate -n {lvweb} -L {lvsize}M {vgweb}
+mkfs.xfs /dev/{vgweb}/{lvweb}
+mkdir -p /srv/{site}
+blkid /dev/{vgweb}/{lvweb}
+echo "UUID=$(blkid -s UUID -o value /dev/{vgweb}/{lvweb}) /srv/{site} xfs defaults 0 0" >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /srv/{site}
+@explain
+blkid shows the UUID that mkfs wrote into the file system. blkid -s UUID -o value prints just the value, so $(...) can put it straight into the fstab line and nothing is typed wrong. A UUID belongs to the file system, not to the device name, so it stays right when disks are added or found in another order. mount -a tests the new line at once: a typo found now is better than a machine that stops in emergency mode at the grader's reboot.
+@endtask
+
+@task t05 | Security | 20 | server2
+Install the Apache web server on server2. It must listen on TCP port {port} only (not on 80) and serve the folder /srv/{site}/html, which holds a file index.html with the text `{site} site on server2`. httpd must start at boot and SELinux must stay enforcing: label the folder with a permanent file context rule, and label the port for the web server.
+@check server2 | httpd is enabled and active
+systemctl is-enabled httpd && systemctl is-active httpd
+@check server2 | the page is served on port {port}, and nothing listens on port 80
+curl -s -m 5 http://localhost:{port}/ | grep -q '{site} site on server2' && ! ss -tln | grep -q ':80 '
+@check server2 | SELinux is enforcing, port {port} is http_port_t
+test "$(getenforce)" = Enforcing && semanage port -l | grep '^http_port_t' | grep -qw {port}
+@check server2 | a permanent fcontext rule covers /srv/{site} and the page is labelled httpd_sys_content_t
+semanage fcontext -l -C | grep '^/srv/{site}' | grep -q httpd_sys_content_t && ls -Z /srv/{site}/html/index.html | grep -q httpd_sys_content_t
+@solution server2
+dnf -y install httpd
+mkdir -p /srv/{site}/html
+echo '{site} site on server2' > /srv/{site}/html/index.html
+semanage fcontext -a -t httpd_sys_content_t '/srv/{site}(/.*)?'
+restorecon -Rv /srv/{site}
+sed -i 's/^Listen 80$/Listen {port}/' /etc/httpd/conf/httpd.conf
+printf '<VirtualHost *:{port}>\n    DocumentRoot /srv/{site}/html\n    <Directory /srv/{site}/html>\n        Require all granted\n    </Directory>\n</VirtualHost>\n' > /etc/httpd/conf.d/{site}.conf
+semanage port -a -t http_port_t -p tcp {port}
+systemctl enable --now httpd
+curl http://localhost:{port}/
+@explain
+Three pieces have to agree. The Listen line decides the port; SELinux lets httpd bind only ports of the type http_port_t, and {port} is not one of them until semanage port -a adds it (without it httpd fails to start and ausearch -m AVC shows a name_bind denial). Files under /srv get the type var_t, which httpd may not read: semanage fcontext -a writes a permanent rule, and restorecon applies it to the files that exist. The mounted xfs volume is labelled the same way, so run restorecon after the mount. chcon would work only until the next relabel.
+@endtask
+
+@task t06 | Networking | 10 | server2
+Only server1 (192.168.50.11) may reach the web site on server2's port {port}; do not open the port or the http service for everybody. On server1, the name `{webname}` must resolve to 192.168.50.12 (use /etc/hosts), and `curl http://{webname}:{port}/` on server1 must show the page.
+@check server1 | {webname} resolves to 192.168.50.12 on server1
+getent hosts {webname} | grep -q '^192\.168\.50\.12[[:space:]]'
+@check server1 | server1 gets the page by name
+curl -s -m 5 http://{webname}:{port}/ | grep -q '{site} site on server2'
+@check server2 | a rule or zone names 192.168.50.11
+firewall-cmd --list-all-zones | grep -q '192\.168\.50\.11'
+@check server2 | the port is not open to everybody in the public zone
+! firewall-cmd --zone=public --list-ports | grep -qw '{port}/tcp' && ! firewall-cmd --zone=public --list-services | grep -qw http
+@solution server2
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.11/32" port port="{port}" protocol="tcp" accept'
+firewall-cmd --reload
+firewall-cmd --list-rich-rules
+@solution server1
+echo '192.168.50.12 {webname}' >> /etc/hosts
+curl http://{webname}:{port}/
+@explain
+A rich rule ties a source address, a port and an action together, so only that one machine gets in. The other way is a zone with a source: firewall-cmd --zone=internal --add-source=192.168.50.11/32 and the port added to that zone; packets from server1 then use the internal zone and everybody else stays in public. Both need --permanent and a --reload. /etc/hosts is read before DNS (the hosts line in /etc/nsswitch.conf says files dns), which is why one line there is enough; getent hosts NAME tests it the same way programs do.
+@endtask
+
+@task t07 | Users and groups | 15 | server2
+On server2, accounts created from now on must get these password aging values by default: at most {maxdays} days between password changes, at least {mindays} day(s), and a warning {warn} days before the password expires. Then create the group `{grp}` with the GID {gid}, the users `{u1}` and `{u2}` with `{grp}` as a secondary group, and the user `{aud}`, who is not in `{grp}`. All three use the password `{upw}`.
+@check server2 | login.defs has the three defaults
+grep -Eq '^PASS_MAX_DAYS[[:space:]]+{maxdays}$' /etc/login.defs && grep -Eq '^PASS_MIN_DAYS[[:space:]]+{mindays}$' /etc/login.defs && grep -Eq '^PASS_WARN_AGE[[:space:]]+{warn}$' /etc/login.defs
+@check server2 | the three users got those aging values
+for u in {u1} {u2} {aud}; do test "$(getent shadow $u | cut -d: -f4-6)" = "{mindays}:{maxdays}:{warn}" || exit 1; done
+@check server2 | {grp} has GID {gid}; {u1} and {u2} are members, {aud} is not
+test "$(getent group {grp} | cut -d: -f3)" = {gid} && id -nG {u1} | grep -qw {grp} && id -nG {u2} | grep -qw {grp} && ! id -nG {aud} | grep -qw {grp}
+@check server2 | the passwords work
+certlab-check password {u1} '{upw}' && certlab-check password {u2} '{upw}' && certlab-check password {aud} '{upw}'
+@solution server2
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t{maxdays}/' /etc/login.defs
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS\t{mindays}/' /etc/login.defs
+sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE\t{warn}/' /etc/login.defs
+grep ^PASS_ /etc/login.defs
+groupadd -g {gid} {grp}
+useradd -G {grp} {u1}
+useradd -G {grp} {u2}
+useradd {aud}
+for u in {u1} {u2} {aud}; do echo '{upw}' | passwd --stdin $u; done
+chage -l {u1}
+@explain
+useradd copies PASS_MAX_DAYS, PASS_MIN_DAYS and PASS_WARN_AGE from /etc/login.defs into the new account's line in /etc/shadow (fields 5, 4 and 6). The file is read only when an account is created, so the order of the steps matters: accounts made before the change keep the old values, and chage -M / -m / -W would have to fix them one by one. chage -l shows what an account got.
+@endtask
+
+@task t08 | File systems | 15 | server2
+Create the project folder /projects/{site} on server2. It belongs to the group `{grp}`; members of `{grp}` can read, write and enter it, and other users have no access (mode 2770, so new files belong to `{grp}`). Every file created in it later must be readable and writable by all members of `{grp}`. The user `{aud}` must be able to read the folder and every file in it, including files created later, but must not be able to change them.
+@check server2 | /projects/{site} has group {grp} and mode 2770
+test "$(stat -c '%G %a' /projects/{site})" = "{grp} 2770"
+@check server2 | {aud} has r-x on the folder and as a default
+getfacl -p /projects/{site} 2>/dev/null | grep -q '^user:{aud}:r-x' && getfacl -p /projects/{site} 2>/dev/null | grep -q '^default:user:{aud}:r-x'
+@check server2 | a new file of {u1} is writable by {u2} and readable, not writable, by {aud}
+f=/projects/{site}/grader-check.txt; rm -f $f; su - {u1} -c "echo first > $f" && su - {u2} -c "echo second >> $f" && su - {aud} -c "cat $f" | grep -q second && ! su - {aud} -c "echo third >> $f" 2>/dev/null
+@solution server2
+mkdir -p /projects/{site}
+chgrp {grp} /projects/{site}
+chmod 2770 /projects/{site}
+setfacl -m u:{aud}:rx /projects/{site}
+setfacl -m d:u:{aud}:rx,d:g:{grp}:rwx /projects/{site}
+getfacl /projects/{site}
+@explain
+Mode 2770 keeps everybody else out and the set-GID bit makes new files belong to {grp}, but it does not decide their permissions: the creator's umask (022) would leave the group read-only. A default ACL (d: entries) on the folder is copied onto every new file and folder made in it, and while one exists the umask is not applied, so the group gets rw. The normal ACL entry u:{aud}:rx lets {aud} into the folder; the default entry d:u:{aud}:rx gives {aud} read access to the files of the future (on files the x is masked away, getfacl shows #effective:r--). setfacl -R -m would also cover files that already exist.
+@endtask
+
+@task t09 | Users and groups | 10 | server2
+Members of `{grp}` may run exactly two commands as root with sudo, without a password: `systemctl restart httpd` and `systemctl status httpd`. They may not run anything else as root. Put the rule in a file in /etc/sudoers.d.
+@check server2 | {u1} can restart and check httpd with sudo
+su - {u1} -c 'sudo -n /usr/bin/systemctl restart httpd' && su - {u1} -c 'sudo -n /usr/bin/systemctl status httpd' >/dev/null
+@check server2 | {u1} cannot run other commands as root
+! su - {u1} -c 'sudo -n /usr/bin/systemctl restart sshd' >/dev/null 2>&1 && ! su - {u1} -c 'sudo -n /usr/bin/cat /etc/shadow' >/dev/null 2>&1
+@check server2 | the rule is in /etc/sudoers.d and the files are valid
+grep -rqs '%{grp}' /etc/sudoers.d/ && visudo -c >/dev/null
+@solution server2
+echo '%{grp} ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd, /usr/bin/systemctl status httpd' > /etc/sudoers.d/{grp}
+chmod 440 /etc/sudoers.d/{grp}
+visudo -c
+su - {u1} -c 'sudo -n -l'
+@explain
+% in front of a name makes the rule apply to a group. A command written with its arguments allows exactly those arguments, so restart httpd is allowed and restart sshd is not; a command without arguments would allow any arguments. Commands need their full path (which systemctl shows it). Check every change with visudo -c: a broken sudoers file stops sudo for everybody, including you.
+@endtask
+
+@task t10 | Security | 15 | server1
+The user `{svc}` exists on server2 with the password `{spw}`. Create `{svc}` on server1 too (password `{spw}`) and set it up so that {svc} on server1 can log in to server2 as {svc} with an SSH key, without typing a password.
+@check server1 | key login from server1 to server2 works for {svc}
+certlab-check sshkey {svc} {svc}@server2
+@solution server1
+useradd {svc}
+echo '{spw}' | passwd --stdin {svc}
+su - {svc}
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=no {svc}@server2
+{spw}
+ssh {svc}@server2 hostname
+exit
+@explain
+ssh-keygen makes the key pair in ~/.ssh of the user who runs it: the private key stays on server1, and ssh-copy-id appends the public half to ~/.ssh/authorized_keys of {svc} on server2 (the password is needed one last time for that). Do it as {svc}, not as root, or the keys end up in root's folder and {svc} still has to type a password. -N '' gives the key an empty passphrase, which a service account needs to run unattended.
+@endtask
+
+@task t11 | Running systems | 10 | server1
+As `{svc}`, copy the report /srv/reports/{rep}.txt from server1 to the folder /home/{svc}/incoming on server2 (create the folder). Use a secure transfer over SSH.
+@check server2 | the report arrived intact and belongs to {svc}
+f=/home/{svc}/incoming/{rep}.txt; test "$(stat -c %U $f 2>/dev/null)" = {svc} && grep -q 'report {rep} for {site}' $f && grep -q 'total 42' $f
+@solution server1
+su - {svc}
+ssh {svc}@server2 mkdir -p incoming
+scp /srv/reports/{rep}.txt {svc}@server2:incoming/
+ssh {svc}@server2 ls -l incoming
+exit
+@explain
+scp copies over SSH, so it uses the key from the last task and asks for no password. A remote path without a leading / (incoming/) is relative to the user's home folder on the other machine. The file arrives owned by the user who logged in, which is why the copy is done as {svc} and not as root. sftp does the same job interactively (put FILE).
+@endtask
+
+@task t12 | Containers | 25 | server1
+On server1, run a rootful container named `{cname}` from the image registry.lab.example.com/library/nginx. It must:
+- publish container port 80 on host port {cport}, reachable from server2 through the firewall
+- keep its web files in a podman volume named `{vol}`, mounted on /usr/share/nginx/html; the volume holds an index.html with the text `{cname} in a container`
+- start at boot as the system service `{cname}.service`, defined by a Quadlet file in /etc/containers/systemd
+@check server1 | the volume {vol} exists and the container uses it
+podman volume ls | grep -qw {vol} && podman inspect {cname} | grep -q 'volumes/{vol}/_data'
+@check server1 | a Quadlet file in /etc/containers/systemd defines the container
+grep -rqs 'Image=.*nginx' /etc/containers/systemd/
+@check server1 | after the reboot the service is active
+systemctl is-active {cname}.service
+@check server2 | server2 gets the page on port {cport}
+curl -s -m 5 http://server1.lab.example.com:{cport}/ | grep -q '{cname} in a container'
+@solution server1
+dnf -y install container-tools
+podman login -u student -p student registry.lab.example.com
+podman volume create {vol}
+podman volume inspect {vol}
+echo '{cname} in a container' > /var/lib/containers/storage/volumes/{vol}/_data/index.html
+mkdir -p /etc/containers/systemd
+cat > /etc/containers/systemd/{cname}.container <<'EOF'
+[Unit]
+Description=nginx web container
+
+[Container]
+ContainerName={cname}
+Image=registry.lab.example.com/library/nginx
+PublishPort={cport}:80
+Volume={vol}:/usr/share/nginx/html:Z
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl start {cname}.service
+firewall-cmd --permanent --add-port={cport}/tcp
+firewall-cmd --reload
+curl http://localhost:{cport}/
+@explain
+A named volume is storage that podman manages: podman volume create makes it, and podman volume inspect shows its Mountpoint on the host, where you can put files. For root, Quadlet reads .container files in /etc/containers/systemd and, at every systemctl daemon-reload, generates a service named after the file. The [Install] section with WantedBy=multi-user.target starts it at boot; a generated unit cannot be enabled with systemctl enable, so that section is the way. The image is pulled once and kept, so the service still starts after a reboot, when the registry login has been forgotten. The firewall opens the host port, not the container port.
+@endtask
+
+@task t13 | Containers | 20 | server1
+On server1, run a rootful MariaDB container named `{dbname}` from the image registry.lab.example.com/rhel9/mariadb-105 with:
+- the environment variables MYSQL_USER=app, MYSQL_PASSWORD={dbpw}, MYSQL_DATABASE={db} and MYSQL_ROOT_PASSWORD={dbpw}
+- container port 3306 published on host port 3306
+- the database files in a podman volume named `{dbvol}`, mounted on /var/lib/mysql
+The container must start at boot as a systemd service. Any method is fine; this time try podman generate systemd.
+@check server1 | after the reboot the container {dbname} is running
+podman ps | grep -qw {dbname}
+@check server1 | the four environment variables are set
+env=$(podman inspect {dbname}); for v in MYSQL_USER=app MYSQL_PASSWORD={dbpw} MYSQL_DATABASE={db} MYSQL_ROOT_PASSWORD={dbpw}; do echo "$env" | grep -q "\"$v\"" || exit 1; done
+@check server1 | port 3306 is published and the volume {dbvol} holds /var/lib/mysql
+podman port {dbname} | grep -q '3306' && podman volume ls | grep -qw {dbvol} && podman inspect {dbname} | grep -q 'volumes/{dbvol}/_data'
+@solution server1
+podman run -d --name {dbname} -e MYSQL_USER=app -e MYSQL_PASSWORD={dbpw} -e MYSQL_DATABASE={db} -e MYSQL_ROOT_PASSWORD={dbpw} -p 3306:3306 -v {dbvol}:/var/lib/mysql:Z registry.lab.example.com/rhel9/mariadb-105
+podman ps
+cd /etc/systemd/system
+podman generate systemd --name {dbname} --new --files
+sed -i 's/^WantedBy=default.target/WantedBy=multi-user.target/' container-{dbname}.service
+grep WantedBy container-{dbname}.service
+podman rm -f {dbname}
+systemctl daemon-reload
+systemctl enable --now container-{dbname}.service
+cd
+podman ps
+@explain
+-e sets one environment variable each; the image reads them at its first start to create the database, the user and the root password. -v NAME:/path uses a named volume (podman creates it the first time), so the data stays when the container is removed. podman generate systemd --new --files writes container-NAME.service into the current folder; with --new the service creates a fresh container at every start, which is why the one made by hand is removed before the service takes over. The generated [Install] section says WantedBy=default.target, the target a user's services use; for a system service, multi-user.target (the normal boot target of a server) says plainly when it starts. podman still prints that generate systemd is deprecated in favour of Quadlet, but it works and is still accepted.
+@endtask
+
+@task t14 | Shell scripts | 20 | server1
+Write the script /usr/local/bin/{script}. It takes exactly one argument, the name of a folder, and makes a gzip-compressed tar archive of it called /backups/NAME-YYYY-MM-DD.tar.gz, where NAME is the last part of the folder's path and YYYY-MM-DD is today's date (create /backups when it is missing). It prints the archive's name. Rules:
+- without exactly one argument it prints `Usage: {script} FOLDER` and exits with status 2
+- when the argument is not an existing folder it prints `FOLDER is not a folder` (with the name it was given) and exits with status 1, without making an archive
+@check server1 | without an argument: the usage line and exit status 2
+out=$(/usr/local/bin/{script} 2>&1); rc=$?; test $rc -eq 2 && echo "$out" | grep -q "Usage: {script} FOLDER"
+@check server1 | a missing folder: the message, status 1 and no archive
+rm -f /backups/no-such-dir-*; out=$(/usr/local/bin/{script} /tmp/no-such-dir 2>&1); rc=$?; test $rc -eq 1 && echo "$out" | grep -q '/tmp/no-such-dir is not a folder' && ! ls /backups/no-such-dir-* >/dev/null 2>&1
+@check server1 | it makes a dated tar.gz of the folder
+mkdir -p /tmp/grade-src/sub; echo data > /tmp/grade-src/sub/f.txt; f=/backups/grade-src-$(date +%F).tar.gz; rm -f $f; /usr/local/bin/{script} /tmp/grade-src >/dev/null 2>&1; file $f | grep -q 'gzip compressed' && tar tzf $f | grep -q 'grade-src/sub/f.txt$'
+@solution server1
+cat > /usr/local/bin/{script} <<'EOF'
+#!/bin/bash
+if [ $# -ne 1 ]; then
+    echo "Usage: {script} FOLDER"
+    exit 2
+fi
+if [ ! -d "$1" ]; then
+    echo "$1 is not a folder"
+    exit 1
+fi
+name=$(basename "$1")
+archive="/backups/$name-$(date +%F).tar.gz"
+mkdir -p /backups
+tar czf "$archive" "$1"
+echo "$archive"
+EOF
+chmod +x /usr/local/bin/{script}
+{script} /srv/reports
+{script} /nowhere
+@explain
+$# counts the arguments and $1 is the first one; quote it ("$1") so that names with spaces stay whole. [ -d NAME ] is true only for an existing folder, and ! turns the test around. $(...) puts a command's output into the text: basename gives the last part of a path and date +%F prints the date as YYYY-MM-DD. tar c creates, z compresses with gzip, f names the archive. The checks of the bad cases come first and end the script with exit, so nothing is archived by mistake.
+@endtask
+
+@task t15 | Deploy and maintain | 10 | server1
+On server1, root must run `/usr/local/bin/{script} /srv/reports` from Monday to Friday at {hh}:{mm} (cron).
+@check server1 | a cron job runs the backup at {mm} {hh} on weekdays
+(crontab -l -u root 2>/dev/null; cat /etc/cron.d/* 2>/dev/null) | grep -Eq '^{mm}[[:space:]]+{hh}[[:space:]]+\*[[:space:]]+\*[[:space:]]+(1-5|[Mm]on-[Ff]ri)[[:space:]]+(root[[:space:]]+)?(/usr/local/bin/)?{script}[[:space:]]+/srv/reports/?$'
+@check server1 | crond is enabled
+systemctl is-enabled crond
+@solution server1
+echo '{mm} {hh} * * 1-5 /usr/local/bin/{script} /srv/reports' | crontab -
+crontab -l
+@explain
+The five time fields are minute, hour, day of month, month and day of week; 1-5 in the last one means Monday to Friday (0 and 7 are Sunday). crontab - replaces root's table with standard input; crontab -e edits it in an editor. Write the full path of the script: cron runs jobs with a short PATH. A file in /etc/cron.d works too, but there each line has one more field, the user.
+@endtask
+
+@task t16 | Deploy and maintain | 10 | server2
+Both machines must get their time from ntp.lab.example.com only (no other sources), and the time service must start at boot. Also set the time zone of server2 to {tz}.
+@check server1 | server1's chrony.conf uses only ntp.lab.example.com
+grep -Eq '^(server|pool) +ntp\.lab\.example\.com' /etc/chrony.conf && test "$(grep -Ec '^(server|pool) ' /etc/chrony.conf)" = 1 && systemctl is-enabled chronyd && systemctl is-active chronyd
+@check server2 | server2's chrony.conf uses only ntp.lab.example.com
+grep -Eq '^(server|pool) +ntp\.lab\.example\.com' /etc/chrony.conf && test "$(grep -Ec '^(server|pool) ' /etc/chrony.conf)" = 1 && systemctl is-enabled chronyd && systemctl is-active chronyd
+@check server2 | server2's time zone is {tz}
+timedatectl | grep -q 'Time zone: {tz} '
+@solution server2
+sed -i 's/^pool /#pool /' /etc/chrony.conf
+echo 'server ntp.lab.example.com iburst' >> /etc/chrony.conf
+systemctl enable chronyd
+systemctl restart chronyd
+timedatectl set-timezone {tz}
+timedatectl
+@solution server1
+sed -i 's/^pool /#pool /' /etc/chrony.conf
+echo 'server ntp.lab.example.com iburst' >> /etc/chrony.conf
+systemctl enable chronyd
+systemctl restart chronyd
+chronyc sources
+@explain
+chronyd reads its time sources from the server and pool lines of /etc/chrony.conf. Comment out the default pool so that only the lab server is used, restart chronyd to read the file again, and check with chronyc sources (^* marks the source the clock follows). The time zone is a separate setting: timedatectl set-timezone points /etc/localtime at the zone file, and timedatectl list-timezones shows the names. It changes how the time is shown, not the clock itself.
+@endtask
+
+@task t17 | Running systems | 15 | server1
+On server1:
+- Make the system journal persistent, so that the messages of earlier boots are kept.
+- Configure rsyslog so that every message of the facility local5 (any priority) is written to /var/log/{logf}.log, and no longer to /var/log/messages.
+@check server1 | the journal keeps more than one boot
+test "$(journalctl --list-boots --no-pager | tail -n +2 | wc -l)" -ge 2
+@check server1 | a local5 message goes to /var/log/{logf}.log and not to /var/log/messages
+m="grader-local5-$RANDOM$RANDOM"; logger -p local5.notice "$m"; grep -q "$m" /var/log/{logf}.log && ! grep -q "$m" /var/log/messages
+@check server1 | other messages still go to /var/log/messages
+m="grader-user-$RANDOM$RANDOM"; logger -p user.info "$m"; grep -q "$m" /var/log/messages && ! grep -q "$m" /var/log/{logf}.log
+@solution server1
+mkdir -p /var/log/journal
+systemctl restart systemd-journald
+echo 'local5.*    /var/log/{logf}.log' > /etc/rsyslog.d/{logf}.conf
+sed -i 's|^\*\.info;mail\.none;authpriv\.none;cron\.none|&;local5.none|' /etc/rsyslog.conf
+grep /var/log/messages /etc/rsyslog.conf
+systemctl restart rsyslog
+logger -p local5.info "test for {logf}"
+cat /var/log/{logf}.log
+@explain
+systemd-journald keeps the journal on disk when /var/log/journal exists (Storage=auto, the default) or when journald.conf says Storage=persistent; otherwise it lives in /run and is lost at shutdown. A rsyslog rule is a selector (facility.priority) and an action (here a file). local5.* catches every priority; a file in /etc/rsyslog.d is read by the main rsyslog.conf. The line that writes /var/log/messages selects *.info, which includes local5, so add local5.none to it. logger -p sends a test message with the facility and priority you choose.
+@endtask
+
+@task t18 | File systems | 15 | server1
+On server1, create a 300 MiB partition on /dev/vdb with a vfat file system labelled `{flabel}`. Mount it on {fmnt} at every boot, using the label in /etc/fstab.
+@check server1 | fstab mounts LABEL={flabel} on {fmnt}
+grep -Eq '^LABEL="?{flabel}"?[[:space:]]+{fmnt}/?[[:space:]]+vfat' /etc/fstab
+@check server1 | after the reboot a vfat file system labelled {flabel} is mounted on {fmnt}
+test "$(findmnt -n -o FSTYPE {fmnt})" = vfat && test "$(findmnt -n -o LABEL {fmnt})" = {flabel}
+@solution server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart files fat32 1MiB 301MiB
+mkfs.vfat -n {flabel} /dev/vdb1
+blkid /dev/vdb1
+mkdir -p {fmnt}
+echo 'LABEL={flabel} {fmnt} vfat defaults 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt {fmnt}
+@explain
+mkfs.vfat (the same program as mkfs.fat) makes a FAT file system, which Windows and most cameras can read too; -n sets its label. FAT labels are at most 11 characters; use capitals (mkfs.fat warns that lowercase labels may not work on some systems). A vfat file system has no Linux owners or permissions of its own: mount options such as uid= and umask= decide them. fatlabel changes the label later.
+@endtask
+
+@task t19 | Local storage | 15 | server1
+Add a swap partition of exactly {swap} MiB on /dev/vdb of server1, in the free space after the first partition, and activate it at every boot. The existing swap space must stay active.
+@check server1 | after the reboot a {swap} MiB partition of vdb is active swap
+d=$(awk '$1 ~ /^\/dev\/vdb/ {print $1}' /proc/swaps | head -1); test -n "$d" && test "$(lsblk -b -dno SIZE $d)" = $(({swap} * 1048576))
+@check server1 | the old swap is still active
+test "$(swapon --show --noheadings | wc -l)" -ge 2
+@solution server1
+parted -s /dev/vdb mkpart swap linux-swap 301MiB $((301 + {swap}))MiB
+mkswap /dev/vdb2
+echo '/dev/vdb2 none swap defaults 0 0' >> /etc/fstab
+swapon -a
+swapon --show
+@explain
+parted takes start and end points, not a size: the partition starts where the first one ends (301MiB) and ends {swap} MiB later; $((...)) lets the shell do the sum. mkswap writes the swap signature, the fstab line (mount point none, type swap) keeps it for the next boot, and swapon -a turns on everything fstab lists. The UUID that mkswap prints works in fstab too (UUID=... none swap defaults 0 0).
+@endtask
+
+@task t20 | Running systems | 10 | server2
+Set the tuned profile of server2 to `{profile}`. tuned must start at boot.
+@check server2 | the active profile is {profile}
+tuned-adm active | grep -q ': {profile}$'
+@check server2 | tuned is enabled
+systemctl is-enabled tuned
+@solution server2
+tuned-adm list
+tuned-adm profile {profile}
+systemctl enable --now tuned
+tuned-adm active
+@explain
+tuned-adm list shows the profiles with a short description, tuned-adm active the current one, and tuned-adm recommend the one tuned would pick. tuned-adm profile NAME switches at once and remembers the choice in /etc/tuned/active_profile, which the tuned service applies again at every boot.
+@endtask
+
+@task t21 | Essential tools | 10 | server2
+On server2:
+- Save the active settings of /etc/httpd/conf/httpd.conf into /root/httpd-settings.txt: every line except the empty lines and the lines whose very first character is #, in the original order (indented lines stay).
+- Create a symbolic link /root/{site}-web that points to /srv/{site}/html.
+@check server2 | /root/httpd-settings.txt has exactly those lines
+test -s /root/httpd-settings.txt && test "$(grep -Ev '^(#|$)' /etc/httpd/conf/httpd.conf)" = "$(cat /root/httpd-settings.txt)"
+@check server2 | /root/{site}-web is a symbolic link to /srv/{site}/html
+test -L /root/{site}-web && test "$(readlink -f /root/{site}-web)" = /srv/{site}/html
+@solution server2
+grep -v '^#' /etc/httpd/conf/httpd.conf | grep -v '^$' > /root/httpd-settings.txt
+head -5 /root/httpd-settings.txt
+ln -s /srv/{site}/html /root/{site}-web
+ls -l /root/{site}-web
+@explain
+grep -v prints the lines that do NOT match. ^# matches a # at the start of a line and ^$ an empty line (start and end with nothing between); the pipe runs the second filter on the result of the first, and > writes the file. grep -Ev '^(#|$)' does both in one go. ln -s TARGET LINKNAME makes a symbolic link: give the target first. A hard link (ln without -s) cannot point to a folder.
+@endtask

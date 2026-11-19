@@ -1,0 +1,31 @@
+# Deck: shell-scripts | Shell scripts | Shell scripts
+What must the first line of a bash script be? :: #!/bin/bash (the shebang: it names the program that runs the file)
+Make the script /root/backup.sh executable :: `chmod +x /root/backup.sh`
+Run the script backup.sh that is in the current folder :: `./backup.sh`
+Which folder is in every user's PATH and is the usual home for scripts everyone may run? :: /usr/local/bin
+Check the script /root/backup.sh for syntax errors without running it :: `bash -n /root/backup.sh`
+Run /root/backup.sh and print every command as it runs :: `bash -x /root/backup.sh`
+Set the variable name to Ann (no spaces!) :: `name=Ann`
+What is the difference between "$name" and '$name'? :: double quotes fill in the variable's value; single quotes keep the text $name exactly
+Why write "$file" with quotes rather than $file? :: without quotes the value is split at spaces and wildcards in it are expanded
+Store the output of the command date +%F in the variable today :: `today=$(date +%F)`
+Print the sum of the variables a and b :: `echo $(($a + $b))`
+Ask "Your name: " and store the answer in the variable name :: `read -p "Your name: " name`
+In a script, what are $1, $2 and $0? :: the first and second arguments, and the script's own name
+What does $# hold? :: the number of arguments the script got
+Which form loops over all arguments, keeping arguments with spaces whole? :: "$@" (for a in "$@"; do ...)
+What does $? hold? :: the exit code of the last command (0 means success)
+End a script with exit code 2 :: `exit 2`
+Print the message "Usage: $0 FILE" on standard error instead of standard output :: `echo "Usage: $0 FILE" >&2`
+Run the second command only if the first one succeeded :: A && B (and A || B runs B only if A failed)
+The test for "is a directory" and for "is a regular file" :: -d and -f, for example [ -d "$1" ]
+The tests for "string is empty" and "string is not empty" :: -z "$s" and -n "$s"
+Compare two whole numbers in [ ]: equal, not equal, less, greater :: -eq, -ne, -lt, -gt (also -le and -ge)
+Why does [ -f /etc/hosts] fail? :: [ is a command and ] its last argument: both need spaces around them
+Which words open and close an if, a case and a loop body? :: if ... fi, case ... esac, do ... done
+What ends each branch of a case statement? :: ;; (and *) is the branch for everything else)
+Loop over every file in /etc that ends in .conf :: for f in /etc/*.conf; do echo "$f"; done
+Read the file names.txt one whole line at a time :: while read -r line; do ...; done < names.txt
+Count from 1 to 5 in a for loop :: for i in {1..5}; do ...; done (or for i in $(seq 1 5))
+Leave a loop at once, or skip to its next round :: break leaves it, continue skips to the next round
+Split a line at colons into the variables user and shell while reading :: while IFS=: read -r user shell; do ...; done

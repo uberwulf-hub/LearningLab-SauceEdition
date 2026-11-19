@@ -1,0 +1,16 @@
+SYNOPSIS: Pauses a running service that supports pausing.
+DESCRIPTION:
+A paused service stays loaded but stops doing its work until it is resumed. Only some services can pause: their CanPauseAndContinue property is True (for example LanmanServer, LanmanWorkstation, Netlogon and Winmgmt). For the others PowerShell writes an error.
+PARAMETER Name:
+The services to pause. Takes pipeline input.
+PARAMETER DisplayName:
+The services to pause, by display name.
+PARAMETER InputObject:
+Service objects from the pipeline.
+PARAMETER PassThru:
+Outputs the paused service.
+EXAMPLE: Get-Service | Where-Object CanPauseAndContinue
+Lists the services that can pause right now.
+EXAMPLE: Suspend-Service -Name LanmanServer
+Pauses file sharing; Resume-Service LanmanServer brings it back.
+RELATED: Resume-Service, Stop-Service, Get-Service

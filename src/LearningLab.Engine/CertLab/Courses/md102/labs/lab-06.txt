@@ -1,0 +1,73 @@
+# Lab: lab-06 | Provisioning packages, upgrades and editions | u06 | 35
+A laptop has to be set up in a warehouse office with no one to sign in, the Windows 10 desktops must move to Windows 11 before their missing security updates become a problem, and some devices need a better Windows edition.
+
+@vars
+grp = Windows 10 desktops | Win10 PCs | Desktops to upgrade
+edition = Enterprise | Education
+@endvars
+
+@setup portal
+tenant mdmScope=Some mdmGroup="Intune pilot users"
+@setup RB-LT-003
+Set-Content C:\Users\Public\Warehouse-old.ppkg -Value "DeviceName=RB-WH-%RAND:4%`nTokenExpires=2026-02-15"
+Set-Content C:\Users\Public\Warehouse-new.ppkg -Value "DeviceName=RB-WH-%RAND:4%`nTokenExpires=2026-08-15"
+
+@task t01 | Deployment | 30 | RB-LT-003
+Bulk enrol **RB-LT-003** with the provisioning package in `C:\Users\Public` whose bulk token is still valid. The laptop must end up joined **and** enrolled in Intune.
+@check portal | the laptop is bulk joined and enrolled
+device["LB14-55821"].join == "Entra joined"
+device["LB14-55821"].managed == Intune
+device["LB14-55821"].name like RB-WH-*
+@hint Two things can stop it: an expired bulk token, and an MDM user scope that doesn't cover the package (set it to All).
+@solution portal
+tenant mdmScope=All
+@solution RB-LT-003
+Get-Content C:\Users\Public\Warehouse-old.ppkg
+Get-Content C:\Users\Public\Warehouse-new.ppkg
+Install-ProvisioningPackage -PackagePath C:\Users\Public\Warehouse-new.ppkg -QuietInstall
+@explain
+Warehouse-old.ppkg's token expired on 15 February. In a real tenant, bulk enrolment enrols only if the account that got the bulk token is in the MDM user scope; with Some and a group that doesn't hold that account, the package joins the laptop to Entra ID but leaves it unmanaged. All always covers it, and Cert Lab simplifies by enrolling bulk devices only with All. Fix the scope first, then install the package.
+@endtask
+
+@task t02 | Deployment | 30 | portal
+Create an assigned device group **{grp}** with **RB-DT-010** and **RB-DT-007**, and a feature updates policy **Move to Windows 11** for *Windows 11, version 24H2* assigned to it. Sync both desktops, and see what the policy reports for the one that can't run Windows 11.
+@check portal | RB-DT-010 runs Windows 11 24H2
+device["RB-DT-010"].featureVersion == 24H2
+@check portal | RB-DT-007 stays on Windows 10, not applicable
+device["RB-DT-007"].policy["Move to Windows 11"] == "Not applicable"
+device["RB-DT-007"].featureVersion == 22H2
+@hint Feature updates policies are assigned to device groups.
+@solution portal
+create group name="{grp}" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+create featureUpdate name="Move to Windows 11" version="Windows 11, version 24H2"
+assign featureUpdate "Move to Windows 11" "{grp}"
+remote sync "RB-DT-010"
+remote sync "RB-DT-007"
+@explain
+The feature update upgrades RB-DT-010 in place: apps, settings and files stay. RB-DT-007 has TPM 1.2, so Windows Update doesn't offer it Windows 11; it stays on Windows 10 22H2 (Cert Lab's policy shows it as Not applicable; Intune's readiness report would show it can't take Windows 11). Windows 10 is out of support since 14 October 2025, so RB-DT-007 needs replacing (or Extended Security Updates).
+@endtask
+
+@task t03 | Deployment | 25 | portal
+RB-LT-002 runs Windows Pro. Upgrade it to **{edition}** with a configuration profile called **Edition {edition}** assigned to **Pilot devices**, then sync it.
+@check portal | RB-LT-002 runs the new edition
+device["RB-LT-002"].edition == {edition}
+@hint Profile type Edition upgrade and mode switch.
+@solution portal
+create config name="Edition {edition}" platform="Windows 10 and later" type="Edition upgrade and mode switch" edition="Windows 10/11 {edition}"
+assign config "Edition {edition}" "Pilot devices"
+remote sync "RB-LT-002"
+@explain
+The edition upgrade profile changes the edition with a product key or licence file, without reinstalling Windows. With per-user licences (Windows Enterprise E3/E5, Microsoft 365 E3/E5) subscription activation does the same at sign-in, with no profile.
+@endtask
+
+@task t04 | Deployment | 15 | portal
+Priya has **Microsoft 365 Business Premium**, which doesn't include Windows Enterprise. Add the licence that lets her Pro devices step up to Enterprise through subscription activation, and keep her current licence.
+@check portal | Priya has Windows Enterprise E3 next to Business Premium
+user["priya"].licenses has "Windows Enterprise E3"
+user["priya"].licenses has "Microsoft 365 Business Premium"
+@hint The licence is called Windows Enterprise E3 in the list.
+@solution portal
+set user priya +licenses="Windows Enterprise E3"
+@explain
+Subscription activation needs the signed-in user to hold Windows Enterprise E3 or E5 (alone or inside Microsoft 365 E3/E5), on an Entra joined or hybrid joined Pro device. Business Premium includes Windows Business instead. Cert Lab records the licence but doesn't simulate the step-up itself.
+@endtask

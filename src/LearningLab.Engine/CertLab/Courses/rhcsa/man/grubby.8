@@ -1,0 +1,102 @@
+NAME
+       grubby - list and change the kernels the boot loader starts
+
+SYNOPSIS
+       grubby --default-kernel | --default-index | --default-title
+       grubby --info=KERNEL
+       grubby --set-default=KERNEL | --set-default-index=INDEX
+       grubby --update-kernel=KERNEL [--args="ARGS"] [--remove-args="ARGS"]
+
+DESCRIPTION
+       On RHEL 9 every kernel in the GRUB menu has its own small file in
+       /boot/loader/entries (the Boot Loader Specification, "BLS", layout).
+       Each file holds the kernel's title, version, the paths of the kernel
+       and its initramfs, and an "options" line with the kernel command line.
+       grubby is Red Hat's tool for reading and changing those files, so you
+       never have to edit them by hand and you do not need to rebuild
+       grub.cfg afterwards: GRUB reads the entries directly at every boot.
+
+       Wherever an option takes a KERNEL you can give:
+
+       ALL       every entry (only for --info and --update-kernel);
+
+       DEFAULT   the entry that boots by default;
+
+       a path    such as /boot/vmlinuz-5.14.0-503.14.1.el9_5.x86_64;
+
+       a number  the entry's index (0 is the first, normally the newest).
+
+       Changes made with --update-kernel take effect at the next boot. Check
+       the running kernel's command line with cat /proc/cmdline.
+
+OPTIONS
+       --default-kernel
+              Print the path of the kernel that boots by default.
+
+       --default-index
+              Print the index of the default entry.
+
+       --default-title
+              Print the title of the default entry, as shown in the menu.
+
+       --info=KERNEL
+              Show the entry (or every entry, with ALL): index, kernel, args
+              (the command line apart from root=), root, initrd, title and id.
+
+       --set-default=KERNEL
+              Make this kernel the one that boots by default. grubby writes
+              the entry's id to saved_entry in /boot/grub2/grubenv.
+
+       --set-default-index=INDEX
+              The same, choosing the entry by its number.
+
+       --update-kernel=KERNEL
+              Change the command line of the chosen entries; use it with
+              --args and/or --remove-args.
+
+       --args="ARG ..."
+              Arguments to add. An argument that is already there with another
+              value (quiet, or crashkernel=...) is replaced, not doubled.
+
+       --remove-args="ARG ..."
+              Arguments to remove. A name alone (rhgb) removes it whatever its
+              value.
+
+NOTES
+       --update-kernel=ALL also updates GRUB_CMDLINE_LINUX in
+       /etc/default/grub, so kernels installed later get the same arguments.
+       With DEFAULT or a single kernel only that entry changes.
+
+       The other way to change the command line for every kernel is to edit
+       GRUB_CMDLINE_LINUX in /etc/default/grub and run
+       "grub2-mkconfig -o /boot/grub2/grub.cfg --update-bls-cmdline".
+
+EXAMPLES
+       Which kernel boots by default, and with what command line?
+              # grubby --default-kernel
+              /boot/vmlinuz-5.14.0-503.14.1.el9_5.x86_64
+              # grubby --info=DEFAULT
+
+       Add an argument to every kernel, and remove two others:
+              # grubby --update-kernel=ALL --args="audit=1"
+              # grubby --update-kernel=ALL --remove-args="rhgb quiet"
+
+       Boot an older kernel by default:
+              # grubby --info=ALL | grep -E '^(index|kernel)'
+              # grubby --set-default=/boot/vmlinuz-5.14.0-427.13.1.el9_4.x86_64
+
+       Check after a reboot:
+              # cat /proc/cmdline
+
+FILES
+       /boot/loader/entries/*.conf
+              One file per menu entry.
+
+       /boot/grub2/grubenv
+              Holds saved_entry, the default entry.
+
+       /etc/default/grub
+              The settings grub2-mkconfig uses.
+
+SEE ALSO
+       grub2-mkconfig(8), grub2-set-default(8), grub2-editenv(1), kernel-command-line(7)

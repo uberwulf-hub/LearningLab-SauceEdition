@@ -1,0 +1,48 @@
+# Sheet: networking | DNS, DHCP and hybrid networking | Networking
+## DNS zones and records
+Get-DnsServerZone :: the zones a DNS server loads (type, AD-integrated, reverse, signed)
+Add-DnsServerPrimaryZone -Name x -ReplicationScope Forest|Domain|Legacy :: AD-integrated primary zone (add -DynamicUpdate Secure for secure updates)
+Add-DnsServerPrimaryZone -Name x -ZoneFile x.dns :: file-backed primary zone (member servers)
+Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 -ReplicationScope Domain :: reverse zone 0.20.10.in-addr.arpa
+Add-DnsServerSecondaryZone -Name x -ZoneFile x.dns -MasterServers IP :: read-only copy by zone transfer
+Add-DnsServerStubZone -Name x -MasterServers IP [-ReplicationScope Forest] :: SOA, NS and glue only; follows the other zone's name servers
+Set-DnsServerPrimaryZone -Name x -SecureSecondaries TransferToSecureServers -SecondaryServers IP :: allow zone transfers only to listed servers
+Set-DnsServerPrimaryZone -Name x -DynamicUpdate Secure|NonsecureAndSecure|None :: who may register records (Secure needs AD)
+Add-DnsServerResourceRecordA -ZoneName z -Name n -IPv4Address IP -CreatePtr :: A record plus its PTR record
+Add-DnsServerResourceRecordCName -ZoneName z -Name alias -HostNameAlias target :: alias (stands alone at its name)
+Add-DnsServerResourceRecordMX / Add-DnsServerResourceRecordPtr / Add-DnsServerResourceRecord -Srv|-Txt :: mail, reverse, service and text records
+Get-DnsServerResourceRecord -ZoneName z -RRType A :: list records
+Set-DnsServerZoneAging -Name z -Aging $true / Set-DnsServerScavenging -ScavengingState $true :: aging per zone, scavenging per server (7 + 7 days)
+## Resolving other names
+Get-DnsServerForwarder / Set-DnsServerForwarder -IPAddress IP :: forwarders for everything the server can't answer
+Add-DnsServerConditionalForwarderZone -Name x -MasterServers IP -ReplicationScope Forest :: one domain to its own servers, on every DC
+Set-DnsServerRecursion -Enable $false :: answer only from own zones (forwarders stop too)
+Resolve-DnsName name [-Type MX|SRV|PTR] [-Server DC2] :: test from a client
+Resolve-DnsName _ldap._tcp.corp.example -Type SRV :: can clients find the domain controllers?
+## DNSSEC and policies
+Invoke-DnsServerZoneSign -ZoneName x -SignWithDefault :: sign: DNSKEY (KSK, ZSK), RRSIG, NSEC/NSEC3; DS goes to the parent
+NRPT rule (Group Policy) :: makes Windows clients require validated answers
+Add-DnsServerClientSubnet -Name HQ -IPv4Subnet 10.10.0.0/24 :: name a client network
+Add-DnsServerZoneScope -ZoneName z -Name internal :: a second set of records in the zone (-ZoneScope on records)
+Add-DnsServerQueryResolutionPolicy -Name p -Action ALLOW -ClientSubnet "EQ,HQ" -ZoneScope "internal,1" -ZoneName z :: split-brain / geo answers
+Add-DnsServerQueryResolutionPolicy -Name p -Action IGNORE -Fqdn "EQ,*.bad.example" :: drop queries (DENY refuses); per server
+## DHCP
+Add-DhcpServerInDC -DnsName srv1.corp.example -IPAddress IP / Get-DhcpServerInDC :: authorize in AD / list authorized servers
+Add-DhcpServerv4Scope -Name n -StartRange a -EndRange b -SubnetMask m -LeaseDuration 4.00:00:00 :: new scope (default lease 8 days)
+Add-DhcpServerv4ExclusionRange -ScopeId s -StartRange a -EndRange b :: never hand these out
+Add-DhcpServerv4Reservation -ScopeId s -IPAddress IP -ClientId MAC :: always this address for this client
+Set-DhcpServerv4OptionValue [-ScopeId s] -Router IP -DnsServer IP,IP -DnsDomain d :: options 003, 006, 015 (scope beats server)
+Get-DhcpServerv4Lease -ScopeId s / Get-DhcpServerv4ScopeStatistics :: leases and free addresses
+Add-DhcpServerv4Failover -Name f -ScopeId s -PartnerServer p -LoadBalancePercent 50 -SharedSecret x :: load balance (default 50:50)
+Add-DhcpServerv4Failover ... -ServerRole Active -ReservePercent 5 -MaxClientLeadTime 01:00:00 :: hot standby
+Invoke-DhcpServerv4FailoverReplication -Name f :: copy scope settings to the partner (leases sync by themselves)
+DHCP relay agent / IP helper :: forwards DHCP broadcasts from other subnets to the server
+IPAM :: domain member (not a DC); GPO-based provisioning with Invoke-IpamGpoProvisioning; set servers to Managed
+## Remote access and Azure
+RRAS :: VPN server (IKEv2, SSTP 443, L2TP/IPsec; not PPTP), LAN routing, NAT, DHCP relay
+Web Application Proxy :: reverse proxy publishing internal web apps, AD FS pre-authentication
+Site-to-site VPN to Azure :: VPN gateway in GatewaySubnet + local network gateway (office IP and ranges) + connection with a shared key
+Azure Network Adapter :: point-to-site VPN for one server, added from Windows Admin Center (registered with Azure)
+Azure Extended Network :: stretch an on-premises subnet into Azure (VXLAN between two appliance VMs; the Azure one runs Azure Edition) so VMs keep their IPs
+Azure-provided DNS 168.63.129.16 :: only from inside Azure
+DNS Private Resolver :: inbound endpoint (office -> Azure private zones), outbound endpoint + forwarding ruleset (Azure -> office)

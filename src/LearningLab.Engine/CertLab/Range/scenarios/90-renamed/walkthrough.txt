@@ -1,0 +1,20 @@
+Stop the damage, repair, then find the way in.
+
+1. Stop it. On FS01 the team share has files ending in .{{EXT}} and a note ({{NOTE}}). Event 4698 shows
+   {{SVC}} creating the task \{{TASK}}; it runs C:\ProgramData\{{TASK}}\run.ps1, which renames every file
+   not renamed yet. Unregister it first, or the next run renames the rest. The flag is in id.txt there.
+
+2. Repair. In Cyber Range the files were only renamed (real ransomware scrambles them, which is why
+   backups matter). Get-ChildItem C:\Shares\Team -Filter *.{{EXT}} | ForEach-Object { Rename-Item
+   $_.FullName ($_.Name -replace '\.{{EXT}}$','') } gives every file its name back.
+
+3. Trace it. The 4624 just before the task: {{SVC}} signed in with remote PowerShell from 10.10.30.20,
+   which is scan1, the scanner box. On scan1 (/var/log/secure), the scanner account signed in from
+   {{ATKIP}} after one failed try. Its history shows it reading /etc/scan-to-share.conf - a file every
+   account can read, holding {{SVC}}'s password - and then winrm-shell to the file server with it.
+
+4. Close the doors. Disable-LocalUser {{SVC}} on FS01 (give the scanner a new password later, kept where
+   only root can read it), and usermod -L scanner on scan1.
+
+For real: keep backups that an intruder can't reach, give service accounts only the rights they need
+(a scanner drop doesn't need to be an administrator), and never leave passwords in world-readable files.

@@ -1,0 +1,75 @@
+# Lab: lab-07 | Web log analysis | u06 | 30
+The web shop of Copperleaf Books was slow this morning, and the developers saw odd errors. A copy of the web server's access log is in /root/evidence/access.log on server1 (the combined log format: client address, time, request, status code, size, referrer, browser). Find the attacks in it. In this log, every SQL injection attempt contains either `%27` (an encoded single quote) or the word `UNION` in capitals, and every directory traversal attempt contains `../` or `%2e%2e`. Write each answer into the file the task names.
+
+@setup server1
+mkdir -p /root/evidence
+cat > /root/evidence/access.log <<'EOF'
+192.0.2.14 - - [02/Mar/2026:09:30:02 +0000] "GET / HTTP/1.1" 200 5120 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+192.0.2.14 - - [02/Mar/2026:09:30:09 +0000] "GET /search?q=garden+books HTTP/1.1" 200 8811 "https://shop.copperleaf.example/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+203.0.113.50 - - [02/Mar/2026:09:31:40 +0000] "GET /products.php?id=7%27 HTTP/1.1" 500 312 "-" "sqlmap/1.7"
+10.0.8.21 - - [02/Mar/2026:09:32:15 +0000] "GET /about.html HTTP/1.1" 200 2048 "-" "Mozilla/5.0 (X11; Linux x86_64)"
+203.0.113.50 - - [02/Mar/2026:09:33:01 +0000] "GET /products.php?id=7%27%20OR%20%271%27=%271 HTTP/1.1" 500 312 "-" "sqlmap/1.7"
+198.51.100.23 - - [02/Mar/2026:09:34:22 +0000] "GET /download.php?file=../../../etc/passwd HTTP/1.1" 403 199 "-" "curl/8.4.0"
+203.0.113.50 - - [02/Mar/2026:09:35:47 +0000] "GET /products.php?id=7%20UNION%20SELECT%20null,null HTTP/1.1" 500 312 "-" "sqlmap/1.7"
+192.0.2.77 - - [02/Mar/2026:09:36:05 +0000] "GET /products.php?id=12 HTTP/1.1" 200 6630 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2)"
+198.51.100.23 - - [02/Mar/2026:09:37:30 +0000] "GET /download.php?file=%2e%2e/%2e%2e/%2e%2e/etc/passwd HTTP/1.1" 403 199 "-" "curl/8.4.0"
+203.0.113.88 - - [02/Mar/2026:09:38:12 +0000] "GET /download.php?file=../../../../etc/shadow HTTP/1.1" 404 196 "-" "Mozilla/5.0 (X11; Linux x86_64)"
+192.0.2.77 - - [02/Mar/2026:09:39:44 +0000] "POST /cart/add HTTP/1.1" 302 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2)"
+203.0.113.50 - - [02/Mar/2026:09:40:20 +0000] "GET /products.php?id=7%20AND%201=1%27-- HTTP/1.1" 500 312 "-" "sqlmap/1.7"
+198.51.100.23 - - [02/Mar/2026:09:41:12 +0000] "GET /download.php?file=....//....//....//etc/passwd HTTP/1.1" 200 2311 "-" "curl/8.4.0"
+10.0.8.21 - - [02/Mar/2026:09:42:30 +0000] "GET /contact.html HTTP/1.1" 200 1890 "-" "Mozilla/5.0 (X11; Linux x86_64)"
+203.0.113.50 - - [02/Mar/2026:09:47:03 +0000] "GET /products.php?id=7%20UNION%20SELECT%20username,password%20FROM%20users HTTP/1.1" 200 9422 "-" "sqlmap/1.7"
+192.0.2.14 - - [02/Mar/2026:09:48:10 +0000] "GET /products.php?id=3 HTTP/1.1" 200 6102 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+203.0.113.50 - - [02/Mar/2026:09:49:55 +0000] "GET /products.php?id=7%20UNION%20SELECT%20card_number,expiry%20FROM%20payments HTTP/1.1" 500 312 "-" "sqlmap/1.7"
+EOF
+
+@task t01 | Threats, vulnerabilities and mitigations | 10 | server1
+How many SQL injection attempts are in the log? Write the number into /root/sqli-count.txt.
+@check server1 | the count is right
+test "$(tr -d ' \n' < /root/sqli-count.txt)" = 6
+@hint grep -E 'A|B' matches lines with either pattern, and grep -c counts them instead of printing them.
+@solution server1
+grep -E '%27|UNION' /root/evidence/access.log
+grep -Ec '%27|UNION' /root/evidence/access.log > /root/sqli-count.txt
+cat /root/sqli-count.txt
+@explain
+SQL injection puts SQL code into a value the application pastes into a query. The single quote ends the application's string, OR '1'='1 makes a condition always true, and UNION SELECT adds the attacker's own query to the result. The user agent sqlmap is an automated injection tool; attackers can change it, so it is a hint, not proof.
+@endtask
+
+@task t02 | Threats, vulnerabilities and mitigations | 10 | server1
+Which address sent the SQL injection attempts? Write it into /root/sqli-ip.txt.
+@check server1 | the address is right
+test "$(cat /root/sqli-ip.txt)" = 203.0.113.50
+@hint The client address is the first field of each line: awk '{print $1}', then sort -u.
+@solution server1
+grep -E '%27|UNION' /root/evidence/access.log | awk '{print $1}' | sort -u > /root/sqli-ip.txt
+cat /root/sqli-ip.txt
+@explain
+One source address for every attempt suggests one attacker, or one tool. A web application firewall (WAF) in front of the shop would have recognised and blocked most of these requests; the real fix is in the code: parameterised queries (prepared statements) and input validation.
+@endtask
+
+@task t03 | Threats, vulnerabilities and mitigations | 15 | server1
+Which addresses tried directory traversal? Write each address once, one per line, into /root/traversal-ips.txt.
+@check server1 | exactly the two traversal sources are listed
+test "$(sort -u /root/traversal-ips.txt | tr '\n' ',')" = "198.51.100.23,203.0.113.88," && test "$(wc -l < /root/traversal-ips.txt)" -eq 2
+@hint grep -E '\.\./|%2e%2e' (the dots must be escaped in a regular expression), then awk and sort -u.
+@solution server1
+grep -E '\.\./|%2e%2e' /root/evidence/access.log
+grep -E '\.\./|%2e%2e' /root/evidence/access.log | awk '{print $1}' | sort -u > /root/traversal-ips.txt
+cat /root/traversal-ips.txt
+@explain
+Directory traversal uses ../ to climb out of the folder the application meant to serve, here to read /etc/passwd or /etc/shadow. Attackers encode the dots (%2e) or double them (....//) to slip past filters that only look for the plain form, which is why decoding and then checking the final path is the reliable defence.
+@endtask
+
+@task t04 | Threats, vulnerabilities and mitigations | 15 | server1
+Most attempts failed (status 403, 404 or 500), but not all. Find the first attack in the log (SQL injection or directory traversal) that succeeded, with status 200, and copy that whole log line into /root/first-success.txt.
+@check server1 | the first successful attack line is copied, and only it
+test "$(wc -l < /root/first-success.txt)" -eq 1 && grep -qF '09:41:12' /root/first-success.txt && grep -qF '....//....//....//etc/passwd HTTP/1.1" 200' /root/first-success.txt
+@hint The status code is field 9: awk '$9 == 200' keeps only successful requests. The log is in time order, so head -1 is the earliest.
+@solution server1
+grep -E '%27|UNION|\.\./|%2e%2e' /root/evidence/access.log | awk '$9 == 200'
+grep -E '%27|UNION|\.\./|%2e%2e' /root/evidence/access.log | awk '$9 == 200' | head -1 > /root/first-success.txt
+cat /root/first-success.txt
+@explain
+Status 200 on an attack request means the server answered it: the traversal at 09:41 returned 2311 bytes, about the size of /etc/passwd, and the UNION SELECT at 09:47 returned far more than a normal product page. The first success fixes the start of the incident's timeline; everything after it (and the data in those answers) is what you report on. Errors (500) during SQL injection are also an indicator: they show the attacker that the input reaches the database.
+@endtask

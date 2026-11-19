@@ -1,0 +1,20 @@
+You are the defender of one Windows PC, {{PC}}.
+
+1. Connect. winrm-shell -i 10.10.21.30 -u Administrator -p {{ADMPW}} opens PowerShell on the PC.
+
+2. Who are the administrators? Get-LocalGroupMember -Group Administrators shows Administrator, {{STAFF}}
+   and {{ROGUE}}. Get-LocalUser shows {{ROGUE}} with a helpful-sounding description ("{{ROGUE_DESC}}"),
+   but nobody in the office made it. Intruders pick names like that so they blend in.
+
+3. Who made it, and from where? The Security log records account changes: event 4720 (an account was
+   created) and 4732 (a member was added to a group) both name {{STAFF}}. Just before them, a 4624
+   sign-in for {{STAFF}} has Logon Type 10 (a remote sign-in) from {{ATKIP}} - not the desk. Someone who
+   knew {{STAFF}}'s password signed in from outside and made themselves a spare key.
+
+4. The flag. C:\Users\{{ROGUE}}\Desktop\todo.txt.
+
+5. Take its powers away. Remove-LocalGroupMember -Group Administrators -Member {{ROGUE}} and
+   Disable-LocalUser -Name {{ROGUE}}. If you are too slow, the account is used to copy the payroll folder.
+
+For real: also change {{STAFF}}'s password, turn off remote sign-in where it isn't needed, and check the
+Administrators group regularly - it should be short and every name on it should be known.

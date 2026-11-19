@@ -1,0 +1,93 @@
+# Lab: lab-06 | Reading authentication logs | u06 | 40
+Overnight, the monitoring system raised an alert about many failed SSH logins on server1. The authentication log of that night was rotated to /var/log/secure-20260301. Read it with grep, awk, sort and uniq to find out who attacked, how hard, and whether they got in; write each answer into the file the task names (just the answer, on one line); then contain the incident.
+
+@vars
+ip = 203.0.113.77 | 203.0.113.140 | 198.51.100.61
+acct = kwilson | dbrooks | nlopez
+n = 31-48
+@endvars
+
+@setup server1
+useradd {acct}
+echo 'Sunny-Day-2026' | passwd --stdin {acct}
+useradd priya
+L=/var/log/secure-20260301
+: > $L
+echo "Mar  1 01:02:11 server1 sshd[2101]: Accepted publickey for priya from 10.0.5.31 port 50122 ssh2: ED25519 SHA256:pR1yaK3yF1ngerpr1ntXq" >> $L
+echo "Mar  1 01:02:11 server1 sshd[2101]: pam_unix(sshd:session): session opened for user priya(uid=1001) by (uid=0)" >> $L
+for i in 1 2 3; do echo "Mar  1 01:3$i:05 server1 sshd[220$i]: Failed password for invalid user test from 198.51.100.23 port 4410$i ssh2" >> $L; done
+echo "Mar  1 01:40:19 server1 sshd[2210]: Accepted password for student from 10.0.5.20 port 50840 ssh2" >> $L
+names=(admin oracle guest ubuntu postgres test)
+for i in $(seq 1 {n}); do m=$((10 + i / 30)); s=$((i * 2 % 60)); printf 'Mar  1 02:%02d:%02d server1 sshd[%d]: Failed password for invalid user %s from {ip} port %d ssh2\n' $m $s $((3000 + i)) ${names[$((i % 6))]} $((40000 + i * 7)) >> $L; done
+for i in 1 2 3 4; do printf 'Mar  1 02:14:%02d server1 sshd[%d]: Failed password for {acct} from {ip} port %d ssh2\n' $((i * 9)) $((3100 + i)) $((47000 + i)) >> $L; done
+echo "Mar  1 02:14:51 server1 sshd[3105]: Accepted password for {acct} from {ip} port 47005 ssh2" >> $L
+echo "Mar  1 02:14:51 server1 sshd[3105]: pam_unix(sshd:session): session opened for user {acct}(uid=1000) by (uid=0)" >> $L
+echo "Mar  1 02:15:30 server1 sudo[3120]:  {acct} : user NOT in sudoers ; TTY=pts/1 ; PWD=/home/{acct} ; USER=root ; COMMAND=/bin/bash" >> $L
+echo "Mar  1 02:31:02 server1 sshd[3105]: pam_unix(sshd:session): session closed for user {acct}" >> $L
+echo "Mar  1 03:05:44 server1 sshd[3301]: Failed password for student from 10.0.5.20 port 51001 ssh2" >> $L
+echo "Mar  1 03:05:49 server1 sshd[3301]: Accepted password for student from 10.0.5.20 port 51001 ssh2" >> $L
+
+@task t01 | Threats, vulnerabilities and mitigations | 15 | server1
+Find the IP address with the most "Failed password" lines in /var/log/secure-20260301 and write it into /root/attacker.txt.
+@check server1 | /root/attacker.txt holds the attacker's address
+test "$(cat /root/attacker.txt)" = {ip}
+@hint grep 'Failed password' FILE | awk '{print $(NF-3)}' prints the address of each line (it is the fourth field from the end). sort | uniq -c | sort -rn counts them.
+@solution server1
+grep 'Failed password' /var/log/secure-20260301 | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn
+grep 'Failed password' /var/log/secure-20260301 | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' > /root/attacker.txt
+cat /root/attacker.txt
+@explain
+Counting by source is the first step in log analysis: a few failures from a colleague are normal (student mistyped once), dozens in a few minutes from one address are a brute-force or dictionary attack. Counting from the end of the line ($(NF-3)) works for both kinds of line, "for invalid user NAME" and "for NAME", which have a different number of words.
+@endtask
+
+@task t02 | Threats, vulnerabilities and mitigations | 10 | server1
+How many "Failed password" lines came from the attacker's address? Write the number into /root/failed-count.txt.
+@check server1 | the count is right
+test "$(tr -d ' \n' < /root/failed-count.txt)" = "$(({n} + 4))"
+@hint grep -c counts matching lines; combine 'Failed password' with the address.
+@solution server1
+grep 'Failed password' /var/log/secure-20260301 | grep -c "$(cat /root/attacker.txt)" > /root/failed-count.txt
+cat /root/failed-count.txt
+@explain
+The count and the time span (here a few minutes) tell you the kind of attack: dozens of guesses in a few minutes from one address, against common user names, is a brute-force or dictionary attack (guesses taken from a word list), and one password tried against many accounts from many addresses would be password spraying, which stays below lockout limits.
+@endtask
+
+@task t03 | Threats, vulnerabilities and mitigations | 15 | server1
+Did the attacker get in? Find the account that accepted a password from the attacker's address and write its user name into /root/compromised.txt.
+@check server1 | the compromised account is named
+test "$(cat /root/compromised.txt)" = {acct}
+@hint Look for "Accepted" lines from that address; in such a line the user name is the word after "for" (field 9).
+@solution server1
+grep Accepted /var/log/secure-20260301
+grep Accepted /var/log/secure-20260301 | grep "$(cat /root/attacker.txt)" | awk '{print $9}' > /root/compromised.txt
+cat /root/compromised.txt
+@explain
+A run of failures followed by a success from the same address is the indicator that matters most: the attack worked. The lines after it show what the attacker did next (here a sudo attempt that was refused, an attempt at privilege escalation). From now on this is an incident, not just noise.
+@endtask
+
+@task t04 | Security operations | 10 | server1
+Contain the incident: lock the password of the compromised account, so that the attacker cannot log in with it again. Do not delete the account (its files are evidence).
+@check server1 | the compromised account's password is locked and the account still exists
+getent shadow {acct} | cut -d: -f2 | grep -q '^!' && test -d /home/{acct}
+@hint usermod -L USER or passwd -l USER.
+@solution server1
+usermod -L $(cat /root/compromised.txt)
+getent shadow $(cat /root/compromised.txt) | cut -d: -f1,2
+@explain
+Containment stops the damage from growing while you investigate. Deleting the account would destroy evidence (its home folder, its shell history) and make the investigation harder. Next steps would be to look for anything the attacker changed or left behind, reset the password with the owner, and ask why a guessable password was allowed.
+@endtask
+
+@task t05 | Security operations | 15 | server1
+Block the attacker's address on server1's firewall with a firewalld rich rule that rejects (or drops) everything from it, in the running firewall and permanently.
+@check server1 | a rich rule blocks the address now
+firewall-cmd --list-rich-rules | grep 'source address="{ip}"' | grep -Eq 'reject|drop'
+@check server1 | and permanently
+firewall-cmd --permanent --list-rich-rules | grep 'source address="{ip}"' | grep -Eq 'reject|drop'
+@hint firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="ADDRESS" reject', then firewall-cmd --reload.
+@solution server1
+firewall-cmd --permanent --add-rich-rule="rule family=\"ipv4\" source address=\"$(cat /root/attacker.txt)\" reject"
+firewall-cmd --reload
+firewall-cmd --list-rich-rules
+@explain
+Blocking the source is a quick containment step, but a weak one on its own: attackers change addresses easily. The lasting fixes are the ones from the SSH hardening lab (keys instead of passwords, no root logins) plus rate limiting or a tool that blocks addresses after repeated failures. reject answers with an error, drop stays silent; both stop the traffic.
+@endtask

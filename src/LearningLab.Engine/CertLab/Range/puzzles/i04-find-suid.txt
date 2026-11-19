@@ -1,0 +1,42 @@
+title: The odd one out
+level: Intermediate
+kind: Privilege escalation
+points: 60
+order: 13
+answer: {{PATH}}
+var: PATH = pick:/usr/local/bin/backuptool|/opt/report/runme|/usr/local/sbin/netfix|/opt/tools/synchelper|/usr/local/bin/diskcheck
+
+@intro
+A set-user-ID program runs as its owner, not as you, so a careless one is a way to
+gain another account's powers. Somewhere under /usr or /opt there is one owned by
+root that should not be. Find its full path. (Give the path.)
+
+@setup
+mkdir -p $(dirname {{PATH}})
+install -m0755 /usr/bin/cat {{PATH}}
+chmod u+s {{PATH}}
+# a few ordinary (and expected) SUID programs are already there: passwd, sudo, su...
+
+@solution
+find / -perm -4000 -type f 2>/dev/null
+ls -l {{PATH}}
+
+@walkthrough
+find / -perm -4000 lists every set-user-ID file (the s in the owner's permissions).
+Most are normal (passwd, sudo, su, mount, chage...). The one that does not belong is
+the extra program an administrator left with the SUID bit set:
+
+    find / -perm -4000 -type f 2>/dev/null
+
+On a real box the next step would be to see what that program does and whether it
+can be made to run something as its owner.
+
+@hint 5
+A normal system has a short, well-known list of set-user-ID programs (passwd, sudo, su, mount...). You are looking for the odd one out.
+
+@hint 10
+Set-user-ID files have the 4000 permission bit (an s in ls -l, like -rwsr-xr-x). find / -perm -4000 lists them; add 2>/dev/null to hide the "Permission denied" noise.
+
+@hint 15
+find / -perm -4000 -type f 2>/dev/null and look for the program that is not a
+standard system tool (it lives under /opt or /usr/local).

@@ -1,0 +1,241 @@
+# Unit: u03 | 3. Compliance policies | Compliance
+
+A compliance policy is a list of rules a device must meet to count as healthy: encrypted disk, Secure Boot, a recent enough version of the operating system, antivirus running, not jailbroken. Intune checks each device against the policies assigned to it and marks it **Compliant** or **Not compliant**. On its own that is just a report; together with Conditional Access (next unit) it becomes a gate: only compliant devices reach company data. This unit covers the settings, what happens when a device fails, the tenant-wide compliance settings, mobile devices, monitoring, and Microsoft Defender for Endpoint's risk score.
+
+## Lesson: l0301 | Compliance policies and their settings
+
+Compliance policies are in **Devices > Compliance**. Each policy is for one platform. For **Windows 10 and later** the main groups of settings are:
+
+- **Device Health** (from Windows' health attestation): Require BitLocker, Require Secure Boot, Require code integrity.
+- **Device Properties**: minimum and maximum OS version (for example `10.0.26100`, Windows 11 24H2's build).
+- **System Security**: require a password, minimum password length, firewall, TPM, antivirus, antispyware.
+- **Microsoft Defender**: antimalware on, real-time protection, security intelligence up to date.
+- **Microsoft Defender for Endpoint**: the highest machine risk score allowed (lesson 4).
+
+A device must pass **every** policy assigned to it. Assign compliance policies to user groups or device groups; a policy assigned to a user group applies to that user's devices.
+
+> A compliance policy only **checks**; it changes nothing on the device. To turn BitLocker on, the firewall on or Defender on, you use configuration and endpoint security policies (units 7, 12 and 13). A typical exam trap is a device that "stays noncompliant for BitLocker": the compliance policy can't encrypt it.
+
+On a device you can look at the same things the policy checks:
+
+```terminal
+PS C:\Windows\system32> Confirm-SecureBootUEFI
+True
+PS C:\Windows\system32> Get-MpComputerStatus | Select-Object AMServiceEnabled, RealTimeProtectionEnabled, AntivirusSignatureAge
+
+AMServiceEnabled RealTimeProtectionEnabled AntivirusSignatureAge
+---------------- ------------------------- ---------------------
+True             True                                          0
+
+
+PS C:\Windows\system32> Get-BitLockerVolume -MountPoint C: | Select-Object MountPoint, VolumeStatus, ProtectionStatus
+
+MountPoint VolumeStatus   ProtectionStatus
+---------- ------------   ----------------
+C:         FullyDecrypted Off
+```
+
+RB-LT-001's disk isn't encrypted yet, so a policy that requires BitLocker would mark it noncompliant.
+
+@try
+@task t1 | Compliance | 10 | portal
+Create a Windows compliance policy called **Windows minimum** that requires Secure Boot, the firewall and at least OS version **10.0.26100**, assign it to **Windows devices**, then sync **RB-DT-010** and **RB-LT-001** and see which one passes.
+@check portal | the policy exists with the three rules and the assignment
+compliance["Windows minimum"].secureBoot == Require
+compliance["Windows minimum"].firewall == Require
+compliance["Windows minimum"].minOs == 10.0.26100
+compliance["Windows minimum"].include has "Windows devices"
+@check portal | the old Windows 10 desktop fails on its version, the laptop passes
+device["RB-DT-010"].compliance == "Not compliant"
+device["RB-DT-010"].reasons contains "older than the minimum"
+device["RB-LT-001"].compliance == Compliant
+@hint Platform Windows 10 and later; Minimum OS version is under Device Properties. Without a sync the devices are checked only at their next check-in.
+@solution portal
+create compliance name="Windows minimum" platform="Windows 10 and later" secureBoot=Require firewall=Require minOs=10.0.26100
+assign compliance "Windows minimum" "Windows devices"
+remote sync "RB-DT-010"
+remote sync "RB-LT-001"
+@endtask
+@end
+
+@quiz
+? A compliance policy requires BitLocker. A laptop isn't encrypted. What does the compliance policy do?
+- It turns BitLocker on at the next check-in
++ It marks the laptop as not compliant; encrypting it needs a disk encryption policy
+- It wipes the laptop
+! Compliance policies only evaluate. A disk encryption (endpoint security) policy turns BitLocker on.
+? Two compliance policies are assigned to a device. It passes one and fails the other. What is its state?
+- Compliant
++ Not compliant
+- Compliant for the first policy only
+! A device must pass every compliance policy assigned to it.
+? Which value would you enter as a minimum OS version to require at least Windows 11 24H2?
++ 10.0.26100
+- 11.0.24
+- 24H2
+! Windows 11 still reports version 10.0; 26100 is the 24H2 build number.
+@end
+
+
+## Lesson: l0302 | Actions for noncompliance and grace periods
+
+Every compliance policy has **Actions for noncompliance**: what Intune does, and when, after a device fails. The actions you can choose include:
+
+- **Mark device noncompliant**: always there. Its schedule (days after the device fails) is the **grace period**. With 0 days the device is noncompliant at once; with 3 days it shows **In grace period** first and becomes noncompliant three days later if nothing is fixed.
+- **Send email to end user**: a message template (made under **Devices > Compliance > Notifications**) sent after N days, optionally copied to other addresses.
+- **Send push notification** to the user (through the Company Portal app).
+- **Remotely lock** the noncompliant device (mobile platforms).
+- **Add device to retire list**: the device appears in a list from which an administrator can retire it; nothing is retired automatically.
+
+> A device **in grace period** still counts as compliant for Conditional Access. That is the point of a grace period: the user keeps working while they fix the problem.
+
+Grace periods are useful when a new rule arrives that people need time to meet (a new minimum OS version, for example), and when a device fails because of something users can fix themselves.
+
+@try
+@setup portal
+create compliance name="Defender up to date" platform="Windows 10 and later" sigUpToDate=Require
+assign compliance "Defender up to date" "Windows devices"
+device RB-LT-002 sigAgeDays=9
+@task t1 | Compliance | 10 | portal
+The policy **Defender up to date** marks devices noncompliant at once. Priya has been travelling with little internet, so her Defender security intelligence is 9 days old; it will update once she is back in the office this week. Change the policy so that a failing device has **3 days** of grace before it is marked noncompliant and the user gets an email on the first day (day 0). Then sync **RB-LT-002** and look at its state.
+@check portal | the policy has a 3-day grace period and an email
+compliance["Defender up to date"].noncompliantDays == 3
+compliance["Defender up to date"].emailDays == 0
+@check portal | RB-LT-002 is in its grace period
+device["RB-LT-002"].compliance == "In grace period"
+@hint Edit the policy's Actions for noncompliance, then use Sync on the device.
+@solution portal
+set compliance "Defender up to date" noncompliantDays=3 emailDays=0
+remote sync "RB-LT-002"
+@endtask
+@end
+
+@quiz
+? A policy marks devices noncompliant after 5 days. A device fails today. What does Conditional Access do with it today?
++ Treats it as compliant: it is in its grace period
+- Blocks it at once
+- Asks the user for MFA instead
+! During the grace period the device counts as compliant.
+? Which action for noncompliance removes the company data from a device automatically?
+- Add device to retire list
+- Send email to end user
++ None of them: the retire list only lists devices for an administrator to retire
+! Retiring is a separate remote action an administrator starts; the retire list only collects candidates.
+? Where do you create the message an email action sends?
+- In Microsoft Entra ID's branding
++ In Devices > Compliance > Notifications (message templates)
+- In the Company Portal's settings
+! Email actions use notification message templates.
+@end
+
+## Lesson: l0303 | The tenant's compliance settings
+
+Two settings apply to every device, in **Devices > Compliance > Compliance settings**:
+
+- **Mark devices with no compliance policy assigned as**: Compliant (the default) or Not compliant. Secure tenants pick **Not compliant**, so a device that falls outside every policy can't pass a "require compliant device" rule in Conditional Access just because nobody checked it.
+- **Compliance status validity period (days)**: a device that doesn't check in for that many days (30 by default) becomes noncompliant, because its last result is too old to trust.
+
+There is also **Enhanced jailbreak detection** for iOS (uses location services). Intune shows these built-in checks as the **Default Device Compliance Policy** in a device's report: "Has a compliance policy assigned", "Is active" (checked in within the validity period) and "Enrolled user exists".
+
+In Cert Lab these two values are in **Tenant administration > Settings**, section Compliance policy settings.
+
+@try
+@setup portal
+create compliance name="Windows basics" platform="Windows 10 and later" secureBoot=Require
+@task t1 | Compliance | 10 | portal
+Make the tenant mark devices **without** a compliance policy as **Not compliant**, and shorten the compliance status validity period to **14** days. So that working laptops aren't hit, assign the existing policy **Windows basics** to **Windows devices**, then sync **RB-LT-001** and check it is still compliant.
+@check portal | the tenant's compliance settings
+tenant.noPolicyMark == "Not compliant"
+tenant.validityDays == 14
+@check portal | Windows devices have a policy, and RB-LT-001 stays compliant
+compliance["Windows basics"].include has "Windows devices"
+device["RB-LT-001"].compliance == Compliant
+@hint Tenant administration > Settings, section Compliance policy settings; then assign the policy and sync.
+@solution portal
+tenant noPolicyMark="Not compliant" validityDays=14
+assign compliance "Windows basics" "Windows devices"
+remote sync "RB-LT-001"
+@endtask
+@end
+
+@quiz
+? A device has no compliance policy and the tenant setting is the default. A Conditional Access policy requires a compliant device. What happens?
++ The device is allowed: with the default setting it is marked compliant
+- The device is blocked: it has no policy
+- The user is asked to enrol again
+! The default for "Mark devices with no compliance policy assigned as" is Compliant, which is why secure tenants change it.
+? A laptop has been switched off for 45 days with the default settings. What is its compliance state when it is checked?
+- Compliant, from its last check-in
++ Not compliant: it hasn't checked in within the validity period
+- In grace period
+! After the validity period (30 days by default) without a check-in, the device is marked not compliant.
+? Where does a device's report show "Has a compliance policy assigned" and "Is active"?
+- In each custom compliance policy
++ In the Default Device Compliance Policy
+- In the Conditional Access sign-in log
+! These built-in checks appear as the Default Device Compliance Policy.
+@end
+
+## Lesson: l0304 | Phones, monitoring and Defender for Endpoint's risk score
+
+### iOS/iPadOS and Android settings
+
+Phones have their own compliance settings. The ones to know:
+
+- **iOS/iPadOS**: block **jailbroken** devices, minimum and maximum OS version, require a passcode (with a minimum length), and the maximum allowed device threat level from a mobile threat defence service.
+- **Android Enterprise**: block **rooted** devices, require a passcode, minimum OS version, and the **Play Integrity** verdict (basic integrity, or basic integrity and device integrity), which detects tampered or unofficial Android builds.
+
+### Monitoring
+
+- **Devices > Monitor > Compliance** and **Devices > Compliance**: how many devices are compliant, noncompliant, in grace period or not evaluated.
+- Each policy's **device status** and **per-setting status**: which rule fails on how many devices.
+- A device's own **Device compliance** page lists every policy and the reason it failed. Cert Lab shows these reasons on the device's page.
+- A device that is **Not evaluated** hasn't been checked yet (just enrolled, or no check-in since the policy was assigned).
+
+### Microsoft Defender for Endpoint's machine risk score
+
+Defender for Endpoint gives each onboarded Windows device a **risk score**: Clear, Low, Medium or High, based on active threats found on it. A compliance setting, *Require the device to be at or under the machine risk score*, turns that into compliance. For it to work:
+
+1. Connect Intune and Defender for Endpoint (the **Microsoft Defender for Endpoint** connector in Endpoint security, turned on from both sides).
+2. Onboard the devices to Defender for Endpoint, usually with an endpoint detection and response (EDR) policy in Intune.
+3. Set the highest allowed risk in a compliance policy.
+
+A device that isn't onboarded has no risk score, so it fails that rule. Unit 12 practises the connector and onboarding.
+
+@try
+@setup portal
+device "Priya's Pixel" rooted=Yes
+@task t1 | Compliance | 10 | portal
+Priya's Android phone has been rooted. Create an Android Enterprise compliance policy called **Android basics** that blocks rooted devices and requires a passcode, assign it to **Sales**, sync **Priya's Pixel** and check that it is noncompliant because it is rooted.
+@check portal | the policy blocks rooted devices and is assigned to Sales
+compliance["Android basics"].rooted == Block
+compliance["Android basics"].password == Require
+compliance["Android basics"].include has Sales
+@check portal | Priya's phone fails because it is rooted
+device["Priya's Pixel"].compliance == "Not compliant"
+device["Priya's Pixel"].reasons contains rooted
+@hint Platform Android Enterprise; Rooted devices is under Device Health. Sync the phone afterwards.
+@solution portal
+create compliance name="Android basics" platform="Android Enterprise" rooted=Block password=Require
+assign compliance "Android basics" Sales
+remote sync "Priya's Pixel"
+@endtask
+@end
+
+@quiz
+? A compliance policy allows at most a Low machine risk score. A Windows laptop isn't onboarded to Defender for Endpoint. What is its state?
+- Compliant: no score means no risk
++ Not compliant: it has no risk score to compare
+- Not evaluated forever
+! The rule needs a risk score from Defender for Endpoint; a device that isn't onboarded fails it.
+? Which Android setting detects devices running a tampered or unofficial build?
+- Block rooted devices only
++ The Play Integrity verdict
+- Minimum OS version
+! Play Integrity checks basic integrity and device integrity.
+? A newly enrolled device shows "Not evaluated". What does that mean?
++ Intune hasn't checked it against its compliance policies yet
+- The device is blocked by Conditional Access
+- The device has no user
+! Not evaluated is the state before the first compliance check.
+@end

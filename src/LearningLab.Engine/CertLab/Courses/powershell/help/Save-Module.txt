@@ -1,0 +1,21 @@
+SYNOPSIS: Downloads a module from a repository into a folder without installing it.
+DESCRIPTION:
+Save-Module downloads a module and the modules it needs into a folder you choose. Nothing is installed, so you can look at the code first, scan it, or copy it to computers that have no internet.
+
+A common pattern: on a PC with internet, Save-Module into a USB stick or file share; on the offline server, copy the module folder into C:\Program Files\WindowsPowerShell\Modules.
+PARAMETER Name:
+The module to download.
+PARAMETER Path:
+The folder to save it in. Each module gets its own subfolder with the version inside.
+PARAMETER Repository:
+Downloads from this repository only.
+PARAMETER RequiredVersion:
+Downloads exactly this version.
+EXAMPLE: Save-Module -Name PSScriptAnalyzer -Path C:\Temp\Modules
+On a real PC, saves the module in C:\Temp\Modules so you can check it before installing.
+EXAMPLE: Copy-Item C:\Temp\Modules\PSScriptAnalyzer 'C:\Program Files\WindowsPowerShell\Modules' -Recurse
+Installs a saved module by hand on the offline machine.
+NOTES:
+The practice network has no internet, so in Cert Lab Save-Module warns that the PowerShell Gallery cannot be reached and saves nothing.
+In PowerShell 7.4 and later, PSResourceGet's Save-PSResource does the same.
+RELATED: Find-Module, Install-Module, Get-Module

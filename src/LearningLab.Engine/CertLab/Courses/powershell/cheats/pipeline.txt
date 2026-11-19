@@ -1,0 +1,26 @@
+# Sheet: pipeline | The pipeline and objects | Pipeline
+## Choosing
+Get-Service | Select-Object Name, Status :: some properties
+Get-Service | Select-Object * :: every property
+Get-Process | Select-Object -First 5 :: the first 5 objects (-Last, -Skip)
+Get-Service | Select-Object -ExpandProperty Name :: plain values
+Get-Process | Select-Object Name, @{ n = 'MB'; e = { $_.WS / 1MB } } :: a calculated property
+## Sorting and filtering
+Get-Process | Sort-Object WS -Descending :: sort (several properties allowed)
+Get-Service | Where-Object Status -eq Stopped :: simple filter
+Get-Service | Where-Object { $_.Status -eq 'Running' -and $_.Name -like 'W*' } :: script block filter
+Get-ChildItem -Filter *.log :: filter left: let the first command filter
+## Counting and grouping
+Get-Process | Measure-Object :: count
+Get-Process | Measure-Object WS -Sum -Average -Maximum :: sums and averages
+Import-Csv C:\LabFiles\employees.csv | Group-Object Department :: groups (Count, Name, Group)
+Group-Object Department -NoElement :: just the counts
+## Doing something with each object
+Get-Service | ForEach-Object { $_.Name } :: script block per object ($_)
+Get-Service | ForEach-Object Name :: one property of each
+1..3 | ForEach-Object -Begin { $t = 0 } -Process { $t += $_ } -End { $t } :: begin, process, end
+## Pipeline binding
+Get-Help Stop-Service -Full :: Accept pipeline input? (ByValue / ByPropertyName)
+'Spooler' | Get-Service :: a string goes to -Name
+[pscustomobject]@{ Name = 'Spooler' } | Get-Service :: a Name property goes to -Name
+Compare-Object $a $b :: what differs between two lists (<= and =>)

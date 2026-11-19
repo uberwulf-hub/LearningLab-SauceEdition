@@ -1,0 +1,43 @@
+title: The word under the mat
+level: Advanced
+kind: Decoding
+topic: Crypto & Encoding
+teaser: a Vigenere message and a sticky note
+points: 75
+order: 74
+answer: flag
+var: KW = word
+var: NOTE = pick:sticky.txt|todo.txt|reminder.txt|desk-note.txt
+
+@intro
+~/secret.txt looks like a flag, but its letters are wrong: it was put through a
+Vigenere cipher with a key word. The owner keeps their key words on ~/{{NOTE}} - in a
+form they thought nobody would read.
+
+@setup
+printf '%s\n' '{{VIG:KW:FLAG}}' > /home/player/secret.txt
+printf 'groceries: milk, eggs\nkey word (rot13, so nobody reads it): {{ROT13:KW}}\ncall the plumber\n' > /home/player/{{NOTE}}
+chown player: /home/player/secret.txt /home/player/{{NOTE}}
+
+@solution
+cat {{NOTE}}
+echo {{ROT13:KW}} | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+vigenere -d -k {{KW}} secret.txt
+
+@walkthrough
+1. The note's key word is ROT13'd: every letter moved 13 places, so doing it again
+   undoes it: echo {{ROT13:KW}} | tr 'A-Za-z' 'N-ZA-Mn-za-m' gives {{KW}}.
+2. Vigenere moves each letter by the matching key-word letter. Decrypt with the key:
+
+       vigenere -d -k {{KW}} secret.txt
+
+   prints the flag (punctuation and digits pass through unchanged, which is why it
+   still looked like a flag).
+
+The lesson: a cipher is only as strong as the place its key is kept.
+
+@hint 15
+Two steps: the key word on the note is itself hidden with ROT13 (tr can undo it), and vigenere -d uses the key word.
+
+@hint 25
+tr 'A-Za-z' 'N-ZA-Mn-za-m' undoes ROT13; then vigenere -d -k WORD secret.txt.

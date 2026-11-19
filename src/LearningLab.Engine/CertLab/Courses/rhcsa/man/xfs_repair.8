@@ -1,0 +1,29 @@
+NAME
+       xfs_repair - check and repair a damaged XFS file system
+
+SYNOPSIS
+       xfs_repair [-n] [-L] DEVICE
+
+DESCRIPTION
+       xfs_repair checks an XFS file system and repairs what it finds, going
+       through numbered phases. The file system must be unmounted. Unlike
+       ext4, XFS is never checked at boot by fsck: when an XFS file system is
+       damaged, the boot stops and you run xfs_repair from the emergency
+       shell.
+
+       Files found without a directory entry are put in lost+found.
+
+OPTIONS
+       -n     Check only; change nothing and report what would be repaired.
+
+       -L     Clear the log first. Use it only when xfs_repair refuses
+              because the log holds changes and mounting the file system (which
+              would replay them) fails: those changes are lost.
+
+EXAMPLES
+           umount /mnt/data
+           xfs_repair -n /dev/vgdata/lvdata
+           xfs_repair /dev/vgdata/lvdata
+
+SEE ALSO
+       xfs_info(8), fsck(8), mount(8)

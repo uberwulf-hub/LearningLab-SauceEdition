@@ -1,0 +1,55 @@
+title: The map the site drew for you
+level: Beginner
+kind: Web
+topic: Web
+teaser: a sitemap that lists a page nobody links to
+points: 45
+order: 46
+packages: httpd
+answer: flag
+var: HIDDEN = hex:6
+
+@intro
+A web site runs on this box (http://localhost/). Besides robots.txt, many sites
+publish a sitemap.xml that lists every page they want search engines to find - and
+sometimes a page the site owner forgot was in there. Read the sitemap, find the page
+that doesn't belong, and read the flag on it.
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/", "kind": "page", "title": "Maple Clinic", "body": "<h1>Maple Clinic</h1><p>Book online.</p>" },
+  { "path": "/sitemap.xml", "kind": "page", "body": "<?xml version=\"1.0\"?>\n<urlset>\n  <url><loc>http://localhost/</loc></url>\n  <url><loc>http://localhost/about.html</loc></url>\n  <url><loc>http://localhost/internal-{{HIDDEN}}.html</loc></url>\n</urlset>\n" },
+  { "path": "/internal-{{HIDDEN}}.html", "kind": "page", "body": "<h1>Internal</h1><p>Staff only. Flag: {{FLAG}}</p>" }
+]
+
+@solution
+curl -s http://localhost/sitemap.xml
+curl -s http://localhost/internal-{{HIDDEN}}.html
+
+@walkthrough
+A sitemap lists a site's pages for search engines. Read it:
+
+    curl -s http://localhost/sitemap.xml
+
+Among the ordinary pages is one that looks internal (internal-...). Nothing links to
+it from the site, but the sitemap gave away its address. Visit it:
+
+    curl -s http://localhost/internal-{{HIDDEN}}.html
+
+The flag is there. The lesson: a sitemap (like robots.txt) can leak pages the owner
+meant to keep quiet; "hidden by having no link" is not security.
+
+@hint 2
+What to think about first: a web page nobody links to is still reachable by anyone who knows its address. So the question is not "can I find a link?" but "has the site written its page addresses down anywhere public?"
+
+@hint 3
+curl is a command-line web browser: it fetches a page and prints its text. Try curl -s http://localhost/ to see the home page's HTML (-s just hides the progress meter).
+
+@hint 4
+Many sites publish sitemap.xml, a list of every page they want search engines to find, one address per <loc> line. It is meant to be public - and it sometimes lists pages the owner forgot about. Read it: curl -s http://localhost/sitemap.xml
+
+@hint 6
+One address in the sitemap looks internal and nothing on the site links to it. Open it: curl -s http://localhost/internal-{{HIDDEN}}.html - the flag is on that page. Copy the whole FLAG{...}.

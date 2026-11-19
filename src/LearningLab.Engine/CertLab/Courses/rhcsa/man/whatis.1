@@ -1,0 +1,21 @@
+NAME
+       whatis - show the one-line description of manual pages
+
+SYNOPSIS
+       whatis NAME...
+
+DESCRIPTION
+       whatis looks NAME up in the manual page index and prints the NAME line
+       of every page with exactly that name, with its section number:
+       passwd (1) for the command, passwd (5) for the file format. It is the
+       same as man -f. To search descriptions for a word, use apropos (man
+       -k) instead.
+
+       If whatis or apropos find nothing on a fresh system, the index may not
+       have been built yet; run mandb as root.
+
+EXAMPLES
+           whatis passwd
+
+SEE ALSO
+       apropos(1), man(1), mandb(8)

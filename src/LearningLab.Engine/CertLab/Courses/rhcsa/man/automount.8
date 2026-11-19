@@ -1,0 +1,58 @@
+NAME
+       automount - the program behind the autofs service
+
+SYNOPSIS
+       systemctl enable --now autofs
+
+DESCRIPTION
+       automount is the daemon of the autofs package. It watches mount points
+       listed in its maps and mounts a file system (usually an NFS export) the
+       first time someone goes into the directory, then unmounts it again
+       after a while without use. You do not run it by hand: start the autofs
+       service instead, and reload or restart it after you change a map.
+
+       The master map /etc/auto.master (and files in /etc/auto.master.d/
+       ending in .autofs) names each base directory and the map that
+       describes it:
+
+           /shares   /etc/auto.shares
+
+       A map lists keys (names inside the base directory), mount options and
+       what to mount:
+
+           work   -rw,sync   nfs.lab.example.com:/exports/shared
+
+       With that, ls /shares/work mounts the export on /shares/work.
+
+       A key of * with & in the location makes a wildcard map: every name you
+       ask for is looked up on the server under the same name, which is how
+       home directories for network users are usually set up:
+
+           *   -rw   nfs.lab.example.com:/exports/home/&
+
+       A master map line of /- (a direct map) uses full paths as keys
+       instead.
+
+EXAMPLES
+       Set up /shares/work and start the service:
+
+           dnf install autofs
+           echo "/shares /etc/auto.shares" > /etc/auto.master.d/shares.autofs
+           echo "work -rw nfs.lab.example.com:/exports/shared" > /etc/auto.shares
+           systemctl enable --now autofs
+           ls /shares/work
+
+FILES
+       /etc/auto.master, /etc/auto.master.d/*.autofs
+              The master map.
+
+       /etc/autofs.conf
+              Settings, such as the idle time before an unmount.
+
+NOTES
+       The base directory (/shares above) belongs to autofs: do not create the
+       key directories in it yourself. They appear when they are used, so ls
+       /shares may look empty until you name one.
+
+SEE ALSO
+       auto.master(5), autofs(5), mount(8), nfs(5)

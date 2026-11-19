@@ -1,0 +1,23 @@
+SYNOPSIS: Changes the properties of an Active Directory computer account.
+DESCRIPTION:
+Set-ADComputer changes a computer account's description, location, enabled state and other attributes.
+-PrincipalsAllowedToDelegateToAccount sets resource-based Kerberos constrained delegation: the computers listed may pass a user's identity on to this computer. It's the usual fix for the "second hop" problem, for example when a remote session on HV1 needs to reach a share on FS1.
+PARAMETER Identity:
+The computer. Position 0, and takes pipeline input.
+PARAMETER Description:
+A new description.
+PARAMETER Location:
+Where the computer is, as free text.
+PARAMETER Enabled:
+$false disables the account (the computer can no longer authenticate to the domain).
+PARAMETER PrincipalsAllowedToDelegateToAccount:
+The accounts allowed to delegate to this computer (resource-based constrained delegation). $null removes them.
+PARAMETER Replace:
+A hash table of LDAP attributes to set.
+PARAMETER Clear:
+Attributes to empty.
+EXAMPLE: Set-ADComputer CL1 -Description "Reception PC" -Location "Portland, ground floor"
+Describes the workstation CL1.
+EXAMPLE: Set-ADComputer FS1 -PrincipalsAllowedToDelegateToAccount (Get-ADComputer HV1)
+Lets HV1 pass users' identities on to FS1, so a session on HV1 can open files on FS1.
+RELATED: Get-ADComputer, New-ADComputer, Remove-ADComputer

@@ -1,0 +1,22 @@
+NAME
+       lscpu - show information about the processors
+
+SYNOPSIS
+       lscpu
+
+DESCRIPTION
+       lscpu prints the processor architecture (x86_64), the number of CPUs
+       and how they are arranged (sockets, cores per socket, threads per
+       core), the model name, the virtualisation it sees, and the cache
+       sizes. nproc prints just the number of CPUs; /proc/cpuinfo has the
+       raw details.
+
+       The number of CPUs helps to read the load average in uptime and top: a
+       load of 2.0 is full use on two CPUs but only half on four.
+
+EXAMPLES
+           lscpu
+           lscpu | grep '^CPU(s)'
+
+SEE ALSO
+       nproc(1), uptime(1), top(1)

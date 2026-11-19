@@ -1,0 +1,10 @@
+SYNOPSIS: Shows how much Data Deduplication has saved on each volume.
+DESCRIPTION:
+Get-DedupStatus shows for each deduplicated volume the FreeSpace, SavedSpace, OptimizedFilesCount and InPolicyFilesCount (files old and big enough to optimize), and when the last jobs ran. Zero savings right after Enable-DedupVolume is normal: nothing is optimized until a job runs.
+PARAMETER Volume:
+Only these volumes. Position 0.
+EXAMPLE: Get-DedupStatus -Volume E:
+How much the archive has saved.
+EXAMPLE: Get-DedupStatus | Format-List Volume, SavedSpace, OptimizedFilesCount, LastOptimizationTime
+The main figures for every volume.
+RELATED: Get-DedupVolume, Start-DedupJob, Enable-DedupVolume

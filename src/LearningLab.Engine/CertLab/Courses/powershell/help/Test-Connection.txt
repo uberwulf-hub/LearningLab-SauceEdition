@@ -1,0 +1,22 @@
+SYNOPSIS: Pings one or more computers, like ping.exe but with objects.
+DESCRIPTION:
+Test-Connection sends ping (ICMP echo) requests and outputs one object per reply, with Source, Destination, IPV4Address, Bytes and Time(ms). By default it sends four.
+
+With -Quiet it outputs just True or False per computer, which is what you want in an if statement. A computer that does not answer gives an error "Testing connection to computer ... failed", unless you use -Quiet.
+PARAMETER ComputerName:
+The names or addresses to ping (required), for example DC01, 10.0.10.50. Several are allowed.
+PARAMETER Count:
+How many pings to send (default 4).
+PARAMETER Quiet:
+Outputs True if the computer answered, False if not, and no errors.
+PARAMETER BufferSize:
+The size of each ping in bytes (default 32).
+EXAMPLE: Test-Connection DC01 -Count 2
+Two pings to the domain controller.
+EXAMPLE: if (Test-Connection WEB01 -Count 1 -Quiet) { 'WEB01 is up' }
+Pings once and acts on the answer.
+EXAMPLE: 'DC01','WEB01','WIN-CL1' | ForEach-Object { [pscustomobject]@{ Name = $_; Up = Test-Connection $_ -Count 1 -Quiet } }
+A small up-or-down table for several computers. WIN-CL1 shows False until its firewall allows ping.
+NOTES:
+PowerShell 7 rewrote Test-Connection: the parameter is -TargetName (-ComputerName is gone), the output is a different object with Ping, Status and Latency, and it adds -TcpPort, -Traceroute and -Repeat. Scripts written for 5.1 often need changes. The practice network has no internet, so outside names fail with "No such host is known".
+RELATED: Test-NetConnection, Resolve-DnsName, Get-NetFirewallRule

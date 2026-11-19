@@ -1,0 +1,33 @@
+NAME
+       shred - overwrite a file to make its contents hard to recover
+
+SYNOPSIS
+       shred [-u] [-n N] [-z] [-v] FILE...
+
+DESCRIPTION
+       shred writes random data over a file's contents several times, so the
+       old data cannot be read back with recovery tools. The file itself
+       stays (with the random contents) unless you add -u.
+
+       On modern file systems and SSDs (journaling, copy-on-write, wear
+       levelling) old copies of the data may survive elsewhere on the disk,
+       so shred gives no guarantee there.
+
+OPTIONS
+       -u, --remove
+              Delete the file after overwriting it.
+
+       -n, --iterations N
+              Overwrite N times (default 3).
+
+       -z, --zero
+              Finish with a pass of zeros, to hide the shredding.
+
+       -v, --verbose
+              Show progress.
+
+EXAMPLES
+           shred -u -v /root/old-secrets.txt
+
+SEE ALSO
+       rm(1), dd(1)

@@ -1,0 +1,23 @@
+NAME
+       nslookup - look up names and addresses in DNS
+
+SYNOPSIS
+       nslookup NAME [SERVER]
+
+DESCRIPTION
+       nslookup asks a DNS server for the address of NAME (or the name of an
+       address) and prints the server it used and the answer. Without SERVER
+       it uses the first nameserver in /etc/resolv.conf. It comes with the
+       bind-utils package, together with host and dig, which are often more
+       convenient.
+
+       nslookup asks DNS only. It does not read /etc/hosts; getent hosts NAME
+       shows what programs on the machine really get.
+
+EXAMPLES
+           nslookup server2.lab.example.com
+           nslookup 192.168.50.12
+           getent hosts server2
+
+SEE ALSO
+       host(1), dig(1), getent(1), resolv.conf(5)

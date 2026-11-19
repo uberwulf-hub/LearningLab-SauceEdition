@@ -1,0 +1,26 @@
+SYNOPSIS: Sets DHCP options at the server, scope or reservation level.
+DESCRIPTION:
+Set-DhcpServerv4OptionValue sets the options clients get. The named parameters cover the usual ones: -Router (option 3), -DnsServer (6), -DnsDomain (15) and -WinsServer (44). Any other option can be set with -OptionId and -Value.
+
+The level depends on what you give: nothing for the server level, -ScopeId for a scope, -ReservedIP for one reservation. Clients pick up changes when they renew their lease (ipconfig /renew to force it).
+PARAMETER ScopeId:
+Sets the options of this scope.
+PARAMETER ReservedIP:
+Sets the options of one reservation.
+PARAMETER Router:
+The default gateway or gateways.
+PARAMETER DnsServer:
+The DNS server addresses, in order.
+PARAMETER DnsDomain:
+The DNS suffix, for example corp.example.
+PARAMETER WinsServer:
+WINS server addresses.
+PARAMETER OptionId:
+An option number, used with -Value.
+PARAMETER Value:
+The option's value or values.
+EXAMPLE: Set-DhcpServerv4OptionValue -ScopeId 10.10.0.0 -DnsServer 10.10.0.10, 10.20.0.11 -DnsDomain corp.example -ComputerName SRV1
+HQ clients use DC1 then DC2 for DNS.
+EXAMPLE: Set-DhcpServerv4OptionValue -OptionId 42 -Value 10.10.0.10
+A server-level option: clients use DC1 as their time server (option 42, NTP).
+RELATED: Get-DhcpServerv4OptionValue, Add-DhcpServerv4Scope, Add-DhcpServerv4Reservation

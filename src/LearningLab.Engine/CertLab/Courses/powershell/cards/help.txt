@@ -1,0 +1,19 @@
+# Deck: help | Getting started and help | Help
+List the commands whose noun is Service :: `Get-Command -Noun Service`
+List the commands whose verb is Export :: `Get-Command -Verb Export`
+Show only the syntax of Get-Process :: `Get-Command Get-Process -Syntax`
+Show the help of Get-ChildItem :: `Get-Help Get-ChildItem`
+Show only the examples in the help of Get-ChildItem :: `Get-Help Get-ChildItem -Examples`
+Show everything about one parameter (-Recurse of Get-ChildItem) :: `Get-Help Get-ChildItem -Parameter Recurse`
+Show the complete help, with Required, Position and pipeline input for every parameter :: `Get-Help Get-Service -Full`
+List the help topics about concepts :: `Get-Help about_*`
+Find commands and topics whose names contain "event" :: `Get-Help *event*`
+Download the newest help files (as an administrator, with internet) :: `Update-Help`
+Find the cmdlet behind the alias gci :: `Get-Alias gci`
+List the aliases of Get-ChildItem :: `Get-Alias -Definition Get-ChildItem`
+Show the properties of the objects Get-Service returns :: `Get-Service | Get-Member -MemberType Property`
+What does [-Name] (in brackets) mean in a syntax line? :: the parameter name may be left out: the value can be given by position
+What does a whole parameter in brackets, [-Force], mean? :: the parameter is optional
+What is the shape of every cmdlet name? :: Verb-Noun, with a verb from the approved list (Get-Verb)
+Show the version of PowerShell :: `$PSVersionTable.PSVersion`
+Which PowerShell is built into Windows 10, 11 and Server? :: Windows PowerShell 5.1 (PowerShell 7 is a separate install)

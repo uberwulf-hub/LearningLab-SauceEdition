@@ -1,0 +1,32 @@
+SYNOPSIS: Shows what an object is and what it has: its type, properties and methods.
+DESCRIPTION:
+Everything in a PowerShell pipeline is an object. Get-Member tells you which kind (the TypeName line at the top) and lists its members: properties you can read (and sometimes set) and methods you can call.
+
+It is the most useful discovery tool after Get-Help and Get-Command. When you wonder "what can I do with this?", pipe it to Get-Member. The property names it lists are the ones you can use with Select-Object, Where-Object, Sort-Object and Format-Table.
+
+When different kinds of object come through the pipeline, Get-Member lists each type once.
+PARAMETER InputObject:
+The object to examine. Usually it comes through the pipeline. Given directly (Get-Member -InputObject $list), a collection is examined as one object, so you see the members of the array itself rather than of its items.
+PARAMETER Name:
+Shows only members with these names. Position 0. Wildcards work: Get-Member -Name To*.
+PARAMETER MemberType:
+Shows only one kind of member: Property, Method, NoteProperty, ScriptProperty, AliasProperty, or the groups Properties and Methods. Its alias is -Type.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Get-Member
+Shows that every row is a PSCustomObject with a note property per column (all strings).
+EXAMPLE: 'hello' | Get-Member -MemberType Method -Name To*
+Lists the string methods that start with To, such as ToUpper and ToLower.
+EXAMPLE: 'hello' | Get-Member -MemberType Property
+A string has one property: Length.
+EXAMPLE: Get-Member -InputObject 1, 2
+Shows the members of the array (System.Object[]), such as Count and Length.
+EXAMPLE: 1, 'a' | Get-Member | Select-Object -ExpandProperty TypeName -Unique
+Lists the two types that came through: System.Int32 and System.String.
+NOTES:
+The alias is gm. "command | gm" is one of the most typed lines in PowerShell.
+
+Get-Member shows the objects as they are when they reach it. After Format-Table you would see formatting objects, and after Select-Object you see a Selected... type with only the properties you chose.
+
+Objects that come back from jobs and remote computers are copies: their type names start with Deserialized and their methods are gone.
+
+On a real PC, -Force adds hidden members such as PSObject and PSBase, and -Static lists the static members of a .NET type: [datetime] | Get-Member -Static shows members such as Now and Today.
+RELATED: Get-Command, Select-Object, Add-Member, about_Objects

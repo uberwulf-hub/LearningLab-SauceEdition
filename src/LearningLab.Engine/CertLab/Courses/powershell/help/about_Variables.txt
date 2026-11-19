@@ -1,0 +1,67 @@
+TOPIC
+    about_Variables
+
+SHORT DESCRIPTION
+    Storing values under a name with $ so you can use them later.
+
+LONG DESCRIPTION
+    A variable is a named place for a value. Its name starts with $, and
+    you create it simply by assigning to it:
+
+        $server = 'WIN-SRV1'
+        $count  = 3
+        $svcs   = Get-Service
+        $server
+        $svcs.Count
+
+    Names ignore case ($Server and $server are the same). Letters, digits
+    and _ are safe; for other characters write ${my var}.
+
+  Types
+    A variable can hold anything: a string, a number, an array, a whole
+    list of objects. Put a type in front to fix what it may hold:
+
+        [int]$port = 5985
+        $port = 'abc'        # error: cannot convert to int
+        [string[]]$names = 'WIN-SRV1', 'WIN-CL1'
+
+    $x.GetType() shows the type of what $x holds right now.
+
+  Variables in strings
+    Inside double quotes a variable is replaced by its value; inside
+    single quotes it is not. For a property, use $( ):
+
+        "Checking $server"
+        'Checking $server'
+        "It has $($svcs.Count) services"
+
+  Arrays and hashtables
+        $list = @('a', 'b', 'c')       $list[0]   $list[-1]
+        $info = @{ Name = 'WIN-CL1'; Ram = 8 }   $info.Name
+
+  The variable cmdlets and drive
+    Get-Variable, Set-Variable, New-Variable, Remove-Variable and
+    Clear-Variable work with variables by name (without the $). The
+    Variable: drive lists them all. New-Variable -Option ReadOnly or
+    Constant protects a value.
+
+        Get-Variable -Name server
+        Remove-Variable -Name count
+
+  Kinds of variables
+    Besides your own, there are automatic variables (set by PowerShell),
+    preference variables (settings) and environment variables ($env:PATH,
+    $env:COMPUTERNAME). A variable's scope decides where it is visible.
+
+  Strict mode
+    Reading a variable that was never set gives $null, which hides typing
+    mistakes. Set-StrictMode -Version Latest turns that into an error.
+
+SEE ALSO
+    about_Automatic_Variables
+    about_Preference_Variables
+    about_Scopes
+    about_Quoting_Rules
+    about_Hash_Tables
+    Get-Variable
+    Set-StrictMode

@@ -1,0 +1,111 @@
+NAME
+       sshd_config - settings of the OpenSSH server
+
+SYNOPSIS
+       /etc/ssh/sshd_config
+       /etc/ssh/sshd_config.d/*.conf
+
+DESCRIPTION
+       sshd, the SSH server, reads its settings from /etc/ssh/sshd_config.
+       On RHEL 9 that file starts with "Include /etc/ssh/sshd_config.d/*.conf",
+       so the files in that directory are read first, in name order. For each
+       keyword, the FIRST value found wins. That means a setting in a
+       drop-in file (such as 50-redhat.conf) beats the same keyword further
+       down in sshd_config. Put your own settings in a file that sorts
+       first, such as /etc/ssh/sshd_config.d/00-lab.conf, or edit the
+       keyword in sshd_config when no drop-in file sets it. Look for the
+       keyword in all the files first:
+
+           grep -ri permitrootlogin /etc/ssh/sshd_config /etc/ssh/sshd_config.d/
+
+       When root logins were allowed during installation, the installer
+       wrote 01-permitrootlogin.conf with "PermitRootLogin yes", which wins
+       over a later file such as 10-lab.conf.
+
+       Each line is a keyword and its value(s); keywords are not case
+       sensitive, values often are. # starts a comment. The commented-out
+       lines in the shipped file show the built-in defaults.
+
+       After a change, apply it with systemctl reload sshd (connections
+       already open stay open), then check systemctl status sshd and test a
+       new login from another terminal before you close the current one.
+
+KEYWORDS
+       Port N
+              The port to listen on (22). Several Port lines are allowed. A
+              new port also needs an SELinux label (semanage port -a -t
+              ssh_port_t -p tcp N) and a firewall opening.
+
+       ListenAddress ADDRESS
+              The local addresses to listen on (all by default).
+
+       PermitRootLogin yes|no|prohibit-password|forced-commands-only
+              Whether root may log in over ssh. prohibit-password (the RHEL 9
+              default) allows root with keys only; no forbids root
+              completely.
+
+       PasswordAuthentication yes|no
+              Whether passwords are accepted. no allows only keys (and other
+              methods); set up and test keys first, or you may lock yourself
+              out.
+
+       PubkeyAuthentication yes|no
+              Whether key logins are accepted (yes).
+
+       AuthorizedKeysFile PATH
+              Where the public keys allowed for an account are
+              (.ssh/authorized_keys, relative to the home directory).
+
+       AllowUsers USER..., DenyUsers USER...
+              Only these users may log in, or these may not. Patterns like
+              student@192.168.50.* are allowed.
+
+       AllowGroups GROUP..., DenyGroups GROUP...
+              The same for groups.
+
+       PermitEmptyPasswords yes|no
+              Whether accounts with an empty password may log in (no).
+
+       X11Forwarding yes|no
+              Whether graphical programs may be shown on the client.
+
+       ClientAliveInterval N, ClientAliveCountMax N
+              Check idle clients every N seconds; drop them after that many
+              unanswered checks.
+
+       MaxAuthTries N
+              Login attempts allowed per connection (6).
+
+       Banner FILE
+              Text shown before login.
+
+       Match User NAME | Group NAME | Address PATTERN
+              The lines that follow apply only to matching connections, up
+              to the next Match line or the end of the file.
+
+EXAMPLES
+       Forbid root logins and password logins, then apply:
+
+           cat > /etc/ssh/sshd_config.d/00-lab.conf <<'EOF'
+           PermitRootLogin no
+           PasswordAuthentication no
+           EOF
+           systemctl reload sshd
+
+       Check which files set a keyword:
+
+           grep -ri passwordauthentication /etc/ssh/sshd_config*
+
+       Allow only student and harry to log in:
+
+           AllowUsers student harry
+
+FILES
+       /etc/ssh/sshd_config, /etc/ssh/sshd_config.d/
+              The settings.
+
+       /etc/ssh/ssh_host_*_key
+              The server's host keys.
+
+SEE ALSO
+       sshd(8), ssh_config(5), ssh(1), semanage(8), firewall-cmd(1)

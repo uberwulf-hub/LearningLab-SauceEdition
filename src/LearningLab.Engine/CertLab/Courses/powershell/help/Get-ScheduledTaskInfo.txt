@@ -1,0 +1,14 @@
+SYNOPSIS: Shows when a task last ran, its result and when it runs next.
+DESCRIPTION:
+Get-ScheduledTaskInfo returns LastRunTime, LastTaskResult, NextRunTime and NumberOfMissedRuns. LastTaskResult 0 means success; 267011 (0x41303) means the task has not run yet; 267009 (0x41301) means it is running now; other numbers are the program's exit code or a Windows error, for example 2147942402 (0x80070002, file not found).
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder.
+PARAMETER InputObject:
+A task object from Get-ScheduledTask, through the pipeline.
+EXAMPLE: Get-ScheduledTaskInfo -TaskName Nightly
+When it ran and how it went.
+EXAMPLE: Get-ScheduledTask -TaskPath \ | Get-ScheduledTaskInfo | Where-Object LastTaskResult -ne 0
+Your tasks that did not succeed (or never ran).
+RELATED: Get-ScheduledTask, Start-ScheduledTask

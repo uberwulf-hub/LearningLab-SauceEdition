@@ -1,0 +1,19 @@
+Same Windows file server as Share and Tell; this time file auditing counts what you copy and every
+sign-in.
+
+1. Scan quietly. nmap -sn and nmap -sV 10.10.3.40 are not counted here.
+
+2. List, then copy one file. smbclient -L //10.10.3.40 -N shows the Public share. In one connection,
+   smbclient //10.10.3.40/Public -N -c 'ls; get new-staff.txt' lists the folder and copies only the
+   note with kim's password ({{KIMPW}} on this run). Copying the welcome file too would cost as much
+   as the note and tell you nothing.
+
+3. Two sign-ins, both right. winrm-shell as kim: her flag is on her desktop, and
+   Documents\reset-local-admin.ps1 holds the Administrator password ({{ADMPW}}). exit, then winrm-shell
+   once as Administrator for the desktop flag.
+
+Why the noisy way fails: copying every file and trying guessed Administrator passwords adds up fast;
+wrong passwords weigh the most. The watcher raises the alarm and blocks your address.
+
+In real life: Windows can audit file access on a share (events 5140 / 5145) and failed sign-ins (4625);
+a burst of copies or failures is exactly what a defender alerts on.

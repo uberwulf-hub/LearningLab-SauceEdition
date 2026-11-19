@@ -1,0 +1,310 @@
+# Unit: u07 | 7. Error handling | Errors
+
+Things go wrong: a file is missing, a server does not answer, a user mistypes a name. PowerShell has two kinds of errors and several ways to react to them. Knowing which kind you are looking at is most of the work, because `try` / `catch` only catches one of them.
+
+## Lesson: l0701 | Reading an error
+
+An error in Windows PowerShell 5.1 is printed in red with a fixed layout. Read it from the top:
+
+```terminal
+PS C:\Windows\system32> Get-Variable NoSuchThing
+Get-Variable : Cannot find a variable with the name 'NoSuchThing'.
+At line:1 char:1
++ Get-Variable NoSuchThing
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (NoSuchThing:String) [Get-Variable], ItemNotFoundException
+    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.GetVariableCommand
+```
+
+- **The first line**: which command failed (`Get-Variable`) and the message.
+- **At line:1 char:1** and the line with `~~~~` under it: where in your command or script it happened.
+- **CategoryInfo**: the error category (ObjectNotFound), the target `(NoSuchThing:String)`, the command and the .NET exception type (`ItemNotFoundException`).
+- **FullyQualifiedErrorId**: a stable identifier, handy for searching the web and for telling errors apart in code.
+
+### $Error and $?
+
+Every error also goes into the automatic variable `$Error`, newest first. `$?` is `True` when the last command succeeded and `False` when it reported an error.
+
+```terminal
+PS C:\Windows\system32> $Error.Clear()
+PS C:\Windows\system32> Get-Variable NoSuchThing -ErrorAction SilentlyContinue
+PS C:\Windows\system32> $?
+False
+PS C:\Windows\system32> $Error.Count
+1
+PS C:\Windows\system32> $Error[0].Exception.Message
+Cannot find a variable with the name 'NoSuchThing'.
+PS C:\Windows\system32> $Error[0].CategoryInfo.Category
+ObjectNotFound
+PS C:\Windows\system32> $Error[0].FullyQualifiedErrorId
+VariableNotFound,Microsoft.PowerShell.Commands.GetVariableCommand
+```
+
+`$Error[0]` is an **ErrorRecord** object. Its most useful properties: `Exception` (with `.Message` and the exception type), `CategoryInfo`, `FullyQualifiedErrorId`, `TargetObject` (what the command was working on) and `InvocationInfo` (where it happened).
+
+@try machines=1
+@task t1 | Errors | 10 | WIN-SRV1
+Run `Get-Variable Missing1`, then store in `$why` the **message** of that error (from `$Error`), so that `$why` is `Cannot find a variable with the name 'Missing1'.`
+@check WIN-SRV1 | $why holds the message
+$why -eq "Cannot find a variable with the name 'Missing1'."
+@hint The newest error is $Error[0]; the text is in .Exception.Message.
+@solution WIN-SRV1
+Get-Variable Missing1
+$why = $Error[0].Exception.Message
+@endtask
+@end
+
+@quiz
+? Where is the newest error kept?
++ $Error[0]
+- $Error[-1]
+- $LastError
+! $Error is a list with the newest error first.
+? What does `$?` tell you?
+- The exit code of the last program
++ Whether the last command finished without reporting an error
+- How many errors there are
+! $? is True or False. $LASTEXITCODE holds the exit code of a program like ping.exe.
+@end
+
+## Lesson: l0702 | Terminating and non-terminating errors
+
+**Non-terminating** errors are the usual kind from cmdlets: the cmdlet reports a problem with one item and **carries on** with the next. `Get-Variable a, NoSuchThing, b` still shows a and b.
+
+**Terminating** errors stop what is running: `throw`, a .NET method that fails, a syntax error, a parameter that cannot be bound (a wrong type, or a missing mandatory one when PowerShell cannot ask for it), and any error when `-ErrorAction Stop` is in force.
+
+```terminal
+PS C:\Windows\system32> $a = 1; $b = 2
+PS C:\Windows\system32> Get-Variable a, NoSuchThing, b
+
+Name                           Value
+----                           -----
+a                              1
+Get-Variable : Cannot find a variable with the name 'NoSuchThing'.
+At line:1 char:1
++ Get-Variable a, NoSuchThing, b
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (NoSuchThing:String) [Get-Variable], ItemNotFoundException
+    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.GetVariableCommand
+
+b                              2
+```
+
+### -ErrorAction and $ErrorActionPreference
+
+Every cmdlet has the common parameter `-ErrorAction` (alias `-ea`) that decides what happens with its non-terminating errors:
+
+| Value | What happens |
+|---|---|
+| `Continue` (default) | show the error, record it in `$Error`, go on |
+| `SilentlyContinue` | do not show it, but still record it in `$Error`, go on |
+| `Ignore` | do not show it, do not record it, go on |
+| `Stop` | turn it into a terminating error (it can now be caught) |
+| `Inquire` | ask what to do |
+
+`$ErrorActionPreference` sets the default for everything that follows in the current scope. In a script, `$ErrorActionPreference = 'Stop'` at the top makes every error stop the script, which is often what you want for a job that must not half-finish.
+
+```terminal
+PS C:\Windows\system32> Get-Variable NoSuchThing -ErrorAction SilentlyContinue
+PS C:\Windows\system32> Get-Variable NoSuchThing -ErrorAction Ignore
+PS C:\Windows\system32> Get-Variable NoSuchThing -ErrorAction Stop; 'not reached'
+Get-Variable : Cannot find a variable with the name 'NoSuchThing'.
+At line:1 char:1
++ Get-Variable NoSuchThing -ErrorAction Stop; 'not reached'
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (NoSuchThing:String) [Get-Variable], ItemNotFoundException
+    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.GetVariableCommand
+```
+
+> `-ErrorVariable myErrors` (alias `-ev`) also stores the command's errors in `$myErrors`; `-ErrorVariable +myErrors` adds to what is already there.
+
+@try machines=1
+@task t1 | Errors | 10 | WIN-SRV1
+Run `Get-Variable NoSuchVar` so that **nothing** is printed and the error is stored in a variable named `$problems` (use `-ErrorVariable`).
+@check WIN-SRV1 | $problems holds the error
+$problems.Count -eq 1 -and $problems[0].FullyQualifiedErrorId -like 'VariableNotFound*'
+@check WIN-SRV1 | no error text was printed for it
+-not ($CertLabTranscript -match "Cannot find a variable with the name 'NoSuchVar'")
+@hint -ErrorAction SilentlyContinue -ErrorVariable problems (no $ in front of the name)
+@solution WIN-SRV1
+Get-Variable NoSuchVar -ErrorAction SilentlyContinue -ErrorVariable problems
+@endtask
+@end
+
+@quiz
+? `Get-Variable x, NoSuch, y` with x and y set. What happens?
++ x and y are shown, and an error for NoSuch
+- Nothing is shown; the command stops at NoSuch
+- Only x is shown
+! It is a non-terminating error: the cmdlet reports it and carries on.
+? Which -ErrorAction value keeps the error out of $Error?
+- SilentlyContinue
++ Ignore
+- Stop
+! SilentlyContinue hides it but still records it; Ignore does neither.
+? What does `$ErrorActionPreference = 'Stop'` do?
+- Stops PowerShell
++ Makes errors in that scope terminating, so they stop the script (or can be caught)
+- Turns off error messages
+! It changes the default for -ErrorAction to Stop.
+@end
+
+## Lesson: l0703 | try, catch and finally
+
+```
+try {
+    # the commands that may fail
+}
+catch [Some.Exception.Type] {
+    # runs for that kind of error; $_ is the ErrorRecord
+}
+catch {
+    # runs for any other terminating error
+}
+finally {
+    # always runs, error or not (clean-up)
+}
+```
+
+`catch` only sees **terminating** errors. A cmdlet's normal error is not terminating, so it slips past `catch` unless you add `-ErrorAction Stop`:
+
+```terminal
+PS C:\Windows\system32> try { Get-Variable NoSuchThing } catch { 'caught it' }
+Get-Variable : Cannot find a variable with the name 'NoSuchThing'.
+At line:1 char:7
++ try { Get-Variable NoSuchThing } catch { 'caught it' }
++       ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (NoSuchThing:String) [Get-Variable], ItemNotFoundException
+    + FullyQualifiedErrorId : VariableNotFound,Microsoft.PowerShell.Commands.GetVariableCommand
+
+PS C:\Windows\system32> try { Get-Variable NoSuchThing -ErrorAction Stop } catch { 'caught it' }
+caught it
+```
+
+Inside `catch`, `$_` (or `$PSItem`) is the ErrorRecord; `$_.Exception.Message` is the text and `$_.Exception.GetType().FullName` the type you can put in `catch [ ]`:
+
+```terminal
+PS C:\Windows\system32> try { Get-Variable NoSuchThing -ErrorAction Stop } catch { $_.Exception.GetType().FullName }
+System.Management.Automation.ItemNotFoundException
+PS C:\Windows\system32> try { 1 / 0 } catch [System.DivideByZeroException] { 'division' } catch { 'other' }
+division
+PS C:\Windows\system32> try { [int]'abc' } catch { "Problem: $($_.Exception.Message)" } finally { 'finally always runs' }
+Problem: Cannot convert value "abc" to type "System.Int32". Error: "Input string was not in a correct format."
+finally always runs
+```
+
+Several `catch` blocks are tried from the top; the first whose type matches (the exception type or one it is derived from) runs. Put the specific types first and a plain `catch` last.
+
+> 1 / 0 typed literally is caught here because the division happens while the statement runs. A real division by a variable that is 0 behaves the same, as long as the numbers are whole numbers: with `[double]` values, PowerShell returns Infinity and no error.
+
+@try machines=1
+@task t1 | Errors | 10 | WIN-SRV1
+Write a function `Get-SafeVariable` with a parameter `$Name` that returns the **value** of the variable with that name, or the text `not set` when it does not exist (no error may be shown). Use `try` / `catch`.
+@check WIN-SRV1 | an existing variable returns its value
+$probe = 'here'; (Get-SafeVariable probe) -eq 'here'
+@check WIN-SRV1 | a missing one returns 'not set'
+(Get-SafeVariable NoSuchName42) -eq 'not set'
+@check WIN-SRV1 | it uses try / catch
+${function:Get-SafeVariable}.ToString() -match 'try' -and ${function:Get-SafeVariable}.ToString() -match 'catch'
+@hint Inside try: Get-Variable -Name $Name -ValueOnly -ErrorAction Stop. In catch: 'not set'.
+@solution WIN-SRV1
+function Get-SafeVariable($Name) { try { Get-Variable -Name $Name -ValueOnly -ErrorAction Stop } catch { 'not set' } }
+Get-SafeVariable NoSuchName42
+@endtask
+@end
+
+@quiz
+? Why does `try { Get-Variable Nope } catch { 'x' }` print the red error instead of 'x'?
++ The cmdlet's error is non-terminating, and catch only sees terminating errors
+- try does not work with Get-Variable
+- catch needs an exception type
+! Add -ErrorAction Stop to make the error terminating.
+? When does a finally block run?
+- Only when an error happened
+- Only when no error happened
++ Always, after try (and catch)
+! finally is for clean-up that must happen either way.
+? In a catch block, what is $_?
+- The exception message as text
++ The ErrorRecord of the error being handled
+- The input object of the pipeline
+! $_.Exception.Message holds the text.
+@end
+
+## Lesson: l0704 | Raising your own errors
+
+### throw
+
+`throw` raises a **terminating** error. Use it when your script cannot go on.
+
+```terminal
+PS C:\Windows\system32> function Get-Half([int]$n) { if ($n % 2) { throw "$n is odd" }; $n / 2 }
+PS C:\Windows\system32> Get-Half 8
+4
+PS C:\Windows\system32> Get-Half 7
+7 is odd
+At line:1 char:44
++ function Get-Half([int]$n) { if ($n % 2) { throw "$n is odd" }; $n / 2 }
++                                            ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (7 is odd:String) [], RuntimeException
+    + FullyQualifiedErrorId : 7 is odd
+
+PS C:\Windows\system32> try { Get-Half 7 } catch { "The function said: $($_.Exception.Message)" }
+The function said: 7 is odd
+```
+
+You can also throw a .NET exception of a type of your choice, which callers can catch by type: `throw [System.IO.FileNotFoundException]::new('config.xml is missing')`.
+
+### Write-Error
+
+`Write-Error` writes a **non-terminating** error, the way a cmdlet reports one bad item and keeps going. It respects `-ErrorAction` and `$ErrorActionPreference` like any cmdlet's error.
+
+```terminal
+PS C:\Windows\system32> function Test-Port([int]$Port) { if ($Port -gt 65535) { Write-Error "Port $Port is out of range" ; return }; "Port $Port is fine" }
+PS C:\Windows\system32> Test-Port 70000
+Test-Port : Port 70000 is out of range
+At line:1 char:1
++ Test-Port 70000
++ ~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Test-Port
+
+PS C:\Windows\system32> Test-Port 443
+Port 443 is fine
+```
+
+### Which one?
+
+- Can the caller sensibly continue with other items? Use **Write-Error** and `return` from that item.
+- Is the whole operation pointless now (no connection, no config)? Use **throw**.
+
+> In an advanced function, `$PSCmdlet.ThrowTerminatingError($record)` is the cmdlet-style way to stop; `throw` is fine for scripts.
+
+@try machines=1
+@task t1 | Errors | 10 | WIN-SRV1
+Write a function `Assert-Positive` with a parameter `[int]$Number` that **throws** the message `Number must be positive` when the number is 0 or less, and returns the number otherwise.
+@check WIN-SRV1 | Assert-Positive 5 returns 5
+(Assert-Positive 5) -eq 5
+@check WIN-SRV1 | Assert-Positive -1 throws the message
+try { Assert-Positive -1; $false } catch { $_.Exception.Message -eq 'Number must be positive' }
+@hint if ($Number -le 0) { throw 'Number must be positive' }; $Number
+@solution WIN-SRV1
+function Assert-Positive([int]$Number) { if ($Number -le 0) { throw 'Number must be positive' }; $Number }
+Assert-Positive 5
+@endtask
+@end
+
+@quiz
+? Which raises a terminating error?
++ throw 'message'
+- Write-Error 'message'
+- Write-Warning 'message'
+! Write-Error is non-terminating (unless ErrorAction is Stop); throw always terminates.
+? A function processes a list of servers and one name is invalid. What fits best?
+- throw, to stop everything
++ Write-Error for that name, then go on with the others
+- Write-Host in red
+! That is the cmdlet way: report the bad item and carry on.
+@end
+
+

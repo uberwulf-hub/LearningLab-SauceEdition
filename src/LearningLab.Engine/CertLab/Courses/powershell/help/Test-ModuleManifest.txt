@@ -1,0 +1,16 @@
+SYNOPSIS: Checks that a module manifest (.psd1) is valid and shows the module it describes.
+DESCRIPTION:
+Test-ModuleManifest reads a manifest without importing the module. It checks that the file exists, that it is a valid data file (a hashtable), that it has the required ModuleVersion key and that the RootModule file it names exists.
+
+If everything is fine it returns a module object, so you can see the name, version and exported commands. If not, it writes an error that says what is wrong.
+PARAMETER Path:
+The .psd1 file to check. You can also pipe in paths.
+EXAMPLE: Test-ModuleManifest 'C:\Program Files\WindowsPowerShell\Modules\LabTools\LabTools.psd1'
+Checks the LabTools manifest and shows its version and exported commands.
+EXAMPLE: Test-ModuleManifest .\LabTools.psd1 | Select-Object Name, Version, ModuleBase
+Shows a few properties of the module the manifest describes.
+EXAMPLE: if (Test-ModuleManifest .\LabTools.psd1 -ErrorAction SilentlyContinue) { 'OK' }
+Uses the test in a script: the result is empty when the manifest is broken.
+NOTES:
+Run it after editing a manifest by hand: one missing quote or comma makes the whole file invalid, and Import-Module then refuses the module.
+RELATED: New-ModuleManifest, Import-Module, Get-Module

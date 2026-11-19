@@ -1,0 +1,25 @@
+# Deck: apps | Apps and app protection | Apps
+The tool that wraps a setup folder into an .intunewin file :: The Win32 Content Prep Tool (IntuneWinAppUtil.exe -c source -s setup -o output)
+Why a Win32 install command needs a silent switch :: Nobody sees the installer; without it, it waits for a click and times out
+The usual silent switch of an MSI install :: msiexec /i setup.msi /qn (or /quiet)
+The default return code for a soft reboot :: 3010 (1641 is a hard reboot, 1618 retry, 0 and 1707 success)
+Install behavior for an app that installs into Program Files :: System
+What requirements do :: Skip devices that can't run the app (Not applicable) before downloading
+The four kinds of Win32 detection rules :: MSI product code, file, registry, custom script
+Error 0x87D1041C :: The app wasn't detected after a successful install: fix the detection rule
+Expenses needs a runtime installed first :: Make the runtime a dependency of the Expenses app
+Version 3.0 must remove 2.4 before installing :: Supersedence with Uninstall previous version = Yes
+How a Microsoft Store app (new) installs :: Through winget; the Store keeps it updated
+Microsoft 365 Apps option for PCs that several licensed people share :: Shared computer activation
+Microsoft 365 Apps channel with features twice a year :: Semi-Annual Enterprise Channel
+Available for enrolled devices is assigned to... :: User groups (people pick the app in Company Portal); Win32 apps may also go to device groups
+Where the IME writes its Win32 app logs :: C:\ProgramData\Microsoft\IntuneManagementExtension\Logs
+Search the IME log for one app :: `Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log | Select-String 'Notepad'`
+Paid iOS apps without Apple IDs :: Apps and Books (VPP) from Apple Business Manager, with a location token in Intune
+Where Android Enterprise apps come from :: Managed Google Play, connected to Intune
+App protection policies are assigned to... :: User groups (they follow the work account in the apps)
+App protection without enrolment is called... :: MAM without enrolment (MAM-WE)
+The three pages of app protection settings :: Data protection, access requirements, conditional launch
+Wipe org data from an app that hasn't checked in for 90 days :: Conditional launch: offline grace period, wipe data after 90 days
+App configuration for apps on unenrolled phones :: Managed apps (through the Intune App SDK); managed devices needs enrolment
+The Conditional Access control that accepts only apps covered by app protection :: Require app protection policy (iOS and Android; Edge on Windows in preview)

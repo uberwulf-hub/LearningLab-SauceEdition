@@ -1,0 +1,58 @@
+TOPIC
+    about_Automatic_Variables
+
+SHORT DESCRIPTION
+    Variables that PowerShell creates and fills in by itself.
+
+LONG DESCRIPTION
+    Some variables are set by PowerShell, not by you. They tell you about
+    the session, the current command or the last thing that happened.
+    Treat them as read-only: assigning to most of them either fails or
+    causes confusing results.
+
+  The ones you will use most
+    $_ or $PSItem    The current object in a pipeline script block
+                     (ForEach-Object, Where-Object, Select-Object
+                     calculated properties) and in a catch block.
+    $?               $true if the last command succeeded, else $false.
+    $LASTEXITCODE    The exit code of the last native program
+                     (ping.exe, robocopy.exe) or script that used exit.
+    $Error           A list of recent errors, newest first: $Error[0].
+    $null            Nothing. Use it to compare: $null -eq $x.
+    $true, $false    The two Boolean values.
+    $args            Arguments a function or script received that no
+                     parameter took.
+    $Input           The pipeline input of a function without a
+                     process block. Never name a parameter $Input.
+    $PSBoundParameters  The parameters a function was called with, as a
+                     hashtable.
+
+        Get-Service -Name Spooler -ComputerName WIN-SRV1
+        $?
+        $Error[0].Exception.Message
+
+  About the session and the machine
+    $PSVersionTable  The PowerShell version; PSVersion is 5.1 here.
+    $Host            The program hosting PowerShell (console, ISE).
+    $HOME            The user's profile folder.
+    $PID             The process id of this PowerShell.
+    $PWD             The current location, as a path object.
+    $PSHOME          The folder PowerShell is installed in.
+    $PROFILE         The path of your profile script.
+
+  Inside scripts
+    $PSScriptRoot    The folder the running script is in.
+    $PSCommandPath   The full path of the running script.
+    $MyInvocation    Details of how the current command was called.
+
+        Get-Content -Path (Join-Path $PSScriptRoot 'servers.txt')
+
+  PowerShell 7
+    PowerShell 7 adds $IsWindows, $IsLinux and $IsMacOS. In 5.1 they do
+    not exist (they read as $null), because 5.1 only runs on Windows.
+
+SEE ALSO
+    about_Variables
+    about_Preference_Variables
+    about_Scopes
+    Get-Variable

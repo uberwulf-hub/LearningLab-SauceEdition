@@ -1,0 +1,37 @@
+NAME
+       base32 - encode data as base32 text, or decode it again
+
+SYNOPSIS
+       base32 [-w COLS] [FILE]
+       base32 -d [-i] [FILE]
+
+DESCRIPTION
+       base32 writes data with only the capital letters A to Z and the digits
+       2 to 7, padded with = to a multiple of eight characters. It is longer
+       than base64 but safe where upper and lower case could be mixed up.
+       With -d it turns such text back into the original bytes. It reads FILE,
+       or standard input when no file is given, and writes to standard output.
+
+       Spotting it: only A-Z, 2-7 and trailing = signs (base64 also has small
+       letters, 0, 1, 8, 9, + and /).
+
+       Encoding is not encryption: anyone can decode the text.
+
+OPTIONS
+       -d, --decode
+              Decode instead of encode.
+
+       -i, --ignore-garbage
+              When decoding, skip characters that are not part of the
+              alphabet.
+
+       -w COLS, --wrap=COLS
+              Break encoded lines after COLS characters (76 by default);
+              -w 0 writes one long line.
+
+EXAMPLES
+           echo -n hello | base32
+           echo NBSWY3DP | base32 -d
+
+SEE ALSO
+       base64(1), od(1), xxd(1)

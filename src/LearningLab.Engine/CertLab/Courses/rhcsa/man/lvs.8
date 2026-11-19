@@ -1,0 +1,70 @@
+NAME
+       lvs - list logical volumes, one line each
+
+SYNOPSIS
+       lvs [-a] [-o FIELDS] [-O SORT] [-S SELECTION] [--units U] [--noheadings]
+           [--nosuffix] [--separator S] [--segments] [VG|LV...]
+
+DESCRIPTION
+       lvs prints a short table of logical volumes: name, volume group,
+       attributes and size, plus columns used by snapshots, thin pools and
+       mirrors. With VG or LV names it lists only those. It changes nothing,
+       so run it as often as you like; it is the quickest way to check an LV
+       you just made or resized. Run it as root.
+
+       The Attr column is a row of letters. The first is the volume type
+       (- for a plain LV, s snapshot, t thin pool...), the second w or r
+       (writable or read-only), the third the allocation policy (i
+       inherited), the fifth a when the LV is active, the sixth o when it is
+       open (mounted or used as swap).
+
+       Sizes are shown in a readable unit by default, with a < sign when the
+       number is rounded down (<1.80g).
+
+OPTIONS
+       -o, --options FIELDS
+              Show these columns (comma separated). With a leading + they are
+              added to the default ones. Useful fields: lv_name, vg_name,
+              lv_size, lv_attr, lv_path, lv_dm_path, devices, lv_uuid,
+              seg_count, lv_active.
+
+       -O, --sort FIELDS
+              Sort by these fields.
+
+       -S, --select EXPRESSION
+              Show only rows that match, such as -S 'lv_size>1g'.
+
+       -a, --all
+              Include hidden internal volumes.
+
+       --units U
+              Show sizes in one unit: b, k, m, g, t (powers of 1024), or the
+              capital letters for powers of 1000. h means readable (default).
+
+       --noheadings
+              Leave out the header line (for scripts).
+
+       --nosuffix
+              Leave the unit letter off sizes (use with --units).
+
+       --separator S
+              Separate the columns with S instead of aligning them.
+
+       --segments
+              One line per segment, showing where each part of the LV lives.
+
+EXAMPLES
+       Show all LVs:
+
+           lvs
+
+       Show the size of one LV in MiB, as a bare number, for a script:
+
+           lvs --noheadings --units m --nosuffix -o lv_size vgdata/data
+
+       See which disks hold each LV:
+
+           lvs -o +devices
+
+SEE ALSO
+       pvs(8), vgs(8), lvdisplay(8), lvscan(8), lvm(8)

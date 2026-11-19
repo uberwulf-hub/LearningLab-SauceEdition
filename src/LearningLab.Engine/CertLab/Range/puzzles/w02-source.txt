@@ -1,0 +1,50 @@
+title: Hidden in plain sight
+level: Beginner
+kind: Web
+topic: Web
+teaser: the answer was in the page all along
+points: 45
+order: 41
+packages: httpd
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+A login page is running at http://localhost/. The developer left something in the
+page's own source code - the HTML the browser receives. Read the source and find the
+secret word that was left in a comment.
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/", "kind": "page", "title": "Staff Login", "body": "<h1>Staff Portal</h1>\n<!-- TODO before launch: remove the default password '{{SECRET}}' from this comment -->\n<form><input name=\"user\"> <input name=\"pass\" type=\"password\"> <button>Sign in</button></form>" }
+]
+
+@solution
+curl -s http://localhost/
+echo {{SECRET}}
+
+@walkthrough
+Browsers show a rendered page, but the source they receive can hold more. curl prints
+the raw HTML:
+
+    curl -s http://localhost/
+
+Among the form is an HTML comment (<!-- ... -->) the developer forgot to remove, with
+the default password '{{SECRET}}'. Comments are sent to every visitor. The lesson:
+never leave secrets in page source, comments, or hidden form fields - the client sees
+all of it.
+
+@hint 2
+What to think about first: a web page you see is drawn from text the server sends, called HTML. The browser shows some of it and hides the rest - but the hidden parts still arrive on your computer, where anyone can read them.
+
+@hint 3
+curl fetches a page and prints the raw HTML instead of drawing it: curl -s http://localhost/ (-s hides the progress meter). In a normal browser the same thing is "View page source" (Ctrl+U).
+
+@hint 5
+HTML comments look like <!-- like this -->. The browser never shows them, so developers use them for notes to themselves - and sometimes forget to remove things that should never be public, like passwords.
+
+@hint 8
+Run curl -s http://localhost/ and look for the <!-- ... --> line. The word inside the quotes is the answer.

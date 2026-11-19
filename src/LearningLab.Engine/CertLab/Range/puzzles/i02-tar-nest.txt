@@ -1,0 +1,47 @@
+title: Boxes in boxes
+level: Intermediate
+kind: File forensics
+points: 60
+order: 11
+answer: flag
+
+@intro
+~/parcel.tar.gz is an archive. Unpack it and you will find another archive inside,
+and inside that, a file with the flag. Keep unpacking until you reach it.
+
+@setup
+work=/tmp/nest.$$
+mkdir -p $work/inner
+printf '%s\n' '{{FLAG}}' > $work/inner/flag.txt
+tar -czf $work/inner.tar.gz -C $work inner
+mkdir -p $work/outer
+mv $work/inner.tar.gz $work/outer/
+tar -czf /home/player/parcel.tar.gz -C $work outer
+chown player: /home/player/parcel.tar.gz
+rm -rf $work
+
+@solution
+tar -xzf parcel.tar.gz
+ls
+ls outer
+tar -xzf outer/inner.tar.gz
+ls inner
+cat inner/flag.txt
+
+@walkthrough
+tar -xzf unpacks a .tar.gz (x extract, z gunzip, f file). The first unpack gives a
+folder "outer" with inner.tar.gz in it; unpack that too, and the folder "inner" has
+flag.txt:
+
+    tar -xzf parcel.tar.gz
+    tar -xzf outer/inner.tar.gz
+    cat inner/flag.txt
+
+@hint 4
+A .tar.gz is a bundle of files (tar) squeezed small (gzip). Unpack one level, look at what came out (ls -R lists folders inside folders), and repeat.
+
+@hint 8
+tar -xzf FILE unpacks (x extract, z gunzip, f the file name follows). After the first one, look for another archive inside the new folder.
+
+@hint 12
+tar -xzf parcel.tar.gz ; tar -xzf outer/inner.tar.gz ; cat inner/flag.txt

@@ -1,0 +1,30 @@
+SYNOPSIS: Creates an object of a .NET type, or a custom object with properties you choose.
+DESCRIPTION:
+New-Object makes a new object from a .NET type name, such as System.Text.StringBuilder or System.Collections.ArrayList, passing any values the type needs to its constructor with -ArgumentList.
+
+New-Object -TypeName PSObject -Property @{ ... } also makes a custom object from a hash table. Since PowerShell 3.0 there is a shorter way that also keeps the properties in the order you wrote them: [pscustomobject]@{ Name = 'web01'; Ram = 16 }.
+
+Many .NET types can also be made with the static new() method: [System.Text.StringBuilder]::new() (PowerShell 5.0 and later).
+PARAMETER TypeName:
+The .NET type to create, for example System.DateTime. Position 0. The System. at the front may be left out.
+PARAMETER ArgumentList:
+Values for the type's constructor, separated by commas. Position 1. Its alias is -Args.
+PARAMETER Property:
+A hash table of property names and values to set on the new object.
+PARAMETER ComObject:
+On a real PC, creates a COM object such as Excel.Application or WScript.Shell. Cert Lab's practice console does not create COM objects, because they reach the real computer.
+EXAMPLE: New-Object -TypeName System.DateTime -ArgumentList 2026, 7, 4
+Makes the date July 4, 2026.
+EXAMPLE: $o = New-Object -TypeName PSObject -Property @{ Name = 'web01'; Ram = 16 }; $o
+Makes a custom object. Note the properties may not appear in the order you wrote them, because a plain hash table has no order.
+EXAMPLE: $sb = New-Object System.Text.StringBuilder; [void]$sb.Append('Hi'); $sb.ToString()
+Makes a StringBuilder, adds text to it and reads it back.
+EXAMPLE: $list = New-Object System.Collections.ArrayList; $list.Add('x')
+Makes a list you can add to. Add() returns the new item's index (0), which is why scripts often write [void]$list.Add('x').
+NOTES:
+A trap: New-Object Type($a, $b) looks like a method call but is not. PowerShell passes ($a, $b) as one array to -ArgumentList. When one of the values is itself an array, wrap it: -ArgumentList (,$array).
+
+[pscustomobject]@{ } is faster than New-Object PSObject and keeps the property order.
+
+COM objects such as Word.Application keep running in the background until you release them.
+RELATED: Add-Member, Get-Member, Select-Object, about_Objects, about_Hash_Tables

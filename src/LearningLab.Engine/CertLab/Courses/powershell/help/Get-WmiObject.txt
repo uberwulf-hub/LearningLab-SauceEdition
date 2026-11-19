@@ -1,0 +1,23 @@
+SYNOPSIS: Gets WMI classes the older way (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Get-WmiObject (alias gwmi) reads the same classes as Get-CimInstance but uses the older DCOM connection and returns ManagementObject objects: they show system properties such as __CLASS and __PATH, their dates are strings like 20260302083600.000000-480 (convert them with the ConvertToDateTime() method), and they have the class's methods directly, for example (Get-WmiObject Win32_Service -Filter "Name='Spooler'").StopService().
+PARAMETER Class:
+The class. Position 0.
+PARAMETER Property:
+Only these properties. Position 1.
+PARAMETER Filter:
+A WQL condition.
+PARAMETER Query:
+A whole WQL query.
+PARAMETER List:
+Lists the classes instead.
+PARAMETER Namespace:
+The namespace; root\cimv2 by default.
+PARAMETER ComputerName:
+Other computers (over DCOM).
+EXAMPLE: Get-WmiObject -Class Win32_OperatingSystem
+EXAMPLE: $os = Get-WmiObject Win32_OperatingSystem; $os.ConvertToDateTime($os.LastBootUpTime)
+The boot time as a DateTime.
+NOTES:
+Get-WmiObject and the other WMI cmdlets are not in PowerShell 7: learn Get-CimInstance and Invoke-CimMethod for new scripts.
+RELATED: Get-CimInstance, Invoke-WmiMethod

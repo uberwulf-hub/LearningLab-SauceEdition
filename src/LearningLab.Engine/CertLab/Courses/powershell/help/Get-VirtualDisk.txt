@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the virtual disks (storage spaces) in the storage pools.
+DESCRIPTION:
+Get-VirtualDisk shows each virtual disk with its FriendlyName, ResiliencySettingName, ProvisioningType, OperationalStatus, HealthStatus and Size. A mirror that lost a disk shows Degraded and still works; replace the disk soon.
+
+Pipe it to Get-Disk to find the disk number Windows gave it.
+PARAMETER FriendlyName:
+Only this virtual disk. Position 0.
+EXAMPLE: Get-VirtualDisk
+Every storage space and its health.
+EXAMPLE: Get-VirtualDisk -FriendlyName Mirror1 | Get-Disk
+The Windows disk behind Mirror1.
+RELATED: New-VirtualDisk, Remove-VirtualDisk, Get-StoragePool, Get-Disk

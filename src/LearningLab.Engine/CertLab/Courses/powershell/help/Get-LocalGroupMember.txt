@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the members of a local group.
+DESCRIPTION:
+Shows each member's ObjectClass (User or Group), Name (COMPUTER\name or DOMAIN\name) and PrincipalSource (Local, ActiveDirectory...).
+PARAMETER Name:
+The group name. Position 0 (or use -Group).
+PARAMETER Group:
+The group as a name or LocalGroup object.
+PARAMETER Member:
+Only members whose names match; wildcards are allowed. Position 1.
+EXAMPLE: Get-LocalGroupMember -Name Administrators
+Who has full control of this computer.
+EXAMPLE: Get-LocalGroupMember Administrators | Where-Object PrincipalSource -eq Local
+Only the local accounts.
+RELATED: Add-LocalGroupMember, Get-LocalGroup

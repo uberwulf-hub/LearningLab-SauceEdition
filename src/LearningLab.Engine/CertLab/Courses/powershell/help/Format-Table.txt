@@ -1,0 +1,38 @@
+SYNOPSIS: Shows objects as a table, one row per object and one column per property.
+DESCRIPTION:
+Format-Table lays objects out in columns with a heading line. It is the usual way to compare many objects side by side.
+
+Without -Property, you see the columns chosen by the type's default table view. With -Property you pick the columns and their order, and you can add calculated columns with a hash table.
+
+Values that are too long for their column are cut off and end in ... ; -AutoSize sizes the columns to fit the data and -Wrap continues long values on the next line.
+
+Format-Table outputs formatting objects for the screen, not your data. Put it last in a pipeline (only Out- cmdlets such as Out-File, Out-String and Out-Host understand its output).
+PARAMETER Property:
+The columns to show, in order. Position 0. Wildcards work, * shows every property, and a hash table makes a calculated column: @{ Name = 'Pay'; Expression = { $_.Salary * 2 }; Align = 'Right' }.
+PARAMETER AutoSize:
+Makes each column just wide enough for its widest value. Its alias is -a.
+PARAMETER Wrap:
+Shows long values on several lines instead of cutting them off.
+PARAMETER HideTableHeaders:
+Leaves out the heading line and the dashes under it.
+PARAMETER GroupBy:
+Starts a new table, with a heading, each time this property changes. Sort by the same property first.
+PARAMETER InputObject:
+The object to show. Usually it comes through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Table Name, Department, Salary -AutoSize
+Shows three columns, each as wide as its longest value.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Sort-Object Department | Format-Table Name, Office -GroupBy Department
+One small table per department. Without Sort-Object, a department would appear again each time it comes back in the list.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Table Name, @{ Name = 'Monthly'; Expression = { [int]$_.Salary / 12 }; FormatString = 'N0' }
+Adds a calculated column with the monthly pay, formatted with thousands separators.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Format-Table Name, Title -HideTableHeaders
+Just the data, without the heading line.
+NOTES:
+The alias is ft.
+
+When a type has no table view, PowerShell shows objects with up to four properties as a table and five or more as a list. Format-Table forces a table.
+
+A common mistake is ... | Format-Table | Export-Csv or ... | Format-Table | Where-Object. Choose columns with Select-Object instead; format only at the very end.
+
+Columns that do not fit the console width are dropped, with no warning. Choose fewer columns, or use Format-List.
+RELATED: Format-List, Format-Wide, Select-Object, Out-String, about_Calculated_Properties, about_Format.ps1xml

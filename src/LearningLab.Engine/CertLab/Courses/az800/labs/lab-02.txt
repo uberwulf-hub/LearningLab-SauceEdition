@@ -1,0 +1,87 @@
+# Lab: lab-02 | Accounts, groups and the safety nets | u02 | 45
+A new team joins Harborline, the security team wants longer passwords for administrators, the backup software needs a service account, and someone deleted an account this morning. The Active Directory Recycle Bin was turned on last month.
+
+@vars
+team = Warehouse | Logistics | Fleet
+pwlen = 14 | 15 | 16
+@endvars
+
+@setup admin
+enable recyclebin
+delete user "fhaddad"
+
+@task t01 | AD DS | 20 | admin
+Create the OU **{team}** under `Staff`, protected from accidental deletion. In it, create **Omar Reyes** (`oreyes`, `oreyes@corp.example`, department **{team}**) with the password `Harbor#2026`, which must be changed at the first sign-in. Then create the **global** security group **{team}** in `Groups` with Omar in it.
+@check admin | the protected OU and the account
+ou["Staff/{team}"].protected == Yes
+user["oreyes"].ou == "OU={team},OU=Staff,DC=corp,DC=example"
+user["oreyes"].mustchange == Yes
+user["oreyes"].enabled == Yes
+@check admin | the global group with its first member
+group["{team}"].scope == Global
+group["{team}"].members has oreyes
+@solution admin
+new ou name={team} path=Staff protect=yes
+new user name="Omar Reyes" sam=oreyes upn=oreyes@corp.example password=Harbor#2026 path=Staff/{team} department={team} mustchange=yes
+new group name={team} path=Groups scope=Global category=Security
+members add "{team}" oreyes
+@endtask
+
+@task t02 | AD DS | 15 | admin
+The {team} team gets a folder on the file server. Following AGDLP, create the group that will receive the Modify permission, **FS-{team}-Modify**, in `Groups` with the right scope, and nest the team's group in it.
+@check admin | a domain local group containing the global group
+group["FS-{team}-Modify"].scope == DomainLocal
+group["FS-{team}-Modify"].members has {team}
+user["oreyes"].allgroups has FS-{team}-Modify
+@solution admin
+new group name=FS-{team}-Modify path=Groups scope=DomainLocal category=Security
+members add "FS-{team}-Modify" {team}
+@explain
+Global groups collect people by job; domain local groups collect who may use a resource; only the domain local group appears on the folder.
+@endtask
+
+@task t03 | AD DS | 20 | admin
+Farid Haddad (`fhaddad`), the finance manager, was deleted by mistake this morning. Bring his account back as it was, including his group memberships.
+@check admin | fhaddad is back in Staff/Finance and in Finance
+user["fhaddad"].ou == "OU=Finance,OU=Staff,DC=corp,DC=example"
+user["fhaddad"].memberof has Finance
+user["fhaddad"].enabled == Yes
+@hint Active Directory Administrative Center > Deleted Objects > Restore (or Restore-ADObject).
+@solution admin
+restore user "fhaddad"
+@explain
+Because the Recycle Bin was on when he was deleted, the object kept all its attributes and links. A new account with the same name would have had a new SID and none of his permissions.
+@endtask
+
+@task t04 | AD DS | 25 | DC1
+The members of **IT Admins** must use passwords of at least **{pwlen}** characters, with lockout after **5** wrong attempts. The rest of the domain, the help desk included, keeps the domain's policy. Create the fine-grained password policy **IT admin passwords** (precedence **10**) for it.
+@check admin | arivera gets the PSO, jprice and bcole don't
+passwordpolicy(user=arivera).minlength == {pwlen}
+passwordpolicy(user=arivera).lockout == 5
+passwordpolicy(user=jprice).minlength == 7
+passwordpolicy(user=bcole).minlength == 7
+@hint New-ADFineGrainedPasswordPolicy -Name ... -Precedence 10 -MinPasswordLength {pwlen} -LockoutThreshold 5, then Add-ADFineGrainedPasswordPolicySubject.
+@solution DC1
+New-ADFineGrainedPasswordPolicy -Name 'IT admin passwords' -Precedence 10 -MinPasswordLength {pwlen} -ComplexityEnabled $true -LockoutThreshold 5 -LockoutDuration 00:30:00 -LockoutObservationWindow 00:30:00
+Add-ADFineGrainedPasswordPolicySubject 'IT admin passwords' -Subjects 'IT Admins'
+@endtask
+
+@task t05 | AD DS | 20 | DC1
+The backup software will run on **SRV1** and **FS1** as a group managed service account. Create the global group **Backup servers** (in `Groups`) with both computers in it, the forest's KDS root key (backdated by 10 hours so it can be used now), and the gMSA **gmsa-backup** that only that group may use. Install it on SRV1.
+@check admin | the computer group and the gMSA
+group["Backup servers"].members has SRV1
+group["Backup servers"].members has FS1
+gmsa["gmsa-backup"].principals has "Backup servers"
+@check admin | the gMSA is installed on SRV1
+gmsa["gmsa-backup"].installedOn has SRV1
+@hint New-ADGroup, Add-ADGroupMember with 'SRV1$','FS1$'; Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10)); New-ADServiceAccount -PrincipalsAllowedToRetrieveManagedPassword 'Backup servers'; then Install-ADServiceAccount on SRV1.
+@solution DC1
+New-ADGroup -Name 'Backup servers' -GroupScope Global -GroupCategory Security -Path 'OU=Groups,DC=corp,DC=example'
+Add-ADGroupMember 'Backup servers' -Members 'SRV1$','FS1$'
+Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))
+New-ADServiceAccount -Name gmsa-backup -DNSHostName gmsa-backup.corp.example -PrincipalsAllowedToRetrieveManagedPassword 'Backup servers'
+@solution SRV1
+Install-ADServiceAccount gmsa-backup
+@explain
+A group of computer accounts makes the gMSA easy to extend: a new backup server only needs to join the group. On a real server, a computer just added to a group sees the membership after a restart (or klist purge -li 0x3e7). The service then logs on as CORP\gmsa-backup$ with no password.
+@endtask

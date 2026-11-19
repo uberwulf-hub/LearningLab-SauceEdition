@@ -1,0 +1,21 @@
+# Deck: pipeline | The pipeline and objects | Pipeline
+Show the name, status and start type of every service :: `Get-Service | Select-Object Name, Status, StartType`
+Show every property of the Spooler service :: `Get-Service Spooler | Select-Object *`
+The 5 processes using the most memory :: `Get-Process | Sort-Object WS -Descending | Select-Object -First 5`
+Only the stopped services (simple syntax) :: `Get-Service | Where-Object Status -eq Stopped`
+Running services that start manually :: `Get-Service | Where-Object { $_.Status -eq 'Running' -and $_.StartType -eq 'Manual' }`
+The names of the services as plain strings :: `Get-Service | Select-Object -ExpandProperty Name`
+Count the running services :: `(Get-Service | Where-Object Status -eq Running | Measure-Object).Count`
+How many employees per department? :: `Import-Csv C:\LabFiles\employees.csv | Group-Object Department`
+The total and average of the Salary column :: `Import-Csv C:\LabFiles\employees.csv | Measure-Object Salary -Sum -Average`
+Do something with every object in the pipeline :: `Get-Service | ForEach-Object { $_.Name.ToUpper() }`
+Get one property of each object with ForEach-Object :: `Get-Process | ForEach-Object Name`
+Add a property MemoryMB to processes with Select-Object :: `Get-Process | Select-Object Name, @{ Name = 'MemoryMB'; Expression = { $_.WS / 1MB } }`
+Sort CSV text values as numbers :: `Import-Csv C:\LabFiles\employees.csv | Sort-Object { [int]$_.Salary }`
+What does "filter left" mean? :: filter as early as possible, with the first command's own parameters when it has them
+Which variable holds the current object in ForEach-Object and Where-Object? :: $_ (also $PSItem)
+Get-Service | Stop-Service: how does each service reach Stop-Service? :: ByValue: the ServiceController goes to -InputObject
+An object with a Name property piped to Get-Service: how is it bound? :: ByPropertyName to -Name
+Where do you see which parameters accept pipeline input? :: `Get-Help Get-Service -Full`
+Remove duplicate values from a sorted list :: `'b', 'a', 'b' | Sort-Object -Unique`
+Compare two lists :: `Compare-Object -ReferenceObject $old -DifferenceObject $new`

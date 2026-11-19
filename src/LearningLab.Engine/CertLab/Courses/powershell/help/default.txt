@@ -1,0 +1,27 @@
+
+TOPIC
+    PowerShell help (Cert Lab practice console)
+
+SHORT DESCRIPTION
+    How to find commands and read their help.
+
+LONG DESCRIPTION
+    Get-Help NAME              the help of a command, for example
+                               Get-Help Get-Service
+    Get-Help NAME -Examples    only the examples
+    Get-Help NAME -Full        everything, with details of every parameter
+    Get-Help *word*            commands and topics whose names contain a word
+    Get-Help about_*           the topics about concepts, such as
+                               about_Pipelines or about_Comparison_Operators
+
+    Get-Command -Noun Service  the commands for a noun
+    Get-Command -Verb Get      the commands for a verb
+    Get-Member                 what is inside the objects a command returns:
+                               Get-Service | Get-Member
+
+    Commands are named Verb-Noun. Press Tab to complete names and
+    parameters.
+
+    The help pages of this practice console were written for Cert Lab and
+    describe what the simulator does. On a real PC, run Update-Help as an
+    administrator once to install Microsoft's full help.

@@ -1,0 +1,120 @@
+NAME
+       parted - create, delete and change disk partitions
+
+SYNOPSIS
+       parted [OPTIONS] [DEVICE [COMMAND [PARAMETERS]...]...]
+
+DESCRIPTION
+       parted (GNU Parted) edits the partition table of a disk. It works with
+       both kinds of table used on PCs: msdos (MBR, up to four primary
+       partitions, or three plus an extended one holding logical partitions,
+       disks up to 2 TiB) and gpt (up to 128 partitions, very large disks).
+
+       Started with only a DEVICE, parted shows its own "(parted)" prompt
+       and reads commands one at a time until quit. With commands after the
+       DEVICE it runs them and exits, which suits scripts and quick changes.
+
+       Unlike fdisk and gdisk, parted writes each change to the disk at once:
+       there is no separate "write" step and no undo. Check the device name
+       before you press Enter.
+
+       parted tells the kernel about the new table itself; when a disk is in
+       use, run partprobe or udevadm settle afterwards. Creating a partition
+       does not create a file system on it: use mkfs, mkswap or pvcreate
+       next. The file system type given to mkpart only sets the partition's
+       type code (for example linux-swap); it formats nothing.
+
+OPTIONS
+       -l, --list
+              List the partition tables of all disks.
+
+       -s, --script
+              Never ask questions (for scripts). Commands that would need an
+              answer fail instead; mklabel on a disk that already has a table
+              goes ahead without asking.
+
+       -m, --machine
+              Print in a form that is easy for programs to read.
+
+       -a, --align none|minimal|optimal
+              How new partitions are aligned. The default, optimal, starts
+              them on 1 MiB boundaries.
+
+COMMANDS
+       print [free]
+              Show the table: model, size, table type and each partition.
+              "print free" also shows the free space.
+
+       mklabel TYPE
+              Write a new, empty partition table of TYPE msdos or gpt. Every
+              partition on the disk is lost.
+
+       mkpart [PART-TYPE | NAME] [FS-TYPE] START END
+              Make a partition. On msdos disks PART-TYPE is primary,
+              extended or logical. On gpt disks the first word is the
+              partition's name. FS-TYPE is a hint such as xfs, ext4,
+              linux-swap or fat32. START and END are positions on the disk,
+              with a unit: 1MiB, 1025MiB, 5GiB, or a percentage such as 100%.
+
+       rm NUMBER
+              Delete a partition. It must not be mounted or in use.
+
+       set NUMBER FLAG on|off
+              Set a flag on a partition: lvm, swap, raid, boot, esp,
+              bios_grub.
+
+       name NUMBER NAME
+              Name a gpt partition.
+
+       resizepart NUMBER END
+              Move the end of a partition (to make it bigger or smaller). The
+              file system inside is not resized.
+
+       unit UNIT
+              The unit for printing and for positions given without one: s
+              (sectors), B, KiB, MiB, GiB, MB, GB, % or compact.
+
+       help [COMMAND], quit, version
+
+       Units: MiB and GiB are powers of 1024, MB and GB powers of 1000. Use
+       MiB and GiB to get the sizes the exam asks for; a partition from 1MiB
+       to 1025MiB is exactly 1 GiB.
+
+EXAMPLES
+       Look at a disk:
+
+              # parted /dev/vdb print
+
+       Give /dev/vdb a GPT table and a 1 GiB partition for XFS:
+
+              # parted /dev/vdb mklabel gpt
+              # parted /dev/vdb mkpart data xfs 1MiB 1025MiB
+
+       An MBR disk with a 512 MiB swap partition and an LVM partition in
+       the rest of the disk:
+
+              # parted -s /dev/vdc mklabel msdos
+              # parted -s /dev/vdc mkpart primary linux-swap 1MiB 513MiB
+              # parted -s /dev/vdc mkpart primary 513MiB 100%
+              # parted -s /dev/vdc set 2 lvm on
+
+       Interactive use:
+
+              # parted /dev/vdb
+              (parted) print free
+              (parted) mkpart backup ext4 1025MiB 2049MiB
+              (parted) quit
+
+       Delete partition 2:
+
+              # parted /dev/vdb rm 2
+
+NOTES
+       Partitions made by parted end one sector before the END you give, so
+       consecutive partitions can share a boundary value (1MiB 513MiB, then
+       513MiB 1025MiB). After changing partitions that are listed in
+       /etc/fstab, check the file (parted reminds you of this).
+
+SEE ALSO
+       fdisk(8), gdisk(8), sgdisk(8), partprobe(8), lsblk(8), mkfs(8),
+       mkswap(8), pvcreate(8)

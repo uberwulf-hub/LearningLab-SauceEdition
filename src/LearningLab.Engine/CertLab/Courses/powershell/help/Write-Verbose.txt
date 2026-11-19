@@ -1,0 +1,12 @@
+SYNOPSIS: Writes a verbose message that shows only when asked for.
+DESCRIPTION:
+Write-Verbose writes "VERBOSE: " messages to the verbose stream. They are hidden unless the command runs with -Verbose or $VerbosePreference is Continue. In an advanced function ([CmdletBinding()]), -Verbose on the function turns on the messages of everything it runs.
+
+Use verbose messages to describe what a script is doing, without cluttering normal output.
+PARAMETER Message:
+The text.
+EXAMPLE: function Get-Double { [CmdletBinding()] param([int]$N) Write-Verbose "Doubling $N"; $N * 2 }; Get-Double 4 -Verbose
+Shows "VERBOSE: Doubling 4" and then 8.
+EXAMPLE: $VerbosePreference = 'Continue'
+Shows verbose messages from now on in this session.
+RELATED: Write-Debug, Write-Warning, about_CommonParameters

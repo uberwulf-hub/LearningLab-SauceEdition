@@ -1,0 +1,60 @@
+TOPIC
+    about_Preference_Variables
+
+SHORT DESCRIPTION
+    Variables that change how PowerShell behaves in this session.
+
+LONG DESCRIPTION
+    Preference variables are ordinary variables that PowerShell reads to
+    decide what to do: whether to stop on errors, whether to show verbose
+    messages, how many history entries to keep. Changing one at the prompt
+    lasts until you close the session (or put the line in your profile).
+    Inside a script or function, the change only affects that scope.
+
+  Messages and errors
+    Each of these takes Stop, Inquire, Continue, SilentlyContinue or
+    Ignore (Ignore is not allowed for every one of them):
+
+    $ErrorActionPreference     Continue   What a non-terminating error
+                                          does. Stop turns it into one
+                                          that try/catch can catch.
+    $WarningPreference         Continue   Write-Warning output.
+    $VerbosePreference         SilentlyContinue  Write-Verbose output.
+    $DebugPreference           SilentlyContinue  Write-Debug output.
+    $InformationPreference     SilentlyContinue  Write-Information.
+    $ProgressPreference        Continue   Progress bars. Setting it to
+                                          SilentlyContinue can speed up
+                                          downloads in 5.1.
+
+        $ErrorActionPreference = 'Stop'
+        $VerbosePreference = 'Continue'
+
+    The common parameters -ErrorAction, -Verbose and so on override the
+    preference for one command.
+
+  Changes and confirmation
+    $ConfirmPreference   High   Commands whose impact is this level or
+                                higher ask before acting.
+    $WhatIfPreference    False  $true makes commands only report what
+                                they would do.
+
+  Other useful ones
+    $MaximumHistoryCount   How many commands Get-History keeps (4096).
+    $OFS                   The separator used when an array becomes a
+                           string (a space by default).
+    $FormatEnumerationLimit  How many items of a property list are shown
+                           before "..." (4).
+    $PSDefaultParameterValues  Default values for cmdlet parameters:
+
+        $PSDefaultParameterValues['Get-Service:ComputerName'] = 'WIN-SRV1'
+
+  PowerShell 7
+    PowerShell 7 adds $ErrorView values such as ConciseView (its default)
+    and $PSStyle for colours; 5.1 has NormalView and CategoryView only.
+
+SEE ALSO
+    about_CommonParameters
+    about_Automatic_Variables
+    about_Variables
+    about_Try_Catch_Finally
+    about_Scopes

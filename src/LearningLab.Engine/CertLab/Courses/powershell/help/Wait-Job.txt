@@ -1,0 +1,18 @@
+SYNOPSIS: Waits until background jobs have finished.
+DESCRIPTION:
+Wait-Job blocks until the jobs are no longer running, then outputs the job objects. With -Timeout it gives up after that many seconds.
+
+In Cert Lab, waiting moves the machines' simulated clock on to the moment the jobs finish.
+PARAMETER Id:
+The job's Id (positional).
+PARAMETER Name:
+The job's name.
+PARAMETER Job:
+Job objects (also by the pipeline).
+PARAMETER Timeout:
+The longest time to wait, in seconds.
+EXAMPLE: Start-Job { Start-Sleep 10; 'done' } | Wait-Job
+Waits for the job, then shows it with State Completed.
+EXAMPLE: Get-Job | Wait-Job | Receive-Job
+Waits for all jobs and collects their output.
+RELATED: Start-Job, Receive-Job, Get-Job

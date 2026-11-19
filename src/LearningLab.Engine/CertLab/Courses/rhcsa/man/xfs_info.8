@@ -1,0 +1,19 @@
+NAME
+       xfs_info - show the layout of an XFS file system
+
+SYNOPSIS
+       xfs_info MOUNT-POINT | DEVICE
+
+DESCRIPTION
+       xfs_info prints the geometry of an XFS file system: the device, the
+       inode size, the number of allocation groups (agcount), the block size
+       (bsize) and number of data blocks, and the details of the log. The
+       size in bytes is the number of data blocks times the block size.
+       Nothing is changed.
+
+EXAMPLES
+           xfs_info /
+           xfs_info /dev/vgdata/lvdata | grep data
+
+SEE ALSO
+       xfs_growfs(8), xfs_admin(8), mkfs.xfs(8)

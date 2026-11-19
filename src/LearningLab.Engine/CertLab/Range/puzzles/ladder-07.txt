@@ -1,0 +1,64 @@
+title: Step 7: Find it by its owner
+level: Intermediate
+category: ladder
+login: step7
+kind: Finding files
+teaser: somewhere on the whole computer: a file with a particular owner, group and size
+points: 30
+order: 7
+answer: {{PW}}
+var: PW = hex:10
+var: D1 = hex:10
+var: D2 = hex:10
+var: D3 = hex:10
+var: WHERE = pick:/var/lib/misc|/usr/share/doc/ladder|/opt/old-reports|/var/spool/archive|/srv/spare
+var: FILE = pick:notes.bak|index.old|cache.dat|keep.txt|.stash
+
+@intro
+You are step7. This time the password for step 8 isn't in your home folder: it is
+somewhere on the computer, in a file that is
+
+    - owned by the user step8
+    - in the group step7
+    - exactly 11 bytes in size
+
+Search the whole computer, from the very top folder, /.
+
+@setup
+useradd -m step8
+echo 'step8:{{PW}}' | chpasswd
+mkdir -p {{WHERE}} /var/tmp/leftovers /usr/local/share/odds
+printf '%s\n' '{{PW}}' > {{WHERE}}/{{FILE}}
+chown step8:step7 {{WHERE}}/{{FILE}}
+printf '%s\n' '{{D1}}' > /var/tmp/leftovers/{{FILE}}
+chown step8:step8 /var/tmp/leftovers/{{FILE}}
+printf '%s\n' '{{D2}}' > /usr/local/share/odds/{{FILE}}
+chown root:step7 /usr/local/share/odds/{{FILE}}
+printf 'not the password: %s\n' '{{D3}}' > /usr/local/share/odds/longer.txt
+chown step8:step7 /usr/local/share/odds/longer.txt
+chmod 640 {{WHERE}}/{{FILE}} /var/tmp/leftovers/{{FILE}} /usr/local/share/odds/{{FILE}} /usr/local/share/odds/longer.txt
+chmod 755 {{WHERE}} /var/tmp/leftovers /usr/local/share/odds
+
+@solution
+find / -user step8 -group step7 -size 11c 2>/dev/null
+cat {{WHERE}}/{{FILE}}
+
+@walkthrough
+find can test who owns a file as well as its size:
+
+    find / -user step8 -group step7 -size 11c 2>/dev/null
+
+Starting at / searches the whole computer. Many folders aren't yours to look in, and
+find prints "Permission denied" for each one; 2>/dev/null throws those error messages
+away (2 is the error output, /dev/null a bin that swallows everything). Three other
+files look similar but each fails one test: wrong group, wrong owner, wrong size.
+What is left is {{WHERE}}/{{FILE}}.
+
+@hint 5
+What to think about first: every file has an owner (a user) and a group, shown in ls -l. find can search by both: -user NAME and -group NAME, and by size with -size 11c. Put all the tests in one find command so only a file that passes every one is listed.
+
+@hint 8
+Search from the top of the computer: find / ... The screen fills with "Permission denied" for folders you may not open. Add 2>/dev/null at the end to hide those error messages (2> sends errors somewhere else, and /dev/null is a bin).
+
+@hint 12
+find / -user step8 -group step7 -size 11c 2>/dev/null prints one path. cat that path.

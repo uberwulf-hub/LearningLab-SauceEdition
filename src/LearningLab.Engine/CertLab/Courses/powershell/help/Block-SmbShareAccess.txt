@@ -1,0 +1,12 @@
+SYNOPSIS: Denies an account access to a share.
+DESCRIPTION:
+Block-SmbShareAccess adds a Deny entry for the account. Deny wins over every Allow, including Allow entries from groups, so the account can't use the share at all. Use it sparingly; removing Allow entries is usually cleaner.
+PARAMETER Name:
+The share. Position 0.
+PARAMETER AccountName:
+The user or group to block.
+PARAMETER Force:
+Blocks without asking.
+EXAMPLE: Block-SmbShareAccess -Name IT -AccountName "CORP\Helpdesk" -Force
+The help desk can't open the IT share, whatever other permissions they have.
+RELATED: Unblock-SmbShareAccess, Grant-SmbShareAccess, Get-SmbShareAccess

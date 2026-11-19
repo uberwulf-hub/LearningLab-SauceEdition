@@ -1,0 +1,16 @@
+SYNOPSIS: Sends objects down the pipeline.
+DESCRIPTION:
+Write-Output passes objects to the next command, or shows them at the console when it is the last. A value on its own does exactly the same, so 'hello' and Write-Output 'hello' are equal; Write-Output just makes it explicit.
+
+Collections are sent one item at a time unless you add -NoEnumerate.
+PARAMETER InputObject:
+The objects to send (positional; several values allowed).
+PARAMETER NoEnumerate:
+Sends a collection as one object instead of item by item.
+EXAMPLE: Write-Output 'one', 'two' | Measure-Object
+Count is 2: the two strings went down the pipeline separately.
+EXAMPLE: Write-Output -NoEnumerate 1, 2, 3 | Measure-Object
+Count is 1: the array went down as one object.
+NOTES:
+echo and write are aliases of Write-Output.
+RELATED: Write-Host, Out-Default, about_Pipelines

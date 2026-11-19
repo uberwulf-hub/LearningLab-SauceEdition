@@ -1,0 +1,14 @@
+SYNOPSIS: Removes a module repository from the list PowerShellGet uses.
+DESCRIPTION:
+Unregister-PSRepository forgets a registered repository. Modules already installed from it stay installed; only the entry in the repository list goes away.
+PARAMETER Name:
+The name of one or more repositories to remove.
+EXAMPLE: Unregister-PSRepository -Name LabRepo
+Removes the internal LabRepo repository.
+EXAMPLE: Get-PSRepository
+Checks which repositories are left.
+NOTES:
+If a name is not registered, Unregister-PSRepository writes an error for it.
+Be careful with PSGallery: without it, Find-Module and Install-Module have nowhere to look unless another repository is registered.
+In PowerShell 7.4 and later, PSResourceGet's Unregister-PSResourceRepository does the same.
+RELATED: Get-PSRepository, Register-PSRepository, Set-PSRepository

@@ -1,0 +1,27 @@
+{
+    "id": "key-left-out",
+    "title": "A Key Left Out",
+    "level": "Intermediate",
+    "order": 4,
+    "summary": "A web server serves a folder it shouldn't, and in it is a private SSH key. The key lets you in without a password; a writable service script lets you up.",
+    "story": "Marigold Media (made up) runs web01 on 10.10.4.0/24. You start on scout. Somewhere on the web server is a backup folder that was never meant to be public.",
+    "goal": "Capture the user flag in the webadmin home folder and the root flag in /root.",
+    "skills": "web folder listings, SSH private keys, file permissions, writable root cron script",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 35,
+    "vars": {},
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.4.5/24" ] },
+        { "name": "web01", "os": "linux", "hostname": "web01.marigold.example", "role": "web server", "nics": [ "10.10.4.30/24" ], "packages": [ "httpd" ], "setup": "web01.sh" }
+    ],
+    "flags": [
+        { "id": "user", "name": "Webadmin's flag", "points": 120, "machine": "web01", "path": "/home/webadmin/flag.txt", "owner": "webadmin", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 180, "machine": "web01", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "Scan 10.10.4.30, fetch its pages, and look for a folder listing. webscan http://10.10.4.30/ tries common folder names.", "cost": 10 },
+        { "text": "The /backup/ folder lists its files. One is id_rsa, an SSH private key. Save it, make it private (chmod 600), and use it: ssh -i id_rsa webadmin@10.10.4.30", "cost": 20 },
+        { "text": "As webadmin, look at what root runs on a timer (ls -l /etc/cron.d, then the script it names). If the script is writable, add a line that copies /root/flag.txt somewhere readable and wait a minute.", "cost": 35 }
+    ]
+}

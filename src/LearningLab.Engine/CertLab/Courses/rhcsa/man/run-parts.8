@@ -1,0 +1,21 @@
+NAME
+       run-parts - run every program in a directory
+
+SYNOPSIS
+       run-parts DIRECTORY
+
+DESCRIPTION
+       run-parts runs each executable file in DIRECTORY, one after the other,
+       in alphabetical order. cron uses it for the directories
+       /etc/cron.hourly, /etc/cron.daily, /etc/cron.weekly and
+       /etc/cron.monthly: a script dropped there (and made executable with
+       chmod +x) runs at that rhythm. Files that are not executable are
+       skipped.
+
+EXAMPLES
+       Run the daily jobs now, to test a new script:
+
+           run-parts /etc/cron.daily
+
+SEE ALSO
+       crontab(5), crond(8), anacron(8)

@@ -1,0 +1,11 @@
+SYNOPSIS: Renames a local user account.
+DESCRIPTION:
+The account keeps its SID, password and group memberships; only the name changes. A common hardening step is renaming the built-in Administrator.
+PARAMETER Name:
+The current name. Position 0.
+PARAMETER NewName:
+The new name. Position 1.
+PARAMETER InputObject:
+A LocalUser object.
+EXAMPLE: Rename-LocalUser -Name Administrator -NewName LabAdmin
+RELATED: Set-LocalUser, Get-LocalUser

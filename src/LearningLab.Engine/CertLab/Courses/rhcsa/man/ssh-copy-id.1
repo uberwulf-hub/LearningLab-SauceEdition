@@ -1,0 +1,59 @@
+NAME
+       ssh-copy-id - install your public key on another computer for key logins
+
+SYNOPSIS
+       ssh-copy-id [-f] [-i [IDENTITY-FILE]] [-p PORT] [-o SSH-OPTION]
+                   [USER@]HOST
+
+DESCRIPTION
+       ssh-copy-id logs in to HOST with ssh (normally with the account's
+       password, one last time) and appends your public key to
+       ~/.ssh/authorized_keys of the remote account. It creates ~/.ssh and the
+       file when they are missing and gives them safe permissions (700 for
+       the directory, 600 for the file), which sshd insists on.
+
+       After that, ssh USER@HOST logs in with the key and no longer asks for
+       the account's password.
+
+       ssh-copy-id first tries to log in with the key. Keys that already work
+       are not added a second time, so running it twice is harmless.
+
+       Without -i, it copies the newest of your default public keys
+       (~/.ssh/id_*.pub). You need a key pair first: create one with
+       ssh-keygen.
+
+OPTIONS
+       -i FILE
+              Copy this public key (FILE or FILE.pub) instead of the default.
+
+       -f     Force: copy the key without first checking whether it already
+              works.
+
+       -p PORT
+              Connect to this port instead of 22.
+
+       -o OPTION=VALUE
+              Pass an option to ssh, such as -o StrictHostKeyChecking=no.
+
+EXAMPLES
+       Set up key logins from server1 to student on server2:
+
+           ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+           ssh-copy-id student@server2
+           ssh student@server2 hostname
+
+       Copy a particular key to root on server2:
+
+           ssh-copy-id -i ~/.ssh/lab_key.pub root@server2
+
+NOTES
+       The key is installed for the remote account named in the command, not
+       for your local one: ssh-copy-id student@server2 lets the local user log
+       in to server2 as student.
+
+       If key logins still ask for a password, check the permissions of the
+       remote home directory, ~/.ssh and authorized_keys, and their SELinux
+       context (restorecon -Rv ~/.ssh).
+
+SEE ALSO
+       ssh-keygen(1), ssh(1), sshd_config(5)

@@ -1,0 +1,4 @@
+## the LOUD way against the watched server
+nmap -sV -p 1-1000 10.10.4.30
+webscan http://10.10.4.30/
+pwguess -l webadmin -P /usr/share/wordlists/range-common.txt ssh://10.10.4.30

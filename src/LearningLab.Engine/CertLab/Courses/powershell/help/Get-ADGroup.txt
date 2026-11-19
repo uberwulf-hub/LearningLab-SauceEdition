@@ -1,0 +1,21 @@
+SYNOPSIS: Gets one or more groups from Active Directory.
+DESCRIPTION:
+Get-ADGroup returns group objects with their GroupScope (DomainLocal, Global or Universal) and GroupCategory (Security or Distribution). Use -Identity for one group or -Filter to search.
+Members are not in the default output; use Get-ADGroupMember, or -Properties Members for the raw list of distinguished names.
+PARAMETER Identity:
+One group: its name (SamAccountName), distinguished name, GUID or SID. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search in the PowerShell filter language, such as "GroupScope -eq 'DomainLocal'". Use * for all groups.
+PARAMETER Properties:
+Extra properties to return, such as Members, MemberOf, Description, or * for all.
+PARAMETER SearchBase:
+Only searches below this OU, for example "OU=Groups,DC=corp,DC=example".
+PARAMETER SearchScope:
+Base, OneLevel or Subtree (the default).
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADGroup -Filter "Name -like 'FS-*'" | Select-Object Name, GroupScope
+The file server permission groups and their scope (domain local).
+EXAMPLE: Get-ADGroup Sales -Properties Members, Description
+The Sales group with its member list and description.
+RELATED: Get-ADGroupMember, New-ADGroup, Set-ADGroup, Add-ADGroupMember

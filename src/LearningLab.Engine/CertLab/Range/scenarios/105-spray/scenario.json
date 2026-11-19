@@ -1,0 +1,61 @@
+{
+    "id": "spray",
+    "title": "Spray and Pray",
+    "category": "soc",
+    "level": "Intermediate",
+    "order": 2,
+    "summary": "Two sign-in alerts: one account failing over and over since dawn, and many accounts failing once each in two minutes. Which one is the attack - and did it get in?",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). Its webmail server MAIL01 can be reached from the internet, and the domain controller DC01 checks every password. The SIEM has two sign-in rules: one for a single account failing again and again, and one for many accounts failing from one address. Both fired today.",
+    "goal": "Decide which alert is real, then find the address behind it, how many accounts it tried, whether it got into one, when it started, and where the other alert comes from.",
+    "skills": "password spraying, counting distinct values, telling a broken service from an attacker",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 25,
+    "vars": {
+        "CO": "company",
+        "P1": "person:flast", "P2": "person:flast", "P3": "person:flast", "P4": "person:flast", "P5": "person:flast",
+        "P6": "person:flast", "P7": "person:flast", "P8": "person:flast", "P9": "person:flast", "PV": "person:flast",
+        "H1": "num:10-39", "H2": "num:40-69", "H3": "num:70-99", "AN": "num:200-230",
+        "NET": "subnet:10",
+        "T0": "time:11-15",
+        "SPRAYIP": "ip",
+        "SVC": "pick:svc_backup|svc_reports|svc_scan|svc_sync",
+        "APP": "pick:APP01|REPORTS01|SCAN01|SYNC01",
+        "MORE": "pick:yes|no",
+        "QV": "pick:spray|svc"
+    },
+    "variants": {
+        "MORE": { "yes": { "NTRIED": "10" }, "no": { "NTRIED": "7" } },
+        "QV": {
+            "spray": { "QRULE": "Failed sign-ins for many accounts from one address", "VQ": "real" },
+            "svc": { "QRULE": "One account failing again and again", "VQ": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 170, "from": "-4h", "to": "+40m",
+            "hosts": [ "WS-{{H1}}", "WS-{{H2}}", "WS-{{H3}}" ],
+            "users": [ "{{P1}}", "{{P2}}", "{{P3}}" ],
+            "ips": [ "{{NET}}.{{H1}}", "{{NET}}.{{H2}}", "{{NET}}.{{H3}}" ],
+            "net": "{{NET}}", "servers": [ "MAIL01", "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}", "quiet": [ "{{PV}}" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The alert '{{QRULE}}': real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "{{SVC}} fails every five minutes, all day, from the company's own server {{APP}}: a program still using an old password. The other alert is one outside address trying one password on many accounts in two minutes: password spraying." },
+        { "id": "ip", "ask": "Which address was spraying passwords?", "answer": "{{SPRAYIP}}", "points": 30, "explain": "src_ip of the burst of 4625s on MAIL01." },
+        { "id": "count", "ask": "How many different accounts did it try (including any that worked)?", "answer": "{{NTRIED}}", "points": 40, "explain": "siem search src_ip={{SPRAYIP}} --count-by user lists one line per account." },
+        { "id": "victim", "ask": "Which account did it get into?", "answer": "{{PV}}", "points": 40, "explain": "The only 4624 (a sign-in that worked) from {{SPRAYIP}}." },
+        { "id": "start", "ask": "At what time (HH:MM:SS) did the spraying start?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 25, "explain": "The first event from {{SPRAYIP}}." },
+        { "id": "app", "ask": "Which of the company's computers keeps failing with the service account {{SVC}}?", "answer": "{{APP}}", "accept": [ "{{NET}}.{{AN}}" ], "points": 25, "explain": "workstation= (and src_ip=) of its 4625 events." }
+    ],
+    "hints": [
+        { "text": "Two kinds of failing: one account many times (a guesser - or a program with an old password) and many accounts a few times each (a spray: one common password tried on everyone, slowly enough to dodge lockouts). Look at where each comes from and how regular it is.", "cost": 5 },
+        { "text": "siem search source=winsec event=4625 --count-by src_ip shows who the failures come from. --count-by user on one address shows how many accounts it tried. An address inside the company ({{NET}}.x) failing every five minutes like clockwork is a machine, not a person.", "cost": 9 },
+        { "text": "Did the spray work? siem search src_ip=ADDRESS event=4624 shows a successful sign-in from the same address. Count every account it tried, the one that worked included.", "cost": 14 }
+    ]
+}

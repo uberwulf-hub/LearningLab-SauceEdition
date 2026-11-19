@@ -1,0 +1,43 @@
+title: Dots and dashes
+level: Beginner
+kind: Decoding
+topic: Crypto & Encoding
+teaser: a very old code that still turns up
+points: 40
+order: 71
+answer: {{WORD}}
+var: WORD = word
+
+@intro
+A radio hobbyist taped a note to the server: ~/radio.txt. It is nothing but dots and
+dashes. Turn it back into letters; the word it spells is the answer.
+
+@setup
+printf '%s\n' '{{MORSE:WORD}}' > /home/player/radio.txt
+chown player: /home/player/radio.txt
+
+@solution
+cat radio.txt
+morse -d radio.txt
+
+@walkthrough
+Morse code writes each letter as short (.) and long (-) signals, with a space between
+letters (and / between words). E is a single dot, T a single dash, S is ... and O is ---.
+
+    morse -d radio.txt
+
+turns it back into letters: {{WORD}} (morse prints capitals; either case is accepted).
+Like base64, Morse is an encoding, not a secret: it has no key.
+
+@hint 2
+What to think about first: dots and dashes with spaces between them are Morse code, the old telegraph code. Each group of dots and dashes stands for one letter or digit.
+
+@hint 3
+You could decode it by hand with a Morse table (E is ., T is -, A is .-, N is -.), but there is a tool on this box for it: morse. Type man morse to read its manual page (press q to leave it); every command on this box has one, and reading it is the quickest way to learn a new tool.
+
+@hint 4
+morse on its own turns text into dots and dashes; with -d it does the opposite and decodes. It reads a file name you give it, or whatever is piped into it.
+
+@hint 6
+Run: morse -d radio.txt
+It prints a word in capital letters. Type that word as the answer (upper or lower case both count).

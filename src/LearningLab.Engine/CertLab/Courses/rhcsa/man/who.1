@@ -1,0 +1,26 @@
+NAME
+       who - show who is logged in
+
+SYNOPSIS
+       who [-b] [-r] [-m]
+       who am i
+
+DESCRIPTION
+       who lists the login sessions: user name, terminal (tty1 for the
+       console, pts/N for ssh and terminal windows), login time and, for
+       remote logins, where from.
+
+OPTIONS
+       -b     Print the time of the last boot.
+
+       -r     Print the current run level.
+
+       -m, am i
+              Only the session on this terminal.
+
+EXAMPLES
+           who
+           who -b
+
+SEE ALSO
+       w(1), users(1), whoami(1), last(1)

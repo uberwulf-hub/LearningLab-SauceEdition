@@ -1,0 +1,28 @@
+{
+    "base": "02-robots-and-roots",
+    "id": "robots-watched",
+    "title": "Robots, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Beginner",
+    "order": 3,
+    "summary": "The web server from Robots and Roots, now with a watcher on its web log. Reading pages like a visitor is fine; a tool that fires hundreds of page guesses is not.",
+    "story": "Larkspur Studios (made up) put someone on web01 (10.10.2.30) who reads the web server's log. They don't mind visitors - they mind page-guessing tools sweeping the site and sign-ins that fail. You start on scout. Find what the site is hiding without guessing at it.",
+    "goal": "Capture both flags without raising the alarm, and keep the quiet bonus.",
+    "skills": "quiet recon, robots.txt, reading pages like a visitor, ssh, sudo -l",
+    "quietPoints": 100,
+    "watch": [ "web01" ],
+    "noisySolution": "noisy.txt",
+    "defenderRules": {
+        "count": { "web-scan": 5, "web-traversal": 3, "login-failed": 3, "password-guessing": 6 },
+        "budget": 8, "window": 1800, "react": 300, "reset": false, "isolate": false,
+        "watches": "page-guessing tools sweeping the website, tricky web addresses and failed sign-ins"
+    },
+    "hints": [
+        { "text": "What to think about first: the watcher reads the web log. One person opening a few pages looks like a visitor; a tool that tries hundreds of page names in a second (webscan) looks like an attack. So ask the site what it is hiding instead of guessing - websites often tell you themselves.", "cost": 3 },
+        { "text": "Find the server and its services: 'nmap -sn 10.10.2.0/24' (who is awake), then 'nmap -sV 10.10.2.30' (which ports, and what answers on each). Port 80 is a website. curl prints a web page as text: 'curl -s http://10.10.2.30/' (-s hides the progress bar). That is one ordinary visit.", "cost": 5 },
+        { "text": "Most websites have a file called robots.txt that asks search engines to skip certain folders. It is public, and it is a list of exactly what the owner would rather nobody looked at. Read it like any visitor: 'curl -s http://10.10.2.30/robots.txt'. No guessing needed.", "cost": 8 },
+        { "text": "Open the folder robots.txt names - 'curl -s http://10.10.2.30/site-backup/deploy-notes.txt' - for the deploy account's password. Then sign in once, typing it carefully: 'ssh deploy@10.10.2.30', yes to the new-host question, the password, and 'cat flag.txt'.", "cost": 12 },
+        { "text": "For root: 'sudo -l' shows deploy may run awk as root, and awk prints any file. 'sudo awk '{ print }' /root/flag.txt' gives root's flag. You never ran a scanner against the website and never typed a wrong password, so the watcher has nothing to see.", "cost": 16 }
+    ]
+}

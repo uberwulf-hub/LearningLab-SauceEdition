@@ -1,0 +1,20 @@
+1. siem alerts shows one alert: "Sign-in after many failures" for {{U}}.
+2. siem search source=winsec event=4625 user={{U}} lists the failed sign-ins (4625 = a sign-in failed). There are
+   {{NFAIL}} of them, ten seconds apart, the first at {{T0}}, all from {{SRC}} and all written down by {{TARGET}}.
+   --count-by src_ip shows they all come from one address; --limit 1 shows just the first.
+3. siem search source=winsec user={{U}} event!=4625 shows the rest of the account's story.
+{{if REAL=guess}}
+   The sign-ins were aimed at RDGW01, the remote desktop gateway, from {{ATKIP}} - an address outside the company
+   (the company's own computers are {{NET}}.x). logon_type=10 means remote desktop. After the failures, a sign-in
+   from that same outside address worked, and a desktop (explorer.exe) started for {{U}}. Someone guessed the
+   password: a real attack. Next steps for a real team: disable or reset the account, block {{ATKIP}}, end its
+   session and check what it did.
+{{else}}
+   Twenty-five minutes before, {{U}} changed their password (event 4723 on DC01). The failures come from their own
+   computer, WS-{{H1}} ({{NET}}.{{H1}}), over the network (logon_type=3) to the file server FILE01 - the pattern of a
+   mapped drive still trying the old saved password. Then a sign-in from the same computer worked: they updated the
+   saved password. A false alarm. A good team still notes it and might tell the person how to update saved passwords.
+{{end}}
+
+The habit: never decide from the alert's title. Check where the events came from (inside or outside), what kind of
+sign-in it was, and what happened just before and after.

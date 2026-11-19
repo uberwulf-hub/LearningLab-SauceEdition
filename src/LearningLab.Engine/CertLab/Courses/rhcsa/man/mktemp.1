@@ -1,0 +1,36 @@
+NAME
+       mktemp - make a temporary file or directory with a unique name
+
+SYNOPSIS
+       mktemp [-d] [-u] [-q] [-p DIR] [-t] [TEMPLATE]
+
+DESCRIPTION
+       mktemp creates a new, empty file (or directory with -d) whose name
+       cannot clash with an existing one, and prints its path. The TEMPLATE
+       ends in at least three X characters, which are replaced by random
+       letters and digits; without a template the name is tmp.XXXXXXXXXX in
+       /tmp. The file is readable only by you (mode 600, directories 700).
+
+       Scripts use it to get a safe scratch file: tmp=$(mktemp).
+
+OPTIONS
+       -d, --directory
+              Make a directory instead of a file.
+
+       -u, --dry-run
+              Only print a name; create nothing (unsafe for real use).
+
+       -q, --quiet
+              Do not print errors.
+
+       -p DIR, --tmpdir[=DIR]
+              Create the name inside DIR (default $TMPDIR or /tmp).
+
+       -t     Treat TEMPLATE as a name to put in the temporary directory.
+
+EXAMPLES
+           tmp=$(mktemp)
+           work=$(mktemp -d /tmp/build.XXXXXX)
+
+SEE ALSO
+       mkdir(1), bash(1)

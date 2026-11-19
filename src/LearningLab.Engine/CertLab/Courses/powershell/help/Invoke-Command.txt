@@ -1,0 +1,54 @@
+SYNOPSIS: Runs commands on one or many other computers (or locally) and brings the results back.
+DESCRIPTION:
+Invoke-Command sends a script block to other computers over PowerShell remoting (WinRM), runs it there, and returns what it outputs. With -ComputerName it opens a temporary connection to each computer, runs the block, and closes the connection; with -Session it uses sessions you opened earlier with New-PSSession, which keep their variables between calls.
+
+Give several computer names and the block runs on all of them at once. Each result carries a PSComputerName property saying where it came from.
+
+The results are copies, not live objects. They are "deserialized": their type names start with Deserialized., their properties hold the values from the moment they were sent, and their methods are gone. Do the work (filtering, stopping, changing) inside the script block, and bring back only what you need.
+
+Without -ComputerName or -Session, Invoke-Command simply runs the script block on your own computer.
+PARAMETER ScriptBlock:
+The commands to run, in braces. Position 0. Its alias is -Command.
+PARAMETER ComputerName:
+The computers to run the commands on. Its alias is -Cn.
+PARAMETER Session:
+Sessions made with New-PSSession. Variables set in one call are still there in the next call to the same session.
+PARAMETER ArgumentList:
+Values to pass into the script block; it receives them in its param() block, in order. Its alias is -Args.
+PARAMETER FilePath:
+A script file on your computer to run on the remote computers instead of a script block. PowerShell reads the file locally and sends its contents.
+PARAMETER AsJob:
+Runs the commands as a background job and returns the job at once. Collect the results later with Receive-Job.
+PARAMETER JobName:
+A name for the job made by -AsJob.
+PARAMETER HideComputerName:
+Leaves PSComputerName (and RunspaceId) out of the displayed results. Its alias is -HCN.
+PARAMETER ConfigurationName:
+The endpoint to connect to on the remote computer, for example a Just Enough Administration endpoint that allows only some commands.
+PARAMETER InputObject:
+Objects sent from your pipeline to the remote commands, where they arrive in $input.
+EXAMPLE: Invoke-Command -ComputerName localhost -ScriptBlock { $env:COMPUTERNAME }
+Runs a command through remoting on this computer itself, a safe way to try remoting out.
+EXAMPLE: $name = 'Ada'; Invoke-Command -ComputerName localhost -ScriptBlock { "Hello $using:name" }
+$using: copies a local variable into the remote command. Without it, $name would be empty on the other side.
+EXAMPLE: Invoke-Command -ComputerName localhost -ScriptBlock { param($a, $b) $a + $b } -ArgumentList 2, 3
+Passes two values into the script block's param() block. Shows 5.
+EXAMPLE: $s = New-PSSession -ComputerName localhost; Invoke-Command -Session $s { $x = 42 }; Invoke-Command -Session $s { $x }
+The second call still sees $x, because both run in the same session.
+EXAMPLE: $job = Invoke-Command -ComputerName localhost -ScriptBlock { Start-Sleep 3; 'finished' } -AsJob; $job | Wait-Job | Receive-Job
+Runs the command as a job, waits for it, and collects the result.
+NOTES:
+The alias is icm.
+
+Remoting must be turned on at the other end (Enable-PSRemoting; it is on by default on Windows Server, off on Windows 10 and 11), the WinRM firewall rule must allow you in, and you must be an administrator there (or in Remote Management Users).
+
+Variables from your session do not travel automatically. Use $using:name (PowerShell 3.0 and later) or -ArgumentList.
+
+Each computer runs the block in its own new session: no profile, the working folder is your Documents folder there, and nothing from your console (functions, modules you imported) exists unless the block loads it.
+
+By default up to 32 computers are contacted at the same time (-ThrottleLimit).
+
+In a domain, computers are found by name with Kerberos. Outside a domain (workgroup, or connecting by IP address) you also need HTTPS or the TrustedHosts setting, and -Credential.
+
+PowerShell 7 can also connect over SSH with -HostName.
+RELATED: New-PSSession, Enter-PSSession, Get-PSSession, Remove-PSSession, Receive-Job, about_Remote, about_Remote_Variables

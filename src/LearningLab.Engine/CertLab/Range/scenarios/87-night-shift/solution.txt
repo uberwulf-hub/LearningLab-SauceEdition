@@ -1,0 +1,14 @@
+## who normally uses the account, and when
+cat /etc/ops-desks.txt
+grep Accepted /var/log/secure
+## what the night visitor left: a key and a job in the account's own crontab
+cat /home/ops/.ssh/authorized_keys
+crontab -l -u ops
+cat /home/ops/.local/share/{{DIR}}/{{JOB}}
+ls -la /home/ops/.local/share/{{DIR}}
+cat /home/ops/.local/share/{{DIR}}/.note
+## clean up without locking the team out
+sed -i '/{{KEYCMT}}/d' /home/ops/.ssh/authorized_keys
+crontab -r -u ops
+rm -f /home/ops/.local/share/{{DIR}}/{{JOB}}
+echo 'ops:{{NEWPW}}' | chpasswd

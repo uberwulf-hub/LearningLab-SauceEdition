@@ -1,0 +1,10 @@
+SYNOPSIS: Writes a debug message that shows only when debugging is turned on.
+DESCRIPTION:
+Write-Debug writes "DEBUG: " messages to the debug stream. They are hidden unless the function or script runs with -Debug, or $DebugPreference is Continue.
+PARAMETER Message:
+The text.
+EXAMPLE: function Test-Dbg { [CmdletBinding()] param() Write-Debug 'checking'; 'done' }; Test-Dbg -Debug
+Shows "DEBUG: checking" before "done".
+NOTES:
+In Windows PowerShell 5.1, -Debug also makes PowerShell stop and ask at every message on a real console. Use Write-Verbose for progress information instead.
+RELATED: Write-Verbose, Write-Warning, about_Preference_Variables

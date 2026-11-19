@@ -1,0 +1,24 @@
+NAME
+       fsadm - grow the file system on a device to fill it (used by lvextend -r)
+
+SYNOPSIS
+       fsadm resize DEVICE
+
+DESCRIPTION
+       fsadm is a helper from the LVM tools. fsadm resize DEVICE makes the
+       file system on DEVICE (xfs, ext4) as big as the device: it runs
+       xfs_growfs or resize2fs for you. lvextend -r (--resizefs) and
+       lvresize -r call it after making the logical volume bigger, which is
+       why one command can grow both.
+
+EXAMPLES
+       Grow a logical volume by 500 MiB together with its file system:
+
+           lvextend -r -L +500M /dev/vgdata/lvdata
+
+       Grow the file system by hand after a plain lvextend:
+
+           fsadm resize /dev/vgdata/lvdata
+
+SEE ALSO
+       lvextend(8), xfs_growfs(8), resize2fs(8)

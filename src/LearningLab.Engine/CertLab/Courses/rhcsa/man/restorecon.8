@@ -1,0 +1,89 @@
+NAME
+       restorecon - set files back to their default SELinux contexts
+
+SYNOPSIS
+       restorecon [-R] [-v] [-F] [-n] [-i] [-e DIRECTORY] PATH...
+       restorecon [-R] [-v] -f FILE
+
+DESCRIPTION
+       Every file on an SELinux system has a context (label), such as
+       system_u:object_r:httpd_sys_content_t:s0. The policy has a list of
+       the context each path should have; restorecon looks each given path
+       up in that list and changes the file's context to match.
+
+       The list comes from the policy plus your own rules made with
+       "semanage fcontext -a". restorecon never reads those rules from
+       anywhere else, which makes the pair the standard way to label files
+       for a service:
+
+           semanage fcontext -a -t TYPE '/path(/.*)?'
+           restorecon -Rv /path
+
+       Use restorecon after moving files with mv (mv keeps the old label,
+       cp gives a new one), after chcon experiments, and when an AVC denial
+       in the audit log shows a file with the wrong type.
+
+       By default restorecon changes only the type part of a context (the
+       third field); -F resets the user, role and level too.
+
+       Only root can run it. On a system with SELinux disabled it does
+       nothing.
+
+OPTIONS
+       -R, -r Recurse into directories.
+
+       -v     Show every file whose context changes ("Relabeled ... from
+              ... to ...").
+
+       -F     Force: reset the whole context, not only the type.
+
+       -n     Do not change anything; with -v, show what would change.
+
+       -i     Ignore files that do not exist.
+
+       -e DIRECTORY
+              Leave this directory out (may be given more than once).
+
+       -f FILE
+              Read the paths to fix from FILE, one per line.
+
+       -p     Show progress (a count of files).
+
+EXAMPLES
+       Fix the labels of a web site copied into /var/www/html:
+
+           restorecon -Rv /var/www/html
+
+       Serve files from /srv/web with Apache:
+
+           semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?'
+           restorecon -Rv /srv/web
+           ls -Zd /srv/web
+
+       See what would change in /home/student without changing it:
+
+           restorecon -Rnv /home/student
+
+       Check one file's current and expected context:
+
+           ls -Z /var/www/html/index.html
+           matchpathcon /var/www/html/index.html
+
+NOTES
+       To relabel the whole file system at the next boot (for example after
+       resetting the root password in rd.break), create the file
+       /.autorelabel, or run fixfiles onboot.
+
+       A context set with chcon is undone by restorecon (and by a full
+       relabel). Use semanage fcontext for changes that must last.
+
+FILES
+       /etc/selinux/targeted/contexts/files/file_contexts
+              The policy's default contexts.
+
+       /etc/selinux/targeted/contexts/files/file_contexts.local
+              The rules added with semanage fcontext.
+
+SEE ALSO
+       semanage(8), chcon(1), ls(1), matchpathcon(8), setfiles(8),
+       fixfiles(8), selinux(8)

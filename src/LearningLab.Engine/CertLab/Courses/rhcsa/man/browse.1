@@ -1,0 +1,34 @@
+NAME
+       browse - a tiny text-only web browser (Cyber Range)
+
+SYNOPSIS
+       browse [-b "name=value"] [-d "field=value&..."] URL
+
+DESCRIPTION
+       browse fetches a page and shows it the way a person would see it in a
+       browser: the words on the page, its links numbered [1], [2]... (listed
+       at the end with where they go) and its forms with the names of their
+       fields. That makes a page easy to read and shows you which fields a
+       form sends.
+
+       Like a real browser, browse does not show the hidden parts of a page:
+       comments (<!-- ... -->), scripts and hidden settings. To see those, look
+       at the page's source with curl.
+
+       browse is a Cyber Range practice tool; it only reaches the range's
+       pretend web servers.
+
+OPTIONS
+       -b "name=value"
+              Send a cookie (as curl -b does), for example a session cookie
+              from signing in.
+
+       -d "field=value&..."
+              Send form fields with the request (as curl -d does).
+
+EXAMPLES
+           browse http://copperleaf.example/
+           browse -b "session=s1234..." http://copperleaf.example/account
+
+SEE ALSO
+       curl(1), webscan(1)

@@ -1,0 +1,26 @@
+SYNOPSIS: Turns lines of CSV text into objects with properties.
+DESCRIPTION:
+ConvertFrom-Csv reads comma-separated text that is already in memory (strings in a variable or the pipeline) and makes one object per line. The first line gives the property names unless you supply them with -Header.
+
+Every value comes out as a string, even numbers. Cast when you need a number: [int]$_.Age.
+
+It works exactly like Import-Csv, except that Import-Csv reads the text from a file.
+PARAMETER InputObject:
+The CSV lines. Usually they come through the pipeline. Position 0, required.
+PARAMETER Delimiter:
+The character between values when it is not a comma, for example ';' or "`t" for tabs. Position 1.
+PARAMETER Header:
+Property names to use when the text has no header line. When you give -Header, the first line is treated as data.
+PARAMETER UseCulture:
+Uses the list separator of the computer's region settings (a comma for English (United States)).
+EXAMPLE: 'Name,Age', 'Ada,36', 'Alan,41' | ConvertFrom-Csv
+Makes two objects with the properties Name and Age.
+EXAMPLE: 'Ada;36' | ConvertFrom-Csv -Delimiter ';' -Header Name, Age
+Text separated by semicolons and with no header line: -Header supplies the names.
+EXAMPLE: 'Name,Age', 'Ada,36' | ConvertFrom-Csv | Where-Object { [int]$_.Age -gt 30 }
+Compares the age as a number. Without [int], the left side is text, so PowerShell compares "36" with "30" as text (and "100" would come before "30"). Cast to be safe.
+NOTES:
+A line starting with #TYPE (written by Export-Csv in Windows PowerShell 5.1) is skipped, and its type name is added to the objects' type names with a CSV: prefix.
+
+Lines that are empty are skipped. Values in double quotes may contain the delimiter.
+RELATED: ConvertTo-Csv, Import-Csv, Export-Csv, ConvertFrom-Json

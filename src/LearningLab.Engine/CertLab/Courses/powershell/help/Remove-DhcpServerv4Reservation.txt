@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes address reservations.
+DESCRIPTION:
+Remove-DhcpServerv4Reservation deletes reservations by address, by MAC address or all of a scope. The device keeps its current lease; at the next renewal it may get a different address.
+PARAMETER ScopeId:
+The scope.
+PARAMETER IPAddress:
+The reserved address to free.
+PARAMETER ClientId:
+The MAC address whose reservation to delete.
+EXAMPLE: Remove-DhcpServerv4Reservation -IPAddress 10.10.0.150 -ComputerName SRV1
+Frees the printer's reserved address.
+RELATED: Add-DhcpServerv4Reservation, Get-DhcpServerv4Reservation

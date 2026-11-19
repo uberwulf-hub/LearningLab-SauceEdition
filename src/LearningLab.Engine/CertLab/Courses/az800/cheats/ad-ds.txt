@@ -1,0 +1,57 @@
+# Sheet: ad-ds | Active Directory Domain Services | AD DS
+## Domain controllers
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools :: add the role (binaries only; not a DC yet)
+Install-ADDSDomainController -DomainName corp.example -InstallDns -SiteName HQ :: promote to an extra writable DC with DNS (a GC by default)
+Install-ADDSDomainController ... -ReadOnlyReplica -SiteName Branch :: promote to a read-only DC (the site is required)
+-ReplicationSourceDC DC1 / -NoGlobalCatalog / -InstallationMediaPath C:\IFM :: copy from DC1 / no GC / install from media
+Install-ADDSForest -DomainName x -DomainNetbiosName X -InstallDns :: the first DC of a new forest
+Install-ADDSDomain -DomainType ChildDomain|TreeDomain :: a new domain in an existing forest
+Uninstall-ADDSDomainController :: demote a DC
+Get-ADDomainController -Filter * | Format-Table Name, Site, IsGlobalCatalog, IsReadOnly :: every DC, its site, GC and read-only
+Get-ADForest / Get-ADDomain :: forest and domain modes, roles, UPN suffixes
+## Read-only DCs
+Allowed RODC Password Replication Group :: accounts whose passwords RODCs may cache (empty by default)
+Denied RODC Password Replication Group :: never cached (admins, krbtgt, DCs); deny wins
+-DelegatedAdministratorAccountName :: a local administrator of the RODC without domain rights
+repadmin /rodcpwdrepl :: fill an RODC's password cache in advance
+## Trusts and UPN suffixes
+Forest / External / Shortcut / Realm :: two forests, transitive inside both (not on to a third) / one domain, not transitive / within a forest / Kerberos v5 realm
+Outgoing trust :: this domain trusts the other: the other's users can use this domain's resources
+Selective authentication :: grant "Allowed to authenticate" on each computer object
+Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest :: name resolution a trust needs first
+Get-ADTrust -Filter * :: list trusts with direction and selective authentication
+Set-ADForest -UPNSuffixes @{Add='harborline.example'} :: an extra UPN suffix
+Set-ADUser bcole -UserPrincipalName bcole@harborline.example :: give it to a user
+## Users, groups, computers, OUs
+New-ADUser -Name ... -SamAccountName ... -AccountPassword (Read-Host -AsSecureString) -Enabled $true -ChangePasswordAtLogon $true :: a new account
+New-ADComputer -Name WH-PC01 -Path 'OU=Workstations,DC=corp,DC=example' :: pre-stage a computer account
+New-ADGroup -Name X -GroupScope Global|DomainLocal|Universal -GroupCategory Security -Path ... :: a new group
+Add-ADGroupMember FS-HR-Modify -Members HR :: nest a group (AGDLP)
+Get-ADPrincipalGroupMembership bcole :: a user's direct groups
+Set-ADOrganizationalUnit X -ProtectedFromAccidentalDeletion $false :: allow deleting an OU
+Search-ADAccount -LockedOut / -AccountDisabled :: find locked or disabled accounts
+redircmp / redirusr :: change where new computers / users land
+## Recycle Bin, gMSA, password policies
+Enable-ADOptionalFeature 'Recycle Bin Feature' -Scope ForestOrConfigurationSet -Target corp.example :: turn on the Recycle Bin (one-way)
+Get-ADObject -Filter ... -IncludeDeletedObjects | Restore-ADObject :: restore a deleted object
+Add-KdsRootKey -EffectiveImmediately :: the forest's KDS root key (usable after 10 hours)
+New-ADServiceAccount -Name gmsa-web -DNSHostName gmsa-web.corp.example -PrincipalsAllowedToRetrieveManagedPassword 'Web servers' :: a gMSA
+Install-ADServiceAccount gmsa-web / Test-ADServiceAccount gmsa-web :: on the server that will use it
+New-ADFineGrainedPasswordPolicy -Name X -Precedence 10 -MinPasswordLength 15 :: a PSO
+Add-ADFineGrainedPasswordPolicySubject X -Subjects 'IT Admins' :: apply it to users or global groups
+Get-ADUserResultantPasswordPolicy arivera :: the PSO a user gets
+## Operations masters and the global catalog
+netdom query fsmo :: who holds the five roles
+Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole PDCEmulator,RIDMaster :: transfer roles (both DCs up)
+... -Force :: seize (the old holder never comes back)
+0 PDCEmulator, 1 RIDMaster, 2 InfrastructureMaster, 3 SchemaMaster, 4 DomainNamingMaster :: role numbers
+## Sites and replication
+New-ADReplicationSite Branch :: a site
+New-ADReplicationSubnet -Name 10.20.0.0/24 -Site Branch :: map a subnet to it
+New-ADReplicationSiteLink -Name HQ-Branch -SitesIncluded HQ,Branch -Cost 50 -ReplicationFrequencyInMinutes 15 :: a site link (15 minutes minimum)
+Move-ADDirectoryServer -Identity DC2 -Site Branch :: move a DC to another site
+repadmin /replsummary :: replication health of every DC
+repadmin /showrepl DC2 :: a DC's inbound partners and last attempts
+repadmin /syncall /AdeP :: push replication everywhere now
+Get-ADReplicationPartnerMetadata -Target DC1 :: replication partners in PowerShell
+dcdiag /test:replications :: test replication

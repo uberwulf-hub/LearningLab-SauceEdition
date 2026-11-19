@@ -1,0 +1,14 @@
+SYNOPSIS: Saves a running virtual machine's state to disk and stops it.
+DESCRIPTION:
+Save-VM writes the VM's memory to a file and stops it, like hibernating a laptop. It frees the host's memory, and Start-VM later carries on exactly where it was.
+
+The VM's clock is behind after a long save; the Time Synchronization integration service catches it up. Suspend-VM is the lighter version that keeps the memory in RAM.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Save-VM -Name APP-OLD -ComputerName HV1
+APP-OLD's state goes to disk; Get-VM shows it as Saved.
+EXAMPLE: Start-VM -Name APP-OLD
+Brings it back where it stopped.
+RELATED: Start-VM, Stop-VM, Suspend-VM, Resume-VM

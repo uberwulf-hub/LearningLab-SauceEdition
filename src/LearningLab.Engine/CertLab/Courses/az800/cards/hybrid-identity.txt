@@ -1,0 +1,31 @@
+# Deck: hybrid-identity | Hybrid identity and AD DS in Azure | Hybrid identity
+Sync tool with its own engine and database on a Windows Server :: Microsoft Entra Connect Sync
+Sync tool with lightweight agents and its configuration in the cloud :: Microsoft Entra Cloud Sync
+Several forests with no network path between them, one tenant :: Cloud Sync, with a provisioning agent in each forest
+Needs Connect Sync rather than Cloud Sync :: Pass-through authentication, federation, device writeback, custom sync rules
+How often Connect Sync runs a delta sync by default :: Every 30 minutes
+How often password hashes are synced :: About every 2 minutes
+Run a delta sync now on the Connect server :: `Start-ADSyncSyncCycle -PolicyType Delta`
+Run a full sync after changing the OU filter :: `Start-ADSyncSyncCycle -PolicyType Initial`
+See the sync interval, next run and staging mode :: `Get-ADSyncScheduler`
+Pause the sync schedule for maintenance :: `Set-ADSyncScheduler -SyncCycleEnabled $false`
+Service name of the Connect Sync engine :: ADSync (Microsoft Azure AD Sync)
+A UPN suffix the tenant hasn't verified syncs as :: The tenant's initial onmicrosoft domain (bcole@harborline.onmicrosoft.example here)
+Add a public UPN suffix to the forest :: `Set-ADForest -Identity corp.example -UPNSuffixes @{Add='harborline.example'}`
+What happens to cloud users whose OU leaves the sync scope :: They are deleted in Microsoft Entra ID at the next sync
+Sign-in method that keeps working when the office is offline :: Password hash synchronization
+Sign-in method where a DC checks every cloud password :: Pass-through authentication (PTA)
+What the PTA agent needs through the firewall :: Outbound HTTPS only, no inbound ports
+How many PTA agents Microsoft recommends at least :: Three, on different servers
+Seamless SSO creates this account in each forest :: The computer account AZUREADSSOACC
+Seamless SSO works with :: Password hash sync or pass-through authentication, on domain-joined PCs inside the network
+Federation with AD FS needs :: An AD FS farm plus Web Application Proxy servers in the perimeter network
+A Connect server that imports and syncs but exports nothing :: A staging mode server (warm standby)
+Make a staging server the active one :: Turn staging mode off on it (and on for the old server)
+Entra role needed to install Connect Sync :: Hybrid Identity Administrator (or Global Administrator)
+Where to set a DC's static IP in an Azure VM :: On the VM's NIC in Azure (private IP allocation Static); Windows stays on DHCP
+Host caching for the disk with NTDS.dit and SYSVOL :: None
+Where the directory goes on an Azure DC :: A separate data disk (-DatabasePath, -LogPath, -SysvolPath)
+VMs in the VNet must find the domain :: Set the VNet's custom DNS servers to the domain's DNS servers
+Make clients in Azure use the DC in Azure :: An AD site for Azure with the VNet's range as its subnet, on a site link
+Managed domain in Azure without running DCs :: Microsoft Entra Domain Services

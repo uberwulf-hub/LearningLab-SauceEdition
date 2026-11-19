@@ -1,0 +1,17 @@
+NAME
+       wall - send a message to every logged-in terminal
+
+SYNOPSIS
+       wall [MESSAGE]
+
+DESCRIPTION
+       wall (write to all) shows MESSAGE, or the text read from standard
+       input, on the terminal of every user who is logged in, under a
+       "Broadcast message from ..." heading. Administrators use it to warn
+       users before a reboot. shutdown sends such a message by itself.
+
+EXAMPLES
+           wall 'server1 restarts in 10 minutes. Please save your work.'
+
+SEE ALSO
+       shutdown(8), who(1), write(1)

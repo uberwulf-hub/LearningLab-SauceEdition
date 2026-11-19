@@ -1,0 +1,16 @@
+SYNOPSIS: Shows the DNS client settings of each network adapter.
+DESCRIPTION:
+Get-DnsClient shows, per interface, the settings that decide how the computer uses DNS on that adapter: ConnectionSpecificSuffix (a DNS suffix just for this adapter, often handed out by DHCP), the suffix search list, RegisterThisConnectionsAddress (whether the computer registers its own address in DNS, so others can find it by name) and UseSuffixWhenRegistering.
+
+The DNS server addresses themselves are shown by Get-DnsClientServerAddress, and the suffixes used for every adapter by Get-DnsClientGlobalSetting.
+PARAMETER InterfaceAlias:
+Shows only this adapter, for example Ethernet. Wildcards are allowed.
+EXAMPLE: Get-DnsClient
+The DNS client settings of every interface.
+EXAMPLE: Get-DnsClient -InterfaceAlias Ethernet | Format-List *
+Every setting of the Ethernet adapter.
+EXAMPLE: Get-DnsClient -InterfaceAlias Ethernet | Select-Object InterfaceAlias, RegisterThisConnectionsAddress
+Does this computer put its own address into DNS?
+NOTES:
+Windows changes these with Set-DnsClient (not in Cert Lab). CIM-based command from the DnsClient module, Windows only.
+RELATED: Get-DnsClientGlobalSetting, Get-DnsClientServerAddress, Resolve-DnsName

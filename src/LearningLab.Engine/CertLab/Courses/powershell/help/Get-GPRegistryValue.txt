@@ -1,0 +1,20 @@
+SYNOPSIS: Reads registry-based policy settings stored in a Group Policy Object.
+DESCRIPTION:
+Get-GPRegistryValue shows the values a GPO sets under one registry key: name, type, value and whether it is a policy or a preference. Without -ValueName it lists every value directly under the key.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Key:
+The registry key, starting with HKLM\ or HKCU\.
+PARAMETER ValueName:
+One value only.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-GPRegistryValue "Sales Desktop" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop"
+Every value the GPO sets under that key.
+EXAMPLE: Get-GPRegistryValue "Sales Desktop" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop" -ValueName ScreenSaveTimeOut
+One value.
+RELATED: Set-GPRegistryValue, Remove-GPRegistryValue, Get-GPOReport

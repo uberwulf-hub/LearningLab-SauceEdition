@@ -1,0 +1,57 @@
+{
+    "id": "extra-key",
+    "title": "The Extra Key",
+    "category": "blue",
+    "level": "Intermediate",
+    "order": 2,
+    "summary": "An attacker got a foothold through a web account and made themselves at home: a new administrator account and a hidden way to become root on demand. Find both and shut them out.",
+    "story": "You run app1, a Linux web server for {{CO}} (made up), on 10.10.7.0/24. Monitoring flagged an odd login overnight. You have a root console on app1. Nothing has been cleaned up yet.",
+    "goal": "Identify the account the attacker used, the extra administrator they created and the hidden set-user-ID backdoor they left, capture the flag they dropped, then remove both footholds - before their backdoor is used to wire in permanent root.",
+    "skills": "auth logs, listing users and groups, finding set-user-ID files, removing a user, cleaning up",
+    "defender": "none",
+    "start": "app1",
+    "minutes": 35,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "give itself permanent passwordless root",
+    "goalPoints": 80,
+    "vars": {
+        "CO": "company",
+        "USER": "pick:www-sync|deploy|appsvc|webops",
+        "PW": "word",
+        "ROGUE": "pick:support2|svc-helpdesk|sysupd|admbak",
+        "ATKIP": "ip",
+        "BDNAME": "pick:.cache-helper|.dbus-x11|.systemd-priv|.gvfsd"
+    },
+    "machines": [
+        {
+            "name": "app1",
+            "os": "linux",
+            "hostname": "app1.{{CO_DOMAIN}}",
+            "role": "web server (yours)",
+            "nics": [ "10.10.7.10/24" ],
+            "packages": [ "httpd" ],
+            "motd": "{{CO}} app1 - staff only.",
+            "setup": "app1.sh"
+        }
+    ],
+    "flags": [
+        { "id": "drop", "name": "The flag in the attacker's dropped note", "points": 70, "machine": "app1", "path": "/home/{{ROGUE}}/.note.txt", "owner": "root", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "acct", "ask": "Which existing account did the attacker sign in with?", "answer": "{{USER}}", "points": 40, "explain": "The web service account appears in /var/log/secure, signed in from the attacker's address." },
+        { "id": "rogue", "ask": "What extra administrator account did they create?", "answer": "{{ROGUE}}", "points": 50, "explain": "A new user in the wheel group that you did not create - compare /etc/passwd and the wheel group." },
+        { "id": "suid", "ask": "What is the full path of the hidden set-user-ID backdoor?", "answer": "/usr/local/bin/{{BDNAME}}", "accept": [ "{{BDNAME}}" ], "points": 50, "explain": "find / -perm -4000 lists set-user-ID files; one with a hidden name is a root-owned copy of a shell." }
+    ],
+    "tasks": [
+        { "id": "deluser", "name": "Remove the extra administrator account", "machine": "app1", "check": "! id {{ROGUE}} >/dev/null 2>&1", "points": 50, "explain": "userdel -r {{ROGUE}} removes it." },
+        { "id": "delsuid", "name": "Remove the set-user-ID backdoor", "machine": "app1", "check": "test ! -e /usr/local/bin/{{BDNAME}}", "points": 50, "explain": "rm -f /usr/local/bin/{{BDNAME}}." }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "app1", "run": "echo '{{ROGUE}} ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/{{ROGUE}} 2>/dev/null; chmod 440 /etc/sudoers.d/{{ROGUE}} 2>/dev/null; true", "unless": "! id {{ROGUE}} >/dev/null 2>&1", "note": "The backdoor account was still there, so the attacker wired in permanent passwordless root for it.", "goal": true }
+    ],
+    "hints": [
+        { "text": "Start with the sign-in log: grep -Ei 'accepted|failed' /var/log/secure. One of the service accounts signed in from an outside address. Note the account name and the address.", "cost": 10 },
+        { "text": "Attackers often add their own account. List the people who can log in (cut -d: -f1,3,7 /etc/passwd) and who can become root (getent group wheel). An account you did not create, sitting in wheel, is the attacker's. Look in its home folder for a dropped note (the flag).", "cost": 18 },
+        { "text": "They also left a quiet way back to root: a set-user-ID copy of a shell. find / -perm -4000 -type f 2>/dev/null lists set-user-ID files; the one with a hidden, odd name under /usr/local/bin is it. Clean up: userdel -r {{ROGUE}} and rm -f /usr/local/bin/{{BDNAME}}.", "cost": 25 }
+    ]
+}

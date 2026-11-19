@@ -1,0 +1,175 @@
+NAME
+       nmcli - command-line client for NetworkManager
+
+SYNOPSIS
+       nmcli [OPTIONS] OBJECT {COMMAND | help}
+
+       OBJECT := general | networking | radio | connection | device
+
+DESCRIPTION
+       nmcli talks to NetworkManager, the service that manages the network on
+       RHEL 9. With it you list network devices, and create, change, start
+       and stop connection profiles. It is the main tool for network settings
+       on the RHCSA exam.
+
+       Two words matter. A device is a network interface, such as enp1s0. A
+       connection (or connection profile) is a saved set of settings: the
+       addresses, gateway, DNS servers and whether it starts at boot. A device
+       uses one connection at a time. On RHEL 9 the profiles are kept as key
+       files in /etc/NetworkManager/system-connections/NAME.nmconnection.
+
+       Every object and command can be shortened, as long as it stays
+       unambiguous: "nmcli con mod" is "nmcli connection modify", "nmcli d"
+       is "nmcli device", "nmcli c s" is "nmcli connection show".
+
+       Changing a profile with "connection modify" saves the new settings at
+       once, but a running connection keeps its old settings until it is
+       activated again: run "nmcli connection up NAME" (or reboot) afterwards.
+
+OPTIONS
+       -t, --terse
+              Output for scripts: no headers, fields separated by colons.
+
+       -f, --fields FIELDS
+              Show only these fields (comma separated). With "connection show
+              NAME" a field may be a whole setting, such as ipv4.
+
+       -g, --get-values FIELDS
+              Print only the values of these fields, one per line. Short for
+              -t -f FIELDS without the field names. Good for tests in scripts.
+
+       -p, --pretty
+              Output for people, with headers and spacing.
+
+       -a, --ask
+              Ask for missing values (such as passwords) instead of failing.
+
+       -w, --wait SECONDS
+              How long to wait for an operation to finish.
+
+COMMANDS
+       general [status]
+              The overall state of NetworkManager.
+
+       general hostname [NAME]
+              Show the static host name, or set it (written to /etc/hostname,
+              as hostnamectl set-hostname does).
+
+       networking [on | off | connectivity]
+              Show, turn on or turn off all networking.
+
+       device [status]
+              List the devices, their type, state and the connection in use.
+
+       device show [IFNAME]
+              Details of a device: hardware address, IP addresses, gateway,
+              DNS servers.
+
+       device connect IFNAME, device disconnect IFNAME
+              Activate the best connection for a device, or take it down.
+
+       device reapply IFNAME
+              Apply the changed settings of the current connection to the
+              device without taking it down.
+
+       connection show [--active] [NAME]
+              List all profiles (or only the active ones). With a NAME, show
+              every setting of that profile; lower-case names are the saved
+              settings, upper-case ones (IP4.ADDRESS...) the live values.
+
+       connection up NAME, connection down NAME
+              Activate or deactivate a profile.
+
+       connection add type TYPE [con-name NAME] [ifname IFNAME] [SETTINGS]
+              Create a new profile and, if the device is free, start it.
+
+       connection modify NAME [+|-]SETTING VALUE ...
+              Change settings of a profile. A plain SETTING replaces the
+              value, +SETTING adds to a list (another address or DNS server),
+              -SETTING removes a value from a list.
+
+       connection delete NAME
+              Remove a profile (and take it down if it is active).
+
+       connection reload
+              Read the profile files again after editing them by hand.
+
+SETTINGS
+       The settings used most, with their short aliases for connection add:
+
+       connection.id (con-name)
+              The profile's name.
+
+       connection.interface-name (ifname)
+              The device the profile is for.
+
+       connection.autoconnect (autoconnect) yes|no
+              Start the profile at boot and when the device appears.
+
+       ipv4.method auto|manual|disabled|link-local|shared
+              auto = DHCP; manual = the addresses you give.
+
+       ipv4.addresses (ip4) ADDRESS/PREFIX[,...]
+              Static IPv4 addresses, for example 192.168.50.11/24. Always give
+              the prefix: without it the address gets /32.
+
+       ipv4.gateway (gw4) ADDRESS
+              The default gateway.
+
+       ipv4.dns ADDRESS[,...]
+              DNS servers; NetworkManager writes them to /etc/resolv.conf.
+
+       ipv4.dns-search DOMAIN[,...]
+              Search domains for short host names.
+
+       ipv4.ignore-auto-dns yes|no
+              Ignore DNS servers handed out by DHCP.
+
+       ipv6.method auto|manual|disabled|ignore|link-local|dhcp
+       ipv6.addresses (ip6), ipv6.gateway (gw6), ipv6.dns
+              The same for IPv6, for example 2001:db8::11/64.
+
+EXAMPLES
+       Look at the devices and profiles:
+
+              # nmcli device status
+              # nmcli connection show
+              # nmcli -g ipv4.addresses,ipv4.gateway connection show enp1s0
+
+       Give server1 a static address, gateway and DNS server, then apply it:
+
+              # nmcli connection modify enp1s0 ipv4.method manual \
+                  ipv4.addresses 192.168.50.11/24 ipv4.gateway 192.168.50.254 \
+                  ipv4.dns 192.168.50.254 ipv4.dns-search lab.example.com
+              # nmcli connection up enp1s0
+
+       Add a second address and an IPv6 address to the same profile:
+
+              # nmcli con mod enp1s0 +ipv4.addresses 192.168.50.111/24
+              # nmcli con mod enp1s0 ipv6.method manual ipv6.addresses 2001:db8::11/64
+              # nmcli con up enp1s0
+
+       Create a new profile that starts at boot:
+
+              # nmcli connection add con-name static1 type ethernet ifname enp1s0 \
+                  ipv4.method manual ipv4.addresses 192.168.50.11/24 \
+                  ipv4.gateway 192.168.50.254 autoconnect yes
+
+       Set the host name:
+
+              # nmcli general hostname server1.lab.example.com
+
+FILES
+       /etc/NetworkManager/system-connections/*.nmconnection
+              The saved profiles (key files, mode 600, owned by root).
+
+       /etc/resolv.conf
+              Written by NetworkManager from the DNS settings.
+
+NOTES
+       Ordinary users may only look; changing settings needs root (or a user
+       allowed by polkit). The text menu program nmtui changes the same
+       profiles.
+
+SEE ALSO
+       nmtui(1), ip(8), hostnamectl(1), ping(8), ss(8)

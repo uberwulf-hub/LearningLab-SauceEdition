@@ -1,0 +1,33 @@
+{
+    "id": "injection-point",
+    "title": "The Injection Point",
+    "level": "Intermediate",
+    "order": 5,
+    "summary": "A little web tool runs a command for you, and it doesn't check what you type. That is your way in; a password it lets you read is your account; a careless sudo rule is root.",
+    "story": "Juniper Health (made up) runs an internal tools site, app01, on 10.10.5.0/24. You start on scout. The site has a ping page that staff use to check if a host is reachable.",
+    "goal": "Capture the user flag in the appsvc home folder and the root flag in /root.",
+    "skills": "web recon, command injection, reading a config as the web account, ssh, sudo -l",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 40,
+    "vars": { "SVCPW": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.5.5/24" ] },
+        { "name": "app01", "os": "linux", "hostname": "app01.juniper.example", "role": "internal tools site", "nics": [ "10.10.5.30/24" ], "packages": [ "httpd" ], "setup": "app01.sh",
+          "versions": { "80": "NetCheck Lite 1.0 (Apache httpd 2.4.62)" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "appsvc flag", "points": 130, "machine": "app01", "path": "/home/appsvc/flag.txt", "owner": "appsvc", "mode": "640", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 170, "machine": "app01", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "web": [
+        { "machine": "app01", "path": "/tools/ping", "kind": "cmd", "param": "host", "runAs": "apache", "title": "NetCheck Lite - ping a host",
+          "template": "echo 'Pinging {}'; echo '(NetCheck Lite runs: ping -c1 {} )'", "body": "<h1>NetCheck Lite</h1><p>Check a host: <a href=\"/tools/ping?host=127.0.0.1\">/tools/ping?host=127.0.0.1</a></p>" },
+        { "machine": "app01", "path": "/", "kind": "page", "title": "Juniper Health Tools", "body": "<h1>Juniper Health internal tools</h1><ul><li><a href=\"/tools/ping?host=127.0.0.1\">Network ping</a></li></ul>" }
+    ],
+    "hints": [
+        { "text": "Scan app01 and open its web page. The ping tool takes a host in the URL: /tools/ping?host=127.0.0.1. It tells you it runs ping -c1 with whatever you give it.", "cost": 10 },
+        { "text": "The tool doesn't check its input, so extra shell characters run extra commands as the web account: try host=127.0.0.1;id . Use ; ls and ; cat to look around for a config file.", "cost": 25 },
+        { "text": "The web account can read /var/www/conf/app.ini, which holds the appsvc password. ssh appsvc@10.10.5.30 with it, then sudo -l: sed can read any file as root.", "cost": 40 }
+    ]
+}

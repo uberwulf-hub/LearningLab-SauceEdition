@@ -1,0 +1,58 @@
+NAME
+       bzip2 - compress or expand files with bzip2 (also bunzip2, bzcat)
+
+SYNOPSIS
+       bzip2 [-d] [-c] [-k] [-f] [-v] [-t] [-1...-9] [FILE...]
+       bunzip2 [-c] [-k] FILE.bz2...
+       bzcat FILE.bz2...
+
+DESCRIPTION
+       bzip2 compresses each FILE and replaces it with FILE.bz2, keeping the
+       owner, permissions and times. bunzip2 (the same as bzip2 -d) turns a
+       .bz2 file back into the original and removes the .bz2. bzcat writes
+       the expanded contents to standard output and leaves the file alone.
+
+       bzip2 usually makes smaller files than gzip but is slower. It packs
+       one file at a time: to compress a whole directory, make a tar archive
+       (tar -cjf archive.tar.bz2 DIR does both steps).
+
+       With no FILE, it reads standard input and writes standard output.
+
+OPTIONS
+       -d, --decompress
+              Expand instead of compress.
+
+       -c, --stdout
+              Write to standard output and keep the input file.
+
+       -k, --keep
+              Keep the input file.
+
+       -f, --force
+              Overwrite an existing output file.
+
+       -t, --test
+              Check that a compressed file is intact.
+
+       -v, --verbose
+              Show the compression ratio of each file.
+
+       -1 ... -9
+              Block size from 100k to 900k; -9 (the default) compresses best.
+
+EXAMPLES
+       Compress a log, keeping the original:
+
+           bzip2 -k /root/messages.log
+
+       Expand it again:
+
+           bunzip2 /root/messages.log.bz2
+
+       Make and unpack a compressed archive of /etc:
+
+           tar -cjf /root/etc.tar.bz2 /etc
+           tar -xjf /root/etc.tar.bz2 -C /tmp
+
+SEE ALSO
+       gzip(1), xz(1), tar(1)

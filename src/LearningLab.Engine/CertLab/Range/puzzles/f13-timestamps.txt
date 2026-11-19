@@ -1,0 +1,58 @@
+title: To the second
+level: Intermediate
+kind: File forensics
+topic: Forensics
+teaser: two files changed in the same minute
+points: 60
+order: 77
+answer: {{TARGET}}
+var: TARGET = pick:payroll.xlsx|invoices.csv|vendors.txt|bank-details.txt
+var: SEC = num:30-59
+var: OTHER = num:2-25
+
+@vars TARGET=payroll.xlsx
+DECOY = invoices.csv
+@vars TARGET=invoices.csv
+DECOY = vendors.txt
+@vars TARGET=vendors.txt
+DECOY = bank-details.txt
+@vars TARGET=bank-details.txt
+DECOY = payroll.xlsx
+
+@intro
+The firewall recorded a stranger's session writing to the finance share at exactly
+09:30:{{SEC}} on 14 February 2026. The share was copied to ~/finance with its times kept.
+Which file did the stranger change? (Give its name.)
+
+@setup
+mkdir -p /home/player/finance
+for f in payroll.xlsx invoices.csv vendors.txt bank-details.txt budget.ods; do
+  echo "data for $f" > /home/player/finance/$f
+  touch -m -d '2026-02-13 16:45:00' /home/player/finance/$f
+done
+touch -m -d '2026-02-14 09:30:{{OTHER}}' /home/player/finance/{{DECOY}}
+touch -m -d '2026-02-14 09:30:{{SEC}}' /home/player/finance/{{TARGET}}
+chown -R player: /home/player/finance
+
+@solution
+ls -l finance
+stat -c '%y %n' finance/*
+
+@walkthrough
+ls -l shows modification times only to the minute, and two files say Feb 14 09:30. To
+tell them apart you need the seconds, which stat shows:
+
+    stat -c '%y %n' finance/*
+
+(%y is the modification time, %n the name.) {{DECOY}} changed at 09:30:{{OTHER}};
+{{TARGET}} at 09:30:{{SEC}} - the firewall's time. Matching events from different sources
+by their exact times is the core of building a timeline.
+
+@hint 5
+ls -l shows the time only to the minute. Two files fit the minute; you need the seconds.
+
+@hint 10
+stat FILE prints the full times, down to fractions of a second. stat -c '%y %n' finance/* prints one line per file.
+
+@hint 15
+stat -c '%y %n' finance/* - the file modified at 09:30:{{SEC}} is the answer.

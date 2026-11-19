@@ -1,0 +1,43 @@
+title: A service from a strange place
+level: Advanced
+kind: Windows
+topic: Windows
+teaser: where does each service's program live?
+points: 75
+order: 84
+host: windows
+answer: {{BAD}}
+var: BAD = pick:PrintAssist|AudioBridge|SyncBroker|DisplayHelper|NetBoost
+var: DIR = pick:C:\Users\Public\Libraries|C:\ProgramData\Temp|C:\Users\Public\Downloads
+
+@intro
+Three new services were installed on this pretend Windows computer last week. Two came
+from proper installers; one runs a program from a folder any user may write to, so
+anyone could swap the program and have it run as SYSTEM. Which service is it? (Give its
+service name.)
+
+@winsetup
+New-Item -ItemType Directory -Path '{{DIR}}' -Force | Out-Null
+New-Service -Name 'ContosoBackupAgent' -BinaryPathName '"C:\Program Files\Contoso Backup\agent.exe" -service' -DisplayName 'Backup Agent' -StartupType Automatic | Out-Null
+New-Service -Name '{{BAD}}' -BinaryPathName '{{DIR}}\{{LOWER:BAD}}.exe -k run' -DisplayName '{{BAD}} Service' -StartupType Automatic | Out-Null
+New-Service -Name 'FabrikamLicense' -BinaryPathName '"C:\Program Files (x86)\Fabrikam\license.exe"' -DisplayName 'License Service' -StartupType Manual | Out-Null
+
+@solution
+Get-WmiObject Win32_Service | Where-Object { $_.PathName -notlike 'C:\Windows*' } | Select-Object Name, PathName
+
+@walkthrough
+Get-Service doesn't show a service's program, but Win32_Service does (PathName):
+
+    Get-WmiObject Win32_Service | Where-Object { $_.PathName -notlike 'C:\Windows*' } |
+        Select-Object Name, PathName
+
+Two new services run from C:\Program Files (only administrators may write there).
+{{BAD}} runs {{DIR}}\{{LOWER:BAD}}.exe - a folder every user can write to. Replace that
+file and the next start runs your program as SYSTEM: a classic way up. The fix is to
+move it under Program Files and lock the folder's permissions.
+
+@hint 15
+Get-Service won't tell you; Win32_Service has each service's PathName (Get-WmiObject or Get-CimInstance).
+
+@hint 25
+Filter out C:\Windows paths and compare the folders: Program Files is protected, C:\Users\Public and C:\ProgramData subfolders often are not.

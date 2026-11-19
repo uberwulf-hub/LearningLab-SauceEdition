@@ -1,0 +1,11 @@
+## the two alerts
+siem alerts
+## the night upload: where from, where to, and what ran just before it
+siem search host=BACKUP01
+## the lookups: which computer asks the most, and for what
+siem search source=dns --count-by host
+siem search source=dns host={{BADH}} --since {{T0}} --limit 3 --fields time,query,image
+siem search source=dns query~{{TUN}} --count-by image
+## the program and what started it
+siem search source=proclog host={{BADH}} image~{{TOOL}} --fields time,user,image,parent
+siem search source=proclog host={{BADH}} image~wscript --fields time,user,image,cmdline

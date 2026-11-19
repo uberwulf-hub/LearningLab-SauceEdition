@@ -1,0 +1,21 @@
+## the web server: what was planted and what it read
+ssh -o StrictHostKeyChecking=accept-new itadmin@10.10.31.10
+{{ITPW}}
+sudo -i
+{{ITPW}}
+grep -E 'POST|uploads' /var/log/httpd/access_log
+ls -l /var/www/html/uploads
+cat /var/www/html/uploads/{{SHELL}}
+cat /var/www/html/config.php
+rm -f /var/www/html/uploads/{{SHELL}}
+exit
+exit
+## the database server: the leaked account and what it left
+winrm-shell -i 10.10.31.40 -u Administrator -p {{ADMPW}}
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } -MaxEvents 3 | Format-List TimeCreated, Message
+Get-WinEvent -FilterHashtable @{ LogName='System'; Id=7045 } | Format-List TimeCreated, Message
+Get-ChildItem C:\ProgramData\{{SVC}}
+Get-Content C:\ProgramData\{{SVC}}\id.txt
+sc.exe delete {{SVC}}
+Disable-LocalUser -Name svc_web
+exit

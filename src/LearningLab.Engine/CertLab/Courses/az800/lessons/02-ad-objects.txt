@@ -1,0 +1,253 @@
+# Unit: u02 | 2. Users, groups, computers and OUs | AD DS
+
+Most daily Active Directory work is about objects: creating people's accounts, putting them in groups, finding the right place for a computer, and getting back something that was deleted by mistake. This unit covers organizational units, users and computers, the group scopes and the AGDLP habit, and three features the exam likes: the AD Recycle Bin, group managed service accounts and fine-grained password policies.
+
+## Lesson: l0201 | OUs, users and computers
+
+An **organizational unit** (OU) is a folder in the directory. OUs exist for two reasons: to **link Group Policy** to the objects in them (units 4 and 5), and to **delegate** administration of them. Harborline's OUs are `Staff` (with `Sales`, `Finance`, `HR` and `IT` under it), `Workstations`, `Servers` and `Groups`.
+
+- The built-in `Users` and `Computers` folders are **containers**, not OUs: you can't link a GPO to them. New computers that join the domain land in `Computers` unless you **pre-stage** their account in an OU (`New-ADComputer -Path ...`) or redirect the default with `redircmp` (`redirusr` for users).
+- OUs made in the consoles are **protected from accidental deletion** (a deny on Delete for Everyone). To delete one, clear the option first (`Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false`, or the Object tab with Advanced Features on).
+- **Delegation of Control** (right-click an OU > Delegate Control) gives a group a task on that OU only, for example "Reset user passwords and force password change at next logon" for the Helpdesk on `Staff`. That is better than making the help desk Domain Admins or Account Operators.
+
+### Users
+
+A user account has a **sAMAccountName** (the old `CORP\bcole` name, up to 20 characters), a **user principal name** (`bcole@corp.example`), a password and properties such as department and title. In PowerShell:
+
+```terminal
+PS C:\Windows\system32> Get-ADUser -Filter 'Department -eq "Sales"' -Properties Title | Format-Table Name, SamAccountName, Title
+
+Name        SamAccountName Title
+----        -------------- -----
+Dev Patel   dpatel         Sales representative
+Bianca Cole bcole          Account manager
+Ines Moreau imoreau        Sales manager
+```
+
+New accounts are disabled until they have a password that meets the policy. Useful cmdlets: `New-ADUser` (with `-AccountPassword`, `-Enabled $true`, `-ChangePasswordAtLogon $true`), `Set-ADUser`, `Disable-ADAccount` / `Enable-ADAccount`, `Set-ADAccountPassword -Reset`, `Unlock-ADAccount`, `Search-ADAccount -LockedOut` or `-AccountDisabled`, `Move-ADObject`.
+
+> When someone leaves, **disable** the account first and delete it later. A deleted account can't be brought back as it was without the Recycle Bin (lesson 3), and a new account with the same name is a different security principal (a new SID) with none of the old permissions.
+
+@try
+@task t1 | AD DS | 10 | admin
+Harborline is opening a warehouse team. Create the OU **Warehouse** under `Staff`, protected from accidental deletion, and in it the user **Omar Reyes** (`oreyes`, `oreyes@corp.example`, department **Warehouse**) with the password `Harbor#2026`, who must change it when he first signs in.
+@check admin | the OU exists and is protected
+ou["Staff/Warehouse"].protected == Yes
+@check admin | Omar's account is in it, enabled, and must change its password
+user["oreyes"].ou == "OU=Warehouse,OU=Staff,DC=corp,DC=example"
+user["oreyes"].enabled == Yes
+user["oreyes"].mustchange == Yes
+user["oreyes"].department == Warehouse
+@solution admin
+new ou name=Warehouse path=Staff protect=yes
+new user name="Omar Reyes" sam=oreyes upn=oreyes@corp.example password=Harbor#2026 path=Staff/Warehouse department=Warehouse mustchange=yes
+@endtask
+@task t2 | AD DS | 10 | admin
+The warehouse PC **WH-PC01** will join the domain next week. Create its computer account in advance in **Workstations**, so the Workstation baseline GPO reaches it from its first start.
+@check admin | WH-PC01's account is in Workstations
+computer["WH-PC01"].ou == "OU=Workstations,DC=corp,DC=example"
+@hint Pre-stage the computer account (new computer ... path=Workstations). Left to itself, a joining PC lands in the Computers container, where no GPO can be linked.
+@solution admin
+new computer name=WH-PC01 path=Workstations
+@endtask
+@end
+
+@quiz
+? Why can't you link a GPO to the built-in Computers folder?
+- It is protected from accidental deletion
++ It is a container, not an OU
+- It holds only domain controllers
+! Group Policy links to sites, domains and OUs; Users and Computers are plain containers. Pre-stage accounts in an OU or use redircmp.
+? The help desk must reset passwords of staff accounts and nothing else. What do you do?
+- Add the help desk to Account Operators
+- Add the help desk to Domain Admins
++ Run Delegation of Control on the Staff OU for the help desk group with the password reset task
+! Delegation gives exactly the right on exactly the OU; the built-in groups give far more.
+? Deleting an OU fails with "Access is denied". You are a Domain Admin. What is the likely reason?
++ The OU is protected from accidental deletion
+- OUs can only be deleted on the PDC emulator
+- The OU still has a GPO linked
+! Clear "Protect object from accidental deletion" first, then delete it.
+@end
+
+## Lesson: l0202 | Groups, scopes and AGDLP
+
+A group has a **type** and a **scope**. The type is **Security** (can be given permissions and used for Group Policy filtering) or **Distribution** (email lists only). The scope says who can be a member and where the group can be used:
+
+- **Domain local**: members from any domain of the forest and from trusted domains; usable for permissions **only in its own domain**. The scope for "who may use this resource".
+- **Global**: members only from **its own domain**; usable anywhere in the forest and in trusting forests. The scope for "people who do the same job".
+- **Universal**: members from any domain of the forest; usable anywhere in the forest. Its membership is stored in the **global catalog**, so keep it to groups that really cross domains.
+
+Changing scope has rules: Global to Universal (if it isn't a member of another global group) and Domain local to Universal (if it has no domain local group members) are allowed; Universal can become Domain local, or Global if no universal group (and nobody from another domain) is a member; but **Global and Domain local can't be changed into each other directly**: go through Universal.
+
+### AGDLP
+
+The habit that keeps permissions readable is **AGDLP**: **A**ccounts go into **G**lobal groups by job, global groups go into **D**omain **L**ocal groups by resource, and the **P**ermission is given to the domain local group only. With several domains, Universal groups can sit in between (AGUDLP). Harborline already works this way: the global group `Sales` is a member of the domain local group `FS-Sales-Modify`, and only `FS-Sales-Modify` appears in the Sales share's permissions.
+
+```terminal
+PS C:\Windows\system32> Get-ADGroupMember FS-Sales-Modify | Select-Object Name, ObjectClass
+
+name  objectClass
+----  -----------
+Sales group
+
+
+PS C:\Windows\system32> Get-ADPrincipalGroupMembership bcole | Select-Object Name, GroupScope
+
+Name         GroupScope
+----         ----------
+Domain Users Global
+Sales        Global
+```
+
+A new salesperson then needs one change (into `Sales`), and a new Sales folder needs one change (give `FS-Sales-Modify` access).
+
+> A user's group memberships are read when they sign in (the access token). After you add someone to a group, they get the new access after signing out and in again (or after `klist purge` for Kerberos tickets on a server).
+
+### Protected Users
+
+**Protected Users** is a global security group with extra sign-in protection for its members: no NTLM, no DES or RC4 in Kerberos, no cached credentials on the computers they use (so no offline sign-in), no delegation, and Kerberos tickets limited to four hours. It is meant for administrators' accounts. Don't put service accounts or computer accounts in it, and test first: anything that still uses NTLM breaks for its members.
+
+@try
+@task t1 | AD DS | 10 | admin
+The HR team gets its own folder on the file server. Following AGDLP, create the **domain local** security group **FS-HR-Modify** in the `Groups` OU and make the global group **HR** a member of it.
+@check admin | FS-HR-Modify is domain local and contains HR
+group["FS-HR-Modify"].scope == DomainLocal
+group["FS-HR-Modify"].members has HR
+@check admin | HR's people are now in it through HR
+user["gkim"].allgroups has FS-HR-Modify
+@solution admin
+new group name=FS-HR-Modify path=Groups scope=DomainLocal category=Security
+members add "FS-HR-Modify" HR
+@endtask
+@task t2 | AD DS | 10 | admin
+Alex Rivera (`arivera`) is a Domain Admin. Give his account the extra sign-in protection meant for administrators.
+@check admin | arivera is a member of Protected Users
+group["Protected Users"].members has arivera
+@solution admin
+members add "Protected Users" arivera
+@endtask
+@end
+
+@quiz
+? In AGDLP, which group is given the NTFS permission on a folder?
+- The global group of the people
++ The domain local group for that resource
+- A universal group
+! Accounts go into global groups, global groups into domain local groups, and only the domain local group gets the permission.
+? You need to change the global group Helpdesk into a domain local group. What do you do?
+- Change the scope directly to Domain local
++ Change it to Universal first, then to Domain local
+- Delete it and create a new one with the same name
+! Global and domain local can't be converted into each other directly; going through Universal keeps the group (and its SID).
+? Which accounts belong in Protected Users?
++ Administrators' user accounts
+- Service accounts that run on many servers
+- Computer accounts of domain controllers
+! Its restrictions (no NTLM, no cached credentials, no delegation) suit people who administer; services and computers often break.
+@end
+
+## Lesson: l0203 | Recycle Bin, managed service accounts and password policies
+
+### The Active Directory Recycle Bin
+
+Without the Recycle Bin, a deleted object loses most of its attributes and group memberships at once (it becomes a "tombstone"), and getting it back means an authoritative restore from a backup. With the Recycle Bin on, a deleted object keeps everything for the **deleted object lifetime** (180 days by default) and can be restored exactly as it was, memberships included.
+
+- Turn it on once for the forest: `Enable-ADOptionalFeature 'Recycle Bin Feature' -Scope ForestOrConfigurationSet -Target corp.example`, or Active Directory Administrative Center > the domain > Enable Recycle Bin. The forest functional level must be Windows Server 2008 R2 or higher, and **it can't be turned off again**.
+- It protects only objects deleted **after** it was enabled.
+- Restore in Active Directory Administrative Center (the **Deleted Objects** container > Restore) or with PowerShell. When a whole OU was deleted, restore the OU first, then what was in it (or use Restore To with a new parent).
+
+```terminal
+#setup admin:enable recyclebin
+#setup admin:delete user "dpatel"
+PS C:\Windows\system32> Get-ADObject -Filter 'samAccountName -eq "dpatel"' -IncludeDeletedObjects | Restore-ADObject
+PS C:\Windows\system32> Get-ADUser dpatel | Select-Object Name, DistinguishedName
+
+Name      DistinguishedName
+----      -----------------
+Dev Patel CN=Dev Patel,OU=Sales,OU=Staff,DC=corp,DC=example
+```
+
+### Group managed service accounts
+
+A service that runs as an ordinary user account needs someone to change its password, and usually nobody does. A **group managed service account** (gMSA) has a long password that the domain changes by itself (every 30 days), and that only the computers you name can retrieve. It can run services, scheduled tasks and IIS application pools on several servers.
+
+- Once per forest, the DCs need a **KDS root key**: `Add-KdsRootKey -EffectiveImmediately`. Despite the name, the key can be used only 10 hours later (so every DC has it). In a lab you can backdate it: `Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))`.
+- Create the account: `New-ADServiceAccount -Name gmsa-web -DNSHostName gmsa-web.corp.example -PrincipalsAllowedToRetrieveManagedPassword 'Web servers'` (a group of computer accounts, or the computers themselves, such as `SRV1$`).
+- On each server: `Install-ADServiceAccount gmsa-web`, check with `Test-ADServiceAccount gmsa-web`, then set the service to log on as `CORP\gmsa-web$` with an empty password.
+
+### Fine-grained password policies
+
+The domain's own password and lockout policy comes from a GPO linked to the **domain** (normally the Default Domain Policy; unit 4), and there is only one per domain. When some accounts need stricter rules, such as 15 characters for administrators, use a **fine-grained password policy**, stored as a **password settings object** (PSO):
+
+- A PSO applies to **users** and **global security groups** directly, never to OUs.
+- When several PSOs reach a user, the one with the lowest **precedence** number wins; a PSO linked to the user directly beats one that reaches them through a group.
+- Make them in Active Directory Administrative Center (System > Password Settings Container) or with `New-ADFineGrainedPasswordPolicy` and `Add-ADFineGrainedPasswordPolicySubject`. `Get-ADUserResultantPasswordPolicy` shows which PSO a user gets (nothing means the domain policy).
+
+```terminal
+#setup DC1:New-ADFineGrainedPasswordPolicy -Name 'Admin passwords' -Precedence 10 -MinPasswordLength 15 -ComplexityEnabled $true -LockoutThreshold 5
+#setup DC1:Add-ADFineGrainedPasswordPolicySubject 'Admin passwords' -Subjects 'IT Admins'
+PS C:\Windows\system32> Get-ADUserResultantPasswordPolicy arivera | Select-Object Name, Precedence, MinPasswordLength
+
+Name            Precedence MinPasswordLength
+----            ---------- -----------------
+Admin passwords         10                15
+```
+
+@try
+@setup admin
+enable recyclebin
+delete user "dpatel"
+@task t1 | AD DS | 10 | admin
+Dev Patel's account was deleted by mistake this morning. The Recycle Bin is on. Bring the account back, with its groups.
+@check admin | dpatel is back in Staff/Sales and in Sales
+user["dpatel"].ou == "OU=Sales,OU=Staff,DC=corp,DC=example"
+user["dpatel"].memberof has Sales
+@solution admin
+restore user "dpatel"
+@endtask
+@task t2 | AD DS | 10 | DC1
+The members of **IT Admins** need passwords of at least **15** characters; everyone else keeps the domain's policy. Create a fine-grained password policy **IT admin passwords** with precedence **10** and complexity on, and apply it to IT Admins.
+@check admin | arivera gets 15 characters, bcole still the domain's 7
+passwordpolicy(user=arivera).minlength == 15
+passwordpolicy(user=bcole).minlength == 7
+pso["IT admin passwords"].appliesto has "IT Admins"
+@hint New-ADFineGrainedPasswordPolicy, then Add-ADFineGrainedPasswordPolicySubject with -Subjects 'IT Admins'.
+@solution DC1
+New-ADFineGrainedPasswordPolicy -Name 'IT admin passwords' -Precedence 10 -MinPasswordLength 15 -ComplexityEnabled $true
+Add-ADFineGrainedPasswordPolicySubject 'IT admin passwords' -Subjects 'IT Admins'
+@endtask
+@task t3 | AD DS | 10 | DC1
+A new web application on **SRV1** needs a service account whose password nobody has to manage. Create the KDS root key (backdated so it can be used now, as in a lab), then the gMSA **gmsa-web** that only SRV1 may use.
+@check admin | the gMSA exists and SRV1 may retrieve its password
+gmsa["gmsa-web"].principals has SRV1
+@hint Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10)), then New-ADServiceAccount with -PrincipalsAllowedToRetrieveManagedPassword 'SRV1$'.
+@solution DC1
+Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))
+New-ADServiceAccount -Name gmsa-web -DNSHostName gmsa-web.corp.example -PrincipalsAllowedToRetrieveManagedPassword 'SRV1$'
+@endtask
+@end
+
+@quiz
+? You enable the AD Recycle Bin today. A user deleted last week: can you restore them from the Recycle Bin?
+- Yes, the Recycle Bin keeps everything deleted in the last 180 days
++ No, it only covers objects deleted after it was enabled
+- Yes, but without their group memberships
+! Objects deleted before the Recycle Bin was enabled are tombstones; they need an authoritative restore from backup.
+? Two PSOs reach a user through groups: precedence 20 (min. 12 characters) and precedence 5 (min. 10 characters). Which wins?
+- Precedence 20, because it is stricter
++ Precedence 5, because the lowest number wins
+- Neither: PSOs don't combine, so the domain policy applies
+! Precedence decides, not strictness: the lowest number wins.
+? New-ADServiceAccount fails with "Key does not exist". What is missing?
+- The AD Recycle Bin
++ A KDS root key that is already in effect
+- A fine-grained password policy for service accounts
+! gMSAs need a KDS root key in the forest, usable 10 hours after it is added unless it is backdated in a lab.
+? Can a fine-grained password policy be applied to an OU?
+- Yes, like a GPO
++ No: only to users and global security groups
+- Only to the Domain Controllers OU
+! PSOs are linked to users and global groups; to cover an OU, use a shadow group of its users.
+@end
+

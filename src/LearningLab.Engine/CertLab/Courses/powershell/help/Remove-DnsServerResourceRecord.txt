@@ -1,0 +1,24 @@
+SYNOPSIS: Deletes records from a DNS zone.
+DESCRIPTION:
+Remove-DnsServerResourceRecord deletes the records with a given name and type. When a name has several records of that type (round robin A records, two MX records), add -RecordData to remove just one of them.
+
+You can also pipe records from Get-DnsServerResourceRecord. It asks for confirmation; -Force skips that.
+
+A computer that registers itself dynamically will add its A record again at its next registration (every 24 hours, or at ipconfig /registerdns).
+PARAMETER ZoneName:
+The zone.
+PARAMETER Name:
+The record name, for example app.
+PARAMETER RRType:
+The record type: A, AAAA, CName, MX, NS, Ptr, Srv or Txt.
+PARAMETER RecordData:
+The data of the one record to remove, for example 10.10.0.60.
+PARAMETER InputObject:
+Records piped in from Get-DnsServerResourceRecord.
+PARAMETER Force:
+Deletes without asking.
+EXAMPLE: Remove-DnsServerResourceRecord -ZoneName corp.example -Name app -RRType A -RecordData 10.10.0.60 -Force
+Removes that one address from app.corp.example.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -Name wiki | Remove-DnsServerResourceRecord -ZoneName corp.example -Force
+Removes the wiki alias found by Get-DnsServerResourceRecord.
+RELATED: Get-DnsServerResourceRecord, Add-DnsServerResourceRecordA, Add-DnsServerResourceRecord

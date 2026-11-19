@@ -1,0 +1,21 @@
+NAME
+       nohup - run a command that keeps going after you log out
+
+SYNOPSIS
+       nohup COMMAND [ARGUMENT...]
+
+DESCRIPTION
+       When you log out, the shell sends the hang-up signal (SIGHUP) to the
+       programs it started, and most of them end. nohup starts COMMAND so
+       that it ignores this signal. Output that would go to the terminal is
+       written to nohup.out in the current directory (or in your home
+       directory) instead.
+
+       Add & to run it in the background.
+
+EXAMPLES
+           nohup ./long-job.sh &
+           nohup tar -czf /root/home.tgz /home > /root/tar.log 2>&1 &
+
+SEE ALSO
+       bash(1), jobs(1), disown(1), at(1), systemd-run(1)

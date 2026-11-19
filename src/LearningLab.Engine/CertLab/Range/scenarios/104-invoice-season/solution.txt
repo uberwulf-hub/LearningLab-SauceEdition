@@ -1,0 +1,10 @@
+## both alerts
+siem alerts
+## what Word started on each computer
+siem search source=proclog parent=*winword* --fields time,host,user,image,cmdline
+## the real chain from the start, one computer only
+siem search source=proclog host={{BADH}} --since {{T0}} --fields time,user,image,parent,cmdline
+siem search source=proclog host={{BADH}} image~winword --since {{T0}} --limit 1 --fields time,user,cmdline
+## where it went next
+siem search source=dns host={{BADH}} --since {{T0}} --limit 3
+siem search source=firewall src={{BADIP}} --since {{T0}} --count-by dst

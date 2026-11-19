@@ -1,0 +1,52 @@
+title: A job that runs at night
+level: Intermediate
+kind: Windows
+topic: Windows
+teaser: what a scheduled task really runs
+points: 60
+order: 83
+host: windows
+answer: {{TOKEN}}
+var: TASK = pick:OneDriveSyncCheck|AdobeUpdateHelper|PrinterCleanup|EdgeCacheTask|DriverHealth
+var: TOKEN = hex:10
+var: HOUR = num:1-4
+
+@intro
+You are on a pretend Windows computer. Windows' Task Scheduler runs programs on a timer,
+and attackers like to hide there among the many real tasks. Someone added a task that
+runs a PowerShell script every night at {{HOUR}} a.m. and passes it a secret token on its
+command line. Give that token.
+
+@winsetup
+New-Item -ItemType Directory -Path 'C:\ProgramData\{{TASK}}' -Force | Out-Null
+Set-Content -Path 'C:\ProgramData\{{TASK}}\run.ps1' -Value '# nightly helper'
+$a = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -File C:\ProgramData\{{TASK}}\run.ps1 -Token {{TOKEN}}'
+$t = New-ScheduledTaskTrigger -Daily -At '{{HOUR}}:00'
+Register-ScheduledTask -TaskName '{{TASK}}' -TaskPath '\' -Action $a -Trigger $t -User 'SYSTEM' | Out-Null
+
+@solution
+Get-ScheduledTask -TaskPath '\' | Select-Object TaskName, State
+(Get-ScheduledTask -TaskName '{{TASK}}').Actions | Format-List Execute, Arguments
+
+@walkthrough
+Get-ScheduledTask lists every task; most live in folders under \Microsoft\Windows\.
+The ones in the top folder (\) are usually added by programs or people:
+
+    Get-ScheduledTask -TaskPath '\' | Select-Object TaskName, State
+
+{{TASK}} sounds like a normal helper, but its action is what matters:
+
+    (Get-ScheduledTask -TaskName '{{TASK}}').Actions | Format-List Execute, Arguments
+
+It starts hidden PowerShell with a script in C:\ProgramData and -Token {{TOKEN}}. A task
+is a favourite way to survive restarts; defenders check each task's Actions, not its
+name.
+
+@hint 5
+Get-ScheduledTask lists the scheduled tasks. Tasks added by people or programs usually sit in the top folder, TaskPath \.
+
+@hint 10
+Names can lie. Look at what a suspicious task runs: (Get-ScheduledTask -TaskName NAME).Actions
+
+@hint 15
+(Get-ScheduledTask -TaskName '{{TASK}}').Actions | Format-List Execute, Arguments - the value after -Token is the answer.

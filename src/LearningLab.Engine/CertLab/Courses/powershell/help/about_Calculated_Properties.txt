@@ -1,0 +1,58 @@
+TOPIC
+    about_Calculated_Properties
+
+SHORT DESCRIPTION
+    Making new columns with a hashtable of a name and an expression.
+
+LONG DESCRIPTION
+    Select-Object, Format-Table, Format-List, Sort-Object and Group-Object
+    accept a hashtable where they would normally take a property name. The
+    hashtable says what to call the new property and how to work out its
+    value from each object:
+
+        Get-ChildItem C:\LabFiles -File |
+            Select-Object Name,
+                @{ Name = 'SizeKB'; Expression = { $_.Length / 1KB } }
+
+    Inside the Expression script block, $_ is the current object. The
+    keys can be shortened: n or Label for Name, e for Expression.
+
+  Select-Object
+    With Select-Object the result is a new object that really has the
+    property, so later commands in the pipeline can sort, filter or
+    export it:
+
+        Get-Process | Select-Object Name,
+            @{ n = 'MemMB'; e = { [math]::Round($_.WS / 1MB, 1) } } |
+            Sort-Object MemMB -Descending |
+            Export-Csv C:\LabFiles\memory.csv -NoTypeInformation
+
+  Format-Table
+    Format-Table accepts extra keys that only change the display: Width,
+    Alignment (Left, Center, Right) and FormatString. The output is text
+    for the screen, so do not pipe it to other commands.
+
+        Get-ChildItem C:\LabFiles -File | Format-Table Name,
+            @{ Label = 'Size'; Expression = { $_.Length };
+               FormatString = 'N0'; Alignment = 'Right' }
+
+  Sort-Object
+    Sort-Object takes Expression with Ascending or Descending, so each key
+    can sort its own way:
+
+        Get-Service | Sort-Object @{ e = 'Status'; Descending = $true },
+            @{ e = 'Name'; Ascending = $true }
+
+  Renaming a property
+    An expression may also be a plain property name in quotes, which is a
+    quick way to rename a column:
+
+        Get-Service -ComputerName WIN-SRV1 |
+            Select-Object @{ n = 'Service'; e = 'Name' }, Status
+
+SEE ALSO
+    about_Hash_Tables
+    Select-Object
+    Format-Table
+    Sort-Object
+    about_Objects

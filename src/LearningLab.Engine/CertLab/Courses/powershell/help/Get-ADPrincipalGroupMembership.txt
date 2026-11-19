@@ -1,0 +1,13 @@
+SYNOPSIS: Lists the groups a user, computer or group is a direct member of.
+DESCRIPTION:
+Get-ADPrincipalGroupMembership looks from the member's side: which groups is bcole in? It returns the direct groups, including the primary group (normally Domain Users), which the MemberOf property leaves out.
+Groups reached only through nesting are not listed; follow them with Get-ADGroupMember -Recursive from the other side, or repeat this cmdlet on each group.
+PARAMETER Identity:
+The user, computer or group. Position 0, and takes pipeline input.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADPrincipalGroupMembership bcole | Select-Object Name
+Bianca Cole's groups: Domain Users and Sales.
+EXAMPLE: Get-ADPrincipalGroupMembership Sales
+The groups the Sales group itself is nested in, such as FS-Sales-Modify.
+RELATED: Add-ADPrincipalGroupMembership, Get-ADGroupMember, Get-ADUser

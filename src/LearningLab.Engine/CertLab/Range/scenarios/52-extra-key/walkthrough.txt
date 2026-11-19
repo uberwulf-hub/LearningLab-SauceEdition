@@ -1,0 +1,20 @@
+The attacker is gone; their footholds are still on the box. You are cleaning up.
+
+1. The way in. grep -Ei 'accepted|failed|new user' /var/log/secure shows the web account {{USER}} signed
+   in from {{ATKIP}} after a failed try, then a "new user" line a few minutes later.
+
+2. The extra administrator. cut -d: -f1,3,7 /etc/passwd lists the accounts; getent group wheel shows who
+   can become root. {{ROGUE}} is there and you did not create it - that is the attacker's account. In its
+   home is a dropped note, .note.txt, which holds the flag.
+
+3. The hidden backdoor. A set-user-ID copy of a shell runs as its owner (root) for anyone, so it is a quiet
+   way back to root. find / -perm -4000 -type f lists set-user-ID files; the odd one under /usr/local/bin
+   (/usr/local/bin/{{BDNAME}}) is it.
+
+4. Clean up before it is used. userdel -r {{ROGUE}} removes the account and its home; rm -f
+   /usr/local/bin/{{BDNAME}} removes the backdoor. Leave the account and the attacker wires in permanent
+   passwordless root with a sudoers drop-in.
+
+For real: once someone is in, they add accounts, set-user-ID binaries, cron jobs and sudoers rules to stay.
+Audit new users and group membership, scan for unexpected set-user-ID files, and keep the web account from
+having a login shell or a weak password in the first place.

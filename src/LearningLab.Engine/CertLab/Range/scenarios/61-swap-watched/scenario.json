@@ -1,0 +1,28 @@
+{
+    "base": "10-swap-meet",
+    "id": "swap-watched",
+    "title": "Swap Meet, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Beginner",
+    "order": 2,
+    "summary": "The little shop server from Swap Meet, but the owner's nephew now reads the logs. He doesn't mind a quick look around - he minds wrong passwords and people emptying the file drop.",
+    "story": "{{CO}} (made up) asked you back to test store1 on 10.10.11.0/24, and this time someone checks its logs every few minutes. You start on scout. The watcher counts failed sign-ins, password guessing and files copied off the FTP drop. Take only what you need and use passwords you actually found.",
+    "goal": "Capture both flags without raising the alarm, and keep the quiet bonus.",
+    "skills": "quiet recon, anonymous FTP (one file, not all of them), ssh, sudo -l, staying under the radar",
+    "quietPoints": 100,
+    "watch": [ "store1" ],
+    "noisySolution": "noisy.txt",
+    "defenderRules": {
+        "count": { "login-failed": 3, "password-guessing": 6, "ftp-read": 2 },
+        "budget": 9, "window": 1800, "react": 240, "reset": false, "isolate": false,
+        "watches": "failed sign-ins, password guessing and lots of files copied off the FTP drop"
+    },
+    "hints": [
+        { "text": "What to think about first: this defender is slow and patient, and it only counts three things - wrong passwords, password-guessing tools, and files being downloaded from the FTP server. A scan of the server, reading one note and one correct sign-in all look like normal work. So plan to touch as little as possible and never guess.", "cost": 3 },
+        { "text": "Look first, quietly: 'nmap -sn 10.10.11.0/24' asks which addresses are awake (no doors knocked), and 'nmap -sV 10.10.11.20' checks just that server's common ports. You will see FTP (21, a file-sharing service) and ssh (22, remote sign-in). The Defender tab shows what has been noticed so far.", "cost": 5 },
+        { "text": "FTP often lets anyone in with the name 'anonymous'. 'ftp 10.10.11.20', type anonymous, then anything as the password. 'cd pub' and 'ls' list the files - but each file you 'get' is one more download the watcher counts. Look at the names first and fetch only the one that sounds useful (a note for new staff), then 'bye' and read it with cat.", "cost": 8 },
+        { "text": "The note holds {{USER}}'s temporary password. Type it carefully: a wrong password is exactly what this watcher is looking for. 'ssh {{USER}}@10.10.11.20', answer yes to the new-host question, then the password. 'cat flag.txt' shows the user flag.", "cost": 12 },
+        { "text": "Last step: 'sudo -l' lists the one program {{USER}} may run as root - on this run {{SUDOBIN}}. Use it to print root's flag: {{SUDORUN}}. That is it: two flags, no guessing, one file downloaded, and the watcher never stirs.", "cost": 16 }
+    ]
+}

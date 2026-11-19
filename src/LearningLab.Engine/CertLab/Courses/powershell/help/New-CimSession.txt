@@ -1,0 +1,13 @@
+SYNOPSIS: Opens a reusable connection for CIM commands to another computer.
+DESCRIPTION:
+A CIM session connects once and is reused by every command you give it with -CimSession: Get-CimInstance, Invoke-CimMethod, and the CIM-based modules such as ScheduledTasks (Get-ScheduledTask -CimSession). It uses WS-Management, so the other computer's WinRM service must be running and listening.
+PARAMETER ComputerName:
+The computers to connect to (localhost by default). Position 0.
+PARAMETER Credential:
+Another account.
+PARAMETER Name:
+A friendly name for the session.
+EXAMPLE: $s = New-CimSession -ComputerName WIN-SRV1; Get-CimInstance -CimSession $s -ClassName Win32_OperatingSystem
+EXAMPLE: Get-ScheduledTask -CimSession $s -TaskPath \
+Tasks of the other computer.
+RELATED: Get-CimSession, Remove-CimSession, Get-CimInstance

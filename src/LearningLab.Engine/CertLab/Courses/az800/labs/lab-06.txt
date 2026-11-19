@@ -1,0 +1,80 @@
+# Lab: lab-06 | Hybrid identity and a DC in Azure | u06 | 40
+Harborline is moving its mail and files to Microsoft 365. Prepare the people's sign-in names, sync the staff with pass-through authentication, make sign-in survive a server failure, and get Azure ready for a domain controller of its own.
+
+@vars
+dept = Finance | HR
+disk = ntds | addsdata
+@endvars
+
+@setup admin
+new user name="Print Kiosk" sam=kiosk1 upn=kiosk1@corp.example password=Harbor#2026 path="CN=Users,DC=corp,DC=example"
+
+@task t01 | Hybrid identity | 25 | DC1
+People must sign in to Microsoft 365 with their public address. Add the UPN suffix **harborline.example** to the forest and give it to every user in `Staff/{dept}` (for example `ewalsh@harborline.example`). Don't change anyone else.
+@check admin | the suffix exists and the {dept} people use it
+forest.upnsuffixes has harborline.example
+@check DC1 | every {dept} user's UPN ends in harborline.example, the Sales users' don't
+(Get-ADUser -Filter * -SearchBase 'OU={dept},OU=Staff,DC=corp,DC=example' | Where-Object { $_.UserPrincipalName -notlike '*@harborline.example' }).Count -eq 0 -and (Get-ADUser bcole).UserPrincipalName -eq 'bcole@corp.example'
+@hint Set-ADForest -UPNSuffixes @{Add='harborline.example'}, then Get-ADUser -SearchBase 'OU={dept},OU=Staff,...' piped to Set-ADUser -UserPrincipalName.
+@solution DC1
+Set-ADForest -Identity corp.example -UPNSuffixes @{Add='harborline.example'}
+Get-ADUser -Filter * -SearchBase 'OU={dept},OU=Staff,DC=corp,DC=example' | ForEach-Object { Set-ADUser $_ -UserPrincipalName ($_.SamAccountName + '@harborline.example') }
+@explain
+The cloud sign-in name is the on-premises UPN when its suffix is a verified domain of the tenant. Doing this before the first sync avoids people starting on the onmicrosoft name and changing later.
+@endtask
+
+@task t02 | Hybrid identity | 25 | admin
+Install **Microsoft Entra Connect Sync** on **SRV1**. Passwords must be checked by Harborline's own domain controllers at every sign-in (a disabled account must stop working at once), with seamless single sign-on. Sync only the OU `Staff`: the kiosk account in Users stays out.
+@check admin | pass-through authentication with seamless SSO on SRV1
+connect.server == SRV1
+connect.signin == PTA
+connect.sso == Yes
+@check admin | Staff is in the tenant, the kiosk account isn't
+cloud.user["fhaddad"]
+not cloud.user["kiosk1"]
+@hint "Checked on premises at every sign-in" is pass-through authentication. Customize the install to choose OU filtering.
+@solution admin
+connect install server=SRV1 signin=PTA sso=yes ous="OU=Staff,DC=corp,DC=example"
+@explain
+PTA hands each password check to an agent that asks a DC, so account state on premises applies immediately. Password hash sync would only see a disabled account at the next sync.
+@endtask
+
+@task t03 | Hybrid identity | 15 | admin
+SRV1 holds the only pass-through authentication agent: if it stops, nobody can sign in to Microsoft 365. Add agents on **FS1** and **CORE1**.
+@check admin | three authentication agents
+connect.ptaagents has FS1
+connect.ptaagents has CORE1
+@solution admin
+connect ptaagent FS1
+connect ptaagent CORE1
+@explain
+Agents are independent and all active; three on different servers is the recommended minimum.
+@endtask
+
+@task t04 | Hybrid identity | 20 | admin
+Prepare **AZ-DC3** to become a domain controller: its private IP must never change, and the directory will live on a new 64 GB data disk named **{disk}** with the caching AD DS needs.
+@check admin | static IP and a data disk without host caching
+azure.vm["AZ-DC3"].ipallocation == Static
+azure.vm["AZ-DC3"].disk["{disk}"].caching == None
+azure.vm["AZ-DC3"].disk["{disk}"].sizegb == 64
+@solution admin
+azure vm AZ-DC3 ipallocation=Static
+azure vm AZ-DC3 disk name={disk} size=64 caching=None
+@explain
+The static address is set on the NIC in Azure (Windows stays on DHCP). Host caching None keeps the directory's writes safe on the data disk.
+@endtask
+
+@task t05 | Hybrid identity | 15 | admin
+Clients in Azure must find the domain and prefer AZ-DC3. Point `vnet-hybrid` at AZ-DC3 (`10.50.1.5`) and DC1 (`10.10.0.10`), and create the AD site **Azure** with the subnet **10.50.0.0/16** on the default site link.
+@check admin | VNet DNS and the Azure site
+azure.vnetdns has 10.50.1.5
+azure.vnetdns has 10.10.0.10
+subnet["10.50.0.0/16"].site == Azure
+sitelink["DEFAULTIPSITELINK"].sites has Azure
+@solution admin
+azure vnetdns 10.50.1.5,10.10.0.10
+new site name=Azure link=DEFAULTIPSITELINK
+new subnet name=10.50.0.0/16 site=Azure
+@explain
+VNet DNS servers make every VM in it use the domain's DNS. The site and subnet tell clients in Azure to use the DC in their own site, and the site link sets how replication reaches it.
+@endtask

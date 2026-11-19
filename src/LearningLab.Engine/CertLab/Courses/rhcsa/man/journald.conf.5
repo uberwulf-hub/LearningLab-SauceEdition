@@ -1,0 +1,74 @@
+NAME
+       journald.conf - settings of the systemd journal
+
+SYNOPSIS
+       /etc/systemd/journald.conf
+       /etc/systemd/journald.conf.d/*.conf
+
+DESCRIPTION
+       systemd-journald collects log messages from the kernel, from services
+       and from programs, and stores them in the journal, which journalctl
+       reads. Its settings are in the [Journal] section of
+       /etc/systemd/journald.conf (drop-in files in journald.conf.d override
+       them). The shipped file has every setting commented out, showing the
+       default. After a change run systemctl restart systemd-journald.
+
+SETTINGS
+       Storage=auto|persistent|volatile|none
+              Where the journal is kept.
+              volatile: only in memory, under /run/log/journal; lost at
+              every reboot.
+              persistent: on disk, under /var/log/journal (created if
+              needed); kept across reboots.
+              auto (the default): on disk if /var/log/journal exists,
+              otherwise in memory. On RHEL 9 that directory does not exist
+              at first, so the journal is lost at reboot until you change
+              this.
+              none: keep nothing.
+
+       Compress=yes|no
+              Compress large entries.
+
+       SystemMaxUse=SIZE, SystemKeepFree=SIZE
+              Limit the disk space the persistent journal may use, or keep
+              this much free (for example 500M). By default 10% (max 4G) and
+              15% of the file system.
+
+       RuntimeMaxUse=SIZE
+              The same for the journal in /run.
+
+       MaxRetentionSec=TIME
+              Remove entries older than this (such as 1month).
+
+       ForwardToSyslog=yes|no
+              Pass messages on to a syslog socket. The default is no: on
+              RHEL 9 rsyslog reads the journal itself (its imjournal
+              module) and writes /var/log/messages and the other text logs.
+
+EXAMPLES
+       Keep the journal across reboots:
+
+           mkdir -p /etc/systemd/journald.conf.d
+           printf '[Journal]\nStorage=persistent\n' > /etc/systemd/journald.conf.d/00-keep.conf
+           systemctl restart systemd-journald
+           ls /var/log/journal
+
+       Or edit the main file: remove the # in front of Storage= and set it:
+
+           sed -i 's/^#Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
+           systemctl restart systemd-journald
+
+       After a reboot, see earlier boots:
+
+           journalctl --list-boots
+           journalctl -b -1
+
+FILES
+       /run/log/journal/
+              The journal in memory.
+
+       /var/log/journal/
+              The persistent journal.
+
+SEE ALSO
+       journalctl(1), systemd-journald(8), rsyslogd(8)

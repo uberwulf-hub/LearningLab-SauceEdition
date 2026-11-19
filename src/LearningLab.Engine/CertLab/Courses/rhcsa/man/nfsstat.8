@@ -1,0 +1,25 @@
+NAME
+       nfsstat - show NFS statistics
+
+SYNOPSIS
+       nfsstat [-c] [-s] [-m]
+
+DESCRIPTION
+       nfsstat prints counters kept by the kernel's NFS client and server:
+       how many remote procedure calls were made, how many were retried, and
+       per operation. A rising retrans count points to network or server
+       trouble.
+
+OPTIONS
+       -c     Client statistics only.
+
+       -s     Server statistics only.
+
+       -m     List the NFS mounts with their options (version, timeouts).
+
+EXAMPLES
+           nfsstat -c
+           nfsstat -m
+
+SEE ALSO
+       mount.nfs(8), showmount(8)

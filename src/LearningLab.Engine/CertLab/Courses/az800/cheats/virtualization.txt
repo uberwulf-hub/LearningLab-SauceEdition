@@ -1,0 +1,52 @@
+# Sheet: virtualization | Hyper-V and Windows Server containers | Virtualization
+## Virtual machines
+Install-WindowsFeature Hyper-V -IncludeManagementTools -Restart :: the role (needs VT-x / AMD-V and SLAT)
+New-VM -Name X -Generation 2 -MemoryStartupBytes 4GB -NewVHDPath ... -NewVHDSizeBytes 60GB -SwitchName LAN :: a new VM with a new disk
+Generation 2 :: UEFI, Secure Boot, vTPM, SCSI boot, VHDX only; generation can't change
+Generation 1 :: BIOS, IDE boot (2 TB), legacy adapter for PXE; old guests only
+Set-VMProcessor X -Count 2 :: processors (VM off)
+Set-VMMemory X -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 4GB -MaximumBytes 8GB :: dynamic memory (VM off to switch it)
+Get-VM | Format-Table Name, State, Generation, Version :: VMs, generation and configuration version
+Update-VMVersion X :: raise the configuration version (VM off, one-way)
+Set-VMHost -EnableEnhancedSessionMode $true :: clipboard, drives, audio in VMConnect (off by default on servers)
+Enable-VMIntegrationService -VMName X -Name 'Guest Service Interface' :: needed for Copy-VMFile
+Set-VM X -AutomaticStartAction Start -AutomaticStopAction ShutDown :: what happens when the host restarts
+## Nested virtualization
+Set-VMMemory X -DynamicMemoryEnabled $false :: dynamic memory must be off
+Set-VMProcessor X -ExposeVirtualizationExtensions $true :: VM off
+Set-VMNetworkAdapter -VMName X -MacAddressSpoofing On :: inner VMs reach the network (or NAT inside)
+## Virtual switches
+New-VMSwitch -Name LAN -NetAdapterName 'Ethernet 2' :: external (one per physical adapter); -AllowManagementOS
+New-VMSwitch -Name X -SwitchType Internal :: VMs and the host
+New-VMSwitch -Name X -SwitchType Private :: VMs only
+Connect-VMNetworkAdapter -VMName X -SwitchName Y :: move a VM to another switch
+New-VMSwitch -NetAdapterName A, B -EnableEmbeddedTeaming $true :: Switch Embedded Teaming
+## Virtual hard disks
+New-VHD -Path x.vhdx -SizeBytes 60GB -Dynamic | -Fixed :: a new disk
+New-VHD -Path child.vhdx -ParentPath base.vhdx -Differencing :: changes only; never modify the parent
+Convert-VHD -Path a.vhd -DestinationPath a.vhdx :: change format or type (disk not in use)
+Resize-VHD -Path x.vhdx -SizeBytes 150GB :: grow or shrink
+Add-VMHardDiskDrive -VMName X -Path x.vhdx :: attach a disk
+VHD / VHDX :: 2040 GB / 64 TB, power-failure resilient
+## Checkpoints
+Set-VM -Name X -CheckpointType Production | ProductionOnly | Standard | Disabled :: the kind of checkpoint
+Checkpoint-VM -Name X -SnapshotName 'Before patch' :: take one
+Get-VMCheckpoint / Restore-VMCheckpoint / Remove-VMCheckpoint :: list, apply, delete (merges the .avhdx)
+Production :: VSS in the guest, no memory; applied VM is off
+Standard :: memory and device state; not for DCs or databases
+## Moving and protecting VMs
+Live migration :: running VM to another host (cluster or shared-nothing); CredSSP or Kerberos delegation
+Storage migration :: move a running VM's files
+Hyper-V Replica :: asynchronous copy every 30 s, 5 or 15 min; manual failover
+## Containers
+Install-WindowsFeature Containers :: the feature (restart), then a runtime: Docker CE, Mirantis or containerd
+Process isolation :: shared kernel; image build = host build
+Hyper-V isolation (--isolation=hyperv) :: own kernel; same or older images; needs Hyper-V
+mcr.microsoft.com/windows/servercore:ltsc2022 :: .NET Framework, IIS, classic apps
+mcr.microsoft.com/windows/nanoserver:ltsc2022 :: smallest, modern .NET
+docker pull IMAGE:TAG / docker images / docker rmi IMAGE :: images
+docker run -d --name web -p 8080:80 IMAGE :: background container, host port 8080 to container 80
+docker ps -a / docker stop / docker start / docker rm :: containers
+docker exec -it web powershell / docker inspect web :: inside a container / details
+docker build -t NAME . :: build from a Dockerfile (FROM, RUN, COPY, EXPOSE, CMD)
+docker network ls :: nat (default), transparent, l2bridge, l2tunnel, overlay

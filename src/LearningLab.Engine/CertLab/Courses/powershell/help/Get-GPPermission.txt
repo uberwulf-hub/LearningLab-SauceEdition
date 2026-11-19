@@ -1,0 +1,23 @@
+SYNOPSIS: Shows who has which permissions on a Group Policy Object.
+DESCRIPTION:
+GPO permissions decide two things: who may edit the GPO, and who it applies to. A GPO applies only to users and computers that have both Read and Apply Group Policy (the GpoApply level); by default that is Authenticated Users.
+Levels: GpoRead (read only), GpoApply (read and apply), GpoEdit (edit settings), GpoEditDeleteModifySecurity (full control) and GpoCustom.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER TargetName:
+One user, group or computer to check.
+PARAMETER TargetType:
+What TargetName is: User, Group, Computer or WellKnownGroup.
+PARAMETER All:
+Lists every permission entry.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-GPPermission "Sales Desktop" -All | Select-Object Trustee, Permission
+Everyone with rights on the GPO.
+EXAMPLE: Get-GPPermission "Sales Desktop" -TargetName Sales -TargetType Group
+Only the Sales group's permission.
+RELATED: Set-GPPermission, Get-GPO

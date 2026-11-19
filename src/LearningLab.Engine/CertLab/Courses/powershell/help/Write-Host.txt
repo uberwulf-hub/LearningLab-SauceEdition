@@ -1,0 +1,22 @@
+SYNOPSIS: Writes text straight to the console.
+DESCRIPTION:
+Write-Host shows text to the person at the console, optionally in colour. The text does not go down the pipeline: you cannot capture it in a variable, sort it or save it with Out-File. Since PowerShell 5.0 it goes to the information stream (number 6), so 6>&1 or 6> file can still catch it.
+
+Use Write-Host for messages to people, and Write-Output (or just a value on its own) for data.
+PARAMETER Object:
+What to show; several values are joined with spaces.
+PARAMETER NoNewline:
+Does not end the line, so the next text continues on it.
+PARAMETER Separator:
+What goes between several values instead of a space.
+PARAMETER ForegroundColor:
+The text colour (Red, Green, Yellow, Cyan...). The practice console shows text in one colour.
+PARAMETER BackgroundColor:
+The background colour.
+EXAMPLE: Write-Host 'Backup finished' -ForegroundColor Green
+A message to the person at the console.
+EXAMPLE: $x = Write-Host 'hello'; $null -eq $x
+Prints hello and then True: nothing reached $x.
+EXAMPLE: Write-Host 1, 2, 3 -Separator ' + '
+Prints 1 + 2 + 3.
+RELATED: Write-Output, Write-Information, Out-Host

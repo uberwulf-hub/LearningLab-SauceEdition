@@ -1,0 +1,9 @@
+SYNOPSIS: Shuts the computer down.
+DESCRIPTION:
+Stop-Computer turns Windows off. A real computer then needs someone to press its power button; the practice machines start again at once, so you can go on.
+PARAMETER ComputerName:
+The computers to shut down. Position 0.
+PARAMETER Force:
+Shuts down even if other users are signed in.
+EXAMPLE: Stop-Computer -ComputerName WIN-CL1 -Force
+RELATED: Restart-Computer

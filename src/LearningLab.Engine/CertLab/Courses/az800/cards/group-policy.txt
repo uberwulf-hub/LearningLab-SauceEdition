@@ -1,0 +1,39 @@
+# Deck: group-policy | Group Policy | Group Policy
+Order GPOs are applied in :: LSDOU: local, site, domain, then OUs from the top down (the last one wins)
+Within one container, which link order wins? :: Link order 1 (applied last)
+What does Block Inheritance stop? :: GPOs linked above the OU or domain, except enforced links
+Make a domain-linked GPO apply through Block Inheritance and win :: Enforce its link (Enforced belongs to the link)
+Two enforced links conflict :: The one linked higher up wins
+Link the existing GPO Sales lockdown to Staff/Sales :: `New-GPLink -Name 'Sales lockdown' -Target 'OU=Sales,OU=Staff,DC=corp,DC=example'`
+Where do domain accounts get their password and lockout policy? :: From GPOs linked to the domain (normally the Default Domain Policy)
+Password policy in a GPO linked to an OU :: Affects only local accounts of the computers in that OU
+Background refresh on members; on DCs :: Every 90 minutes plus up to 30 random; every 5 minutes
+Reapply every setting now on this computer :: `gpupdate /force`
+Refresh a remote computer at once :: `Invoke-GPUpdate -Computer CL1 -RandomDelayInMinutes 0`
+Invoke-GPUpdate's default delay :: A random delay of up to 10 minutes
+One set of ADMX files for every editor in the domain :: The central store: \\corp.example\SYSVOL\corp.example\Policies\PolicyDefinitions
+A GPO's two storage places :: The Group Policy container in AD and the Group Policy template in SYSVOL
+Switch off the empty user half of a GPO :: GPO status "User configuration settings disabled"
+Back up a GPO :: `Backup-GPO -Name 'Staff desktop' -Path C:\GpoBackups`
+What doesn't a GPO backup contain? :: Its links to sites, the domain and OUs
+Copy settings from a backup into a GPO in another domain :: Import-GPO, with a migration table for names and paths
+Template GPO with Administrative Template settings for new GPOs :: A starter GPO
+One GPO maps S: for Sales and F: for Finance :: Drive map preferences with item-level targeting
+Preferences vs policies :: Preferences write a value users may change, nothing greyed out; policies are enforced and removed when the GPO stops applying
+Default security filtering of a new GPO :: Authenticated Users: Read and Apply group policy
+Filter a GPO to Sales Managers and keep it working (MS16-072) :: Remove Authenticated Users, add Sales Managers, give Authenticated Users or Domain Computers Read
+Exclude one group from a GPO :: Deny Apply group policy for that group (Delegation > Advanced)
+Give a group Apply on a GPO with PowerShell :: `Set-GPPermission -Name 'Staff desktop' -TargetName 'Sales Managers' -TargetType Group -PermissionLevel GpoApply`
+Where is a WMI filter evaluated? :: On the computer processing the GPO
+WMI filter for client Windows only :: SELECT * FROM Win32_OperatingSystem WHERE ProductType = 1 (2 = DC, 3 = member server)
+How many WMI filters per GPO? :: One (a filter can serve many GPOs)
+Same restricted desktop on RDS servers whatever the users' OU :: Loopback processing, Replace, in a GPO linked to the servers' OU
+Loopback Merge: who wins a conflict? :: The user settings of the GPOs that reach the computer
+Where is the loopback setting? :: Computer Configuration > Administrative Templates > System > Group Policy
+Which GPOs applied for bcole on this PC, and why others didn't :: `gpresult /r /user bcole /scope user`
+Group Policy Results vs Modeling :: Results: what happened on a computer; Modeling: a what-if simulated by a DC
+RSoP report for CL1 and bcole in PowerShell :: `Get-GPResultantSetOfPolicy -Computer CL1 -User bcole -ReportType Html -Path C:\rsop.html`
+gpresult reason "Denied (Security)" :: The account lacks Read or Apply group policy on the GPO
+Who may create GPOs by default? :: Domain Admins and Group Policy Creator Owners
+Linking GPOs to an OU is a permission on :: The OU (its Delegation tab), not the GPO
+Recreate damaged default GPOs :: dcgpofix

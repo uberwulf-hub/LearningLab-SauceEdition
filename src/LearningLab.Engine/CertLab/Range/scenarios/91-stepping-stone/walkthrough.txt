@@ -1,0 +1,16 @@
+The web server was only a stepping stone to the machine that mattered.
+
+1. web. The access log shows {{ATKIP}} POSTing to /upload.php, then calling /uploads/{{SHELL}} with
+   commands in ?{{P}}=: first id, then cat ../config.php. {{SHELL}} is a web shell (the first flag is
+   inside it). config.php holds the order database's account for WIN-DB: svc_web and its password.
+   Remove the shell: rm -f /var/www/html/uploads/{{SHELL}}.
+
+2. WIN-DB. svc_web normally signs in only from the web server (10.10.31.10). One 4624 comes from
+   {{ATKIP}} with remote PowerShell: the password from config.php, used from outside. System event 7045
+   shows the service {{SVC}} ("{{SVC_DISP}}") being installed; its folder C:\ProgramData\{{SVC}} has
+   the second flag. Remove it (sc.exe delete {{SVC}}) and Disable-LocalUser svc_web. If you are too
+   slow, the service exports the orders.
+
+For real: an upload form must never let uploaded files run; keep secrets out of the web folder (or at
+least readable only by the web server); let a web account sign in only from the web server; and give it
+only the database rights it needs, not administrator.

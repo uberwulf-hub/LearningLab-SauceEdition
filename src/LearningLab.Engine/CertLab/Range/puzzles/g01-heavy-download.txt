@@ -1,0 +1,52 @@
+title: The heavy download
+level: Advanced
+kind: Log hunting
+topic: Log Hunting
+teaser: one request was much bigger than the rest
+points: 75
+order: 78
+answer: /backup/{{FILE}}
+var: FILE = pick:db-full.sql.gz|customers-2026.csv|hr-export.zip|site-backup.tar|mail-archive.pst
+var: ATK = ip
+var: BIG = num:180000000-900000000
+
+@intro
+~/access.log is a day of a web server's access log. Most requests are small pages. One
+request carried a very large file out of the building. Which path was downloaded?
+(Give the path as it appears in the log, starting with /.)
+
+@setup
+log=/home/player/access.log
+: > $log
+i=0
+for p in / /about.html /shop.php /img/logo.png /contact.html /css/site.css /js/app.js /shop.php?id=4; do
+  for ip in 198.51.100.21 203.0.113.40 198.51.100.77 203.0.113.12; do
+    i=$((i+1))
+    printf '%s - - [01/Mar/2026:%02d:%02d:11 +0000] "GET %s HTTP/1.1" 200 %d "-" "Mozilla/5.0"\n' $ip $((8+i%10)) $((i*7%60)) "$p" $((800+i*37)) >> $log
+  done
+done
+printf '%s - - [01/Mar/2026:02:13:40 +0000] "GET /backup/ HTTP/1.1" 200 2210 "-" "curl/8.2.1"\n' {{ATK}} >> $log
+printf '%s - - [01/Mar/2026:02:14:02 +0000] "GET /backup/{{FILE}} HTTP/1.1" 200 {{BIG}} "-" "curl/8.2.1"\n' {{ATK}} >> $log
+printf '%s - - [01/Mar/2026:02:14:30 +0000] "GET /backup/notes.txt HTTP/1.1" 404 196 "-" "curl/8.2.1"\n' {{ATK}} >> $log
+sort -R $log -o $log 2>/dev/null || true
+chown player: $log
+
+@solution
+head -3 access.log
+awk '{print $10, $7, $1}' access.log | sort -n | tail -3
+
+@walkthrough
+Each line's fields, split on spaces: 1 is the address, 7 the path, 9 the status and 10
+the number of bytes sent. Print the size first and sort numerically:
+
+    awk '{print $10, $7, $1}' access.log | sort -n | tail -3
+
+The last line, {{BIG}} bytes, is /backup/{{FILE}}, fetched by {{ATK}} with curl at 2 in
+the morning after it listed /backup/. A web root should never hold backups; and a
+transfer hundreds of times bigger than normal is exactly what data-loss alerts watch for.
+
+@hint 15
+The 10th space-separated field of each line is the size in bytes. Sort by it.
+
+@hint 25
+awk '{print $10, $7}' access.log | sort -n | tail - the biggest is last.

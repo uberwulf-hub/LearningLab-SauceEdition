@@ -1,0 +1,9 @@
+SYNOPSIS: Renames a local group.
+DESCRIPTION:
+The group keeps its SID and members; only the name changes.
+PARAMETER Name:
+The current name. Position 0.
+PARAMETER NewName:
+The new name. Position 1.
+EXAMPLE: Rename-LocalGroup -Name WebAdmins -NewName SiteAdmins
+RELATED: Set-LocalGroup

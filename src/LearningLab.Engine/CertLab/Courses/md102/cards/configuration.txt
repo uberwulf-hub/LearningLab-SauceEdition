@@ -1,0 +1,23 @@
+# Deck: configuration | Configuration profiles and scripts | Configuration
+The profile type with the full, searchable list of Windows settings, where new settings appear first :: The settings catalog
+The profile type for a CSP setting that no template or catalog entry offers :: Custom (an OMA-URI, a data type and a value)
+The OMA-URI pattern of a device-wide Policy CSP setting :: ./Device/Vendor/MSFT/Policy/Config/AREA/SETTING (./User/... for the signed-in user)
+Where Windows stores the MDM policies it received for the device :: HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\AREA
+List the policy areas that reached this PC :: `Get-ChildItem HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device`
+The profile type that makes a PC run only Microsoft Edge on one web page, signing in on its own :: Kiosk: single app, full-screen, auto logon (local account)
+The profile type that moves Windows Pro to Enterprise :: Edition upgrade and mode switch
+The template that sets the domain, name prefix and OU for hybrid joined Autopilot devices :: Domain Join
+A profile assigned to a user group applies to... :: every enrolled device the users of that group sign in to
+Including a user group and excluding a device group (or the reverse) :: Not supported: the exclusion is ignored. Use a filter instead.
+When a device is in both an included and an excluded group of the same kind :: The exclusion wins: it doesn't get the profile.
+The two modes of an assignment filter :: Include (only matching devices get it) and exclude (matching devices don't)
+Can an excluded group have a filter? :: No: filters go on included groups only, one per assignment.
+Two configuration profiles set one setting to different values on a device :: Both report Conflict and the setting isn't changed
+Collect MDM diagnostics of chosen areas into a cab file :: `mdmdiagnosticstool -area 'DeviceEnrollment;TPM' -cab C:\Temp\mdm.cab`
+Write an MDM diagnostic report into a folder :: `mdmdiagnosticstool -out C:\Temp\MDM`
+The agent that runs platform scripts, remediations and Win32 apps on Windows :: The Intune Management Extension (IME)
+How often a platform script runs :: Once per device (or user); again only if the script changes
+A remediation's detection script finds the problem: its exit code :: 1 (0 means no issue)
+The licences remediations need :: Windows Enterprise E3/E5 or Education A3/A5 (in Microsoft 365 E3/E5)
+The remediation states in the report :: Without issues, With issues, Issue fixed, Recurred, Error
+The page that shows how much of a GPO backup has MDM equivalents and migrates it :: Group Policy analytics (Devices > Group Policy analytics)

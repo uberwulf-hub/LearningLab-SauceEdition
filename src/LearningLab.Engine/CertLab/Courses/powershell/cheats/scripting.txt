@@ -1,0 +1,28 @@
+# Sheet: scripting | Scripting | Scripting
+## Scripts
+.\Report.ps1 :: run a script in the current folder
+C:\Scripts\Report.ps1 -Name x :: run a script by its path with a parameter
+. .\Tools.ps1 :: dot-source: keep its functions and variables
+param([string]$Name = 'world') :: parameters at the top of a script or function
+$PSScriptRoot :: the folder of the running script
+## Decisions and loops
+if ($a -gt 5) { } elseif ($a -gt 1) { } else { } :: if
+switch -Wildcard ($f) { '*.csv' { 'csv' } default { 'other' } } :: switch (every matching case runs)
+foreach ($x in $list) { } :: every item of a collection
+for ($i = 0; $i -lt 10; $i++) { } :: counting loop
+while ($ok) { } :: loop while true
+do { } until ($done) :: loop at least once
+break; continue :: leave the loop; next round
+## Functions
+function Get-Thing { param($Name) "thing $Name" } :: a function
+Get-Thing -Name a :: call it like a cmdlet (no commas, no parentheses)
+[CmdletBinding()] :: common parameters for the function
+[Parameter(Mandatory, ValueFromPipeline)] :: mandatory, takes pipeline objects
+[ValidateSet('a', 'b')] :: allowed values
+begin { } process { } end { } :: once, per object, once
+[CmdletBinding(SupportsShouldProcess)] :: -WhatIf and -Confirm; ask with $PSCmdlet.ShouldProcess()
+Write-Verbose 'step' :: a message shown with -Verbose
+$script:count = 1 :: change a variable of the script scope
+## Help and splatting
+<# .SYNOPSIS ... .DESCRIPTION ... .EXAMPLE ... #> :: comment-based help
+$p = @{ Name = 'x'; ValueOnly = $true }; Get-Variable @p :: splatting

@@ -1,0 +1,584 @@
+# Unit: u04 | 4. Variables, types and operators | Language
+
+Under the cmdlets, PowerShell is a full programming language. This unit covers what you need to store values, work with their types and compare and change them: variables, numbers and strings, arrays, hashtables and custom objects, and the operators that come with them. Everything here behaves the same in a script and at the prompt.
+
+## Lesson: l0401 | Variables
+
+A variable is a name that starts with `$`. You create it by assigning to it; there is no separate declaration. Names are not case-sensitive (`$Total` and `$total` are the same variable).
+
+```terminal
+PS C:\Windows\system32> $count = 3
+PS C:\Windows\system32> $name = 'WIN-SRV1'
+PS C:\Windows\system32> "$name has $count disks"
+WIN-SRV1 has 3 disks
+PS C:\Windows\system32> $count + 1
+4
+PS C:\Windows\system32> $missing
+PS C:\Windows\system32> $null -eq $missing
+True
+```
+
+A variable that was never set is simply `$null` (PowerShell does not complain unless you turn on `Set-StrictMode -Version Latest`).
+
+### Looking at variables
+
+- `Get-Variable` lists every variable of the session, `Get-Variable count` shows one, `Get-Variable -Name c* -ValueOnly` only the values.
+- `Remove-Variable count` deletes it; `$count = $null` keeps the name but empties it.
+- Names with unusual characters go in braces: `${my file count} = 4`.
+
+### Automatic variables
+
+PowerShell keeps some variables up to date by itself. You read them, you do not set them:
+
+- `$_` (also `$PSItem`): the current object in a pipeline script block.
+- `$PSVersionTable`, `$PSHOME`, `$HOME`, `$PID`, `$PROFILE`.
+- `$?` (did the last command succeed?), `$Error` (the recent errors, newest first), `$LASTEXITCODE` (the exit code of the last program).
+- `$true`, `$false`, `$null`.
+
+```terminal
+PS C:\Windows\system32> $HOME
+C:\Users\Administrator
+PS C:\Windows\system32> $PSVersionTable.PSVersion
+
+Major  Minor  Build  Revision
+-----  -----  -----  --------
+5      1      20348  2849
+```
+
+### A type for a variable
+
+Put a type in front of the first assignment and the variable keeps that type: every later value is converted, or refused.
+
+```terminal
+PS C:\Windows\system32> [int]$port = '8080'
+PS C:\Windows\system32> $port + 1
+8081
+PS C:\Windows\system32> $port = 'eighty'
+Cannot convert value "eighty" to type "System.Int32". Error: "Input string was not in a correct format."
+At line:1 char:1
++ $port = 'eighty'
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : MetadataError: (:) [], ArgumentTransformationMetadataException
+    + FullyQualifiedErrorId : RuntimeException
+```
+
+> Scope in short: a variable you set at the prompt lives in the *global* scope. A script or function gets its own scope: it can read the caller's variables, but assigning creates a new local variable. Unit 6 comes back to this.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Create a variable `$maxUsers` that always holds an integer, and set it to the text `'250'`. Then add 50 to it, so that `$maxUsers` is 300.
+@check WIN-SRV1 | $maxUsers is the integer 300
+$maxUsers -is [int] -and $maxUsers -eq 300
+@hint [int]$maxUsers = '250' converts the text; then $maxUsers += 50 (or $maxUsers = $maxUsers + 50).
+@solution WIN-SRV1
+[int]$maxUsers = '250'
+$maxUsers += 50
+$maxUsers
+@endtask
+@end
+
+@quiz
+? What is the value of a variable that was never assigned?
+- An empty string
++ $null
+- An error is shown
+! Without strict mode, reading an unset variable gives $null.
+? After `[int]$n = 5`, what does `$n = 'five'` do?
+- $n becomes the text 'five'
++ It fails: the text cannot be converted to an int, and $n stays 5
+- $n becomes 0
+! A typed variable converts every new value to its type, and refuses values it cannot convert.
+? Which variable holds the current object inside ForEach-Object { }?
+- $this
++ $_ (or $PSItem)
+- $input
+! $_ and $PSItem are the same automatic variable.
+@end
+
+## Lesson: l0402 | Types and casting
+
+Every value has a .NET type: `GetType()` tells you which. The type decides what operators and methods do.
+
+```terminal
+PS C:\Windows\system32> (42).GetType().Name
+Int32
+PS C:\Windows\system32> (4.2).GetType().Name
+Double
+PS C:\Windows\system32> ('42').GetType().Name
+String
+PS C:\Windows\system32> (Get-Date).GetType().Name
+DateTime
+PS C:\Windows\system32> 'text'.GetType()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     String                                   System.Object
+```
+
+### The left side decides
+
+For `+`, `-eq` and their friends, PowerShell converts the value on the **right** to the type of the value on the **left**:
+
+```terminal
+PS C:\Windows\system32> '10' + 5
+105
+PS C:\Windows\system32> 10 + '5'
+15
+PS C:\Windows\system32> '10' -eq 10.0
+True
+PS C:\Windows\system32> 7 / 2
+3.5
+PS C:\Windows\system32> 8 / 2
+4
+```
+
+Integers divide into a decimal number when the result is not whole, and stay integers when it is.
+
+### Casts
+
+`[type]value` converts. `-as [type]` converts too, but gives `$null` instead of an error when it cannot. `-is [type]` tests.
+
+```terminal
+PS C:\Windows\system32> [int]'42' + 1
+43
+PS C:\Windows\system32> [int]2.5
+2
+PS C:\Windows\system32> [int]3.5
+4
+PS C:\Windows\system32> [datetime]'2026-03-02'
+Monday, March 2, 2026 12:00:00 AM
+PS C:\Windows\system32> 'abc' -as [int]
+PS C:\Windows\system32> 42 -is [int]
+True
+PS C:\Windows\system32> [int]'abc'
+Cannot convert value "abc" to type "System.Int32". Error: "Input string was not in a correct format."
+At line:1 char:1
++ [int]'abc'
++ ~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [], RuntimeException
+    + FullyQualifiedErrorId : InvalidCastFromStringToInteger
+```
+
+> `[int]2.5` is 2 and `[int]3.5` is 4: .NET rounds a half to the nearest *even* number ("banker's rounding"). Use `[math]::Round(2.5, [System.MidpointRounding]::AwayFromZero)` if you need 3.
+
+Common type names you can write in brackets: `[int]`, `[long]`, `[double]`, `[decimal]`, `[string]`, `[char]`, `[bool]`, `[datetime]`, `[timespan]`, `[array]`, `[hashtable]`, `[pscustomobject]`, `[regex]`, `[version]`, `[ipaddress]`.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+The file `C:\LabFiles\settings.json` stores `"MaxUsers": 250`. Store in `$limit` the number of users **plus 10** as an integer (260). Read the text `'250'` from wherever you like (typing it is fine) but make sure the result is a number, not the text `25010`.
+@check WIN-SRV1 | $limit is the integer 260
+$limit -is [int] -and $limit -eq 260
+@hint With a string on the left, + joins text. Cast first: [int]'250' + 10.
+@solution WIN-SRV1
+$limit = [int]'250' + 10
+$limit
+@endtask
+@end
+
+@quiz
+? What does `'10' + 5` give?
++ 105
+- 15
+- An error
+! The left side is a string, so 5 is converted to a string and the two are joined.
+? What does `[int]2.5` give in PowerShell?
++ 2
+- 3
+- 2.5
+! Banker's rounding: a half goes to the nearest even number.
+? What does `'abc' -as [int]` give?
+- 0
+- An error
++ $null
+! -as returns $null when the conversion fails, where a cast would throw an error.
+@end
+
+## Lesson: l0403 | Arrays
+
+An array is an ordered list of values. The comma makes one; `@( )` makes one from whatever is inside (even nothing or a single item); `..` makes a range of integers.
+
+```terminal
+PS C:\Windows\system32> $servers = 'WIN-SRV1', 'WIN-CL1', 'DC01'
+PS C:\Windows\system32> $servers.Count
+3
+PS C:\Windows\system32> $servers[0]
+WIN-SRV1
+PS C:\Windows\system32> $servers[-1]
+DC01
+PS C:\Windows\system32> $servers[0..1]
+WIN-SRV1
+WIN-CL1
+PS C:\Windows\system32> $servers[5]
+PS C:\Windows\system32> 1..5 -join ','
+1,2,3,4,5
+PS C:\Windows\system32> $empty = @()
+PS C:\Windows\system32> $empty.Count
+0
+```
+
+- Index from 0; negative indexes count from the end (`-1` is the last item).
+- An index past the end gives `$null`, not an error.
+- `$a += 'x'` builds a **new** array one item longer. Arrays cannot grow in place (`$a.Add('x')` fails with "Collection was of a fixed size."). For many additions use `System.Collections.Generic.List[string]` or an ArrayList (see unit 14).
+
+### Searching an array
+
+```terminal
+PS C:\Windows\system32> $servers = 'WIN-SRV1', 'WIN-CL1', 'DC01'
+PS C:\Windows\system32> $servers -contains 'DC01'
+True
+PS C:\Windows\system32> 'WEB01' -in $servers
+False
+PS C:\Windows\system32> $servers -like 'WIN-*'
+WIN-SRV1
+WIN-CL1
+PS C:\Windows\system32> $servers -ne 'DC01'
+WIN-SRV1
+WIN-CL1
+```
+
+With an array on the left, `-eq`, `-ne`, `-like`, `-match` and the other comparison operators **filter**: they return the items that match, not `True` or `False`.
+
+### Properties of every item
+
+When you ask an array for a property it does not have, PowerShell asks each item and collects the answers (member enumeration):
+
+```terminal
+PS C:\Windows\system32> $servers = 'WIN-SRV1', 'WIN-CL1', 'DC01'
+PS C:\Windows\system32> $servers.Length
+3
+PS C:\Windows\system32> $servers.ToLower()
+win-srv1
+win-cl1
+dc01
+```
+
+`Length` is a property of the array itself (3), while `ToLower()` was called on every string.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Create `$ports` with the numbers 80, 443, 3389 and 5985, then add 22 at the end. Store in `$high` only the ports greater than 1000 (use a comparison operator on the array, not a loop).
+@check WIN-SRV1 | $ports holds 80, 443, 3389, 5985, 22
+($ports -join ',') -eq '80,443,3389,5985,22'
+@check WIN-SRV1 | $high holds 3389 and 5985
+($high -join ',') -eq '3389,5985'
+@hint $ports += 22; $high = $ports -gt 1000
+@solution WIN-SRV1
+$ports = 80, 443, 3389, 5985
+$ports += 22
+$high = $ports -gt 1000
+$high
+@endtask
+@end
+
+@quiz
+? `$a = 1, 2, 3`. What is `$a[-1]`?
++ 3
+- An error
+- 1
+! Negative indexes count from the end.
+? `$a = 5, 10, 15`. What does `$a -gt 7` return?
+- True
++ 10 and 15
+- False
+! With an array on the left, comparison operators return the matching items.
+? Why does `$a.Add(4)` fail on `$a = 1, 2, 3`?
++ Arrays have a fixed size; += builds a new array instead
+- Add needs two arguments
+- Arrays are read-only
+! Use $a += 4, or a List[int] / ArrayList when you add often.
+@end
+
+## Lesson: l0404 | Hashtables and custom objects
+
+A hashtable stores **key = value** pairs. Keys are not case-sensitive. It is the PowerShell way to keep settings, look things up, and build objects.
+
+```terminal
+PS C:\Windows\system32> $ports = @{ HTTP = 80; HTTPS = 443; WinRM = 5985 }
+PS C:\Windows\system32> $ports['HTTPS']
+443
+PS C:\Windows\system32> $ports.winrm
+5985
+PS C:\Windows\system32> $ports.SSH = 22
+PS C:\Windows\system32> $ports.Count
+4
+PS C:\Windows\system32> $ports.ContainsKey('RDP')
+False
+PS C:\Windows\system32> $ports.Remove('HTTP')
+PS C:\Windows\system32> $ports.Keys | Sort-Object
+HTTPS
+SSH
+WinRM
+```
+
+A plain hashtable does **not** keep the order you typed. Write `[ordered]` in front when order matters:
+
+```terminal
+PS C:\Windows\system32> $o = [ordered]@{ First = 1; Second = 2; Third = 3 }
+PS C:\Windows\system32> $o
+
+Name                           Value
+----                           -----
+First                          1
+Second                         2
+Third                          3
+```
+
+`$h.GetEnumerator()` gives the pairs one by one (each with a `Name`/`Key` and a `Value`), which is what you pipe to `Sort-Object` to sort a hashtable by value.
+
+### [pscustomobject]
+
+Cast a hashtable literal to `[pscustomobject]` and you get a real object with properties, in the order you wrote them. This is the usual way to output your own data from a script, because objects work with every cmdlet (Sort-Object, Export-Csv, Format-Table...).
+
+```terminal
+PS C:\Windows\system32> $o = [pscustomobject]@{ Name = 'WIN-SRV1'; Role = 'Server'; Cores = 4 }
+PS C:\Windows\system32> $o
+
+Name     Role   Cores
+----     ----   -----
+WIN-SRV1 Server     4
+
+
+PS C:\Windows\system32> $o.Cores * 2
+8
+PS C:\Windows\system32> $o | Add-Member -NotePropertyName Site -NotePropertyValue 'Lab'
+PS C:\Windows\system32> $o.Site
+Lab
+```
+
+> You cannot add a property just by assigning to it: `$o.Owner = 'IT'` fails with "The property 'Owner' cannot be found on this object." Use Add-Member, or build a new object with all the properties.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Create `$srv` as a `[pscustomobject]` with exactly these properties, in this order: `Name` = `WIN-SRV1`, `IP` = `10.0.10.11`, `Cores` = `4` (a number).
+@check WIN-SRV1 | $srv has Name, IP, Cores in this order
+($srv.psobject.Properties.Name -join ',') -eq 'Name,IP,Cores'
+@check WIN-SRV1 | the values are right and Cores is a number
+$srv.Name -eq 'WIN-SRV1' -and $srv.IP -eq '10.0.10.11' -and $srv.Cores -is [int] -and $srv.Cores -eq 4
+@hint $srv = [pscustomobject]@{ Name = 'WIN-SRV1'; IP = '10.0.10.11'; Cores = 4 }
+@solution WIN-SRV1
+$srv = [pscustomobject]@{ Name = 'WIN-SRV1'; IP = '10.0.10.11'; Cores = 4 }
+$srv
+@endtask
+@end
+
+@quiz
+? Which keeps the keys in the order you typed them?
+- @{ a = 1; b = 2 }
++ [ordered]@{ a = 1; b = 2 }
+- @( a = 1; b = 2 )
+! A plain hashtable orders keys by their hash; [ordered] keeps your order.
+? `$h = @{ Name = 'x' }`. What is `$h.NAME`?
++ x
+- $null
+- An error
+! Hashtable keys are not case-sensitive.
+? How do you add a property to an existing [pscustomobject]?
+- $o.NewProp = 1
++ $o | Add-Member -NotePropertyName NewProp -NotePropertyValue 1
+- $o.Add('NewProp', 1)
+! Assigning to a property that does not exist is an error on a custom object.
+@end
+
+## Lesson: l0405 | Comparison and regular expressions
+
+| Operator | Means |
+|---|---|
+| `-eq` `-ne` | equal, not equal |
+| `-gt` `-ge` `-lt` `-le` | greater, greater or equal, less, less or equal |
+| `-like` `-notlike` | wildcard match (`*` any text, `?` one character, `[a-c]` one of) |
+| `-match` `-notmatch` | regular expression match |
+| `-contains` `-in` | is the value in the collection? |
+| `-replace` | replace text found by a regular expression |
+| `-is` `-isnot` | type test |
+
+Comparisons ignore case. Put a `c` in front for a case-sensitive version (`-ceq`, `-clike`, `-cmatch`), or an `i` to say explicitly that case is ignored.
+
+```terminal
+PS C:\Windows\system32> 'PowerShell' -eq 'powershell'
+True
+PS C:\Windows\system32> 'PowerShell' -ceq 'powershell'
+False
+PS C:\Windows\system32> 'report-2026.csv' -like 'report-*.csv'
+True
+PS C:\Windows\system32> 'Error 404 at line 12' -match '\d+'
+True
+PS C:\Windows\system32> $Matches[0]
+404
+```
+
+### -match and $Matches
+
+`-match` with a single string on the left returns True or False and fills `$Matches` with what was found: `$Matches[0]` is the whole match, `$Matches[1]` the first group in parentheses, and named groups `(?<name>...)` appear by name.
+
+```terminal
+PS C:\Windows\system32> 'user=ada; id=7' -match 'user=(?<user>\w+); id=(\d+)'
+True
+PS C:\Windows\system32> $Matches.user
+ada
+PS C:\Windows\system32> $Matches[1]
+7
+```
+
+### -replace
+
+`-replace` takes a regular expression and a replacement; `$1`, `$2` in the replacement are the groups. Use **single quotes** around the replacement so that PowerShell does not try to expand `$1` as a variable.
+
+```terminal
+PS C:\Windows\system32> 'WIN-SRV1.lab.example.com' -replace '\..*$'
+WIN-SRV1
+PS C:\Windows\system32> '2026-03-02' -replace '(\d+)-(\d+)-(\d+)', '$3.$2.$1'
+02.03.2026
+PS C:\Windows\system32> 'a.b.c' -replace '.', '-'
+-----
+PS C:\Windows\system32> 'a.b.c' -replace '\.', '-'
+a-b-c
+```
+
+The third line replaced every character, because `.` in a regular expression means "any character". `\.` is a real dot.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+From the string `'Order 4711 shipped to Vienna'` store the order number (the digits, as text) in `$order`, using `-match` and `$Matches`.
+@check WIN-SRV1 | $order is 4711
+"$order" -eq '4711'
+@hint 'Order 4711 shipped to Vienna' -match '\d+' then $order = $Matches[0]
+@solution WIN-SRV1
+'Order 4711 shipped to Vienna' -match '\d+'
+$order = $Matches[0]
+@endtask
+@end
+
+@quiz
+? Which operator compares with wildcards like `*.log`?
+- -match
++ -like
+- -eq
+! -like uses wildcards; -match uses regular expressions.
+? What does `'a.b' -replace '.', 'x'` give?
++ xxx
+- axb
+- a.b
+! An unescaped dot matches any character, so all three characters are replaced.
+? Where does `-match` put the text found by the first group in parentheses?
+- $Matches[0]
++ $Matches[1]
+- $_
+! $Matches[0] is the whole match; groups are numbered from 1.
+@end
+
+## Lesson: l0406 | Strings
+
+### Quotes
+
+- **Single quotes** `'...'`: the text exactly as written. To put a single quote inside, double it: `'it''s'`.
+- **Double quotes** `"..."`: variables and `$( )` are expanded, and the backtick escapes work: `` `n `` new line, `` `t `` tab, `` `$ `` a literal dollar sign.
+
+```terminal
+PS C:\Windows\system32> $name = 'Ada'
+PS C:\Windows\system32> 'Hello $name'
+Hello $name
+PS C:\Windows\system32> "Hello $name"
+Hello Ada
+PS C:\Windows\system32> "Length: $name.Length"
+Length: Ada.Length
+PS C:\Windows\system32> "Length: $($name.Length)"
+Length: 3
+PS C:\Windows\system32> "Cost: `$5"
+Cost: $5
+```
+
+Only the variable name is expanded inside double quotes: `$name.Length` became "Ada.Length". Anything more (a property, an index, a calculation) needs a subexpression `$( )`.
+
+> `"$name: hello"` is an error (in 5.1 and in PowerShell 7): a colon after a variable name means a drive or scope (as in `$env:PATH`). Write `"${name}: hello"` or `"$($name): hello"`.
+
+### Here-strings
+
+A here-string holds several lines. It starts with `@"` (or `@'`) at the end of a line and ends with `"@` (or `'@`) at the **start** of a line.
+
+```terminal
+PS C:\Windows\system32> $report = @"
+>> Server: $env:COMPUTERNAME
+>> User:   $env:USERNAME
+>> "@
+PS C:\Windows\system32> $report
+Server: WIN-SRV1
+User:   Administrator
+```
+
+### The format operator -f
+
+`'{0} has {1:N1} GB free' -f $a, $b` puts the values into the numbered slots. After the colon comes a format: `N2` (number with 2 decimals and thousands separators), `P0` (percent), `D5` (pad an integer with zeros), `yyyy-MM-dd` for dates. `{0,10}` right-aligns in 10 characters, `{0,-10}` left-aligns.
+
+```terminal
+PS C:\Windows\system32> '{0} has {1:N1} GB free' -f 'C:', 52.448
+C: has 52.4 GB free
+PS C:\Windows\system32> 'Done: {0:P0}' -f 0.756
+Done: 76%
+PS C:\Windows\system32> 'Ticket {0:D5}' -f 42
+Ticket 00042
+PS C:\Windows\system32> '[{0,6}] [{1,-6}]' -f 'r', 'l'
+[     r] [l     ]
+```
+
+### Splitting, joining and string methods
+
+```terminal
+PS C:\Windows\system32> 'WIN-SRV1,WIN-CL1,DC01' -split ','
+WIN-SRV1
+WIN-CL1
+DC01
+PS C:\Windows\system32> -split '  lots   of   space  '
+lots
+of
+space
+PS C:\Windows\system32> 'a', 'b', 'c' -join ' | '
+a | b | c
+PS C:\Windows\system32> $s = '  PowerShell 5.1  '
+PS C:\Windows\system32> $s.Trim()
+PowerShell 5.1
+PS C:\Windows\system32> $s.Trim().ToUpper()
+POWERSHELL 5.1
+PS C:\Windows\system32> $s.Trim().Substring(0, 5)
+Power
+PS C:\Windows\system32> $s.Trim().Replace('5.1', '7')
+PowerShell 7
+PS C:\Windows\system32> 'report.csv'.EndsWith('.csv')
+True
+PS C:\Windows\system32> '42'.PadLeft(5, '0')
+00042
+```
+
+`-split` and `-replace` use regular expressions and ignore case; the string methods `.Replace()`, `.Contains()`, `.StartsWith()` and `.EndsWith()` take plain text and **are** case-sensitive.
+
+@try machines=1
+@task t1 | Language | 10 | WIN-SRV1
+Store in `$line` the text `WIN-SRV1 | 10.0.10.11 | 4 cores`, built with the `-f` operator from the variables `$n = 'WIN-SRV1'`, `$ip = '10.0.10.11'` and `$c = 4`.
+@check WIN-SRV1 | $line is right
+$line -eq 'WIN-SRV1 | 10.0.10.11 | 4 cores'
+@check WIN-SRV1 | the -f operator was used
+($CertLabHistory -join "`n") -match '-f'
+@hint $line = '{0} | {1} | {2} cores' -f $n, $ip, $c
+@solution WIN-SRV1
+$n = 'WIN-SRV1'; $ip = '10.0.10.11'; $c = 4
+$line = '{0} | {1} | {2} cores' -f $n, $ip, $c
+$line
+@endtask
+@end
+
+@quiz
+? `$x = 5; 'Value: $x'` prints...
++ Value: $x
+- Value: 5
+- An error
+! Single quotes are literal; only double quotes expand variables.
+? `$s = 'abc'; "$s.Length"` prints...
+- 3
++ abc.Length
+- An error
+! Only the variable is expanded inside double quotes. Use "$($s.Length)".
+? Which of these is case-sensitive?
+- 'ABC' -eq 'abc'
+- 'ABC' -like 'a*'
++ 'ABC'.Contains('a')
+! String methods compare exactly; PowerShell's operators ignore case unless you use the c-versions.
+@end

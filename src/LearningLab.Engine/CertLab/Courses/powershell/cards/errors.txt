@@ -1,0 +1,17 @@
+# Deck: errors | Error handling | Errors
+Where is the newest error? :: `$Error[0]`
+The message text of the newest error :: `$Error[0].Exception.Message`
+Did the last command finish without an error? :: `$?`
+Hide a cmdlet's error but keep it in $Error :: `Get-Variable x -ErrorAction SilentlyContinue`
+Hide an error and keep no trace of it :: `Get-Variable x -ErrorAction Ignore`
+Make a cmdlet's error catchable by try / catch :: `Get-Variable x -ErrorAction Stop`
+Make every error in a script stop it :: `$ErrorActionPreference = 'Stop'`
+Collect a command's errors in $errs :: `Get-Variable a, b -ErrorVariable errs`
+Why does catch not see an ordinary cmdlet error? :: it is non-terminating; catch only sees terminating errors (add -ErrorAction Stop)
+In a catch block, what is $_? :: the ErrorRecord of the error being handled
+Catch only division by zero :: `try { 1 / $n } catch [System.DivideByZeroException] { 'zero' }`
+A block that always runs, error or not :: finally
+Raise a terminating error with the message 'No config' :: `throw 'No config'`
+Report a bad item without stopping the caller :: `Write-Error 'Bad name'`
+Show the exception type of a caught error :: `$_.Exception.GetType().FullName`
+What is the difference between SilentlyContinue and Ignore? :: both hide the error; SilentlyContinue still adds it to $Error, Ignore does not

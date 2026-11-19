@@ -1,0 +1,24 @@
+# Deck: identity | Microsoft Entra ID for devices | Identity
+What must be set on a user before a licence can be assigned? :: The usage location (a country such as US)
+Which part of a licence is needed for Conditional Access and dynamic groups? :: Microsoft Entra ID P1 (included in Microsoft 365 E3/E5, Business Premium and EMS E3)
+Does Office 365 E3 include Intune? :: No: only the Office apps and services. Add Intune Plan 1, EMS E3 or a Microsoft 365 licence
+What does Microsoft 365 E5 add to E3 for devices? :: Microsoft Entra ID P2 and Microsoft Defender for Endpoint Plan 2
+Security group or Microsoft 365 group for Intune targeting? :: Security group (it can hold users, devices and nested groups; Microsoft 365 groups hold users only)
+The three membership types of a group :: Assigned, Dynamic user and Dynamic device
+Can a dynamic group hold users and devices together? :: No: a dynamic group holds users or devices, never both
+A rule for every user in the Sales department :: (user.department -eq "Sales")
+A rule for every Windows device owned by the company :: (device.deviceOSType -eq "Windows") -and (device.deviceOwnership -eq "Company")
+A rule for users in Portland or Denver :: user.city -in ["Portland","Denver"]
+How is a device's ownership written in dynamic group rules? :: Company or Personal (Intune filters say Corporate instead)
+Does Intune follow nested groups in assignments? :: Yes: members of a group inside the assigned group get the policy
+Show a Windows device's join state :: `dsregcmd /status`
+Microsoft Entra joined :: A corporate device; people sign in to Windows with their work account (Pro, Enterprise or Education)
+Microsoft Entra hybrid joined :: Joined to the on-premises domain and registered in Entra ID through Microsoft Entra Connect
+Microsoft Entra registered :: A personal device with a work account added; the person keeps their own Windows sign-in
+dsregcmd /status on a hybrid joined PC :: AzureAdJoined YES and DomainJoined YES
+dsregcmd /status on a registered personal PC :: AzureAdJoined NO and WorkplaceJoined YES
+Where do you allow only some users to join devices to Entra ID? :: Microsoft Entra device settings: Users may join devices to Microsoft Entra = Selected
+What must be on before an Intune LAPS policy can back passwords up to Entra ID? :: Enable Microsoft Entra LAPS in the Entra device settings
+Entra role to disable or delete device objects and read BitLocker keys :: Cloud Device Administrator
+Entra role for everything in Intune without being Global Administrator :: Intune Administrator
+Why keep an emergency access account? :: To get back in if Conditional Access or MFA goes wrong; exclude it from every policy

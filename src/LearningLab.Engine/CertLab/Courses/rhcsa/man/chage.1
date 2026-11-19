@@ -1,0 +1,101 @@
+NAME
+       chage - change or show a user's password ageing settings
+
+SYNOPSIS
+       chage [-m MIN] [-M MAX] [-W WARN] [-I INACTIVE] [-E DATE] [-d DATE] LOGIN
+       chage -l LOGIN
+
+DESCRIPTION
+       chage sets the ageing fields of an account in /etc/shadow: how often
+       the password must be changed, how long before that the user is warned,
+       and when the whole account stops working. Only root may change them;
+       a user may list their own with chage -l.
+
+       The fields, all counted in days:
+
+       last change
+              The day the password was last changed. 0 forces a change at the
+              next login.
+
+       minimum (-m)
+              Days that must pass before the user may change the password
+              again (0 = any time).
+
+       maximum (-M)
+              Days a password stays valid; after that the user must choose a
+              new one. 99999 (or -1) means never.
+
+       warning (-W)
+              Days before the expiry date that the user is warned at login.
+
+       inactive (-I)
+              Days after the password expired during which the user can
+              still log in by changing it. After that the account is locked.
+
+       account expiry (-E)
+              The date the account stops working altogether, whatever the
+              password.
+
+       Dates are written YYYY-MM-DD (or a day number counted from
+       1970-01-01). -1 clears a date or turns a limit off.
+
+       New accounts take their defaults from PASS_MAX_DAYS, PASS_MIN_DAYS and
+       PASS_WARN_AGE in /etc/login.defs. chage changes existing accounts
+       only; edit login.defs for accounts created later.
+
+OPTIONS
+       -l, --list
+              Show the settings in words.
+
+       -m DAYS, --mindays DAYS
+              Set the minimum number of days between changes.
+
+       -M DAYS, --maxdays DAYS
+              Set the maximum number of days a password is valid.
+
+       -W DAYS, --warndays DAYS
+              Set the warning period.
+
+       -I DAYS, --inactive DAYS
+              Set the inactive period after expiry. -1 turns it off.
+
+       -E DATE, --expiredate DATE
+              Set the account expiry date. -1 removes it.
+
+       -d DATE, --lastday DATE
+              Set the day of the last change. -d 0 makes the user choose a
+              new password at the next login.
+
+       -i, --iso8601
+              With -l, print dates as YYYY-MM-DD.
+
+EXAMPLES
+       Make student change the password every 90 days, warned 7 days before:
+
+           chage -M 90 -W 7 student
+
+       Force a new password at the next login:
+
+           chage -d 0 student
+
+       Let the account of a contractor end on a date:
+
+           chage -E 2026-12-31 contractor
+
+       Check the result:
+
+           chage -l student
+
+FILES
+       /etc/shadow
+              Where the fields are stored (fields 3 to 8).
+
+       /etc/login.defs
+              Defaults for new accounts.
+
+NOTES
+       passwd -e LOGIN also expires a password at once, and usermod -e DATE
+       sets the account expiry date.
+
+SEE ALSO
+       passwd(1), usermod(8), shadow(5), login.defs(5)

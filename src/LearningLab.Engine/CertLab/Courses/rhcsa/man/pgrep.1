@@ -1,0 +1,79 @@
+NAME
+       pgrep - find processes by name and other attributes; pkill - signal them
+
+SYNOPSIS
+       pgrep [-l | -a] [-f] [-u USER] [PATTERN]
+       pkill [-SIGNAL] [--signal SIGNAL] [-f] [-u USER] [PATTERN]
+
+DESCRIPTION
+       pgrep looks through the running processes and prints the process ID
+       of each one that matches: by name (PATTERN, an extended regular
+       expression matched against the program name), by owner, or both. It
+       spares you reading the whole ps list.
+
+       pkill uses the same matching but sends a signal to every process it
+       finds instead of printing them: SIGTERM (15, "please end") unless you
+       name another. It is the quick way to stop all processes of one name or
+       one user.
+
+       The pattern matches anywhere in the name: "pgrep ssh" also finds
+       sshd. Anchor it to match exactly: pgrep '^sshd$'. Process names are
+       at most 15 characters; use -f to match against the whole command
+       line instead.
+
+       Both exit with status 0 when something matched and 1 when nothing
+       did, so they also work in if-tests.
+
+       A normal user can only signal their own processes; root can signal
+       any.
+
+OPTIONS
+       -u, --euid USER
+              Only processes of this user (name or UID).
+
+       -U, --uid USER
+              Only processes whose real user is USER.
+
+       -f, --full
+              Match the pattern against the full command line (program and
+              arguments), not just the name.
+
+       -l, --list-name
+              pgrep: print the name after each PID.
+
+       -a, --list-full
+              pgrep: print the full command line after each PID.
+
+       -SIGNAL, --signal SIGNAL
+              pkill: the signal to send, by name or number: -9 or -KILL,
+              -HUP, -TERM. Use -9 (KILL) only when a process ignores TERM:
+              it cannot clean up.
+
+EXAMPLES
+       Show the PIDs and names of all sshd processes:
+
+           pgrep -l sshd
+
+       List everything the user student is running, with command lines:
+
+           pgrep -a -u student
+
+       Stop a runaway program by name:
+
+           pkill dd
+
+       Force it when it does not stop:
+
+           pkill -9 dd
+
+       Log the user student out everywhere (ends their shells and
+       programs):
+
+           pkill -u student
+
+       Stop only the sleep started with a particular argument:
+
+           pkill -f 'sleep 3600'
+
+SEE ALSO
+       ps(1), kill(1), killall(1), pidof(1), top(1), signal(7)

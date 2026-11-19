@@ -1,0 +1,46 @@
+title: The mirror alphabet
+level: Beginner
+kind: Decoding
+topic: Crypto & Encoding
+teaser: a is z, b is y, and so on
+points: 45
+order: 8
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/atbash.txt holds a word in the Atbash cipher: each letter is swapped for its mirror
+in the alphabet, so a becomes z, b becomes y, c becomes x, and so on. The same swap
+undoes it. What is the word?
+
+@setup
+printf '%s' '{{SECRET}}' | tr 'A-Za-z' 'ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba' > /home/player/atbash.txt
+chown player: /home/player/atbash.txt
+
+@solution
+cat atbash.txt
+echo
+tr 'A-Za-z' 'ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba' < atbash.txt
+echo
+
+@walkthrough
+Atbash is a fixed letter swap: the alphabet is reversed, so a<->z, b<->y, m<->n. It is
+its own inverse - applying it twice returns the original. The tr command swaps
+characters; give it the normal alphabet and the reversed alphabet:
+
+    tr 'A-Za-z' 'ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba' < atbash.txt
+
+The word it prints is the answer.
+
+@hint 2
+What to think about first: nothing is locked here - each letter was swapped for a fixed partner letter. Read the scrambled word with cat atbash.txt. If it looks like real letters in a nonsense order, think about a simple swap rule rather than a password.
+
+@hint 3
+Atbash is one of the oldest ciphers. Write the alphabet forwards (a b c ... z) and under it backwards (z y x ... a): each letter on top swaps with the one under it. So a<->z, b<->y, m<->n. Doing the swap twice gives the original back, so the same step both hides and reveals.
+
+@hint 4
+You could swap each letter by hand with that table. The tr command ("translate") does it for you: you give it a list of letters and a list of their replacements, and it swaps every character it reads. The < sign feeds a file into it.
+
+@hint 6
+Run: tr 'A-Za-z' 'ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba' < atbash.txt
+The first list is the normal alphabet (capitals and small letters); the second is the same letters in reverse. The word it prints is the answer.

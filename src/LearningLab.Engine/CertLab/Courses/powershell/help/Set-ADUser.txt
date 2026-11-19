@@ -1,0 +1,27 @@
+SYNOPSIS: Changes the properties of an Active Directory user account.
+DESCRIPTION:
+Set-ADUser changes attributes of an existing user. Common attributes have their own parameters (-Department, -Title, -Manager...). For anything else use -Replace, -Add, -Remove or -Clear with LDAP attribute names.
+It doesn't change group membership (Add-ADGroupMember), the password (Set-ADAccountPassword) or where the account lives (Move-ADObject).
+PARAMETER Identity:
+The user: SamAccountName, distinguished name, GUID or SID. Position 0, and takes pipeline input from Get-ADUser.
+PARAMETER Replace:
+A hash table of LDAP attributes and their new values, such as @{telephoneNumber='555-0142'}.
+PARAMETER Add:
+Adds values to multi-valued attributes, such as @{otherTelephone='555-0100'}.
+PARAMETER Remove:
+Removes values from multi-valued attributes.
+PARAMETER Clear:
+Names of attributes to empty.
+PARAMETER Enabled:
+$true or $false; the same as Enable-ADAccount or Disable-ADAccount.
+PARAMETER ChangePasswordAtLogon:
+$true forces a new password at the next sign-in.
+PARAMETER Department:
+The department. GivenName, Surname, DisplayName, Title, Description, City, Company, Office, EmailAddress, UserPrincipalName and SamAccountName work the same way.
+PARAMETER Manager:
+The manager's account (any identity Get-ADUser accepts).
+EXAMPLE: Set-ADUser bcole -Title "Senior account manager" -Manager imoreau
+Gives Bianca Cole a new title and sets Ines Moreau as her manager.
+EXAMPLE: Get-ADUser -Filter "Department -eq 'Sales'" | Set-ADUser -Office "Portland 2nd floor"
+Updates the office of everyone in the Sales department.
+RELATED: Get-ADUser, New-ADUser, Set-ADAccountPassword, Move-ADObject

@@ -1,0 +1,96 @@
+# Practice: pbq-firewall | Firewall rule tables
+Write or fix the rules of a firewall. Rules are read from the top; the first rule that matches a packet decides, and a packet that no rule matches is denied (the implicit deny).
+
+@firewall fw01 | Security operations | 6
+Maple Street Bakery has a staff network (10.0.1.0/24) and a screened subnet with its online shop (10.0.2.10) and a mail relay (10.0.2.25). The till PC at the shop counter (10.0.1.50) is on the staff network, but anyone behind the counter can use it, so it must never manage the shop server. Write the rules for the firewall that sits between the internet, the staff network and the screened subnet.
+rows 5
+addr Staff LAN = 10.0.1.0/24
+addr Till PC = 10.0.1.50
+addr Shop server = 10.0.2.10
+addr Mail relay = 10.0.2.25
+addr Screened subnet = 10.0.2.0/24
+ports 22, 25, 53, 80, 443, 3389
+test allow | 198.51.100.40 -> 10.0.2.10 | 443/TCP | customers on the internet reach the shop over HTTPS
+test deny | 198.51.100.40 -> 10.0.2.10 | 80/TCP | plain HTTP to the shop is not offered
+test allow | 203.0.113.7 -> 10.0.2.25 | 25/TCP | other mail servers deliver mail to the relay
+test allow | 10.0.1.30 -> 10.0.2.10 | 22/TCP | staff manage the shop server over SSH
+test deny | 10.0.1.50 -> 10.0.2.10 | 22/TCP | the shared till PC never reaches SSH on the shop server
+test deny | 198.51.100.40 -> 10.0.2.10 | 22/TCP | nobody on the internet reaches SSH
+test deny | 10.0.2.10 -> 10.0.1.30 | 3389/TCP | nothing in the screened subnet may start connections to the staff network
+rule DENY | Till PC | Shop server | 22 | TCP
+rule ALLOW | Any | Shop server | 443 | TCP
+rule ALLOW | Any | Mail relay | 25 | TCP
+rule ALLOW | Staff LAN | Shop server | 22 | TCP
+! HTTPS to the shop and SMTP to the relay are open to Any source, because customers and other mail servers can be anywhere on the internet. SSH is allowed only from the staff network: an administration port should never be open to the whole internet. The till PC is inside the staff network, so the narrow DENY for it must sit above the broader staff SSH allow; below it, the allow would match first and let the till through. Plain HTTP and everything from the screened subnet into the staff network fall through to the implicit deny, so no other deny rules are needed. A rule "ALLOW Any Any 22 TCP" would also have let SSH in from the internet.
+
+@firewall fw02 | Security operations | 6
+A contractor rewrote Riverside Clinic's edge firewall rules last night. Now patients can't open the patient portal (10.0.3.5), staff can't look up names through the internal DNS server (10.0.3.53), and a review found that remote desktop is open to the internet. The known attacker 203.0.113.66 must stay blocked from everything. Fix the table: change, move or clear rows so that the requirements are met.
+rows 4
+addr Attacker = 203.0.113.66
+addr Portal = 10.0.3.5
+addr DNS server = 10.0.3.53
+addr Staff LAN = 10.0.1.0/24
+ports 53, 80, 443, 3389
+start ALLOW | Any | Portal | 3389 | TCP
+start ALLOW | Any | DNS server | 443 | TCP
+start DENY | Attacker | Any | Any | Any
+start ALLOW | Staff LAN | DNS server | 53 | TCP
+test deny | 203.0.113.66 -> 10.0.3.5 | 443/TCP | the attacker's address is blocked from everything
+test allow | 198.51.100.9 -> 10.0.3.5 | 443/TCP | patients reach the portal over HTTPS
+test allow | 10.0.1.44 -> 10.0.3.53 | 53/UDP | staff look up names with the internal DNS server (DNS queries use UDP)
+test deny | 198.51.100.9 -> 10.0.3.5 | 3389/TCP | remote desktop is never open to the internet
+test deny | 198.51.100.9 -> 10.0.3.53 | 53/UDP | the internal DNS server does not answer the internet
+rule DENY | Attacker | Any | Any | Any
+rule ALLOW | Any | Portal | 443 | TCP
+rule ALLOW | Staff LAN | DNS server | 53 | UDP
+! Four faults: the remote desktop rule exposed RDP (3389) to the internet, so it is cleared; the HTTPS rule pointed at the DNS server instead of the portal, so patients matched nothing; that HTTPS allow also sat above the deny for the attacker, so once its destination is corrected the deny must move to the top, or the attacker's HTTPS would match the allow first; and DNS queries use UDP 53 (TCP 53 is used for large answers and zone transfers), so the rule for staff must allow UDP. Order matters because the first matching rule wins.
+
+@firewall fw03 | Security operations | 6
+Lakeside College is tightening the firewall in front of its server network (10.20.1.0/24). The monitoring server (10.20.0.5) checks that servers are up with ping (ICMP) and reads their counters with SNMP. Every server sends its logs to the SIEM collector (10.20.0.9) with syslog. Staff (10.20.2.0/24) only need the internal DNS server (10.20.1.53). One staff PC (10.20.2.77) is infected and is quarantined until it is rebuilt. Write the rules.
+rows 6
+addr Monitoring = 10.20.0.5
+addr SIEM collector = 10.20.0.9
+addr Servers = 10.20.1.0/24
+addr DNS server = 10.20.1.53
+addr Staff LAN = 10.20.2.0/24
+addr Quarantined PC = 10.20.2.77
+ports 53, 123, 161, 443, 514, 3389
+test allow | 10.20.0.5 -> 10.20.1.20 | 0/ICMP | the monitoring server can ping every server
+test deny | 10.20.2.40 -> 10.20.1.20 | 0/ICMP | staff PCs can't ping (sweep) the server network
+test allow | 10.20.0.5 -> 10.20.1.20 | 161/UDP | the monitoring server polls servers with SNMP
+test deny | 10.20.2.40 -> 10.20.1.20 | 161/UDP | staff PCs can't query SNMP on the servers
+test allow | 10.20.1.20 -> 10.20.0.9 | 514/UDP | servers send their logs to the SIEM collector with syslog
+test allow | 10.20.2.40 -> 10.20.1.53 | 53/UDP | staff look up names with the internal DNS server
+test deny | 10.20.2.77 -> 10.20.1.53 | 53/UDP | the quarantined PC is blocked from everything, DNS included
+test deny | 10.20.1.20 -> 10.20.2.40 | 3389/TCP | servers never start remote desktop connections to staff PCs
+rule DENY | Quarantined PC | Any | Any | Any
+rule ALLOW | Monitoring | Servers | Any | ICMP
+rule ALLOW | Monitoring | Servers | 161 | UDP
+rule ALLOW | Servers | SIEM collector | 514 | UDP
+rule ALLOW | Staff LAN | DNS server | 53 | UDP
+! ICMP has no ports, so the ping rule names the protocol ICMP and only the monitoring server as its source: staff who could ping the whole server range could map it. SNMP polling uses UDP 161 (traps sent back use UDP 162), again only from the monitoring server. Classic syslog uses UDP 514 from the servers to the collector. DNS lookups use UDP 53, and staff get only the DNS server, not the whole server network. The quarantined PC is inside the staff range, so its DENY must be the first rule; below the staff DNS allow it would still get DNS answers, a common channel for malware to call home. Everything else, such as servers opening RDP to staff, falls to the implicit deny.
+
+@firewall fw04 | Security operations | 6
+Harbor Lane Library's firewall protects two servers: the public book catalogue (10.30.5.10, HTTPS only) and the staff file server (10.30.5.20, file sharing on SMB 445). Since a technician edited the rules, nobody can reach either server. Readers on the internet and on the public Wi-Fi (10.30.9.0/24) must reach the catalogue, staff (10.30.1.0/24) must reach both servers, and the self-service kiosks (10.30.1.192/26, inside the staff range) must never reach the file server. Fix the table: change, move or clear rows.
+rows 4
+addr Staff LAN = 10.30.1.0/24
+addr Kiosks = 10.30.1.192/26
+addr Public Wi-Fi = 10.30.9.0/24
+addr Catalogue = 10.30.5.10
+addr File server = 10.30.5.20
+ports 53, 80, 443, 445, 3389
+start DENY | Any | Any | Any | Any
+start ALLOW | Staff LAN | File server | 445 | TCP
+start ALLOW | Any | Catalogue | 80 | TCP
+start DENY | Kiosks | File server | Any | Any
+test allow | 198.51.100.23 -> 10.30.5.10 | 443/TCP | readers on the internet reach the catalogue over HTTPS
+test allow | 10.30.9.15 -> 10.30.5.10 | 443/TCP | readers on the public Wi-Fi reach the catalogue over HTTPS
+test allow | 10.30.1.12 -> 10.30.5.20 | 445/TCP | staff reach the file server
+test deny | 10.30.1.200 -> 10.30.5.20 | 445/TCP | the self-service kiosks never reach the file server
+test deny | 10.30.9.15 -> 10.30.5.20 | 445/TCP | the public Wi-Fi never reaches the file server
+test deny | 198.51.100.23 -> 10.30.5.20 | 445/TCP | file sharing is never open to the internet
+test deny | 10.30.9.15 -> 10.30.1.12 | 3389/TCP | the public Wi-Fi never reaches staff PCs
+rule DENY | Kiosks | File server | Any | Any
+rule ALLOW | Staff LAN | File server | 445 | TCP
+rule ALLOW | Any | Catalogue | 443 | TCP
+! Three faults: the "deny everything" rule sat at the top, so it matched every packet before any allow could (clear it: the implicit deny already does that job at the bottom); the catalogue rule allowed HTTP 80, but the catalogue offers HTTPS 443 only; and the kiosk deny came after the staff allow, so kiosks, being inside the staff range, matched the allow first (move the deny to the top). The public Wi-Fi and the internet reach only the catalogue, and everything else falls to the implicit deny.

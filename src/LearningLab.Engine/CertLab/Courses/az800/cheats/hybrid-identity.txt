@@ -1,0 +1,29 @@
+# Sheet: hybrid-identity | Hybrid identity and AD DS in Azure | Hybrid identity
+## Choosing the sync tool
+Microsoft Entra Connect Sync :: full engine on a domain-joined server; PHS, PTA, federation, writeback, custom rules; one active server
+Microsoft Entra Cloud Sync :: provisioning agents, configuration in the cloud; several agents for HA; disconnected forests; PHS but no PTA
+Staging mode :: a second Connect server that imports and syncs but exports nothing; turn it off to fail over
+Express settings :: whole forest with password hash sync; Customize for OU filtering, sign-in method, features
+## Sync cycles (on the Connect server)
+Get-ADSyncScheduler :: interval (30 min), next run, SyncCycleEnabled, StagingModeEnabled
+Start-ADSyncSyncCycle -PolicyType Delta :: sync the changes now
+Start-ADSyncSyncCycle -PolicyType Initial :: full sync after a configuration change (OU filter, rules)
+Set-ADSyncScheduler -SyncCycleEnabled $false :: pause the schedule; set $true again afterwards
+Get-Service ADSync :: the sync engine's service
+## Sign-in names
+Set-ADForest -Identity corp.example -UPNSuffixes @{Add='harborline.example'} :: add a routable UPN suffix
+Set-ADUser bcole -UserPrincipalName bcole@harborline.example :: give a user the suffix
+Verified domain :: a UPN with a verified suffix keeps its name in the cloud; otherwise the onmicrosoft domain
+## Cloud sign-in methods
+Password hash synchronization (PHS) :: a hash of the hash, every 2 minutes; works with the office offline; leaked credential detection
+Pass-through authentication (PTA) :: agents (outbound 443) check passwords on a DC; on-prem account state applies at once; 3+ agents
+Federation (AD FS) :: your own sign-in farm and Web Application Proxy; most work; move to PHS or PTA when you can
+Seamless SSO :: Kerberos sign-in from domain PCs on the network; AZUREADSSOACC computer account; with PHS or PTA
+## AD DS in Azure VMs
+Private IP allocation Static :: set on the VM's NIC in Azure; Windows stays on DHCP
+Data disk, host caching None :: for NTDS.dit, logs and SYSVOL (-DatabasePath, -LogPath, -SysvolPath)
+VNet custom DNS servers :: the domain's DNS servers instead of Azure-provided DNS
+AD site and subnet for the VNet :: clients in Azure use the Azure DC; replication follows the site link
+Site-to-site VPN or ExpressRoute :: connectivity between the office and the VNet
+Azure Bastion :: RDP to the DC without a public IP
+Microsoft Entra Domain Services :: a managed domain instead of your own DCs in Azure

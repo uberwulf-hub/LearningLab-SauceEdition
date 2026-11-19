@@ -1,0 +1,19 @@
+# Upload Trouble (offsets from {{T0}}, the upload)
+# harmless: the build server tells WEB02 to fetch the newest version of the site (the developers' deploy hook)
+-70m host=WEB02 source=web client={{NET}}.30 method=POST path=/hooks/deploy status=200 bytes=64 agent="BuildBot/3.0 (BUILD01)"
+-70m host=WEB02 source=proclog event=1 user=apache image=/usr/bin/bash parent=/usr/sbin/httpd cmdline="sh -c 'cd /var/www/site && git pull --ff-only'"
+-70m host=WEB02 source=alert severity=high rule="Shell started by the web server" note="httpd started a shell on WEB02"
+-70m host=WEB02 source=proclog event=1 user=apache image=/usr/bin/git parent=/usr/bin/bash cmdline="git pull --ff-only"
+# the attack on WEB01: a "picture" that is really a PHP script, uploaded through the profile-picture form
+-3m host=WEB01 source=web client={{ATKIP}} method=GET path=/profile/picture status=200 bytes=5120 agent="Mozilla/5.0 (X11; Linux x86_64)"
++0 host=WEB01 source=web client={{ATKIP}} method=POST path=/upload.php status=200 bytes=88 agent="Mozilla/5.0 (X11; Linux x86_64)" note="file={{SHELL}}"
++40s host=WEB01 source=web client={{ATKIP}} method=GET path="/uploads/{{SHELL}}?c={{FIRST}}" status=200 bytes=54 agent="Mozilla/5.0 (X11; Linux x86_64)"
++40s host=WEB01 source=proclog event=1 user=apache image=/usr/bin/bash parent=/usr/sbin/httpd cmdline="sh -c '{{FIRST}}'"
++41s host=WEB01 source=alert severity=high rule="Shell started by the web server" note="httpd started a shell on WEB01"
++90s host=WEB01 source=web client={{ATKIP}} method=GET path="/uploads/{{SHELL}}?c=ls /var/www/html/config" status=200 bytes=140 agent="Mozilla/5.0 (X11; Linux x86_64)"
++90s host=WEB01 source=proclog event=1 user=apache image=/usr/bin/bash parent=/usr/sbin/httpd cmdline="sh -c 'ls /var/www/html/config'"
++2m host=WEB01 source=web client={{ATKIP}} method=GET path="/uploads/{{SHELL}}?c=cat /var/www/html/config/db.php" status=200 bytes=410 agent="Mozilla/5.0 (X11; Linux x86_64)"
++2m host=WEB01 source=proclog event=1 user=apache image=/usr/bin/bash parent=/usr/sbin/httpd cmdline="sh -c 'cat /var/www/html/config/db.php'"
++4m host=WEB01 source=proclog event=1 user=apache image=/usr/bin/ssh parent=/usr/bin/bash cmdline="ssh {{DBUSER}}@DB01"
++4m host=DB01 source=auth event=sshd result=accepted method=password user={{DBUSER}} src_ip={{NET}}.21 note="Accepted password for {{DBUSER}} from WEB01"
++5m host=DB01 source=proclog event=1 user={{DBUSER}} image=/usr/bin/mysqldump parent=/usr/bin/bash cmdline="mysqldump --all-databases"

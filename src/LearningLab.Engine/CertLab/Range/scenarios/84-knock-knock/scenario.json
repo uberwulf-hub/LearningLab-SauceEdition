@@ -1,0 +1,76 @@
+{
+    "id": "knock-knock",
+    "title": "Knock Knock",
+    "category": "blue",
+    "level": "Intermediate",
+    "order": 6,
+    "summary": "Overnight, one address tried a few passwords against every account on the office PC - and one of them opened. Find the door that gave way and the scheduled task left behind it.",
+    "story": "{{CO}} (made up) keeps its accounts PC, {{PC}}, on 10.10.24.0/24. The Security log is suddenly full of failed sign-ins. You sit at soc on the same network with the PC's administrator password: {{ADMPW}} (winrm-shell -i 10.10.24.30 -u Administrator -p {{ADMPW}}).",
+    "goal": "Find the address that tried the passwords, the one account it got into and the scheduled task it created; capture the flag beside the task's script; then switch that account off and remove the task before it runs.",
+    "skills": "the Security log (4625, 4624, 4698), password spraying, Get-ScheduledTask, Unregister-ScheduledTask, Disable-LocalUser",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 30,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the accounts share out",
+    "goalPoints": 70,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-ACCT01|WIN-FIN02|WIN-BOOKS|WIN-LEDGER",
+        "S1": "person", "S2": "person", "S3": "person", "S4": "person",
+        "P1": "word", "P2": "word", "P3": "word", "P4": "word",
+        "ADMPW": "word",
+        "ATKIP": "ip",
+        "WHO": "pick:1|2|3|4",
+        "TASK": "pick:OneDriveSync|AdobeHelper|PrinterCheck"
+    },
+    "variants": {
+        "WHO": { "1": { "VIC": "{{S1}}" }, "2": { "VIC": "{{S2}}" }, "3": { "VIC": "{{S3}}" }, "4": { "VIC": "{{S4}}" } },
+        "TASK": {
+            "OneDriveSync": { "SCRIPT": "sync.ps1", "TASK_DESC": "Keeps files in step" },
+            "AdobeHelper": { "SCRIPT": "update.ps1", "TASK_DESC": "Checks for reader updates" },
+            "PrinterCheck": { "SCRIPT": "check.ps1", "TASK_DESC": "Checks the printer queue" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.24.5/24" ] },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "accounts PC (yours)", "nics": [ "10.10.24.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{S1}}", "password": "{{P1}}", "remote": true },
+            { "user": "{{S2}}", "password": "{{P2}}", "remote": true },
+            { "user": "{{S3}}", "password": "{{P3}}", "remote": true },
+            { "user": "{{S4}}", "password": "{{P4}}", "remote": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "28h", "repeat": 4, "every": 1800, "message": "An account was successfully logged on. Account Name: {{S3}} Source Network Address: 10.10.24.30 Logon Type: 2" },
+            { "log": "Security", "id": 4625, "level": 0, "ago": "6h", "repeat": 3, "every": 9, "message": "An account failed to log on. Account Name: {{S1}} Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+            { "log": "Security", "id": 4625, "level": 0, "ago": "21540s", "repeat": 3, "every": 9, "message": "An account failed to log on. Account Name: {{S2}} Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+            { "log": "Security", "id": 4625, "level": 0, "ago": "21480s", "repeat": 3, "every": 9, "message": "An account failed to log on. Account Name: {{S3}} Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+            { "log": "Security", "id": 4625, "level": 0, "ago": "21420s", "repeat": 3, "every": 9, "message": "An account failed to log on. Account Name: {{S4}} Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+            { "log": "Security", "id": 4625, "level": 0, "ago": "21360s", "repeat": 2, "every": 9, "message": "An account failed to log on. Account Name: Administrator Source Network Address: {{ATKIP}} Status: 0xC000006A" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "21000s", "message": "An account was successfully logged on. Account Name: {{VIC}} Source Network Address: {{ATKIP}} Logon Type: 3" },
+            { "log": "Security", "id": 4698, "level": 0, "ago": "20880s", "message": "A scheduled task was created. Subject: Account Name: {{VIC}} Task Name: \\{{TASK}}" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag beside the task's script", "points": 60, "machine": "{{PC}}", "path": "C:\\ProgramData\\{{TASK}}\\readme.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "addr", "ask": "What address tried the passwords?", "answer": "{{ATKIP}}", "points": 40, "explain": "Every 4625 (failed sign-in) comes from this Source Network Address." },
+        { "id": "acct", "ask": "Which account did it get into?", "answer": "{{VIC}}", "points": 40, "explain": "The only 4624 (successful sign-in) from that address." },
+        { "id": "task", "ask": "What is the name of the scheduled task it created?", "answer": "{{TASK}}", "accept": [ "\\{{TASK}}" ], "points": 40, "explain": "Event 4698 (a scheduled task was created) names it, and Get-ScheduledTask lists it." }
+    ],
+    "tasks": [
+        { "id": "disable", "name": "Switch off the account that was broken into", "machine": "{{PC}}", "check": "if ((Get-LocalUser -Name '{{VIC}}').Enabled) { exit 1 } else { exit 0 }", "points": 40, "explain": "Disable-LocalUser -Name {{VIC}} (until its owner picks a new, strong password)" },
+        { "id": "task", "name": "Remove the scheduled task", "machine": "{{PC}}", "check": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 40, "explain": "Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "{{PC}}", "run": "New-Item -ItemType Directory -Path 'C:\\ProgramData\\{{TASK}}\\out' -Force | Out-Null; Copy-Item 'C:\\Shares\\Accounts\\*' 'C:\\ProgramData\\{{TASK}}\\out' -ErrorAction SilentlyContinue", "unless": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "note": "The scheduled task ran and copied the accounts share into its folder, ready to be taken.", "goal": true }
+    ],
+    "hints": [
+        { "text": "A few failures for each of many accounts from one address is password spraying: one or two common passwords tried everywhere, hoping one person chose it. Read event 4625 (failed) and 4624 (succeeded) in the Security log: Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } | Format-List TimeCreated, Message.", "cost": 8 },
+        { "text": "Of all the accounts tried, only one has a 4624 from the same address. What did it do next? Event 4698 means a scheduled task was created; Get-ScheduledTask lists tasks, and (Get-ScheduledTask -TaskName NAME).Actions shows what one runs.", "cost": 14 },
+        { "text": "The flag is in the task's folder under C:\\ProgramData. Clean up: Disable-LocalUser -Name {{VIC}} and Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false.", "cost": 22 }
+    ]
+}

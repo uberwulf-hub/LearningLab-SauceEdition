@@ -1,0 +1,130 @@
+NAME
+       mount - attach a file system to the directory tree
+
+SYNOPSIS
+       mount
+       mount [-t TYPE] [-o OPTIONS] DEVICE DIRECTORY
+       mount [-o OPTIONS] DEVICE|DIRECTORY
+       mount -a [-v]
+
+DESCRIPTION
+       mount makes the file system on a device (a partition, logical volume,
+       DVD, NFS export...) appear at a directory, the mount point. The
+       directory must exist. Whatever was in it before is hidden until the
+       file system is unmounted with umount.
+
+       With no arguments, mount lists everything that is mounted (findmnt and
+       df -h give tidier lists).
+
+       With only a device or only a directory, mount looks for the rest in
+       /etc/fstab. "mount -a" mounts every fstab entry that is not mounted
+       yet, except those with noauto. Run it after editing /etc/fstab: it is
+       the best check that the next boot will work, because a broken line
+       can stop the system at boot.
+
+       After editing /etc/fstab, systemd keeps its old copy of the file until
+       "systemctl daemon-reload"; mount prints a hint about this.
+
+       The device can be given as a path (/dev/vdb1, /dev/vgdata/data), as
+       UUID=... or LABEL=..., and for NFS as SERVER:/PATH. mount usually
+       finds the file system type itself; -t sets it.
+
+       Mounts made with the mount command last until reboot. To make them
+       permanent, add a line to /etc/fstab:
+
+           DEVICE  MOUNTPOINT  TYPE  OPTIONS  DUMP  FSCK
+
+       for example "UUID=3f2a... /data xfs defaults 0 0".
+
+OPTIONS
+       -t, --types TYPE
+              The file system type: xfs, ext4, vfat, nfs, iso9660, swap...
+
+       -o, --options LIST
+              Mount options, separated by commas (see below).
+
+       -a, --all
+              Mount every file system in /etc/fstab (except noauto).
+
+       -r, --read-only
+              Mount read-only (same as -o ro).
+
+       -w, --rw
+              Mount read-write (the default).
+
+       -L, --label LABEL
+              Mount the file system with this label.
+
+       -U, --uuid UUID
+              Mount the file system with this UUID.
+
+       -B, --bind
+              Make a directory also appear at a second place.
+
+       -v, --verbose
+              Say what is done.
+
+MOUNT OPTIONS
+       defaults
+              The usual set: rw, suid, dev, exec, auto, nouser, async.
+
+       ro, rw Read-only or read-write.
+
+       remount
+              Change the options of a mounted file system without unmounting
+              it, such as "mount -o remount,rw /sysroot" in the rd.break
+              shell.
+
+       noexec, nosuid, nodev
+              Do not run programs, ignore set-user-ID bits, ignore device
+              files on this file system.
+
+       noauto Do not mount with mount -a or at boot.
+
+       nofail Do not stop the boot if the device is missing.
+
+       _netdev
+              The file system needs the network (NFS, iSCSI): mount it after
+              the network is up.
+
+       context=CONTEXT
+              Give every file one SELinux context, for file systems without
+              labels (vfat, NFS).
+
+       uid=, gid=, umask=
+              Owner, group and permission mask for every file on vfat.
+
+EXAMPLES
+       Mount the RHEL DVD to use as a package source:
+
+           mount /dev/sr0 /mnt
+
+       Mount an XFS partition by hand, then check it:
+
+           mkdir /data
+           mount /dev/vdb1 /data
+           findmnt /data
+
+       After adding a line to /etc/fstab:
+
+           systemctl daemon-reload
+           mount -a
+
+       Mount an NFS export from utility.lab.example.com:
+
+           mount -t nfs utility.lab.example.com:/exports/shared /mnt/shared
+
+       Make the real root file system writable in the rd.break shell:
+
+           mount -o remount,rw /sysroot
+
+FILES
+       /etc/fstab
+              The file systems to mount at boot.
+
+       /proc/mounts
+              What is mounted now.
+
+SEE ALSO
+       umount(8), findmnt(8), fstab(5), blkid(8), lsblk(8), mount.nfs(8),
+       swapon(8), systemd.mount(5)

@@ -1,0 +1,22 @@
+SYNOPSIS: Times how long a script block takes to run.
+DESCRIPTION:
+Measure-Command runs a script block and returns a TimeSpan: how long it took. Use it to compare two ways of doing the same thing, or to find the slow part of a script.
+
+The script block's own output is thrown away; you only see the time. To see both, have the block save its results in a variable or a file.
+PARAMETER Expression:
+The script block to time. Position 0, required.
+PARAMETER InputObject:
+Objects to pass into the script block, where they are $_. They come through the pipeline.
+EXAMPLE: Measure-Command { Start-Sleep -Seconds 2 }
+Shows a TimeSpan of about two seconds, with all its parts (Days, Hours, ... TotalMilliseconds).
+EXAMPLE: (Measure-Command { 1..1000 | ForEach-Object { $_ } }).TotalMilliseconds
+Just the number of milliseconds.
+EXAMPLE: (Measure-Command { $a = foreach ($i in 1..1000) { $i } }).TotalMilliseconds
+Time the same work done with the foreach statement, and compare: the statement is usually much faster than the pipeline.
+NOTES:
+Times change from run to run. Run each version several times before you decide which is faster.
+
+Writing to the screen is slow; leave Write-Host and Format-Table out of the block when you time the work itself.
+
+In Cert Lab the time comes from the practice machine's clock, which counts Start-Sleep and a small amount for each step of work, so numbers are only rough.
+RELATED: Measure-Object, Start-Sleep, New-TimeSpan, Get-Date

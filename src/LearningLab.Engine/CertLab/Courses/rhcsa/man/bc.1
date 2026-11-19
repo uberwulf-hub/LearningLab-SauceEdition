@@ -1,0 +1,34 @@
+NAME
+       bc - a calculator language
+
+SYNOPSIS
+       bc [-l] [-q] [FILE...]
+
+DESCRIPTION
+       bc reads arithmetic, one expression per line, and prints each result.
+       It works with numbers of any size. Without -l it uses whole numbers:
+       set scale=N to keep N digits after the decimal point. Operators are
+       + - * / % (remainder) and ^ (power); variables are lower-case names.
+       Type quit (or press Ctrl+D) to leave.
+
+       Bash's own $(( )) also does whole-number arithmetic, so bc is mostly
+       used when you need decimals.
+
+OPTIONS
+       -l, --mathlib
+              Load the maths library and use scale=20.
+
+       -q, --quiet
+              Do not print the welcome text.
+
+EXAMPLES
+       Divide with two decimals inside a script:
+
+           echo "scale=2; 10/3" | bc
+
+       Work out how many MiB 5 GiB is:
+
+           echo "5 * 1024" | bc
+
+SEE ALSO
+       expr(1), bash(1)

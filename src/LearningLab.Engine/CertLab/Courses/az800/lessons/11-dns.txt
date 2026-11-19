@@ -1,0 +1,334 @@
+# Unit: u11 | 11. DNS | Networking
+
+Active Directory can't work without DNS: computers find domain controllers through DNS records, people reach file servers and web sites by name, and every hybrid link to Azure or a partner needs names to resolve across it. Harborline's DNS servers are its two domain controllers, DC1 and DC2. This unit covers zones and records, how a DNS server answers names it doesn't own (forwarders, conditional forwarders, stub and secondary zones), and two newer features: DNSSEC and DNS policies.
+
+## Lesson: l1101 | Zones and records
+
+A **zone** is a part of the DNS name space that a server answers for with authority. The kinds of zone on Windows Server:
+
+- **Primary**: the writable copy. Changes are made here.
+- **Secondary**: a read-only copy, filled by a **zone transfer** from a master server (lesson 2).
+- **Stub**: only the zone's SOA, NS and glue A records, so the server always knows the other zone's current name servers (lesson 2).
+- **Conditional forwarder**: not really a zone, but listed with them: "send queries for this domain to these servers" (lesson 2).
+
+A **forward lookup zone** turns names into addresses (`corp.example`); a **reverse lookup zone** turns addresses into names. A reverse zone is named after the network backwards: `10.10.0.0/24` becomes `0.10.10.in-addr.arpa`, and the record `20` in it is the address 10.10.0.20.
+
+### Zones stored in Active Directory
+
+On a domain controller a primary zone can be **Active Directory-integrated**: it lives in the directory and replicates with it, so every DC that runs DNS has a writable copy (multi-master, no zone transfers needed). The **replication scope** says which DCs get it:
+
+- **Forest** (`-ReplicationScope Forest`): every DNS server on a DC in the forest (the ForestDnsZones partition). The `_msdcs` zone uses it.
+- **Domain**: every DNS server on a DC in the domain (DomainDnsZones). The usual choice for the domain's own zone.
+- **Legacy**: every DC in the domain, DNS server or not (the domain partition; for Windows 2000 compatibility).
+- **Custom**: an application directory partition you create, enlisting only the DCs you choose.
+
+A zone that isn't stored in AD is **file-backed** (`-ZoneFile x.dns`, kept in `C:\Windows\System32\dns`). Member servers can only have file-backed zones.
+
+```terminal
+PS C:\Windows\system32> Get-DnsServerZone
+
+ZoneName                         ZoneType         IsAutoCreated IsDsIntegrated IsReverseLookupZone IsSigned
+--------                         --------         ------------- -------------- ------------------- --------
+_msdcs.corp.example              Primary          False         True           False               False
+0.10.10.in-addr.arpa             Primary          False         True           True                False
+corp.example                     Primary          False         True           False               False
+```
+
+### Record types to know
+
+- **A** (IPv4 address) and **AAAA** (IPv6 address): a host name.
+- **CNAME**: an alias for another name (`intranet` -> `srv1.corp.example`). A CNAME stands alone: no other record may have the same name.
+- **MX**: the mail server for a domain, with a preference (the lowest number is tried first).
+- **PTR**: in a reverse zone, the name for an address.
+- **SRV**: a service: priority, weight, port and host. DCs register `_ldap._tcp`, `_kerberos._tcp` and others; this is how clients find a DC.
+- **NS** and **SOA**: the zone's name servers and its start of authority (serial number, refresh and retry times).
+- **TXT**: free text, used for domain verification, SPF and similar.
+
+```terminal
+PS C:\Windows\system32> Resolve-DnsName _ldap._tcp.corp.example -Type SRV
+
+Name         : _ldap._tcp.corp.example
+Type         : SRV
+QueryType    : SRV
+CharacterSet : Unicode
+Section      : Answer
+DataLength   : 8
+TTL          : 3600
+NameTarget   : dc1.corp.example
+Priority     : 0
+Weight       : 100
+Port         : 389
+
+Name         : _ldap._tcp.corp.example
+Type         : SRV
+QueryType    : SRV
+CharacterSet : Unicode
+Section      : Answer
+DataLength   : 8
+TTL          : 3600
+NameTarget   : dc2.corp.example
+Priority     : 0
+Weight       : 100
+Port         : 389
+```
+
+### Dynamic updates, aging and scavenging
+
+Windows computers register their own A records (and DHCP can register PTR records for them). A zone's **dynamic updates** setting decides who may: **None**, **Nonsecure and secure** (anyone, risky), or **Secure only**, where only the computer that created a record may change it. Secure only needs an AD-integrated zone; the New Zone wizard picks it for one, and with PowerShell you say `-DynamicUpdate Secure`.
+
+Records that computers register get a timestamp. With **aging** on, a record that isn't refreshed for the **no-refresh interval** plus the **refresh interval** (7 days each by default) becomes stale, and **scavenging** deletes it. Both must be switched on: aging on the zone (`Set-DnsServerZoneAging`) and scavenging on at least one server (`Set-DnsServerScavenging`). Records you create by hand have no timestamp and are never scavenged.
+
+> Exam pattern: "old records of computers that left the network stay in DNS" = turn on aging for the zone and scavenging on a server. "Only domain members may register names" = an AD-integrated zone with Secure only.
+
+@try
+@task t1 | Networking | 10 | DC1
+Harborline is moving its business applications to a new internal name space. On DC1, create the primary zone `harborline.internal`, stored in Active Directory and replicated to every DNS server in the domain, allowing only secure dynamic updates. Add the host `erp` at 10.10.0.60 and the alias `finance` pointing to `erp.harborline.internal`.
+@check admin | the zone is in Active Directory, domain-wide, secure updates only
+dns(DC1).zone["harborline.internal"].scope == Domain
+dns(DC1).zone["harborline.internal"].dynamic == Secure
+@check admin | the records exist and CL1 resolves the alias
+dns(DC1).zone["harborline.internal"].record["erp/A"] == 10.10.0.60
+dns(DC1).zone["harborline.internal"].record["finance/CNAME"] == erp.harborline.internal
+resolve(client=CL1, name=finance.harborline.internal) == 10.10.0.60
+@hint Add-DnsServerPrimaryZone with -ReplicationScope Domain, then Add-DnsServerResourceRecordA and Add-DnsServerResourceRecordCName.
+@solution DC1
+Add-DnsServerPrimaryZone -Name harborline.internal -ReplicationScope Domain -DynamicUpdate Secure
+Add-DnsServerResourceRecordA -ZoneName harborline.internal -Name erp -IPv4Address 10.10.0.60
+Add-DnsServerResourceRecordCName -ZoneName harborline.internal -Name finance -HostNameAlias erp.harborline.internal
+@explain
+-ReplicationScope stores the zone in Active Directory (Domain = every DNS server on a DC of corp.example), so DC2 gets it by normal AD replication. The client asked for finance, got the CNAME and the A record behind it in one answer.
+@endtask
+@task t2 | Networking | 10 | DC1
+The branch subnet `10.20.0.0/24` has no reverse lookup zone, so `Resolve-DnsName 10.20.0.11` fails. Create it (AD-integrated, domain-wide) and add a PTR record so that 10.20.0.11 resolves to `dc2.corp.example`.
+@check admin | the reverse zone exists and 10.20.0.11 has a name
+dns(DC1).zone["0.20.10.in-addr.arpa"].adintegrated == Yes
+resolve(client=CL1, name=10.20.0.11, type=PTR) == dc2.corp.example
+@hint Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 names the zone for you; the PTR record's name is the last part of the address (11).
+@solution DC1
+Add-DnsServerPrimaryZone -NetworkId 10.20.0.0/24 -ReplicationScope Domain
+Add-DnsServerResourceRecordPtr -ZoneName 0.20.10.in-addr.arpa -Name 11 -PtrDomainName dc2.corp.example
+@explain
+-NetworkId builds the name 0.20.10.in-addr.arpa. Inside it, the record 11 stands for 10.20.0.11. Add-DnsServerResourceRecordA -CreatePtr can add the PTR record together with an A record once the reverse zone exists.
+@endtask
+@task t3 | Networking | 10 | DC1
+Laptops that left the company years ago still have A records in `corp.example`. Turn on aging for the zone and scavenging on DC1 so that stale records are cleaned up.
+@check admin | aging is on for corp.example
+dns(DC1).zone["corp.example"].aging == Yes
+@hint Set-DnsServerZoneAging for the zone, Set-DnsServerScavenging for the server.
+@solution DC1
+Set-DnsServerZoneAging -Name corp.example -Aging $true
+Set-DnsServerScavenging -ScavengingState $true
+@explain
+Aging marks records stale after the no-refresh and refresh intervals (7 + 7 days by default); scavenging on a server deletes the stale ones. Static records have no timestamp and stay.
+@endtask
+@end
+
+@quiz
+? You need a zone that DC1 and DC2 can both change, with no zone transfers. What do you create?
+- A primary zone on DC1 and a secondary zone on DC2
++ An Active Directory-integrated primary zone
+- A stub zone on each DC
+! AD-integrated zones are multi-master: every DC that holds the zone can change it, and AD replication carries the changes.
+? Which replication scope puts a zone on every DNS server on a domain controller in the whole forest?
++ Forest (ForestDnsZones)
+- Domain (DomainDnsZones)
+- Legacy (the domain partition)
+! Forest scope reaches every DC running DNS in every domain of the forest; Legacy reaches every DC of one domain, DNS or not.
+? A zone must accept dynamic updates only from domain-joined computers. What must be true?
+- The zone is file-backed and allows nonsecure updates
++ The zone is stored in Active Directory and allows secure updates only
+- Scavenging is switched on
+! Secure only uses the records' permissions in AD, so it needs an AD-integrated zone.
+? Stale records stay in a zone although aging is on. What is missing?
+- A reverse lookup zone
++ Scavenging on at least one DNS server
+- A shorter TTL on the records
+! Aging only marks records as stale; a server with scavenging switched on deletes them.
+@end
+
+## Lesson: l1102 | Forwarders, conditional forwarders, stub and secondary zones
+
+When a DNS server gets a query for a name it isn't authoritative for, it **recurses**: it finds the answer for the client. In order, a Windows DNS server tries:
+
+1. Its own zones (and their zone scopes, lesson 3).
+2. A **conditional forwarder** or **stub zone** for that name, if it has one.
+3. Its **forwarders**: the servers it sends every other query to (Harborline's DCs forward to the ISP's resolver, 203.0.113.53).
+4. The **root hints** (the Internet's root servers), when the forwarders don't answer and "use root hints" is on.
+
+**Recursion** can be switched off (`Set-DnsServerRecursion -Enable $false`): the server then answers only from its own zones, and forwarders and conditional forwarders stop working too. That suits a server that only publishes a zone to the Internet, never a DC that clients use.
+
+```terminal
+PS C:\Windows\system32> Get-DnsServerForwarder
+
+UseRootHint        : True
+Timeout(s)         : 3
+EnableReordering   : True
+IPAddress          : {203.0.113.53}
+ReorderedIPAddress : {203.0.113.53}
+```
+
+### Conditional forwarders
+
+A **conditional forwarder** sends queries for one domain to the servers you name, typically a partner's or another forest's DNS servers over a VPN. Harborline's partner Tidewater Freight has its own forest, `tidewater.example`, whose DNS server 192.168.50.10 is reachable over the VPN but not from the Internet. Without a conditional forwarder, DC1 asks the ISP, which only knows Tidewater's public web site:
+
+```terminal
+#machine CL1
+PS C:\Windows\system32> Resolve-DnsName dc01.tidewater.example
+Resolve-DnsName : dc01.tidewater.example : DNS name does not exist
+At line:1 char:1
++ Resolve-DnsName dc01.tidewater.example
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceUnavailable: (dc01.tidewater.example:String) [Resolve-DnsName], Win32Exception
+    + FullyQualifiedErrorId : DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName
+```
+
+On a DC, a conditional forwarder can be **stored in Active Directory** (`-ReplicationScope Forest` or `Domain`), so every DC that runs DNS gets it. A forest trust (unit 1) needs name resolution like this in both directions (conditional forwarders or stub zones).
+
+### Stub zones and secondary zones
+
+- A **stub zone** copies only the other zone's SOA, NS and the name servers' A records. Like a conditional forwarder it sends queries to the other zone's servers, but it keeps its list of those servers up to date by itself: use it when the partner may add or replace DNS servers. It needs the partner to allow zone transfers to you.
+- A **secondary zone** is a full read-only copy, filled by a **zone transfer** from its master servers: a full transfer (AXFR) or only the changes (IXFR). The master must allow it: zone transfers are **not allowed** for AD-integrated zones until you say so, and for file-backed zones only to the servers on the Name Servers tab. The choices: to any server (avoid), to the zone's name servers, or **only to the servers you list** (`-SecureSecondaries TransferToSecureServers -SecondaryServers IP`).
+
+A secondary zone is how a server that isn't a DC (or a DNS server at a partner) gets a copy of an AD-integrated zone.
+
+> Conditional forwarder or stub zone? Both send the queries for one domain to that domain's own servers. A conditional forwarder has a fixed list of addresses you maintain; a stub zone learns the servers from the zone itself. A secondary zone also answers when the master is unreachable, until the zone expires.
+
+@try
+@task t1 | Networking | 10 | DC1
+Harborline's people need to reach servers in the partner forest `tidewater.example` (DNS server 192.168.50.10). Create a conditional forwarder for it on DC1, stored in Active Directory so that every DNS server on a DC in the forest gets it.
+@check admin | CL1 resolves a server inside Tidewater's forest
+resolve(client=CL1, name=dc01.tidewater.example) == 192.168.50.10
+@check admin | DC2 has the conditional forwarder too
+dns(DC2).conditional["tidewater.example"] has 192.168.50.10
+@hint Add-DnsServerConditionalForwarderZone with -MasterServers and -ReplicationScope Forest. AD replication to DC2 takes a few seconds (Skip time).
+@solution DC1
+Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest
+#wait 60
+@explain
+Stored in Active Directory, the conditional forwarder replicates like an AD-integrated zone, so DC2 (and any DNS server on a DC added later) forwards tidewater.example the same way.
+@endtask
+@task t2 | Networking | 10 | SRV1
+SRV1 will run a DNS server for a lab network and needs a read-only copy of `corp.example`. On DC1, allow zone transfers of `corp.example` only to SRV1 (10.10.0.50). Then install the DNS Server role on SRV1 and create a secondary zone for `corp.example` from DC1.
+@check admin | DC1 transfers the zone only to the listed server
+dns(DC1).zone["corp.example"].transfers == TransferToSecureServers
+dns(DC1).zone["corp.example"].secondaries has 10.10.0.50
+@check admin | SRV1 has a loaded secondary copy
+dns(SRV1).zone["corp.example"].type == Secondary
+dns(SRV1).zone["corp.example"].loaded == Yes
+@hint Set-DnsServerPrimaryZone -SecureSecondaries TransferToSecureServers -SecondaryServers 10.10.0.50 on DC1; on SRV1 Install-WindowsFeature DNS, then Add-DnsServerSecondaryZone with -ZoneFile and -MasterServers.
+@solution DC1
+Set-DnsServerPrimaryZone -Name corp.example -SecureSecondaries TransferToSecureServers -SecondaryServers 10.10.0.50
+@solution SRV1
+Install-WindowsFeature DNS -IncludeManagementTools
+Add-DnsServerSecondaryZone -Name corp.example -ZoneFile corp.example.dns -MasterServers 10.10.0.10
+@explain
+A secondary zone can't be stored in Active Directory, so it needs -ZoneFile. If you create it before the master allows the transfer, the zone stays empty (not loaded) until a transfer succeeds: Start-DnsServerZoneTransfer -Name corp.example tries again at once.
+@endtask
+@end
+
+@quiz
+? DC1 must send queries for `tidewater.example` to 192.168.50.10 and everything else to the ISP. What do you configure?
+- A forwarder to 192.168.50.10
++ A conditional forwarder for tidewater.example to 192.168.50.10
+- Root hints that include 192.168.50.10
+! A forwarder takes every query the server can't answer itself; a conditional forwarder takes only one domain's.
+? The partner keeps replacing its DNS servers and your conditional forwarder keeps breaking. What is better?
+- A secondary zone with transfers to any server
++ A stub zone, which learns the partner's name servers from the zone
+- Switching recursion off
+! A stub zone refreshes its NS and glue records from the partner's zone, so it follows changes of name servers by itself.
+? A secondary zone on a member server stays empty. The master is an AD-integrated zone on a DC. What is the likely cause?
++ The master doesn't allow zone transfers to that server
+- Secondary zones need Active Directory
+- The member server needs a conditional forwarder first
+! AD-integrated zones don't allow zone transfers until you allow them (to the listed servers is the safe choice).
+? Recursion is switched off on a DNS server. What still works?
+- Its forwarders
+- Its conditional forwarders
++ Answers from the zones it hosts
+! Without recursion a server only answers authoritatively; forwarders and conditional forwarders need recursion.
+@end
+
+## Lesson: l1103 | DNSSEC and DNS policies
+
+### DNSSEC
+
+**DNSSEC** lets a resolver check that an answer really comes from the zone and wasn't changed on the way. Signing a zone adds:
+
+- **DNSKEY** records: the zone's public keys. The **key signing key** (KSK) signs the DNSKEY set; the **zone signing key** (ZSK) signs everything else.
+- **RRSIG** records: a signature for each set of records.
+- **NSEC** or **NSEC3** records: signed proof that a name does **not** exist (NSEC3 hides the zone's names from being listed).
+- **DS** records: a hash of the KSK, published in the parent zone, which makes the chain of trust.
+
+Resolvers that don't get a chain of trust from the parent need a **trust anchor** for the zone; for AD-integrated zones Windows can distribute the trust anchors to every DC. The **Key Master** is the DNS server that generates and rolls over the keys. Windows clients don't validate by themselves: a Group Policy **Name Resolution Policy Table** (NRPT) rule tells them to require validated answers for a name space. Sign with `Invoke-DnsServerZoneSign` (or DNS Manager > DNSSEC > Sign the Zone).
+
+### DNS policies
+
+Since Windows Server 2016 a DNS server can answer differently depending on who asks, when and what. The building blocks:
+
+- **Client subnets**: named lists of networks (`Add-DnsServerClientSubnet -Name HQ -IPv4Subnet 10.10.0.0/24`).
+- **Zone scopes**: extra sets of records inside one zone (`Add-DnsServerZoneScope`), for example an "internal" copy of `www` with a private address.
+- **Query resolution policies** (`Add-DnsServerQueryResolutionPolicy`): criteria (client subnet, FQDN, time of day, query type, the server interface...) with `EQ` or `NE`, and an action: **ALLOW** (answer, optionally from a zone scope), **DENY** (refuse) or **IGNORE** (drop the query, so the client times out). Policies are checked by processing order; the first one that matches wins.
+
+Typical uses: **split-brain DNS** (internal clients get internal addresses for the same name), **geo-location** (branch clients get the branch server), blocking a malicious domain, and answering differently out of hours. Policies are stored on each DNS server and don't replicate: configure every server that should apply them.
+
+> `-ZoneScope "internal,1"` is a weighted list: `"siteA,2;siteB,1"` spreads answers between scopes 2:1. A policy with `-Fqdn "EQ,*.bad.example" -Action IGNORE` at server level blocks a whole domain.
+
+@try
+@setup DC1
+Add-DnsServerPrimaryZone -Name harborline.internal -ReplicationScope Domain
+Add-DnsServerPrimaryZone -Name harborline.example -ZoneFile harborline.example.dns
+Add-DnsServerResourceRecordA -ZoneName harborline.example -Name www -IPv4Address 198.51.100.20
+@task t1 | Networking | 10 | DC1
+Sign the zone `harborline.internal` with DNSSEC, using the default settings.
+@check admin | the zone is signed and has its keys
+dns(DC1).zone["harborline.internal"].signed == Yes
+dns(DC1).zone["harborline.internal"].record["@/DNSKEY"]
+@hint Invoke-DnsServerZoneSign -ZoneName ... -SignWithDefault (add -Force to skip the question).
+@solution DC1
+Invoke-DnsServerZoneSign -ZoneName harborline.internal -SignWithDefault -Force
+@explain
+The default settings create a KSK and a ZSK and sign every record set. The DNSKEY records hold the public keys; resolvers check the RRSIG signatures with them.
+@endtask
+@task t2 | Networking | 10 | DC1
+DC1 now hosts `harborline.example` with the public address of `www` (198.51.100.20). Set up split-brain DNS: clients in `10.10.0.0/24` must get the internal web server **10.10.0.80** for `www.harborline.example`, while everyone else keeps the public address. Call the client subnet **HQ** and the zone scope **internal**.
+@check admin | HQ clients get the internal address
+resolve(client=CL1, name=www.harborline.example) == 10.10.0.80
+@check admin | the zone's default answer is still the public one
+dns(DC1).zone["harborline.example"].record["www/A"] == 198.51.100.20
+dns(DC1).zone["harborline.example"].record["www/A/internal"] == 10.10.0.80
+dns(DC1).policy["InternalWww"].action == ALLOW
+@hint Add-DnsServerClientSubnet, Add-DnsServerZoneScope, Add-DnsServerResourceRecordA with -ZoneScope, then Add-DnsServerQueryResolutionPolicy -ZoneName -ClientSubnet "EQ,HQ" -ZoneScope "internal,1". Name the policy InternalWww.
+@solution DC1
+Add-DnsServerClientSubnet -Name HQ -IPv4Subnet 10.10.0.0/24
+Add-DnsServerZoneScope -ZoneName harborline.example -Name internal
+Add-DnsServerResourceRecordA -ZoneName harborline.example -Name www -IPv4Address 10.10.0.80 -ZoneScope internal
+Add-DnsServerQueryResolutionPolicy -Name InternalWww -Action ALLOW -ClientSubnet "EQ,HQ" -ZoneScope "internal,1" -ZoneName harborline.example
+@explain
+The zone scope holds a second www record; the policy sends queries from the HQ subnet to that scope. Queries from anywhere else match no policy and get the zone's default scope.
+@endtask
+@end
+
+@quiz
+? Which DNSSEC record proves that a name does not exist?
+- RRSIG
+- DS
++ NSEC or NSEC3
+! NSEC / NSEC3 records are signed lists of the names that exist, so a resolver can trust a "no such name" answer.
+? How do Windows clients come to require DNSSEC-validated answers for corp.example?
+- Signing the zone is enough
++ A Name Resolution Policy Table (NRPT) rule from Group Policy
+- A conditional forwarder on each client
+! The Windows DNS client doesn't validate on its own; an NRPT rule makes it require validation for a name space.
+? A policy must make the server drop queries for `*.malware.example` without answering. Which action?
+- DENY
++ IGNORE
+- ALLOW with an empty zone scope
+! IGNORE drops the query (the client times out); DENY answers with a refusal.
+? You configured DNS policies on DC1. Do branch clients that use DC2 get them?
+- Yes: policies replicate with Active Directory
++ No: policies are stored on each server; configure DC2 too
+- Only if the zone is signed
+! DNS policies are per server; zone data can replicate, policies don't.
+@end
+

@@ -1,0 +1,26 @@
+SYNOPSIS: Closes remote sessions and frees their resources on the other computer.
+DESCRIPTION:
+Remove-PSSession closes sessions made by New-PSSession. Each open session uses memory and a process on the remote computer, so close them when you are done.
+
+After removal, the session object you saved in a variable can no longer be used: Invoke-Command with it fails because its state is Closed.
+PARAMETER Session:
+The sessions to close, for example $s. Position 0, and they can come through the pipeline.
+PARAMETER Id:
+The numbers of the sessions to close.
+PARAMETER Name:
+The names of the sessions to close. Wildcards work.
+PARAMETER ComputerName:
+Closes the sessions connected to these computers. Its alias is -Cn.
+EXAMPLE: $s = New-PSSession -ComputerName localhost; Remove-PSSession -Session $s
+Opens and closes a session.
+EXAMPLE: Get-PSSession | Remove-PSSession
+Closes all your sessions.
+EXAMPLE: Remove-PSSession -Name Work
+Closes the session named Work.
+NOTES:
+The alias is rsn.
+
+Closing the PowerShell window also closes its sessions.
+
+Enter-PSSession -ComputerName and Invoke-Command -ComputerName make temporary sessions that close by themselves; you only need Remove-PSSession for sessions you opened with New-PSSession.
+RELATED: New-PSSession, Get-PSSession, Enter-PSSession, Invoke-Command, about_Remote

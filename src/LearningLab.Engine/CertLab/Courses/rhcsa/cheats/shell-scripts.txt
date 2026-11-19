@@ -1,0 +1,51 @@
+# Sheet: shell-scripts | Shell scripts | Shell scripts
+## Making and running a script
+`#!/bin/bash` :: first line: the program that runs the file
+chmod +x FILE :: make it executable (or chmod 755)
+./script.sh :: run it from the current folder
+/usr/local/bin :: put scripts here to run them by name, for every user
+bash -n FILE :: check the syntax without running
+bash -x FILE :: run and print each command as it runs
+
+## Variables and quoting
+NAME=value :: set a variable (no spaces around =)
+"$NAME" :: the value, kept as one word; ${NAME}x marks where the name ends
+'text' :: exactly as written, nothing is filled in
+VAR=$(CMD) :: the output of a command
+$(( a + b )) :: whole-number arithmetic (+ - * / %)
+read -p "Question: " VAR :: read a line of input into VAR
+export NAME :: pass a variable on to the programs you start
+
+## Arguments and exit codes
+$1 $2 ... ${10} :: the arguments
+$# :: the number of arguments
+"$@" :: all arguments, each one whole
+$0 :: the script's name
+shift :: drop $1 and move the others down
+$? :: exit code of the last command (0 = success)
+exit N :: end the script with code N
+A && B :: run B only if A succeeded
+A || B :: run B only if A failed
+echo "msg" >&2 :: print on standard error
+
+## Tests
+if CMD; then ...; elif CMD; then ...; else ...; fi :: branch on an exit code
+[ -e F ] [ -f F ] [ -d F ] :: exists / regular file / directory
+[ -r F ] [ -w F ] [ -x F ] [ -s F ] :: readable / writable / executable / not empty
+[ "$a" = "$b" ] [ "$a" != "$b" ] :: strings equal / different
+[ -z "$s" ] [ -n "$s" ] :: string empty / not empty
+[ $a -eq $b ] :: numbers: -eq -ne -lt -le -gt -ge
+[ ! -d DIR ] :: not
+[[ $f == *.txt ]] :: bash test with a wildcard pattern
+[[ $x =~ ^[0-9]+$ ]] :: bash test with a regular expression
+case "$1" in start) ...;; *) ...;; esac :: choose by pattern (start|begin) matches either word)
+
+## Loops
+for x in a b c; do ...; done :: once per word
+for f in /etc/*.conf; do ...; done :: once per matching file
+for u in $(CMD); do ...; done :: once per word of a command's output
+for i in {1..10}; do ...; done :: count (or $(seq 1 10))
+while read -r line; do ...; done < FILE :: once per line of a file
+while IFS=: read -r a b; do ...; done :: split each line at colons
+while [ $n -gt 0 ]; do ...; done :: as long as a test is true
+break / continue :: leave the loop / skip to the next round

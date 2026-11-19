@@ -1,0 +1,58 @@
+{
+    "id": "next-stop",
+    "title": "Next Stop",
+    "category": "soc",
+    "level": "Intermediate",
+    "order": 3,
+    "summary": "A new Windows service appeared on two servers. One was the IT team's planned update. The other arrived from a desktop computer - and the same account went straight on to the domain controller.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). Installing a service is a favourite way for attackers to run a program on another computer with full rights, but IT does it too. The SIEM raised \"New service installed\" on FILE01 and on PRINT01 today. Find which one is an intruder moving from computer to computer, where it came from and where it went next.",
+    "goal": "Decide which alert is real, then trace it: the computer it came from, the account, the service and its program, when it arrived, and the next computer it reached.",
+    "skills": "lateral movement, network sign-ins (logon type 3), admin shares, service installs (7045), following an account across hosts",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 25,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "O1": "person:flast", "O2": "person:flast", "ADMP": "person:flast",
+        "HA": "num:10-39", "H2": "num:40-69", "H3": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:13-17",
+        "SVCNAME": "pick:WinUpdSvc|SysHelperSvc|NetCacheSvc|PerfMon2|DiagTrack2",
+        "EXE": "pick:upd.exe|svchelper.exe|netcache.exe|perfmon2.exe",
+        "QV": "pick:file|print"
+    },
+    "variants": {
+        "QV": {
+            "file": { "QSRV": "FILE01", "VQ": "real" },
+            "print": { "QSRV": "PRINT01", "VQ": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 170, "from": "-12h", "to": "+40m",
+            "hosts": [ "WS-{{HA}}", "WS-{{H2}}", "WS-{{H3}}" ],
+            "users": [ "{{UA}}", "{{O1}}", "{{O2}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{H2}}", "{{NET}}.{{H3}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01", "PRINT01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}", "quiet": [ "adm_{{ADMP}}" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The \"New service installed\" alert on {{QSRV}}: real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "PRINT01's service came from the deployment server DEPLOY01, during the night, in the planned update window, by svc_deploy, from Program Files. FILE01's came from a desktop computer, by an administrator account, from a file just copied into C:\\Windows\\Temp, and that account went on to the domain controller." },
+        { "id": "from", "ask": "From which computer did the intruder reach FILE01?", "answer": "WS-{{HA}}", "accept": [ "{{NET}}.{{HA}}" ], "points": 30, "explain": "workstation= / src_ip= of the 4624 on FILE01 just before the service." },
+        { "id": "acct", "ask": "Which account did it use?", "answer": "adm_{{ADMP}}", "points": 30, "explain": "user= on the 4624, 4672 and 7045 events." },
+        { "id": "svc", "ask": "What was the new service on FILE01 called?", "answer": "{{SVCNAME}}", "points": 25, "explain": "service= on the 7045 event." },
+        { "id": "exe", "ask": "Which program file does that service run (just the file name)?", "answer": "{{EXE}}", "accept": [ "C:\\Windows\\Temp\\{{EXE}}" ], "points": 25, "explain": "path= on the 7045 event; the same file was copied in over the ADMIN$ share seconds earlier." },
+        { "id": "when", "ask": "At what time (HH:MM:SS) did the intruder first sign in to FILE01?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The 4624 for that account on FILE01." },
+        { "id": "next", "ask": "Which computer did the same account reach next, after FILE01?", "answer": "DC01", "points": 40, "explain": "A 4624 on DC01 from FILE01's address a few minutes later." }
+    ],
+    "hints": [
+        { "text": "For each service alert, ask: who installed it, from where, when, and what does it run? Planned IT work comes from IT's own servers, in planned hours, from Program Files. An intruder copies a program in and starts it straight away.", "cost": 5 },
+        { "text": "siem search source=winsec event=7045 shows both services with their user= and path=. Then siem search host=FILE01 source=winsec --since HH:MM (a few minutes before the service) shows the sign-in (4624, logon_type=3 means over the network) with workstation= and src_ip=: where it came from.", "cost": 9 },
+        { "text": "Follow the account, not the computer: siem search source=winsec user=ACCOUNT lists everywhere it signed in, in time order. The one after FILE01 is where it went next.", "cost": 14 }
+    ]
+}

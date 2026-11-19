@@ -1,0 +1,14 @@
+SYNOPSIS: Saves the current location on a stack, then moves to another one (pushd).
+DESCRIPTION:
+Push-Location remembers where you are and then works like Set-Location. Pop-Location takes you back. Scripts use the pair to visit a folder and return to where the user started, even from another drive.
+PARAMETER Path:
+The new location. Without it, Push-Location only saves the current one.
+PARAMETER LiteralPath:
+The new location, taken exactly as typed.
+PARAMETER StackName:
+Saves on a named stack instead of the default one.
+PARAMETER PassThru:
+Outputs the new location.
+EXAMPLE: Push-Location HKLM:\SOFTWARE; Get-ChildItem; Pop-Location
+Visits a registry key and comes back.
+RELATED: Pop-Location, Set-Location, Get-Location

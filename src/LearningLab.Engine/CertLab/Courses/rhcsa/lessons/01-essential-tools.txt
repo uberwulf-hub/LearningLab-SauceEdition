@@ -1,0 +1,767 @@
+# Unit: u01 | 1. Essential tools | Understand and use essential tools
+
+Everything in the exam happens at a shell prompt. This unit is about the commands you use all the time: moving around the file system, reading and changing files, sending output where you want it, finding text, links, permissions, archives, logging in to other machines and getting help without the internet.
+
+## Lesson: l0101 | The shell prompt and getting help
+
+When you log in on a RHEL console you see a prompt like `[root@server1 ~]#`. It tells you who you are (`root`), which machine you are on (`server1`) and which folder you are in (`~` is your home folder). The last character is `#` for root and `$` for everyone else.
+
+A command line is the command, then options (they start with `-` or `--`), then arguments (what the command works on). Options that are single letters can be combined: `ls -l -a` and `ls -la` mean the same. Long options use two dashes and are easier to read, for example `ls --all`.
+
+```terminal
+[root@server1 ~]# ls -la /etc/fstab
+-rw-r--r--. 1 root root 579 Mar  2 04:00 /etc/fstab
+[root@server1 ~]# date +%F
+2026-03-02
+```
+
+### Keys that save time
+
+- Tab completes command names, file names and many options. Press it twice to see all the choices.
+- The Up arrow brings back earlier commands; `history` lists them.
+- Ctrl+C stops the command that is running. Ctrl+L clears the screen.
+
+### Help that is always there
+
+The exam has no internet, so learn to find answers on the machine itself:
+
+- `man ls` shows the manual page of a command. Inside it, `/word` searches, `n` jumps to the next match and `q` quits.
+- Manual pages are grouped in sections: 1 is user commands, 5 is file formats, 8 is administration commands. `man 5 fstab` shows the page about the file format, not a command.
+- `man -k word` (the same as `apropos word`) searches the one-line descriptions of all pages. Use it when you know what you want to do but not the name of the command.
+- Most commands print a short summary with `--help`, for example `useradd --help`.
+- `info` shows the longer GNU manuals for some tools, for example `info coreutils`.
+- Packages put extra documentation, notes and example files in `/usr/share/doc/<package>/`.
+
+```terminal
+[root@server1 ~]# ls /usr/share/doc/chrony
+FAQ  README
+```
+
+> Tip: in a man page the EXAMPLES section near the end is often the fastest way to the right syntax. Type /EXAMPLES to jump to it.
+
+@try machines=1
+@task t1 | Essential tools | 10 | server1
+The chrony package keeps its documentation in the usual place. Copy chrony's README file into root's home folder as /root/chrony-readme.txt.
+@check server1 | /root/chrony-readme.txt is a copy of chrony's README
+cmp -s /usr/share/doc/chrony/README /root/chrony-readme.txt
+@hint Package documentation lives in /usr/share/doc/PACKAGE/. List that folder first.
+@solution server1
+ls /usr/share/doc/chrony
+cp /usr/share/doc/chrony/README /root/chrony-readme.txt
+@endtask
+@end
+
+@quiz
+? Which command searches the short descriptions of all manual pages?
+- man -s
++ man -k
+- man -f
+- info -k
+! man -k (or apropos) searches the descriptions; man -f (whatis) only matches the page name.
+? Where do packages put their extra documentation?
+- /usr/doc
+- /etc/doc
++ /usr/share/doc
+- /var/lib/doc
+! On RHEL each package has a folder in /usr/share/doc.
+? You want the manual page about the format of the /etc/fstab file, not a command. What do you type?
+- man fstab 8
++ man 5 fstab
+- man --format fstab
+- info 5 fstab
+! Section 5 holds file formats. The section number comes before the page name.
+? What does the # at the end of the prompt tell you?
+- You are in your home folder
+- The last command failed
++ You are logged in as root
+- The machine is in rescue mode
+! Root's prompt ends with #, every other user's prompt ends with $.
+@end
+
+## Lesson: l0102 | Files, directories and links
+
+Linux keeps everything in one tree that starts at `/`. A path that starts with `/` is absolute; any other path is relative to the folder you are in (`pwd` prints it). `..` means the folder above, `.` the current one and `~` your home folder.
+
+```terminal
+[root@server1 ~]# mkdir -p /srv/projects/2026/reports
+[root@server1 ~]# cd /srv/projects
+[root@server1 projects]# touch notes.txt
+[root@server1 projects]# cp notes.txt 2026/
+[root@server1 projects]# mv notes.txt old-notes.txt
+[root@server1 projects]# ls -R
+.:
+2026  old-notes.txt
+
+./2026:
+notes.txt  reports
+
+./2026/reports:
+```
+
+- `mkdir -p` makes the missing parent folders too.
+- `touch` creates an empty file (or updates the time of an existing one).
+- `cp -r` copies a folder with everything in it; `cp -a` also keeps owners, permissions, times and SELinux labels.
+- `mv` moves or renames. `rm` removes files, `rm -r` folders with their content, `rmdir` only empty folders.
+- `ls -l` shows details, `ls -a` shows hidden files (names starting with a dot), `ls -ld dir` shows the folder itself instead of its content.
+- Wildcards pick several names at once: `*` matches anything, `?` one character, `[abc]` one of the listed characters. `cp /etc/*.conf /backup/` copies every name ending in .conf.
+
+> As root, `rm`, `cp` and `mv` ask before they overwrite or remove, because root's ~/.bashrc has aliases for `rm -i`, `cp -i` and `mv -i`. Answer y, or use -f. There is no recycle bin: what rm removes is gone.
+
+### Hard links and symbolic links
+
+A file's data lives in an inode; a file name is only a pointer to it. A **hard link** is a second name for the same inode. Both names are equal: change the file through one and you see the change through the other, and the data stays until the last name is removed. Hard links work only for files (not folders) and only inside one file system.
+
+A **symbolic (soft) link** is a small file that holds a path to another name. It works for folders and across file systems, but it breaks if the target is removed or moved.
+
+```terminal
+[root@server1 ~]# echo one > /tmp/a.txt
+[root@server1 ~]# ln /tmp/a.txt /tmp/hard.txt
+[root@server1 ~]# ln -s /tmp/a.txt /tmp/soft.txt
+[root@server1 ~]# ls -li /tmp/a.txt /tmp/hard.txt /tmp/soft.txt
+827 -rw-r--r--. 2 root root  4 Mar  2 04:00 /tmp/a.txt
+827 -rw-r--r--. 2 root root  4 Mar  2 04:00 /tmp/hard.txt
+828 lrwxrwxrwx. 1 root root 10 Mar  2 04:00 /tmp/soft.txt -> /tmp/a.txt
+[root@server1 ~]# rm -f /tmp/a.txt
+[root@server1 ~]# cat /tmp/hard.txt
+one
+[root@server1 ~]# cat /tmp/soft.txt
+cat: /tmp/soft.txt: No such file or directory
+```
+
+Read the output: `ls -i` prints the inode number first. The two hard links share inode 827 and the link count (the number after the permissions) is 2. The symbolic link has its own inode, starts with `l` and shows where it points. After the original name is removed, the hard link still has the data and the soft link points at nothing.
+
+- The order is always `ln [-s] TARGET LINKNAME`: what exists first, then the new name.
+- Give `ln -s` an absolute target path. A relative target is resolved from the folder the link is in, not from where you are.
+- `readlink LINK` prints where a link points.
+
+@try machines=1
+@setup server1
+mkdir -p /srv/data
+echo 'quarterly numbers' > /srv/data/report.txt
+@task t1 | Essential tools | 10 | server1
+Create the folder /data/backup/daily (the parent folders do not exist yet) and copy /etc/hosts into it.
+@check server1 | /data/backup/daily is a folder
+test -d /data/backup/daily
+@check server1 | /data/backup/daily/hosts is a copy of /etc/hosts
+cmp -s /etc/hosts /data/backup/daily/hosts
+@solution server1
+mkdir -p /data/backup/daily
+cp /etc/hosts /data/backup/daily/
+@endtask
+@task t2 | Essential tools | 10 | server1
+Create a hard link /srv/data/report-hard.txt to /srv/data/report.txt, and a symbolic link /root/report-link that points to /srv/data/report.txt.
+@check server1 | report-hard.txt is a hard link (same inode as report.txt)
+test -f /srv/data/report-hard.txt && test ! -L /srv/data/report-hard.txt && test "$(stat -c %i /srv/data/report.txt)" = "$(stat -c %i /srv/data/report-hard.txt)"
+@check server1 | /root/report-link is a symbolic link to /srv/data/report.txt
+test -L /root/report-link && test "$(readlink -f /root/report-link)" = /srv/data/report.txt
+@hint ln makes hard links, ln -s symbolic ones. The existing file comes first, the new name second.
+@solution server1
+ln /srv/data/report.txt /srv/data/report-hard.txt
+ln -s /srv/data/report.txt /root/report-link
+@endtask
+@end
+
+@quiz
+? Which option makes mkdir create missing parent folders?
++ -p
+- -r
+- -m
+- -v
+! -p (parents) creates every missing folder on the way and does not complain if the folder exists.
+? You remove the original file. Which link still shows the data?
++ A hard link
+- A symbolic link
+- Both
+- Neither
+! A hard link is another name for the same data, which stays until the last name is gone. A symbolic link only holds the old path.
+? Which of these can a hard link NOT do?
+- Point to a file in the same folder
+- Have a different name from the original
++ Point to a file on another file system
+- Survive when the original name is removed
+! Hard links share an inode, and inode numbers only mean something inside one file system. Use ln -s across file systems and for folders.
+? Which command copies a folder and keeps owners, permissions and times?
+- cp -r
++ cp -a
+- mv -a
+- cp -l
+! -a (archive) copies recursively and preserves everything it can. cp -r makes the copies belong to you with fresh times.
+@end
+
+## Lesson: l0103 | Redirection and pipes
+
+Every command has three streams: standard input (0), standard output (1) and standard error (2). The shell can connect them to files or to other commands. This is how you save output for a task, hide noise, or build a result from several small commands.
+
+- `>` writes output to a file (replacing it), `>>` adds to the end.
+- `2>` sends errors to a file, `2>/dev/null` throws them away, `2>&1` sends errors where the output goes, `&>` sends both.
+- `<` reads input from a file.
+- `|` (a pipe) sends one command's output into the next command.
+- `tee file` shows the output and writes it to a file at the same time.
+
+```terminal
+[root@server1 ~]# echo "first line" > notes.txt
+[root@server1 ~]# echo "second line" >> notes.txt
+[root@server1 ~]# cat notes.txt
+first line
+second line
+[root@server1 ~]# ls /etc/hostname /nowhere 2> errors.txt
+/etc/hostname
+[root@server1 ~]# cat errors.txt
+ls: cannot access '/nowhere': No such file or directory
+```
+
+The output of ls still reached the screen, because only stream 2 went to the file. To catch both:
+
+```terminal
+[root@server1 ~]# ls /nowhere /etc/hosts > out.txt 2>&1
+[root@server1 ~]# cat out.txt
+ls: cannot access '/nowhere': No such file or directory
+/etc/hosts
+```
+
+> The order matters: `> out.txt 2>&1` first points output at the file, then errors at the same place. `2>&1 > out.txt` would leave the errors on the screen.
+
+### Pipes
+
+A pipe joins small tools into one job. Some tools you will pipe into often: `wc -l` counts lines, `sort` sorts, `uniq -c` counts repeated lines, `head` and `tail` keep the first or last lines, `cut -d: -f1` picks a field.
+
+```terminal
+[root@server1 ~]# find /etc -name "*.conf" 2>/dev/null | wc -l
+21
+[root@server1 ~]# cut -d: -f7 /etc/passwd | sort | uniq -c
+      2 /bin/bash
+      1 /bin/sync
+      1 /sbin/halt
+     18 /sbin/nologin
+      1 /sbin/shutdown
+      1 /usr/sbin/nologin
+[root@server1 ~]# grep student /etc/passwd | tee student.txt
+student:x:1000:1000:Student:/home/student:/bin/bash
+```
+
+A here-document feeds several lines into a command, which is handy for writing a file in one go. With quotes around the end word (`<<'EOF'`) the shell leaves `$` and other special characters alone:
+
+```terminal
+[root@server1 ~]# cat > /root/motd.txt <<EOF
+> Welcome to $(hostname)
+> EOF
+```
+
+@try machines=1
+@setup server1
+printf 'line one\nline two\n' > /root/notes.txt
+@task t1 | Essential tools | 10 | server1
+Find every file under /usr/share/doc whose name is README and save the list (one path per line, no error messages) in /root/readmes.txt.
+@check server1 | /root/readmes.txt lists /usr/share/doc/chrony/README
+grep -qx '/usr/share/doc/chrony/README' /root/readmes.txt
+@check server1 | no error messages in it
+! grep -q 'Permission denied\|No such' /root/readmes.txt
+@solution server1
+find /usr/share/doc -name README > /root/readmes.txt 2>/dev/null
+@endtask
+@task t2 | Essential tools | 10 | server1
+Add the line `line three` to the end of /root/notes.txt. The two lines already in it must stay.
+@check server1 | the file is line one, line two, line three
+test "$(cat /root/notes.txt)" = "$(printf 'line one\nline two\nline three')"
+@hint One > replaces the file; two of them add to it.
+@solution server1
+echo "line three" >> /root/notes.txt
+@endtask
+@end
+
+@quiz
+? Which redirection sends both output and errors to the same file?
+- 2> file
+- > file 2>
++ > file 2>&1
+- 1>2 file
+! The order matters: first > file, then 2>&1 points errors at the same place. &> file does the same.
+? What does command 2>/dev/null do?
+- Saves the output in a file named null
++ Throws away the error messages and keeps the normal output on the screen
+- Throws away all output
+- Runs the command in the background
+! Stream 2 is standard error; /dev/null discards whatever is written to it.
+? Which command shows output on the screen and saves it in a file at the same time?
+- cat
+- more
++ tee
+- split
+! tee copies its input to the screen and to every file you name (tee -a appends).
+@end
+
+## Lesson: l0104 | grep and regular expressions
+
+`grep PATTERN FILE` prints the lines of a file that match a pattern. In the exam you use it to find a setting, to filter output, and to save matching lines into a file.
+
+Options worth knowing:
+
+- `-i` ignores upper and lower case, `-v` prints the lines that do NOT match.
+- `-n` adds line numbers, `-c` counts matching lines, `-l` prints only the names of files that match.
+- `-r` searches all files in a folder and below, `-w` matches whole words only, `-q` prints nothing (only the exit code tells you if it matched, which is useful in scripts).
+- `-A 2` and `-B 2` also show 2 lines after or before each match.
+- `-E` turns on extended regular expressions (the same as the old `egrep`).
+
+```terminal
+[root@server1 ~]# grep -n '^student' /etc/passwd
+24:student:x:1000:1000:Student:/home/student:/bin/bash
+[root@server1 ~]# grep -c nologin /etc/passwd
+19
+[root@server1 ~]# grep -i 'PERMITROOTLOGIN' /etc/ssh/sshd_config
+#PermitRootLogin prohibit-password
+```
+
+### Regular expressions
+
+A regular expression is a pattern where some characters have a special meaning:
+
+- `^` is the start of the line and `$` the end. `^root` matches lines that begin with root; `sh$` lines that end with sh.
+- `.` matches any one character. `*` means "the thing before me, any number of times (also zero)", so `.*` matches anything.
+- `[abc]` matches one of the listed characters, `[0-9]` one digit, `[^:]` any character except a colon.
+- With `-E` you also get `+` (one or more), `?` (zero or one), `{4}` (exactly four times), `|` (or) and `( )` for groups.
+- Put the pattern in single quotes so the shell does not change `*`, `$` or `|` before grep sees them.
+
+```terminal
+[root@server1 ~]# grep 'sh$' /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+student:x:1000:1000:Student:/home/student:/bin/bash
+[root@server1 ~]# grep -E '^(root|student):' /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+student:x:1000:1000:Student:/home/student:/bin/bash
+[root@server1 ~]# grep -E 'x:[0-9]{4}:' /etc/passwd
+student:x:1000:1000:Student:/home/student:/bin/bash
+```
+
+A classic use: show a configuration file without its comments and blank lines.
+
+```terminal
+[root@server1 ~]# grep -vE '^(#|$)' /etc/ssh/sshd_config
+Include /etc/ssh/sshd_config.d/*.conf
+AuthorizedKeysFile	.ssh/authorized_keys
+Subsystem	sftp	/usr/libexec/openssh/sftp-server
+```
+
+> grep prints whole lines. If a task asks for "all lines that contain X", redirect grep's output into the file and do not cut anything away.
+
+@try machines=1
+@setup server1
+curl -s -o /root/words.txt http://utility.lab.example.com/files/words.txt
+@task t1 | Essential tools | 10 | server1
+Save every line of /etc/passwd whose login shell is /bin/bash (the line ends with /bin/bash) into /root/bash-users.txt, in the original order and without changing the lines.
+@check server1 | the file holds exactly the root and student lines
+test "$(cat /root/bash-users.txt)" = "$(printf 'root:x:0:0:root:/root:/bin/bash\nstudent:x:1000:1000:Student:/home/student:/bin/bash')"
+@hint $ anchors a pattern at the end of the line.
+@solution server1
+grep '/bin/bash$' /etc/passwd > /root/bash-users.txt
+@endtask
+@task t2 | Essential tools | 10 | server1
+The file /root/words.txt has one word per line. Save the words that begin with `start` into /root/start-words.txt.
+@check server1 | start-words.txt holds start and startle (and not starfish)
+test "$(cat /root/start-words.txt)" = "$(printf 'start\nstartle')"
+@hint ^ anchors a pattern at the start of the line.
+@solution server1
+grep '^start' /root/words.txt > /root/start-words.txt
+@endtask
+@end
+
+@quiz
+? Which grep option prints the lines that do NOT match?
+- -n
++ -v
+- -x
+- -l
+! -v inverts the match. grep -v '^#' hides comment lines.
+? What does the pattern ^#  match?
+- Lines that contain a #
++ Lines that start with #
+- Lines that end with #
+- Empty lines
+! ^ is the start of the line, so ^# only matches when # is the first character.
+? Which pattern matches exactly four digits with grep -E?
+- [0-9]4
+- [0-9]*4
++ [0-9]{4}
+- 4[0-9]
+! {4} repeats the thing before it four times. Without -E you would have to write \{4\}.
+@end
+
+## Lesson: l0105 | Editing text files with vim and nano
+
+Configuration on Linux is plain text, so you must be able to edit a file on a console without a mouse. RHEL always has `vi` (vim-minimal); `nano` is a simpler editor that is also installed here. The full `vim` command comes with the vim-enhanced package.
+
+### vi in five minutes
+
+vi has modes. It starts in **normal mode**, where keys are commands, not text. That is the part that surprises people.
+
+- `i` starts inserting before the cursor, `a` after it, `o` opens a new line below. Type your text, then press `Esc` to go back to normal mode.
+- `:w` saves, `:q` quits, `:wq` (or `ZZ`) saves and quits, `:q!` quits without saving.
+- Moving: arrow keys, or `h j k l`; `gg` goes to the first line, `G` to the last, `:15` to line 15, `0` and `$` to the start and end of the line.
+- Changing: `x` deletes a character, `dd` deletes (cuts) a line, `yy` copies a line, `p` pastes below, `u` undoes, `Ctrl+r` redoes. A number in front repeats: `3dd` deletes three lines.
+- Searching: `/word` searches forward, `n` goes to the next match. `:%s/old/new/g` replaces old with new on every line.
+- `:set nu` shows line numbers.
+
+> If you are lost in vi, press Esc twice and type :q! to leave without changing anything. Then start again.
+
+### nano
+
+nano shows its commands at the bottom of the screen; `^` means the Ctrl key. Type to insert text, `Ctrl+O` then Enter saves, `Ctrl+X` quits (it asks to save if needed), `Ctrl+W` searches and `Ctrl+K` cuts the current line.
+
+### Editing without an editor
+
+Small changes can also be made from the command line, which is quick and easy to repeat:
+
+- `echo "text" >> file` adds a line at the end.
+- `sed -i 's/old/new/' file` replaces the first old on each line (add `g` for all of them).
+- `sed -i '/pattern/d' file` deletes the lines that match.
+
+```terminal
+[root@server1 ~]# printf 'apples\npears\nplums\n' > list.txt
+[root@server1 ~]# sed -i 's/pears/cherries/' list.txt
+[root@server1 ~]# sed -i '/plums/d' list.txt
+[root@server1 ~]# cat list.txt
+apples
+cherries
+```
+
+Whatever way you choose, look at the file afterwards (`cat` or `grep`) to be sure the change is right.
+
+@try machines=1
+@setup server1
+printf 'buy milk\nwrite draft report\ncall the bank\n' > /root/todo.txt
+@task t1 | Essential tools | 10 | server1
+Edit /root/todo.txt with vi or nano: delete the line `buy milk`, change the word `draft` to `final`, and add a new last line `water the plants`.
+@check server1 | the file is: write final report, call the bank, water the plants
+test "$(cat /root/todo.txt)" = "$(printf 'write final report\ncall the bank\nwater the plants')"
+@hint In vi: dd deletes the line under the cursor, cw changes a word, G then o opens a new line at the end, Esc then :wq saves. In nano, Ctrl+K cuts a line and Ctrl+O saves.
+@solution server1
+sed -i '/buy milk/d' /root/todo.txt
+sed -i 's/draft/final/' /root/todo.txt
+echo "water the plants" >> /root/todo.txt
+@endtask
+@end
+
+@quiz
+? You are in vi and typed some text. How do you save and quit?
+- Ctrl+S, then Ctrl+Q
++ Esc, then :wq
+- :exit while typing
+- Ctrl+X
+! Esc returns to normal mode; :wq writes the file and quits. Ctrl+X is nano's quit key.
+? In vi's normal mode, what does dd do?
+- Duplicates the line
++ Deletes (cuts) the current line
+- Moves to the last line
+- Deletes the whole file
+! dd cuts the line; p pastes it again below the cursor.
+? Which command replaces every "http" with "https" in every line of a file without opening an editor?
+- sed 's/http/https/' file
++ sed -i 's/http/https/g' file
+- grep -r http https file
+- tr http https file
+! -i changes the file in place and g replaces every match on a line, not just the first. Without -i sed only prints the result.
+@end
+
+## Lesson: l0106 | Permissions: users, groups and others
+
+Every file and folder has an owner (a user), a group, and three sets of permissions: for the owner (u), for members of the group (g) and for everyone else (o). Each set is r (read), w (write) and x (execute).
+
+```terminal
+[root@server1 ~]# ls -l /etc/hostname
+-rw-r--r--. 1 root root 24 Mar  2 04:00 /etc/hostname
+[root@server1 ~]# ls -ld /tmp /root /home/student
+drwx------. 2 student student  60 Mar  2 04:00 /home/student
+dr-xr-x---. 2 root    root    168 Mar  2 04:00 /root
+drwxrwxrwt. 2 root    root      6 Mar  2 04:00 /tmp
+```
+
+Read `-rw-r--r--` in pieces: the first character is the type (`-` file, `d` folder, `l` link), then `rw-` for the owner, `r--` for the group and `r--` for others. The dot after it means the file has an SELinux label. Then come the link count, the owner and the group.
+
+### What r, w and x mean
+
+- On a file: r reads it, w changes it, x runs it as a program.
+- On a folder: r lists the names in it, w creates, renames and deletes files in it, x lets you enter it and reach the files inside. A folder without x is closed even if you can read it.
+- Linux checks only one set: if you are the owner, the owner set counts; else if you are in the group, the group set; else the others set. Root can read and write everything anyway.
+
+### chmod: change the permissions
+
+With numbers, r=4, w=2, x=1, added up per set: `chmod 640 file` gives rw- (6) to the owner, r-- (4) to the group and nothing (0) to others. Common values: 755 (programs and folders), 644 (normal files), 700 and 600 (private).
+
+With letters you change just one part: `u`, `g`, `o` or `a` (all), then `+` (add), `-` (remove) or `=` (set exactly), then the permissions.
+
+```terminal
+[root@server1 ~]# touch /root/plan.txt
+[root@server1 ~]# chmod u=rw,g=r,o= /root/plan.txt
+[root@server1 ~]# ls -l /root/plan.txt
+-rw-r-----. 1 root root 0 Mar  2 04:00 /root/plan.txt
+[root@server1 ~]# chmod 755 /root/plan.txt
+[root@server1 ~]# ls -l /root/plan.txt
+-rwxr-xr-x. 1 root root 0 Mar  2 04:00 /root/plan.txt
+```
+
+`chmod -R` changes a whole folder tree. `chmod o+t` sets the sticky bit (the `t` you saw on /tmp: in such a folder people can only delete their own files) and `chmod g+s` on a folder makes new files take the folder's group; you meet both again in the file systems unit.
+
+### chown and chgrp: change the owner and group
+
+Only root can give a file to another user. `chown USER file` changes the owner, `chown USER:GROUP file` both, `chown :GROUP file` or `chgrp GROUP file` only the group. `-R` works on a whole tree.
+
+```terminal
+[root@server1 ~]# chown student /root/plan.txt
+[root@server1 ~]# chown :wheel /root/plan.txt
+[root@server1 ~]# ls -l /root/plan.txt
+-rwxr-xr-x. 1 student wheel 0 Mar  2 04:00 /root/plan.txt
+[root@server1 ~]# stat -c '%A %a %U %G %n' /etc/shadow /etc/passwd
+---------- 0 root root /etc/shadow
+-rw-r--r-- 644 root root /etc/passwd
+```
+
+`stat -c` prints exactly the fields you ask for, which is handy to check your work: `%a` is the number form, `%A` the letters, `%U` the owner and `%G` the group.
+
+> New files start from a default set by the umask (0022 for root here: files 644, folders 755). That is part of the Security unit.
+
+@try machines=1
+@setup server1
+mkdir -p /srv/shared/bin
+echo 'meeting at nine' > /srv/shared/plan.txt
+printf '#!/bin/bash\necho tool\n' > /srv/shared/bin/tool.sh
+chmod 600 /srv/shared/bin/tool.sh
+@task t1 | Essential tools | 10 | server1
+Make /srv/shared/plan.txt belong to the user student and the group wheel. The owner may read and write it, the group may only read it, and other users have no access.
+@check server1 | owner student, group wheel
+test "$(stat -c '%U:%G' /srv/shared/plan.txt)" = student:wheel
+@check server1 | mode 640 (rw-r-----)
+test "$(stat -c %a /srv/shared/plan.txt)" = 640
+@solution server1
+chown student:wheel /srv/shared/plan.txt
+chmod 640 /srv/shared/plan.txt
+@endtask
+@task t2 | Essential tools | 10 | server1
+Everyone must be able to read and run /srv/shared/bin/tool.sh; only its owner (root) may change it.
+@check server1 | mode 755 (rwxr-xr-x)
+test "$(stat -c %a /srv/shared/bin/tool.sh)" = 755
+@check server1 | student can run it
+su - student -c /srv/shared/bin/tool.sh | grep -q tool
+@solution server1
+chmod 755 /srv/shared/bin/tool.sh
+@endtask
+@end
+
+@quiz
+? What permissions does chmod 750 give?
+- rwxr-xr-x
++ rwxr-x---
+- rw-r-----
+- rwx---r-x
+! 7 = rwx for the owner, 5 = r-x for the group, 0 = nothing for others.
+? A user can list a folder with ls but cannot open any file in it. Which permission is missing on the folder?
+- r
+- w
++ x
+- t
+! x on a folder lets you enter it and reach the files inside; r only lets you read the list of names.
+? Which command gives the file only to the group "sales" and leaves the owner alone?
+- chown sales file
++ chgrp sales file
+- chmod g=sales file
+- usermod -g sales file
+! chgrp (or chown :sales) changes only the group. chown sales would change the owner.
+? Which chmod removes write permission for the group and others, and changes nothing else?
+- chmod 644 file
++ chmod go-w file
+- chmod a=r file
+- chmod -w file
+! go-w takes w away from the group and others only. A number would set every bit, not just remove w.
+@end
+
+## Lesson: l0107 | Archives and compression
+
+An archive packs many files and folders into one file; compression makes a file smaller. On Linux `tar` does the packing and can call a compressor at the same time.
+
+The tar options you need (they can be combined, and the `f` must come last because the file name follows it):
+
+- `c` creates an archive, `t` lists what is inside, `x` extracts.
+- `f FILE` names the archive file. `v` shows each file as it works.
+- `z` uses gzip (.tar.gz or .tgz), `j` uses bzip2 (.tar.bz2), `J` uses xz (.tar.xz).
+- `-C DIR` changes to DIR first: when creating, the names in the archive are taken from there; when extracting, the files land there.
+
+```terminal
+[root@server1 ~]# tar -czf /root/ssh.tar.gz /etc/ssh
+tar: Removing leading `/' from member names
+[root@server1 ~]# tar -tvzf /root/ssh.tar.gz | head -3
+drwxr-xr-x root/root            0 2026-03-02 04:00 etc/ssh/
+-rw-r--r-- root/root          634 2026-03-02 04:00 etc/ssh/ssh_config
+drwxr-xr-x root/root            0 2026-03-02 04:00 etc/ssh/ssh_config.d/
+[root@server1 ~]# tar -xzf /root/ssh.tar.gz -C /tmp
+[root@server1 ~]# ls /tmp/etc/ssh
+ssh_config  ssh_config.d  sshd_config  sshd_config.d
+```
+
+The message about the leading `/` is normal: tar stores `etc/ssh/...` without the slash, so extracting never overwrites the real /etc by accident. It unpacks under the folder you are in (or the one after `-C`). When you extract, tar finds out the compression by itself, so `tar -xf` works for every kind.
+
+```terminal
+[root@server1 ~]# tar -cvjf /root/home.tar.bz2 -C /home student
+student/
+student/.bash_logout
+student/.bash_profile
+student/.bashrc
+[root@server1 ~]# file /root/ssh.tar.gz /root/home.tar.bz2
+/root/ssh.tar.gz: gzip compressed data, from Unix, original size modulo 2^32 10240
+/root/home.tar.bz2: bzip2 compressed data, block size = 900k
+```
+
+### Compressing single files
+
+`gzip file`, `bzip2 file` and `xz file` replace the file with a compressed `file.gz`, `file.bz2` or `file.xz`. `-d` (or `gunzip`, `bunzip2`, `unxz`) turns it back, `-k` keeps the original, and `zcat`, `bzcat`, `xzcat` print the content without unpacking.
+
+```terminal
+[root@server1 ~]# cp /etc/passwd /tmp/p
+[root@server1 ~]# bzip2 /tmp/p
+[root@server1 ~]# bzcat /tmp/p.bz2 | head -1
+root:x:0:0:root:/root:/bin/bash
+[root@server1 ~]# bzip2 -d /tmp/p.bz2
+[root@server1 ~]# ls /tmp
+etc  p
+```
+
+> If a task names the archive file (for example /root/backup.tar.bz2), use exactly that name and the matching compression. `file` tells you what an archive really is.
+
+@try machines=1
+@setup server1
+mkdir -p /tmp/site
+echo '<h1>hello</h1>' > /tmp/site/index.html
+tar -cjf /root/site.tar.bz2 -C /tmp site
+rm -rf /tmp/site
+@task t1 | Essential tools | 10 | server1
+Create a gzip-compressed tar archive /root/sshconf.tar.gz that holds the folder /etc/ssh with everything in it.
+@check server1 | the archive is gzip compressed
+file /root/sshconf.tar.gz | grep -q 'gzip compressed'
+@check server1 | it contains etc/ssh/sshd_config
+tar -tzf /root/sshconf.tar.gz | grep -q 'etc/ssh/sshd_config$'
+@solution server1
+tar -czf /root/sshconf.tar.gz /etc/ssh
+@endtask
+@task t2 | Essential tools | 10 | server1
+Unpack the archive /root/site.tar.bz2 into the folder /srv/www (create it), so that the file /srv/www/site/index.html exists.
+@check server1 | /srv/www/site/index.html exists
+grep -q hello /srv/www/site/index.html
+@hint tar -xf works for every compression; -C picks the folder to unpack into.
+@solution server1
+mkdir -p /srv/www
+tar -xjf /root/site.tar.bz2 -C /srv/www
+@endtask
+@end
+
+@quiz
+? Which tar command creates a bzip2-compressed archive?
+- tar -czf backup.tar.bz2 /data
++ tar -cjf backup.tar.bz2 /data
+- tar -xjf backup.tar.bz2 /data
+- tar -cJf backup.tar.bz2 /data
+! c creates, j means bzip2, f names the file. z would be gzip and J xz, whatever the file name says.
+? How do you list the files inside archive.tar.gz without unpacking it?
++ tar -tzf archive.tar.gz
+- tar -lzf archive.tar.gz
+- gzip -l archive.tar.gz
+- tar -czf archive.tar.gz
+! t lists the content. gzip -l only shows sizes, not the file names inside the tar.
+? You run gzip report.txt. What is left?
+- report.txt and report.txt.gz
++ Only report.txt.gz
+- Only report.txt
+- report.tar.gz
+! gzip replaces the file with its compressed version. Use gzip -k to keep the original.
+@end
+
+## Lesson: l0108 | Logging in: consoles, ssh and su
+
+### Logging in on a console
+
+In the multi-user target (the normal text mode of a server) each console shows a `login:` prompt. Type the user name, then the password; nothing is shown while you type a password. `exit` (or `logout`, or Ctrl+D) ends the session. A real machine has several text consoles: Ctrl+Alt+F2 to F6 switch between them, so you can log in as another user while the first session keeps running.
+
+`whoami` prints who you are now, `who` lists the people logged in, and `w` adds what they are doing.
+
+### ssh: a shell on another machine
+
+`ssh USER@HOST` opens a shell on another machine over an encrypted connection. The first time, ssh shows the other machine's key fingerprint and asks if you trust it; answering yes saves the key in `~/.ssh/known_hosts`, and it does not ask again. If the key ever changes, ssh warns you loudly, because someone may be pretending to be that machine.
+
+```terminal
+[root@server1 ~]# ssh student@server2
+The authenticity of host 'server2 (192.168.50.12)' can't be established.
+ED25519 key fingerprint is SHA256:CSGKzvYSOfnQXRpu6xQl6t1hYLnO4gEhQwYBk4mSDD0.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'server2' (ED25519) to the list of known hosts.
+student@server2's password:
+[student@server2 ~]$ hostname
+server2.lab.example.com
+[student@server2 ~]$ exit
+logout
+Connection to server2 closed.
+```
+
+Watch the prompt: it shows which user and which machine you are on. A common exam mistake is doing a task on the wrong machine because you forgot to leave an ssh session. Without `USER@`, ssh uses your current user name. You can also run one command and come straight back: `ssh server2 hostname`. Logging in with keys instead of passwords is in the Security unit.
+
+### su: become another user
+
+`su - USER` starts a login shell as that user: you get their environment, their PATH and their home folder. Without the `-`, you keep most of your old environment and stay in the same folder, which can make commands behave oddly. Root can switch to any user without a password; other users must type the target user's password. `su -` alone means root.
+
+```terminal
+[root@server1 ~]# su - student
+[student@server1 ~]$ pwd
+/home/student
+[student@server1 ~]$ exit
+logout
+[root@server1 ~]# su student
+[student@server1 root]$ pwd
+/root
+[student@server1 root]$ exit
+exit
+[root@server1 ~]# su - student -c 'id'
+uid=1000(student) gid=1000(student) groups=1000(student),10(wheel) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+```
+
+`su - USER -c 'command'` runs one command as that user, which is also a good way to check that a user can (or cannot) do something. `sudo command` runs one command as root after asking for your own password; it works for members of the wheel group, such as student here (more in the Users and groups unit).
+
+@try machines=2
+@task t1 | Essential tools | 10 | server2
+From server1, log in to server2 over ssh as student (password student) and create the file /home/student/from-server1.txt on server2.
+@check server2 | the file exists on server2 and belongs to student
+test "$(stat -c %U /home/student/from-server1.txt)" = student
+@hint Answer yes to the fingerprint question the first time. Check the prompt before you type touch.
+@solution server1
+ssh student@server2
+yes
+student
+touch /home/student/from-server1.txt
+exit
+@endtask
+@task t2 | Essential tools | 10 | server1
+On server1, switch to the user student with a login shell and create the file notes.txt in student's home folder, so that it belongs to student.
+@check server1 | /home/student/notes.txt belongs to student
+test "$(stat -c %U /home/student/notes.txt)" = student
+@solution server1
+su - student
+touch notes.txt
+exit
+@endtask
+@end
+
+@quiz
+? What is the difference between su - student and su student?
+- There is none
++ su - starts a login shell with student's environment and home folder; su keeps most of the old environment
+- su student asks for root's password
+- su - student only works for root
+! The dash gives you a full login, as if student had logged in. Without it you keep your old PATH and folder.
+? ssh asks "Are you sure you want to continue connecting?" the first time you reach a machine. Why?
+- The password is wrong
++ ssh does not know the machine's key yet and asks you to trust it
+- The firewall blocks the connection
+- Root may not log in with ssh
+! Your answer saves the key in ~/.ssh/known_hosts. Next time ssh checks that the machine still has the same key.
+? Which command runs only hostname on server2 and comes back?
+- ssh -c hostname server2
++ ssh server2 hostname
+- su - server2 -c hostname
+- scp server2 hostname
+! Anything after the host name is run as a command on the other machine.
+@end

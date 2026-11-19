@@ -1,0 +1,29 @@
+NAME
+       partx - tell the kernel about the partitions of a disk
+
+SYNOPSIS
+       partx [-a | -d | -u | -s] DISK
+
+DESCRIPTION
+       partx reads the partition table of a disk and adds, removes or
+       updates partitions in the kernel's view, or just lists them. It is an
+       alternative to partprobe.
+
+OPTIONS
+       -a, --add
+              Tell the kernel about partitions it does not know yet.
+
+       -d, --delete
+              Tell the kernel to forget partitions.
+
+       -u, --update
+              Bring the kernel's view in line with the table on disk.
+
+       -s, --show
+              List the partitions on the disk.
+
+EXAMPLES
+           partx -u /dev/vdb
+
+SEE ALSO
+       partprobe(8), lsblk(8), fdisk(8)

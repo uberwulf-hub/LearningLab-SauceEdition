@@ -1,0 +1,26 @@
+NAME
+       apropos - search the short descriptions of the manual pages
+
+SYNOPSIS
+       apropos KEYWORD
+
+DESCRIPTION
+       apropos looks for KEYWORD in the NAME line of every manual page and
+       prints each match as "name (section) - description". Upper and lower
+       case do not matter. It is the same as man -k KEYWORD.
+
+       Use it when you know what you want to do but not which program does
+       it. The search uses a database built by mandb; on a freshly installed
+       system run mandb once (as root) if apropos finds nothing.
+
+EXAMPLES
+       Find programs that deal with logical volumes:
+
+           apropos "logical volume"
+
+       Find the pages that talk about SELinux contexts:
+
+           apropos context
+
+SEE ALSO
+       man(1), whatis(1), mandb(8)

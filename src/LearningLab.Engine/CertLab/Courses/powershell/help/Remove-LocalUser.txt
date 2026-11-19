@@ -1,0 +1,13 @@
+SYNOPSIS: Deletes local user accounts.
+DESCRIPTION:
+Remove-LocalUser deletes accounts and their group memberships. The built-in accounts cannot be deleted (disable them instead). The user's profile folder under C:\Users stays.
+PARAMETER Name:
+The users. Position 0, takes pipeline input.
+PARAMETER InputObject:
+LocalUser objects.
+PARAMETER SID:
+Users by security identifier.
+EXAMPLE: Remove-LocalUser -Name kiosk
+EXAMPLE: Get-LocalUser test* | Remove-LocalUser -WhatIf
+Shows which test accounts would go.
+RELATED: New-LocalUser, Disable-LocalUser

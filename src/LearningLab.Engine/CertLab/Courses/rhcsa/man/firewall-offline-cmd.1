@@ -1,0 +1,22 @@
+NAME
+       firewall-offline-cmd - change the saved firewalld configuration while firewalld is stopped
+
+SYNOPSIS
+       firewall-offline-cmd [--zone=ZONE] OPTION...
+
+DESCRIPTION
+       firewall-offline-cmd takes most of the options of firewall-cmd, but
+       works on the files in /etc/firewalld directly instead of talking to
+       the firewalld service. Every change is permanent, so --permanent is
+       not needed. It is meant for when firewalld is not running, for
+       example in installation scripts.
+
+       If firewalld is running, use firewall-cmd instead; a running firewalld
+       does not see the changes until it is reloaded.
+
+EXAMPLES
+           firewall-offline-cmd --add-service=http
+           firewall-offline-cmd --zone=public --list-all
+
+SEE ALSO
+       firewall-cmd(1), firewalld(1)

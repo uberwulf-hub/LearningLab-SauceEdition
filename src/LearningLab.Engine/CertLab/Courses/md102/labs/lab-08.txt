@@ -1,0 +1,91 @@
+# Lab: lab-08 | Windows updates | u08 | 30
+Riverbend has no update policies yet: every PC installs whatever Windows Update offers, the Windows 10 desktops are out of support, and the update reports are empty. Build update waves, move the old desktops forward, react to a bad update, get the reports working and take control of drivers.
+
+@vars
+broad = 7 | 10 | 14
+deadline = 2 | 3 | 5
+@endvars
+
+@task t01 | Updates | 25 | portal
+Create two update rings. **Pilot**: quality deferral 0 days, feature deferral 0 days, for the **Pilot devices** group. **Broad**: quality deferral **{broad}** days, feature deferral 0 days, a quality update deadline of **{deadline}** days, for **Windows devices** but not the pilot devices. Sync **RB-LT-001** and **RB-LT-002** so each reports its ring.
+@check portal | the rings are set up as asked
+ring["Broad"].qualityDeferral == {broad}
+ring["Broad"].qualityDeadline == {deadline}
+ring["Broad"].exclude has "Pilot devices"
+ring["Pilot"].include has "Pilot devices"
+@check portal | each laptop is in exactly one ring
+device["RB-LT-001"].ring == Broad
+device["RB-LT-002"].ring == Pilot
+device["RB-LT-002"].policy["Broad"] == "Not assigned"
+@hint Exclude Pilot devices from Broad: both are device groups, so the exclusion works and the pilot laptop gets only the Pilot ring.
+@solution portal
+create ring name=Pilot qualityDeferral=0 featureDeferral=0
+create ring name=Broad qualityDeferral={broad} featureDeferral=0 qualityDeadline={deadline}
+assign ring Pilot "Pilot devices"
+assign ring Broad "Windows devices"
+assign ring Broad "Pilot devices" intent=exclude
+remote sync RB-LT-001
+remote sync RB-LT-002
+@explain
+Two rings on one device conflict, so the broad ring excludes the pilot group. Pilot PCs get each update first; the rest wait {broad} days, then have {deadline} days before Windows restarts on its own outside active hours.
+@endtask
+
+@task t02 | Updates | 20 | portal
+Windows 10 is out of support. Put **RB-DT-010** and **RB-DT-007** in a new assigned group **Old desktops**, and give that group a feature updates policy **Move to Windows 11** for **Windows 11, version 24H2**. RB-DT-007 can't run Windows 11: check what the policy reports for it. Sync both desktops.
+@check portal | RB-DT-010 is on Windows 11; RB-DT-007 is not applicable
+device["RB-DT-010"].featureVersion == 24H2
+device["RB-DT-010"].osVersion like 10.0.26100.*
+device["RB-DT-007"].policy["Move to Windows 11"] == "Not applicable"
+@hint A feature updates policy is assigned to a device group.
+@solution portal
+create group name="Old desktops" type=Security membership=Assigned members="RB-DT-010,RB-DT-007"
+create featureUpdate name="Move to Windows 11" version="Windows 11, version 24H2"
+assign featureUpdate "Move to Windows 11" "Old desktops"
+remote sync RB-DT-010
+remote sync RB-DT-007
+@explain
+A feature updates policy moves devices to the version it names and keeps them there. RB-DT-007 has a TPM 1.2, so Windows Update doesn't offer it Windows 11: it stays on Windows 10 22H2, the last Windows 10 version, and the policy shows it as not applicable. It needs replacing (or Extended Security Updates).
+@endtask
+
+@task t03 | Updates | 15 | portal
+The pilot laptops show that this month's quality update breaks the expenses app. Stop the **Broad** ring from installing new quality updates until the vendor fixes it, and sync **RB-LT-001** so the pause reaches it.
+@check portal | quality updates are paused on Broad
+ring["Broad"].pausedQuality == Yes
+@check RB-LT-001 | the PC knows about the pause
+(Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Update).PauseQualityUpdates -eq 1
+@hint On the ring: Pause > Quality updates. (In Cert Lab: set the ring's Quality updates paused to Yes.)
+@solution portal
+set ring Broad pausedQuality=Yes
+remote sync RB-LT-001
+@explain
+Pausing a ring stops new updates of that kind for its devices. In the real portal the pause ends by itself after 35 days unless you extend it, so it can't be forgotten; Resume lifts it earlier.
+@endtask
+
+@task t04 | Updates | 20 | portal
+The Windows update reports are empty. Turn on the tenant connector **Enable features that need Windows diagnostic data**, and send **Allow Telemetry = Basic** (Windows calls this level Required now) to the Windows devices with a settings catalog profile **Diagnostic data**. Sync RB-LT-001.
+@check portal | the tenant and the device are ready for the reports
+tenant.windowsData == On
+config["Diagnostic data"].include has "Windows devices"
+device["RB-LT-001"].setting["System/AllowTelemetry"] == Basic
+@hint Tenant administration > Settings > Connectors; then a settings catalog profile with System > Allow Telemetry.
+@solution portal
+tenant windowsData=On
+create config name="Diagnostic data" platform="Windows 10 and later" type="Settings catalog" s:System/AllowTelemetry=Basic
+assign config "Diagnostic data" "Windows devices"
+remote sync RB-LT-001
+@explain
+Update reports, and feature, expedited and driver updates through Microsoft's cloud update service, all rely on Windows diagnostic data: the tenant has to allow its use, and the devices must send at least the Required level.
+@endtask
+
+@task t05 | Updates | 20 | portal
+A new driver once broke the docking stations. From now on, drivers must be approved by hand. Create a driver updates policy **Reviewed drivers** with **manual approval** and assign it to **Pilot devices** first.
+@check portal | drivers need approval on the pilot devices
+driverUpdate["Reviewed drivers"].approval == "Manually approve and deploy driver updates"
+driverUpdate["Reviewed drivers"].include has "Pilot devices"
+@hint Devices > Windows updates > Driver updates > Create: approval method Manually approve and deploy driver updates.
+@solution portal
+create driverUpdate name="Reviewed drivers" approval="Manually approve and deploy driver updates"
+assign driverUpdate "Reviewed drivers" "Pilot devices"
+@explain
+With manual approval, Intune lists the drivers Windows Update has for the devices and nothing installs until you approve it. The update ring must not block Windows drivers, or the policy has nothing to offer.
+@endtask

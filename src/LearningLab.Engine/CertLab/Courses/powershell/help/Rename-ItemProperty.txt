@@ -1,0 +1,18 @@
+SYNOPSIS: Renames a registry value and keeps its data.
+DESCRIPTION:
+Rename-ItemProperty gives a value a new name in the same key.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The value's current name.
+PARAMETER NewName:
+The new name.
+PARAMETER PassThru:
+Outputs the renamed value.
+PARAMETER Force:
+Replaces a value that already has the new name.
+EXAMPLE: Rename-ItemProperty HKCU:\Software\Lab -Name Mode -NewName Speed
+Renames a value.
+RELATED: Set-ItemProperty, Get-ItemProperty

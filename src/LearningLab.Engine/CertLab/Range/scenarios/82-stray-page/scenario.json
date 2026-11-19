@@ -1,0 +1,52 @@
+{
+    "id": "stray-page",
+    "title": "A Stray Page",
+    "category": "blue",
+    "level": "Beginner",
+    "order": 6,
+    "summary": "Your website lets visitors upload photos, and someone uploaded something that isn't a photo. Find it in the web log, read it, and get rid of it before it is used again.",
+    "story": "You look after web, the little public website of {{CO}} (made up), on 10.10.22.0/24. Visitors can send photos through an upload form. A colleague thinks something odd was uploaded last night. You have an administrator (root) console on web; the web log is exactly as it was left.",
+    "goal": "Find the address that uploaded the stray file and the file's name, capture the flag inside it, then delete it and stop the upload folder being writable by every account - before it is used again.",
+    "skills": "reading a web access log, grep, ls -l, cat, chmod, rm",
+    "defender": "none",
+    "start": "web",
+    "minutes": 20,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "use the dropped page against your visitors",
+    "goalPoints": 60,
+    "vars": {
+        "CO": "company",
+        "ATKIP": "ip",
+        "PHOTO1": "pick:beach|picnic|garden|dog",
+        "PHOTO2": "pick:sunset|kitten|cake|bike",
+        "KIND": "pick:shell|phish"
+    },
+    "variants": { "KIND": {
+        "shell": { "FILE": "cmd.php", "QUERY": "?c=id", "WHAT": "a tiny web shell: a page that runs commands typed into the address" },
+        "phish": { "FILE": "signin.html", "QUERY": "?from=email", "WHAT": "a fake sign-in page that asks visitors for their password" } } },
+    "machines": [
+        { "name": "web", "os": "linux", "hostname": "web.{{CO_DOMAIN}}", "role": "public website (the one you look after)", "nics": [ "10.10.22.10/24" ],
+          "packages": [ "httpd" ], "motd": "{{CO}} web server - staff only.", "setup": "web.sh" }
+    ],
+    "flags": [
+        { "id": "page", "name": "The flag inside the stray file", "points": 60, "machine": "web", "path": "/var/www/html/uploads/{{FILE}}", "owner": "apache", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "addr", "ask": "What address uploaded the stray file?", "answer": "{{ATKIP}}", "points": 40, "explain": "In the access log this address POSTs to /upload.php late at night and then asks for the new file in /uploads." },
+        { "id": "file", "ask": "What is the stray file's name?", "answer": "{{FILE}}", "accept": [ "/uploads/{{FILE}}", "/var/www/html/uploads/{{FILE}}", "uploads/{{FILE}}" ], "points": 40, "explain": "Every other file in /uploads is a .jpg photo; this one isn't." }
+    ],
+    "tasks": [
+        { "id": "delete", "name": "Delete the stray file", "machine": "web", "check": "test ! -e /var/www/html/uploads/{{FILE}}", "points": 40, "explain": "rm -f /var/www/html/uploads/{{FILE}}" },
+        { "id": "perms", "name": "Stop the uploads folder being writable by every account", "machine": "web", "check": "test -d /var/www/html/uploads && ! find /var/www/html/uploads -maxdepth 0 -perm -0002 | grep -q .", "points": 40, "explain": "chmod 755 /var/www/html/uploads (only its owner may write)" }
+    ],
+    "attacker": [
+        { "at": "240s", "machine": "web", "run": "echo '{{ATKIP}} used /uploads/{{FILE}} again' >> /var/log/httpd/access_log; true", "unless": "test ! -e /var/www/html/uploads/{{FILE}}", "note": "The stray file was still there, so it was used again: {{WHAT}}.", "goal": true }
+    ],
+    "hints": [
+        { "text": "What to think about first: you are the defender. A web server writes a line to its access log for every page anyone asks for. Somewhere in that log is the moment the stray file arrived. Ask: who uploaded something, what did they upload, and is it still there?", "cost": 3 },
+        { "text": "The log is /var/log/httpd/access_log. Each line starts with the visitor's address, then the time, then the request (GET means 'show me a page', POST means 'here is something to save'). cat shows the whole file; grep uploads /var/log/httpd/access_log shows only the lines that mention the uploads folder.", "cost": 5 },
+        { "text": "Look at what is in the folder: ls -l /var/www/html/uploads lists it with details (-l). The visitors' photos all end in .jpg; one file doesn't. The address that POSTed to /upload.php just before asking for that file is the uploader. Read the file with cat: the flag is inside.", "cost": 8 },
+        { "text": "In the same ls -l line for the folder itself (ls -ld /var/www/html/uploads), drwxrwxrwx means every account on the server may write there - the last rwx is 'everyone else'. chmod 755 /var/www/html/uploads makes it rwxr-xr-x: only the owner can write.", "cost": 12 },
+        { "text": "Clean up: rm -f /var/www/html/uploads/{{FILE}} deletes the stray file, and chmod 755 /var/www/html/uploads closes the folder. Then press Check on each fix. (In real life the upload form should also accept only real pictures and never let uploaded files run as pages.)", "cost": 16 }
+    ]
+}

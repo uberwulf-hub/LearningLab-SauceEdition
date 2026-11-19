@@ -1,0 +1,17 @@
+SYNOPSIS: Turns on an Active Directory optional feature, such as the Recycle Bin.
+DESCRIPTION:
+Enable-ADOptionalFeature switches on a forest-wide feature. For the Recycle Bin the scope is ForestOrConfigurationSet and the target is the forest; it needs the Windows Server 2008 R2 forest functional level and Enterprise Admins rights.
+Turning the Recycle Bin on can't be undone. Objects deleted before it was on can't be restored with their attributes.
+PARAMETER Identity:
+The feature, such as "Recycle Bin Feature". Position 0.
+PARAMETER Scope:
+ForestOrConfigurationSet or Domain. Position 1.
+PARAMETER Target:
+The forest or domain to enable it in, such as corp.example. Position 2.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Enable-ADOptionalFeature "Recycle Bin Feature" -Scope ForestOrConfigurationSet -Target corp.example
+Turns on the AD Recycle Bin for the whole forest.
+EXAMPLE: Get-ADOptionalFeature "Recycle Bin Feature" | Select-Object Name, EnabledScopes
+Checks that it is on.
+RELATED: Get-ADOptionalFeature, Restore-ADObject, Get-ADObject

@@ -1,0 +1,26 @@
+SYNOPSIS: Turns JSON text into PowerShell objects.
+DESCRIPTION:
+ConvertFrom-Json reads JSON (the text format many web services and settings files use) and builds objects from it. Each JSON object { } becomes a PSCustomObject whose properties are the JSON keys, each JSON array [ ] becomes an array, and true, false, null and numbers become the matching PowerShell values.
+
+After converting, you reach nested values with dots: $config.Database.Server.
+
+When the text arrives as several lines through the pipeline (for example from Get-Content), the lines are joined and read as one JSON document.
+PARAMETER InputObject:
+The JSON text. Usually it comes through the pipeline. Position 0, required.
+EXAMPLE: $j = '{"name":"web01","ports":[80,443],"owner":{"team":"IT"}}' | ConvertFrom-Json; $j
+Shows an object with the properties name, ports (an array) and owner (another object).
+EXAMPLE: $j.owner.team
+Reads a nested value: IT.
+EXAMPLE: ('[1,2,3]' | ConvertFrom-Json).Count
+Shows 3: a JSON array becomes a PowerShell array.
+EXAMPLE: Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json
+Reads a settings file. -Raw passes the file as one string.
+NOTES:
+Windows PowerShell 5.1 sends a top-level JSON array down the pipeline as one object, so '[1,2,3]' | ConvertFrom-Json | Measure-Object counts 1. Wrap it in parentheses first, or use ForEach-Object. PowerShell 7 sends the items one by one (and has -NoEnumerate to get the old behaviour).
+
+5.1 has no -AsHashtable and no -Depth parameter; both arrived in PowerShell 6 and 7.
+
+5.1 leaves date strings such as "2026-03-01T10:00:00" as text; PowerShell 7 turns them into [datetime]. The old "\/Date(...)\/" form becomes a date in both.
+
+The JSON must be valid: keys in double quotes, no trailing commas, no comments. Otherwise you get an "Invalid JSON primitive" error.
+RELATED: ConvertTo-Json, ConvertFrom-Csv, Import-Csv, about_Objects

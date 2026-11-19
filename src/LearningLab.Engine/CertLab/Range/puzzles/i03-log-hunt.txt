@@ -1,0 +1,54 @@
+title: Who keeps knocking?
+level: Intermediate
+kind: Log hunting
+points: 60
+order: 12
+answer: {{ATTACKER}}
+var: ATTACKER = ip
+var: OK = ip
+
+@intro
+~/secure.log is a copy of this box's SSH log, full of login lines. One address failed
+to log in far more than any other. Which address is it? (Give the IP.)
+
+@setup
+log=/home/player/secure.log
+: > $log
+i=0
+while [ $i -lt 40 ]; do
+  printf 'Mar  2 09:%02d:%02d server sshd[%d]: Accepted password for admin from {{OK}} port %d ssh2\n' $((i%60)) $((i*7%60)) $((2000+i)) $((40000+i)) >> $log
+  i=$((i+1))
+done
+j=0
+while [ $j -lt 120 ]; do
+  printf 'Mar  2 10:%02d:%02d server sshd[%d]: Failed password for root from {{ATTACKER}} port %d ssh2\n' $((j%60)) $((j*3%60)) $((3000+j)) $((50000+j)) >> $log
+  j=$((j+1))
+done
+for extra in 198.51.100.7 203.0.113.9 198.51.100.44; do
+  printf 'Mar  2 08:15:00 server sshd[1234]: Failed password for guest from %s port 51000 ssh2\n' "$extra" >> $log
+done
+sort -R $log -o $log 2>/dev/null || true
+chown player: $log
+chmod 644 $log
+
+@solution
+grep 'Failed password' /home/player/secure.log | grep -oE 'from [0-9.]+' | sort | uniq -c | sort -rn | head
+
+@walkthrough
+Pull out the failed logins, keep just the "from ADDRESS" part, then count how often
+each address appears and sort the counts from biggest to smallest:
+
+    grep 'Failed password' /home/player/secure.log | grep -oE 'from [0-9.]+' \
+      | sort | uniq -c | sort -rn | head
+
+The address at the top, with far more failures than the rest, is the one knocking.
+
+@hint 5
+Don't read the log line by line. Narrow it to the lines that matter (failed sign-ins), then count which address appears most.
+
+@hint 10
+Filter to the "Failed password" lines, then count how often each "from ADDRESS"
+appears: ... | sort | uniq -c | sort -rn (uniq -c counts repeated lines, but only next to each other - hence the first sort).
+
+@hint 15
+grep 'Failed password' /home/player/secure.log | grep -oE 'from [0-9.]+' | sort | uniq -c | sort -rn | head

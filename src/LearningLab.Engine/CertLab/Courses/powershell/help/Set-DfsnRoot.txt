@@ -1,0 +1,14 @@
+SYNOPSIS: Changes the settings of an existing DFS namespace.
+DESCRIPTION:
+Use it to turn access-based enumeration on or off for a namespace after it was created, or to change its description. With access-based enumeration on, people browsing the namespace see only the folders they have permission to open.
+
+Access-based enumeration needs a domain-based namespace in DomainV2 mode or a stand-alone namespace on Windows Server 2008 or later.
+PARAMETER Path:
+The namespace path, for example \\corp.example\Files.
+PARAMETER EnableAccessBasedEnumeration:
+$true to hide folders a user can't open, $false to show every folder.
+PARAMETER Description:
+A new description.
+EXAMPLE: Set-DfsnRoot -Path \\corp.example\Files -EnableAccessBasedEnumeration $true
+Hides the folders each person can't open.
+RELATED: New-DfsnRoot, Get-DfsnRoot, New-DfsnFolder

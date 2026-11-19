@@ -1,0 +1,42 @@
+title: Base 64, base case
+level: Beginner
+kind: Decoding
+points: 40
+order: 1
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+The file ~/message.txt holds a short message, but it has been turned into base64
+(letters, digits, + and /, often ending in =). Decode it. The answer is the word
+inside.
+
+@setup
+printf '%s' '{{SECRET}}' | base64 > /home/player/message.txt
+chown player: /home/player/message.txt
+
+@solution
+cat message.txt
+base64 -d message.txt
+echo
+
+@walkthrough
+base64 is a way to write any data with 64 plain characters, so it travels safely
+through things that only expect text. It is not a secret code: anyone can turn it
+back. The command base64 -d (d for decode) does it.
+
+    base64 -d message.txt
+
+The word it prints is the answer.
+
+@hint 2
+What to think about first: the message isn't locked, it is just written in a different alphabet. Your job is to recognise which alphabet, then use the matching tool to turn it back. Look at the file first: cat message.txt prints it to the screen.
+
+@hint 3
+How to recognise base64: it uses only capital and small letters, the digits 0-9, + and /, and often ends with one or two = signs (padding, to make the length a multiple of four). If what you see looks like that, it is almost certainly base64.
+
+@hint 5
+base64 is an encoding, not encryption: there is no key or password. It exists so that any data can travel through systems that only handle plain text, such as email. Anyone can reverse it, and Linux has a command called base64 that does both directions.
+
+@hint 8
+Run: base64 -d message.txt (the -d means decode). The word it prints is the answer. Because the encoded text had no line break at the end, your prompt may appear on the same line - typing echo afterwards prints a fresh line.

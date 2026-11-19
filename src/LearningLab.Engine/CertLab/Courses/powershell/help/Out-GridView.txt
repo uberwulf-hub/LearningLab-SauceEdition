@@ -1,0 +1,26 @@
+SYNOPSIS: Shows objects in a window with a sortable, filterable table (not available in Cert Lab).
+DESCRIPTION:
+On a Windows PC with a desktop, Out-GridView opens a separate window that shows the objects in a grid. You can sort by clicking column headings, type in a filter box and add criteria, which makes it a handy way to browse large results.
+
+With -PassThru (or -OutputMode Single or Multiple) the window gets OK and Cancel buttons, and the rows you select are sent on down the pipeline. That turns it into a simple picker: choose items with the mouse, then act on them.
+
+Cert Lab's practice console has no windows, so Out-GridView only shows a warning there. Use Format-Table, Sort-Object and Where-Object instead.
+PARAMETER InputObject:
+The objects to show. Usually they come through the pipeline.
+PARAMETER Title:
+The text in the window's title bar.
+PARAMETER PassThru:
+Adds OK and Cancel buttons and outputs the rows you select.
+PARAMETER OutputMode:
+None (just show), Single (pick one row) or Multiple (pick several rows).
+PARAMETER Wait:
+Keeps PowerShell waiting until the window is closed; useful when a script ends straight after showing it.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Out-GridView -Title 'Employees'
+On a real PC, opens the employee list in a window. In Cert Lab, shows a warning.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Out-GridView -PassThru | Export-Csv C:\LabFiles\picked.csv -NoTypeInformation
+On a real PC, saves the rows you select in the window.
+NOTES:
+The alias is ogv.
+
+Out-GridView needs the Windows desktop: it does not work on Server Core or inside a remote session. PowerShell 7 on Windows has it too; on Linux and macOS, the Microsoft.PowerShell.ConsoleGuiTools module offers Out-ConsoleGridView, which draws a similar grid inside the terminal.
+RELATED: Format-Table, Out-Host, Sort-Object, Where-Object

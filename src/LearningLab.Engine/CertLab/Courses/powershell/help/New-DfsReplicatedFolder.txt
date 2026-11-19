@@ -1,0 +1,16 @@
+SYNOPSIS: Adds a replicated folder to a DFS Replication group.
+DESCRIPTION:
+A replicated folder is the content a group keeps in step. It has a name here; the real path on each server is set later with Set-DfsrMembership -ContentPath, and can differ from server to server.
+
+-DfsnPath links it to the DFS namespace folder that publishes it, which is only information for administrators.
+PARAMETER GroupName:
+The replication group. Position 0.
+PARAMETER FolderName:
+The replicated folder's name. Position 1.
+PARAMETER Description:
+A description.
+PARAMETER DfsnPath:
+The namespace folder that shows it, for example \\corp.example\Files\Sales.
+EXAMPLE: New-DfsReplicatedFolder -GroupName Sales-Replication -FolderName Sales -DfsnPath \\corp.example\Files\Sales
+Step 2: the group replicates a folder named Sales.
+RELATED: New-DfsReplicationGroup, Add-DfsrMember, Set-DfsrMembership

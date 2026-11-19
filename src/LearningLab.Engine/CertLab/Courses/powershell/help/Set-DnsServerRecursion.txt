@@ -1,0 +1,12 @@
+SYNOPSIS: Turns recursion on or off on a DNS server.
+DESCRIPTION:
+With -Enable $false the server answers only for the zones it hosts. Everything else gets a refusal, and forwarders and conditional forwarders stop being used, because they are part of recursion.
+
+That is right for a server that publishes public zones, and wrong for a server your clients use: they could no longer resolve internet names.
+PARAMETER Enable:
+$true to resolve other names for clients, $false to answer only from local zones.
+EXAMPLE: Set-DnsServerRecursion -Enable $false -ComputerName DC2
+DC2 now answers only for its own zones; check what that does to clients before keeping it.
+EXAMPLE: Set-DnsServerRecursion -Enable $true -ComputerName DC2
+Turns it back on.
+RELATED: Get-DnsServerRecursion, Get-DnsServerForwarder, Set-DnsServerForwarder

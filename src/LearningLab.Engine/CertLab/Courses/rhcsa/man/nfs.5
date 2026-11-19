@@ -1,0 +1,67 @@
+NAME
+       nfs - mount options for NFS shares
+
+SYNOPSIS
+       mount -t nfs [-o OPTIONS] SERVER:/PATH DIRECTORY
+       SERVER:/PATH  DIRECTORY  nfs  OPTIONS  0 0     (in /etc/fstab)
+
+DESCRIPTION
+       NFS (Network File System) lets a client mount a directory that a
+       server exports, and use it like a local file system. The client needs
+       the nfs-utils package (installed on RHEL 9 Server). On RHEL 9 the
+       type nfs tries NFS version 4.2 first and falls back to older versions;
+       nfs4 asks for version 4 only.
+
+       showmount -e SERVER lists what a server exports (for NFSv3 servers;
+       with NFSv4 only you can mount SERVER:/ and look).
+
+       Owners on NFS are numbers: a file owned by UID 1501 on the server
+       belongs to whichever local account has UID 1501. Give users the same
+       UIDs on all machines.
+
+OPTIONS
+       rw, ro Mount read-write (default) or read-only. The server's export
+              can still refuse writes.
+
+       vers=N, nfsvers=N
+              The NFS version: 3, 4, 4.1 or 4.2.
+
+       sync   Write data to the server before a write call returns (safer,
+              slower).
+
+       hard   Keep retrying while the server is unreachable (default):
+              programs wait instead of getting errors.
+
+       soft   Give up after a while and return an error.
+
+       timeo=N, retrans=N
+              Timeout in tenths of a second, and number of retries.
+
+       sec=sys|krb5|krb5i|krb5p
+              The security mode. sys (default) trusts the client's UIDs;
+              the krb5 modes need Kerberos.
+
+       _netdev
+              In /etc/fstab: a network file system, mounted after the network
+              is up (NFS is recognised by itself, but writing it does no
+              harm).
+
+       nofail In /etc/fstab: do not stop the boot when the server is down.
+
+EXAMPLES
+       Mount a share by hand, then look at it:
+
+           mkdir -p /mnt/shared
+           mount -t nfs nfs.lab.example.com:/exports/shared /mnt/shared
+           df -h /mnt/shared
+
+       Mount it at every boot, read-only, with NFS 4.2:
+
+           echo 'nfs.lab.example.com:/exports/public /mnt/public nfs ro,vers=4.2 0 0' \
+               >> /etc/fstab
+           mkdir -p /mnt/public
+           mount -a
+           findmnt /mnt/public
+
+SEE ALSO
+       mount(8), fstab(5), auto.master(5), showmount(8), umount(8)

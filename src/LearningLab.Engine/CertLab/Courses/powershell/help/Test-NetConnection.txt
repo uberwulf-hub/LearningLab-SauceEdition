@@ -1,0 +1,26 @@
+SYNOPSIS: Checks whether another computer answers a ping or accepts a connection on a TCP port.
+DESCRIPTION:
+Test-NetConnection is the troubleshooting tool for "can this computer reach that one?". It looks up the name, picks the adapter and source address, then pings the target. With -Port (or -CommonTCPPort) it also tries to open a TCP connection to that port, which tells you whether a service is listening and the firewall lets it in.
+
+The result shows ComputerName, RemoteAddress, InterfaceAlias, SourceAddress and PingSucceeded or TcpTestSucceeded. When something fails, a yellow warning says what (name resolution, ping or TCP connect).
+
+A failed ping alone does not prove a computer is down: many firewalls block ping. A successful TCP test does prove the service is reachable.
+PARAMETER ComputerName:
+The name or address to test, for example WEB01 or 10.0.10.50. Without it, Windows tests an internet address.
+PARAMETER Port:
+A TCP port to test, for example 443.
+PARAMETER CommonTCPPort:
+A well-known port by name: HTTP (80), RDP (3389), SMB (445) or WINRM (5985).
+PARAMETER InformationLevel:
+Quiet returns only True or False (good in scripts); Detailed adds the name resolution results and the next hop.
+PARAMETER TraceRoute:
+Lists the routers on the way, like tracert.
+EXAMPLE: Test-NetConnection WEB01 -Port 443
+Checks that the web server accepts HTTPS connections.
+EXAMPLE: Test-NetConnection WIN-SRV1 -CommonTCPPort WINRM -InformationLevel Quiet
+True when PowerShell remoting can reach WIN-SRV1.
+EXAMPLE: Test-NetConnection 10.0.10.21
+Pings WIN-CL1. It fails at first: the client's firewall blocks ping until you enable the File and Printer Sharing (Echo Request - ICMPv4-In) rule.
+NOTES:
+The practice network has no internet, so Test-NetConnection with no computer name (or any name outside lab.example.com) warns that name resolution failed. Test-NetConnection is a Windows-only function from the NetTCPIP module; PowerShell 7 on Windows has it too, and PowerShell 7 also has Test-Connection -TcpPort, which works on every system.
+RELATED: Test-Connection, Resolve-DnsName, Get-NetFirewallRule, Get-NetTCPConnection

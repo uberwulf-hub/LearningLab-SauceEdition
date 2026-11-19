@@ -1,0 +1,53 @@
+TOPIC
+    about_History
+
+SHORT DESCRIPTION
+    Finding and running again the commands you typed earlier.
+
+LONG DESCRIPTION
+    PowerShell remembers the commands you type in a session. There are two
+    separate memories, and it helps to know which one you are using.
+
+  The session history
+    Get-History lists the commands of this session, each with an Id
+    number, the time it started and ended, and whether it succeeded. The
+    list is lost when you close PowerShell.
+
+        Get-History
+        Get-History -Count 5
+        Invoke-History 12          # run command 12 again (alias r)
+        Clear-History
+
+    $MaximumHistoryCount sets how many entries are kept (4096 by default).
+    Add-History adds entries, for example from an exported file:
+
+        Get-History | Export-Clixml C:\LabFiles\history.xml
+        Import-Clixml C:\LabFiles\history.xml | Add-History
+
+    Timing a command after the fact is easy, because every entry has its
+    start and end time:
+
+        $h = Get-History -Count 1
+        $h.EndExecutionTime - $h.StartExecutionTime
+
+  The keyboard history (PSReadLine)
+    The Up and Down arrows, and Ctrl+R to search, come from the PSReadLine
+    module. It saves what you type to a text file, so it remembers commands
+    from earlier sessions too. Clear-History does not empty that file.
+
+        (Get-PSReadLineOption).HistorySavePath
+
+    PSReadLine 2.2 and later skip lines that look like they contain a
+    password or key, but the PSReadLine 2.0 that comes with Windows
+    PowerShell 5.1 saves every line. Treat the file as something others
+    could read.
+
+  Shortcuts
+    Type # followed by part of an old command, then Tab, to bring it back.
+    F7 shows a list of recent commands in the classic console.
+
+SEE ALSO
+    Get-History
+    Clear-History
+    about_Automatic_Variables
+    about_Preference_Variables

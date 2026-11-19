@@ -1,0 +1,19 @@
+SYNOPSIS: Shows each domain controller's replication partners and how the last replication went.
+DESCRIPTION:
+Get-ADReplicationPartnerMetadata answers "is replication working?". For each partner of the target domain controller it returns the partner, the partition, the last attempt (LastReplicationAttempt), the last success (LastReplicationSuccess) and the result (LastReplicationResult, 0 means success).
+A last success far in the past, or a non-zero result, points to a replication problem; repadmin /showrepl gives the same information in text.
+PARAMETER Target:
+The domain controllers to check, such as DC1, DC2. Position 0.
+PARAMETER Partition:
+Which partition to report on, such as the domain's distinguished name, or * for all.
+PARAMETER PartnerType:
+Inbound (the default), Outbound or Both.
+PARAMETER Scope:
+What -Target means: Server (the default), Site, Domain or Forest.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADReplicationPartnerMetadata -Target DC1, DC2 | Select-Object Server, Partner, LastReplicationSuccess, LastReplicationResult
+When each domain controller last replicated successfully.
+EXAMPLE: Get-ADReplicationPartnerMetadata -Target corp.example -Scope Domain
+Every domain controller of the domain.
+RELATED: Sync-ADObject, Get-ADDomainController, Get-ADReplicationSiteLink

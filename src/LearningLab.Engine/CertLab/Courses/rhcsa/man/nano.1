@@ -1,0 +1,27 @@
+NAME
+       nano - a small, easy text editor
+
+SYNOPSIS
+       nano [FILE]
+
+DESCRIPTION
+       nano is a simple editor for the terminal. Unlike vi there are no
+       modes: what you type goes into the file. The commands are Ctrl key
+       combinations, and the most important ones are listed at the bottom of
+       the screen, where ^ means Ctrl and M- means Alt.
+
+KEYS
+       Ctrl+O  save the file (write Out); Enter confirms the name
+       Ctrl+X  leave (asks whether to save changes)
+       Ctrl+W  search (Where is)
+       Ctrl+K  cut the current line
+       Ctrl+U  paste the cut text
+       Ctrl+G  help
+       Ctrl+C  show the cursor position
+
+EXAMPLES
+           nano /etc/hosts
+           EDITOR=nano crontab -e
+
+SEE ALSO
+       vim(1), vi(1)

@@ -1,0 +1,17 @@
+Same server as Open Door, but now the quiet path matters.
+
+1. Quiet recon. Scan just the server, not the whole network: nmap -sV 10.10.1.20. One targeted service
+   scan barely registers; a full -p- sweep of the subnet is loud.
+
+2. Anonymous FTP. ftp 10.10.1.20, user anonymous: the pub folder's note has Dana's password. Reading a
+   file over FTP is normal traffic - the watcher doesn't flinch.
+
+3. Foothold and root, quietly. ssh dana@10.10.1.20 with the password from the note (use it, don't guess
+   it - password guessing is the loudest thing you can do), then sudo -l and
+   sudo find /root -name flag.txt -exec cat {} \;.
+
+Why the noisy way fails: a full -p- scan, webscan hammering the web addresses, and pwguess throwing the
+whole word list at ssh all add up fast. Past the watcher's patience it raises the alarm and blocks your
+address on the firewall - your connections then time out. In real life that is a SIEM alert and an
+automatic block; the lesson is that noise gets you caught, so a real attacker moves slowly and uses what
+they already know.

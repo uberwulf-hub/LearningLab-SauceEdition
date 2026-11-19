@@ -1,0 +1,25 @@
+# Sheet: remoting | Remoting and jobs | Remoting
+## Setting up
+Enable-PSRemoting -Force :: turn on remoting (clients; servers have it on)
+Test-WSMan -ComputerName WIN-CL1 :: does WinRM answer?
+Disable-PSRemoting :: refuse remote sessions again (WinRM and its listener keep running)
+## Running commands elsewhere
+Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { hostname } :: one command on one or more computers
+Invoke-Command -ComputerName A, B -ScriptBlock { Get-Date } :: several computers (results carry PSComputerName)
+Invoke-Command -ComputerName A -ScriptBlock { param($x) $x } -ArgumentList 1 :: pass values to param( )
+Invoke-Command -ComputerName A -ScriptBlock { $using:x } :: use a local variable
+Invoke-Command -ComputerName A -FilePath C:\Scripts\x.ps1 :: run a local script remotely
+## Sessions
+$s = New-PSSession -ComputerName WIN-CL1 :: a connection that stays open
+Invoke-Command -Session $s -ScriptBlock { } :: run in it (variables stay)
+Get-PSSession :: list sessions
+Remove-PSSession $s :: close it
+Enter-PSSession -ComputerName WIN-CL1 :: interactive; the prompt shows [WIN-CL1]
+Exit-PSSession :: back to the local console
+## Jobs
+Start-Job -ScriptBlock { } -Name X :: run in the background
+Get-Job :: list jobs (State, HasMoreData)
+Wait-Job -Name X :: wait until done
+Receive-Job -Name X -Wait -Keep :: wait and collect the output (keep it)
+Stop-Job -Name X; Remove-Job -Name X :: stop; delete
+Invoke-Command -ComputerName A -ScriptBlock { } -AsJob :: a remote job

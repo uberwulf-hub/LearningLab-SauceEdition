@@ -1,0 +1,43 @@
+# Sheet: monitoring | Monitoring and administration | Monitoring
+## Portal
+Devices > All devices > a device :: overview, compliance, configuration, managed apps, recovery keys, LAPS password, diagnostics
+Devices > Monitor / Reports :: compliance, configuration errors and conflicts, app installs, updates, antivirus
+Devices > All devices > Bulk device actions :: one remote action on many devices
+Devices > Device clean-up rules :: remove devices that haven't checked in for a number of days
+Reports > Endpoint analytics :: startup performance, app reliability, work from anywhere
+Tenant administration > Roles :: Intune roles and role assignments
+## Remote actions
+Sync :: check in now
+Restart :: restart the device (no warning to the user)
+Retire :: remove company apps, data and settings; personal data stays; device leaves Intune
+Wipe :: factory reset (options: retain enrolment state and user account; continue if power is lost)
+Fresh Start :: remove the maker's extra apps and reset Windows; Retain user data keeps the Entra join and re-enrols
+Autopilot Reset :: remove user files, apps and settings; stays Entra joined and enrolled
+Rename device :: up to 15 characters, after a restart; hybrid joined needs extra setup
+BitLocker key rotation :: new recovery password, needs rotation on in the policy
+Rotate local admin password :: new LAPS password now
+Quick scan / Full scan / Update security intelligence :: Microsoft Defender Antivirus
+Collect diagnostics :: logs into a zip under Device diagnostics
+Remote lock :: lock a phone or tablet
+Delete :: remove the record from Intune and retire the device at its next check-in (Entra object stays)
+## On the PC
+Get-Service IntuneManagementExtension, dmwappushservice :: the IME and the push service that triggers check-ins
+Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 20 :: the IME's last lines
+Start-MpScan -ScanType QuickScan :: a quick scan from PowerShell
+Update-MpSignature :: new security intelligence from PowerShell
+## Intune RBAC
+Role assignment members :: the admin groups who get the role
+Role assignment scope (groups) :: the users and devices they may manage (the device or its primary user in the group)
+Scope tags :: which objects they see; untagged objects have Default
+Help Desk Operator :: remote actions, view devices and users
+Policy and Profile Manager :: compliance and configuration
+Application Manager :: apps
+Endpoint Security Manager :: security policies
+Read Only Operator :: view only
+Intune Role Administrator :: manage roles and assignments
+## Entra roles
+Global Administrator :: everything
+Intune Administrator :: everything in Intune
+Cloud Device Administrator :: enable, disable, delete devices; read BitLocker keys and LAPS passwords
+Global Reader :: read only; can read BitLocker keys, not LAPS passwords
+Helpdesk Administrator :: password resets, BitLocker keys, LAPS details (not the password); no Intune rights

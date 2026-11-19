@@ -1,0 +1,241 @@
+# Unit: u03 | 3. Operations masters, sites and replication | AD DS
+
+Every writable domain controller accepts changes, and replication copies them to the others. A few jobs, though, must be done by exactly one DC: those are the **operations master** (FSMO) roles. This unit covers the five roles and how to move them, the global catalog, and how **sites**, subnets and site links shape replication between head office and the branch.
+
+## Lesson: l0301 | Operations master roles and the global catalog
+
+There are five operations master roles (also called FSMO roles, "flexible single master operations"). Two exist once per **forest**, three once per **domain**:
+
+- **Schema master** (forest): the only DC that can change the schema, for example when Exchange or a new Windows Server version extends it.
+- **Domain naming master** (forest): adds and removes domains (and application partitions) in the forest.
+- **PDC emulator** (domain): gets password changes first, so a sign-in with a brand-new password works even before it has replicated; handles account lockouts; is the **time source** for the domain (the forest root's PDC emulator should take its time from a reliable outside source); Group Policy Management edits GPOs on it by default.
+- **RID master** (domain): hands out pools of relative IDs (RIDs) to the DCs; every new user, group or computer's SID ends in one. If it is down, DCs keep creating objects until their pool runs out.
+- **Infrastructure master** (domain): keeps references to objects in other domains up to date. In a forest with several domains it shouldn't be on a global catalog server, unless every DC is a global catalog (or there is only one domain, as at Harborline).
+
+```terminal
+PS C:\Windows\system32> netdom query fsmo
+Schema master               dc1.corp.example
+Domain naming master        dc1.corp.example
+PDC                         dc1.corp.example
+RID pool manager            dc1.corp.example
+Infrastructure master       dc1.corp.example
+The command completed successfully.
+```
+
+### Transfer or seize
+
+- **Transfer** when both the old and the new holder are running: the old one hands the role over cleanly. `Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole PDCEmulator,RIDMaster`, or in the consoles: Users and Computers > Operations Masters (RID, PDC, Infrastructure), Domains and Trusts (domain naming), the Active Directory Schema snap-in (schema).
+- **Seize** only when the holder is gone for good (hardware dead, no backup worth restoring). Add `-Force` to the same cmdlet (or use `ntdsutil` > roles > seize). A DC whose role was seized must **never come back online** as it was: remove it with a metadata cleanup and rebuild it.
+
+You can name the roles by number too: 0 PDCEmulator, 1 RIDMaster, 2 InfrastructureMaster, 3 SchemaMaster, 4 DomainNamingMaster.
+
+> A planned shutdown of the DC with the roles: **transfer** first. A DC that died: **seize**, and don't bring the old one back.
+
+### The global catalog
+
+A **global catalog** (GC) server holds a full copy of its own domain plus a partial, read-only copy of every other domain's objects in the forest (a set of commonly searched attributes). GCs answer forest-wide searches, resolve UPN sign-ins, and supply **universal group** memberships when someone signs in. In a single-domain forest make every DC a GC. A site without a GC can turn on **Universal Group Membership Caching** (site's NTDS Site Settings) so sign-ins there don't need a GC over the WAN.
+
+@try
+@setup admin
+fsmo transfer PDCEmulator DC2
+fsmo transfer RIDMaster DC2
+@setup DC2
+#power off
+@task t1 | AD DS | 10 | DC1
+Last month the PDC emulator and RID master roles were moved to **DC2**. This morning DC2's motherboard died and it will be rebuilt from scratch. Make **DC1** the holder of both roles again.
+@check admin | DC1 holds the PDC emulator and RID master roles
+fsmo.PDCEmulator == DC1
+fsmo.RIDMaster == DC1
+@hint A transfer needs the old holder online. DC2 is gone for good: seize the roles (-Force; -Confirm:$false answers the question).
+@solution DC1
+Move-ADDirectoryServerOperationMasterRole -Identity DC1 -OperationMasterRole PDCEmulator,RIDMaster -Force -Confirm:$false
+@explain
+Without -Force the cmdlet tries a transfer and fails because DC2 can't be contacted. Seizing is right here because DC2 will be rebuilt, never brought back with its old copy of the directory.
+@endtask
+@end
+
+@quiz
+? Grace changed her password at head office a minute ago and now signs in at the branch, whose DC hasn't received the change yet. Which role makes the sign-in work anyway?
+- RID master
++ PDC emulator
+- Infrastructure master
+! A DC that doesn't recognise a password asks the PDC emulator, which receives password changes first.
+? Which two roles exist only once per forest?
++ Schema master and domain naming master
+- PDC emulator and RID master
+- RID master and infrastructure master
+! The schema and the list of domains belong to the forest; the other three roles exist in every domain.
+? The DC with the RID master role must be shut down for a week for a planned repair. What do you do?
++ Transfer the role to another DC before shutting it down
+- Seize the role after shutting it down
+- Nothing: the role moves by itself
+! When both DCs are running, transfer. Seizing is for a holder that is never coming back.
+@end
+
+## Lesson: l0302 | Sites, subnets and site links
+
+An Active Directory **site** is a group of IP subnets that are well connected to each other, usually one building or campus on a LAN. Sites don't follow the domain structure: one site can hold several domains' DCs, and one domain can span many sites. Sites matter for three things:
+
+- **Finding a DC**: a computer works out its site from its IP address and asks DNS for DCs in that site first (the DC locator). A branch PC should sign in at the branch DC, not over the WAN.
+- **Replication**: inside a site it is fast and frequent; between sites it follows the site link's schedule (next lesson).
+- **Site-aware services**: GPOs can be linked to a site, and DFS namespaces send people to targets in their own site.
+
+The pieces, in **Active Directory Sites and Services** (or the `*-ADReplication*` cmdlets):
+
+- **Sites**: `New-ADReplicationSite Branch`. The first one, renamed or not, holds all DCs at first.
+- **Subnets**: `New-ADReplicationSubnet -Name 10.20.0.0/24 -Site Branch`. A computer whose subnet isn't listed has no site and may pick any DC (the DCs log it as NO_CLIENT_SITE in `netlogon.log`).
+- **Site links**: which sites can replicate with each other, at what **cost** and how often. `New-ADReplicationSiteLink -Name HQ-Branch -SitesIncluded HQ,Branch -Cost 50 -ReplicationFrequencyInMinutes 15`. Every forest starts with `DEFAULTIPSITELINK` (cost 100, every 180 minutes). The replication interval can't be under 15 minutes; a link can also have a **schedule** (hours when it may replicate).
+- **Server objects**: a DC's place is its server object under a site's Servers folder. A new DC goes to the site of its subnet; to move one later, drag it to the other site's Servers folder or use `Move-ADDirectoryServer -Identity DC2 -Site Branch`.
+
+When several paths exist, replication takes the one with the lowest total **cost**. Site links are transitive by default (**bridge all site links** is on), so HQ can reach a third site through Branch without a link of its own.
+
+```terminal
+#setup admin:new site name=Branch
+#setup admin:new subnet name=10.20.0.0/24 site=Branch
+#setup admin:new sitelink name=HQ-Branch sites=HQ,Branch cost=50 interval=15
+#setup admin:move dc DC2 Branch
+PS C:\Windows\system32> Get-ADReplicationSiteLink -Filter * | Format-Table Name, Cost, ReplicationFrequencyInMinutes
+
+Name              Cost ReplicationFrequencyInMinutes
+----              ---- -----------------------------
+DEFAULTIPSITELINK  100                           180
+HQ-Branch           50                            15
+
+
+PS C:\Windows\system32> Get-ADDomainController -Filter * | Format-Table Name, Site
+
+Name Site
+---- ----
+DC1  HQ
+DC2  Branch
+```
+
+@try
+@task t1 | AD DS | 10 | admin
+DC2 sits in the branch office (10.20.0.0/24) but Active Directory still thinks it is at head office. Create the site **Branch** with that subnet, a site link **HQ-Branch** between HQ and Branch with cost **50** that replicates every **15** minutes, and move DC2 into Branch.
+@check admin | the site, the subnet and the link
+subnet["10.20.0.0/24"].site == Branch
+sitelink["HQ-Branch"].sites has Branch
+sitelink["HQ-Branch"].sites has HQ
+sitelink["HQ-Branch"].interval == 15
+sitelink["HQ-Branch"].cost == 50
+@check admin | DC2 is in Branch
+dc["DC2"].site == Branch
+@hint Sites and Services: new site, new subnet (site=Branch), new site link (sites=HQ,Branch), then move DC2's server object.
+@solution admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+new sitelink name=HQ-Branch sites=HQ,Branch cost=50 interval=15
+move dc DC2 Branch
+@endtask
+@end
+
+@quiz
+? A new branch PC signs in at a DC at head office instead of the branch DC. The branch has a site with its DC in it. What is the most likely cause?
+- The branch DC isn't a global catalog
++ The branch's IP subnet isn't associated with the branch site
+- The site link cost is too high
+! Computers find their site from their subnet; without a subnet object they have no site and can use any DC.
+? Two paths join HQ and a branch: a direct link with cost 200, and two links through a hub with costs 50 and 75. Which path does replication use?
+- The direct link, because it is one hop
++ The path through the hub (total cost 125)
+- Both, alternately
+! The lowest total cost wins; with bridging on, links chain together.
+? What is the shortest replication interval a site link accepts?
+- 1 minute
++ 15 minutes
+- 180 minutes
+! 15 minutes is the minimum; 180 is the default.
+@end
+
+## Lesson: l0303 | Replication and repadmin
+
+Active Directory uses **multi-master** replication: a change can be made on any writable DC, and it travels to the others. Inside a site and between sites it behaves differently:
+
+- **Intra-site**: driven by **change notification**. A DC that receives a change tells its partners after about 15 seconds, and they pull it. The Knowledge Consistency Checker (**KCC**) on each DC builds a ring of connections so no DC is more than three hops from any other. Traffic is not compressed: the LAN is fast.
+- **Inter-site**: on the site link's **schedule and interval**, between one **bridgehead server** in each site (chosen by the Inter-Site Topology Generator, ISTG). Traffic is **compressed**. A change made at head office reaches the branch at the next interval, so with the default 180 minutes it can take up to three hours. You can turn on change notification on a site link, but then you lose the WAN savings.
+- Some changes are **urgent** and go out at once inside a site, without the usual wait, such as an account lockout; between sites they still wait for the link's schedule unless change notification is on for that link. Password changes are also sent straight to the PDC emulator.
+- **SYSVOL** (GPO files, scripts) replicates separately, with DFS Replication.
+
+Tools to look at and push replication:
+
+- `repadmin /replsummary`: the health of every DC at a glance (largest delta, failures).
+- `repadmin /showrepl DC2`: a DC's inbound partners and the last attempt for each.
+- `repadmin /syncall /AdeP`: push replication to every partner now, across sites (A all partitions, d DNs, e enterprise, P push).
+- **Replicate Now** on a connection object in Sites and Services, or `Sync-ADObject` for one object.
+- `Get-ADReplicationPartnerMetadata` and `Get-ADReplicationFailure` in PowerShell; `dcdiag /test:replications`.
+
+```terminal
+#setup admin:new site name=Branch
+#setup admin:move dc DC2 Branch
+#setup admin:new sitelink name=HQ-Branch sites=HQ,Branch cost=50 interval=60
+#setup wait:1800
+#setup admin:new user name="Nora Lind" sam=nlind password=Harbor#2026 path=Staff/HR
+#machine DC2
+PS C:\Windows\system32> Get-ADUser nlind
+Get-ADUser : Cannot find an object with identity: 'nlind' under: 'DC=corp,DC=example'.
+At line:1 char:1
++ Get-ADUser nlind
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (nlind:String) [Get-ADUser], ADIdentityNotFoundException
+    + FullyQualifiedErrorId : ActiveDirectoryCmdlet:Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException,Microsoft.ActiveDirectory.Management.Commands.GetADUserCmdlet
+
+PS C:\Windows\system32> repadmin /showrepl DC2
+
+Repadmin: running command /showrepl against full DC localhost
+Branch\DC2
+DSA Options: IS_GC
+Site Options: (none)
+
+==== INBOUND NEIGHBORS ======================================
+
+DC=corp,DC=example
+    HQ\DC1 via RPC
+        Last attempt @ 2026-03-02 09:00:15 was successful.
+        1 change(s) not replicated yet (next: 10:00).
+```
+
+On DC2 the new account isn't there yet: it was made on DC1 at 09:30, and the HQ-Branch link replicates every 60 minutes. Either wait for the next interval or push it now. (The "change(s) not replicated yet" line is Cert Lab's own hint; the real `repadmin /showrepl` shows only the last attempt and its result. On a real DC, `repadmin /showchanges` or `repadmin /queue` show what is still waiting.)
+
+@try
+@setup admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+set sitelink "DEFAULTIPSITELINK" +sites=Branch
+move dc DC2 Branch
+@task t1 | AD DS | 10 | admin
+DC2 is now in the site Branch on the default site link, which replicates every 180 minutes. Branch users complain that new accounts take hours to work there. Make the default site link replicate every **15** minutes.
+@check admin | DEFAULTIPSITELINK replicates every 15 minutes
+sitelink["DEFAULTIPSITELINK"].interval == 15
+@solution admin
+set sitelink "DEFAULTIPSITELINK" interval=15
+@endtask
+@task t2 | AD DS | 10 | admin
+Create the user **Paul Keane** (`pkeane`, password `Harbor#2026`) in `Staff/Sales` on DC1. He is at the branch today and can't wait for the next interval: make sure DC2 has his account now.
+@check admin | DC2 already has pkeane
+@DC2 user["pkeane"].enabled == Yes
+@hint Sites and Services > Replicate Now on DC2's connection from DC1 (replicate DC2 from=DC1), or repadmin /syncall on DC1.
+@solution admin
+new user name="Paul Keane" sam=pkeane password=Harbor#2026 path=Staff/Sales
+replicate DC2 from=DC1
+@endtask
+@end
+
+@quiz
+? DC1 and DC2 are in the same site. About how long does a change on DC1 take to reach DC2?
++ About 15 seconds (change notification)
+- Up to 180 minutes
+- Until the next restart of DC2
+! Within a site, replication is triggered by change notification within seconds; schedules apply between sites.
+? Which command forces replication from a DC to all its partners, across sites, right now?
+- repadmin /replsummary
++ repadmin /syncall /AdeP
+- dcdiag /test:replications
+! /syncall pushes (P) all partitions (A) across sites (e); /replsummary and dcdiag only report.
+? Why is traffic between sites compressed but traffic inside a site not?
++ Between sites links are slow and costly; inside a site the LAN is fast, so saving CPU matters more
+- Compression only works with bridgehead servers that are global catalogs
+- Inside a site traffic is encrypted instead
+! Inter-site replication trades CPU for bandwidth; intra-site replication favours speed.
+@end
+

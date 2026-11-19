@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the zone scopes of a zone.
+DESCRIPTION:
+Get-DnsServerZoneScope shows the scopes of one zone. Every zone has a default scope with the zone's own name; the others were added with Add-DnsServerZoneScope for DNS policies.
+PARAMETER ZoneName:
+The zone to look at.
+EXAMPLE: Get-DnsServerZoneScope -ZoneName corp.example -ComputerName DC1
+Lists the default scope and any added ones such as BranchScope.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -ZoneScope BranchScope
+Shows the records inside one scope.
+RELATED: Add-DnsServerZoneScope, Get-DnsServerResourceRecord, Get-DnsServerQueryResolutionPolicy

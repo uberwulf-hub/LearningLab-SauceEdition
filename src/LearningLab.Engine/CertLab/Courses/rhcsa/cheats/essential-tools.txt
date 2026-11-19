@@ -1,0 +1,61 @@
+# Sheet: essential-tools | Essential tools | Essential tools
+## Help on the machine
+man CMD :: the manual page (/word searches, n next match, q quits)
+man 5 fstab :: a page from a given section (1 commands, 5 file formats, 8 administration)
+man -k WORD :: search the descriptions of all pages (same as apropos)
+CMD --help :: a short summary of the options
+info coreutils :: the longer GNU manuals
+/usr/share/doc/PACKAGE/ :: extra documentation and examples of a package
+
+## Files and folders
+pwd :: print the current folder
+ls -la :: long list, including hidden names
+ls -ld DIR :: the folder itself, not its content
+mkdir -p a/b/c :: create folders, with missing parents
+cp -a SRC DEST :: copy, keeping owners, modes, times and labels (cp -r: just recursive)
+mv OLD NEW :: move or rename
+rm -r DIR :: remove a folder and its content (rmdir: only an empty one)
+touch FILE :: create an empty file or update its time
+file FILE :: what kind of data a file holds
+
+## Links
+ln TARGET NAME :: hard link: a second name for the same inode (same file system, no folders)
+ln -s /abs/TARGET NAME :: symbolic link: a small file holding a path
+ls -li :: show inode numbers and link counts
+readlink -f NAME :: where a link finally points
+
+## Redirection and pipes
+CMD > FILE :: output into FILE (replaces it); >> appends
+CMD 2> FILE :: errors into FILE; 2>/dev/null throws them away
+CMD > FILE 2>&1 :: output and errors into the same file (also &> FILE)
+CMD < FILE :: read input from FILE
+A | B :: A's output becomes B's input
+tee FILE :: show and save at the same time (tee -a appends)
+wc -l :: count lines
+sort | uniq -c :: count repeated lines
+cut -d: -f1 :: pick field 1 of colon-separated lines
+
+## grep and regular expressions
+grep -i / -v / -n / -c :: ignore case / non-matching lines / line numbers / count
+grep -r PATTERN DIR :: search all files below DIR (-l: only file names)
+grep -E 'a|b' :: extended regex: | + ? {n} ( )
+^ $ . * [abc] [^:] :: start, end, any char, repeat, one of, none of
+
+## Archives
+tar -czf A.tar.gz DIR :: create, gzip (j bzip2, J xz)
+tar -tvf A.tar.gz :: list the content
+tar -xf A.tar.gz -C DIR :: extract into DIR (any compression)
+gzip / bzip2 / xz FILE :: compress (-d unpacks, -k keeps the original)
+
+## Permissions
+chmod 750 FILE :: rwx for owner, r-x for group, nothing for others (r=4 w=2 x=1)
+chmod u+x,g-w,o= FILE :: add, remove or set single permissions
+chown USER:GROUP FILE :: change owner and group (-R for a tree)
+chgrp GROUP FILE :: change only the group
+stat -c '%a %U %G' FILE :: mode as a number, owner and group
+
+## Logging in
+ssh USER@HOST :: a shell on another machine (exit to leave)
+ssh HOST CMD :: run one command there and come back
+su - USER :: a login shell as USER (su - alone: root)
+su - USER -c 'CMD' :: run one command as USER

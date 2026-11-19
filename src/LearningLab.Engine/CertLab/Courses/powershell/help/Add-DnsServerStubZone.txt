@@ -1,0 +1,18 @@
+SYNOPSIS: Creates a stub zone that only keeps the name servers of another zone.
+DESCRIPTION:
+A stub zone holds just the SOA record, the NS records and the A records (glue) of the name servers for a zone. When a client asks about a name in that zone, the server knows which servers are authoritative and asks them directly.
+
+Unlike a conditional forwarder, a stub zone keeps itself up to date: if the other side adds or changes a name server, the stub learns it at the next refresh. Unlike a secondary zone, it doesn't copy the records themselves.
+
+A stub zone can be stored in Active Directory (-ReplicationScope) or in a file (-ZoneFile). The masters must allow zone transfers to this server.
+PARAMETER Name:
+The zone, for example tidewater.example.
+PARAMETER MasterServers:
+The IP addresses of servers to load the name server list from.
+PARAMETER ReplicationScope:
+Forest, Domain, Legacy or Custom, for a stub zone stored in AD.
+PARAMETER ZoneFile:
+The file name, for a stub zone kept in a file.
+EXAMPLE: Add-DnsServerStubZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest
+Every DC running DNS in the forest learns the partner's name servers.
+RELATED: Add-DnsServerConditionalForwarderZone, Add-DnsServerSecondaryZone, Get-DnsServerZone, ConvertTo-DnsServerPrimaryZone

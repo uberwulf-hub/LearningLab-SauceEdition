@@ -1,0 +1,20 @@
+SYNOPSIS: Names the modules whose DSC resources a configuration uses. Works only inside a Configuration block.
+DESCRIPTION:
+A DSC configuration describes how a computer should be, using resources: File, Registry, Environment, Script, Log and others. Each resource comes from a module. Import-DscResource, written at the top of the Configuration block, tells PowerShell which modules to take the resources from.
+
+The built-in resources come from the PSDesiredStateConfiguration module. Naming it is good practice, and needed for resources from any other module. If the module cannot be found, compiling the configuration fails.
+
+Import-DscResource is not a normal command: typed at the prompt, outside a configuration, it gives an error.
+PARAMETER ModuleName:
+The module or modules, for example PSDesiredStateConfiguration. A hashtable such as @{ ModuleName = 'LabDsc'; ModuleVersion = '1.0' } asks for one version.
+PARAMETER Name:
+Only these resources from the module.
+PARAMETER ModuleVersion:
+The version of the module to use.
+EXAMPLE: Configuration WebBase { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Tools { DestinationPath = 'C:\Tools'; Type = 'Directory'; Ensure = 'Present' } } }
+A configuration that imports the built-in resources and makes sure C:\Tools exists on WIN-SRV1.
+EXAMPLE: Get-DscResource -Module PSDesiredStateConfiguration
+Lists the resources that module provides, before you write the configuration.
+NOTES:
+PowerShell 7 has no built-in DSC: the PSDesiredStateConfiguration 2.x module comes from the PowerShell Gallery, and DSC 3 is a separate program (dsc.exe).
+RELATED: Get-DscResource, Start-DscConfiguration, about_DesiredStateConfiguration

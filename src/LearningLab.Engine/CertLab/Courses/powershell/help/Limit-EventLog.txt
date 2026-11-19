@@ -1,0 +1,14 @@
+SYNOPSIS: Sets how big a classic log may grow and what happens when it is full (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Each log has a maximum size. When it is full, OverwriteAsNeeded replaces the oldest entries, OverwriteOlder replaces only entries older than RetentionDays, and DoNotOverwrite keeps everything and stops logging.
+PARAMETER LogName:
+The logs to change. Position 0.
+PARAMETER MaximumSize:
+The size in bytes, a multiple of 64 KB, for example 32MB.
+PARAMETER OverflowAction:
+OverwriteAsNeeded, OverwriteOlder or DoNotOverwrite.
+PARAMETER RetentionDays:
+With OverwriteOlder: how many days entries are kept.
+EXAMPLE: Limit-EventLog -LogName Application -MaximumSize 64MB -OverflowAction OverwriteAsNeeded
+A bigger Application log.
+RELATED: Get-EventLog, Clear-EventLog

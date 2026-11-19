@@ -1,0 +1,36 @@
+title: Layer upon layer
+level: Advanced
+kind: Decoding
+points: 70
+order: 20
+answer: flag
+
+@intro
+~/stack.txt went through three steps: the flag was reversed, then ROT13'd, then
+base64-encoded. Undo them in the opposite order (base64 decode, then ROT13, then
+reverse) to read the flag.
+
+@setup
+printf '%s' '{{FLAG}}' | rev | tr 'A-Za-z' 'N-ZA-Mn-za-m' | base64 > /home/player/stack.txt
+chown player: /home/player/stack.txt
+
+@solution
+cat stack.txt
+base64 -d stack.txt
+base64 -d stack.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+base64 -d stack.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m' | rev
+echo
+
+@walkthrough
+To undo a stack of changes, reverse each step in the opposite order. The file is
+base64 on the outside, so decode that first; the result is ROT13, so step the letters
+13 places; that result is backwards, so reverse it:
+
+    base64 -d stack.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m' | rev
+
+@hint 10
+Work from the outside in: base64 first (the text looks like base64), then ROT13,
+then reverse.
+
+@hint 18
+base64 -d stack.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m' | rev

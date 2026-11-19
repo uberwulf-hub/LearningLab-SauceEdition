@@ -1,0 +1,32 @@
+NAME
+       chattr - change the special attributes of files on ext4 and xfs
+
+SYNOPSIS
+       chattr [-R] [-V] +ATTRS|-ATTRS|=ATTRS FILE...
+
+DESCRIPTION
+       Besides the normal permissions, files on Linux file systems can carry
+       attributes that even root has to respect. chattr adds (+), removes (-)
+       or sets exactly (=) them. lsattr shows them. Only root may set i and a.
+
+       The two that matter most:
+
+       i      immutable: the file cannot be changed, renamed, deleted or
+              linked to, by anyone, until the attribute is removed.
+
+       a      append only: data can be added to the end, nothing else.
+
+OPTIONS
+       -R     Work on directories and their contents.
+
+       -V     Report what is done.
+
+EXAMPLES
+       Protect a file from changes, then allow them again:
+
+           chattr +i /etc/resolv.conf
+           lsattr /etc/resolv.conf
+           chattr -i /etc/resolv.conf
+
+SEE ALSO
+       lsattr(1), chmod(1)

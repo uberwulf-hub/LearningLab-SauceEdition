@@ -1,0 +1,59 @@
+{
+    "id": "upload-trouble",
+    "title": "Upload Trouble",
+    "category": "soc",
+    "level": "Advanced",
+    "order": 3,
+    "summary": "On two web servers, the web server program started a shell. One is the deploy hook the developers use every day. The other is a 'picture' that someone uploaded - and it takes orders.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). Its website runs on two Linux web servers, WEB01 and WEB02. A web server program (httpd) normally only answers web requests; when it starts a shell (bash, sh), the SIEM raises \"Shell started by the web server\". That happened on both servers today.",
+    "goal": "Decide which alert is real, then find the attacker's address, the file they uploaded, the first command it ran, the account it ran as, and the computer they reached next.",
+    "skills": "web shells, web server logs (POST, query strings), Linux process events, sign-ins between servers",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 30,
+    "vars": {
+        "CO": "company",
+        "U1": "person:flast", "U2": "person:flast",
+        "H1": "num:10-39", "H2": "num:40-69",
+        "NET": "subnet:10",
+        "T0": "time:10-16",
+        "ATKIP": "ip",
+        "SHELL": "pick:img_4471.php|avatar_small.php|thumb.php|logo2.php",
+        "FIRST": "pick:id|whoami|uname -a|hostname",
+        "DBUSER": "pick:dbadmin|dbsync|reports",
+        "QV": "pick:web01|web02"
+    },
+    "variants": {
+        "QV": {
+            "web01": { "QSRV": "WEB01", "VQ": "real" },
+            "web02": { "QSRV": "WEB02", "VQ": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 200, "from": "-3h", "to": "+40m",
+            "hosts": [ "WS-{{H1}}", "WS-{{H2}}" ],
+            "users": [ "{{U1}}", "{{U2}}" ],
+            "ips": [ "{{NET}}.{{H1}}", "{{NET}}.{{H2}}" ],
+            "net": "{{NET}}", "web": "WEB01", "linux": "WEB02", "domain": "{{CO_DOMAIN}}",
+            "kinds": [ "web", "web", "web", "web", "process", "dns", "firewall", "ssh" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The \"Shell started by the web server\" alert on {{QSRV}}: real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "On WEB02 the shell ran 'git pull' for the deploy hook, called by the company's own build server BUILD01, as it is after every change. On WEB01 the shell was started by a .php file someone from outside had just uploaded, and it ran the commands they put in the address." },
+        { "id": "ip", "ask": "Which address did the attacker use?", "answer": "{{ATKIP}}", "points": 25, "explain": "client= of the upload and of the requests to the uploaded file." },
+        { "id": "file", "ask": "Which file did they upload (just the file name)?", "answer": "{{SHELL}}", "accept": [ "/uploads/{{SHELL}}" ], "points": 30, "explain": "The POST to /upload.php, then GET requests to /uploads/{{SHELL}}." },
+        { "id": "first", "ask": "What was the first command it ran?", "answer": "{{FIRST}}", "accept": [ "sh -c {{FIRST}}" ], "points": 30, "explain": "The first bash process started by httpd on WEB01 (also in the first ?c= of the web log)." },
+        { "id": "acct", "ask": "Which account did those commands run as?", "answer": "apache", "points": 30, "explain": "user= of the process events: the web server's own account." },
+        { "id": "next", "ask": "Which computer did they reach next from WEB01?", "answer": "DB01", "points": 40, "explain": "A sign-in on DB01 (source=auth) from WEB01's address, using the database password read from the website's settings file." }
+    ],
+    "hints": [
+        { "text": "For each alert, look at the process events on that server (source=proclog host=...): who started the shell, as which user, and with what command. Then look at the web log just before: what request made the web server do it?", "cost": 10 },
+        { "text": "A web shell is a small script uploaded to the website that runs whatever is written after ?c= in its address. Follow the attacker's address in the web log (siem search source=web client=ADDRESS) and in the sign-ins of other servers (siem search source=auth).", "cost": 18 }
+    ]
+}

@@ -1,0 +1,57 @@
+title: Step 18: A key instead of a password
+level: Expert
+category: ladder
+login: step18
+kind: SSH keys
+teaser: someone gave you step19's private key: sign in as step19 with it
+points: 50
+order: 18
+answer: {{PW}}
+var: PW = hex:10
+var: KEYNAME = pick:step19.key|id_step19|spare-key|from-step19
+
+@intro
+You are step18. You don't get the password for step 19 this time - you get something
+better: a private SSH key that lets you sign in as step19 without any password. Use it
+to sign in to this same computer (localhost) as step19. step19's password is in
+/etc/ladder/step19, which only step19 can read.
+
+@setup
+useradd -m step19
+echo 'step19:{{PW}}' | chpasswd
+mkdir -p /etc/ladder
+printf '%s\n' '{{PW}}' > /etc/ladder/step19
+chown step19: /etc/ladder/step19
+chmod 400 /etc/ladder/step19
+su - step19 -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 -q && cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
+cp /home/step19/.ssh/id_ed25519 /home/step18/{{KEYNAME}}
+rm -f /home/step19/.ssh/id_ed25519 /home/step19/.ssh/id_ed25519.pub
+chown step18: /home/step18/{{KEYNAME}}
+chmod 600 /home/step18/{{KEYNAME}}
+
+@solution
+ls -l
+cat /etc/ladder/step19
+ssh -i {{KEYNAME}} -o StrictHostKeyChecking=accept-new step19@localhost
+whoami
+cat /etc/ladder/step19
+exit
+
+@walkthrough
+An SSH key comes in two halves: the private key (kept secret by its owner) and the
+public key (copied into ~/.ssh/authorized_keys on the computers it may sign in to).
+Whoever holds the private key can sign in as that user:
+
+    ssh -i {{KEYNAME}} step19@localhost
+    cat /etc/ladder/step19
+    exit
+
+-i names the key file; localhost means "this computer". The first time, ssh asks
+whether you trust the computer's own key (yes). ssh refuses a private key that other
+people can read, so keys are kept at chmod 600. exit signs you out of step19.
+
+@hint 15
+ssh signs in to a computer: ssh USER@COMPUTER. With -i KEYFILE it proves who you are with a private key instead of a password. The computer you want is this one, called localhost.
+
+@hint 25
+ssh -i {{KEYNAME}} step19@localhost, then cat /etc/ladder/step19, then exit.

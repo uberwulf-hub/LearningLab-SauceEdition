@@ -1,0 +1,260 @@
+# Unit: u04 | 4. Group Policy: GPOs, links and inheritance | Group Policy
+
+Group Policy is how a domain sets the same configuration on many computers and for many people: password rules, a locked-down desktop, Windows Update settings, a mapped drive, the firewall. You put settings in a **Group Policy Object** (GPO) and **link** it to a site, the domain or an OU; the computers and users in there apply it. This unit covers GPOs and links, the order GPOs are applied in and how Block Inheritance and Enforced change it, and the everyday management tasks (the Default Domain Policy, GPO status, backups, preferences).
+
+## Lesson: l0401 | GPOs, links and refresh
+
+A GPO has two halves:
+
+- **Computer Configuration**: applied to computers, at startup and then in the background. Settings land mostly under `HKLM\Software\Policies`.
+- **User Configuration**: applied to users when they sign in and then in the background, wherever they sign in.
+
+Each half has **Policies** (Software Settings, Windows Settings with security settings and scripts, and **Administrative Templates**, the registry-based settings) and **Preferences** (lesson 3). Policy settings are put back to their default when the GPO stops applying; that is why they are written under the `Policies` keys.
+
+A GPO is stored in two places: the **Group Policy container** in Active Directory and the **Group Policy template** (the files) in SYSVOL, `\\corp.example\SYSVOL\corp.example\Policies\{GUID}`. Both replicate to every DC.
+
+### Links
+
+A GPO does nothing until it is **linked**: to a **site**, the **domain** or an **OU**. One GPO can be linked to many places, and a link can be disabled without deleting it. GPOs apply to the users and computers **in** the linked container and in the OUs below it, never to the security groups that happen to be there: a GPO linked to `Groups` changes nothing for the members of those groups.
+
+- In **Group Policy Management** (GPMC): right-click an OU > Create a GPO in this domain, and Link it here; or link an existing one.
+- In PowerShell (the GroupPolicy module): `New-GPO -Name 'Sales lockdown'`, `New-GPLink -Name 'Sales lockdown' -Target 'OU=Sales,OU=Staff,DC=corp,DC=example'`, and `Set-GPRegistryValue` for Administrative Template settings.
+
+```terminal
+PS C:\Windows\system32> Get-GPInheritance -Target 'OU=Sales,OU=Staff,DC=corp,DC=example'
+
+Name                  : Sales
+ContainerType         : OU
+Path                  : ou=sales,ou=staff,dc=corp,dc=example
+GpoInheritanceBlocked : False
+GpoLinks              : {}
+InheritedGpoLinks     : {Staff desktop, Default Domain Policy}
+```
+
+`InheritedGpoLinks` is everything that reaches the OU, in precedence order (the first one wins).
+
+### The Administrative Templates and the central store
+
+Administrative Template settings are described by **ADMX** files (with **ADML** language files). By default each editing computer uses its own `C:\Windows\PolicyDefinitions`, so two administrators with different Windows versions see different settings. The **central store** fixes that: copy the ADMX and ADML files to `\\corp.example\SYSVOL\corp.example\Policies\PolicyDefinitions`, and every Group Policy Management Editor in the domain uses that copy. To add templates for new software (Microsoft Edge, Office), drop their ADMX files there.
+
+### When settings arrive
+
+- Computers apply their part at **startup**, users theirs at **sign-in**.
+- Then a **background refresh** runs every **90 minutes** with a random offset of up to **30 minutes** on members, and every **5 minutes** on domain controllers. "Set Group Policy refresh interval for computers" changes the interval.
+- Some settings apply only at startup or sign-in, never in the background: software installation and folder redirection, for example.
+- `gpupdate` refreshes the computer it runs on (only what changed); `gpupdate /force` reapplies everything; `/target:computer` or `/target:user` limits it. `Invoke-GPUpdate -Computer CL1` asks a remote computer to refresh: by default it waits a **random delay of up to 10 minutes** (`-RandomDelayInMinutes 0` for at once).
+
+@try
+@task t1 | Group Policy | 10 | admin
+The Sales team keeps changing settings in Control Panel. Create the GPO **Sales lockdown** that prohibits access to Control Panel and PC settings, link it to `Staff/Sales`, and refresh Group Policy on **CL1** so that Bianca Cole (`bcole`) gets it at once.
+@check admin | the GPO has the setting and is linked to Staff/Sales
+gpo["Sales lockdown"].setting["NoControlPanel"] == Enabled
+gpo["Sales lockdown"].links has "OU=Sales,OU=Staff,DC=corp,DC=example"
+@check admin | CL1 applied it for bcole, but not for Finance's ewalsh
+applied(CL1, user=bcole).setting["NoControlPanel"] == Enabled
+applied(CL1, user=ewalsh).setting["NoControlPanel"] == "Not configured"
+@hint User Configuration > Policies > Administrative Templates > Control Panel. Then Group Policy Update on CL1 (or gpupdate there).
+@solution admin
+gpo new "Sales lockdown"
+gpo set "Sales lockdown" setting=NoControlPanel state=Enabled
+gpo link "Sales lockdown" "Staff/Sales"
+gpupdate CL1
+@explain
+The setting is a user setting, so the GPO must be linked where the user accounts are (Staff/Sales), not where the computer is. Without a refresh CL1 would apply it at the next sign-in or background refresh, within about two hours.
+@endtask
+@end
+
+@quiz
+? A GPO with user settings is linked to the OU `Groups`, where the Sales group is. Do the members of Sales get the settings?
+- Yes, every member of every group in the OU
++ No: GPOs apply to user and computer accounts in the OU, not to members of groups there
+- Only after a gpupdate /force
+! Group Policy follows where the accounts are in the OU tree; groups are used for filtering, not for scope.
+? How often does a member computer refresh Group Policy in the background by default?
+- Every 5 minutes
++ Every 90 minutes, plus a random offset of up to 30 minutes
+- Only at startup
+! 5 minutes is the interval for domain controllers.
+? Two administrators see different Administrative Template settings in the same GPO. What fixes it?
+- Run gpupdate /force on both PCs
++ Create the central store in SYSVOL with one set of ADMX and ADML files
+- Link the GPO to the domain
+! With a central store, every editor reads the same ADMX files from SYSVOL.
+? You run `Invoke-GPUpdate -Computer CL1` and the setting still isn't there two minutes later. Why?
++ Invoke-GPUpdate waits a random delay of up to 10 minutes unless you give -RandomDelayInMinutes 0
+- Invoke-GPUpdate only refreshes user settings
+- CL1 must restart first
+! The default random delay spreads refreshes when many computers are targeted.
+@end
+
+## Lesson: l0402 | Precedence: LSDOU, link order, Block Inheritance and Enforced
+
+When several GPOs set the same thing, the one applied **last** wins. They are applied in the order **LSDOU**:
+
+1. **L**ocal: the computer's own local policy.
+2. **S**ite: GPOs linked to the computer's site.
+3. **D**omain: GPOs linked to the domain.
+4. **OU**: GPOs linked to each OU from the top down to the OU that holds the account.
+
+So by default the OU closest to the account wins. Within one container, the **link order** decides: link order **1** has the highest precedence (it is applied last). Settings that don't conflict simply add up.
+
+Two switches change the normal order:
+
+- **Block Inheritance** (on an OU or the domain): GPOs linked **above** it don't apply to it and below. Use it rarely; it makes troubleshooting harder.
+- **Enforced** (on a **link**, formerly "No Override"): the GPO applies even through Block Inheritance, and it wins over conflicting settings from GPOs linked lower down. When two enforced links conflict, the one **higher** up wins.
+
+> Block Inheritance belongs to a container; Enforced belongs to a link. An exam question that says "make sure the security GPO linked to the domain applies everywhere, even where inheritance is blocked" is answered by **enforcing that link**.
+
+```terminal
+#setup admin:inheritance block "Staff/Finance"
+PS C:\Windows\system32> Get-GPInheritance -Target 'OU=Finance,OU=Staff,DC=corp,DC=example' | Select-Object GpoInheritanceBlocked, InheritedGpoLinks
+
+GpoInheritanceBlocked InheritedGpoLinks
+--------------------- -----------------
+True                  {}
+```
+
+With Block Inheritance on Finance, nothing linked above it reaches its accounts, not even the Default Domain Policy. That doesn't weaken the domain's password rules: the domain controllers apply the account policy to the domain itself, whatever an OU blocks.
+
+@try
+@setup admin
+gpo new "Security baseline" comment="Required by the security team"
+gpo set "Security baseline" setting=NoCmd state=Enabled
+gpo link "Security baseline" "corp.example"
+gpo new "Sales wallpaper 2025"
+gpo set "Sales wallpaper 2025" setting=Wallpaper value=\\FS1\Public\sales-2025.jpg
+gpo link "Sales wallpaper 2025" "Staff/Sales"
+gpo new "Sales wallpaper 2026"
+gpo set "Sales wallpaper 2026" setting=Wallpaper value=\\FS1\Public\sales-2026.jpg
+gpo link "Sales wallpaper 2026" "Staff/Sales"
+@task t1 | Group Policy | 10 | admin
+Finance uses its own desktop and must not receive **Staff desktop** or anything else linked above `Staff/Finance`.
+@check admin | Finance blocks inheritance; Erin Walsh no longer gets Staff desktop
+ou["Staff/Finance"].blocked == Yes
+rsop(computer=CL1, user=ewalsh).usergpos !has "Staff desktop"
+@solution admin
+inheritance block "Staff/Finance"
+@endtask
+@task t2 | Group Policy | 10 | admin
+The security team's GPO **Security baseline** (linked to the domain) must still reach every user, Finance included, and win over anything linked lower.
+@check admin | the domain link is enforced and Finance gets the setting
+gpo["Security baseline"].enforced["corp.example"] == Yes
+rsop(computer=CL1, user=ewalsh).setting["NoCmd"] == Enabled
+@hint Enforce the link of Security baseline on the domain (Enforced belongs to the link, not to the GPO).
+@solution admin
+gpo setlink "Security baseline" "corp.example" enforced=yes
+@endtask
+@task t3 | Group Policy | 10 | admin
+Two GPOs on `Staff/Sales` set the desktop wallpaper, and Sales still sees the 2025 picture. Make **Sales wallpaper 2026** win without deleting either GPO.
+@check admin | the 2026 GPO has link order 1 and wins for bcole
+gpo["Sales wallpaper 2026"].linkorder["Staff/Sales"] == 1
+rsop(computer=CL1, user=bcole).setting["Wallpaper"].winner == "Sales wallpaper 2026"
+@hint In Group Policy Management, select Staff/Sales > Linked Group Policy Objects and move the 2026 GPO to link order 1.
+@solution admin
+gpo setlink "Sales wallpaper 2026" "Staff/Sales" order=1
+@endtask
+@end
+
+@quiz
+? A GPO linked to the domain and a GPO linked to `Staff/Sales` set the same setting differently. Nothing is enforced or blocked. Which wins for bcole?
+- The domain GPO, because the domain is processed first
++ The Staff/Sales GPO, because it is applied later
+- Neither: conflicting settings cancel out
+! LSDOU: the last GPO applied wins, and OUs come after the domain.
+? Within one OU, which link order wins a conflict?
++ Link order 1
+- The highest link order number
+- The GPO created most recently
+! Link order 1 has the highest precedence: it is applied last.
+? An OU blocks inheritance. A GPO linked to the domain is Enforced. Does it apply to the OU's users?
++ Yes: Enforced links go through Block Inheritance
+- No: Block Inheritance stops everything from above
+- Only its computer settings
+! Enforced beats Block Inheritance.
+@end
+
+## Lesson: l0403 | Managing GPOs: the default GPOs, status, backups and preferences
+
+### The two default GPOs
+
+- **Default Domain Policy** (linked to the domain): holds the domain's **password**, **account lockout** and **Kerberos** policies. Domain accounts take these only from GPOs linked to the **domain**; the same settings in a GPO linked to an OU change only the **local** accounts of the computers in that OU. For different rules for some domain users, use a fine-grained password policy (unit 2).
+- **Default Domain Controllers Policy** (linked to the Domain Controllers OU): user rights and audit settings for the DCs.
+
+Leave other settings out of them and make your own GPOs; `dcgpofix` can recreate the two defaults if they are ever damaged.
+
+### GPO status and link status
+
+A GPO's status can switch off half of it: **Enabled**, **User configuration settings disabled**, **Computer configuration settings disabled**, **All settings disabled**. Turning off the empty half of a GPO is a common habit (it was said to speed up processing); turning off the wrong half is a common reason why "the GPO doesn't apply". A **link** can also be disabled, which stops the GPO there only.
+
+```terminal
+#setup admin:gpo status "Workstation baseline" UserSettingsDisabled
+PS C:\Windows\system32> Get-GPO -All | Format-Table DisplayName, GpoStatus
+
+DisplayName                       GpoStatus
+-----------                       ---------
+Default Domain Controllers Policy AllSettingsEnabled
+Default Domain Policy             AllSettingsEnabled
+Staff desktop                     AllSettingsEnabled
+Workstation baseline              UserSettingsDisabled
+```
+
+### Backup, restore, import and copy
+
+- `Backup-GPO -Name 'Staff desktop' -Path C:\GpoBackups` (or `-All`): saves the settings, security filtering and WMI filter link; **not the links** to OUs.
+- `Restore-GPO -Name 'Staff desktop' -Path C:\GpoBackups`: puts a GPO back as it was in the backup, keeping its GUID. A deleted GPO can come back from its backup too (GPMC > Group Policy Objects > Manage Backups > Restore), but you must link it again.
+- `Import-GPO -BackupGpoName ... -TargetName ...`: copies the settings of a backup into another (or a new) GPO, also in another domain or forest; a **migration table** translates names and paths that differ.
+- `Copy-GPO`: a new GPO with the same settings in the same domain.
+
+### Starter GPOs
+
+A **starter GPO** is a template of Administrative Template settings that new GPOs can start from (GPMC > Starter GPOs; create the folder the first time). Windows adds a few read-only system starter GPOs (for example the firewall ports for remote Group Policy updates and reporting); Microsoft's security baselines come as GPO backups instead. You can export starter GPOs as a cabinet file to share.
+
+### Group Policy preferences
+
+**Preferences** sit beside the policies in both halves of a GPO: **Drive Maps**, **Printers**, **Registry**, **Files**, **Folders**, **Shortcuts**, **Local Users and Groups**, **Scheduled Tasks**, **Power Options** and more. They differ from policies:
+
+- They write an ordinary value that the user may change, and they don't grey anything out. By default every refresh writes it again; "Apply once and do not reapply" makes it a starting value only.
+- Each item has an action: **Create**, **Replace**, **Update** (the default) or **Delete**, and can be removed when the GPO no longer applies ("Remove this item when it is no longer applied").
+- **Item-level targeting** applies one item only when a condition holds: a security group, an OS version, an IP range, a site, a computer name, a WMI query... One GPO can then map S: for Sales and F: for Finance.
+
+@try
+@task t1 | Group Policy | 10 | admin
+The auditors want domain passwords of at least **12** characters and an account lockout after **10** wrong passwords. Set it where it applies to domain accounts.
+@check admin | the domain's policy has the new values
+domain.minPwdLength == 12
+domain.lockoutThreshold == 10
+gpo["Default Domain Policy"].setting["MinPwdLength"].value == 12
+@hint Domain accounts take password and lockout policy from a GPO linked to the domain: the Default Domain Policy.
+@solution admin
+gpo set "Default Domain Policy" setting=MinPwdLength state=Enabled value=12
+gpo set "Default Domain Policy" setting=LockoutThreshold state=Enabled value=10
+@endtask
+@task t2 | Group Policy | 10 | admin
+**Workstation baseline** has only computer settings. Disable its user configuration half, then back it up to `C:\GpoBackups` before anyone edits it again.
+@check admin | the status and the backup
+gpo["Workstation baseline"].status == UserSettingsDisabled
+gpo["Workstation baseline"].backups >= 1
+@solution admin
+gpo status "Workstation baseline" UserSettingsDisabled
+gpo backup "Workstation baseline" path=C:\GpoBackups
+@endtask
+@end
+
+@quiz
+? A GPO linked to `Staff/IT` sets the minimum password length to 14. What changes for the IT staff's domain accounts?
+- Their passwords must be 14 characters
++ Nothing: domain accounts take password policy only from GPOs linked to the domain
+- They must change their password at the next sign-in
+! An account policy in an OU-linked GPO affects only the local accounts of the computers in that OU; use a fine-grained password policy for some domain users.
+? A GPO was deleted. You restore it from last week's backup. What else must you do?
++ Link it again where it was linked
+- Nothing: the backup includes its links
+- Recreate its security filtering
+! GPO backups hold settings, security filtering and the WMI filter link, but not the links to sites, the domain or OUs.
+? One GPO must map S: for Sales and F: for Finance. Which feature does that?
+- Two WMI filters on the same GPO
++ Drive map preferences with item-level targeting on the security groups
+- Loopback processing
+! Item-level targeting decides per preference item; a WMI or security filter decides for the whole GPO.
+@end
+

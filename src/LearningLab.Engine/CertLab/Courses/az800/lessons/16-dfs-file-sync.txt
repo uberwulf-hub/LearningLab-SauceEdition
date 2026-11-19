@@ -1,0 +1,231 @@
+# Unit: u16 | 16. DFS and Azure File Sync | File and storage
+
+People shouldn't need to know which server a share lives on, and the branch office shouldn't wait for files over the WAN link. This unit covers **DFS Namespaces** (one tree of folders such as `\\corp.example\Files\Sales`, whatever server holds them), **DFS Replication** (keeping copies of a folder in step on several servers), and **Azure File Sync**, which uses an Azure file share as the hub and can keep only the recently used files on the server.
+
+## Lesson: l1601 | DFS Namespaces
+
+A **namespace** is a virtual folder tree. Its parts:
+
+- The **namespace root**, `\\corp.example\Files`, hosted by one or more **namespace servers**. Each root target is a share on a namespace server (`\\FS1\Files`).
+- **Folders** in the namespace (`Sales`, `Finance`), each with one or more **folder targets**: the real shares (`\\FS1\Sales`, `\\DC2\Sales`).
+- **Referrals**: when a client opens a folder, a namespace server hands it the list of targets. By default targets in the **client's own AD site come first**, then the others ordered by **site cost** (or randomly). The client caches the referral (1800 seconds for folders by default).
+
+Two kinds of namespace:
+
+- **Domain-based** (`\\corp.example\Files`): stored in Active Directory, so the path doesn't depend on a server name and several namespace servers can host it. **Windows Server 2008 mode** (`DomainV2`) supports access-based enumeration and more than 5,000 folders; use it unless you must support Windows 2000 servers.
+- **Stand-alone** (`\\FS1\Files`): stored on one server (or a failover cluster). Use it when there is no domain, or for namespaces with a very large number of folders.
+
+A folder with several targets doesn't copy anything by itself: keep the targets' contents the same with DFS Replication (next lesson) or another tool. A target can be set **offline** to stop referrals to it, and a target's **referral priority** (first among all, last among all, first or last in its cost group) overrides the site ordering.
+
+```terminal
+#machine FS1
+#setup FS1:Install-WindowsFeature FS-DFS-Namespace -IncludeManagementTools
+#setup FS1:New-Item -Path D:\DFSRoots\Files -ItemType Directory
+#setup FS1:New-SmbShare -Name Files -Path D:\DFSRoots\Files -ReadAccess Everyone
+PS C:\Windows\system32> New-DfsnRoot -Path \\corp.example\Files -TargetPath \\FS1\Files -Type DomainV2
+
+Path          : \\corp.example\Files
+Type          : Domain V2
+Properties    : {}
+TimeToLiveSec : 300
+State         : Online
+Description   :
+
+
+PS C:\Windows\system32> New-DfsnFolder -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales
+
+Path                       State  TimeToLiveSec Description
+----                       -----  ------------- -----------
+\\corp.example\Files\Sales Online 1800
+```
+
+@try
+@setup admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+move dc DC2 Branch
+@setup DC2
+New-Item -Path C:\Shares\Sales -ItemType Directory
+New-SmbShare -Name Sales -Path C:\Shares\Sales -FullAccess 'Authenticated Users'
+@task t1 | File and storage | 10 | FS1
+Create the domain-based namespace `\\corp.example\Files` (Windows Server 2008 mode) on FS1, with its root share `\\FS1\Files` on `D:\DFSRoots\Files`, and a folder **Sales** that points to `\\FS1\Sales`.
+@check admin | the namespace and its folder exist
+namespace["\\corp.example\Files"].type == DomainV2
+namespace["\\corp.example\Files"].folders has Sales
+@check admin | Brian reaches the Sales files through the namespace
+access(user=bcole, path="\\corp.example\Files\Sales") == Modify
+@hint Install-WindowsFeature FS-DFS-Namespace, create and share the root folder, New-DfsnRoot -Type DomainV2, New-DfsnFolder.
+@solution FS1
+Install-WindowsFeature FS-DFS-Namespace -IncludeManagementTools
+New-Item -Path D:\DFSRoots\Files -ItemType Directory
+New-SmbShare -Name Files -Path D:\DFSRoots\Files -ReadAccess Everyone
+New-DfsnRoot -Path \\corp.example\Files -TargetPath \\FS1\Files -Type DomainV2
+New-DfsnFolder -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales
+@explain
+The root share only holds the namespace's links, so Read for everyone is enough there; the permissions that count are those of the target share \\FS1\Sales.
+@endtask
+@task t2 | File and storage | 10 | FS1
+DC2 is now in the **Branch** site and has a share `\\DC2\Sales`. Add it as a second folder target of `\\corp.example\Files\Sales`, so that branch clients are referred to DC2 and head office clients to FS1.
+@check admin | each site gets its own target first
+namespace["\\corp.example\Files"].targets["Sales"] has \\DC2\Sales
+dfsresolve("\\corp.example\Files\Sales", Branch) == \\DC2\Sales
+dfsresolve("\\corp.example\Files\Sales", HQ) == \\FS1\Sales
+@hint New-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\DC2\Sales.
+@solution FS1
+New-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\DC2\Sales
+@explain
+Referrals list the targets in the client's own site first, so the same path takes each office to its nearest copy. The two copies still have to be kept the same: that is DFS Replication's job.
+@endtask
+@end
+
+@quiz
+? A namespace must keep working when one namespace server fails, and its path must not contain a server name. What do you create?
++ A domain-based namespace with two namespace servers
+- A stand-alone namespace on a single server
+- A stand-alone namespace on each server
+! Domain-based namespaces are stored in AD and can have several root targets on different servers.
+? A DFS folder has targets in HQ and Branch. In which order does a client in Branch get them by default?
++ The Branch target first, then the others by site cost
+- Alphabetically
+- The target that was added first
+! Referrals put the client's own site first and then order the other targets by the cost of the site links.
+? A folder has two targets. A user saves a file through the namespace. Does it appear on both targets?
+- Yes: DFS Namespaces copies it
++ Only if something replicates the folders, such as DFS Replication
+- Only if access-based enumeration is on
+! A namespace only refers clients to targets; keeping the targets the same needs replication.
+@end
+
+## Lesson: l1602 | DFS Replication
+
+**DFS Replication** (DFSR) keeps folders on several servers in step, sending only the changed parts of files (remote differential compression) on a schedule and with a bandwidth limit you choose. It is how SYSVOL replicates between domain controllers.
+
+- A **replication group** is a set of **members** (servers) and the **connections** between them (two-way by default; full mesh or hub and spoke when created with the wizard).
+- A **replicated folder** is a folder the group keeps in step; each member has its own local path for it (`D:\Shares\Sales` on FS1, `C:\Shares\Sales` on DC2). A member can be **read-only** (changes made there aren't accepted).
+- The **primary member** wins the **initial sync**: its files are authoritative, and the other members' different files are moved to their `ConflictAndDeleted` / `PreExisting` folders. After the initial sync, the last writer wins.
+- The configuration is stored in **Active Directory**. Each member polls AD for changes (every 60 minutes by default); `Update-DfsrConfigurationFromAD` (or `dfsrdiag pollad`) makes it read the configuration now.
+- **Staging**: a hidden folder where files wait to be sent; its quota (4 GB by default) should be at least the size of the 32 largest files. A **backlog** is the list of changes still waiting to go to a partner (`Get-DfsrBacklog`).
+- DFSR doesn't replicate files that are open and locked, and it isn't a backup: deletions replicate too.
+
+Here the group Sales-RG has just been created and the members haven't polled AD yet, so every file is still in the backlog:
+
+```terminal
+#setup admin:feature install FS1 FS-DFS-Replication
+#setup admin:feature install DC2 FS-DFS-Replication
+#setup admin:dfsr group name=Sales-RG members=FS1,DC2 folder=Sales
+#setup admin:dfsr membership group=Sales-RG server=FS1 folder=Sales path=D:\Shares\Sales primary=yes
+#setup admin:dfsr membership group=Sales-RG server=DC2 folder=Sales path=C:\Shares\Sales
+#machine FS1
+PS C:\Windows\system32> Get-DfsrMembership -GroupName Sales-RG | Format-Table ComputerName, ContentPath, PrimaryMember
+
+ComputerName ContentPath     PrimaryMember
+------------ -----------     -------------
+FS1          D:\Shares\Sales True
+DC2          C:\Shares\Sales False
+
+
+PS C:\Windows\system32> Get-DfsrBacklog -GroupName Sales-RG -FolderName Sales -SourceComputerName FS1 -DestinationComputerName DC2 | Select-Object FileName
+
+FileName
+--------
+Price list 2026.xlsx
+Customers.csv
+
+
+PS C:\Windows\system32> Update-DfsrConfigurationFromAD -ComputerName FS1,DC2
+PS C:\Windows\system32> (Get-DfsrBacklog -GroupName Sales-RG -FolderName Sales -SourceComputerName FS1 -DestinationComputerName DC2 | Measure-Object).Count
+0
+```
+
+@try
+@task t1 | File and storage | 10 | admin
+Keep a copy of the Sales folder at the branch: install DFS Replication on **FS1** and **DC2**, create the replication group **Sales-RG** with both members and the replicated folder **Sales**, set FS1's path to `D:\Shares\Sales` as the **primary member** and DC2's path to `C:\Shares\Sales`, then make both servers read the configuration from AD at once.
+@check admin | the group, the primary member and the first sync
+dfsr["Sales-RG"].members has DC2
+dfsr["Sales-RG"].primary has FS1
+dfsr["Sales-RG"].synced has DC2
+@check DC2 | the Sales files arrived on DC2
+Test-Path 'C:\Shares\Sales\Customers.csv'
+@hint Windows Admin Center: install the FS-DFS-Replication feature on both, then the DFS Replication group (members, folder), the memberships (path, primary) and Poll AD on each server.
+@solution admin
+feature install FS1 FS-DFS-Replication
+feature install DC2 FS-DFS-Replication
+dfsr group name=Sales-RG members=FS1,DC2 folder=Sales
+dfsr membership group=Sales-RG server=FS1 folder=Sales path=D:\Shares\Sales primary=yes
+dfsr membership group=Sales-RG server=DC2 folder=Sales path=C:\Shares\Sales
+dfsr poll FS1
+dfsr poll DC2
+@explain
+Without the poll, each member would only notice the new group at its next AD poll, up to an hour later. FS1, the primary member, sent its files first; DC2's folder was empty.
+@endtask
+@end
+
+@quiz
+? Two servers both have files in the folder you are about to replicate. How do you make sure FS1's copies win the first sync?
++ Make FS1 the primary member
+- Make DC2 read-only
+- Create the connection from FS1 only
+! The primary member is authoritative for the initial sync; the other members' differing files are moved aside.
+? You changed a replication group and want the members to use the change now. What do you run?
+- Get-DfsrBacklog
++ Update-DfsrConfigurationFromAD (or dfsrdiag pollad)
+- Restart-Computer on each member
+! Members read their configuration from AD when they poll; you can force the poll.
+? Which command shows the files still waiting to replicate from FS1 to DC2?
+- Get-DfsrMembership
++ Get-DfsrBacklog
+- Get-DfsnFolderTarget
+! The backlog is the list of updates not yet sent to a partner.
+@end
+
+## Lesson: l1603 | Azure File Sync
+
+**Azure File Sync** keeps folders on Windows file servers in step with an **Azure file share**, which becomes the master copy. The parts:
+
+- A **Storage Sync Service**: the Azure resource that manages everything. A server is registered to only one Storage Sync Service.
+- The **Azure File Sync agent** on each Windows Server (2016 or later), then **server registration**, which ties the server to the Storage Sync Service.
+- A **sync group**: one **cloud endpoint** (an Azure file share in a storage account) and one or more **server endpoints** (a path on a registered server, on an NTFS volume; a server can have only one endpoint in a given sync group). Everything in the group syncs with everything else, through the cloud.
+- **Cloud tiering** (per server endpoint): files that are rarely used are kept only in Azure, with a small pointer (reparse point) left on the server; opening one recalls it. Two policies: the **volume free space policy** (keep at least this percentage of the volume free; it always wins) and the **date policy** (tier files not opened for this many days). Cloud tiering isn't available on the system volume.
+
+Typical uses: replace DFS Replication between branch servers with one hub in Azure, give a small branch a cache of a large share, or move a file server to Azure gradually. Changes made directly in the Azure file share reach the servers after the cloud change detection job (every 24 hours).
+
+@try
+@task t1 | File and storage | 10 | admin
+Move the Sales archive to Azure while FS1 keeps a cache: create the Storage Sync Service **harbor-sync**, register **FS1**, create the sync group **SalesArchive** with the cloud endpoint `salesarchive` in the storage account `stharborfiles`, and add FS1's `E:\Archive\Sales` as a server endpoint with **cloud tiering** (keep 20% of the volume free, tier files not opened for 60 days).
+@check admin | the sync group and its endpoints
+filesync["SalesArchive"].share == stharborfiles/salesarchive
+filesync["SalesArchive"].servers has FS1
+filesync["SalesArchive"].tiering["FS1"] == Yes
+@check admin | the files are in Azure and old reports are tiered on FS1
+filesync["SalesArchive"].cloudfiles has "2023\Report Q1.pdf"
+file(FS1, "E:\Archive\Sales\2023\Report Q1.pdf").tiered == Yes
+@hint Azure portal: Storage Sync Services > create; Registered servers (the agent registers FS1); Sync groups > create with the file share; Add server endpoint with cloud tiering.
+@solution admin
+filesync service name=harbor-sync
+filesync register FS1
+filesync group name=SalesArchive account=stharborfiles share=salesarchive
+filesync endpoint group=SalesArchive server=FS1 path=E:\Archive\Sales tiering=yes days=60 free=20
+@explain
+The first sync uploads everything to the Azure file share; then the date policy leaves only pointers on FS1 for reports nobody opened in the last 60 days. Opening one recalls it from Azure.
+@endtask
+@end
+
+@quiz
+? How many cloud endpoints can a sync group have?
++ One
+- One per server endpoint
+- Up to 16
+! A sync group has exactly one cloud endpoint (an Azure file share) and any number of server endpoints.
+? Cloud tiering has a volume free space policy of 20% and a date policy of 60 days. The volume drops to 10% free although every file was opened last week. What happens?
++ Files are tiered anyway until 20% is free: the free space policy wins
+- Nothing: no file is older than 60 days
+- Sync stops until space is freed
+! The volume free space policy always takes precedence over the date policy.
+? What must happen on a server before it can be a server endpoint?
+- It must be joined to Microsoft Entra ID
++ The Azure File Sync agent is installed and the server is registered with the Storage Sync Service
+- It must be an Azure Arc-enabled server
+! Server endpoints can only be added on servers registered with the Storage Sync Service through the agent.
+@end
+
+

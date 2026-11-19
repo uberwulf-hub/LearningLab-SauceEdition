@@ -1,0 +1,46 @@
+NAME
+       dig - ask DNS servers about names and addresses
+
+SYNOPSIS
+       dig [@SERVER] NAME [TYPE] [+short]
+       dig -x ADDRESS
+
+DESCRIPTION
+       dig sends a DNS question to the servers in /etc/resolv.conf (or to
+       @SERVER) and prints the full answer: the header with the status
+       (NOERROR, or NXDOMAIN when the name does not exist), the question, the
+       ANSWER SECTION with the records, and which server answered and how
+       fast.
+
+       Unlike getent hosts, dig asks DNS only and ignores /etc/hosts, so it
+       tells you whether the problem is in DNS or elsewhere.
+
+       dig is in the bind-utils package, together with host and nslookup.
+
+OPTIONS
+       @SERVER
+              Ask this server instead of the ones in /etc/resolv.conf.
+
+       TYPE   The kind of record: A (IPv4 address, the default), AAAA
+              (IPv6), MX (mail servers), NS, CNAME, PTR, ANY.
+
+       -x ADDRESS
+              A reverse lookup: which name has this address?
+
+       +short Print only the answer itself.
+
+EXAMPLES
+       Look up an address:
+
+           dig server2.lab.example.com
+
+       Only the address, for a script:
+
+           dig +short utility.lab.example.com
+
+       Ask the lab's DNS server directly:
+
+           dig @192.168.50.254 repo.lab.example.com
+
+SEE ALSO
+       host(1), nslookup(1), getent(1), resolv.conf(5)

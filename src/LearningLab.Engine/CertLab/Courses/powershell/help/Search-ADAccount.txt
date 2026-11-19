@@ -1,0 +1,23 @@
+SYNOPSIS: Finds user and computer accounts that are locked out, disabled, expired or have passwords that never expire.
+DESCRIPTION:
+Search-ADAccount answers common housekeeping questions without writing a filter. Pick one state switch; add -UsersOnly or -ComputersOnly to narrow the result.
+The results can be piped to Unlock-ADAccount, Enable-ADAccount, Disable-ADAccount and similar cmdlets.
+PARAMETER LockedOut:
+Accounts that are locked out right now.
+PARAMETER AccountDisabled:
+Accounts that are disabled.
+PARAMETER AccountExpired:
+Accounts whose expiry date has passed.
+PARAMETER PasswordNeverExpires:
+Accounts set so their password never expires.
+PARAMETER UsersOnly:
+Only user accounts.
+PARAMETER ComputersOnly:
+Only computer accounts.
+PARAMETER SearchBase:
+Searches only below this OU or container (a distinguished name).
+EXAMPLE: Search-ADAccount -LockedOut -UsersOnly | Select-Object Name, SamAccountName
+The users who are locked out.
+EXAMPLE: Search-ADAccount -PasswordNeverExpires -UsersOnly
+Accounts that never have to change their password, worth a review.
+RELATED: Unlock-ADAccount, Enable-ADAccount, Disable-ADAccount, Get-ADUser

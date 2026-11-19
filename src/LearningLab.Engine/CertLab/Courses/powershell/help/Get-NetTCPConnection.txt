@@ -1,0 +1,26 @@
+SYNOPSIS: Lists TCP connections and the ports the computer listens on.
+DESCRIPTION:
+Get-NetTCPConnection is the PowerShell version of netstat. Each line shows LocalAddress and LocalPort, RemoteAddress and RemotePort, State and OwningProcess (the process id of the program that owns it).
+
+State Listen means a service is waiting for connections on that port: 0.0.0.0 is "every IPv4 address", :: is "every IPv6 address". State Established is an open connection to another computer. Use OwningProcess with Get-Process to find which program it is.
+PARAMETER LocalAddress:
+Shows only connections on this local address.
+PARAMETER LocalPort:
+Shows only this local port, for example 3389. It is the second positional parameter.
+PARAMETER RemoteAddress:
+Shows only connections to this address, for example 10.0.10.10.
+PARAMETER RemotePort:
+Shows only connections to this remote port.
+PARAMETER State:
+Listen, Established and so on.
+PARAMETER OwningProcess:
+Shows only connections of this process id.
+EXAMPLE: Get-NetTCPConnection -State Listen
+The ports something listens on.
+EXAMPLE: Get-NetTCPConnection -LocalPort 5985
+Is WinRM (PowerShell remoting) listening? An error means nothing uses that port.
+EXAMPLE: Get-NetTCPConnection -LocalPort 3389 | ForEach-Object { Get-Process -Id $_.OwningProcess }
+Which process owns the Remote Desktop port.
+NOTES:
+A filter that finds nothing is an error ("No matching MSFT_NetTCPConnection objects found"). For UDP ports Windows has Get-NetUDPEndpoint. CIM-based command from the NetTCPIP module, Windows only.
+RELATED: Test-NetConnection, Get-Process, Get-NetFirewallRule

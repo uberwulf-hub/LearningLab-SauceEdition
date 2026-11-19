@@ -1,0 +1,18 @@
+SYNOPSIS: Empties a variable but keeps the variable itself.
+DESCRIPTION:
+Clear-Variable sets a variable's value to $null. The variable still exists afterwards, with the same name, description and options. Use Remove-Variable when you want it gone completely.
+
+Give the name without the dollar sign: Clear-Variable -Name total, not Clear-Variable -Name $total. With the dollar sign, PowerShell would use the value of $total as the name.
+PARAMETER Name:
+The names of the variables to clear, without the $. Position 0, and required. Several names may be separated by commas.
+PARAMETER Force:
+On a real PC, needed to clear a read-only variable.
+EXAMPLE: $color = 'blue'; Clear-Variable -Name color; $null -eq $color
+Shows True: the variable is now empty.
+EXAMPLE: Clear-Variable color, size
+Clears two variables at once, giving the names by position.
+NOTES:
+$color = $null does the same as Clear-Variable color for an ordinary variable.
+
+On a real PC, Clear-Variable cannot clear a constant variable, and a read-only one needs -Force. Real PowerShell also has -Scope (Global, Script, Local or a number) and -Include / -Exclude.
+RELATED: Get-Variable, Set-Variable, New-Variable, Remove-Variable, about_Variables

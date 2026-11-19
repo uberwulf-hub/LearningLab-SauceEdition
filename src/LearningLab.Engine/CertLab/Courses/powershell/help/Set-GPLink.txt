@@ -1,0 +1,25 @@
+SYNOPSIS: Changes an existing GPO link: enabled, enforced or its order.
+DESCRIPTION:
+Set-GPLink changes how a GPO link behaves without removing it. Disabling the link (-LinkEnabled No) is a quick, reversible way to stop a GPO from applying at one place.
+-Enforced Yes makes the link's settings win over GPOs linked lower down and pushes through blocked inheritance.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Target:
+The OU, domain or site the link is on.
+PARAMETER LinkEnabled:
+Yes or No.
+PARAMETER Enforced:
+Yes or No.
+PARAMETER Order:
+The new position; 1 is the highest priority.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-GPLink "Sales Desktop" -Target "OU=Sales,OU=Staff,DC=corp,DC=example" -LinkEnabled No
+Stops the GPO applying to Sales, keeping the link for later.
+EXAMPLE: Set-GPLink "Security Baseline" -Target "DC=corp,DC=example" -Enforced Yes
+Enforces the baseline over everything below the domain.
+RELATED: New-GPLink, Remove-GPLink, Get-GPInheritance

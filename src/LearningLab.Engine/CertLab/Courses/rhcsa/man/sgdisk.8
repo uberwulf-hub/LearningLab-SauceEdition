@@ -1,0 +1,47 @@
+NAME
+       sgdisk - change GPT partition tables from the command line
+
+SYNOPSIS
+       sgdisk [OPTIONS] DISK
+
+DESCRIPTION
+       sgdisk is the scriptable sibling of gdisk: each change is an option on
+       the command line, and sgdisk writes the table when it is done. It
+       works on GPT disks (an MBR disk is converted). It is part of the gdisk
+       package.
+
+OPTIONS
+       -p, --print
+              Print the partition table.
+
+       -n, --new NUM:START:END
+              Create partition NUM. START and END can be sectors or sizes such
+              as +1G; 0 means the default (first free sector, or the end of
+              the free space).
+
+       -t, --typecode NUM:CODE
+              Set the type code: 8300 Linux, 8200 Linux swap, 8e00 Linux LVM,
+              ef00 EFI system.
+
+       -c, --change-name NUM:NAME
+              Set the partition's name.
+
+       -d, --delete NUM
+              Delete partition NUM.
+
+       -o, --clear
+              Write a new, empty GPT (all partitions are lost).
+
+       -Z, --zap-all
+              Destroy both GPT and MBR data structures.
+
+EXAMPLES
+       A new 1 GiB LVM partition on /dev/vdb:
+
+           sgdisk -n 1:0:+1G -t 1:8e00 /dev/vdb
+
+NOTES
+       Cert Lab does not simulate sgdisk: use gdisk, fdisk or parted there.
+
+SEE ALSO
+       gdisk(8), fdisk(8), parted(8), partprobe(8)

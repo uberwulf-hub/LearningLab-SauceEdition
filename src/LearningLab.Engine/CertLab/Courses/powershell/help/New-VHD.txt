@@ -1,0 +1,22 @@
+SYNOPSIS: Creates a virtual hard disk file (VHD or VHDX).
+DESCRIPTION:
+New-VHD creates a disk file; the extension in -Path picks the format. VHDX (up to 64 TB, resists damage from power loss) is the right choice today; VHD (up to 2 TB) only for old systems.
+
+Dynamic disks start small and grow as data is written (the default). Fixed disks take their full size at once and are a little faster. Differencing disks record only changes compared with a -ParentPath disk; the parent must never change afterwards, or the child breaks.
+PARAMETER Path:
+The new file, for example D:\Hyper-V\Virtual Hard Disks\Data.vhdx. Position 0.
+PARAMETER SizeBytes:
+The size, for example 100GB. Position 1.
+PARAMETER Dynamic:
+A dynamically expanding disk.
+PARAMETER Fixed:
+A fixed-size disk.
+PARAMETER Differencing:
+A differencing disk (with -ParentPath).
+PARAMETER ParentPath:
+The parent disk of a differencing disk.
+EXAMPLE: New-VHD -Path "D:\Hyper-V\Virtual Hard Disks\WEB-DATA.vhdx" -SizeBytes 100GB -Dynamic -ComputerName HV1
+A 100 GB dynamic disk that uses almost no space yet.
+EXAMPLE: New-VHD -Path "D:\Hyper-V\Virtual Hard Disks\TEST1.vhdx" -ParentPath "D:\Hyper-V\Virtual Hard Disks\WEB-TEST.vhdx" -Differencing
+A child disk that records only the changes made on top of WEB-TEST's disk.
+RELATED: Get-VHD, Resize-VHD, Convert-VHD, Add-VMHardDiskDrive

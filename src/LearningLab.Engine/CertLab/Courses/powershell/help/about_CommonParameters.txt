@@ -1,0 +1,33 @@
+TOPIC
+    about_CommonParameters
+
+SHORT DESCRIPTION
+    The parameters every cmdlet and advanced function has.
+
+LONG DESCRIPTION
+    -Verbose (-vb)            show the command's verbose messages
+    -Debug (-db)              show its debug messages
+    -ErrorAction (-ea)        what to do with its non-terminating errors:
+                              Continue, SilentlyContinue, Ignore, Stop, Inquire
+    -ErrorVariable (-ev)      also store its errors in this variable (name
+                              without $; +name adds to it)
+    -WarningAction (-wa)      what to do with its warnings
+    -WarningVariable (-wv)    store its warnings in a variable
+    -InformationAction (-infa) what to do with its information messages
+    -InformationVariable (-iv) store its information messages in a variable
+    -OutVariable (-ov)        also store its output in a variable
+    -OutBuffer (-ob)          how many objects to collect before passing them on
+    -PipelineVariable (-pv)   keep its current object in a variable for later
+                              commands of the same pipeline
+
+    Commands that change things also have:
+
+    -WhatIf (-wi)             only say what would be done
+    -Confirm (-cf)            ask before each change
+
+    Your own functions get these when they use [CmdletBinding()]
+    (and [CmdletBinding(SupportsShouldProcess)] for -WhatIf and -Confirm).
+
+SEE ALSO
+    about_Preference_Variables
+    about_Functions_Advanced

@@ -1,0 +1,21 @@
+SYNOPSIS: Gets one or more computer accounts from Active Directory.
+DESCRIPTION:
+Every domain-joined computer has a computer account (its SamAccountName is the name followed by $, such as CL1$). Get-ADComputer returns them; use -Identity for one or -Filter to search.
+Useful extra properties: OperatingSystem, OperatingSystemVersion, IPv4Address, LastLogonDate, Description. Ask for them with -Properties.
+PARAMETER Identity:
+One computer: its name (CL1), distinguished name, GUID or SID. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search in the PowerShell filter language, such as "OperatingSystem -like '*Server*'". Use * for all.
+PARAMETER Properties:
+Extra properties to return.
+PARAMETER SearchBase:
+Only searches below this OU, such as "OU=Servers,DC=corp,DC=example".
+PARAMETER SearchScope:
+Base, OneLevel or Subtree (the default).
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADComputer -Filter * -Properties OperatingSystem | Select-Object Name, OperatingSystem
+Every computer and its Windows edition.
+EXAMPLE: Get-ADComputer CL1 -Properties IPv4Address, LastLogonDate
+The workstation CL1 with its address and last sign-in to the domain.
+RELATED: New-ADComputer, Set-ADComputer, Remove-ADComputer, Move-ADObject

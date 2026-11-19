@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the local user accounts of the computer.
+DESCRIPTION:
+Local accounts exist only on this computer, unlike domain accounts (LAB\name) which the domain controller keeps. Every Windows has the built-in Administrator, Guest (disabled), DefaultAccount and WDAGUtilityAccount. Get-LocalUser returns LocalUser objects with Name, Enabled, Description, FullName, the password dates and the SID.
+PARAMETER Name:
+User names; wildcards are allowed. Position 0, and takes pipeline input.
+PARAMETER SID:
+Users by security identifier.
+EXAMPLE: Get-LocalUser
+Every local user.
+EXAMPLE: Get-LocalUser | Where-Object Enabled | Select-Object Name, LastLogon, PasswordExpires
+The enabled accounts with their last sign-in and password expiry.
+NOTES:
+The LocalAccounts module exists in 64-bit Windows PowerShell 5.1; in PowerShell 7 it loads through Windows PowerShell compatibility.
+RELATED: New-LocalUser, Set-LocalUser, Get-LocalGroupMember

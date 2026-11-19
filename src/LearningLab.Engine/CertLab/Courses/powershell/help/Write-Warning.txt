@@ -1,0 +1,10 @@
+SYNOPSIS: Writes a warning message.
+DESCRIPTION:
+Write-Warning shows "WARNING: " and the text. Warnings are shown by default; -WarningAction SilentlyContinue (or $WarningPreference) hides them, and -WarningVariable keeps them in a variable. A warning is not an error: it does not go into $Error and $? stays True.
+PARAMETER Message:
+The text.
+EXAMPLE: Write-Warning 'The disk is 90 percent full'
+Shows WARNING: The disk is 90 percent full
+EXAMPLE: function Test-W { [CmdletBinding()] param() Write-Warning 'careful'; 'result' }; Test-W -WarningAction SilentlyContinue
+Shows only "result".
+RELATED: Write-Error, Write-Verbose, about_Preference_Variables

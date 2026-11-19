@@ -1,0 +1,28 @@
+# Deck: protection | Endpoint security, BitLocker and LAPS | Protection
+The setting that stops local admins and malware from turning Defender off :: Tamper protection (Windows Security experience profile)
+Defender's running state on the PC (real-time protection, tamper protection, signature age) :: `Get-MpComputerStatus`
+Defender's configuration on the PC (PUA, exclusions, ASR rules) :: `Get-MpPreference`
+PUAProtection values in Get-MpPreference :: 0 off, 1 on, 2 audit
+The firewall profile Windows uses on an unknown network :: Public
+The safe default inbound action :: Block
+Firewall profile states on the PC :: `Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction`
+The modes of an attack surface reduction rule :: Not configured, Off, Block, Audit, Warn
+The first mode for a new ASR rule :: Audit, then exclusions for legitimate programs, then Block
+ASR rule actions in Get-MpPreference :: 0 off, 1 block, 2 audit, 6 warn
+Onboard devices to Defender for Endpoint from Intune :: Turn on the connector, then an EDR policy with package type Auto from connector
+The service that runs when a PC is onboarded to Defender for Endpoint :: Sense (Windows Defender Advanced Threat Protection Service)
+Use the machine risk score for access :: Compliance: require the device at or under a risk level; Conditional Access: require compliance
+Silent BitLocker: the warning setting :: Allow Warning For Other Disk Encryption = Disabled
+Silent BitLocker for users who aren't local admins :: Allow Standard User Encryption = Enabled
+Why a required startup PIN breaks silent encryption :: The user must choose the PIN, so encryption waits
+Windows' default OS drive encryption method :: XTS-AES 128-bit
+BitLocker state of drive C: :: `Get-BitLockerVolume -MountPoint C:`
+Where admins find a BitLocker recovery key :: Intune device > Recovery keys, or Entra admin center > device > BitLocker keys
+Make BitLocker replace a recovery key that was used :: Configure Recovery Password Rotation (then BitLocker key rotation)
+The tenant switch Windows LAPS with Entra ID needs :: Entra device settings: Enable Microsoft Entra Local Administrator Password Solution (LAPS)
+Smallest LAPS password age with backup to Entra ID :: 7 days
+LAPS backup directory for a hybrid joined device that keeps passwords on-premises :: Active Directory only
+Process the LAPS policy now on the PC :: `Invoke-LapsPolicyProcessing`
+Set a new LAPS password now on the PC :: `Reset-LapsPassword`
+The default post-authentication action :: Reset the password and log off the managed account, after the reset delay (24 hours by default)
+Roles that may read a LAPS password :: Cloud Device Administrator, Intune Administrator, Global Administrator (or a custom role); Global Reader can't

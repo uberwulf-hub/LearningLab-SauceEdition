@@ -1,0 +1,99 @@
+NAME
+       ssh-keygen - create and manage ssh key pairs and known host keys
+
+SYNOPSIS
+       ssh-keygen [-q] [-t TYPE] [-b BITS] [-N NEW-PASSPHRASE] [-C COMMENT]
+                  [-f FILE]
+       ssh-keygen -p [-P OLD] [-N NEW] [-f FILE]
+       ssh-keygen -l [-E HASH] [-f FILE]
+       ssh-keygen -y [-f FILE]
+       ssh-keygen -R HOST
+
+DESCRIPTION
+       ssh-keygen creates key pairs for ssh logins. A key pair is two files:
+       the private key (for example ~/.ssh/id_ed25519), which never leaves
+       your account and must be readable only by you, and the public key (the
+       same name with .pub), which you copy to the servers you want to log in
+       to (see ssh-copy-id).
+
+       Run without options, ssh-keygen asks where to save the key (Enter
+       takes the default for the type) and for a passphrase. The passphrase
+       encrypts the private key file; leaving it empty (press Enter twice)
+       makes a key that logs in without any questions, which is what scripts
+       and most exam tasks need.
+
+       When the files already exist, ssh-keygen asks before overwriting them.
+
+OPTIONS
+       -t TYPE
+              The kind of key: ed25519, ecdsa or rsa. RHEL 9 creates rsa keys
+              when no type is given; ed25519 keys are short and fast.
+
+       -b BITS
+              The key size, for rsa (3072 by default) and ecdsa keys.
+
+       -f FILE
+              The private key file to create or work on. The public key is
+              FILE.pub.
+
+       -N PASSPHRASE
+              The new passphrase. -N '' gives an empty one (no questions).
+
+       -P PASSPHRASE
+              The old passphrase, with -p.
+
+       -C COMMENT
+              A comment stored at the end of the public key, by default
+              user@host.
+
+       -q     Quiet: do not print the fingerprint and picture.
+
+       -p     Change the passphrase of an existing private key.
+
+       -l     Print the fingerprint of a key file.
+
+       -E HASH
+              The hash for fingerprints: sha256 (default) or md5.
+
+       -y     Read a private key and print its public key.
+
+       -R HOST
+              Remove HOST's entries from ~/.ssh/known_hosts (after a server was
+              reinstalled and has new host keys).
+
+       -H     Hash the host names in a known_hosts file.
+
+EXAMPLES
+       Create an ed25519 key without a passphrase, without questions:
+
+           ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+
+       Create a key interactively (Enter for the file, Enter twice for no
+       passphrase):
+
+           ssh-keygen
+
+       Show the fingerprint of your public key:
+
+           ssh-keygen -l -f ~/.ssh/id_ed25519.pub
+
+       Forget server2's old host key:
+
+           ssh-keygen -R server2
+
+       Add a passphrase to an existing key:
+
+           ssh-keygen -p -f ~/.ssh/id_ed25519
+
+FILES
+       ~/.ssh/id_rsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ed25519
+              Private keys (mode 600).
+
+       ~/.ssh/id_rsa.pub, ~/.ssh/id_ecdsa.pub, ~/.ssh/id_ed25519.pub
+              Public keys (mode 644).
+
+       /etc/ssh/ssh_host_*_key
+              The server's own host keys, created when sshd first starts.
+
+SEE ALSO
+       ssh(1), ssh-copy-id(1), ssh-add(1), ssh-agent(1), sshd(8)

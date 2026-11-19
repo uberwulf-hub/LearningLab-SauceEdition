@@ -1,0 +1,24 @@
+NAME
+       setfiles - set SELinux file contexts from a context list
+
+SYNOPSIS
+       setfiles [-v] [-n] [-F] SPEC-FILE PATH...
+
+DESCRIPTION
+       setfiles is the tool behind restorecon and the full relabel at boot:
+       it labels the files under each PATH from the rules in SPEC-FILE (the
+       policy's file_contexts). For everyday work use restorecon, which
+       finds the policy's list by itself and needs no SPEC-FILE.
+
+OPTIONS
+       -v     Show the files whose context changes.
+
+       -n     Change nothing.
+
+       -F     Reset the whole context, not only the type.
+
+EXAMPLES
+           setfiles -v /etc/selinux/targeted/contexts/files/file_contexts /srv
+
+SEE ALSO
+       restorecon(8), fixfiles(8), semanage(8)

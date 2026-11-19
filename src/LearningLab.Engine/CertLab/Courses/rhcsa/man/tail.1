@@ -1,0 +1,65 @@
+NAME
+       tail - print the last lines of files, or follow a growing file
+
+SYNOPSIS
+       tail [OPTION]... [FILE]...
+
+DESCRIPTION
+       tail prints the last 10 lines of each FILE, or of standard input when
+       no file is given. With several files it prints a header line
+       "==> FILE <==" before each.
+
+       With -f, tail keeps the file open after printing and shows new lines
+       as they are written: the usual way to watch a log while you test
+       something in another window. Press Ctrl+C to stop.
+
+OPTIONS
+       -n, --lines=N
+              Print the last N lines instead of 10. -n +N starts at line N
+              and prints everything after it (tail -n +2 skips a header line).
+              The old form -N (tail -5) works too.
+
+       -c, --bytes=N
+              Print the last N bytes.
+
+       -f, --follow
+              Keep printing lines as they are added.
+
+       -F     Like -f, and keep following when the file is replaced or
+              recreated (as log rotation does).
+
+       --pid=PID
+              With -f, stop when process PID ends.
+
+       -q, --quiet
+              Never print the file name headers.
+
+       -v, --verbose
+              Always print the file name headers.
+
+EXAMPLES
+       Show the newest lines of the security log:
+
+           tail /var/log/secure
+
+       Watch SELinux denials appear while you test a web page:
+
+           tail -f /var/log/audit/audit.log
+
+       Print the last 3 accounts created:
+
+           tail -n 3 /etc/passwd
+
+       Print a CSV file without its first (header) line:
+
+           tail -n +2 /root/report.csv
+
+       Show lines 11 to 20 of a file:
+
+           head -n 20 /etc/services | tail -n 10
+
+NOTES
+       journalctl -f does for the journal what tail -f does for a log file.
+
+SEE ALSO
+       head(1), cat(1), less(1), journalctl(1)

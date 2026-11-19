@@ -1,0 +1,83 @@
+NAME
+       ip - show and change network interfaces, addresses and routes
+
+SYNOPSIS
+       ip [-4 | -6] [-br] OBJECT [COMMAND [ARGUMENT...]]
+
+       OBJECT := address (a, addr) | link (l) | route (r) | neighbour (n)
+
+DESCRIPTION
+       ip shows the network state of the machine as the kernel sees it now,
+       and can change it. Objects and commands may be shortened (ip a, ip r).
+
+       Changes made with ip are temporary: they are lost when the interface
+       goes down, when NetworkManager reapplies its connection, or at a
+       reboot. To configure an address or route for good, use nmcli (or
+       nmtui), which saves NetworkManager connection profiles. Use ip to look
+       and to check.
+
+   ip address
+       ip address [show [dev] IFACE]
+              List the interfaces with their state and addresses. An inet
+              line is an IPv4 address with its prefix (/24), inet6 an IPv6
+              address; scope link marks the automatic fe80:: address.
+
+       ip address add ADDRESS/PREFIX dev IFACE
+       ip address del ADDRESS/PREFIX dev IFACE
+              Add or remove an address (temporary, root only).
+
+   ip link
+       ip link [show]
+              List the interfaces with their MAC address and whether they
+              are UP.
+
+       ip link set [dev] IFACE up|down
+              Bring an interface up or down (root only).
+
+   ip route
+       ip route [show]
+              The routing table. The default line names the gateway that
+              traffic for other networks goes to:
+
+                  default via 192.168.50.254 dev enp1s0 proto static metric 100
+
+   ip neighbour
+       ip neighbour [show]
+              The ARP (IPv4) and neighbour (IPv6) cache: addresses on the
+              local network and their MAC addresses.
+
+OPTIONS
+       -4, -6 Show only IPv4 or only IPv6.
+
+       -br, -brief
+              One short line per interface: name, state, addresses.
+
+       -s     Add statistics (packets, errors).
+
+       -c, -color
+              Colour the output.
+
+EXAMPLES
+       Which addresses does this machine have?
+
+           ip -br address
+
+       Details of one interface:
+
+           ip addr show enp1s0
+
+       What is the default gateway?
+
+           ip route
+
+       Only the IPv6 addresses:
+
+           ip -6 addr show enp1s0
+
+       After an nmcli change, check that it is in effect:
+
+           nmcli connection up enp1s0
+           ip addr show enp1s0
+
+SEE ALSO
+       nmcli(1), ping(8), ss(8), hostnamectl(1)

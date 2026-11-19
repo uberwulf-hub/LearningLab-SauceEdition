@@ -1,0 +1,45 @@
+# Sheet: apps | Apps and app protection | Apps
+## Portal
+Apps > All apps > Add :: Win32, line-of-business, Microsoft Store app (new), Microsoft 365 Apps, Edge, web link, iOS store, managed Google Play
+Apps > App protection policies :: MAM for iOS, Android (and Edge on Windows); user groups
+Apps > App configuration policies :: managed devices or managed apps
+Apps > App selective wipe :: remove org data from the apps only
+Tenant administration > Connectors and tokens :: Apple VPP tokens, managed Google Play
+## Win32 apps
+IntuneWinAppUtil.exe -c source -s setup.exe -o output :: package a setup folder as .intunewin
+Install / uninstall command :: must be silent (/S, /quiet, /qn, /silent)
+msiexec /i app.msi /qn :: silent MSI install
+Install behavior System :: all users, admin rights (Program Files)
+Install behavior User :: the user's context, no admin rights
+Return codes :: 0 and 1707 success, 3010 soft reboot, 1641 hard reboot, 1618 retry
+Requirements :: architecture, minimum OS, disk, memory, CPU, custom rules; else Not applicable
+Detection: MSI :: product code {GUID}, optional version
+Detection: File :: a file or folder exists (or date, version, size)
+Detection: Registry :: a key or value exists (or its value)
+Detection: script :: exit 0 with output = detected
+0x87D1041C :: not detected after a successful install: wrong detection rule
+1603 :: MSI fatal error (for example a missing prerequisite: add a dependency)
+Dependency :: installed first, no assignment needed
+Supersedence :: the new app replaces the old where the new one is assigned; Uninstall previous version removes it first
+## Store and Office
+Microsoft Store app (new) :: installed by winget, updated by the Store; System or User
+Microsoft 365 Apps channels :: Current, Monthly Enterprise, Semi-Annual Enterprise
+Remove other versions :: removes MSI Office first
+Shared computer activation :: PCs shared by several licensed users (kiosks, AVD)
+## Assignments
+Required :: installs on its own (user or device groups)
+Available for enrolled devices :: in Company Portal (user groups; Win32 apps also device groups)
+Uninstall :: removes the app
+## Troubleshooting
+Apps > the app > Device / User install status :: per-device state and error
+C:\ProgramData\Microsoft\IntuneManagementExtension\Logs :: IntuneManagementExtension.log, AppWorkload.log
+Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log | Select-String 'Notepad' :: lines about one app
+## Mobile
+iOS store app + VPP :: licences from Apple Business Manager, no Apple ID needed
+Managed Google Play :: Android Enterprise apps; install in the work profile
+App protection: data protection :: backup, send / receive, save copies, cut / copy / paste, printing
+App protection: access requirements :: PIN, biometrics, work credentials
+App protection: conditional launch :: PIN attempts, offline grace period, jailbroken / rooted, min OS
+App configuration: managed devices :: MDM, enrolled devices, deployed apps
+App configuration: managed apps :: Intune App SDK, enrolled or not
+Require app protection policy :: Conditional Access grant for iOS and Android (Edge on Windows in preview)

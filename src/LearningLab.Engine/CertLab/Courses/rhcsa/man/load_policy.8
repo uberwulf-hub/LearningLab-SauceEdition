@@ -1,0 +1,21 @@
+NAME
+       load_policy - load the SELinux policy into the kernel
+
+SYNOPSIS
+       load_policy
+
+DESCRIPTION
+       load_policy reads the policy of the type named in /etc/selinux/config
+       (targeted on RHEL) and loads it into the kernel. The boot process
+       does this normally, so you rarely run it. Tools such as semodule and
+       setsebool -P reload the policy themselves.
+
+       You may meet it in an emergency shell (for example after rd.break and
+       chroot /sysroot), where no policy is loaded yet; load_policy -i loads
+       it there so labels can be set right.
+
+EXAMPLES
+           load_policy
+
+SEE ALSO
+       selinux(8), semodule(8), fixfiles(8)

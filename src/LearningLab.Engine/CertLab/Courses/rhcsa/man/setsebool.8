@@ -1,0 +1,40 @@
+NAME
+       setsebool - turn SELinux booleans on or off
+
+SYNOPSIS
+       setsebool [-P] BOOLEAN on|off
+       setsebool [-P] BOOLEAN=VALUE...
+
+DESCRIPTION
+       Booleans are switches in the SELinux policy that allow optional
+       behaviour, such as httpd_enable_homedirs (Apache may read users'
+       public_html directories) or httpd_can_network_connect (Apache may
+       open network connections). setsebool changes them.
+
+       Without -P the change lasts only until the next reboot. With -P it is
+       also written to the policy store, so it survives reboots. Exam tasks
+       almost always want -P. Writing the store takes a few seconds.
+
+       Values can be on/off, 1/0 or true/false. Only root can change
+       booleans.
+
+OPTIONS
+       -P     Make the change permanent.
+
+EXAMPLES
+       Let Apache serve users' home pages, for good:
+
+           setsebool -P httpd_enable_homedirs on
+           getsebool httpd_enable_homedirs
+
+       Find booleans about a service:
+
+           getsebool -a | grep ftp
+           semanage boolean -l | grep httpd
+
+       Change two at once:
+
+           setsebool -P httpd_can_network_connect=1 httpd_use_nfs=1
+
+SEE ALSO
+       getsebool(8), semanage(8), sestatus(8), booleans(8)

@@ -1,0 +1,30 @@
+NAME
+       netstat - show network connections and listening ports (old tool)
+
+SYNOPSIS
+       netstat [-t] [-u] [-l] [-n] [-p]
+
+DESCRIPTION
+       netstat lists network sockets. It is part of the net-tools package,
+       which RHEL 9 no longer installs by default: use ss, which takes the
+       same main options and prints the same kind of table. Both show which
+       program listens on which port, which is how you check that a service
+       really listens where you configured it.
+
+OPTIONS
+       -t     TCP sockets.
+
+       -u     UDP sockets.
+
+       -l     Only listening sockets.
+
+       -n     Show numbers instead of names for addresses and ports.
+
+       -p     Show the program and PID that owns each socket (root sees all).
+
+EXAMPLES
+           ss -tlnp
+           netstat -tlnp      (after dnf install net-tools)
+
+SEE ALSO
+       ss(8), ip(8), firewall-cmd(1)

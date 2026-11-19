@@ -1,0 +1,10 @@
+## both alerts, and the shells the web servers started
+siem alerts
+siem search source=proclog parent=/usr/sbin/httpd --fields time,host,user,cmdline
+## WEB02: what asked for its shell?
+siem search source=web host=WEB02 path=/hooks/deploy
+## WEB01: who uploaded what, then called it
+siem search source=web host=WEB01 method=POST path=/upload.php
+siem search source=web client={{ATKIP}} --fields time,method,path,status
+## where they went next
+siem search source=auth host!=WEB02 --since {{T0}}

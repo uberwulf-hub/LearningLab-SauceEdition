@@ -1,0 +1,76 @@
+# Lab: lab-02 | The pipeline and objects | u02 | 30
+Answer questions about the employees list and the services with pipelines: filtering, sorting, grouping, measuring, and letting objects bind to the next command.
+
+@vars
+dept = Engineering | Research | IT
+min = 60000-90000
+svc = Spooler | W32Time | BITS
+@endvars
+
+@task t01 | Pipeline | 10 | WIN-SRV1
+Store in `$picked` the employees from `C:\LabFiles\employees.csv` who work in **{dept}** and earn **more than {min}**, sorted by salary from highest to lowest. Keep the whole employee objects (not just the names). Remember that values from a CSV file are text.
+@check WIN-SRV1 | $picked holds the right employees in the right order
+$want = Import-Csv C:\LabFiles\employees.csv | Where-Object { $_.Department -eq '{dept}' -and [int]$_.Salary -gt {min} } | Sort-Object { [int]$_.Salary } -Descending; @($picked).Count -eq @($want).Count -and ((@($picked) | ForEach-Object Name) -join ',') -eq ((@($want) | ForEach-Object Name) -join ',')
+@check WIN-SRV1 | the items are employee objects
+@($picked).Count -eq 0 -or ($picked | Select-Object -First 1).Department -eq '{dept}'
+@hint Import-Csv ... | Where-Object { $_.Department -eq '{dept}' -and [int]$_.Salary -gt {min} } | Sort-Object { [int]$_.Salary } -Descending
+@solution WIN-SRV1
+$picked = Import-Csv C:\LabFiles\employees.csv | Where-Object { $_.Department -eq '{dept}' -and [int]$_.Salary -gt {min} } | Sort-Object { [int]$_.Salary } -Descending
+@explain
+Import-Csv gives text, so "98000" -gt 60000 would compare as text if the text came first. Casting with [int] in Where-Object and in a Sort-Object script block makes both the filter and the order numeric.
+@endtask
+
+@task t02 | Pipeline | 10 | WIN-SRV1
+Store in `$biggest` the **name** of the department with the most employees in `C:\LabFiles\employees.csv` (a plain string, such as `Sales`).
+@check WIN-SRV1 | $biggest is the largest department's name
+$want = (Import-Csv C:\LabFiles\employees.csv | Group-Object Department | Sort-Object Count -Descending | Select-Object -First 1).Name; $biggest -is [string] -and $biggest -eq $want
+@hint Group-Object Department, then Sort-Object Count -Descending, then take the first group's Name.
+@solution WIN-SRV1
+$biggest = Import-Csv C:\LabFiles\employees.csv | Group-Object Department | Sort-Object Count -Descending | Select-Object -First 1 -ExpandProperty Name
+@explain
+Group-Object makes one GroupInfo object per department with Count, Name and Group. -ExpandProperty Name turns the chosen group into a plain string.
+@endtask
+
+@task t03 | Pipeline | 10 | WIN-SRV1
+Store in `$payroll` the **total** of the Salary column of `C:\LabFiles\employees.csv` as a number, and in `$avgPay` the average.
+@check WIN-SRV1 | $payroll is the total
+$t = 0; Import-Csv C:\LabFiles\employees.csv | ForEach-Object { $t += [int]$_.Salary }; [double]$payroll -eq $t -and $payroll -isnot [string]
+@check WIN-SRV1 | $avgPay is the average
+$m = Import-Csv C:\LabFiles\employees.csv | Measure-Object Salary -Average; [double]$avgPay -eq $m.Average
+@hint $m = Import-Csv ... | Measure-Object Salary -Sum -Average, then $m.Sum and $m.Average
+@solution WIN-SRV1
+$m = Import-Csv C:\LabFiles\employees.csv | Measure-Object Salary -Sum -Average
+$payroll = $m.Sum
+$avgPay = $m.Average
+@explain
+Measure-Object turns the text values into numbers itself and returns one object with Count, Sum, Average, Maximum and Minimum (the ones you asked for).
+@endtask
+
+@setup WIN-CL1
+Start-Service {svc}
+
+@task t04 | Pipeline | 10 | WIN-CL1
+On **WIN-CL1**, stop the service **{svc}** by piping it from Get-Service to Stop-Service (do not name it on Stop-Service itself).
+@check WIN-CL1 | {svc} is stopped
+"$((Get-Service {svc}).Status)" -eq 'Stopped'
+@check WIN-CL1 | it was piped to Stop-Service
+@($CertLabHistory | Where-Object { $_ -match 'Get-Service.*\|\s*Stop-Service' }).Count -gt 0
+@hint Get-Service {svc} | Stop-Service
+@solution WIN-CL1
+Get-Service {svc} | Stop-Service
+@explain
+Stop-Service takes ServiceController objects from the pipeline ByValue into -InputObject, so the service object itself travels down the pipeline.
+@endtask
+
+@task t05 | Pipeline | 10 | WIN-SRV1
+Store in `$pay` one object per employee with exactly two properties: `Name`, and `Monthly`, the yearly Salary divided by 12 and rounded to a whole number (use a calculated property).
+@check WIN-SRV1 | ten objects with Name and Monthly
+$p = @($pay); $p.Count -eq 10 -and (($p[0].PSObject.Properties | ForEach-Object Name) -join ',') -eq 'Name,Monthly'
+@check WIN-SRV1 | Monthly is right
+$e = Import-Csv C:\LabFiles\employees.csv | Select-Object -First 1; $first = @($pay)[0]; $first.Name -eq $e.Name -and [double]$first.Monthly -eq [math]::Round([int]$e.Salary / 12)
+@hint Select-Object Name, @{ Name = 'Monthly'; Expression = { [math]::Round([int]$_.Salary / 12) } }
+@solution WIN-SRV1
+$pay = Import-Csv C:\LabFiles\employees.csv | Select-Object Name, @{ Name = 'Monthly'; Expression = { [math]::Round([int]$_.Salary / 12) } }
+@explain
+A calculated property is a hashtable with Name (or Label) and an Expression script block; $_ is the object being converted.
+@endtask

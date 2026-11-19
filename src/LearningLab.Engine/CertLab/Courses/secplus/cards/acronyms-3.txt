@@ -1,0 +1,166 @@
+# Deck: acronyms-3 | Acronyms P-Z | Security operations
+P12 :: PKCS #12: a password-protected file that holds a certificate together with its private key (also called .pfx)
+P2P :: Peer-to-peer: computers share directly without a central server; file-sharing apps can spread malware and leak data
+PaaS :: Platform as a service: the cloud runs the OS, runtime and database; you manage your own code and data
+PAC :: Proxy auto-configuration: a file that tells browsers which proxy to use for which address
+PAM (privileged) :: Privileged access management: vaults, checks and records administrator access (just-in-time rights, checked-out passwords)
+PAM (Linux) :: Pluggable authentication modules: the Linux framework that decides how programs authenticate (password rules, lockout, MFA)
+PAP :: Password Authentication Protocol: sends the password in clear text; avoid it
+PAT :: Port address translation: many inside hosts share one public address using different ports (NAT overload)
+PBKDF2 :: Password-Based Key Derivation Function 2: stretches a password with a salt and many hash rounds to slow down cracking
+PBX :: Private branch exchange: a company's phone system; toll fraud and VoIP attacks target it
+PCAP :: Packet capture: recorded network traffic (a .pcap file) for analysis in tools such as Wireshark or tcpdump
+PCI DSS :: Payment Card Industry Data Security Standard: required rules for anyone who stores, processes or sends payment card data
+PDU :: Power distribution unit: a rack power strip, often managed over the network (in networking, also protocol data unit)
+PE :: Portable executable: the Windows file format for .exe and .dll programs
+PEAP :: Protected EAP: the server's certificate builds a TLS tunnel, then the user signs in inside it (often with MS-CHAPv2)
+PED :: Personal electronic device: a phone, tablet or wearable a person carries
+PEM :: Privacy-Enhanced Mail: the Base64 text format for certificates and keys, between BEGIN and END lines
+PFS :: Perfect forward secrecy: new keys for every session, so a stolen long-term key can't unlock past sessions
+PFX :: Personal Information Exchange: the Windows name for a PKCS #12 file with a certificate and its private key
+PGP :: Pretty Good Privacy: encrypts and signs email and files, trusting keys through a web of trust
+PHI :: Protected health information: health data tied to a person; protected by HIPAA
+PII :: Personally identifiable information: data that identifies a person, such as name, ID number or address
+PIN :: Personal identification number: a short number you remember; something you know
+PIV :: Personal Identity Verification: the US federal smart card for staff identity and sign-in
+PKCS :: Public Key Cryptography Standards: a family of standards, such as #10 for CSRs and #12 for key files
+PKI :: Public key infrastructure: the CAs, certificates, policies and processes that bind public keys to identities
+POP3 :: Post Office Protocol 3: downloads mail to the device (TCP 110; POP3S on 995)
+POTS :: Plain old telephone service: analog phone lines, still used by some alarms and modems
+PPP :: Point-to-Point Protocol: carries traffic over a direct link and can sign in with PAP or CHAP
+PPTP :: Point-to-Point Tunneling Protocol: an old VPN protocol with broken security; don't use it
+PSK :: Pre-shared key: one shared password for Wi-Fi or a VPN; weak if short or widely shared
+PTZ :: Pan-tilt-zoom: a security camera that can be turned and zoomed remotely
+PUP :: Potentially unwanted program: software such as adware or toolbars that isn't quite malware but is usually unwanted
+QA :: Quality assurance: testing that software works and meets its requirements before release
+QoS :: Quality of service: gives some traffic, such as voice, priority over other traffic
+RA :: Registration authority: checks people's identities for a CA before certificates are issued
+RAD :: Rapid application development: building software quickly through prototypes and user feedback
+RADIUS :: Remote Authentication Dial-In User Service: central AAA for network access (UDP 1812 and 1813); hides only the password
+RAID :: Redundant array of independent disks: combines disks for redundancy or speed (1 mirror, 5 parity, 10 mirror plus stripe); not a backup
+RAS :: Remote access server: lets remote users connect into the network
+RAT :: Remote access Trojan: malware that gives an attacker hidden remote control of a computer
+RBAC (role) :: Role-based access control: permissions are given to roles (jobs), and users get roles
+RBAC (rule) :: Rule-based access control: rules set by an administrator decide access for everyone, such as firewall rules or time-of-day limits
+RC4 :: Rivest Cipher 4: an old stream cipher used in WEP and early TLS; broken, never use it
+RDP :: Remote Desktop Protocol: Windows remote desktop on TCP 3389; never expose it straight to the internet
+RFID :: Radio-frequency identification: tags read by radio, used in badges and stock control; badges can be cloned
+RIPEMD :: RACE Integrity Primitives Evaluation Message Digest: a hash family; RIPEMD-160 is used in some cryptocurrencies
+RMF :: Risk Management Framework: NIST's seven-step process to prepare, categorize, select, implement, assess, authorize and monitor
+ROI :: Return on investment: what a control saves compared with what it costs
+RPO :: Recovery point objective: how much data, measured in time, the business can afford to lose; sets backup frequency
+RSA :: Rivest-Shamir-Adleman: asymmetric algorithm for encryption and signatures; use keys of 2048 bits or more
+RTBH :: Remotely triggered black hole: a routing trick that drops traffic for an address under DDoS attack before it arrives
+RTO :: Recovery time objective: the longest a system may be down before the harm is unacceptable
+RTOS :: Real-time operating system: an OS that must react within strict time limits (cars, machines, medical devices)
+RTP :: Real-time Transport Protocol: carries voice and video; SRTP adds encryption
+S/MIME :: Secure/Multipurpose Internet Mail Extensions: signs and encrypts email using certificates
+SaaS :: Software as a service: the provider runs the whole application; you manage users, settings and data
+SAE :: Simultaneous Authentication of Equals: the WPA3 handshake that replaces PSK and resists offline password guessing
+SAML :: Security Assertion Markup Language: XML standard for web SSO between an identity provider and a service provider
+SAN (storage) :: Storage area network: a fast dedicated network for block storage
+SAN (certificate) :: Subject alternative name: the certificate field that lists every name the certificate covers
+SASE :: Secure access service edge: networking and security delivered from the cloud (SD-WAN with SWG, CASB, ZTNA and firewall)
+SAST :: Static application security testing: scans source code for flaws without running it
+SBOM :: Software bill of materials: a list of every component and library in software, to track supply chain flaws
+SCADA :: Supervisory control and data acquisition: controls and monitors industrial equipment spread over wide areas
+SCAP :: Security Content Automation Protocol: NIST suite of standards (CVE, CVSS, CPE, CCE, OVAL, XCCDF) for automated checks
+SCEP :: Simple Certificate Enrollment Protocol: lets devices ask for certificates automatically
+SCP :: Secure Copy Protocol: copies files over SSH (TCP 22)
+SD-WAN :: Software-defined wide area network: manages WAN links centrally and picks the best path over any connection
+SDK :: Software development kit: tools and libraries for building apps; third-party kits bring their own risks
+SDLC :: Software development life cycle: the stages of building software; security belongs in every stage
+SDLM :: Software development life cycle methodology: the chosen way of running the SDLC, such as waterfall or agile
+SDN :: Software-defined networking: the control plane is separated from the data plane and run by software
+SED :: Self-encrypting drive: a drive that encrypts everything in its own hardware
+SEH :: Structured exception handling: Windows error handling; overwriting its handlers is a known exploit method
+SELinux :: Security-Enhanced Linux: mandatory access control for Linux with labels on every process and file
+SFTP :: SSH File Transfer Protocol: secure file transfer over SSH (TCP 22)
+SHA :: Secure Hash Algorithm: hash family; SHA-1 is broken for collisions, SHA-256 and SHA-3 are current
+SHTTP :: Secure Hypertext Transfer Protocol: an old alternative to HTTPS that never caught on
+SIEM :: Security information and event management: collects and correlates logs, raises alerts and reports
+SIM :: Subscriber identity module: the phone card with the subscriber's identity; SIM swapping steals text-message codes
+SIP :: Session Initiation Protocol: sets up VoIP calls (5060, or 5061 with TLS)
+SLA :: Service-level agreement: measurable promises from a provider (uptime, response time), with penalties if missed
+SLE :: Single loss expectancy: the cost of one occurrence of a risk; SLE = AV x EF
+SMB :: Server Message Block: Windows file sharing on TCP 445; never open it to the internet
+SMS :: Short Message Service: text messages; a weak second factor, and the channel for smishing
+SMTP :: Simple Mail Transfer Protocol: sends email between servers (TCP 25; 587 for clients sending mail)
+SMTPS :: SMTP Secure: SMTP over implicit TLS on port 465
+SNMP :: Simple Network Management Protocol: monitors devices (UDP 161, traps on 162); only version 3 adds authentication and encryption
+SOAP :: Simple Object Access Protocol: XML-based messages for web services
+SOAR :: Security orchestration, automation and response: runs playbooks automatically across security tools
+SoC :: System on a chip: a whole computer on one chip, as in phones and IoT devices
+SOC :: Security operations center: the team and place that watch for and respond to threats around the clock
+SOC 2 :: System and Organization Controls 2: an auditor's report on a service provider's controls (Type I at a point in time, Type II over a period)
+SOW :: Statement of work: the specific work, deliverables and timeline for one project
+SPF :: Sender Policy Framework: a DNS record listing the servers allowed to send mail for a domain
+SPIM :: Spam over instant messaging: unwanted messages in chat apps
+SPOF :: Single point of failure: one part whose failure stops the whole system; remove it with redundancy
+SQL :: Structured Query Language: the language for querying databases
+SQLi :: SQL injection: attacker input changes a database query; stop it with parameterized queries
+SRTP :: Secure Real-time Transport Protocol: encrypted and authenticated voice and video
+SSD :: Solid-state drive: flash storage; overwriting is unreliable, so use cryptographic erase or destruction
+SSH :: Secure Shell: an encrypted remote command line (TCP 22)
+SSID :: Service set identifier: a Wi-Fi network's name; hiding it is not real protection
+SSL :: Secure Sockets Layer: the old, broken forerunner of TLS; every version should be turned off
+SSO :: Single sign-on: sign in once to reach many systems
+SSRF :: Server-side request forgery: tricks a server into fetching internal addresses for the attacker
+STIX :: Structured Threat Information eXpression: a standard format for describing threat intelligence
+STP :: Spanning Tree Protocol: stops switching loops; BPDU guard and root guard protect it
+SWG :: Secure web gateway: filters users' web traffic for malware and policy
+TACACS+ :: Terminal Access Controller Access-Control System Plus: AAA for administering network devices over TCP 49; encrypts the whole payload
+TAXII :: Trusted Automated eXchange of Intelligence Information: the transport for sharing STIX threat data
+TCP/IP :: Transmission Control Protocol/Internet Protocol: the core protocol suite of the internet
+TFTP :: Trivial File Transfer Protocol: file transfer with no sign-in (UDP 69); used for network boot and device configs
+TGT :: Ticket-granting ticket: the Kerberos ticket used to get service tickets; a golden ticket attack forges one
+TKIP :: Temporal Key Integrity Protocol: WPA's stopgap fix for WEP; deprecated
+TLS :: Transport Layer Security: encrypts connections such as HTTPS; use version 1.2 or 1.3
+TOC :: Time of check: when a program checks a condition; the first half of a TOC/TOU race
+TOTP :: Time-based one-time password: codes from a shared secret and the clock, usually new every 30 seconds
+TOU :: Time of use: when a program uses what it checked; an attacker swaps it in between
+TPM :: Trusted Platform Module: a chip that stores keys and measures the boot process (BitLocker, Secure Boot, attestation)
+TSIG :: Transaction signature: protects DNS messages such as zone transfers with a shared key
+TTP :: Tactics, techniques and procedures: how an attacker works; much harder for them to change than an IP address
+UAT :: User acceptance testing: users confirm that software does what they need before it goes live
+UAV :: Unmanned aerial vehicle: a drone; can carry cameras or wireless attack gear over a fence
+UDP :: User Datagram Protocol: fast connectionless transport; easy to spoof, so used in amplification attacks
+UEBA :: User and entity behavior analytics: learns normal behaviour and flags unusual activity by users and devices
+UEFI :: Unified Extensible Firmware Interface: modern PC firmware that supports Secure Boot
+UEM :: Unified endpoint management: manages every kind of endpoint (PCs, phones, IoT) from one tool
+UPS :: Uninterruptible power supply: batteries that keep systems running for a short time during a power cut
+URI :: Uniform resource identifier: a string that names a resource; a URL is one kind
+URL :: Uniform resource locator: a web address; check it carefully for typosquatting
+USB :: Universal Serial Bus: the common device port; malicious drives and cables are an attack vector
+UTM :: Unified threat management: one appliance with firewall, IPS, antivirus, web filtering and VPN
+UTP :: Unshielded twisted pair: the usual copper network cable
+VBA :: Visual Basic for Applications: the macro language in Office files; macro malware is written in it
+VDE :: Virtual desktop environment: the desktops that a VDI delivers to users
+VDI :: Virtual desktop infrastructure: desktops run on central servers, so data stays in the data center
+VLAN :: Virtual local area network: splits one switch into separate logical networks
+VLSM :: Variable-length subnet masking: subnets of different sizes carved from one address block
+VM :: Virtual machine: a computer running in software on a hypervisor; VM escape breaks out to the host
+VoIP :: Voice over IP: phone calls over the network; protect them with SRTP and SIP over TLS
+VPC :: Virtual private cloud: your own isolated network inside a public cloud
+VPN :: Virtual private network: an encrypted tunnel across an untrusted network
+VTC :: Video teleconferencing: video meetings; needs access control so strangers can't join
+WAF :: Web application firewall: inspects HTTP traffic to block attacks such as SQL injection and XSS
+WAP :: Wireless access point: the same as an AP (also the name of an old mobile web protocol)
+WEP :: Wired Equivalent Privacy: the first Wi-Fi encryption, built on RC4; broken, never use it
+WIDS :: Wireless intrusion detection system: watches the airwaves for rogue access points and attacks
+WIPS :: Wireless intrusion prevention system: like a WIDS, but it can also stop the attack
+WLAN :: Wireless local area network: a Wi-Fi network
+WO :: Work order: authorizes one specific piece of work under an MSA
+WORM :: Write once, read many: storage that can't be changed after writing; protects logs and backups
+WPA :: Wi-Fi Protected Access: the first replacement for WEP, using TKIP; obsolete
+WPA2 :: Wi-Fi Protected Access 2: AES-CCMP encryption; still common, but its PSK mode allows offline guessing
+WPA3 :: Wi-Fi Protected Access 3: the current standard, with SAE, forward secrecy and protected management frames
+WPS :: Wi-Fi Protected Setup: easy pairing with a PIN or button; the PIN can be brute forced, so turn it off
+WTLS :: Wireless Transport Layer Security: TLS-like security for the old WAP mobile web protocol
+XDR :: Extended detection and response: joins endpoint, network, email and cloud data to detect and respond together
+XML :: Extensible Markup Language: a data format; badly set up parsers allow XXE attacks
+XOR :: Exclusive OR: a bit operation inside every cipher; used alone with a short key it is weak obfuscation
+XSRF :: Cross-site request forgery: another name for CSRF
+XSS :: Cross-site scripting: an attacker's script runs in other users' browsers; stop it with output encoding and input validation
+XXE :: XML external entity: an attack that abuses an XML parser to read files or reach internal systems
+ZTNA :: Zero trust network access: grants access to one application at a time after checking the user and device every time

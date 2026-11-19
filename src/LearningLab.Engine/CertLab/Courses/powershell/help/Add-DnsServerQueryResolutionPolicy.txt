@@ -1,0 +1,30 @@
+SYNOPSIS: Adds a DNS policy that decides how the server answers certain questions.
+DESCRIPTION:
+A query resolution policy has conditions and an action. Conditions compare the question with values in the form "operator,value": -ClientSubnet "EQ,Branch", -Fqdn "EQ,*.ads.example", -TimeOfDay "EQ,18:00-23:00". The action is ALLOW (answer, usually from the -ZoneScope you give), DENY (refuse) or IGNORE (drop without answering).
+
+With -ZoneName the policy is a zone-level policy for that zone; without it, it is a server-level policy (often used to block names). -ProcessingOrder sets which policy is checked first; the first match wins.
+
+Typical uses: send branch clients to a branch server, block a malware domain, or answer differently after hours.
+PARAMETER Name:
+The policy's name.
+PARAMETER Action:
+ALLOW, DENY or IGNORE.
+PARAMETER ClientSubnet:
+Condition on the client subnet, for example "EQ,Branch".
+PARAMETER Fqdn:
+Condition on the name asked for, wildcards allowed: "EQ,*.ads.example".
+PARAMETER TimeOfDay:
+Condition on the server's time, for example "EQ,18:00-23:00".
+PARAMETER ZoneScope:
+Which scope answers, with a weight: "BranchScope,1".
+PARAMETER ZoneName:
+Makes it a policy of this zone.
+PARAMETER ProcessingOrder:
+The order the policies are checked in, 1 first.
+PARAMETER Disable:
+Creates the policy turned off.
+EXAMPLE: Add-DnsServerQueryResolutionPolicy -Name BranchPolicy -Action ALLOW -ClientSubnet "EQ,Branch" -ZoneScope "BranchScope,1" -ZoneName corp.example -ComputerName DC1
+Branch clients get the answers in BranchScope; everyone else the default records.
+EXAMPLE: Add-DnsServerQueryResolutionPolicy -Name BlockAds -Action IGNORE -Fqdn "EQ,*.ads.example"
+A server-level policy that silently drops questions about that domain.
+RELATED: Get-DnsServerQueryResolutionPolicy, Remove-DnsServerQueryResolutionPolicy, Add-DnsServerClientSubnet, Add-DnsServerZoneScope

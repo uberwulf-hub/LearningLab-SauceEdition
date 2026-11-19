@@ -1,0 +1,17 @@
+SYNOPSIS: Creates an Active Directory site.
+DESCRIPTION:
+New-ADReplicationSite adds a site, typically for a new office. A site on its own does nothing yet. To make it useful:
+Give it its subnets (New-ADReplicationSubnet), so computers there are recognised as being in the site.
+Put it in a site link (New-ADReplicationSiteLink or Set-ADReplicationSiteLink), or it won't replicate with the other sites.
+Optionally move or promote a domain controller into it.
+PARAMETER Name:
+The site's name, such as Seattle. Position 0.
+PARAMETER Description:
+A note, such as the office address.
+PARAMETER PassThru:
+Returns the new site.
+EXAMPLE: New-ADReplicationSite Seattle -Description "Seattle warehouse"
+A site for the Seattle office.
+EXAMPLE: New-ADReplicationSite Seattle; New-ADReplicationSubnet 10.20.0.0/24 -Site Seattle; Set-ADReplicationSiteLink DEFAULTIPSITELINK -SitesIncluded @{Add="Seattle"}
+Creates the site, gives it its subnet and adds it to the default site link.
+RELATED: Get-ADReplicationSite, New-ADReplicationSubnet, New-ADReplicationSiteLink, Move-ADDirectoryServer

@@ -1,0 +1,91 @@
+# Lab: lab-05 | Files, content and the registry | u05 | 30
+Five jobs on WIN-SRV1 with the item, content and property cmdlets: collecting files from a folder tree, renaming a file with brackets in its name, writing a text file with a chosen encoding, tidying a registry key and copying a registry value into the environment.
+
+@vars
+ext = csv | log
+year = 2024 | 2025
+who = Ada | Grace | Linus
+app = InventoryApp | ReportTool | BackupAgent
+port = 1433-1499
+@endvars
+
+@setup WIN-SRV1
+New-Item HKCU:\Software\{app} -Force | Out-Null
+New-ItemProperty HKCU:\Software\{app} -Name Mode -PropertyType String -Value Slow | Out-Null
+New-ItemProperty HKCU:\Software\{app} -Name Debug -PropertyType DWord -Value 1 | Out-Null
+
+@task t01 | Providers | 10 | WIN-SRV1
+Create the folder `C:\Collect\{ext}` and copy into it every `.{ext}` file found anywhere under `C:\LabFiles` (in its subfolders too). The copies all go straight into `C:\Collect\{ext}`, with no subfolders.
+@check WIN-SRV1 | every .{ext} file of C:\LabFiles was copied
+$want = @(Get-ChildItem C:\LabFiles -Filter *.{ext} -Recurse | ForEach-Object Name | Sort-Object) -join '|'; $have = @(Get-ChildItem C:\Collect\{ext} -File | ForEach-Object Name | Sort-Object) -join '|'; $want -ne '' -and $have -eq $want
+@check WIN-SRV1 | nothing else is in the folder
+@(Get-ChildItem C:\Collect\{ext} -Directory -Force).Count -eq 0
+@hint Find the files with Get-ChildItem C:\LabFiles -Filter *.{ext} -Recurse, then pipe them to Copy-Item -Destination. Make the folder first with New-Item -ItemType Directory -Force.
+@solution WIN-SRV1
+New-Item C:\Collect\{ext} -ItemType Directory -Force
+Get-ChildItem C:\LabFiles -Filter *.{ext} -Recurse | Copy-Item -Destination C:\Collect\{ext}
+Get-ChildItem C:\Collect\{ext}
+@explain
+`Copy-Item C:\LabFiles\*.{ext}` would only see the top folder. Finding the files first with `-Recurse` and piping them to Copy-Item copies each one into the destination you name, wherever it was found. Piped files bind to Copy-Item's -LiteralPath, so even a name with square brackets copies correctly.
+@endtask
+
+@task t02 | Providers | 10 | WIN-SRV1
+The file `C:\LabFiles\Reports\summary [old].txt` has square brackets in its name. Rename it to `summary-{year}.txt` (in the same folder).
+@check WIN-SRV1 | summary-{year}.txt exists with the old text
+(Get-Content C:\LabFiles\Reports\summary-{year}.txt) -like 'Summary of last year*'
+@check WIN-SRV1 | the old name is gone
+-not (Test-Path -LiteralPath 'C:\LabFiles\Reports\summary [old].txt')
+@hint In -Path, [old] is a wildcard. Use Rename-Item -LiteralPath.
+@solution WIN-SRV1
+Rename-Item -LiteralPath 'C:\LabFiles\Reports\summary [old].txt' -NewName summary-{year}.txt
+Get-ChildItem C:\LabFiles\Reports
+@explain
+Square brackets in -Path mean "one of these characters", so `[old]` matches a single o, l or d and the real name is not found. -LiteralPath takes the name exactly as written. The new name is only a name: Rename-Item never moves an item to another folder.
+@endtask
+
+@task t03 | Providers | 10 | WIN-SRV1
+Create `C:\LabFiles\online.txt` in **UTF-8** (with a byte order mark). It must hold the lines of `C:\LabFiles\servers.txt` that start with `WIN`, in the same order, and then one last line `checked by {who}`.
+@check WIN-SRV1 | the lines are right
+$l = @(Get-Content C:\LabFiles\online.txt -Encoding UTF8 | Where-Object { $_ -ne '' }); ($l -join '|') -eq 'WIN-SRV1|WIN-CL1|checked by {who}'
+@check WIN-SRV1 | the file is UTF-8 with a byte order mark
+(@(Get-Content C:\LabFiles\online.txt -Encoding Byte -TotalCount 3) -join ',') -eq '239,187,191'
+@hint Get-Content servers.txt | Where-Object { $_ -like 'WIN*' } | Set-Content online.txt -Encoding UTF8, then Add-Content the last line (Add-Content keeps the file's encoding).
+@solution WIN-SRV1
+Get-Content C:\LabFiles\servers.txt | Where-Object { $_ -like 'WIN*' } | Set-Content C:\LabFiles\online.txt -Encoding UTF8
+Add-Content C:\LabFiles\online.txt 'checked by {who}'
+Get-Content C:\LabFiles\online.txt
+@explain
+Set-Content writes ANSI by default in Windows PowerShell 5.1, so the encoding has to be asked for. Add-Content then appends in the encoding the file already has. In 5.1, `-Encoding UTF8` always writes the three bytes 239, 187, 191 (EF BB BF) first: the byte order mark. PowerShell 7 writes UTF-8 without it unless you ask for utf8BOM.
+@endtask
+
+@task t04 | Providers | 10 | WIN-SRV1
+The program {app} keeps its settings in `HKCU:\Software\{app}`. Change its value `Mode` to `Fast` (it stays a String), add a **DWord** value `Port` set to `{port}`, and remove the value `Debug`. Keep the key itself.
+@check WIN-SRV1 | Mode is the string Fast
+$k = Get-Item HKCU:\Software\{app}; $k.GetValueKind('Mode') -eq 'String' -and $k.GetValue('Mode') -eq 'Fast'
+@check WIN-SRV1 | Port is a DWord with {port}
+$k = Get-Item HKCU:\Software\{app}; $k.GetValueKind('Port') -eq 'DWord' -and $k.GetValue('Port') -eq {port}
+@check WIN-SRV1 | Debug is gone
+-not ((Get-Item HKCU:\Software\{app}).Property -contains 'Debug')
+@hint Set-ItemProperty changes Mode, New-ItemProperty -PropertyType DWord adds Port, Remove-ItemProperty removes Debug. Remove-Item would remove the whole key.
+@solution WIN-SRV1
+Set-ItemProperty HKCU:\Software\{app} -Name Mode -Value Fast
+New-ItemProperty HKCU:\Software\{app} -Name Port -PropertyType DWord -Value {port}
+Remove-ItemProperty HKCU:\Software\{app} -Name Debug
+Get-Item HKCU:\Software\{app}
+@explain
+Registry values are item properties, so they have their own cmdlets: Set-ItemProperty changes one (an existing value keeps its kind), New-ItemProperty creates one of the kind you name, and Remove-ItemProperty deletes one. Set-ItemProperty on a value that does not exist creates a String, which is why Port needs New-ItemProperty -PropertyType DWord.
+@endtask
+
+@task t05 | Providers | 10 | WIN-SRV1
+Copy the registered owner of this Windows (the value `RegisteredOwner` in `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion`) into the environment variable `LAB_OWNER` of this PowerShell session. Read it from the registry; do not type the name.
+@check WIN-SRV1 | $env:LAB_OWNER holds the owner
+$env:LAB_OWNER -eq (Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name RegisteredOwner)
+@check WIN-SRV1 | the value was read from the registry
+($CertLabHistory -join "`n") -match 'RegisteredOwner'
+@hint Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name RegisteredOwner gives the text; assign it to $env:LAB_OWNER. The path has a space, so quote it.
+@solution WIN-SRV1
+$env:LAB_OWNER = Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name RegisteredOwner
+Get-ChildItem Env:LAB_OWNER
+@explain
+Get-ItemPropertyValue returns only the data of one value, which is what you want to store. (Get-ItemProperty would return an object, and `(Get-ItemProperty PATH).RegisteredOwner` is the older way to get the same text.) `$env:LAB_OWNER` and `Env:LAB_OWNER` are the same variable; it lasts until this PowerShell window closes.
+@endtask

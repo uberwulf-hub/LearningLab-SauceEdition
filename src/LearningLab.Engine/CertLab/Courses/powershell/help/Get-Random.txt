@@ -1,0 +1,32 @@
+SYNOPSIS: Picks a random number, or random items from a list.
+DESCRIPTION:
+Get-Random has two jobs. Without input, it returns a random whole number: by default from 0 up to (but not including) a very large number, or between -Minimum and -Maximum. With a list (-InputObject or the pipeline), it picks random items from that list.
+
+The maximum is never returned: Get-Random -Minimum 1 -Maximum 7 gives 1 to 6, like a die.
+
+If either limit is a decimal number, the result is a decimal number too.
+PARAMETER Maximum:
+The upper limit; results are always below it. Position 0, so Get-Random 10 gives 0 to 9.
+PARAMETER Minimum:
+The lower limit; it can be returned. The default is 0.
+PARAMETER InputObject:
+A list to pick from. It can also come through the pipeline.
+PARAMETER Count:
+How many items to pick from a list. Each item is picked at most once, so -Count larger than the list gives the whole list in random order.
+PARAMETER SetSeed:
+Starts the random generator from a fixed number, so the same "random" sequence comes out each time. Useful for tests.
+EXAMPLE: Get-Random -Minimum 1 -Maximum 7
+Rolls a die: a number from 1 to 6.
+EXAMPLE: Get-Random -InputObject 'red', 'green', 'blue'
+Picks one of the three colours.
+EXAMPLE: 1..10 | Get-Random -Count 3
+Picks three different numbers from 1 to 10.
+EXAMPLE: Get-Random -Maximum 1.0
+A decimal number from 0 up to (not including) 1.
+NOTES:
+To shuffle a whole list: $list | Get-Random -Count $list.Count. PowerShell 7 adds -Shuffle for this.
+
+Get-Random is fine for games and test data but not for passwords or keys; use the .NET cryptography classes for those.
+
+If you pipe a list and also give -Maximum, the list wins.
+RELATED: Sort-Object, Select-Object, Get-Unique

@@ -1,0 +1,22 @@
+NAME
+       pwck - check the user account files for errors
+
+SYNOPSIS
+       pwck [-r] [-s]
+
+DESCRIPTION
+       pwck checks /etc/passwd and /etc/shadow: every line has the right
+       number of fields, names are unique and valid, home directories and
+       shells exist, and every user in one file is in the other. It offers
+       to fix the problems it finds. grpck does the same for the group files.
+
+OPTIONS
+       -r     Read-only: report problems but change nothing.
+
+       -s     Sort the entries by UID.
+
+EXAMPLES
+           pwck -r
+
+SEE ALSO
+       grpck(8), pwconv(8), passwd(5), shadow(5)

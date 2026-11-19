@@ -1,0 +1,11 @@
+SYNOPSIS: Disables local user accounts.
+DESCRIPTION:
+A disabled account keeps everything but cannot sign in, which is safer than deleting it when someone leaves. Windows logs event 4725.
+PARAMETER Name:
+The users. Position 0, takes pipeline input.
+PARAMETER InputObject:
+LocalUser objects.
+EXAMPLE: Disable-LocalUser -Name Guest
+EXAMPLE: Get-LocalUser | Where-Object { $_.LastLogon -lt (Get-Date).AddDays(-90) } | Disable-LocalUser
+Disables accounts nobody used for three months.
+RELATED: Enable-LocalUser, Remove-LocalUser

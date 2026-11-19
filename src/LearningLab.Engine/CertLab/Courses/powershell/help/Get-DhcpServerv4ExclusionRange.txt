@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the excluded address ranges of a DHCP server's scopes.
+DESCRIPTION:
+Get-DhcpServerv4ExclusionRange shows the ranges that a scope never leases. Without -ScopeId it lists the exclusions of every scope.
+PARAMETER ScopeId:
+Shows only the exclusions of this scope.
+PARAMETER ComputerName:
+The DHCP server to ask.
+EXAMPLE: Get-DhcpServerv4ExclusionRange -ComputerName SRV1
+Every exclusion on SRV1.
+EXAMPLE: Get-DhcpServerv4ExclusionRange -ScopeId 10.10.0.0
+Only those of the HQ scope.
+RELATED: Add-DhcpServerv4ExclusionRange, Get-DhcpServerv4Scope

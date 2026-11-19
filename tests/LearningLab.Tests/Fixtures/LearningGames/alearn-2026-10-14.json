@@ -1,0 +1,77 @@
+[
+    {
+        "Age":  8,
+        "Best":  {
+                     "race":  21
+                 },
+        "Color":  "#EC4899",
+        "Stars":  112,
+        "Created":  "2026-10-13",
+        "Days":  {
+                     "2026-10-13":  {
+                                        "Done":  20,
+                                        "Right":  18
+                                    },
+                     "2026-10-14":  {
+                                        "Done":  31,
+                                        "Right":  27
+                                    }
+                 },
+        "Mistakes":  [
+
+                     ],
+        "Grade":  3,
+        "Name":  "Ava",
+        "Id":  "0badf00d",
+        "Skills":  {
+                       "mult":  {
+                                    "Level":  3,
+                                    "Attempts":  40,
+                                    "Correct":  35,
+                                    "Streak":  2,
+                                    "Misses":  0,
+                                    "Recent":  [
+                                                   1,
+                                                   1,
+                                                   1,
+                                                   0,
+                                                   1
+                                               ]
+                                }
+                   },
+        "Subjects":  {
+                         "science":  {
+                                         "Level":  "g35",
+                                         "Recent":  [
+                                                        1,
+                                                        0
+                                                    ],
+                                         "Answered":  14,
+                                         "Correct":  11,
+                                         "Cards":  {
+                                                       "3f2a9c1d0e4b":  {
+                                                                            "Box":  3,
+                                                                            "Due":  "2026-10-20"
+                                                                        }
+                                                   },
+                                         "Best":  {
+                                                      "quiz":  9
+                                                  }
+                                     },
+                         "spanish":  {
+                                         "Level":  "k2",
+                                         "Recent":  [
+
+                                                    ],
+                                         "Answered":  0,
+                                         "Correct":  0,
+                                         "Cards":  {
+
+                                                   },
+                                         "Best":  {
+
+                                                  }
+                                     }
+                     }
+    }
+]

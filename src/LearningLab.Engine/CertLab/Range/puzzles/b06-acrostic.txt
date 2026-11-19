@@ -1,0 +1,48 @@
+title: First things first
+level: Beginner
+kind: Steganography
+points: 40
+order: 6
+answer: {{SECRET}}
+var: SECRET = pick:planet|rocket|silver|dragon|orange|turtle
+
+@intro
+~/poem.txt looks like an ordinary note. But read only the first letter of each line,
+from top to bottom. They spell a word. What is it?
+
+@setup
+word='{{SECRET}}'
+: > /home/player/poem.txt
+i=1
+while [ $i -le ${#word} ]; do
+  ch=$(printf '%s' "$word" | cut -c$i | tr 'a-z' 'A-Z')
+  printf '%s is a fine word to think about on line %s.\n' "$ch" "$i" >> /home/player/poem.txt
+  i=$((i+1))
+done
+chown player: /home/player/poem.txt
+
+@solution
+cat poem.txt
+cut -c1 poem.txt
+cut -c1 poem.txt | tr -d '\n'
+echo
+
+@walkthrough
+This is an acrostic: the hidden word is spelled by the first letter of each line.
+cut -c1 prints the first character of every line; piping that through tr -d '\n'
+removes the line breaks so the letters line up into the word:
+
+    cut -c1 poem.txt | tr -d '\n'
+
+@hint 2
+What to think about first: steganography means hiding a message inside something that looks ordinary, so nobody even knows there is a message. This one is very old: a poem where the first letters of the lines spell a word (an "acrostic"). Read the note with cat poem.txt and look down the left edge.
+
+@hint 3
+You can read the first letters by eye, top to bottom. For a long text a tool helps: cut cuts out parts of each line. cut -c1 FILE keeps only character number 1 of every line.
+
+@hint 5
+cut -c1 poem.txt prints one letter per line. To join them into one word, remove the line breaks with tr -d '\n' (tr -d deletes the characters you name; \n is a line break). The | symbol passes one command's output into the next.
+
+@hint 8
+Run: cut -c1 poem.txt | tr -d '\n'
+then echo for a fresh line. The letters spell the answer (upper or lower case both count).

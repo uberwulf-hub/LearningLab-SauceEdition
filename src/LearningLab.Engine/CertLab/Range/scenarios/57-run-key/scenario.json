@@ -1,0 +1,62 @@
+{
+    "id": "run-key",
+    "title": "Starts With Windows",
+    "category": "blue",
+    "level": "Beginner",
+    "order": 3,
+    "summary": "A Windows PC at the front desk keeps running something nobody installed, every time someone signs in. Find what starts it, who signed in to plant it, and switch it off before it copies the shared files.",
+    "story": "{{CO}} (made up) has one Windows PC, {{PC}}, at the front desk on 10.10.12.0/24. Since yesterday it has been slow after every sign-in. You sit at soc, a Linux box on the same network, and you have the PC's administrator password: {{ADMPW}}. Connect to it with: winrm-shell -i 10.10.12.30 -u Administrator -p {{ADMPW}}",
+    "goal": "Find the program set to start at every sign-in, the account and address that planted it, and the flag in the attacker's folder; then remove the start-up entry and the script before it copies the shared files.",
+    "skills": "winrm-shell, the registry Run key, Windows Security log (4624), Remove-ItemProperty, Remove-Item",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 25,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the shared files out",
+    "goalPoints": 60,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-DESK01|WIN-FRONT|WIN-RECEPT|WIN-LOBBY",
+        "USER": "person",
+        "USERPW": "word",
+        "ADMPW": "word",
+        "ATKIP": "ip",
+        "VAL": "pick:AudioHelper|SyncAgent|PrinterTray|UpdateCheck|DisplayTool"
+    },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.12.5/24" ] },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "front desk PC (yours to look after)", "nics": [ "10.10.12.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{USER}}", "password": "{{USERPW}}", "remote": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "26h", "repeat": 3, "every": 3600, "message": "An account was successfully logged on. Account Name: {{USER}} Source Network Address: 10.10.12.30 Logon Type: 2" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "18h", "message": "An account was successfully logged on. Account Name: {{USER}} Source Network Address: {{ATKIP}} Logon Type: 10" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag in the attacker's folder", "points": 60, "machine": "{{PC}}", "path": "C:\\ProgramData\\{{VAL}}\\config.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "value", "ask": "What is the name of the start-up entry in the Run key?", "answer": "{{VAL}}", "points": 40, "explain": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run has a value you didn't add." },
+        { "id": "acct", "ask": "Which account signed in remotely to plant it?", "answer": "{{USER}}", "points": 40, "explain": "The Security log has a 4624 sign-in for this account with Logon Type 10 (remote) from an outside address." },
+        { "id": "addr", "ask": "From what address?", "answer": "{{ATKIP}}", "points": 40, "explain": "The Source Network Address of that remote sign-in." }
+    ],
+    "tasks": [
+        { "id": "runkey", "name": "Remove the start-up entry from the Run key", "machine": "{{PC}}", "check": "if ((Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run').{{VAL}}) { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run' -Name {{VAL}}" },
+        { "id": "script", "name": "Delete the script it starts", "machine": "{{PC}}", "check": "if (Test-Path 'C:\\ProgramData\\{{VAL}}\\run.ps1') { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-Item C:\\ProgramData\\{{VAL}}\\run.ps1" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "{{PC}}", "run": "New-Item -ItemType Directory -Path 'C:\\ProgramData\\{{VAL}}\\out' -Force | Out-Null; Copy-Item 'C:\\Shares\\Front\\*' 'C:\\ProgramData\\{{VAL}}\\out' -ErrorAction SilentlyContinue", "unless": "if (Test-Path 'C:\\ProgramData\\{{VAL}}\\run.ps1') { exit 1 } else { exit 0 }", "note": "Someone signed in, the start-up script ran and copied the shared front-desk files into its folder, ready to send out.", "goal": true }
+    ],
+    "hints": [
+        { "text": "What to think about first: you are the defender. Something runs every time someone signs in, so ask: where does Windows keep the list of programs to start at sign-in, who put this one there, and what does it do? Answer each question in the Findings tab as you go.", "cost": 3 },
+        { "text": "Connect to the PC from your box: winrm-shell -i 10.10.12.30 -u Administrator -p {{ADMPW}}. You get a PowerShell prompt on the PC (PS C:\\...>). Type exit to come back to your own box at any time.", "cost": 5 },
+        { "text": "One of the most common places for 'start at sign-in' is the registry's Run key. Read it: Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run'. Each value is a name and a command; one runs a PowerShell script from C:\\ProgramData that nobody installed. Its name is the first answer.", "cost": 8 },
+        { "text": "Who planted it: Windows records sign-ins in the Security log as event 4624. Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } | Format-List TimeCreated, Message shows them. Most are ordinary desk sign-ins (Logon Type 2); one is a remote sign-in (Logon Type 10) from an outside address. That gives the account and the address. The flag is in the script's folder: Get-ChildItem C:\\ProgramData\\{{VAL}}, then Get-Content on config.txt.", "cost": 12 },
+        { "text": "Clean up before the next sign-in: Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run' -Name {{VAL}} removes the start-up entry, and Remove-Item C:\\ProgramData\\{{VAL}}\\run.ps1 deletes the script. Then press Check on both fixes in the Findings tab. (In real life you would also change {{USER}}'s password, since someone else knows it.)", "cost": 16 }
+    ]
+}

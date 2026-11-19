@@ -1,0 +1,21 @@
+NAME
+       which - show the full path of a command
+
+SYNOPSIS
+       which COMMAND...
+
+DESCRIPTION
+       which searches the directories in $PATH, in order, and prints the path
+       of the program that would run for each COMMAND, such as
+       /usr/sbin/useradd. On RHEL 9 it also shows aliases. When a command is
+       not found it prints which directories it searched and exits with 1.
+
+       The shell's own builtins (cd, echo) are not programs; ask bash with
+       type COMMAND to see how the shell will treat a name.
+
+EXAMPLES
+           which useradd
+           rpm -qf $(which ss)
+
+SEE ALSO
+       type (in builtins(1)), whereis(1), bash(1)

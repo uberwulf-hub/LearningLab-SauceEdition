@@ -1,0 +1,61 @@
+{
+    "id": "invoice-season",
+    "title": "Invoice Season",
+    "category": "soc",
+    "level": "Intermediate",
+    "order": 1,
+    "summary": "Word started another program on two computers this morning. On one, someone printed. On the other, a document from an email started a chain that is still calling home.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). The SIEM has a rule for an old trick: an Office program starting another program. It fired on two computers. Follow each chain from the first program to the last connection, and work out what to block.",
+    "goal": "Decide which alert is real, then trace the real chain: the account, the document, when it started, what Word started, what was loaded, and where it connected.",
+    "skills": "process trees (parent and child), timelines, DNS and firewall events, deciding what to block",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 25,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "UB": "person:flast", "O1": "person:flast", "O2": "person:flast",
+        "HA": "num:10-29", "HB": "num:30-49", "H3": "num:50-69", "H4": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:9-14",
+        "DOC": "pick:Invoice_Oct.docm|Remittance_Advice.docm|Statement_2026-10.docm|Supplier_Update.docm",
+        "GOODDOC": "pick:Rota_November.docx|Staff_Handbook.docx|Meeting_Notes.docx|Price_List.docx",
+        "C2DOM": "pick:cdn-sync-update.example|telemetry-cloudfront.example|api-msg-relay.example|static-img-host.example",
+        "C2IP": "ip",
+        "DLL": "pick:update.dll|cache.dll|helper.dat|sync.bin",
+        "REAL": "pick:a|b"
+    },
+    "variants": {
+        "REAL": {
+            "a": { "BADH": "WS-{{HA}}", "BADU": "{{UA}}", "BADIP": "{{NET}}.{{HA}}", "GOODH": "WS-{{HB}}", "GOODU": "{{UB}}", "GOODIP": "{{NET}}.{{HB}}", "VA": "real" },
+            "b": { "BADH": "WS-{{HB}}", "BADU": "{{UB}}", "BADIP": "{{NET}}.{{HB}}", "GOODH": "WS-{{HA}}", "GOODU": "{{UA}}", "GOODIP": "{{NET}}.{{HA}}", "VA": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 180, "from": "-3h", "to": "+50m",
+            "hosts": [ "WS-{{HA}}", "WS-{{HB}}", "WS-{{H3}}", "WS-{{H4}}" ],
+            "users": [ "{{UA}}", "{{UB}}", "{{O1}}", "{{O2}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{HB}}", "{{NET}}.{{H3}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01", "PRINT01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}"
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The alert on WS-{{HA}}: real attack or false alarm? (one try)", "answer": "{{VA}}", "tries": 1, "points": 60,
+          "explain": "On {{GOODH}}, Word started splwow64.exe, its own printing helper, and a print job went to PRINT01. On {{BADH}}, Word started cmd.exe, which started PowerShell, which saved and loaded a file and began calling an outside address every minute." },
+        { "id": "user", "ask": "Which account opened the document that started the real attack?", "answer": "{{BADU}}", "points": 25, "explain": "user= on the winword.exe event." },
+        { "id": "doc", "ask": "What was that document called?", "answer": "{{DOC}}", "accept": [ "C:\\Users\\{{BADU}}\\Downloads\\{{DOC}}" ], "points": 25, "explain": "The cmdline of winword.exe; .docm means a Word document that can contain macros." },
+        { "id": "first", "ask": "At what time (HH:MM:SS) was it opened - the first event of the attack?", "answer": "{{T0}}", "accept": [ "2026-10-20T{{T0}}", "2026-10-20 {{T0}}" ], "points": 30, "explain": "The winword.exe event's time." },
+        { "id": "child", "ask": "Which program did Word start on the attacked computer?", "answer": "cmd.exe", "accept": [ "cmd", "C:\\Windows\\System32\\cmd.exe" ], "points": 30, "explain": "The event whose parent is winword.exe." },
+        { "id": "dll", "ask": "Which file did rundll32 load (just the file name)?", "answer": "{{DLL}}", "accept": [ "C:\\Users\\{{BADU}}\\AppData\\Local\\Temp\\{{DLL}}" ], "points": 30, "explain": "rundll32.exe's cmdline names the file." },
+        { "id": "block", "ask": "Which outside address should the firewall block (where it connected next)?", "answer": "{{C2IP}}", "accept": [ "{{C2DOM}}" ], "points": 40, "explain": "The DNS lookup of {{C2DOM}} answered {{C2IP}}, and the firewall shows a connection there every minute." }
+    ],
+    "hints": [
+        { "text": "Follow the family tree: every proclog event has the program (image) and the program that started it (parent). Start from each alert's host and ask what Word started, and then what that program started, until you reach the end of the chain.", "cost": 5 },
+        { "text": "siem search source=proclog host=WS-NN --since HH:MM shows the programs on one computer from a time onwards. splwow64.exe is Word's own printing helper; cmd.exe and powershell.exe have no reason to come from Word.", "cost": 9 },
+        { "text": "After the programs, look at the network: siem search source=dns host=WS-NN --since HH:MM, then siem search source=firewall src=ADDRESS (the computer's own address) to see where it connected and how often.", "cost": 14 }
+    ]
+}

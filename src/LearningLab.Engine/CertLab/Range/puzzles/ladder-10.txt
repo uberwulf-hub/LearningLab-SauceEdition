@@ -1,0 +1,48 @@
+title: Step 10: One line in the middle
+level: Intermediate
+category: ladder
+login: step10
+kind: Heads and tails
+teaser: a long log, and the one line you need in the middle of it
+points: 30
+order: 10
+answer: {{PW}}
+var: PW = hex:10
+var: SALT = hex:6
+var: N = num:300-700
+
+@intro
+You are step10. The file journal.txt is a long list of codes, one per line. The
+password for step 11 is on line number {{N}} - not the first line, not the last, but
+right in the middle. Find out how long the file is, then print only that line.
+
+@setup
+useradd -m step11
+echo 'step11:{{PW}}' | chpasswd
+for i in $(seq 1 1000); do printf '%s\n' "{{SALT}}.$i" | md5sum | cut -c1-10; done > /root/j.txt
+(head -n $(({{N}} - 1)) /root/j.txt; printf '%s\n' '{{PW}}'; tail -n +$(({{N}} + 1)) /root/j.txt) > /home/step10/journal.txt
+rm -f /root/j.txt
+chown step10: /home/step10/journal.txt
+
+@solution
+wc -l journal.txt
+head -n 3 journal.txt
+head -n {{N}} journal.txt | tail -n 1
+
+@walkthrough
+wc -l counts the lines (1000 here). head -n K prints the first K lines and tail -n 1
+the last line of whatever it is given, so together they pick out one line:
+
+    head -n {{N}} journal.txt | tail -n 1
+
+head keeps lines 1 to {{N}}; tail keeps only the last of those, which is line {{N}}.
+(sed -n {{N}}p journal.txt does the same in one command.)
+
+@hint 5
+What to think about first: two commands are made for the start and the end of a file. head shows the first lines, tail the last ones. wc -l tells you how many lines a file has.
+
+@hint 8
+head -n {{N}} journal.txt prints lines 1 to {{N}}. The line you want is the last one of those. Which command shows only the last line of what it receives? Join the two with a pipe |.
+
+@hint 12
+Type: head -n {{N}} journal.txt | tail -n 1

@@ -1,0 +1,26 @@
+SYNOPSIS: Creates a new IPv4 scope on a DHCP server.
+DESCRIPTION:
+Add-DhcpServerv4Scope creates a range of addresses to lease. The ScopeId (network address) is worked out from -StartRange and -SubnetMask, so you don't type it.
+
+The default lease is 8 days; shorter leases suit busy guest or Wi-Fi networks. Most scopes also need options (router, DNS servers, domain name): set them with Set-DhcpServerv4OptionValue. Leave out addresses you assign by hand with Add-DhcpServerv4ExclusionRange.
+
+For a subnet behind a router, the router must relay DHCP requests (a DHCP relay or IP helper pointing at the server).
+PARAMETER Name:
+A friendly name, for example Branch clients.
+PARAMETER StartRange:
+The first address to lease.
+PARAMETER EndRange:
+The last address to lease.
+PARAMETER SubnetMask:
+The subnet mask, for example 255.255.255.0.
+PARAMETER LeaseDuration:
+How long a lease lasts, as days.hours:minutes:seconds, for example 1.00:00:00.
+PARAMETER State:
+Active (default) or InActive.
+PARAMETER Description:
+A note about the scope.
+EXAMPLE: Add-DhcpServerv4Scope -Name "Branch clients" -StartRange 10.20.0.100 -EndRange 10.20.0.199 -SubnetMask 255.255.255.0 -ComputerName SRV1
+Creates the scope 10.20.0.0 with the default 8-day lease.
+EXAMPLE: Set-DhcpServerv4OptionValue -ScopeId 10.20.0.0 -Router 10.20.0.1 -ComputerName SRV1
+Gives the new scope its default gateway.
+RELATED: Get-DhcpServerv4Scope, Set-DhcpServerv4Scope, Remove-DhcpServerv4Scope, Add-DhcpServerv4ExclusionRange, Set-DhcpServerv4OptionValue

@@ -1,0 +1,202 @@
+# Unit: u04 | 4. Conditional Access | Compliance
+
+Conditional Access is Microsoft Entra ID's decision engine for sign-ins: **if** a sign-in matches these conditions, **then** grant access with these requirements, or block it. It is how compliance from unit 3 becomes a real gate ("only compliant devices may open company mail"), how multifactor authentication is required, and how old, unsafe sign-in methods are switched off. Conditional Access needs Microsoft Entra ID P1. In Cert Lab the policies are under **Conditional Access > Policies**, and checks test sign-ins against them as the What If tool does.
+
+## Lesson: l0401 | The parts of a policy
+
+A Conditional Access policy has two halves.
+
+**Assignments** (when does it apply?):
+
+- **Users**: include All users, or chosen users and groups; **exclude** users and groups. Always exclude your **emergency access** account (Riverbend's is `breakglass`) so that a wrong policy can never lock every administrator out.
+- **Target resources** (cloud apps): All cloud apps (All resources), or chosen apps such as Office 365, Microsoft Intune or your own web app.
+- **Conditions** (optional): device platforms, locations, client apps, sign-in and user risk (Entra ID P2), and filters for devices.
+
+**Access controls** (what happens?):
+
+- **Block access**, or
+- **Grant access** with one or more controls: require multifactor authentication, require the device to be marked as compliant, require a Microsoft Entra hybrid joined device, require an app protection policy (the older "require approved client app" control was announced for retirement in 2026), require a password change... With several controls you pick **Require all the selected controls** or **Require one of the selected controls**.
+- **Session** controls (sign-in frequency, persistent browser session) also exist; they are not practised here.
+
+Every policy that matches a sign-in applies, and **all** of them must be satisfied. A **block** in any matching policy wins over everything else.
+
+### Report-only first
+
+Each policy has a state: **Report-only**, **On** or **Off**. New policies should start in **report-only**: Entra ID evaluates them and writes what they *would* have done in the sign-in logs, without blocking anyone. When the logs look right, switch the policy to On.
+
+@try
+@task t1 | Compliance | 10 | portal
+Create a Conditional Access policy **Require MFA for everyone** that requires multifactor authentication for **all users** on **all cloud apps**, excluding the emergency access account `breakglass`. Switch it **On**.
+@check portal | everyone is asked for MFA
+signin(user=jordan, device=RB-LT-001) == "Allowed after MFA"
+signin(user=sam, device=RB-DT-010, app="Microsoft Intune") == "Allowed after MFA"
+@check portal | the emergency account isn't affected
+signin(user=breakglass) == Allowed
+ca["Require MFA for everyone"].usersExclude has breakglass
+@hint Users: include All users, exclude breakglass. Grant access with Require multifactor authentication. Enable policy: On.
+@solution portal
+create ca name="Require MFA for everyone" usersInclude="All users" usersExclude=breakglass apps="All cloud apps" grant="Grant access" controls="Require multifactor authentication" state=On
+@endtask
+@end
+
+@quiz
+? A new Conditional Access policy should be tested without blocking anyone. Which state do you choose?
+- Off
++ Report-only
+- On, with the emergency account excluded
+! Report-only evaluates the policy and logs the result without enforcing it.
+? Two policies apply to a sign-in: one requires MFA, the other blocks access. What happens?
+- The user is asked for MFA, then allowed
++ The sign-in is blocked
+- The newer policy wins
+! All matching policies apply, and a block wins.
+? Why is the emergency access account excluded from Conditional Access policies?
++ So a mistake in a policy can't lock every administrator out of the tenant
+- Because it has no licence
+- Because Conditional Access can't apply to Global Administrators
+! The break-glass account is the way back in if a policy goes wrong; keep it out of every policy and watch its sign-ins.
+@end
+
+## Lesson: l0402 | Requiring compliant or hybrid joined devices
+
+The grant control **Require device to be marked as compliant** joins Intune and Conditional Access: the sign-in is allowed only from a device that is **enrolled in Intune and compliant** (a device in its grace period counts as compliant). A personal PC that isn't enrolled can't pass it, nor can a corporate PC that fails a compliance policy.
+
+**Require Microsoft Entra hybrid joined device** allows devices that are domain joined and hybrid joined, whatever their compliance. Companies moving from on-premises often use the two together with **Require one of the selected controls**: a domain PC passes as hybrid joined, a cloud PC passes as compliant, a home PC passes neither.
+
+> A common worry: if a compliant device is required on **all** cloud apps, can a new device still enrol, since it isn't compliant yet? Yes: Microsoft built the control so that it doesn't block Intune enrolment. The **Microsoft Intune Enrollment** app is still useful as a target of its own, for example to require MFA only at the moment someone enrols a device.
+
+On mobile phones, browsers and some apps need to pass the device's state to Entra ID: on iOS and Android that is done by the Company Portal or Microsoft Authenticator app (as the broker), and on Windows by signing in with the work account in Edge, or with an extension in Chrome.
+
+@try
+@task t1 | Compliance | 10 | portal
+The Finance web app **Riverbend Expenses (web app)** may only be opened by **Finance** from a device that is either compliant **or** hybrid joined. Create the policy **Expenses from managed devices** and switch it on.
+@check portal | Sam is allowed on the hybrid joined desktop
+signin(user=sam, device=RB-DT-010, app="Riverbend Expenses (web app)", mfa=yes) == Allowed
+@check portal | Sam is blocked on the home PC
+signin(user=sam, device=SAM-HOME-PC, app="Riverbend Expenses (web app)", mfa=yes) == Blocked
+@check portal | the policy targets only Finance and the Expenses app
+ca["Expenses from managed devices"].usersInclude has Finance
+ca["Expenses from managed devices"].apps has "Riverbend Expenses (web app)"
+@hint Two controls (compliant device, hybrid joined device) with Require one of the selected controls.
+@solution portal
+create ca name="Expenses from managed devices" usersInclude=Finance apps="Riverbend Expenses (web app)" grant="Grant access" controls="Require device to be marked as compliant,Require Microsoft Entra hybrid joined device" controlsOp="Require one of the selected controls" state=On
+@endtask
+@end
+
+@quiz
+? A policy requires a compliant device. Which device passes?
+- A personal PC with a registered work account, not enrolled
++ An enrolled laptop in its compliance grace period
+- An enrolled laptop that is not compliant
+! Only enrolled devices that are compliant (or in grace period) satisfy the control.
+? A policy grants access with "Require device to be marked as compliant" and "Require Microsoft Entra hybrid joined device", set to Require all the selected controls. A cloud-only Entra joined laptop that is compliant signs in. What happens?
+- Allowed
++ Blocked: it isn't hybrid joined
+- Allowed after MFA
+! With Require all, both controls must pass; a cloud-only device is never hybrid joined.
+? You want people to pass MFA when they enrol a device in Intune, and not at other times. Which cloud app does the Conditional Access policy target?
++ Microsoft Intune Enrollment
+- Office 365
+- Microsoft Azure Management
+! The Microsoft Intune Enrollment app covers the enrolment sign-in. (Require device to be marked as compliant doesn't block enrolment, so new devices can still enrol under such a policy.)
+@end
+
+## Lesson: l0403 | Locations and legacy authentication
+
+### Named locations
+
+A **named location** is a set of public IP ranges (written in CIDR form, for example `203.0.113.0/24`) or a list of countries. A location of IP ranges can be **marked as trusted**. Policies can then include or exclude **All trusted locations** or chosen locations. Common uses:
+
+- Don't ask for MFA when people sign in from the head office (exclude trusted locations from the MFA policy).
+- Block sign-ins from countries where the company doesn't work.
+- Allow an admin portal only from the office network.
+
+The IP address that counts is the **public** address the sign-in comes from, not the PC's private 10.x or 192.168.x address.
+
+### Blocking legacy authentication
+
+Old protocols such as POP, IMAP, SMTP with basic authentication and older Exchange ActiveSync clients send a password with every request and **can't do MFA**. Attackers love them because a stolen password is enough. In Conditional Access, the condition **Client apps** has two legacy choices: **Exchange ActiveSync clients** and **Other clients**. A policy with those two client apps and **Block access** for all users blocks legacy authentication. Modern apps (browsers, and mobile apps and desktop clients) are not affected.
+
+@try
+@task t1 | Compliance | 10 | portal
+Create a trusted named location **Head office** for the office's public range **203.0.113.0/24**. Then create a policy **Block legacy authentication** that blocks Exchange ActiveSync and other legacy clients for all users (except `breakglass`) on all cloud apps, and switch it on.
+@check portal | the head office is a trusted location
+location["Head office"].ranges has 203.0.113.0/24
+location["Head office"].trusted == Yes
+@check portal | legacy clients are blocked, browsers are not
+signin(user=priya, client=eas, mfa=yes) == Blocked
+signin(user=sam, client=other, mfa=yes) == Blocked
+signin(user=sam, client=browser, mfa=yes) == Allowed
+@hint Conditional Access > Named locations; in the policy, Conditions > Client apps: Exchange ActiveSync clients and Other clients; Grant: Block access.
+@solution portal
+create location name="Head office" ranges=203.0.113.0/24 trusted=Yes
+create ca name="Block legacy authentication" usersInclude="All users" usersExclude=breakglass apps="All cloud apps" clientApps="Exchange ActiveSync clients,Other clients" grant="Block access" state=On
+@endtask
+@end
+
+@quiz
+? You want no MFA prompt at the head office but MFA everywhere else. What do you do?
+- Make a second policy that blocks the head office
++ Mark the office's IP range as a trusted location and exclude trusted locations from the MFA policy
+- Exclude every office worker from the MFA policy
+! Excluding trusted locations keeps the policy for every other place.
+? Which client apps choices make up legacy authentication in Conditional Access?
+- Browser and Mobile apps and desktop clients
++ Exchange ActiveSync clients and Other clients
+- Mobile apps and Exchange ActiveSync clients
+! Legacy authentication is Exchange ActiveSync clients and Other clients (older protocols).
+? Which address does a named location of IP ranges match?
++ The public IP address the sign-in comes from
+- The device's private address on the office network
+- The address of the user's DNS server
+! Microsoft Entra ID sees the public address, so named locations list public ranges.
+@end
+
+## Lesson: l0404 | App protection, What If, and security defaults
+
+### Protected apps on phones
+
+**Require app protection policy** allows a sign-in only from an app that an Intune **app protection policy** covers (Outlook, Teams, Edge... on iOS and Android; unit 11). It works without enrolling the phone, which is why it suits personal phones: the company protects its data inside the app, not the whole device. Policies with this control usually target the **iOS and Android** platforms only, and the device-based policies exclude those platforms.
+
+### The What If tool
+
+**Conditional Access > Policies > What If** tests a pretend sign-in: you pick the user, the app, the platform, the location, the client app and the device state, and it lists every policy with **Applies** or **Doesn't apply** and why. Use it before you switch a policy on, and when someone asks "why was I blocked?" (the sign-in logs show the real answer for a real sign-in). Cert Lab's portal has a What If page, and the checks in this course use the same evaluation.
+
+### Security defaults or Conditional Access
+
+**Security defaults** are a free, on-or-off set of protections for tenants without Entra ID P1: everyone registers for MFA, administrators always use MFA, users are asked for MFA when needed, and legacy authentication is blocked. You can't adjust them. A tenant that uses Conditional Access must **turn security defaults off**; the two can't be used together. Tenants with P1 licences should use Conditional Access instead, because it can be tuned (exclusions, locations, device compliance).
+
+@try
+@task t1 | Compliance | 10 | portal
+Sales people read mail on their own phones. Create an iOS app protection policy **Protect Outlook on iPhone** for **Microsoft Outlook** assigned to **Sales**, and a Conditional Access policy **Phones need protected apps** that requires an app protection policy for **Sales** on **Office 365** from **iOS and Android**, switched on.
+@check portal | Jordan's protected Outlook on the iPhone gets in
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Outlook", mfa=yes) == Allowed
+@check portal | an app without app protection is blocked on the phone
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Word", mfa=yes) == Blocked
+@check portal | Windows isn't affected
+signin(user=jordan, device=RB-LT-001, mfa=yes) == Allowed
+@hint The app protection policy is under Apps > App protection policies (platform iOS/iPadOS, target app Microsoft Outlook). The Conditional Access policy uses the device platforms condition (iOS, Android).
+@solution portal
+create appProtection name="Protect Outlook on iPhone" platform=iOS/iPadOS targetApps="Microsoft Outlook"
+assign appProtection "Protect Outlook on iPhone" Sales
+create ca name="Phones need protected apps" usersInclude=Sales apps="Office 365" platforms="iOS,Android" grant="Grant access" controls="Require app protection policy" state=On
+@endtask
+@end
+
+@quiz
+? A tenant uses security defaults and now wants Conditional Access policies. What must happen?
++ Security defaults must be turned off
+- Nothing: they combine
+- Each Conditional Access policy must exclude security defaults
+! Security defaults and Conditional Access can't be used at the same time.
+? Which tool tells you which Conditional Access policies would apply to a sign-in that hasn't happened?
+- The sign-in logs
++ The What If tool
+- The Intune compliance report
+! What If evaluates a pretend sign-in against every policy and explains each result.
+? A personal iPhone isn't enrolled. Which grant control can still protect company mail on it?
+- Require device to be marked as compliant
+- Require Microsoft Entra hybrid joined device
++ Require app protection policy
+! App protection works inside the app without enrolment.
+@end

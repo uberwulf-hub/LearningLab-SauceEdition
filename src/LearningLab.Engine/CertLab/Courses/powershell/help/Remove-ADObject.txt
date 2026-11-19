@@ -1,0 +1,15 @@
+SYNOPSIS: Deletes any Active Directory object.
+DESCRIPTION:
+Remove-ADObject deletes an object of any class, by distinguished name or GUID. A container that has children needs -Recursive. Protected objects can't be deleted until the protection is turned off (Set-ADObject -ProtectedFromAccidentalDeletion $false).
+It asks for confirmation unless you add -Confirm:$false. With the AD Recycle Bin on, deleted objects can be restored with Restore-ADObject.
+PARAMETER Identity:
+The object. Position 0, and takes pipeline input.
+PARAMETER Recursive:
+Also deletes the object's children.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-ADObject "CN=Old Printer,OU=Servers,DC=corp,DC=example"
+Deletes one object after asking.
+EXAMPLE: Get-ADObject -Filter "ObjectClass -eq 'contact'" -SearchBase "OU=Sales,OU=Staff,DC=corp,DC=example" | Remove-ADObject -Confirm:$false
+Deletes every contact in the Sales OU.
+RELATED: Get-ADObject, Restore-ADObject, Remove-ADOrganizationalUnit

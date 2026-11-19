@@ -1,0 +1,40 @@
+# Sheet: identity | Microsoft Entra ID for devices | Identity
+## Portal paths (Cert Lab's portal, then Microsoft's)
+Users and groups > Users :: users, licences, roles (Entra admin center > Users; Microsoft 365 admin center)
+Users and groups > Groups :: security and Microsoft 365 groups, dynamic rules (Entra admin center > Groups)
+Tenant administration > Settings, Microsoft Entra device settings :: who may join devices, Entra LAPS (Entra admin center > Devices > Device settings)
+## Licences
+usage location :: must be set before any licence can be assigned
+Microsoft 365 E3 :: Intune Plan 1, Entra ID P1, Windows Enterprise E3, Office apps
+Microsoft 365 E5 :: E3 plus Entra ID P2 and Defender for Endpoint Plan 2
+Microsoft 365 Business Premium :: Intune Plan 1, Entra ID P1, Defender for Business, Office apps (up to 300 users)
+Enterprise Mobility + Security E3 :: Intune Plan 1 and Entra ID P1
+Office 365 E3 :: Office only: no Intune, no Entra ID P1
+Entra ID P1 :: Conditional Access, dynamic groups, group-based licensing
+## Groups
+Security group :: users, devices and nested groups; used for Intune assignments
+Microsoft 365 group :: users only, with mailbox, site and team; no dynamic device membership
+Assigned / Dynamic user / Dynamic device :: the three membership types; dynamic groups hold users or devices, not both
+## Dynamic rule syntax
+(user.department -eq "Sales") :: a comparison: property, operator, value in double quotes
+-and -or -not :: join and negate comparisons; brackets group them
+-eq -ne -startsWith -notStartsWith -contains -notContains :: common operators
+-match -notMatch :: regular expressions
+user.city -in ["Portland","Denver"] :: one of a list (-notIn for none)
+(device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales")) :: a multi-valued property (also -all)
+device.deviceOwnership -eq "Company" :: Company or Personal in rules (filters say Corporate)
+device.deviceOSType, deviceOSVersion, deviceModel, enrollmentProfileName :: useful device properties
+## Device identities
+Microsoft Entra joined :: corporate; work account sign-in; Pro, Enterprise, Education
+Microsoft Entra hybrid joined :: on-premises domain plus Entra ID (Entra Connect)
+Microsoft Entra registered :: personal device with a work account (also Home, iOS, Android)
+dsregcmd /status :: AzureAdJoined, DomainJoined, WorkplaceJoined, AzureAdPrt
+dsregcmd /status | Select-String 'Joined' :: only the join lines
+## Device settings and roles
+Users may join devices to Microsoft Entra :: All, Selected (a group) or None
+Enable Microsoft Entra LAPS :: tenant switch needed before LAPS backs up to Entra ID
+Global Administrator :: everything; very few accounts plus the emergency access account
+Intune Administrator :: everything in Intune
+Cloud Device Administrator :: enable, disable, delete devices; read BitLocker keys
+Helpdesk Administrator :: reset passwords of non-administrators
+Global Reader :: read everything, change nothing

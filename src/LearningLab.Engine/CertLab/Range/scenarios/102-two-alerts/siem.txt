@@ -1,0 +1,12 @@
+# Same Alert, Different Story (offsets from {{T0}})
+# the IT team's daily inventory: the Task Scheduler (svchost.exe) runs it as SYSTEM on several computers at once
+-90m x[WS-{{H3}}|WS-{{H4}}|{{GOODH}}]/1s host=%ITEM% source=proclog event=1 user=SYSTEM image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe parent=C:\Windows\System32\svchost.exe cmdline="powershell.exe -NoProfile -NonInteractive -EncodedCommand {{B64:ITCMD}}"
+-90m x[WS-{{H3}}|WS-{{H4}}|{{GOODH}}]/1s host=%ITEM% source=alert severity=medium rule="PowerShell with a hidden command" note="PowerShell was started with -EncodedCommand on %ITEM%"
+-89m x[WS-{{H3}}|WS-{{H4}}|{{GOODH}}]/1s host=FILE01 source=winsec event=4624 user=%ITEM%$ logon_type=3 workstation=%ITEM% note="A computer account signed in over the network"
+# the real one: a document from an email starts Word, and Word starts PowerShell
+-2m host={{BADH}} source=proclog event=1 user={{BADU}} image="C:\Program Files\Office\outlook.exe" parent=C:\Windows\explorer.exe cmdline="outlook.exe"
++0 host={{BADH}} source=proclog event=1 user={{BADU}} image="C:\Program Files\Office\winword.exe" parent="C:\Program Files\Office\outlook.exe" cmdline="winword.exe C:\Users\{{BADU}}\Downloads\{{DOC}}"
++19s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe parent="C:\Program Files\Office\winword.exe" cmdline="powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand {{B64:BADCMD}}"
++20s host={{BADH}} source=alert severity=medium rule="PowerShell with a hidden command" note="PowerShell was started with -EncodedCommand on {{BADH}}"
++21s host={{BADH}} source=dns query={{DLDOM}} type=A answer={{DLIP}} src_ip={{BADIP}}
++22s host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{DLIP}} dport=80 proto=tcp bytes=48210

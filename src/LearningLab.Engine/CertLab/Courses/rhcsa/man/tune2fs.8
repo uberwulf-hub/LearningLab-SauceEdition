@@ -1,0 +1,51 @@
+NAME
+       tune2fs - show and change settings of an ext2, ext3 or ext4 file system
+
+SYNOPSIS
+       tune2fs [-l] [-L LABEL] [-U UUID] [-c COUNT] [-i INTERVAL] [-m PERCENT]
+               [-o [^]MOUNT-OPTION] [-O [^]FEATURE] DEVICE
+
+DESCRIPTION
+       tune2fs changes settings stored in the superblock of an ext file
+       system. Most changes may be made while the file system is mounted.
+       For XFS file systems use xfs_admin instead.
+
+OPTIONS
+       -l     List the superblock: label, UUID, features, block and inode
+              counts, default mount options, mount count and check interval.
+
+       -L LABEL
+              Set the file system label (up to 16 characters), used by
+              LABEL= in /etc/fstab.
+
+       -U UUID
+              Set a new UUID: a value, random or time. The file system should
+              be unmounted.
+
+       -c COUNT
+              Check the file system after COUNT mounts (-1 turns it off).
+
+       -i INTERVAL
+              Check after this much time, such as 30d or 6m (0 turns it off).
+
+       -m PERCENT
+              Space reserved for root (5% by default).
+
+       -o OPTION
+              Set default mount options, such as acl or user_xattr (^ in front
+              removes one).
+
+       -O FEATURE
+              Turn a file system feature on (or off with ^).
+
+EXAMPLES
+       Give the ext4 file system on /dev/vdb1 the label data:
+
+           tune2fs -L data /dev/vdb1
+
+       Look at its settings:
+
+           tune2fs -l /dev/vdb1 | grep -i -e name -e uuid -e 'mount options'
+
+SEE ALSO
+       mkfs.ext4(8), e2label(8), xfs_admin(8), blkid(8), fstab(5)

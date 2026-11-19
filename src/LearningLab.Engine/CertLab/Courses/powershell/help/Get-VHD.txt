@@ -1,0 +1,14 @@
+SYNOPSIS: Shows the details of a virtual hard disk file.
+DESCRIPTION:
+Get-VHD shows a disk's VhdFormat (VHD or VHDX), VhdType (Fixed, Dynamic, Differencing), Size (the size the VM sees), FileSize (the space it takes on the host), ParentPath for a differencing disk, and whether it is Attached to a running VM.
+
+For a dynamic disk FileSize is often much smaller than Size: that is thin provisioning, and the host's drive must have room for it to grow.
+PARAMETER Path:
+The disk file or files. Position 0.
+PARAMETER VMId:
+Shows the disks of the VM with this ID.
+EXAMPLE: Get-VHD -Path "D:\Hyper-V\Virtual Hard Disks\APP-OLD.vhdx" -ComputerName HV1
+A 60 GB dynamic disk that takes about 18 GB.
+EXAMPLE: Get-VM | Get-VMHardDiskDrive | Get-VHD
+Every VM's disks with their sizes.
+RELATED: New-VHD, Resize-VHD, Convert-VHD, Get-VMHardDiskDrive

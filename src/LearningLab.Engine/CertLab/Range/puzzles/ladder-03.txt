@@ -1,0 +1,49 @@
+title: Step 3: Spaces in the name
+level: Beginner
+category: ladder
+login: step3
+kind: Awkward file names
+teaser: a file name with spaces in it, and how to keep the shell from splitting it
+points: 20
+order: 3
+answer: {{PW}}
+var: PW = hex:10
+var: NAME = pick:my secret notes|the password is in here|read me please|step three notes|not a boring file
+
+@intro
+You are step3. The password for step 4 is in a file in your home folder, and its name
+has spaces in it. Typing cat followed by the name doesn't work as you might hope - find
+out why, then read it.
+
+@setup
+useradd -m step4
+echo 'step4:{{PW}}' | chpasswd
+printf 'The password for step 4: %s\n' '{{PW}}' > '/home/step3/{{NAME}}'
+chown step3: '/home/step3/{{NAME}}'
+
+@solution
+ls
+cat "{{NAME}}"
+
+@walkthrough
+The shell splits what you type into words at every space, so cat {{NAME}} asks cat
+for several files, one per word, and none of them exist. Put the whole name in quotes
+so it stays one word:
+
+    cat "{{NAME}}"
+
+Two other ways work too: a backslash before each space (cat my\ secret\ notes), or
+typing the first letters and pressing Tab, which fills the name in with the
+backslashes for you.
+
+@hint 2
+What to think about first: when you press Enter, the shell (the program reading your commands) cuts your line into pieces at every space. The first piece is the command and the rest are its arguments. So a name with spaces turns into several names, and cat looks for each one separately.
+
+@hint 3
+Run ls to see the file's exact name. Then try cat with the name as it is, and read the error messages: cat complains about each word on its own. That shows you the splitting happening.
+
+@hint 4
+Quotes tell the shell "keep this together as one piece". Double quotes " " or single quotes ' ' both work here. Another way is a backslash \ just before each space, which means "this space is part of the name".
+
+@hint 5
+Type cat, a space, then the whole file name inside double quotes, for example: cat "my secret notes" (use the name ls shows). Or type cat and the first letter of the name and press Tab to let the shell complete it.

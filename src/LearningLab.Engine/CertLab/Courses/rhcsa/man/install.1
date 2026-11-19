@@ -1,0 +1,40 @@
+NAME
+       install - copy files and set their mode and owner in one step
+
+SYNOPSIS
+       install [OPTION]... SOURCE DEST
+       install [OPTION]... SOURCE... DIRECTORY
+       install -d [OPTION]... DIRECTORY...
+
+DESCRIPTION
+       install copies files like cp does, but also sets the permissions,
+       owner and group of the copies in the same command. With -d it creates
+       directories (and their parents) instead. Unless -m is given the new
+       files and directories get mode 0755 (rwxr-xr-x), which suits programs
+       and scripts.
+
+OPTIONS
+       -d, --directory
+              Create the named directories, with any missing parents.
+
+       -m, --mode=MODE
+              Set this mode (octal, such as 640) instead of 0755.
+
+       -o, --owner=USER
+              Make USER the owner (only root may do this).
+
+       -g, --group=GROUP
+              Make GROUP the group.
+
+       -v, --verbose
+              Print the name of each file copied.
+
+EXAMPLES
+       Put a script in place, executable for everyone:
+              # install -m 755 hello.sh /usr/local/bin/hello
+
+       Create a directory owned by student, closed to others:
+              # install -d -m 750 -o student -g student /srv/projects
+
+SEE ALSO
+       cp(1), mkdir(1), chmod(1), chown(1)

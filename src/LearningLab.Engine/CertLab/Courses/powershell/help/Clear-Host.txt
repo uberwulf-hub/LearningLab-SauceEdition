@@ -1,0 +1,14 @@
+SYNOPSIS: Clears the console screen.
+DESCRIPTION:
+Clear-Host wipes everything off the console window and puts the prompt back at the top. It changes nothing else: your variables, history and jobs are all still there.
+
+You will usually type one of its short names: cls (as in the old Command Prompt) or clear (as on Linux).
+EXAMPLE: Clear-Host
+Clears the screen.
+EXAMPLE: cls
+The same thing, using the alias.
+NOTES:
+In Windows PowerShell 5.1, Clear-Host is a function, not a compiled cmdlet. Cert Lab treats it as a command with no parameters.
+
+Ctrl+L also clears the screen in a console that uses PSReadLine.
+RELATED: Clear-History, Get-History, Out-Host

@@ -1,0 +1,40 @@
+NAME
+       fsck - check and repair a file system
+
+SYNOPSIS
+       fsck [-A] [-N] [-R] [-V] [-f] [-n] [-p] [-y] [DEVICE...]
+
+DESCRIPTION
+       fsck finds out which type of file system is on DEVICE and runs the
+       matching checker: fsck.ext4 (e2fsck) for ext2/3/4, fsck.vfat for FAT.
+       The checkers fix what they can and report what they found.
+
+       Only check file systems that are not mounted.
+
+       xfs is different: fsck.xfs does nothing, because xfs checks itself
+       when it is mounted. To repair a damaged xfs file system, unmount it
+       and run xfs_repair.
+
+       The last field of an /etc/fstab line (the pass number) says whether
+       the system runs fsck on it at boot: 1 for the root file system, 2 for
+       others, 0 for never. For xfs, use 0.
+
+OPTIONS
+       -A     Check every file system listed in /etc/fstab.
+
+       -N     Only show what would be done.
+
+       -R     With -A, skip the root file system.
+
+       -V     Show the commands that are run.
+
+       -f, -n, -p, -y
+              Passed on to the checker: force a check, answer no, repair
+              automatically, answer yes (see e2fsck).
+
+EXAMPLES
+           umount /data
+           fsck -f /dev/vdb1
+
+SEE ALSO
+       e2fsck(8), fsck.vfat(8), fsck.xfs(8), xfs_repair(8), fstab(5)

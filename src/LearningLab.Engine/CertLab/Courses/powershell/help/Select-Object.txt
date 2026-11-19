@@ -1,0 +1,50 @@
+SYNOPSIS: Picks properties of objects, or picks some of the objects (the first, the last, the unique ones).
+DESCRIPTION:
+Select-Object does two different jobs, and you can combine them.
+
+Choosing properties: Select-Object Name, Office makes new objects that have only those properties, in that order. A hash table adds a calculated property: @{ Name = 'Pay'; Expression = { [int]$_.Salary } }. Unlike Format-Table, the results are still real objects that you can sort, filter and export.
+
+Choosing objects: -First, -Last, -Skip, -Index and -Unique pick which objects go on down the pipeline.
+
+-ExpandProperty is different again: it outputs the values of one property themselves (plain strings, numbers or the objects inside), not objects that have that property.
+PARAMETER Property:
+The properties to keep. Position 0. Wildcards work, and a hash table with Name and Expression (or n and e) makes a calculated property.
+PARAMETER ExcludeProperty:
+Properties to leave out. Use it with -Property *.
+PARAMETER ExpandProperty:
+Outputs the value of this property instead of an object.
+PARAMETER First:
+Keeps only this many objects from the start.
+PARAMETER Last:
+Keeps only this many objects from the end.
+PARAMETER Skip:
+Skips this many objects from the start.
+PARAMETER SkipLast:
+Skips this many objects from the end.
+PARAMETER Index:
+Keeps the objects at these positions (0 is the first).
+PARAMETER Unique:
+Removes duplicates (after choosing properties). Case matters here.
+PARAMETER InputObject:
+The objects to select from. Usually they come through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object Name, @{ Name = 'Pay'; Expression = { [int]$_.Salary } } -First 3
+Three employees with their name and a calculated, numeric Pay property.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -ExpandProperty Office -Unique
+Just the office names, each once, as plain strings.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object * -ExcludeProperty Salary, Started -First 1
+Every property except two.
+EXAMPLE: 1..1000000 | Select-Object -First 3
+Outputs 1, 2 and 3, and stops the numbers coming: once it has enough, Select-Object -First stops the earlier commands in the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Sort-Object { [int]$_.Salary } -Descending | Select-Object -First 3 Name, Salary
+The classic "top three": sort first, then pick.
+NOTES:
+The alias is select.
+
+The new objects have a type name starting with Selected. (for example Selected.System.Management.Automation.PSCustomObject), so the original type's display rules no longer apply and the methods of the original are gone.
+
+Select-Object Name gives objects with a Name property; Select-Object -ExpandProperty Name gives the names themselves. Use the second when a command expects plain strings.
+
+Stopping early with -First (since PowerShell 3.0) makes it very quick on big inputs. -Last has to wait for everything.
+
+In 5.1, -ExcludeProperty only works together with -Property. PowerShell 7 lets you use it alone.
+RELATED: Where-Object, Sort-Object, Format-Table, about_Calculated_Properties, about_Pipelines

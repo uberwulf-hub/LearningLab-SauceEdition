@@ -1,0 +1,82 @@
+# Lab: lab-01 | Users, groups and device settings | u01 | 30
+Riverbend has hired a warehouse worker, wants groups that keep themselves up to date, and has decided to tighten who may join devices. Someone also gave the help desk far too much power last week. Work in the practice portal.
+
+@vars
+who = lena.park | omar.haddad | rosa.kim
+lic = Microsoft 365 E3 | Enterprise Mobility + Security E3
+@endvars
+
+@setup portal
+set user chen +roles="Global Administrator"
+
+@task t01 | Identity | 20 | portal
+Create a user for the new warehouse worker with the sign-in name `{who}@riverbend.example` (pick a display name), department **Warehouse**, city **Denver**, and the licence **{lic}**.
+@check portal | the user exists in Warehouse, Denver
+user["{who}"].upn == {who}@riverbend.example
+user["{who}"].department == Warehouse
+user["{who}"].city == Denver
+@check portal | the user has the licence
+user["{who}"].licenses has "{lic}"
+@hint The licence needs a usage location in the same form.
+@solution portal
+create user name="New warehouse worker" upn={who}@riverbend.example department=Warehouse city=Denver usageLocation=US licenses="{lic}"
+@explain
+The usage location is the step people forget: without it the licence can't be assigned. Both licences in this lab include Intune Plan 1 and Microsoft Entra ID P1; Office 365 E3 would have given neither.
+@endtask
+
+@task t02 | Identity | 20 | portal
+Create a security group **Warehouse staff** that always holds every user whose department is Warehouse, without anyone adding people by hand.
+@check portal | the group is dynamic and holds the warehouse people
+group["Warehouse staff"].membership == "Dynamic user"
+group["Warehouse staff"].members has nils
+group["Warehouse staff"].members has {who}
+group["Warehouse staff"].members !has jordan
+@hint Dynamic user, rule (user.department -eq "Warehouse").
+@solution portal
+create group name="Warehouse staff" type=Security membership="Dynamic user" rule="(user.department -eq \"Warehouse\")"
+@explain
+A dynamic user group reads the users' properties, so the new worker (and anyone who moves into the department later) is added on their own. Text values in a rule go in double quotes; the property starts with user.
+@endtask
+
+@task t03 | Identity | 20 | portal
+Create a security group **Corporate laptops** that holds, automatically, every **company-owned Windows** device whose model starts with **Lumen Book**.
+@check portal | the group holds the laptops
+group["Corporate laptops"].membership == "Dynamic device"
+group["Corporate laptops"].members has RB-LT-001
+group["Corporate laptops"].members has RB-LT-002
+@check portal | desktops and the personal PC stay out
+group["Corporate laptops"].members !has RB-DT-010
+group["Corporate laptops"].members !has SAM-HOME-PC
+@hint Three conditions joined with -and: deviceOSType, deviceOwnership (Company) and deviceModel with -startsWith.
+@solution portal
+create group name="Corporate laptops" type=Security membership="Dynamic device" rule="(device.deviceOSType -eq \"Windows\") -and (device.deviceOwnership -eq \"Company\") -and (device.deviceModel -startsWith \"Lumen Book\")"
+@explain
+deviceOwnership is Company or Personal in group rules (Intune filters say Corporate instead). -startsWith matches the start of the text, so both Lumen Book 13 and Lumen Book 14 match while the Lumen Tower desktops don't.
+@endtask
+
+@task t04 | Identity | 20 | portal
+From now on only **IT Admins** may join devices to Microsoft Entra ID by hand, and Microsoft Entra **LAPS** must be switched on for the tenant.
+@check portal | joining is limited to IT Admins
+tenant.joinScope == Selected
+tenant.joinGroup == "IT Admins"
+@check portal | Microsoft Entra LAPS is on
+tenant.lapsEnabled == Yes
+@hint Both are Microsoft Entra device settings (Tenant administration > Settings in Cert Lab).
+@solution portal
+tenant joinScope=Selected joinGroup="IT Admins" lapsEnabled=Yes
+@explain
+"Users may join devices to Microsoft Entra" has All, Selected and None. The LAPS switch is tenant-wide: without it, every Intune LAPS policy that backs up to Entra ID fails on the devices.
+@endtask
+
+@task t05 | Identity | 20 | portal
+Chen (`chen`) was given the **Global Administrator** role by mistake. Take it away and leave him his help desk role.
+@check portal | Chen is no longer a Global Administrator
+user["chen"].roles !has "Global Administrator"
+@check portal | Chen keeps Helpdesk Administrator
+user["chen"].roles has "Helpdesk Administrator"
+@hint Remove one role from his list; don't clear the list.
+@solution portal
+set user chen -roles="Global Administrator"
+@explain
+Least privilege: the help desk needs Helpdesk Administrator (password resets for non-admins), perhaps Cloud Device Administrator, never Global Administrator. Keep Global Administrator for a handful of accounts and the emergency access account.
+@endtask

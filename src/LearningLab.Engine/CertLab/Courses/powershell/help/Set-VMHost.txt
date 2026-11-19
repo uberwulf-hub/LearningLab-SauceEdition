@@ -1,0 +1,16 @@
+SYNOPSIS: Changes the settings of a Hyper-V host.
+DESCRIPTION:
+Set-VMHost changes host-wide defaults. -VirtualMachinePath and -VirtualHardDiskPath set where new VMs and disks are stored (existing ones don't move). -EnableEnhancedSessionMode $true lets Virtual Machine Connection pass the clipboard, drives and audio into Windows guests. -NumaSpanningEnabled $false keeps each VM inside one NUMA node, which is faster but limits how big a VM can be.
+PARAMETER VirtualMachinePath:
+Default folder for VM configuration files.
+PARAMETER VirtualHardDiskPath:
+Default folder for new virtual disks.
+PARAMETER EnableEnhancedSessionMode:
+$true to allow enhanced sessions.
+PARAMETER NumaSpanningEnabled:
+$false to keep VMs within one NUMA node.
+EXAMPLE: Set-VMHost -VirtualMachinePath "D:\Hyper-V\Virtual Machines" -VirtualHardDiskPath "D:\Hyper-V\Virtual Hard Disks" -ComputerName HV1
+New VMs on HV1 go to the D: drive.
+EXAMPLE: Set-VMHost -EnableEnhancedSessionMode $true
+Allows copy and paste in VM connections.
+RELATED: Get-VMHost, New-VM

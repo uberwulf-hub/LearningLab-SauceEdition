@@ -1,0 +1,30 @@
+SYNOPSIS: Answers True or False: does this path exist (or is it at least a valid path)?
+DESCRIPTION:
+Test-Path works on every drive: files and folders, registry keys (HKLM:\SOFTWARE\Contoso), environment variables (Env:TEMP), variables (Variable:name) and certificates. With wildcards it answers True when anything matches. It never writes an error for a missing item or a missing drive, which makes it the usual check before creating or deleting something.
+PARAMETER Path:
+The path or paths to check. Wildcards are allowed.
+PARAMETER LiteralPath:
+The path taken exactly as typed, for names with [ ] in them.
+PARAMETER PathType:
+Leaf (a file, a value-like item), Container (a folder or key) or Any (the default).
+PARAMETER IsValid:
+Only checks that the path could exist (no forbidden characters, a known drive); nothing has to be there.
+PARAMETER Include:
+Only counts items whose names match these wildcards.
+PARAMETER Exclude:
+Ignores items whose names match these wildcards.
+PARAMETER Filter:
+A file name filter such as *.log.
+PARAMETER NewerThan:
+For files: True only if the file was written after this date.
+PARAMETER OlderThan:
+For files: True only if the file was written before this date.
+EXAMPLE: if (-not (Test-Path C:\Tools)) { New-Item -ItemType Directory C:\Tools }
+Creates a folder only when it is missing.
+EXAMPLE: Test-Path HKCU:\Software\Lab
+Checks for a registry key.
+EXAMPLE: Test-Path C:\LabFiles\app.log -PathType Leaf
+True only for a file, not for a folder of that name.
+NOTES:
+Test-Path $null and Test-Path '' are errors, not False: the -Path parameter refuses empty values.
+RELATED: Get-Item, Resolve-Path, New-Item

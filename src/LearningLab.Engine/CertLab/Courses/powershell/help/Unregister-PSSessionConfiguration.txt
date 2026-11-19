@@ -1,0 +1,19 @@
+SYNOPSIS: Removes a remoting endpoint from this computer.
+DESCRIPTION:
+Unregister-PSSessionConfiguration deletes an endpoint, so nobody can connect to it any more. The .pssc and .psrc files are not deleted; you can register the endpoint again from them.
+
+It asks for confirmation unless you add -Force. Remoting must be on (WinRM listening).
+PARAMETER Name:
+The endpoint to remove. Wildcards work, so check with Get-PSSessionConfiguration first. You can pipe in endpoints from Get-PSSessionConfiguration.
+PARAMETER Force:
+Removes without asking.
+PARAMETER NoServiceRestart:
+Does not restart WinRM afterwards.
+EXAMPLE: Unregister-PSSessionConfiguration -Name HelpDesk -Force
+Removes the HelpDesk JEA endpoint.
+EXAMPLE: Get-PSSessionConfiguration -Name Test* | Unregister-PSSessionConfiguration
+Removes every endpoint whose name starts with Test, asking for each one.
+NOTES:
+Do not remove the built-in microsoft.powershell endpoint: normal remoting uses it.
+On a real PC this needs PowerShell run as administrator.
+RELATED: Register-PSSessionConfiguration, Get-PSSessionConfiguration

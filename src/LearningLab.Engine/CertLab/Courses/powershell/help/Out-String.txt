@@ -1,0 +1,26 @@
+SYNOPSIS: Turns objects into the text you would see on screen, as a string.
+DESCRIPTION:
+Out-String formats objects the way the console would (tables, lists or plain text) and returns that text instead of showing it. By default you get one big string with line breaks; with -Stream you get one string per line.
+
+Use it when you need the screen text itself: to put a table into an e-mail body or a message box, or to search the displayed text with -match or Select-String.
+
+Remember it is text after this point. You can no longer sort or filter by property, so pick and sort the objects first and use Out-String last.
+PARAMETER InputObject:
+What to format. Usually it comes through the pipeline.
+PARAMETER Stream:
+Outputs each line as its own string instead of one string.
+PARAMETER Width:
+The line width used for formatting. Wider means fewer columns are cut off.
+EXAMPLE: $text = Import-Csv C:\LabFiles\employees.csv | Format-Table Name, Office | Out-String; $text.GetType().Name
+Keeps the table as one String.
+EXAMPLE: 1..3 | Out-String -Stream | ForEach-Object { "<$_>" }
+One string per line: <1>, <2>, <3>.
+EXAMPLE: (Import-Csv C:\LabFiles\employees.csv | Out-String -Width 200) -match 'Lovelace'
+Searches the displayed text: True.
+NOTES:
+The single string usually ends with an extra line break. Use .Trim() to remove the blank lines at the start and end.
+
+Out-String is the usual fix when someone tries to use Format-Table output as text: ... | Format-Table | Out-String.
+
+PowerShell 7 adds -NoNewline.
+RELATED: Out-Host, Out-File, Format-Table, about_Format.ps1xml

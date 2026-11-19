@@ -1,0 +1,9 @@
+SYNOPSIS: Shows the schedule of Microsoft Entra Connect Sync (formerly Azure AD Connect).
+DESCRIPTION:
+Entra Connect Sync copies users, groups and (with password hash sync) password hashes from Active Directory to Microsoft Entra ID. Run Get-ADSyncScheduler on the server where it is installed.
+Key properties: SyncCycleEnabled (whether automatic syncs run), CurrentlyEffectiveSyncCycleInterval (30 minutes by default, and that is the shortest allowed), NextSyncCycleStartTimeInUTC and NextSyncCyclePolicyType (Delta or Initial). StagingModeEnabled shows a standby server that syncs nothing out.
+EXAMPLE: Get-ADSyncScheduler
+The scheduler's settings and when the next sync starts.
+EXAMPLE: Get-ADSyncScheduler | Select-Object SyncCycleEnabled, NextSyncCycleStartTimeInUTC
+Whether syncs are on, and the next one.
+RELATED: Set-ADSyncScheduler, Start-ADSyncSyncCycle

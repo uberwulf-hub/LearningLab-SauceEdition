@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "futureTopLevel": { "kept": true },
+  "players": {
+    "Riley": {
+      "tricky": [ "cabin", "fertilizer|fertiliser" ],
+      "lists": [ "p2", "p3" ],
+      "howMany": 10,
+      "shuffle": false,
+      "autoSay": false,
+      "badges": [ "first-bee" ],
+      "history": [ { "when": "2026-11-10 18:05", "lists": "Starter Words", "right": 8, "total": 10, "seconds": 300 } ]
+    }
+  }
+}

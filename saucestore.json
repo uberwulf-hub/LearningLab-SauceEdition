@@ -1,0 +1,20 @@
+{
+  "name": "Learning Lab (Sauce Edition)",
+  "category": "App",
+  "description": "Learning for the whole family, on Windows and Android. Learning Games: math games for 2nd and 6th grade, the Long Division Workshop, and quizzes, flash cards and memory games in history, English, science, Spanish, coding and US citizenship, with family games on the home network. Languages: Spanish from hello to short conversations, with spoken lessons to listen to in the car. Spelling Bee: hear a word, spell it out loud or type it, with five word lists of its own and your school's. Emulator Lab: a small computer to look inside, with its own operating system and programs to write. Network Lab: build and cable pretend networks, with labs, device screens and floor plans. Cert Lab: lessons, practice machines, labs and practice exams for IT certifications. Cyber Range: capture-the-flag practice on pretend networks. Everything is simulated and works offline.",
+  "icon": "store/icon.png",
+  "assets": { "windows": "LearningLabSE-windows.zip", "android": "LearningLabSE-android.apk" },
+  "requirements": [
+    "Windows 10 or 11 (64-bit), or Android 8 or later",
+    "About 150 MB of space on Windows, about 60 MB on Android",
+    "Nothing else to install; works offline"
+  ],
+  "rightsConfirmed": true,
+  "credits": [
+    { "asset": "Avalonia UI 12 (the windows and screens, on Windows and Android)", "author": "AvaloniaUI OU and contributors", "license": "MIT", "source": "https://github.com/AvaloniaUI/Avalonia" },
+    { "asset": "SkiaSharp and HarfBuzzSharp (drawing and text, bundled by Avalonia)", "author": ".NET Foundation and contributors", "license": "MIT", "source": "https://github.com/mono/SkiaSharp" },
+    { "asset": "Inter typeface", "author": "Rasmus Andersson", "license": "SIL Open Font License 1.1", "source": "https://github.com/rsms/inter" },
+    { "asset": ".NET runtime (bundled with the app)", "author": ".NET Foundation and contributors", "license": "MIT", "source": "https://github.com/dotnet/runtime" },
+    { "asset": "AndroidX libraries (Android version)", "author": "The Android Open Source Project", "license": "Apache-2.0", "source": "https://developer.android.com/jetpack/androidx" }
+  ]
+}

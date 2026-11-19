@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!-- "Say it" exercises: asked only when someone taps "Tap and speak"; recognised on the phone only -->
+	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+	<queries>
+		<intent>
+			<action android:name="android.speech.RecognitionService" />
+		</intent>
+	</queries>
+	<application android:label="Learning Lab SE" android:icon="@drawable/Icon" />
+</manifest>

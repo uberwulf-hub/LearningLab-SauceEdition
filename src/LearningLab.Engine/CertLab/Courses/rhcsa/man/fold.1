@@ -1,0 +1,22 @@
+NAME
+       fold - wrap long lines to a given width
+
+SYNOPSIS
+       fold [-w WIDTH] [-s] [FILE...]
+
+DESCRIPTION
+       fold breaks every line of FILE (or standard input) that is longer than
+       WIDTH characters (80 by default) into several lines.
+
+OPTIONS
+       -w WIDTH, --width=WIDTH
+              The maximum line length.
+
+       -s, --spaces
+              Break at spaces where possible, so words stay whole.
+
+EXAMPLES
+           fold -s -w 60 /root/notes.txt
+
+SEE ALSO
+       fmt(1), cut(1)

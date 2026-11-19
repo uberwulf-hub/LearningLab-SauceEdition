@@ -1,0 +1,70 @@
+# Sheet: admin | Administration | Administration
+## Services
+Get-Service :: every service (Status, Name, DisplayName)
+Get-Service -DisplayName '*Update*' :: find a service by its long name
+Get-Service Spooler | Select-Object Name, Status, StartType :: status and start type
+Start-Service Spooler :: start (Stop-Service, Restart-Service; -PassThru shows the result)
+Stop-Service LanmanWorkstation -Force :: also stops the services that depend on it
+Get-Service LanmanWorkstation -DependentServices :: who needs it (-RequiredServices: what it needs)
+Set-Service BITS -StartupType Automatic :: Automatic, Manual or Disabled
+Set-Service BITS -StartupType Manual -Status Running :: change the start type and start it
+sc.exe qc Spooler :: the old tool (always type sc.exe: sc is Set-Content)
+Get-CimInstance Win32_Service -Filter "Name = 'Spooler'" :: program path and account of a service
+## Processes
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 :: busiest processes (CPU = seconds used)
+Get-Process | Sort-Object WS -Descending | Select-Object -First 5 :: biggest working set (bytes)
+Get-Process -IncludeUserName :: who runs each process (elevated console)
+Start-Process notepad -PassThru :: start a program and get its process
+Start-Process ping -ArgumentList '-n 1 DC01' -Wait -NoNewWindow :: run in this console and wait
+Wait-Process -Name notepad -Timeout 30 :: wait for a process to end
+Stop-Process -Name notepad :: stop every process with that name (-Id: just one)
+## Event logs
+Get-WinEvent -ListLog Application, System :: logs and their sizes
+Get-WinEvent -LogName System -MaxEvents 10 :: newest events first
+Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 2, 3 } :: errors and warnings (1 Critical, 2 Error, 3 Warning, 4 Information)
+Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 7036 } :: by event Id
+Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddDays(-1) } :: the last 24 hours
+Get-EventLog -LogName System -EntryType Error -Newest 5 :: the old cmdlet (not in PowerShell 7)
+## Scheduled tasks
+$a = New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -File C:\Scripts\x.ps1' :: what to run
+$t = New-ScheduledTaskTrigger -Daily -At 3am :: when (-Weekly -DaysOfWeek, -Once -At, -AtStartup, -AtLogOn)
+Register-ScheduledTask -TaskName X -Action $a -Trigger $t -User SYSTEM :: create it, running as SYSTEM
+Get-ScheduledTaskInfo -TaskName X :: LastRunTime, LastTaskResult (0 = OK), NextRunTime
+Start-ScheduledTask -TaskName X :: run it now
+Disable-ScheduledTask -TaskName X :: keep it but stop its triggers (Enable-ScheduledTask)
+Unregister-ScheduledTask -TaskName X -Confirm:$false :: delete it
+## The computer
+Get-CimInstance Win32_OperatingSystem | Select-Object Caption, LastBootUpTime :: version and last start
+Get-ComputerInfo -Property CsName, OsVersion :: many details (slow without -Property)
+Get-HotFix :: installed updates
+Get-WindowsFeature :: roles and features (Windows Server only)
+Install-WindowsFeature -Name Telnet-Client -IncludeManagementTools :: add a feature (Uninstall-WindowsFeature removes)
+Restart-Computer -ComputerName WIN-CL1 -Wait -For PowerShell :: restart and wait until it answers
+## Local users and groups
+$pw = Read-Host -AsSecureString :: a password typed in secretly
+$pw = ConvertTo-SecureString 'Pa55-word' -AsPlainText -Force :: a password from text (labs and tests)
+New-LocalUser -Name kim -Password $pw -FullName 'Kim Lee' :: new user
+Set-LocalUser -Name kim -PasswordNeverExpires $true :: change a user
+Disable-LocalUser kim :: stop sign-ins (Enable-LocalUser, Remove-LocalUser)
+Add-LocalGroupMember -Group Administrators -Member kim :: add to a group (Remove-LocalGroupMember)
+Get-LocalGroupMember Administrators :: members of a group
+## CIM
+Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3" :: WQL filter: =, <>, AND, OR, LIKE with %
+Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = 'notepad.exe' } :: call a method
+$cs = New-CimSession -ComputerName WIN-CL1 :: a session over WinRM (Remove-CimSession)
+Get-CimInstance -CimSession $cs -ClassName Win32_OperatingSystem :: use it
+## Networking
+Get-NetIPConfiguration :: addresses, gateway, DNS per adapter
+Get-NetAdapter :: network cards (Name is the InterfaceAlias)
+Get-NetIPAddress -AddressFamily IPv4 :: every IPv4 address
+New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.15 -PrefixLength 24 :: add an address
+Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10 :: DNS servers, in order
+Resolve-DnsName WEB01 :: does the name resolve?
+Test-NetConnection WEB01 -Port 443 :: does the port answer? (-InformationLevel Quiet: True/False)
+Test-Connection DC01 -Count 1 -Quiet :: ping, True/False
+## Firewall
+Get-NetFirewallProfile :: Domain, Private, Public
+Get-NetFirewallRule -DisplayGroup 'File and Printer Sharing' :: rules of a group
+Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In :: allow incoming IPv4 ping
+New-NetFirewallRule -Name Web8080 -DisplayName 'Web 8080' -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow :: a new rule
+Get-NetFirewallRule -Name Web8080 | Get-NetFirewallPortFilter :: its port and protocol

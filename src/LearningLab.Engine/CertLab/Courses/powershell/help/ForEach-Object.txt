@@ -1,0 +1,38 @@
+SYNOPSIS: Runs a script block once for every object that comes through the pipeline.
+DESCRIPTION:
+ForEach-Object is how you do something to each item in a pipeline. Inside its script block, $_ (or $PSItem, the same thing) is the current object. Whatever the block outputs goes on down the pipeline.
+
+You can give three blocks: -Begin runs once before the first object, -Process runs for each object, and -End runs once after the last. That is handy for totals and counters.
+
+For the simple case of reading one property or calling one method, give just the name: ForEach-Object Name is the same as ForEach-Object { $_.Name }.
+
+The script blocks run in your own scope, as if you had typed them at the prompt: a variable you set inside is still there afterwards.
+PARAMETER Process:
+The script block to run for each object. Position 0, so you normally just write ForEach-Object { ... }. With two or three blocks by position, they are taken as Begin, Process (and End).
+PARAMETER Begin:
+A script block that runs once, before any objects arrive.
+PARAMETER End:
+A script block that runs once, after the last object.
+PARAMETER InputObject:
+The object to work on. Usually it comes through the pipeline; given directly, an array is treated as one object.
+PARAMETER MemberName:
+The name of a property to read, or a method to call, on each object.
+PARAMETER ArgumentList:
+Arguments for the method named by -MemberName. Its alias is -Args.
+EXAMPLE: 1..5 | ForEach-Object { $_ * $_ }
+Outputs the squares 1, 4, 9, 16 and 25.
+EXAMPLE: 1..3 | ForEach-Object -Begin { $total = 0 } -Process { $total += $_ } -End { "Total: $total" }
+Adds up the numbers and prints Total: 6 at the end. $total is still 6 afterwards.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | ForEach-Object Name
+Outputs just the names, using the short member-name form.
+EXAMPLE: 'ada', 'alan' | ForEach-Object ToUpper
+Calls the ToUpper() method on each string: ADA, ALAN.
+EXAMPLE: 'a,b', 'c,d' | ForEach-Object -MemberName Split -ArgumentList ','
+Calls Split(',') on each string, giving a, b, c and d.
+NOTES:
+Aliases: foreach and %. Do not confuse the foreach alias with the foreach statement (foreach ($x in $list) { }), which is a language keyword and does not use the pipeline. PowerShell decides by where the word appears.
+
+Inside ForEach-Object, return skips to the next object (like continue in a loop). break and continue do not do what you might expect: they act on an enclosing loop, or stop the whole script if there is none.
+
+PowerShell 7 adds -Parallel (run the blocks at the same time in separate runspaces) and -ThrottleLimit. Windows PowerShell 5.1 has neither.
+RELATED: Where-Object, Select-Object, about_Pipelines, about_Foreach, about_Automatic_Variables

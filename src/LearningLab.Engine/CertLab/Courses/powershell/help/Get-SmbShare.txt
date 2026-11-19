@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the shared folders of a Windows server.
+DESCRIPTION:
+Get-SmbShare shows each share's Name, ScopeName, Path and Description. Format-List * shows the settings too: FolderEnumerationMode (AccessBased means access-based enumeration), EncryptData, CachingMode and ConcurrentUserLimit.
+
+The list includes the hidden administrative shares that end in $ (C$, ADMIN$, IPC$). -Special $false leaves them out. On FS1 the lab's shares are Sales, Finance, HR, Public and IT, all under D:\Shares.
+PARAMETER Name:
+The share or shares to show; wildcards work. Position 0.
+PARAMETER Special:
+$true for only the administrative shares, $false for only the normal ones.
+EXAMPLE: Get-SmbShare -Special $false
+The normal shares on this server.
+EXAMPLE: Get-SmbShare -Name Sales | Format-List Name, Path, FolderEnumerationMode, EncryptData
+The settings of the Sales share.
+RELATED: New-SmbShare, Set-SmbShare, Remove-SmbShare, Get-SmbShareAccess

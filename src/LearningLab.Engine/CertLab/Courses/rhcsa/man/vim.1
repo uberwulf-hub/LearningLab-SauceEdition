@@ -1,0 +1,99 @@
+NAME
+       vim, vi, view - the standard screen text editor
+
+SYNOPSIS
+       vim [+N] [FILE]...
+       vi [FILE]...
+       view FILE...
+
+DESCRIPTION
+       vim (Vi IMproved) edits text files in the terminal. It is on every
+       RHEL system, which makes it the editor to know: on a minimal install
+       vi may be the only one. On RHEL 9, vi is the small vim from
+       vim-minimal; the vim command comes from vim-enhanced. view opens a
+       file read-only.
+
+       vim has modes, which is what surprises newcomers. It starts in normal
+       mode, where keys are commands, not text. Press i to enter insert mode
+       and type; press Esc to go back to normal mode. Type : in normal mode
+       for a command line at the bottom (to save, quit, search and replace).
+       When lost, press Esc (twice does no harm).
+
+   Leaving
+       :w        save                 :wq or :x or ZZ   save and quit
+       :q        quit (refused when there are unsaved changes)
+       :q!       quit and throw the changes away
+       :w FILE   save under another name
+
+   Entering insert mode
+       i, a      insert before, or after, the cursor
+       I, A      insert at the start, or end, of the line
+       o, O      open a new line below, or above, and insert
+       R         overwrite characters until Esc
+
+   Moving (normal mode)
+       h j k l   left, down, up, right (the arrow keys work too)
+       w, b      next word, previous word
+       0, ^, $   start of line, first non-blank, end of line
+       gg, G     first line, last line; 15G goes to line 15
+       Ctrl+F, Ctrl+B
+                 a screen forward, back (Page Down, Page Up)
+
+   Changing (normal mode)
+       x         delete the character under the cursor
+       dd        delete (cut) the line; 3dd deletes three lines
+       dw, D     delete to the end of the word, of the line
+       cw, C     change to the end of the word, of the line
+       yy        copy (yank) the line; 5yy copies five lines
+       p, P      paste after, or before, the cursor
+       r C       replace one character with C
+       J         join the next line to this one
+       u         undo; Ctrl+R redoes
+       .         repeat the last change
+       V         select whole lines; then d, y or > act on them
+
+   Searching and replacing
+       /TEXT     search forward; ?TEXT searches back
+       n, N      next, previous match
+       :s/OLD/NEW/         replace the first OLD on this line
+       :%s/OLD/NEW/g       replace every OLD in the file
+       :noh                remove the search highlight
+
+   Settings
+       :set number (:set nu)   show line numbers; :set nonu hides them
+       :syntax on              colour the text by file type
+
+OPTIONS
+       +N     Start at line N (+ alone: the last line).
+
+       -R     Read-only, like view.
+
+EXAMPLES
+       Edit the SSH server settings:
+
+           vim /etc/ssh/sshd_config
+
+       A typical change: find a line, change it, save:
+
+           /PermitRootLogin      (Enter: jump to it)
+           cw ... Esc             (change the word)
+           :wq                    (save and quit)
+
+       Look at a log without risking a change:
+
+           view /var/log/messages
+
+NOTES
+       vimtutor is a 30-minute interactive lesson that teaches the basics.
+       For crontab -e, visudo, vipw and systemctl edit, the editor is chosen
+       by $EDITOR or $VISUAL (vi by default).
+
+FILES
+       ~/.vimrc
+              Your own settings, read at start.
+
+       /etc/vimrc
+              Settings for everyone.
+
+SEE ALSO
+       vimtutor(1), nano(1), sed(1)

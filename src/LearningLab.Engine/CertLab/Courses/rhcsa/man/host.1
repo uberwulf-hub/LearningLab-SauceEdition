@@ -1,0 +1,34 @@
+NAME
+       host - look up names and addresses in DNS
+
+SYNOPSIS
+       host [-t TYPE] [-v] NAME [SERVER]
+
+DESCRIPTION
+       host asks a DNS server for the address of a host name, or for the name
+       of an address (a reverse lookup). It uses the servers listed in
+       /etc/resolv.conf unless a SERVER is given. Unlike getent hosts, host
+       asks DNS only and never reads /etc/hosts, so it shows whether the DNS
+       settings themselves work.
+
+       host comes in the bind-utils package (with dig and nslookup), which is
+       not installed on a minimal RHEL 9 system: dnf install bind-utils.
+
+OPTIONS
+       -t TYPE
+              The record type to ask for: A, AAAA, MX, PTR, NS and so on.
+
+       -v     Verbose: print the whole answer, in the style of dig.
+
+EXIT STATUS
+       0 when the name was found, 1 when it was not.
+
+EXAMPLES
+              $ host utility.lab.example.com
+              utility.lab.example.com has address 192.168.50.254
+
+              $ host 192.168.50.254
+              254.50.168.192.in-addr.arpa domain name pointer utility.lab.example.com.
+
+SEE ALSO
+       dig(1), nslookup(1), getent(1), resolv.conf(5)

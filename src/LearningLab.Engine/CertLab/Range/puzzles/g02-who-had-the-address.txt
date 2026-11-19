@@ -1,0 +1,56 @@
+title: Who had the address?
+level: Expert
+kind: Log hunting
+topic: Log Hunting
+teaser: two logs, one moment in time
+points: 100
+order: 79
+answer: {{U2}}
+var: U1 = name
+var: U2 = name
+var: U3 = name
+var: U4 = name
+var: LAST = num:20-90
+var: MB = num:700-4000
+
+@intro
+The firewall saw a large upload at 22:41 from the VPN address 10.8.0.{{LAST}}. The VPN
+gives addresses out again as people come and go. ~/vpn.log and ~/firewall.log are your
+evidence. Which user was it?
+
+@setup
+cat > /home/player/vpn.log <<LOG
+2026-03-01 20:02:11 vpn: user {{U1}} connected, assigned 10.8.0.{{LAST}}
+2026-03-01 20:05:40 vpn: user {{U3}} connected, assigned 10.8.0.7
+2026-03-01 21:58:03 vpn: user {{U1}} disconnected, released 10.8.0.{{LAST}}
+2026-03-01 22:09:17 vpn: user {{U2}} connected, assigned 10.8.0.{{LAST}}
+2026-03-01 22:30:00 vpn: user {{U4}} connected, assigned 10.8.0.12
+2026-03-01 22:55:48 vpn: user {{U2}} disconnected, released 10.8.0.{{LAST}}
+2026-03-01 23:02:31 vpn: user {{U4}} disconnected, released 10.8.0.12
+2026-03-01 23:10:09 vpn: user {{U1}} connected, assigned 10.8.0.{{LAST}}
+2026-03-01 23:40:00 vpn: user {{U3}} disconnected, released 10.8.0.7
+LOG
+cat > /home/player/firewall.log <<LOG
+2026-03-01 21:15:02 ALLOW 10.8.0.7 -> 192.0.2.80:443 bytes=48211
+2026-03-01 22:41:19 ALLOW 10.8.0.{{LAST}} -> 203.0.113.200:443 bytes={{MB}}000000
+2026-03-01 22:44:51 ALLOW 10.8.0.12 -> 192.0.2.80:443 bytes=1200
+2026-03-01 23:20:33 ALLOW 10.8.0.{{LAST}} -> 192.0.2.80:443 bytes=9113
+LOG
+chown player: /home/player/vpn.log /home/player/firewall.log
+
+@solution
+grep 22:41 firewall.log
+grep '10.8.0.{{LAST}}' vpn.log
+
+@walkthrough
+The address 10.8.0.{{LAST}} belonged to three different sessions that day:
+
+- {{U1}} from 20:02 to 21:58
+- {{U2}} from 22:09 to 22:55
+- {{U1}} again from 23:10
+
+The upload at 22:41:19 falls inside {{U2}}'s session, so {{U2}} is the answer - not
+{{U1}}, whose name appears most. An address is only an identity together with a time.
+
+@hint 30
+grep the address in vpn.log and line the sessions up against 22:41.

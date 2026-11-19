@@ -1,0 +1,4229 @@
+{
+  "id": "coding",
+  "name": "Coding",
+  "levels": {
+    "prek": [
+      {
+        "name": "What Comes Next",
+        "questions": [
+          {
+            "q": "You put on your socks. What do you put on next?",
+            "choices": [
+              "Your shoes",
+              "Your pillow",
+              "Your toothbrush"
+            ],
+            "answer": 0,
+            "explain": "Socks go on first, then shoes go on top of them.",
+            "tip": "Socks first, shoes second, out the door you go!"
+          },
+          {
+            "q": "To plant a seed, what do you do first?",
+            "choices": [
+              "Pick the flower",
+              "Eat the fruit",
+              "Dig a little hole"
+            ],
+            "answer": 2,
+            "explain": "The seed needs a hole in the dirt before it can grow.",
+            "tip": "Dig, drop, cover, water: dig comes first!"
+          },
+          {
+            "q": "First you get in the bath. Then you wash. What comes last?",
+            "choices": [
+              "Get in the bath",
+              "Dry off with a towel",
+              "Fill up the bath"
+            ],
+            "answer": 1,
+            "explain": "After washing, you get out and dry off.",
+            "tip": "In, wash, out, dry: the towel is the finish line."
+          },
+          {
+            "q": "A caterpillar makes a cocoon. What comes out next?",
+            "choices": [
+              "A butterfly",
+              "A frog",
+              "A bird"
+            ],
+            "answer": 0,
+            "explain": "A caterpillar changes inside the cocoon and comes out as a butterfly.",
+            "tip": "Crawl, wrap, flap: caterpillar, cocoon, butterfly!"
+          },
+          {
+            "q": "To make a sandwich, what do you do last?",
+            "choices": [
+              "Get the bread",
+              "Open the jar",
+              "Eat it"
+            ],
+            "answer": 2,
+            "explain": "You make the sandwich first and eat it at the end.",
+            "tip": "The yummy part is always the last part."
+          },
+          {
+            "q": "Snow falls. Then you roll big snowballs. What can you make next?",
+            "choices": [
+              "A pie",
+              "A snowman",
+              "A sandcastle"
+            ],
+            "answer": 1,
+            "explain": "You stack the snowballs to build a snowman.",
+            "tip": "Roll, stack, smile: hello, snowman!"
+          },
+          {
+            "q": "You open the door and walk through. What do you do next?",
+            "choices": [
+              "Close the door",
+              "Open the door again",
+              "Knock on the door"
+            ],
+            "answer": 0,
+            "explain": "After you walk through, you close the door behind you.",
+            "tip": "Open, walk, close: like a door sandwich."
+          }
+        ]
+      },
+      {
+        "name": "Patterns",
+        "questions": [
+          {
+            "q": "Red, blue, red, blue, red. What comes next?",
+            "choices": [
+              "Red",
+              "Green",
+              "Blue"
+            ],
+            "answer": 2,
+            "explain": "The colors take turns: red, then blue, over and over.",
+            "tip": "Say it like a song: red-blue, red-blue!"
+          },
+          {
+            "q": "Clap, stomp, clap, stomp, clap. What comes next?",
+            "choices": [
+              "Jump",
+              "Stomp",
+              "Clap"
+            ],
+            "answer": 1,
+            "explain": "Clap and stomp take turns, so stomp comes after clap.",
+            "tip": "Do it with your body: clap your hands, stomp your feet!"
+          },
+          {
+            "q": "Circle, square, circle, square. What comes next?",
+            "choices": [
+              "Circle",
+              "Square",
+              "Triangle"
+            ],
+            "answer": 0,
+            "explain": "The shapes take turns, and the last one was square, so circle is next.",
+            "tip": "Round, pointy, round, pointy: like a wheel then a box."
+          },
+          {
+            "q": "Cat, dog, dog, cat, dog, dog, cat. What comes next?",
+            "choices": [
+              "Cat",
+              "Fish",
+              "Dog"
+            ],
+            "answer": 2,
+            "explain": "The pattern is one cat, then two dogs. After cat comes dog.",
+            "tip": "Meow, woof, woof! Meow, woof, woof!"
+          },
+          {
+            "q": "Big, small, big, small. What comes next?",
+            "choices": [
+              "Tiny",
+              "Big",
+              "Small"
+            ],
+            "answer": 1,
+            "explain": "Big and small take turns, and small was last, so big is next.",
+            "tip": "Say it loud then soft: BIG, small, BIG, small!"
+          },
+          {
+            "q": "Sun, moon, sun, moon. What comes next?",
+            "choices": [
+              "Sun",
+              "Moon",
+              "Star"
+            ],
+            "answer": 0,
+            "explain": "Sun and moon take turns, just like day and night.",
+            "tip": "Day, night, day, night: the sky has a pattern too!"
+          },
+          {
+            "q": "Apple, banana, apple, banana, apple. What comes next?",
+            "choices": [
+              "Apple",
+              "Grape",
+              "Banana"
+            ],
+            "answer": 2,
+            "explain": "Apple and banana take turns, so banana comes after apple.",
+            "tip": "Crunch, peel, crunch, peel!"
+          }
+        ]
+      },
+      {
+        "name": "Up, Down, Left, Right",
+        "questions": [
+          {
+            "q": "A ball rolls off the table. Which way does it fall?",
+            "choices": [
+              "Down",
+              "Up"
+            ],
+            "answer": 0,
+            "explain": "Things fall down to the floor.",
+            "tip": "What goes up must come down, and balls love the floor!"
+          },
+          {
+            "q": "Up is the opposite of what?",
+            "choices": [
+              "Down",
+              "Left",
+              "Big"
+            ],
+            "answer": 0,
+            "explain": "Up and down are opposites.",
+            "tip": "Point to the sky for up and to your toes for down."
+          },
+          {
+            "q": "Left is the opposite of what?",
+            "choices": [
+              "Up",
+              "Down",
+              "Right"
+            ],
+            "answer": 2,
+            "explain": "Left and right are opposites.",
+            "tip": "Wave your left hand, then your right hand: two sides!"
+          },
+          {
+            "q": "A bird flies high into the sky. Is it going up or down?",
+            "choices": [
+              "Down",
+              "Up"
+            ],
+            "answer": 1,
+            "explain": "The sky is up above us.",
+            "tip": "Birds go up, up, up to say hi to the clouds."
+          },
+          {
+            "q": "You climb the ladder and then go down the slide. Which way do you slide?",
+            "choices": [
+              "Down",
+              "Up"
+            ],
+            "answer": 0,
+            "explain": "Slides take you down to the ground.",
+            "tip": "Wheee goes down!"
+          },
+          {
+            "q": "A robot steps right, then steps left. Where is it now?",
+            "choices": [
+              "Far to the right",
+              "Up in the air",
+              "Back where it started"
+            ],
+            "answer": 2,
+            "explain": "One step right and one step left cancel out.",
+            "tip": "Right then left is like a little dance back home."
+          },
+          {
+            "q": "A robot is facing a door. To get to the door, should it go forward or backward?",
+            "choices": [
+              "Forward",
+              "Backward"
+            ],
+            "answer": 0,
+            "explain": "Forward means the way you are facing.",
+            "tip": "Forward is where your nose points!"
+          }
+        ]
+      },
+      {
+        "name": "First, Then, Last",
+        "questions": [
+          {
+            "q": "To wash your hands: get them wet, use soap, then what?",
+            "choices": [
+              "Rinse and dry them",
+              "Eat lunch",
+              "Put on gloves"
+            ],
+            "answer": 0,
+            "explain": "After soap, you rinse it off and dry your hands.",
+            "tip": "Wet, soap, rinse, dry: bubbles say bye-bye!"
+          },
+          {
+            "q": "First you put on your coat. Then you zip it up. What did you do first?",
+            "choices": [
+              "Put on your coat",
+              "Zip it up"
+            ],
+            "answer": 0,
+            "explain": "The word first tells you: the coat goes on before the zip.",
+            "tip": "You cannot zip air: coat first!"
+          },
+          {
+            "q": "To build a tower, which block goes first?",
+            "choices": [
+              "The top block",
+              "The bottom block"
+            ],
+            "answer": 1,
+            "explain": "Towers are built from the bottom up.",
+            "tip": "Start at the floor and grow tall like a tree."
+          },
+          {
+            "q": "To read a book, what do you do first?",
+            "choices": [
+              "Open the book",
+              "Close the book",
+              "Put it on the shelf"
+            ],
+            "answer": 0,
+            "explain": "You must open a book before you can read it.",
+            "tip": "Open the cover like opening a door to a story."
+          },
+          {
+            "q": "Simon says: touch your nose, then touch your toes. What do you touch second?",
+            "choices": [
+              "Your nose",
+              "Your ears",
+              "Your toes"
+            ],
+            "answer": 2,
+            "explain": "Nose was first, then toes came second.",
+            "tip": "Nose, toes: it even rhymes!"
+          },
+          {
+            "q": "To draw a smiley face: draw a circle, add eyes, then add what?",
+            "choices": [
+              "Another circle",
+              "A smile",
+              "Wheels"
+            ],
+            "answer": 1,
+            "explain": "A smiley face needs a smile at the end.",
+            "tip": "Circle, eyes, smile: now it smiles back at you!"
+          },
+          {
+            "q": "A robot follows steps. What order does it use?",
+            "choices": [
+              "The order you give it",
+              "Any order it likes",
+              "Backward"
+            ],
+            "answer": 0,
+            "explain": "Robots and computers do steps in the exact order they are given.",
+            "tip": "Robots are great listeners: step one, step two, step three."
+          }
+        ]
+      }
+    ],
+    "k2": [
+      {
+        "name": "Algorithms Are Steps",
+        "questions": [
+          {
+            "q": "What is an algorithm?",
+            "choices": [
+              "A kind of animal",
+              "A loud noise",
+              "A list of steps to do a job"
+            ],
+            "answer": 2,
+            "explain": "An algorithm is a set of steps in order, like a recipe.",
+            "tip": "An algorithm is a recipe for a computer."
+          },
+          {
+            "q": "What is the first step to make toast?",
+            "choices": [
+              "Butter the toast",
+              "Put bread in the toaster",
+              "Eat the toast"
+            ],
+            "answer": 1,
+            "explain": "The bread must be toasted before you butter or eat it.",
+            "tip": "Bread in, pop up, butter, munch!"
+          },
+          {
+            "q": "How does a computer follow instructions?",
+            "choices": [
+              "Exactly as they are written",
+              "However it feels like",
+              "Only on Mondays"
+            ],
+            "answer": 0,
+            "explain": "Computers do exactly what the steps say, even if the steps are wrong.",
+            "tip": "A computer is like a very literal friend: it does just what you say."
+          },
+          {
+            "q": "Steps to brush teeth: put paste on the brush, brush your teeth, rinse. What is step 2?",
+            "choices": [
+              "Rinse",
+              "Put paste on the brush",
+              "Brush your teeth"
+            ],
+            "answer": 2,
+            "explain": "Brushing comes in the middle, after the paste and before rinsing.",
+            "tip": "Paste, brush, rinse: one, two, three, sparkly teeth!"
+          },
+          {
+            "q": "Why do steps for a computer need to be very clear?",
+            "choices": [
+              "Computers get bored",
+              "Computers cannot guess what you mean",
+              "Computers like long words"
+            ],
+            "answer": 1,
+            "explain": "A computer cannot fill in missing steps, so every step must be spelled out.",
+            "tip": "Give a computer a map with every turn, not just \"go to the park\"."
+          },
+          {
+            "q": "Lemonade: squeeze lemons, add water, add sugar, stir. What is the last step?",
+            "choices": [
+              "Stir",
+              "Squeeze lemons",
+              "Add water"
+            ],
+            "answer": 0,
+            "explain": "Stirring mixes everything together at the end.",
+            "tip": "Squeeze, pour, sweeten, swirl!"
+          },
+          {
+            "q": "Which is a good instruction for a robot?",
+            "choices": [
+              "Go somewhere nice",
+              "Do the thing",
+              "Move forward 2 steps"
+            ],
+            "answer": 2,
+            "explain": "Good instructions say exactly what to do and how much.",
+            "tip": "Robots need numbers, not nice ideas."
+          },
+          {
+            "q": "Planting: dig a hole, drop in a seed, cover it with dirt, water it. What comes after dropping in the seed?",
+            "choices": [
+              "Pick a flower",
+              "Cover it with dirt",
+              "Dig a hole"
+            ],
+            "answer": 1,
+            "explain": "The seed gets tucked in with dirt before you water it.",
+            "tip": "Tuck the seed in bed with a dirt blanket."
+          },
+          {
+            "q": "Who writes the instructions that computers follow?",
+            "choices": [
+              "People called programmers",
+              "The computer mouse",
+              "The clouds"
+            ],
+            "answer": 0,
+            "explain": "Programmers, also called coders, write the steps for computers.",
+            "tip": "Coders are the bosses who tell computers what to do."
+          },
+          {
+            "q": "A recipe is like an algorithm because...",
+            "choices": [
+              "it is always about cake",
+              "it has pictures",
+              "it lists steps in order"
+            ],
+            "answer": 2,
+            "explain": "Both a recipe and an algorithm are step-by-step instructions.",
+            "tip": "Cooks follow recipes; computers follow algorithms."
+          }
+        ]
+      },
+      {
+        "name": "Repeat It: Loops",
+        "questions": [
+          {
+            "q": "\"Repeat 3 times: clap.\" How many claps?",
+            "choices": [
+              "6",
+              "3",
+              "1"
+            ],
+            "answer": 1,
+            "explain": "Repeat 3 times means do it 3 times: clap, clap, clap.",
+            "tip": "Repeat is like an echo that counts."
+          },
+          {
+            "q": "\"Repeat 2 times: jump, then clap.\" How many jumps?",
+            "choices": [
+              "2",
+              "1",
+              "4"
+            ],
+            "answer": 0,
+            "explain": "Each time through you jump once, and you go through 2 times.",
+            "tip": "Jump-clap, jump-clap: two jumps in the dance."
+          },
+          {
+            "q": "\"Repeat 2 times: jump, then clap.\" How many moves in all?",
+            "choices": [
+              "2",
+              "3",
+              "4"
+            ],
+            "answer": 2,
+            "explain": "Jump, clap, jump, clap is 4 moves.",
+            "tip": "Two moves, done twice, makes four. 2 + 2 = 4!"
+          },
+          {
+            "q": "Instead of \"step, step, step, step,\" what is a shorter way to say it?",
+            "choices": [
+              "Step one time",
+              "Repeat 4 times: step",
+              "Repeat 2 times: step"
+            ],
+            "answer": 1,
+            "explain": "A loop says the step once and how many times to do it.",
+            "tip": "Loops are lazy in a smart way: say it once, do it lots."
+          },
+          {
+            "q": "What is a loop in coding?",
+            "choices": [
+              "Doing the same steps again and again",
+              "Stopping forever",
+              "A kind of snack"
+            ],
+            "answer": 0,
+            "explain": "A loop repeats steps, so you do not have to write them over and over.",
+            "tip": "A loop goes round and round like a merry-go-round."
+          },
+          {
+            "q": "\"Repeat 5 times: stomp.\" You stomped 3 times. How many more stomps?",
+            "choices": [
+              "3",
+              "5",
+              "2"
+            ],
+            "answer": 2,
+            "explain": "5 minus 3 is 2 more stomps.",
+            "tip": "Count up from 3 on your fingers: 4, 5. Two more!"
+          },
+          {
+            "q": "A robot draws a square: \"Repeat 4 times: move, turn.\" Why 4?",
+            "choices": [
+              "4 is the biggest number",
+              "A square has 4 sides",
+              "A square has 3 sides"
+            ],
+            "answer": 1,
+            "explain": "Each move draws one side, and a square has 4 sides.",
+            "tip": "Four sides, four corners, four repeats."
+          },
+          {
+            "q": "\"Repeat 3 times: hop.\" Then \"clap one time.\" How many hops?",
+            "choices": [
+              "3",
+              "1",
+              "4"
+            ],
+            "answer": 0,
+            "explain": "Only the hop is inside the repeat, so you hop 3 times and clap once.",
+            "tip": "Only what is inside the loop goes round and round."
+          },
+          {
+            "q": "Why do coders use loops?",
+            "choices": [
+              "To make the computer sleep",
+              "To delete things",
+              "To save writing the same step many times"
+            ],
+            "answer": 2,
+            "explain": "Loops make programs shorter and easier to change.",
+            "tip": "Why write it ten times when you can loop it?"
+          }
+        ]
+      },
+      {
+        "name": "If This, Then That",
+        "questions": [
+          {
+            "q": "\"If it is raining, take an umbrella.\" It is raining. What do you do?",
+            "choices": [
+              "Stay in bed",
+              "Take an umbrella",
+              "Wear only sunglasses"
+            ],
+            "answer": 1,
+            "explain": "The if part is true, so you do the then part.",
+            "tip": "If it rains, umbrella reigns!"
+          },
+          {
+            "q": "\"If it is raining, take an umbrella.\" It is sunny. Do you take the umbrella?",
+            "choices": [
+              "No",
+              "Yes"
+            ],
+            "answer": 0,
+            "explain": "The if part is false, so you skip the then part.",
+            "tip": "No rain, no umbrella: the if says no."
+          },
+          {
+            "q": "\"If the light is red, stop.\" The light is red. What do you do?",
+            "choices": [
+              "Go fast",
+              "Turn around",
+              "Stop"
+            ],
+            "answer": 2,
+            "explain": "The light is red, so the rule says stop.",
+            "tip": "Red means stop, like a stop sign."
+          },
+          {
+            "q": "\"If you are cold, wear a jacket. If not, wear a T-shirt.\" You are warm. What do you wear?",
+            "choices": [
+              "Both",
+              "A T-shirt",
+              "A jacket"
+            ],
+            "answer": 1,
+            "explain": "You are not cold, so you follow the \"if not\" part.",
+            "tip": "If chooses a path: cold goes one way, warm goes the other."
+          },
+          {
+            "q": "\"If the dog is hungry, feed it.\" The dog just ate a big meal. Do you feed it?",
+            "choices": [
+              "Yes",
+              "No"
+            ],
+            "answer": 1,
+            "explain": "The dog is not hungry, so the if part is false.",
+            "tip": "Check the if first, like checking the dog bowl."
+          },
+          {
+            "q": "\"If the card shows 5, clap. If not, stomp.\" The card shows 3. What do you do?",
+            "choices": [
+              "Clap",
+              "Both",
+              "Stomp"
+            ],
+            "answer": 2,
+            "explain": "3 is not 5, so you stomp.",
+            "tip": "Not a match? Take the other path!"
+          },
+          {
+            "q": "A game says: \"If you touch the lava, you lose.\" What makes you lose?",
+            "choices": [
+              "Pressing start",
+              "Touching the lava",
+              "Jumping"
+            ],
+            "answer": 1,
+            "explain": "The if rule only cares about touching the lava.",
+            "tip": "The floor is lava: the if is watching your feet!"
+          },
+          {
+            "q": "Which one is an if-then rule?",
+            "choices": [
+              "If it is dark, turn on the light",
+              "The light is yellow",
+              "Lights are nice"
+            ],
+            "answer": 0,
+            "explain": "An if-then rule says what to do when something is true.",
+            "tip": "If-then rules start with \"if\" and tell you what to do."
+          },
+          {
+            "q": "An if rule makes the computer...",
+            "choices": [
+              "Turn off",
+              "Repeat forever",
+              "Choose what to do"
+            ],
+            "answer": 2,
+            "explain": "If rules let a program make choices.",
+            "tip": "If is a fork in the road: the computer picks a path."
+          }
+        ]
+      },
+      {
+        "name": "Fix the Bug",
+        "questions": [
+          {
+            "q": "What is a bug in a program?",
+            "choices": [
+              "A new computer",
+              "A mistake in the steps",
+              "A pet insect"
+            ],
+            "answer": 1,
+            "explain": "A bug is an error that makes a program do the wrong thing.",
+            "tip": "In 1947 a real moth got stuck in a computer, and the team taped it in their notebook as an actual bug!"
+          },
+          {
+            "q": "Steps: put on shoes, then put on socks. What is wrong?",
+            "choices": [
+              "Socks should go on before shoes",
+              "Nothing is wrong",
+              "You do not need shoes"
+            ],
+            "answer": 0,
+            "explain": "The steps are in the wrong order.",
+            "tip": "Socks on top of shoes would look silly!"
+          },
+          {
+            "q": "Finding and fixing mistakes in code is called...",
+            "choices": [
+              "Dancing",
+              "Drawing",
+              "Debugging"
+            ],
+            "answer": 2,
+            "explain": "De-bugging means taking the bugs out.",
+            "tip": "De-bug: shoo the bug out of your code!"
+          },
+          {
+            "q": "Steps: eat cereal, pour milk, get a bowl. Which step should be first?",
+            "choices": [
+              "Pour milk",
+              "Get a bowl",
+              "Eat cereal"
+            ],
+            "answer": 1,
+            "explain": "You need a bowl before you can pour or eat.",
+            "tip": "No bowl means cereal on the table!"
+          },
+          {
+            "q": "A robot needs to move 3 steps to the cookie, but the code says \"move 2.\" How do you fix it?",
+            "choices": [
+              "Change it to \"move 3\"",
+              "Change it to \"move 1\"",
+              "Turn off the robot"
+            ],
+            "answer": 0,
+            "explain": "The number was wrong, so you change it to the right number.",
+            "tip": "Count the squares, then fix the number."
+          },
+          {
+            "q": "Steps for a letter: mail it, write it, put it in an envelope. Which step should be last?",
+            "choices": [
+              "Write it",
+              "Put it in an envelope",
+              "Mail it"
+            ],
+            "answer": 2,
+            "explain": "Write it, put it in the envelope, then mail it.",
+            "tip": "You cannot mail a letter you have not written yet!"
+          },
+          {
+            "q": "Your robot turned left, but it should turn right. What should you do?",
+            "choices": [
+              "Start a new game",
+              "Change \"left\" to \"right\" in the steps",
+              "Yell at the robot"
+            ],
+            "answer": 1,
+            "explain": "The robot did what the steps said, so you fix the step.",
+            "tip": "Fix the steps, not the robot."
+          },
+          {
+            "q": "Your code has a bug. What is a good first thing to do?",
+            "choices": [
+              "Go through the steps one at a time",
+              "Give up",
+              "Throw away the computer"
+            ],
+            "answer": 0,
+            "explain": "Checking each step helps you find where it goes wrong.",
+            "tip": "Be a detective: check each clue one by one."
+          },
+          {
+            "q": "Snowman steps: put on the head, then roll the body. What is the bug?",
+            "choices": [
+              "Snowmen do not have heads",
+              "There is no bug",
+              "The body should come before the head"
+            ],
+            "answer": 2,
+            "explain": "The head needs a body to sit on, so the order is wrong.",
+            "tip": "Build from the bottom up, like a snowman sandwich."
+          }
+        ]
+      },
+      {
+        "name": "Computer Parts and Staying Safe",
+        "questions": [
+          {
+            "q": "What do you use to type letters?",
+            "choices": [
+              "A speaker",
+              "A keyboard",
+              "A mouse"
+            ],
+            "answer": 1,
+            "explain": "A keyboard has keys with letters and numbers.",
+            "tip": "Keyboard has keys, like a piano for words."
+          },
+          {
+            "q": "Which part shows pictures and words?",
+            "choices": [
+              "The screen",
+              "The keyboard",
+              "The mouse"
+            ],
+            "answer": 0,
+            "explain": "The screen, or monitor, shows what the computer is doing.",
+            "tip": "The screen is the computer's face."
+          },
+          {
+            "q": "What do you move and click to point at things?",
+            "choices": [
+              "A printer",
+              "A speaker",
+              "A mouse"
+            ],
+            "answer": 2,
+            "explain": "A mouse moves the pointer on the screen.",
+            "tip": "A computer mouse has a long cord tail, like a real mouse."
+          },
+          {
+            "q": "Which part lets you hear sounds?",
+            "choices": [
+              "The screen",
+              "Speakers",
+              "The keyboard"
+            ],
+            "answer": 1,
+            "explain": "Speakers play music and sounds.",
+            "tip": "Speakers speak!"
+          },
+          {
+            "q": "What makes paper copies of your work?",
+            "choices": [
+              "A printer",
+              "A mouse",
+              "A microphone"
+            ],
+            "answer": 0,
+            "explain": "A printer puts words and pictures on paper.",
+            "tip": "A printer prints on paper."
+          },
+          {
+            "q": "Someone you do not know asks online where you live. What should you do?",
+            "choices": [
+              "Tell them",
+              "Send a picture of your house",
+              "Not tell, and tell a grown-up"
+            ],
+            "answer": 2,
+            "explain": "Never share where you live online. A grown-up can help.",
+            "tip": "Your address stays at home, not on the internet."
+          },
+          {
+            "q": "Should you share your password with your friends?",
+            "choices": [
+              "Yes, with everyone",
+              "No, only with a parent or trusted grown-up"
+            ],
+            "answer": 1,
+            "explain": "Passwords keep your stuff safe, so keep them private.",
+            "tip": "A password is like a toothbrush: do not share it!"
+          },
+          {
+            "q": "A pop-up says \"You won a prize! Click here!\" What should you do?",
+            "choices": [
+              "Ask a grown-up first",
+              "Click it fast",
+              "Type your name"
+            ],
+            "answer": 0,
+            "explain": "Prize pop-ups are often tricks. Ask a grown-up.",
+            "tip": "If it sounds too good to be true, it is a trick."
+          },
+          {
+            "q": "Something online makes you feel scared or upset. What should you do?",
+            "choices": [
+              "Keep it a secret",
+              "Show it to little kids",
+              "Tell a trusted grown-up"
+            ],
+            "answer": 2,
+            "explain": "A trusted grown-up can help you, and you will not be in trouble.",
+            "tip": "Uh-oh feeling? Tell a grown-up."
+          },
+          {
+            "q": "Is it okay to say mean things to people online?",
+            "choices": [
+              "No, be kind online too",
+              "Yes, it does not matter"
+            ],
+            "answer": 0,
+            "explain": "Real people read what you write, so be kind.",
+            "tip": "Type like the person is right next to you."
+          }
+        ]
+      }
+    ],
+    "g35": [
+      {
+        "name": "Block Coding and Events",
+        "questions": [
+          {
+            "q": "In Scratch, a script under \"when green flag clicked\" starts when...",
+            "choices": [
+              "the green flag is clicked",
+              "the computer turns off",
+              "the sprite is deleted"
+            ],
+            "answer": 0,
+            "explain": "The green flag is the go button for Scratch projects.",
+            "tip": "Green means go, just like a traffic light."
+          },
+          {
+            "q": "In Scratch, what is a sprite?",
+            "choices": [
+              "A sound file",
+              "The background picture",
+              "A character or object that can move and act"
+            ],
+            "answer": 2,
+            "explain": "Sprites are the characters, like the Scratch cat.",
+            "tip": "Sprites are the actors; the stage is where they perform."
+          },
+          {
+            "q": "What is an event in programming?",
+            "choices": [
+              "A kind of number",
+              "Something that happens, like a click or key press, that starts code",
+              "A loop that never ends"
+            ],
+            "answer": 1,
+            "explain": "Events trigger code to run.",
+            "tip": "An event is a doorbell: when it rings, the code answers."
+          },
+          {
+            "q": "\"move 10 steps\" runs, then \"move 10 steps\" runs again. How far did the sprite move?",
+            "choices": [
+              "20 steps",
+              "10 steps",
+              "100 steps"
+            ],
+            "answer": 0,
+            "explain": "10 plus 10 is 20 steps.",
+            "tip": "Steps add up, like walking down a hallway."
+          },
+          {
+            "q": "Which block makes a sprite show a speech bubble?",
+            "choices": [
+              "move 10 steps",
+              "turn 15 degrees",
+              "say Hello!"
+            ],
+            "answer": 2,
+            "explain": "The say block shows words in a speech bubble.",
+            "tip": "Say blocks make sprites talk, like a comic strip."
+          },
+          {
+            "q": "\"when space key pressed\" is an example of what?",
+            "choices": [
+              "A bug",
+              "An event",
+              "A variable"
+            ],
+            "answer": 1,
+            "explain": "It waits for something to happen, then runs code.",
+            "tip": "Hat-shaped blocks sit on top and wait for something to happen."
+          },
+          {
+            "q": "In Scratch, the picture behind the sprites on the stage is called a...",
+            "choices": [
+              "Backdrop",
+              "Sprite",
+              "Costume"
+            ],
+            "answer": 0,
+            "explain": "The stage uses backdrops; sprites use costumes.",
+            "tip": "Backdrop is the back of the stage, like scenery in a play."
+          },
+          {
+            "q": "Switching a sprite between costumes quickly can make it look like it is...",
+            "choices": [
+              "Deleted",
+              "Muted",
+              "Walking or moving"
+            ],
+            "answer": 2,
+            "explain": "Fast costume changes make animation, like a flip book.",
+            "tip": "Costume switching is a flip book for sprites."
+          },
+          {
+            "q": "In Scratch, x tells a sprite's left-right position. What does y tell?",
+            "choices": [
+              "Color",
+              "Up-down position",
+              "Size"
+            ],
+            "answer": 1,
+            "explain": "x is left-right and y is up-down.",
+            "tip": "Y goes to the sky!"
+          },
+          {
+            "q": "Why do block languages snap blocks together?",
+            "choices": [
+              "Blocks only fit where they make sense, so there are fewer typing mistakes",
+              "Blocks make the computer faster",
+              "Blocks are heavier"
+            ],
+            "answer": 0,
+            "explain": "Snapping blocks avoids spelling and typing mistakes.",
+            "tip": "Like puzzle pieces, blocks only fit the right way."
+          }
+        ]
+      },
+      {
+        "name": "Loops and Conditionals",
+        "questions": [
+          {
+            "q": "\"repeat 4: move 50 steps, turn 90 degrees\" draws what shape?",
+            "choices": [
+              "A triangle",
+              "A circle",
+              "A square"
+            ],
+            "answer": 2,
+            "explain": "Four equal sides with four 90 degree turns make a square.",
+            "tip": "Four sides, four corners, four repeats: square!"
+          },
+          {
+            "q": "To draw a triangle with \"repeat 3: move, turn\", how many degrees should the sprite turn each time?",
+            "choices": [
+              "90",
+              "120",
+              "60"
+            ],
+            "answer": 1,
+            "explain": "The turns must add up to a full circle: 360 divided by 3 is 120.",
+            "tip": "Any closed shape turns a full 360 in total, so divide 360 by the number of sides."
+          },
+          {
+            "q": "What does a \"forever\" block do?",
+            "choices": [
+              "Repeats the blocks inside until the program stops",
+              "Runs them one time",
+              "Never runs them"
+            ],
+            "answer": 0,
+            "explain": "Forever keeps looping until you click the stop sign.",
+            "tip": "Forever is a hamster wheel that never stops on its own."
+          },
+          {
+            "q": "\"repeat 3: (repeat 2: clap)\". How many claps?",
+            "choices": [
+              "5",
+              "3",
+              "6"
+            ],
+            "answer": 2,
+            "explain": "The inside loop claps 2 times, and that happens 3 times: 3 x 2 = 6.",
+            "tip": "Loops inside loops multiply."
+          },
+          {
+            "q": "\"if touching edge then turn around\". When does the sprite turn around?",
+            "choices": [
+              "Never",
+              "Only when it touches the edge",
+              "All the time"
+            ],
+            "answer": 1,
+            "explain": "The if block only runs its inside blocks when the condition is true.",
+            "tip": "If is a guard that only opens the gate when the rule is true."
+          },
+          {
+            "q": "An if-else block picks between how many paths?",
+            "choices": [
+              "2",
+              "1",
+              "3"
+            ],
+            "answer": 0,
+            "explain": "If the condition is true it takes one path, otherwise the else path.",
+            "tip": "If-else is a fork in the road with two ways to go."
+          },
+          {
+            "q": "\"if score > 10 then say You win! else say Keep going\". The score is 10. What does it say?",
+            "choices": [
+              "You win!",
+              "Keep going"
+            ],
+            "answer": 1,
+            "explain": "10 is not greater than 10, so the else part runs.",
+            "tip": "Greater than means bigger, and 10 is not bigger than itself."
+          },
+          {
+            "q": "Which task needs a loop?",
+            "choices": [
+              "Changing color once",
+              "Making a ball bounce over and over",
+              "Saying hello one time"
+            ],
+            "answer": 1,
+            "explain": "Over and over is the job of a loop.",
+            "tip": "If you hear \"over and over,\" think loop."
+          },
+          {
+            "q": "\"repeat until touching edge: move 5 steps\". When does it stop?",
+            "choices": [
+              "When it touches the edge",
+              "After 5 steps",
+              "Never"
+            ],
+            "answer": 0,
+            "explain": "Repeat until keeps going until the condition becomes true.",
+            "tip": "Repeat until is like \"keep walking until you reach the wall.\""
+          },
+          {
+            "q": "In \"if raining and cold\", what does \"and\" mean?",
+            "choices": [
+              "Only one must be true",
+              "Neither is true",
+              "Both must be true"
+            ],
+            "answer": 2,
+            "explain": "And needs every part to be true.",
+            "tip": "AND is picky: it wants both. OR is easygoing: one is enough."
+          }
+        ]
+      },
+      {
+        "name": "Variables Are Boxes",
+        "questions": [
+          {
+            "q": "A variable is like...",
+            "choices": [
+              "A broken computer",
+              "A labeled box that holds a value",
+              "A sprite costume"
+            ],
+            "answer": 1,
+            "explain": "A variable has a name and stores a value you can change.",
+            "tip": "A variable is a labeled box you can put things in."
+          },
+          {
+            "q": "score starts at 0. \"change score by 1\" runs 3 times. What is score?",
+            "choices": [
+              "3",
+              "1",
+              "0"
+            ],
+            "answer": 0,
+            "explain": "0 + 1 + 1 + 1 = 3.",
+            "tip": "Each change adds a marble to the box."
+          },
+          {
+            "q": "\"set lives to 3\", then \"change lives by -1\". What is lives?",
+            "choices": [
+              "4",
+              "3",
+              "2"
+            ],
+            "answer": 2,
+            "explain": "Changing by -1 takes one away: 3 - 1 = 2.",
+            "tip": "Minus one is like losing a heart in a video game."
+          },
+          {
+            "q": "Why give a variable a good name like \"score\"?",
+            "choices": [
+              "Because computers need long names",
+              "So people know what it holds",
+              "So the code runs faster"
+            ],
+            "answer": 1,
+            "explain": "Clear names make code easier to read and fix.",
+            "tip": "Label your boxes when you move house, and label your variables too."
+          },
+          {
+            "q": "\"set x to 5\", then \"set x to 8\". What is x now?",
+            "choices": [
+              "8",
+              "5",
+              "13"
+            ],
+            "answer": 0,
+            "explain": "Set replaces the old value, so x is 8.",
+            "tip": "Set empties the box and puts in something new."
+          },
+          {
+            "q": "Can a variable's value change while a program runs?",
+            "choices": [
+              "Yes, that is why it is called a variable",
+              "No, never"
+            ],
+            "answer": 0,
+            "explain": "Variable means \"able to vary,\" or change.",
+            "tip": "Variable sounds like \"vary-able\": able to change."
+          },
+          {
+            "q": "\"set apples to 4\", \"change apples by 2\", \"change apples by 2\". What is apples?",
+            "choices": [
+              "4",
+              "8",
+              "6"
+            ],
+            "answer": 1,
+            "explain": "4 + 2 + 2 = 8.",
+            "tip": "Change adds to the box; it does not empty it."
+          },
+          {
+            "q": "\"set a to 3\", then \"set b to a + 2\". What is b?",
+            "choices": [
+              "5",
+              "3",
+              "32"
+            ],
+            "answer": 0,
+            "explain": "a holds 3, so a + 2 is 5.",
+            "tip": "Peek in box a, add 2, put the answer in box b."
+          },
+          {
+            "q": "Which is the best variable for a game timer?",
+            "choices": [
+              "thing",
+              "x7q",
+              "timeLeft"
+            ],
+            "answer": 2,
+            "explain": "A good name tells you what the value means.",
+            "tip": "Good names are like name tags at a party."
+          }
+        ]
+      },
+      {
+        "name": "Binary Numbers",
+        "questions": [
+          {
+            "q": "Binary numbers use which digits?",
+            "choices": [
+              "1 and 2",
+              "0 and 1",
+              "0 through 9"
+            ],
+            "answer": 1,
+            "explain": "Binary has only two digits: 0 and 1.",
+            "tip": "Bi means two, like a bicycle has two wheels."
+          },
+          {
+            "q": "Why do computers use binary?",
+            "choices": [
+              "Their tiny switches are either off (0) or on (1)",
+              "Computers can only count to 2",
+              "Binary uses fewer pages"
+            ],
+            "answer": 0,
+            "explain": "Computer chips are made of millions of tiny on/off switches.",
+            "tip": "Think of a light switch: off is 0, on is 1."
+          },
+          {
+            "q": "What number is binary 10?",
+            "choices": [
+              "10",
+              "1",
+              "2"
+            ],
+            "answer": 2,
+            "explain": "In binary the places are worth 1, 2, 4, 8. So 10 means one 2 and no 1s.",
+            "tip": "Binary 10 is \"two\", not \"ten\": there are 10 kinds of people, those who get it and those who do not!"
+          },
+          {
+            "q": "What number is binary 11?",
+            "choices": [
+              "2",
+              "3",
+              "11"
+            ],
+            "answer": 1,
+            "explain": "One 2 plus one 1 is 3.",
+            "tip": "Places from the right are 1, 2, 4, 8: doubling like a growing snack pile."
+          },
+          {
+            "q": "What number is binary 101?",
+            "choices": [
+              "5",
+              "101",
+              "3"
+            ],
+            "answer": 0,
+            "explain": "One 4, no 2, one 1: 4 + 1 = 5.",
+            "tip": "Read places right to left: 1, 2, 4. Add the ones that are on."
+          },
+          {
+            "q": "How do you write 4 in binary?",
+            "choices": [
+              "4",
+              "11",
+              "100"
+            ],
+            "answer": 2,
+            "explain": "4 is one 4, no 2, no 1: 100.",
+            "tip": "Every power of two in binary is a 1 followed by zeros."
+          },
+          {
+            "q": "A single 0 or 1 is called a...",
+            "choices": [
+              "Pixel",
+              "Bit",
+              "Byte"
+            ],
+            "answer": 1,
+            "explain": "Bit is short for binary digit.",
+            "tip": "A bit is a tiny bit of information."
+          },
+          {
+            "q": "How many bits are in a byte?",
+            "choices": [
+              "8",
+              "2",
+              "10"
+            ],
+            "answer": 0,
+            "explain": "One byte is a group of 8 bits.",
+            "tip": "A byte is a big bite: 8 bits in one mouthful."
+          },
+          {
+            "q": "Binary places from the right are worth 1, 2, 4, 8. What number is binary 1000?",
+            "choices": [
+              "1000",
+              "4",
+              "8"
+            ],
+            "answer": 2,
+            "explain": "Only the 8s place is on, so it is 8.",
+            "tip": "The 1 sits in the 8 seat."
+          }
+        ]
+      },
+      {
+        "name": "Internet Safety and Passwords",
+        "questions": [
+          {
+            "q": "Which password is the strongest?",
+            "choices": [
+              "12345",
+              "Purple!Tiger7Jumps",
+              "password"
+            ],
+            "answer": 1,
+            "explain": "Long passwords with a mix of words, numbers and symbols are hard to guess.",
+            "tip": "Make a silly sentence password: long and weird is strong."
+          },
+          {
+            "q": "Who should you share your password with?",
+            "choices": [
+              "Only a parent or trusted grown-up",
+              "Your best friend",
+              "Anyone who asks nicely"
+            ],
+            "answer": 0,
+            "explain": "Even friends could accidentally share it. Keep it with trusted adults.",
+            "tip": "Passwords are like toothbrushes: do not share them."
+          },
+          {
+            "q": "Which is private information you should not share online?",
+            "choices": [
+              "Your favorite animal",
+              "Your favorite game",
+              "Your home address"
+            ],
+            "answer": 2,
+            "explain": "Your address shows where you live, so keep it private.",
+            "tip": "Where you live stays off the web."
+          },
+          {
+            "q": "A message says your game account is locked and asks for your password. What is it most likely?",
+            "choices": [
+              "A note from your teacher",
+              "A trick to steal your password",
+              "A nice surprise"
+            ],
+            "answer": 1,
+            "explain": "Real companies do not ask for your password in a message.",
+            "tip": "Anyone asking for your password is fishing for it."
+          },
+          {
+            "q": "Before downloading a new game or app, you should...",
+            "choices": [
+              "Ask a grown-up",
+              "Download anything that is free",
+              "Turn off the computer"
+            ],
+            "answer": 0,
+            "explain": "Some downloads have viruses or hidden costs.",
+            "tip": "Ask before you click download."
+          },
+          {
+            "q": "Is everything you read online true?",
+            "choices": [
+              "No, check with trusted sources",
+              "Yes, always"
+            ],
+            "answer": 0,
+            "explain": "Anyone can post online, so check facts.",
+            "tip": "Be a fact detective: check two good sources."
+          },
+          {
+            "q": "Someone online is being mean to you. What should you do?",
+            "choices": [
+              "Keep it secret",
+              "Do not reply, save it, and tell a trusted adult",
+              "Be mean back"
+            ],
+            "answer": 1,
+            "explain": "Telling an adult gets you help; replying can make it worse.",
+            "tip": "Stop, save, tell."
+          },
+          {
+            "q": "Why should you log out on a shared computer?",
+            "choices": [
+              "So others cannot use your account",
+              "To save electricity",
+              "To make it faster"
+            ],
+            "answer": 0,
+            "explain": "If you stay logged in, the next person could use your account.",
+            "tip": "Logging out is locking the door behind you."
+          },
+          {
+            "q": "Why is using the same password everywhere risky?",
+            "choices": [
+              "Passwords wear out",
+              "It makes typing slow",
+              "If one is stolen, all your accounts can be opened"
+            ],
+            "answer": 2,
+            "explain": "One leaked password would unlock everything.",
+            "tip": "One key for every door means one lost key opens them all."
+          },
+          {
+            "q": "A longer password is usually...",
+            "choices": [
+              "Harder to guess",
+              "Easier to guess"
+            ],
+            "answer": 0,
+            "explain": "Each extra character makes many more possible passwords.",
+            "tip": "Longer is stronger."
+          }
+        ]
+      }
+    ],
+    "g68": [
+      {
+        "name": "Python Basics",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "print(\"Hello, \" + \"world\")",
+            "choices": [
+              "Hello, world",
+              "Hello,world",
+              "Hello, + world"
+            ],
+            "answer": 0,
+            "explain": "The + joins the two strings exactly, including the space after the comma.",
+            "tip": "+ on strings is glue: it sticks them together exactly as they are."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 5\ny = 3\nprint(x + y)",
+            "choices": [
+              "53",
+              "x + y",
+              "8"
+            ],
+            "answer": 2,
+            "explain": "x and y are numbers, so + adds them.",
+            "tip": "Numbers add, strings stick."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(\"5\" + \"3\")",
+            "choices": [
+              "An error",
+              "53",
+              "8"
+            ],
+            "answer": 1,
+            "explain": "The quotes make them strings, so + joins them instead of adding.",
+            "tip": "Quotes turn numbers into words, and words just stick together."
+          },
+          {
+            "q": "What does this print?",
+            "code": "name = \"Sam\"\nprint(len(name))",
+            "choices": [
+              "3",
+              "4",
+              "Sam"
+            ],
+            "answer": 0,
+            "explain": "len counts characters: S, a, m.",
+            "tip": "len is short for length: count the letters."
+          },
+          {
+            "q": "What does this print?",
+            "code": "word = \"python\"\nprint(word[0])",
+            "choices": [
+              "y",
+              "n",
+              "p"
+            ],
+            "answer": 2,
+            "explain": "Python starts counting at 0, so index 0 is the first letter.",
+            "tip": "Python counts from zero, like floors in a European building."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(\"ha\" * 3)",
+            "choices": [
+              "An error",
+              "hahaha",
+              "ha3"
+            ],
+            "answer": 1,
+            "explain": "Multiplying a string by 3 repeats it 3 times.",
+            "tip": "String times 3 is a string photocopier."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 10\nx = x + 5\nprint(x)",
+            "choices": [
+              "15",
+              "10",
+              "5"
+            ],
+            "answer": 0,
+            "explain": "x starts at 10, then becomes 10 + 5.",
+            "tip": "The right side is worked out first, then stored in the box on the left."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(7 // 2)",
+            "choices": [
+              "3.5",
+              "4",
+              "3"
+            ],
+            "answer": 2,
+            "explain": "// is floor division: it divides and drops the remainder.",
+            "tip": "Two slashes chop off the leftovers."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(7 % 3)",
+            "choices": [
+              "2.33",
+              "1",
+              "2"
+            ],
+            "answer": 1,
+            "explain": "% gives the remainder: 7 divided by 3 is 2 remainder 1.",
+            "tip": "% is the leftovers after sharing cookies equally."
+          },
+          {
+            "q": "What does this print?",
+            "code": "s = \"Code\"\nprint(s.upper())",
+            "choices": [
+              "CODE",
+              "code",
+              "Code"
+            ],
+            "answer": 0,
+            "explain": ".upper() returns the string in capital letters.",
+            "tip": "upper means UPPERCASE: the letters stand up tall."
+          },
+          {
+            "q": "Which symbol starts a comment in Python?",
+            "choices": [
+              "//",
+              "<!--",
+              "#"
+            ],
+            "answer": 2,
+            "explain": "Python ignores everything after # on a line.",
+            "tip": "The # is a hashtag note to humans that Python ignores."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(2 ** 3)",
+            "choices": [
+              "9",
+              "8",
+              "6"
+            ],
+            "answer": 1,
+            "explain": "** is power: 2 x 2 x 2 = 8.",
+            "tip": "Two stars make it power up."
+          }
+        ]
+      },
+      {
+        "name": "If, Elif and Else",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "age = 12\nif age >= 13:\n    print(\"teen\")\nelse:\n    print(\"kid\")",
+            "choices": [
+              "kid",
+              "teen",
+              "Nothing"
+            ],
+            "answer": 0,
+            "explain": "12 is not 13 or more, so the else part runs.",
+            "tip": "Else is the \"otherwise\" door."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 7\nif x % 2 == 0:\n    print(\"even\")\nelse:\n    print(\"odd\")",
+            "choices": [
+              "even",
+              "1",
+              "odd"
+            ],
+            "answer": 2,
+            "explain": "7 % 2 is 1, not 0, so 7 is odd.",
+            "tip": "Even numbers share evenly by 2 with nothing left over."
+          },
+          {
+            "q": "Which operator checks if two values are equal in Python?",
+            "choices": [
+              "!=",
+              "==",
+              "="
+            ],
+            "answer": 1,
+            "explain": "= stores a value; == compares two values.",
+            "tip": "One = puts in the box; two == asks \"are these the same?\""
+          },
+          {
+            "q": "What does this print?",
+            "code": "temp = 75\nif temp > 80:\n    print(\"hot\")\nelif temp > 60:\n    print(\"nice\")\nelse:\n    print(\"cold\")",
+            "choices": [
+              "nice",
+              "hot",
+              "cold"
+            ],
+            "answer": 0,
+            "explain": "75 is not over 80, but it is over 60, so elif runs.",
+            "tip": "Python checks top to bottom and stops at the first true one."
+          },
+          {
+            "q": "What does this print?",
+            "code": "a = 5\nb = 5\nprint(a != b)",
+            "choices": [
+              "True",
+              "5",
+              "False"
+            ],
+            "answer": 2,
+            "explain": "!= means \"not equal\". a and b are both 5, so they are equal.",
+            "tip": "The ! in != is a \"NOT\" sign: not-equal."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 3\nif x > 1 and x < 5:\n    print(\"yes\")\nelse:\n    print(\"no\")",
+            "choices": [
+              "An error",
+              "yes",
+              "no"
+            ],
+            "answer": 1,
+            "explain": "3 is greater than 1 and less than 5, so both sides are true.",
+            "tip": "and needs both to be true, like needing both shoes to go outside."
+          },
+          {
+            "q": "Why are the lines under an if indented in Python?",
+            "choices": [
+              "The indent shows which lines belong to the if",
+              "It is just for looks and Python ignores it",
+              "To make the file smaller"
+            ],
+            "answer": 0,
+            "explain": "Python uses indentation to group code into blocks.",
+            "tip": "Indented lines are tucked inside the if, like items in a drawer."
+          },
+          {
+            "q": "What does this print?",
+            "code": "score = 90\nif score >= 90:\n    print(\"A\")\nif score >= 80:\n    print(\"B\")",
+            "choices": [
+              "A only",
+              "B only",
+              "A, then B on the next line"
+            ],
+            "answer": 2,
+            "explain": "These are two separate ifs, not if/elif, so both are checked and both are true.",
+            "tip": "Separate ifs are separate questions; elif only asks if the first answer was no."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(10 > 3 or 2 > 5)",
+            "choices": [
+              "An error",
+              "True",
+              "False"
+            ],
+            "answer": 1,
+            "explain": "or needs only one side to be true, and 10 > 3 is true.",
+            "tip": "or is easygoing: one yes is enough."
+          }
+        ]
+      },
+      {
+        "name": "Loops and Lists",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "for i in range(3):\n    print(i)",
+            "choices": [
+              "0, 1, 2 (each on its own line)",
+              "1, 2, 3 (each on its own line)",
+              "0, 1, 2, 3 (each on its own line)"
+            ],
+            "answer": 0,
+            "explain": "range(3) gives 0, 1, 2: it starts at 0 and stops before 3.",
+            "tip": "range stops before the finish line, like a runner who stops one step short."
+          },
+          {
+            "q": "What does this print?",
+            "code": "total = 0\nfor n in range(1, 5):\n    total += n\nprint(total)",
+            "choices": [
+              "15",
+              "4",
+              "10"
+            ],
+            "answer": 2,
+            "explain": "range(1, 5) is 1, 2, 3, 4 and they add to 10.",
+            "tip": "The end number of range is never included."
+          },
+          {
+            "q": "What does this print?",
+            "code": "count = 0\nwhile count < 3:\n    count += 1\nprint(count)",
+            "choices": [
+              "4",
+              "3",
+              "2"
+            ],
+            "answer": 1,
+            "explain": "count goes 1, 2, 3; when it is 3 the condition count < 3 is false and the loop stops.",
+            "tip": "A while loop is like \"keep eating while you are hungry.\""
+          },
+          {
+            "q": "What does this print?",
+            "code": "pets = [\"cat\", \"dog\", \"fish\"]\nprint(pets[1])",
+            "choices": [
+              "dog",
+              "cat",
+              "fish"
+            ],
+            "answer": 0,
+            "explain": "Lists start at index 0, so index 1 is the second item.",
+            "tip": "Python counts from zero, like floors in a European building: index 1 is one floor up."
+          },
+          {
+            "q": "What does this print?",
+            "code": "nums = [4, 8, 15]\nprint(len(nums))",
+            "choices": [
+              "15",
+              "27",
+              "3"
+            ],
+            "answer": 2,
+            "explain": "len counts the items in the list, not their values.",
+            "tip": "len counts the eggs, not how big they are."
+          },
+          {
+            "q": "What does this print?",
+            "code": "colors = [\"red\", \"blue\"]\ncolors.append(\"green\")\nprint(colors)",
+            "choices": [
+              "['red', 'blue']",
+              "['red', 'blue', 'green']",
+              "['green', 'red', 'blue']"
+            ],
+            "answer": 1,
+            "explain": "append adds an item to the end of the list.",
+            "tip": "Append means add to the end, like joining the back of a line."
+          },
+          {
+            "q": "What does this print?",
+            "code": "nums = [10, 20, 30]\nprint(nums[-1])",
+            "choices": [
+              "30",
+              "10",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "Negative indexes count from the end; -1 is the last item.",
+            "tip": "-1 is the caboose: the last car of the train."
+          },
+          {
+            "q": "What does this print?",
+            "code": "for letter in \"hi\":\n    print(letter)",
+            "choices": [
+              "hi",
+              "h i on one line",
+              "h, then i (each on its own line)"
+            ],
+            "answer": 2,
+            "explain": "A for loop over a string visits one letter at a time, and each print starts a new line.",
+            "tip": "A for loop is a tour bus that stops at every letter."
+          },
+          {
+            "q": "What happens with \"while True:\" and no break inside?",
+            "choices": [
+              "It never runs",
+              "It loops forever",
+              "It runs once"
+            ],
+            "answer": 1,
+            "explain": "The condition is always True, so nothing ever stops it.",
+            "tip": "while True is a song stuck on repeat."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 1\nwhile x < 20:\n    x = x * 2\nprint(x)",
+            "choices": [
+              "32",
+              "16",
+              "20"
+            ],
+            "answer": 0,
+            "explain": "x goes 1, 2, 4, 8, 16, 32. At 32 the condition x < 20 is false.",
+            "tip": "The check happens before each lap, so x can jump past 20."
+          },
+          {
+            "q": "What does this print?",
+            "code": "nums = [3, 1, 2]\nnums.sort()\nprint(nums)",
+            "choices": [
+              "[3, 1, 2]",
+              "[3, 2, 1]",
+              "[1, 2, 3]"
+            ],
+            "answer": 2,
+            "explain": "sort() puts the list in order, smallest first.",
+            "tip": "sort lines things up shortest to tallest, like a class photo."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(list(range(2, 10, 3)))",
+            "choices": [
+              "[2, 3, 4]",
+              "[2, 5, 8]",
+              "[2, 5, 8, 11]"
+            ],
+            "answer": 1,
+            "explain": "range(2, 10, 3) starts at 2 and counts by 3, stopping before 10.",
+            "tip": "range(start, stop, step): hop like a frog by the step size."
+          }
+        ]
+      },
+      {
+        "name": "Binary and Hexadecimal",
+        "questions": [
+          {
+            "q": "What is binary 1010 in decimal?",
+            "choices": [
+              "10",
+              "1010",
+              "5"
+            ],
+            "answer": 0,
+            "explain": "8 + 2 = 10.",
+            "tip": "Place values 8, 4, 2, 1: add up the places that have a 1."
+          },
+          {
+            "q": "What is 13 written in binary?",
+            "choices": [
+              "1011",
+              "1111",
+              "1101"
+            ],
+            "answer": 2,
+            "explain": "13 = 8 + 4 + 1, so 1101.",
+            "tip": "Grab the biggest power of two that fits, then repeat with what is left."
+          },
+          {
+            "q": "What is binary 11111111 in decimal?",
+            "choices": [
+              "128",
+              "255",
+              "256"
+            ],
+            "answer": 1,
+            "explain": "128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 = 255.",
+            "tip": "All 1s is always one less than the next power of two."
+          },
+          {
+            "q": "Hexadecimal uses which symbols?",
+            "choices": [
+              "0-9 and A-F",
+              "0 and 1",
+              "A-Z"
+            ],
+            "answer": 0,
+            "explain": "Hex has 16 digits: 0-9 then A-F for 10 to 15.",
+            "tip": "Hex means six, deci means ten: 6 + 10 = 16 digits."
+          },
+          {
+            "q": "What is hex A in decimal?",
+            "choices": [
+              "1",
+              "16",
+              "10"
+            ],
+            "answer": 2,
+            "explain": "After 9, hex uses A for 10.",
+            "tip": "A is the first letter, and it comes right after 9, so it is 10."
+          },
+          {
+            "q": "What is hex FF in decimal?",
+            "choices": [
+              "99",
+              "255",
+              "256"
+            ],
+            "answer": 1,
+            "explain": "F is 15: 15 x 16 + 15 = 255.",
+            "tip": "FF is the biggest two-digit hex number, just like 99 in decimal."
+          },
+          {
+            "q": "What is hex 1F in decimal?",
+            "choices": [
+              "31",
+              "25",
+              "16"
+            ],
+            "answer": 0,
+            "explain": "One 16 plus F (15) is 31.",
+            "tip": "The left digit counts 16s, the right digit counts 1s."
+          },
+          {
+            "q": "How many different values can one byte hold?",
+            "choices": [
+              "255",
+              "8",
+              "256"
+            ],
+            "answer": 2,
+            "explain": "8 bits give 2 x 2 x 2 x 2 x 2 x 2 x 2 x 2 = 256 values (0 to 255).",
+            "tip": "0 to 255 is 256 values, because you count 0 too."
+          },
+          {
+            "q": "The web color #FF0000 is which color?",
+            "choices": [
+              "Blue",
+              "Red",
+              "Green"
+            ],
+            "answer": 1,
+            "explain": "Web colors go red, green, blue. FF red with no green or blue is pure red.",
+            "tip": "RGB: the first pair is Red, then Green, then Blue."
+          },
+          {
+            "q": "Why do programmers like hexadecimal?",
+            "choices": [
+              "Each hex digit stands for exactly 4 bits, so it is a short way to write binary",
+              "Computers are built from hex circuits",
+              "It has no letters"
+            ],
+            "answer": 0,
+            "explain": "Two hex digits describe one byte neatly.",
+            "tip": "One hex digit is a nibble: half a byte."
+          }
+        ]
+      },
+      {
+        "name": "How the Internet Works",
+        "questions": [
+          {
+            "q": "What is an IP address?",
+            "choices": [
+              "A website password",
+              "A type of cable",
+              "A number that identifies a device on a network"
+            ],
+            "answer": 2,
+            "explain": "IP addresses let data find the right computer.",
+            "tip": "An IP address is like a home address for your device."
+          },
+          {
+            "q": "What does DNS do?",
+            "choices": [
+              "Makes your screen brighter",
+              "Turns names like example.com into IP addresses",
+              "Stores your photos"
+            ],
+            "answer": 1,
+            "explain": "DNS is the internet's phone book.",
+            "tip": "DNS is the contacts list: you tap a name, it finds the number."
+          },
+          {
+            "q": "Data sent over the internet is split into small pieces called...",
+            "choices": [
+              "Packets",
+              "Pixels",
+              "Folders"
+            ],
+            "answer": 0,
+            "explain": "Packets travel separately and are put back together at the end.",
+            "tip": "Like mailing a puzzle in many envelopes and rebuilding it on arrival."
+          },
+          {
+            "q": "What does the S in HTTPS stand for?",
+            "choices": [
+              "Speedy",
+              "Simple",
+              "Secure"
+            ],
+            "answer": 2,
+            "explain": "HTTPS encrypts data between your browser and the website.",
+            "tip": "S for Secure, like a padlock on the connection."
+          },
+          {
+            "q": "What does a router do?",
+            "choices": [
+              "Stores every website",
+              "Forwards data between networks",
+              "Prints pages"
+            ],
+            "answer": 1,
+            "explain": "Routers pass packets toward where they are going.",
+            "tip": "A router is a traffic cop for data."
+          },
+          {
+            "q": "How are the internet and the World Wide Web related?",
+            "choices": [
+              "The web is one service that runs on the internet",
+              "They are exactly the same thing",
+              "The internet runs on the web"
+            ],
+            "answer": 0,
+            "explain": "The internet is the network; the web is pages and links that use it. Email and games use the internet too.",
+            "tip": "The internet is the roads; the web is one kind of car driving on them."
+          },
+          {
+            "q": "A computer that stores websites and sends them when asked is a...",
+            "choices": [
+              "Browser",
+              "Keyboard",
+              "Server"
+            ],
+            "answer": 2,
+            "explain": "Servers serve pages to clients that request them.",
+            "tip": "A server serves pages like a waiter serves food."
+          },
+          {
+            "q": "Your web browser is a...",
+            "choices": [
+              "Cable",
+              "Client that requests web pages",
+              "Server that stores every website"
+            ],
+            "answer": 1,
+            "explain": "Your browser asks servers for pages and shows them.",
+            "tip": "The client orders, the server serves."
+          },
+          {
+            "q": "What does URL stand for?",
+            "choices": [
+              "Uniform Resource Locator",
+              "Universal Router Link",
+              "User Read Language"
+            ],
+            "answer": 0,
+            "explain": "A URL is the address of something on the web.",
+            "tip": "URL: it Locates a Resource, like a treasure map address."
+          },
+          {
+            "q": "What does HTML describe?",
+            "choices": [
+              "Internet speed",
+              "Computer memory",
+              "The structure and content of web pages"
+            ],
+            "answer": 2,
+            "explain": "HTML marks up text into headings, paragraphs, links and more.",
+            "tip": "HTML is the skeleton of a web page."
+          }
+        ]
+      }
+    ],
+    "g912": [
+      {
+        "name": "Python Functions, Scope and Recursion",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "def add(a, b):\n    return a + b\n\nprint(add(2, 3))",
+            "choices": [
+              "None",
+              "5",
+              "23"
+            ],
+            "answer": 1,
+            "explain": "add returns 2 + 3, which is printed.",
+            "tip": "return hands the answer back, like a vending machine dropping a snack."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def greet(name=\"friend\"):\n    return \"Hi \" + name\n\nprint(greet())",
+            "choices": [
+              "Hi friend",
+              "Hi",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "With no argument, name uses its default value \"friend\".",
+            "tip": "A default is the backup plan when nobody gives an answer."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def f():\n    print(\"A\")\n\nresult = f()\nprint(result)",
+            "choices": [
+              "A, then A",
+              "None only",
+              "A, then None"
+            ],
+            "answer": 2,
+            "explain": "f prints A but returns nothing, and a function with no return gives None.",
+            "tip": "Printing shows it on screen; returning hands it back. No return means None."
+          },
+          {
+            "q": "What does this print?",
+            "code": "x = 10\n\ndef change():\n    x = 5\n\nchange()\nprint(x)",
+            "choices": [
+              "An error",
+              "10",
+              "5"
+            ],
+            "answer": 1,
+            "explain": "x = 5 inside the function makes a new local x; the global x is unchanged.",
+            "tip": "What happens in the function stays in the function."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def square(n):\n    return n * n\n\nprint(square(square(2)))",
+            "choices": [
+              "16",
+              "8",
+              "4"
+            ],
+            "answer": 0,
+            "explain": "square(2) is 4, then square(4) is 16.",
+            "tip": "Work from the inside out, like opening nesting dolls."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def f(lst):\n    lst.append(4)\n\nnums = [1, 2, 3]\nf(nums)\nprint(nums)",
+            "choices": [
+              "[1, 2, 3]",
+              "None",
+              "[1, 2, 3, 4]"
+            ],
+            "answer": 2,
+            "explain": "The function receives the same list object, so append changes the original.",
+            "tip": "Passing a list hands over the real backpack, not a photo of it."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def countdown(n):\n    if n == 0:\n        return \"Go!\"\n    return str(n) + \" \" + countdown(n - 1)\n\nprint(countdown(3))",
+            "choices": [
+              "1 2 3 Go!",
+              "3 2 1 Go!",
+              "Go!"
+            ],
+            "answer": 1,
+            "explain": "Each call adds its number before the result of the smaller call, ending with \"Go!\" at 0.",
+            "tip": "Recursion is a countdown: each step hands off to a smaller step until liftoff."
+          },
+          {
+            "q": "In recursion, what is the base case?",
+            "choices": [
+              "The case that stops the recursion",
+              "The first line of the file",
+              "The biggest input"
+            ],
+            "answer": 0,
+            "explain": "Without a base case, the function would call itself forever.",
+            "tip": "The base case is the bottom step of the staircase."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)\n\nprint(fact(5))",
+            "choices": [
+              "24",
+              "15",
+              "120"
+            ],
+            "answer": 2,
+            "explain": "5 x 4 x 3 x 2 x 1 = 120.",
+            "tip": "Factorial is a countdown multiplied together."
+          },
+          {
+            "q": "A variable created inside a function is usually...",
+            "choices": [
+              "Shared with every other function",
+              "Local: it only exists inside that function",
+              "Global: usable everywhere"
+            ],
+            "answer": 1,
+            "explain": "Local variables disappear when the function finishes.",
+            "tip": "Local variables are like a hotel room: yours only while you are checked in."
+          }
+        ]
+      },
+      {
+        "name": "Data Types, Lists and Dictionaries",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "ages = {\"Ann\": 15, \"Ben\": 16}\nprint(ages[\"Ben\"])",
+            "choices": [
+              "16",
+              "15",
+              "Ben"
+            ],
+            "answer": 0,
+            "explain": "A dictionary looks up a value by its key.",
+            "tip": "A dict is a real dictionary: look up the word, get the meaning."
+          },
+          {
+            "q": "What does this print?",
+            "code": "d = {\"a\": 1}\nd[\"b\"] = 2\nprint(len(d))",
+            "choices": [
+              "1",
+              "3",
+              "2"
+            ],
+            "answer": 2,
+            "explain": "Assigning a new key adds it, so the dict has keys \"a\" and \"b\".",
+            "tip": "len of a dict counts the keys, like counting labels in a filing cabinet."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(type(3.0))",
+            "choices": [
+              "<class 'str'>",
+              "<class 'float'>",
+              "<class 'int'>"
+            ],
+            "answer": 1,
+            "explain": "A number with a decimal point is a float, even if it is 3.0.",
+            "tip": "The decimal point floats in the number, so it is a float."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(int(\"7\") + 3)",
+            "choices": [
+              "10",
+              "73",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "int(\"7\") converts the string to the number 7, then 7 + 3 = 10.",
+            "tip": "int() takes a number out of its quote marks wrapper."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(bool(\"\"))",
+            "choices": [
+              "True",
+              "None",
+              "False"
+            ],
+            "answer": 2,
+            "explain": "Empty strings, 0, empty lists and None are \"falsy\".",
+            "tip": "Empty is false: an empty box has nothing to say yes about."
+          },
+          {
+            "q": "What does this print?",
+            "code": "nums = [1, 2, 3, 4, 5]\nprint(nums[1:3])",
+            "choices": [
+              "[1, 2, 3]",
+              "[2, 3]",
+              "[2, 3, 4]"
+            ],
+            "answer": 1,
+            "explain": "Slicing [1:3] takes indexes 1 and 2, stopping before 3.",
+            "tip": "Slices include the start and stop before the end, like range."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print([x * 2 for x in range(4)])",
+            "choices": [
+              "[0, 2, 4, 6]",
+              "[2, 4, 6, 8]",
+              "[0, 1, 2, 3]"
+            ],
+            "answer": 0,
+            "explain": "The list comprehension doubles each of 0, 1, 2, 3.",
+            "tip": "Read it like English: x times 2 for each x in the range."
+          },
+          {
+            "q": "What does this print?",
+            "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)",
+            "choices": [
+              "[1, 2]",
+              "An error",
+              "[1, 2, 3]"
+            ],
+            "answer": 2,
+            "explain": "b = a makes b another name for the same list, not a copy.",
+            "tip": "Two names, one list: like a nickname for the same person."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(0.1 + 0.2 == 0.3)",
+            "choices": [
+              "0.3",
+              "False",
+              "True"
+            ],
+            "answer": 1,
+            "explain": "Floats are stored in binary, so 0.1 + 0.2 is 0.30000000000000004.",
+            "tip": "Floats are like a ruler with tiny smudges: close, but not always exact."
+          },
+          {
+            "q": "What happens when this runs?",
+            "code": "t = (1, 2, 3)\nt[0] = 9",
+            "choices": [
+              "A TypeError, because tuples cannot be changed",
+              "t becomes (9, 2, 3)",
+              "Nothing changes and no error"
+            ],
+            "answer": 0,
+            "explain": "Tuples are immutable: once made, their items cannot be replaced.",
+            "tip": "A tuple is a list sealed in glass."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(10 / 2)",
+            "choices": [
+              "5",
+              "5.00",
+              "5.0"
+            ],
+            "answer": 2,
+            "explain": "In Python 3, / always gives a float.",
+            "tip": "One slash makes a float; two slashes make a whole number."
+          },
+          {
+            "q": "What does this print?",
+            "code": "s = \"hello\"\nprint(s[::-1])",
+            "choices": [
+              "h",
+              "olleh",
+              "hello"
+            ],
+            "answer": 1,
+            "explain": "A slice with step -1 walks the string backward.",
+            "tip": "[::-1] is the rewind button."
+          }
+        ]
+      },
+      {
+        "name": "JavaScript Basics",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "console.log(2 + \"2\");",
+            "choices": [
+              "22",
+              "4",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "When one side is a string, + joins them as text.",
+            "tip": "In JavaScript, a string in the mix turns + into glue."
+          },
+          {
+            "q": "What does this print?",
+            "code": "console.log(\"5\" - 2);",
+            "choices": [
+              "52",
+              "NaN",
+              "3"
+            ],
+            "answer": 2,
+            "explain": "The - operator only works on numbers, so \"5\" is converted to 5.",
+            "tip": "+ can glue strings, but - can only do math."
+          },
+          {
+            "q": "What does this print?",
+            "code": "console.log(typeof null);",
+            "choices": [
+              "undefined",
+              "object",
+              "null"
+            ],
+            "answer": 1,
+            "explain": "typeof null is \"object\", a famous old quirk kept for compatibility.",
+            "tip": "null wears an \"object\" costume: a bug from 1995 that never left."
+          },
+          {
+            "q": "What does this print?",
+            "code": "const arr = [1, 2, 3];\narr.push(4);\nconsole.log(arr.length);",
+            "choices": [
+              "4",
+              "3",
+              "5"
+            ],
+            "answer": 0,
+            "explain": "push adds one item to the end, so the length becomes 4. const stops reassigning, not changing contents.",
+            "tip": "const locks the label, not the box contents."
+          },
+          {
+            "q": "What does this print?",
+            "code": "const person = { name: \"Ava\", age: 16 };\nconsole.log(person.name);",
+            "choices": [
+              "name",
+              "undefined",
+              "Ava"
+            ],
+            "answer": 2,
+            "explain": "Dot notation reads a property of an object.",
+            "tip": "The dot is like \"apostrophe s\": person.name is the person's name."
+          },
+          {
+            "q": "What does this print?",
+            "code": "console.log(1 === \"1\");",
+            "choices": [
+              "An error",
+              "false",
+              "true"
+            ],
+            "answer": 1,
+            "explain": "=== checks value and type with no conversion; a number is not a string.",
+            "tip": "Triple equals is the strict teacher: same value AND same type."
+          },
+          {
+            "q": "What does this print?",
+            "code": "let total = 0;\nfor (let i = 1; i <= 3; i++) {\n  total += i;\n}\nconsole.log(total);",
+            "choices": [
+              "6",
+              "3",
+              "10"
+            ],
+            "answer": 0,
+            "explain": "i goes 1, 2, 3, and total = 1 + 2 + 3.",
+            "tip": "The for loop has three parts: start; keep going while; step."
+          },
+          {
+            "q": "What does this print?",
+            "code": "const double = (n) => n * 2;\nconsole.log(double(7));",
+            "choices": [
+              "72",
+              "undefined",
+              "14"
+            ],
+            "answer": 2,
+            "explain": "An arrow function with no braces returns its expression automatically.",
+            "tip": "The arrow points from the input to the output."
+          },
+          {
+            "q": "What happens when this runs?",
+            "code": "const x = 5;\nx = 6;",
+            "choices": [
+              "x becomes 11",
+              "A TypeError, because a const variable cannot be reassigned",
+              "x becomes 6"
+            ],
+            "answer": 1,
+            "explain": "const creates a binding that cannot be reassigned.",
+            "tip": "const is short for constant: it stays put."
+          },
+          {
+            "q": "What does this print?",
+            "code": "console.log([1, 2, 3].map(n => n * 10).join(\",\"));",
+            "choices": [
+              "10,20,30",
+              "1,2,3",
+              "60"
+            ],
+            "answer": 0,
+            "explain": "map makes a new array with each item times 10, and join puts commas between them.",
+            "tip": "map is a factory line: every item goes in, a changed item comes out."
+          },
+          {
+            "q": "What does this print?",
+            "code": "if (0) {\n  console.log(\"yes\");\n} else {\n  console.log(\"no\");\n}",
+            "choices": [
+              "yes",
+              "An error",
+              "no"
+            ],
+            "answer": 2,
+            "explain": "0 is falsy in JavaScript, so the else branch runs.",
+            "tip": "Zero means \"nothing,\" and nothing counts as false."
+          },
+          {
+            "q": "What does this print?",
+            "code": "let x = 1;\n{\n  let x = 2;\n}\nconsole.log(x);",
+            "choices": [
+              "An error",
+              "1",
+              "2"
+            ],
+            "answer": 1,
+            "explain": "let is block-scoped, so the inner x is a different variable that disappears after the braces.",
+            "tip": "Curly braces are a room: a let made inside stays inside."
+          }
+        ]
+      },
+      {
+        "name": "Big-O and Debugging",
+        "questions": [
+          {
+            "q": "Looping once over a list of n items takes about how much time?",
+            "choices": [
+              "O(n)",
+              "O(1)",
+              "O(n^2)"
+            ],
+            "answer": 0,
+            "explain": "Work grows in step with the number of items.",
+            "tip": "O(n): twice the items, twice the work, like reading every page of a book."
+          },
+          {
+            "q": "A loop inside a loop, each going over n items, is about...",
+            "choices": [
+              "O(n)",
+              "O(log n)",
+              "O(n^2)"
+            ],
+            "answer": 2,
+            "explain": "n times n pairs of steps.",
+            "tip": "Nested loops are like everyone in class shaking hands with everyone."
+          },
+          {
+            "q": "Reading nums[5] from a Python list is about...",
+            "choices": [
+              "O(n^2)",
+              "O(1)",
+              "O(n)"
+            ],
+            "answer": 1,
+            "explain": "Indexing jumps straight to the spot, no matter how long the list is.",
+            "tip": "O(1) is like going straight to your seat number at a theater."
+          },
+          {
+            "q": "Binary search on a sorted list takes about...",
+            "choices": [
+              "O(log n)",
+              "O(n)",
+              "O(n^2)"
+            ],
+            "answer": 0,
+            "explain": "Each step cuts the search area in half.",
+            "tip": "Like a guess-the-number game: higher or lower halves it every time."
+          },
+          {
+            "q": "An O(n^2) algorithm takes 1 second for 1,000 items. About how long for 2,000?",
+            "choices": [
+              "About 2 seconds",
+              "About 1 second",
+              "About 4 seconds"
+            ],
+            "answer": 2,
+            "explain": "Doubling n multiplies n^2 by 4.",
+            "tip": "Squared growth: double the size, quadruple the time."
+          },
+          {
+            "q": "Which grows fastest as n gets large?",
+            "choices": [
+              "O(n)",
+              "O(2^n)",
+              "O(n^2)",
+              "O(n log n)"
+            ],
+            "answer": 1,
+            "explain": "Exponential growth doubles with every extra item.",
+            "tip": "Exponential is the rice-on-a-chessboard story: it explodes."
+          },
+          {
+            "q": "This should print every item. Which item is skipped?",
+            "code": "nums = [1, 2, 3]\nfor i in range(1, len(nums)):\n    print(nums[i])",
+            "choices": [
+              "The first item, 1",
+              "The last item, 3",
+              "No item is skipped"
+            ],
+            "answer": 0,
+            "explain": "range(1, len(nums)) starts at index 1, so index 0 is skipped.",
+            "tip": "Python counts from zero, so starting at 1 skips the first."
+          },
+          {
+            "q": "What happens when this runs?",
+            "code": "print(\"Total: \" + 5)",
+            "choices": [
+              "It prints Total: 5",
+              "It prints Total: 5.0",
+              "A TypeError, because a string and an int cannot be joined with +"
+            ],
+            "answer": 2,
+            "explain": "Python will not auto-convert; use str(5) or an f-string.",
+            "tip": "Python will not glue apples to oranges: convert first with str()."
+          },
+          {
+            "q": "What is an off-by-one error?",
+            "choices": [
+              "A missing file",
+              "A loop or index that goes one too far or stops one too soon",
+              "A typo in a variable name"
+            ],
+            "answer": 1,
+            "explain": "These often come from mixing up < and <=, or forgetting indexes start at 0.",
+            "tip": "Fence posts: a 10-meter fence with posts every meter needs 11 posts, not 10."
+          },
+          {
+            "q": "What is a good debugging habit?",
+            "choices": [
+              "Reproduce the bug, then test one small change at a time",
+              "Change many things at once",
+              "Delete the error messages"
+            ],
+            "answer": 0,
+            "explain": "Small changes show you exactly which change fixed it.",
+            "tip": "Change one thing at a time, like a scientist with one variable."
+          },
+          {
+            "q": "What happens when this runs?",
+            "code": "x = 5\nif x = 5:\n    print(\"five\")",
+            "choices": [
+              "It prints five",
+              "Nothing is printed",
+              "A SyntaxError, because = assigns and == compares"
+            ],
+            "answer": 2,
+            "explain": "An if needs a comparison like x == 5.",
+            "tip": "One = puts in the box; two == asks a question."
+          }
+        ]
+      },
+      {
+        "name": "HTML and CSS",
+        "questions": [
+          {
+            "q": "Which HTML tag makes the biggest, most important heading?",
+            "choices": [
+              "<head>",
+              "<h1>",
+              "<h6>"
+            ],
+            "answer": 1,
+            "explain": "Headings go from h1 (top level) to h6 (smallest).",
+            "tip": "h1 is number one: the headline."
+          },
+          {
+            "q": "Which HTML tag makes a clickable link?",
+            "choices": [
+              "<a>",
+              "<link>",
+              "<p>"
+            ],
+            "answer": 0,
+            "explain": "The a (anchor) tag with an href makes a link. The link tag connects files like stylesheets.",
+            "tip": "a is for anchor: it anchors you to another page."
+          },
+          {
+            "q": "What does CSS control?",
+            "choices": [
+              "The page database",
+              "Internet speed",
+              "How a page looks: colors, fonts and layout"
+            ],
+            "answer": 2,
+            "explain": "HTML is structure; CSS is style.",
+            "tip": "HTML is the skeleton, CSS is the clothes."
+          },
+          {
+            "q": "What does this CSS do?",
+            "code": "p {\n  color: blue;\n}",
+            "choices": [
+              "Makes only links blue",
+              "Makes paragraph text blue",
+              "Makes the page background blue"
+            ],
+            "answer": 1,
+            "explain": "The selector p matches paragraph elements, and color sets text color.",
+            "tip": "color colors the text; background-color colors behind it."
+          },
+          {
+            "q": "In CSS, a selector starting with # matches...",
+            "choices": [
+              "The element with that id",
+              "All elements with that class",
+              "Every element"
+            ],
+            "answer": 0,
+            "explain": "#main matches id=\"main\".",
+            "tip": "# is for ID, like a single ID number; . is for a class of many."
+          },
+          {
+            "q": "In CSS, a selector starting with . matches...",
+            "choices": [
+              "The element with that id",
+              "Only links",
+              "Elements with that class"
+            ],
+            "answer": 2,
+            "explain": ".card matches every element with class=\"card\".",
+            "tip": "Dot for a class: many students in a class."
+          },
+          {
+            "q": "Which attribute gives an image text for screen readers?",
+            "choices": [
+              "href",
+              "alt",
+              "src"
+            ],
+            "answer": 1,
+            "explain": "alt text describes the image when it cannot be seen.",
+            "tip": "alt is the alternative to seeing the picture."
+          },
+          {
+            "q": "What does the <ul> tag create?",
+            "choices": [
+              "A bulleted (unordered) list",
+              "A numbered list",
+              "Underlined text"
+            ],
+            "answer": 0,
+            "explain": "ul is unordered list; ol is ordered (numbered) list.",
+            "tip": "u for unordered bullets, o for ordered numbers."
+          },
+          {
+            "q": "In the CSS box model, what is the space between the content and the border?",
+            "choices": [
+              "Margin",
+              "Outline",
+              "Padding"
+            ],
+            "answer": 2,
+            "explain": "Padding is inside the border; margin is outside it.",
+            "tip": "Padding is the bubble wrap inside the box; margin is the space between boxes."
+          },
+          {
+            "q": "Where does the visible content of a web page go?",
+            "choices": [
+              "Inside <title>",
+              "Inside <body>",
+              "Inside <head>"
+            ],
+            "answer": 1,
+            "explain": "The head holds info about the page; the body holds what you see.",
+            "tip": "Your body is what people see; your head holds the thinking."
+          }
+        ]
+      },
+      {
+        "name": "Logic Gates",
+        "questions": [
+          {
+            "q": "An AND gate outputs 1 when...",
+            "choices": [
+              "Both inputs are 1",
+              "Either input is 1",
+              "Both inputs are 0"
+            ],
+            "answer": 0,
+            "explain": "AND needs every input to be true.",
+            "tip": "AND is a door with two locks: both keys needed."
+          },
+          {
+            "q": "An OR gate gets inputs 0 and 1. What is the output?",
+            "choices": [
+              "1",
+              "0"
+            ],
+            "answer": 0,
+            "explain": "OR outputs 1 if at least one input is 1.",
+            "tip": "OR is a room with two doors: either one gets you in."
+          },
+          {
+            "q": "A NOT gate gets 1. What is the output?",
+            "choices": [
+              "1",
+              "0"
+            ],
+            "answer": 1,
+            "explain": "NOT flips the input.",
+            "tip": "NOT is the opposite-day gate."
+          },
+          {
+            "q": "An XOR gate gets inputs 1 and 1. What is the output?",
+            "choices": [
+              "0",
+              "1"
+            ],
+            "answer": 0,
+            "explain": "XOR is 1 only when the inputs differ.",
+            "tip": "XOR is exclusive: \"one or the other, but not both,\" like a two-way light switch."
+          },
+          {
+            "q": "A NAND gate gets inputs 1 and 1. What is the output?",
+            "choices": [
+              "1",
+              "0"
+            ],
+            "answer": 1,
+            "explain": "NAND is NOT AND: AND gives 1, then NOT flips it to 0.",
+            "tip": "NAND is AND with a grumpy flip at the end."
+          },
+          {
+            "q": "Which gate outputs 1 only when its two inputs are different?",
+            "choices": [
+              "XOR",
+              "AND",
+              "OR",
+              "NOR"
+            ],
+            "answer": 0,
+            "explain": "XOR checks for difference.",
+            "tip": "X marks the difference."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(True and not False)",
+            "choices": [
+              "True",
+              "False",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "not False is True, and True and True is True.",
+            "tip": "Do the not first, then the and."
+          },
+          {
+            "q": "A NOR gate outputs 1 when...",
+            "choices": [
+              "Both inputs are 1",
+              "The inputs are different",
+              "Both inputs are 0"
+            ],
+            "answer": 2,
+            "explain": "NOR is NOT OR: OR is 0 only when both are 0, so NOR is 1 then.",
+            "tip": "NOR: neither this NOR that."
+          },
+          {
+            "q": "Why is the NAND gate called \"universal\"?",
+            "choices": [
+              "It has the most inputs",
+              "Every other gate can be built from NAND gates alone",
+              "It is the fastest gate"
+            ],
+            "answer": 1,
+            "explain": "Combining NANDs can make NOT, AND, OR and the rest.",
+            "tip": "NAND is the LEGO brick of logic: build anything with it."
+          }
+        ]
+      }
+    ],
+    "college": [
+      {
+        "name": "Stacks, Queues and Hash Tables",
+        "questions": [
+          {
+            "q": "A stack removes items in what order?",
+            "choices": [
+              "Last in, first out (LIFO)",
+              "First in, first out (FIFO)",
+              "Smallest first"
+            ],
+            "answer": 0,
+            "explain": "The most recently pushed item is popped first.",
+            "tip": "A stack of plates: you take the top one, which was the last one added."
+          },
+          {
+            "q": "A queue removes items in what order?",
+            "choices": [
+              "Last in, first out (LIFO)",
+              "Random order",
+              "First in, first out (FIFO)"
+            ],
+            "answer": 2,
+            "explain": "Items leave in the order they arrived.",
+            "tip": "A queue is a line at a coffee shop: first come, first served."
+          },
+          {
+            "q": "Push 1, push 2, push 3, then pop once. What is popped?",
+            "choices": [
+              "2",
+              "3",
+              "1"
+            ],
+            "answer": 1,
+            "explain": "Pop takes the top of the stack, the last item pushed.",
+            "tip": "Pop the top!"
+          },
+          {
+            "q": "Enqueue A, enqueue B, enqueue C, then dequeue once. What comes out?",
+            "choices": [
+              "A",
+              "C",
+              "B"
+            ],
+            "answer": 0,
+            "explain": "A arrived first, so it leaves first.",
+            "tip": "The front of the line goes first."
+          },
+          {
+            "q": "What is the average time to look up a key in a hash table?",
+            "choices": [
+              "O(n)",
+              "O(log n)",
+              "O(1)"
+            ],
+            "answer": 2,
+            "explain": "The hash function jumps directly to the right bucket in the common case.",
+            "tip": "A hash is a coat-check ticket: hand it over and go straight to your coat."
+          },
+          {
+            "q": "What is a hash collision?",
+            "choices": [
+              "Two tables share a name",
+              "Two different keys map to the same bucket",
+              "A key is missing from the table"
+            ],
+            "answer": 1,
+            "explain": "Collisions are handled by chaining or probing.",
+            "tip": "Two guests given the same locker number."
+          },
+          {
+            "q": "Which data structure tracks active function calls in most languages?",
+            "choices": [
+              "A stack",
+              "A queue",
+              "A hash table"
+            ],
+            "answer": 0,
+            "explain": "Each call pushes a frame; returning pops it.",
+            "tip": "It is literally called the call stack."
+          },
+          {
+            "q": "Checking that brackets like ( [ ] ) are balanced is usually done with a...",
+            "choices": [
+              "Queue",
+              "Binary search",
+              "Stack"
+            ],
+            "answer": 2,
+            "explain": "Push each opener, and pop to match each closer.",
+            "tip": "The last opened bracket must close first, which is LIFO."
+          },
+          {
+            "q": "Breadth-first search uses which data structure to track nodes to visit?",
+            "choices": [
+              "A heap",
+              "A queue",
+              "A stack"
+            ],
+            "answer": 1,
+            "explain": "BFS visits nodes level by level in arrival order.",
+            "tip": "Breadth-first ripples out like a stone in a pond, one ring at a time."
+          },
+          {
+            "q": "In Python, which can be a dictionary key?",
+            "choices": [
+              "A tuple of numbers",
+              "A list",
+              "Another dictionary"
+            ],
+            "answer": 0,
+            "explain": "Keys must be hashable (immutable); lists and dicts are mutable.",
+            "tip": "Keys must not change shape, or the lock will not recognize them."
+          }
+        ]
+      },
+      {
+        "name": "Trees and Graphs",
+        "questions": [
+          {
+            "q": "In a binary search tree, values in a node's left subtree are...",
+            "choices": [
+              "Larger than the node",
+              "Random",
+              "Smaller than the node"
+            ],
+            "answer": 2,
+            "explain": "BSTs keep smaller keys left and larger keys right.",
+            "tip": "Left is less: both start with L."
+          },
+          {
+            "q": "An in-order traversal of a binary search tree visits the values in...",
+            "choices": [
+              "Random order",
+              "Sorted order",
+              "Reverse insertion order"
+            ],
+            "answer": 1,
+            "explain": "Left, node, right visits smaller values before larger ones.",
+            "tip": "In-order gives things in order."
+          },
+          {
+            "q": "What is the most children a node in a binary tree can have?",
+            "choices": [
+              "2",
+              "1",
+              "3"
+            ],
+            "answer": 0,
+            "explain": "Binary means two.",
+            "tip": "Bi means two, like bicycle."
+          },
+          {
+            "q": "Searching a balanced BST with n nodes takes about...",
+            "choices": [
+              "O(n)",
+              "O(1)",
+              "O(log n)"
+            ],
+            "answer": 2,
+            "explain": "Each step down discards about half the remaining nodes.",
+            "tip": "A balanced tree is a binary search you can walk down."
+          },
+          {
+            "q": "You insert 1, 2, 3, 4, 5 in that order into a plain BST. Worst-case search time is now...",
+            "choices": [
+              "O(1)",
+              "O(n)",
+              "O(log n)"
+            ],
+            "answer": 1,
+            "explain": "Each node becomes a right child, so the tree is basically a linked list.",
+            "tip": "Sorted inserts make the tree a stick, not a bush."
+          },
+          {
+            "q": "A tree node with no children is called a...",
+            "choices": [
+              "Leaf",
+              "Root",
+              "Branch"
+            ],
+            "answer": 0,
+            "explain": "Leaves are at the ends of the tree.",
+            "tip": "Leaves are at the tips of a tree, with nothing growing past them."
+          },
+          {
+            "q": "Which traversal goes as deep as possible before backtracking?",
+            "choices": [
+              "Breadth-first search",
+              "Level-order traversal",
+              "Depth-first search"
+            ],
+            "answer": 2,
+            "explain": "DFS follows one path to the end first, often using a stack or recursion.",
+            "tip": "DFS is exploring a maze by always following one wall to its end."
+          },
+          {
+            "q": "In a min-heap, where is the smallest value?",
+            "choices": [
+              "In the middle",
+              "At the root",
+              "At a leaf"
+            ],
+            "answer": 1,
+            "explain": "Every parent is smaller than or equal to its children, so the minimum is on top.",
+            "tip": "In a min-heap the smallest floats to the top like a bubble."
+          },
+          {
+            "q": "A tree with n nodes has how many edges?",
+            "choices": [
+              "n - 1",
+              "n",
+              "n + 1"
+            ],
+            "answer": 0,
+            "explain": "Every node except the root has exactly one edge to its parent.",
+            "tip": "Everyone but the root has one parent line."
+          }
+        ]
+      },
+      {
+        "name": "Sorting, Searching and Complexity",
+        "questions": [
+          {
+            "q": "What is merge sort's worst-case time?",
+            "choices": [
+              "O(n^2)",
+              "O(n)",
+              "O(n log n)"
+            ],
+            "answer": 2,
+            "explain": "It splits log n times and merges n items at each level.",
+            "tip": "Merge sort: split in halves, then zip them back together."
+          },
+          {
+            "q": "What is quicksort's worst-case time?",
+            "choices": [
+              "O(log n)",
+              "O(n^2)",
+              "O(n log n)"
+            ],
+            "answer": 1,
+            "explain": "Bad pivots, such as always the smallest item, make very uneven splits.",
+            "tip": "Quick on average, slow with unlucky pivots."
+          },
+          {
+            "q": "What does binary search require?",
+            "choices": [
+              "The data must be sorted",
+              "The data must be unique",
+              "The data must be numbers"
+            ],
+            "answer": 0,
+            "explain": "It decides which half to keep by comparing with the middle.",
+            "tip": "You can only play higher-or-lower if things are in order."
+          },
+          {
+            "q": "About how many halvings narrow 1,024 items down to 1?",
+            "choices": [
+              "512",
+              "100",
+              "10"
+            ],
+            "answer": 2,
+            "explain": "2 to the 10th is 1,024, so log2(1,024) = 10.",
+            "tip": "2^10 is about a thousand: ten halvings tame a thousand items."
+          },
+          {
+            "q": "What is bubble sort's average time?",
+            "choices": [
+              "O(n)",
+              "O(n^2)",
+              "O(n log n)"
+            ],
+            "answer": 1,
+            "explain": "It compares neighboring pairs over many passes.",
+            "tip": "Bubbles rise slowly, one swap at a time."
+          },
+          {
+            "q": "What is a stable sort?",
+            "choices": [
+              "Equal items keep their original relative order",
+              "It never crashes",
+              "It uses no extra memory"
+            ],
+            "answer": 0,
+            "explain": "Stability matters when sorting by one field after another.",
+            "tip": "Stable sorts are polite: equal items do not cut in line."
+          },
+          {
+            "q": "Which of these is NOT a comparison sort?",
+            "choices": [
+              "Merge sort",
+              "Quicksort",
+              "Heapsort",
+              "Counting sort"
+            ],
+            "answer": 3,
+            "explain": "Counting sort tallies how often each value occurs instead of comparing items.",
+            "tip": "Counting sort counts, it does not compare."
+          },
+          {
+            "q": "Comparison-based sorting cannot beat which worst-case bound?",
+            "choices": [
+              "About log n comparisons",
+              "About n log n comparisons",
+              "About n comparisons"
+            ],
+            "answer": 1,
+            "explain": "There are n! possible orders, and log2(n!) grows like n log n.",
+            "tip": "Each comparison is a yes/no question, and n! orders need about n log n questions."
+          },
+          {
+            "q": "What is the worst-case time of linear search?",
+            "choices": [
+              "O(n)",
+              "O(log n)",
+              "O(1)"
+            ],
+            "answer": 0,
+            "explain": "The item may be last or missing, so every item is checked.",
+            "tip": "Linear search is checking every pocket for your keys."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(sorted([3, 1, 2], reverse=True))",
+            "choices": [
+              "[1, 2, 3]",
+              "[3, 1, 2]",
+              "[3, 2, 1]"
+            ],
+            "answer": 2,
+            "explain": "sorted returns a new list, and reverse=True puts it largest first.",
+            "tip": "reverse=True flips the line: tallest first."
+          }
+        ]
+      },
+      {
+        "name": "Object-Oriented Programming and Recursion",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return self.name + \" says woof\"\n\nd = Dog(\"Rex\")\nprint(d.speak())",
+            "choices": [
+              "An error",
+              "Rex says woof",
+              "name says woof"
+            ],
+            "answer": 1,
+            "explain": "The constructor stores \"Rex\" in self.name, and speak uses it.",
+            "tip": "self means \"this particular dog.\""
+          },
+          {
+            "q": "What does this print?",
+            "code": "class Animal:\n    def sound(self):\n        return \"...\"\n\nclass Cat(Animal):\n    def sound(self):\n        return \"meow\"\n\nprint(Cat().sound())",
+            "choices": [
+              "meow",
+              "...",
+              "An error"
+            ],
+            "answer": 0,
+            "explain": "Cat overrides sound, so its own version runs.",
+            "tip": "A child class can redo a parent's method its own way."
+          },
+          {
+            "q": "What is the difference between a class and an object?",
+            "choices": [
+              "They are the same",
+              "An object is a blueprint; a class is built from it",
+              "A class is a blueprint; an object is one thing built from it"
+            ],
+            "answer": 2,
+            "explain": "Many objects (instances) can be made from one class.",
+            "tip": "Class is the cookie cutter; objects are the cookies."
+          },
+          {
+            "q": "What is encapsulation?",
+            "choices": [
+              "Making a class with no methods",
+              "Bundling data with the methods that use it and hiding internal details",
+              "Copying an object"
+            ],
+            "answer": 1,
+            "explain": "Outside code uses a clean interface instead of poking at internals.",
+            "tip": "Encapsulation is a capsule: the medicine is inside, you just swallow it."
+          },
+          {
+            "q": "What is polymorphism?",
+            "choices": [
+              "Different classes used through the same interface, each with its own behavior",
+              "A class with many attributes",
+              "Running code on many computers"
+            ],
+            "answer": 0,
+            "explain": "For example, calling area() works on circles and squares alike.",
+            "tip": "Poly-morph means many shapes: one remote, many TVs."
+          },
+          {
+            "q": "What does this print?",
+            "code": "class Counter:\n    count = 0\n\n    def __init__(self):\n        Counter.count += 1\n\na = Counter()\nb = Counter()\nprint(Counter.count)",
+            "choices": [
+              "0",
+              "1",
+              "2"
+            ],
+            "answer": 2,
+            "explain": "count is a class variable shared by all instances, and each new object adds 1.",
+            "tip": "A class variable is one tally board on the classroom wall."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def fib(n):\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(6))",
+            "choices": [
+              "13",
+              "8",
+              "5"
+            ],
+            "answer": 1,
+            "explain": "The Fibonacci sequence is 0, 1, 1, 2, 3, 5, 8, so fib(6) is 8.",
+            "tip": "Each Fibonacci number is the sum of the two before it, like rabbits multiplying."
+          },
+          {
+            "q": "What greatly speeds up a naive recursive Fibonacci?",
+            "choices": [
+              "Memoization: caching results already computed",
+              "Adding more print statements",
+              "Using global variables"
+            ],
+            "answer": 0,
+            "explain": "Without caching, the same values are recomputed an exponential number of times.",
+            "tip": "Memoization is writing answers on a memo so you do not redo homework."
+          },
+          {
+            "q": "In Python, what does recursion with no reachable base case eventually raise?",
+            "choices": [
+              "ZeroDivisionError",
+              "KeyError",
+              "RecursionError"
+            ],
+            "answer": 2,
+            "explain": "Python limits recursion depth to protect the call stack.",
+            "tip": "No base case is a staircase with no bottom."
+          },
+          {
+            "q": "What does this print?",
+            "code": "def total(lst):\n    if not lst:\n        return 0\n    return lst[0] + total(lst[1:])\n\nprint(total([2, 4, 6]))",
+            "choices": [
+              "2",
+              "12",
+              "6"
+            ],
+            "answer": 1,
+            "explain": "2 + (4 + (6 + 0)) = 12.",
+            "tip": "Recursion on lists: handle the first item, let recursion handle the rest."
+          }
+        ]
+      },
+      {
+        "name": "SQL Basics",
+        "questions": [
+          {
+            "q": "Which SQL statement reads data from a table?",
+            "choices": [
+              "SELECT",
+              "INSERT",
+              "UPDATE"
+            ],
+            "answer": 0,
+            "explain": "SELECT retrieves rows; the others change data.",
+            "tip": "SELECT is shopping: you pick what you want to see."
+          },
+          {
+            "q": "What does this query return?",
+            "code": "SELECT name\nFROM students\nWHERE age > 18;",
+            "choices": [
+              "Every column for every student",
+              "Students who are exactly 18",
+              "The names of students older than 18"
+            ],
+            "answer": 2,
+            "explain": "WHERE filters rows, and SELECT name picks the column.",
+            "tip": "SELECT picks columns, WHERE picks rows."
+          },
+          {
+            "q": "Which clause sorts query results?",
+            "choices": [
+              "SORT WITH",
+              "ORDER BY",
+              "GROUP BY"
+            ],
+            "answer": 1,
+            "explain": "ORDER BY sorts, ascending by default.",
+            "tip": "ORDER BY puts things in order; GROUP BY puts them in piles."
+          },
+          {
+            "q": "What does COUNT(*) return?",
+            "choices": [
+              "The number of rows",
+              "The sum of a column",
+              "The number of columns"
+            ],
+            "answer": 0,
+            "explain": "COUNT(*) counts rows, including rows that contain NULLs.",
+            "tip": "COUNT counts heads in the room."
+          },
+          {
+            "q": "What is a primary key?",
+            "choices": [
+              "The first column alphabetically",
+              "A password for the database",
+              "A column that uniquely identifies each row"
+            ],
+            "answer": 2,
+            "explain": "No two rows can share a primary key value.",
+            "tip": "A primary key is a student ID number: one per person, no repeats."
+          },
+          {
+            "q": "What is a foreign key?",
+            "choices": [
+              "An encrypted column",
+              "A column that refers to a primary key in another table",
+              "A key from another database vendor"
+            ],
+            "answer": 1,
+            "explain": "Foreign keys link tables together.",
+            "tip": "A foreign key is a pointer to a row that lives in another table."
+          },
+          {
+            "q": "What does an INNER JOIN return?",
+            "choices": [
+              "Only rows that have a match in both tables",
+              "All rows from both tables",
+              "Only rows with no match"
+            ],
+            "answer": 0,
+            "explain": "Unmatched rows are left out; outer joins keep them.",
+            "tip": "INNER JOIN is the overlap in the middle of a Venn diagram."
+          },
+          {
+            "q": "Which clause filters groups after GROUP BY?",
+            "choices": [
+              "WHERE",
+              "LIMIT",
+              "HAVING"
+            ],
+            "answer": 2,
+            "explain": "WHERE filters rows before grouping; HAVING filters the groups.",
+            "tip": "WHERE works before grouping, HAVING works after."
+          },
+          {
+            "q": "What does this statement do?",
+            "code": "DELETE FROM orders;",
+            "choices": [
+              "Asks for confirmation first",
+              "Deletes every row in the orders table",
+              "Deletes the most recent order"
+            ],
+            "answer": 1,
+            "explain": "Without WHERE, DELETE affects every row.",
+            "tip": "Forget WHERE, lose everywhere."
+          },
+          {
+            "q": "How do you find rows where the email column has no value?",
+            "choices": [
+              "WHERE email IS NULL",
+              "WHERE email = NULL",
+              "WHERE email == NULL"
+            ],
+            "answer": 0,
+            "explain": "NULL means unknown, so = NULL is never true; use IS NULL.",
+            "tip": "NULL is not equal to anything, not even itself."
+          }
+        ]
+      },
+      {
+        "name": "Networking",
+        "questions": [
+          {
+            "q": "Which protocol guarantees reliable, in-order delivery?",
+            "choices": [
+              "UDP",
+              "ICMP",
+              "TCP"
+            ],
+            "answer": 2,
+            "explain": "TCP uses acknowledgments and retransmits lost data.",
+            "tip": "TCP is certified mail; UDP is tossing postcards."
+          },
+          {
+            "q": "What is the default port for HTTPS?",
+            "choices": [
+              "22",
+              "443",
+              "80"
+            ],
+            "answer": 1,
+            "explain": "HTTP uses 80, SSH uses 22, HTTPS uses 443.",
+            "tip": "Secure HTTPS gets the bigger number: 443 beats plain old 80."
+          },
+          {
+            "q": "What is the default port for plain HTTP?",
+            "choices": [
+              "80",
+              "443",
+              "25"
+            ],
+            "answer": 0,
+            "explain": "Port 80 is the standard unencrypted web port.",
+            "tip": "80 is the old-school web door."
+          },
+          {
+            "q": "What does HTTP status 404 mean?",
+            "choices": [
+              "Server Error",
+              "OK",
+              "Not Found"
+            ],
+            "answer": 2,
+            "explain": "The server could not find the requested resource.",
+            "tip": "404: the page went for a walk and did not come back."
+          },
+          {
+            "q": "What does HTTP status 200 mean?",
+            "choices": [
+              "Redirect",
+              "OK",
+              "Not Found"
+            ],
+            "answer": 1,
+            "explain": "2xx codes mean success.",
+            "tip": "200 is the thumbs-up."
+          },
+          {
+            "q": "Which range of HTTP status codes means a server error?",
+            "choices": [
+              "5xx",
+              "4xx",
+              "3xx"
+            ],
+            "answer": 0,
+            "explain": "4xx is a client error, 5xx is a server error.",
+            "tip": "4xx is your fault, 5xx is their fault."
+          },
+          {
+            "q": "How many bits long is an IPv4 address?",
+            "choices": [
+              "64",
+              "128",
+              "32"
+            ],
+            "answer": 2,
+            "explain": "IPv4 has four 8-bit numbers, like 192.168.1.1.",
+            "tip": "Four numbers, each one byte: 4 x 8 = 32."
+          },
+          {
+            "q": "How many bits long is an IPv6 address?",
+            "choices": [
+              "32",
+              "128",
+              "64"
+            ],
+            "answer": 1,
+            "explain": "IPv6 was made much bigger to avoid running out of addresses.",
+            "tip": "IPv6 is four times as long as IPv4."
+          },
+          {
+            "q": "What does the address 127.0.0.1 refer to?",
+            "choices": [
+              "This same computer (localhost)",
+              "The nearest router",
+              "A public DNS server"
+            ],
+            "answer": 0,
+            "explain": "It is the loopback address.",
+            "tip": "There is no place like 127.0.0.1."
+          },
+          {
+            "q": "What does DNS translate?",
+            "choices": [
+              "IP addresses into MAC addresses only",
+              "Web pages into other languages",
+              "Domain names into IP addresses"
+            ],
+            "answer": 2,
+            "explain": "Your computer asks DNS for the IP behind a name.",
+            "tip": "DNS is the internet's phone book."
+          }
+        ]
+      },
+      {
+        "name": "Version Control with Git",
+        "questions": [
+          {
+            "q": "What does git commit do?",
+            "choices": [
+              "Deletes old files",
+              "Records a snapshot of the staged changes in your repository",
+              "Uploads your code to a server"
+            ],
+            "answer": 1,
+            "explain": "Commits are saved locally; push sends them to a remote.",
+            "tip": "A commit is a save point in a video game."
+          },
+          {
+            "q": "What does git add do?",
+            "choices": [
+              "Stages changes to go into the next commit",
+              "Creates a new repository",
+              "Adds a collaborator"
+            ],
+            "answer": 0,
+            "explain": "Staging lets you choose exactly what goes into a commit.",
+            "tip": "add puts items in the shopping cart; commit checks out."
+          },
+          {
+            "q": "What does git push do?",
+            "choices": [
+              "Saves files without committing",
+              "Downloads others' changes",
+              "Sends your local commits to a remote repository"
+            ],
+            "answer": 2,
+            "explain": "Push uploads; pull downloads and integrates.",
+            "tip": "Push sends it out, pull brings it in."
+          },
+          {
+            "q": "What does git pull do?",
+            "choices": [
+              "Creates a branch",
+              "Fetches changes from a remote and integrates them into your branch",
+              "Deletes your local changes"
+            ],
+            "answer": 1,
+            "explain": "Pull is fetch plus merge (or rebase).",
+            "tip": "Pull is fetch, then merge: get the mail and open it."
+          },
+          {
+            "q": "What does git clone do?",
+            "choices": [
+              "Copies an existing repository, including its history",
+              "Duplicates a single file",
+              "Makes a new empty branch"
+            ],
+            "answer": 0,
+            "explain": "Clone gives you a full local copy to work in.",
+            "tip": "Clone is a full photocopy of the project and its diary."
+          },
+          {
+            "q": "What is a branch in git?",
+            "choices": [
+              "A backup on another server",
+              "A folder of images",
+              "A separate line of development that points to a commit"
+            ],
+            "answer": 2,
+            "explain": "Branches let you work on features without touching main.",
+            "tip": "A branch is a parallel universe for your code."
+          },
+          {
+            "q": "When does a merge conflict happen?",
+            "choices": [
+              "You forget to push",
+              "Two branches change the same lines in different ways",
+              "A file is too large"
+            ],
+            "answer": 1,
+            "explain": "Git cannot pick which change wins, so you decide.",
+            "tip": "Two people edited the same sentence, and git asks you to referee."
+          },
+          {
+            "q": "What does git status show?",
+            "choices": [
+              "Which files are changed, staged or untracked",
+              "The full commit history",
+              "Who is online"
+            ],
+            "answer": 0,
+            "explain": "Status is a snapshot of your working directory and staging area.",
+            "tip": "git status is checking your bag before you leave."
+          },
+          {
+            "q": "What does git log show?",
+            "choices": [
+              "Unsaved changes only",
+              "Server error logs",
+              "The commit history"
+            ],
+            "answer": 2,
+            "explain": "Log lists commits with authors, dates and messages.",
+            "tip": "git log is the project's diary."
+          },
+          {
+            "q": "What is a .gitignore file for?",
+            "choices": [
+              "Listing ignored users",
+              "Listing files git should not track",
+              "Storing passwords"
+            ],
+            "answer": 1,
+            "explain": "Build output, secrets and temporary files often go in .gitignore.",
+            "tip": ".gitignore is a \"do not pack\" list."
+          }
+        ]
+      }
+    ],
+    "adult": [
+      {
+        "name": "Staying Safe Online",
+        "questions": [
+          {
+            "q": "What is phishing?",
+            "choices": [
+              "A fake message that tricks you into giving up passwords or money",
+              "A slow internet connection",
+              "A kind of computer virus scanner"
+            ],
+            "answer": 0,
+            "explain": "Phishing messages pretend to be from banks, shops or coworkers.",
+            "tip": "Phishing: they cast bait and hope you bite."
+          },
+          {
+            "q": "What is two-factor authentication (2FA)?",
+            "choices": [
+              "Using two passwords on one site",
+              "Logging in on two devices",
+              "A second proof of identity, like a code, on top of your password"
+            ],
+            "answer": 2,
+            "explain": "Even if a password leaks, the second factor blocks the thief.",
+            "tip": "Something you know plus something you have: your password plus a code from your phone."
+          },
+          {
+            "q": "Which second factor is generally the most secure?",
+            "choices": [
+              "A security question",
+              "A hardware security key",
+              "A code sent by text message"
+            ],
+            "answer": 1,
+            "explain": "Hardware keys resist phishing; texts can be intercepted and security answers guessed.",
+            "tip": "A physical key in your pocket beats a secret anyone could look up."
+          },
+          {
+            "q": "What is the main benefit of a password manager?",
+            "choices": [
+              "You can use a unique, strong password for every site",
+              "It makes passwords shorter",
+              "It shares passwords with friends"
+            ],
+            "answer": 0,
+            "explain": "You only remember one strong master password.",
+            "tip": "One master key to a safe full of unique keys."
+          },
+          {
+            "q": "Which is a red flag in an email?",
+            "choices": [
+              "A greeting with your name",
+              "A company logo",
+              "Urgent pressure to click a link and \"verify\" your account"
+            ],
+            "answer": 2,
+            "explain": "Urgency and links to log in are classic phishing tactics. Logos are easy to fake.",
+            "tip": "Urgent plus link equals stop and think."
+          },
+          {
+            "q": "Before clicking a link in an email, what should you check?",
+            "choices": [
+              "Whether it uses bright colors",
+              "Where it really goes, by hovering or long-pressing it",
+              "How many words the email has"
+            ],
+            "answer": 1,
+            "explain": "Link text can say one thing and go somewhere else.",
+            "tip": "Hover before you go."
+          },
+          {
+            "q": "Why install software updates promptly?",
+            "choices": [
+              "They fix security holes attackers already know about",
+              "They always make the computer faster",
+              "They delete viruses from email"
+            ],
+            "answer": 0,
+            "explain": "Many attacks target known bugs in out-of-date software.",
+            "tip": "Updates are patches on a leaky boat."
+          },
+          {
+            "q": "A caller says they are tech support and asks to remotely access your computer. What should you do?",
+            "choices": [
+              "Let them in so they can fix it",
+              "Give them your password instead",
+              "Hang up and contact the company using an official number"
+            ],
+            "answer": 2,
+            "explain": "Real companies rarely cold-call; scammers use remote access to steal.",
+            "tip": "You call them; they do not call you."
+          },
+          {
+            "q": "What is ransomware?",
+            "choices": [
+              "A backup tool",
+              "Malware that locks or encrypts your files and demands payment",
+              "A free antivirus program"
+            ],
+            "answer": 1,
+            "explain": "Good offline backups let you recover without paying.",
+            "tip": "Ransomware holds your files hostage."
+          },
+          {
+            "q": "Which password is stronger?",
+            "choices": [
+              "correct-river-lamp-velvet",
+              "P@ssw0rd1"
+            ],
+            "answer": 0,
+            "explain": "Length matters more than swapping letters for symbols, and P@ssw0rd is on every attacker's list.",
+            "tip": "A long passphrase is a fortress; P@ssw0rd is a tent with a sign on it."
+          }
+        ]
+      },
+      {
+        "name": "Files, Formats and Backups",
+        "questions": [
+          {
+            "q": "What is the 3-2-1 backup rule?",
+            "choices": [
+              "3 backups a day, 2 days a week, 1 month total",
+              "3 passwords, 2 devices, 1 account",
+              "3 copies of your data, on 2 kinds of storage, with 1 kept offsite"
+            ],
+            "answer": 2,
+            "explain": "Multiple copies in different places survive device failure, theft and fire.",
+            "tip": "3-2-1: three copies, two types, one far away."
+          },
+          {
+            "q": "Is a cloud sync folder a full backup?",
+            "choices": [
+              "Not by itself: deletions and ransomware can sync too, so keep versioned backups",
+              "Yes, always"
+            ],
+            "answer": 0,
+            "explain": "Sync mirrors changes, including mistakes. Version history or separate backups protect you.",
+            "tip": "Sync is a mirror: it copies your mistakes too."
+          },
+          {
+            "q": "Which image format supports transparent backgrounds and lossless compression?",
+            "choices": [
+              "PNG",
+              "JPG"
+            ],
+            "answer": 0,
+            "explain": "PNG keeps every pixel exactly; JPG is lossy and has no transparency.",
+            "tip": "PNG for pictures with no background; JPG for photos."
+          },
+          {
+            "q": "What is a CSV file?",
+            "choices": [
+              "A compressed video",
+              "A program you can run",
+              "A plain-text table with values separated by commas"
+            ],
+            "answer": 2,
+            "explain": "CSV is Comma-Separated Values; spreadsheets open it easily.",
+            "tip": "CSV: Commas Separate Values."
+          },
+          {
+            "q": "What is a ZIP file?",
+            "choices": [
+              "A secure email",
+              "An archive that bundles and compresses files",
+              "A type of image"
+            ],
+            "answer": 1,
+            "explain": "Zipping makes files smaller and easier to send as one.",
+            "tip": "A ZIP is a suitcase you sit on to close."
+          },
+          {
+            "q": "Which attachment from an unknown sender is most dangerous to open?",
+            "choices": [
+              "invoice.exe",
+              "photo.jpg",
+              "notes.txt"
+            ],
+            "answer": 0,
+            "explain": ".exe files are programs that run with your permissions.",
+            "tip": ".exe means execute: it does things, not just shows things."
+          },
+          {
+            "q": "Roughly how many megabytes are in a gigabyte?",
+            "choices": [
+              "About 100",
+              "About 1,000,000",
+              "About 1,000"
+            ],
+            "answer": 2,
+            "explain": "A gigabyte is 1,000 MB; its binary cousin, the gibibyte (GiB), is 1,024 MiB.",
+            "tip": "Kilo, mega, giga: each step is about a thousand times bigger."
+          },
+          {
+            "q": "What does a file extension like .docx or .pdf tell you?",
+            "choices": [
+              "Who made it",
+              "What type of file it is",
+              "How old the file is"
+            ],
+            "answer": 1,
+            "explain": "The extension tells the computer which app opens it.",
+            "tip": "The extension is the file's last name: it tells you its family."
+          },
+          {
+            "q": "Why save a finished document as a PDF to share it?",
+            "choices": [
+              "It looks the same on almost any device",
+              "It is always smaller than any other format",
+              "It can never contain images"
+            ],
+            "answer": 0,
+            "explain": "PDFs preserve layout and fonts across systems.",
+            "tip": "PDF is a printout you can email."
+          },
+          {
+            "q": "How do you know your backups actually work?",
+            "choices": [
+              "Check that the backup drive is plugged in",
+              "Count the folders",
+              "Restore a file from them now and then"
+            ],
+            "answer": 2,
+            "explain": "A backup that has never been restored is only a hope.",
+            "tip": "Test the parachute before you need it."
+          }
+        ]
+      },
+      {
+        "name": "Shortcuts and Everyday Computing",
+        "questions": [
+          {
+            "q": "What does Ctrl+C (Cmd+C on a Mac) do?",
+            "choices": [
+              "Close",
+              "Copy",
+              "Cut"
+            ],
+            "answer": 1,
+            "explain": "It copies the selection to the clipboard.",
+            "tip": "C for Copy."
+          },
+          {
+            "q": "What does Ctrl+V (Cmd+V on a Mac) do?",
+            "choices": [
+              "Paste",
+              "Paste as video",
+              "Verify"
+            ],
+            "answer": 0,
+            "explain": "V sits next to C on the keyboard, and pastes.",
+            "tip": "V looks like a funnel pouring the copy back out."
+          },
+          {
+            "q": "What does Ctrl+Z (Cmd+Z on a Mac) do?",
+            "choices": [
+              "Zoom",
+              "Zip",
+              "Undo"
+            ],
+            "answer": 2,
+            "explain": "Undo reverses your last action.",
+            "tip": "Z is the last letter: it takes you back from the last thing."
+          },
+          {
+            "q": "What does Ctrl+F (Cmd+F on a Mac) usually do?",
+            "choices": [
+              "Open a new file",
+              "Find text on the page or in the document",
+              "Make text bold"
+            ],
+            "answer": 1,
+            "explain": "Find jumps to matching words.",
+            "tip": "F for Find."
+          },
+          {
+            "q": "What does Ctrl+A (Cmd+A on a Mac) do?",
+            "choices": [
+              "Select all",
+              "Add a page",
+              "Align text"
+            ],
+            "answer": 0,
+            "explain": "It selects everything in the current area.",
+            "tip": "A for All."
+          },
+          {
+            "q": "What does Ctrl+S (Cmd+S on a Mac) do?",
+            "choices": [
+              "Search",
+              "Send",
+              "Save"
+            ],
+            "answer": 2,
+            "explain": "Save often to avoid losing work.",
+            "tip": "S for Save: tap it like a nervous habit."
+          },
+          {
+            "q": "On Windows, what does Alt+Tab do?",
+            "choices": [
+              "Opens a new tab",
+              "Switches between open windows",
+              "Closes the current window"
+            ],
+            "answer": 1,
+            "explain": "Hold Alt and keep pressing Tab to cycle. On a Mac, Cmd+Tab switches apps.",
+            "tip": "Alt+Tab is flipping between TV channels."
+          },
+          {
+            "q": "In most web browsers, what does Ctrl+Shift+T (Cmd+Shift+T on a Mac) do?",
+            "choices": [
+              "Reopens the tab you just closed",
+              "Translates the page",
+              "Opens the task manager"
+            ],
+            "answer": 0,
+            "explain": "It is a lifesaver after closing a tab by accident.",
+            "tip": "T for Tab, Shift for \"bring it back.\""
+          },
+          {
+            "q": "Why does restarting a computer often fix odd problems?",
+            "choices": [
+              "It deletes viruses automatically",
+              "It upgrades the hardware",
+              "It clears memory and restarts stuck programs"
+            ],
+            "answer": 2,
+            "explain": "A fresh start clears out glitchy states that build up over time.",
+            "tip": "A restart is a good night's sleep for your computer."
+          }
+        ]
+      },
+      {
+        "name": "Spreadsheet Formulas",
+        "questions": [
+          {
+            "q": "What character starts a spreadsheet formula?",
+            "choices": [
+              "#",
+              "=",
+              "+"
+            ],
+            "answer": 1,
+            "explain": "Typing = tells the spreadsheet to calculate.",
+            "tip": "Equals means \"work this out.\""
+          },
+          {
+            "q": "A1 is 2, A2 is 4 and A3 is 6. What does =SUM(A1:A3) give?",
+            "choices": [
+              "12",
+              "6",
+              "3"
+            ],
+            "answer": 0,
+            "explain": "2 + 4 + 6 = 12. The colon means \"from A1 through A3.\"",
+            "tip": "The colon is a \"through\": A1 through A3."
+          },
+          {
+            "q": "What does =AVERAGE(2, 4, 9) give?",
+            "choices": [
+              "15",
+              "4",
+              "5"
+            ],
+            "answer": 2,
+            "explain": "(2 + 4 + 9) / 3 = 5.",
+            "tip": "Average: add them up, share them out."
+          },
+          {
+            "q": "B2 is 59. What does =IF(B2>=60, \"Pass\", \"Fail\") show?",
+            "choices": [
+              "59",
+              "Fail",
+              "Pass"
+            ],
+            "answer": 1,
+            "explain": "59 is not 60 or more, so the false value is shown.",
+            "tip": "IF(question, yes answer, no answer)."
+          },
+          {
+            "q": "What does the $ do in $A$1?",
+            "choices": [
+              "Keeps the reference fixed when the formula is copied",
+              "Formats the cell as money",
+              "Makes the cell read-only"
+            ],
+            "answer": 0,
+            "explain": "An absolute reference does not shift when you fill or copy the formula.",
+            "tip": "The $ pins it down like a thumbtack."
+          },
+          {
+            "q": "The formula =A1*B1 in C1 is copied down to C2. What does it become?",
+            "choices": [
+              "=A1*B1",
+              "=A1*B2",
+              "=A2*B2"
+            ],
+            "answer": 2,
+            "explain": "Relative references shift by the same amount as the copy.",
+            "tip": "Relative references move along with the formula, like a shadow."
+          },
+          {
+            "q": "What does =COUNTIF(A1:A10, \">5\") do?",
+            "choices": [
+              "Counts all cells in A1:A10",
+              "Counts cells in A1:A10 greater than 5",
+              "Adds up cells greater than 5"
+            ],
+            "answer": 1,
+            "explain": "COUNTIF counts cells that meet a condition; SUMIF would add them.",
+            "tip": "COUNTIF counts, IF they pass the test."
+          },
+          {
+            "q": "What does the error #DIV/0! mean?",
+            "choices": [
+              "A formula divided by zero or an empty cell",
+              "The column is too narrow",
+              "A misspelled function name"
+            ],
+            "answer": 0,
+            "explain": "Check the cell you are dividing by.",
+            "tip": "You cannot share cookies among zero friends."
+          },
+          {
+            "q": "What does =MAX(3, 9, 4) give?",
+            "choices": [
+              "3",
+              "16",
+              "9"
+            ],
+            "answer": 2,
+            "explain": "MAX returns the largest value.",
+            "tip": "MAX is the tallest kid in the photo."
+          },
+          {
+            "q": "What is XLOOKUP or VLOOKUP used for?",
+            "choices": [
+              "Sorting a column",
+              "Finding a value in a table and returning a matching value from another column",
+              "Checking spelling"
+            ],
+            "answer": 1,
+            "explain": "For example, look up a product code and return its price.",
+            "tip": "Lookup is reading a menu: find the dish, read across to the price."
+          },
+          {
+            "q": "A1 is \"Ada\" and B1 is \"Lovelace\". What does =A1&\" \"&B1 show?",
+            "choices": [
+              "Ada Lovelace",
+              "AdaLovelace",
+              "A1 B1"
+            ],
+            "answer": 0,
+            "explain": "& joins text, and \" \" adds a space between.",
+            "tip": "& is the glue stick for text."
+          }
+        ]
+      },
+      {
+        "name": "Python for Grown-Ups",
+        "questions": [
+          {
+            "q": "What does this print?",
+            "code": "name = \"Pat\"\nprint(f\"Hello, {name}!\")",
+            "choices": [
+              "Hello, {name}!",
+              "Hello, name!",
+              "Hello, Pat!"
+            ],
+            "answer": 2,
+            "explain": "An f-string fills in the variable inside the braces.",
+            "tip": "f is for fill-in: braces are the blanks."
+          },
+          {
+            "q": "What does this print?",
+            "code": "bills = [120, 45, 60]\nprint(sum(bills))",
+            "choices": [
+              "[120, 45, 60]",
+              "225",
+              "120"
+            ],
+            "answer": 1,
+            "explain": "sum adds every number in the list.",
+            "tip": "sum is the calculator tape at the bottom of the receipt."
+          },
+          {
+            "q": "What does this print?",
+            "code": "price = 19.99\nqty = 3\nprint(round(price * qty, 2))",
+            "choices": [
+              "59.97",
+              "59.9",
+              "60"
+            ],
+            "answer": 0,
+            "explain": "19.99 x 3 = 59.97, and round(..., 2) keeps two decimal places.",
+            "tip": "round(x, 2) is for money: two places after the point."
+          },
+          {
+            "q": "What does this print?",
+            "code": "items = {\"milk\": 3.5, \"eggs\": 4}\nfor k in items:\n    print(k)",
+            "choices": [
+              "milk 3.5 eggs 4",
+              "3.5, then 4 (each on its own line)",
+              "milk, then eggs (each on its own line)"
+            ],
+            "answer": 2,
+            "explain": "Looping over a dictionary gives its keys, in the order they were added.",
+            "tip": "A for loop over a dict walks through the labels, not the contents."
+          },
+          {
+            "q": "What does \"pip install requests\" do?",
+            "choices": [
+              "Uninstalls Python",
+              "Installs a third-party Python package",
+              "Runs a Python script"
+            ],
+            "answer": 1,
+            "explain": "pip is Python's package installer.",
+            "tip": "pip is the app store for Python."
+          },
+          {
+            "q": "Why use \"with open('notes.txt') as f:\" to read a file?",
+            "choices": [
+              "It closes the file automatically when the block ends",
+              "It deletes the file afterward",
+              "It makes the file read faster"
+            ],
+            "answer": 0,
+            "explain": "The with block cleans up even if an error happens.",
+            "tip": "with is a door that closes itself behind you."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(len(\"2026-10-13\".split(\"-\")))",
+            "choices": [
+              "10",
+              "2026",
+              "3"
+            ],
+            "answer": 2,
+            "explain": "split(\"-\") makes a list of 3 pieces: \"2026\", \"10\", \"13\".",
+            "tip": "split is scissors cutting at every dash."
+          },
+          {
+            "q": "What type of value does input() return?",
+            "choices": [
+              "A float",
+              "A string (str), even if the user types a number",
+              "An integer"
+            ],
+            "answer": 1,
+            "explain": "Convert it with int() or float() before doing math.",
+            "tip": "input always hands you words; turn them into numbers yourself."
+          },
+          {
+            "q": "What does this print?",
+            "code": "temps = [68, 72, 75]\nprint(max(temps) - min(temps))",
+            "choices": [
+              "7",
+              "75",
+              "215"
+            ],
+            "answer": 0,
+            "explain": "max is 75, min is 68, and 75 - 68 = 7.",
+            "tip": "The range of numbers is highest minus lowest."
+          },
+          {
+            "q": "What does this print?",
+            "code": "print(f\"{1234.5:,.2f}\")",
+            "choices": [
+              "1234.5",
+              "1,234.5",
+              "1,234.50"
+            ],
+            "answer": 2,
+            "explain": "The format \",.2f\" adds a thousands comma and exactly two decimals.",
+            "tip": "Comma for thousands, .2f for cents."
+          },
+          {
+            "q": "What does this print?",
+            "code": "try:\n    print(10 / 0)\nexcept ZeroDivisionError:\n    print(\"Cannot divide by zero\")",
+            "choices": [
+              "0",
+              "Cannot divide by zero",
+              "An error message and the program stops"
+            ],
+            "answer": 1,
+            "explain": "The except block catches the ZeroDivisionError, so the friendly message prints instead.",
+            "tip": "try is the trapeze act; except is the safety net."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+## the day's alerts
+siem alerts
+## every account made and every group change: who did it
+siem search source=winsec event=4720 --fields time,user,target,src_ip
+siem search source=winsec group~ --fields time,event,user,target,group
+## follow the account that made the odd one
+siem search source=winsec user=adm_{{ADMP}} --fields time,host,event,logon_type,src_ip,target
+siem search source=winsec event=1102

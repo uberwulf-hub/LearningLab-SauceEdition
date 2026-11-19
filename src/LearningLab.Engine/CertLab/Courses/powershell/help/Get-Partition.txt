@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the partitions on the disks.
+DESCRIPTION:
+Get-Partition shows each partition with its DiskNumber, PartitionNumber, DriveLetter, Offset, Size and Type. System disks also have small partitions without letters: the EFI system partition and the reserved one.
+PARAMETER DiskNumber:
+Only the partitions of this disk. Position 0.
+PARAMETER DriveLetter:
+Only the partition with this letter.
+EXAMPLE: Get-Partition -DiskNumber 0
+The system disk: EFI, reserved and C:.
+EXAMPLE: Get-Partition -DriveLetter D
+Which disk D: is on.
+RELATED: New-Partition, Get-Disk, Get-Volume, Format-Volume

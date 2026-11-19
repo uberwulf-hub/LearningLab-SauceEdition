@@ -1,0 +1,30 @@
+{
+    "id": "robots-and-roots",
+    "title": "Robots and Roots",
+    "level": "Beginner",
+    "order": 2,
+    "summary": "A web server politely lists the folder it wants hidden. One readable backup later, you are signing in; one careless sudo rule later, you are root.",
+    "story": "Larkspur Studios (made up) runs one web server, web01, on the network 10.10.2.0/24. You start on scout, your Linux box on the same network. Find the server, see what it is trying to hide, and work your way up to root.",
+    "goal": "Capture the user flag in the deploy account's home folder and the root flag in /root.",
+    "skills": "port scanning, robots.txt, reading web folders, ssh, sudo -l",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 25,
+    "vars": { "PW1": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.2.5/24" ] },
+        { "name": "web01", "os": "linux", "hostname": "web01.larkspur.example", "role": "web server", "nics": [ "10.10.2.30/24" ], "packages": [ "httpd" ], "setup": "web01.sh",
+          "versions": { "80": "Apache httpd 2.4.62 ((Red Hat Enterprise Linux))" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "Deploy's flag", "points": 100, "machine": "web01", "path": "/home/deploy/flag.txt", "owner": "deploy", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 150, "machine": "web01", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "What to think about first: find the server, then find out what it is quietly trying to keep out of sight. Websites sometimes ask search engines not to look in certain places - and that list is public, so it points straight at the interesting folders.", "cost": 3 },
+        { "text": "Find the machine: 'nmap -sn 10.10.2.0/24' lists who answers on the network (no port checks yet). Then 'nmap -sV 10.10.2.30' shows which services it runs: port 80 is a web server. curl is a command-line web browser that prints the page's text: 'curl -s http://10.10.2.30/' (-s just hides the progress bar).", "cost": 5 },
+        { "text": "Most websites have a file called robots.txt at the top. It tells search engines which folders to skip ('Disallow: /something/'). It isn't a lock - anyone can read it, and anyone can visit the folders it names. Read it: curl -s http://10.10.2.30/robots.txt", "cost": 8 },
+        { "text": "Visit the folder that robots.txt names (curl -s http://10.10.2.30/FOLDER/). Inside is a deploy note with the password of the 'deploy' account. Sign in with ssh: 'ssh deploy@10.10.2.30', yes to the new-host question, then the password. 'cat flag.txt' shows the user flag.", "cost": 12 },
+        { "text": "Now 'sudo -l' shows what deploy may run as root: awk. awk is a small text-processing language that reads any file it is given, and under sudo it reads it as root. So: sudo awk '{ print }' /root/flag.txt prints root's flag ('{ print }' means print every line). A tool that reads files or runs programs should never be on a sudo list.", "cost": 16 }
+    ]
+}

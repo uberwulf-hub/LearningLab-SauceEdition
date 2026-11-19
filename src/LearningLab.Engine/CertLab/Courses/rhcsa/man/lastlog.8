@@ -1,0 +1,20 @@
+NAME
+       lastlog - show when each user last logged in
+
+SYNOPSIS
+       lastlog
+
+DESCRIPTION
+       lastlog prints one line per account in /etc/passwd: the name, the
+       terminal and host of the last login, and its time, or "**Never logged
+       in**". It reads /var/log/lastlog. Service accounts normally never log
+       in; a service account with a login time is worth a closer look.
+
+EXAMPLES
+           lastlog | grep -v Never
+
+FILES
+       /var/log/lastlog
+
+SEE ALSO
+       last(1), login(1)

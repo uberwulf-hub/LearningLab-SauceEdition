@@ -1,0 +1,76 @@
+# Lab: lab-01 | A third domain controller and a partner forest | u01 | 40
+Harborline is growing: head office gets a third domain controller, the branch will get a read-only one later this year, and the partner company Tidewater Freight (forest `tidewater.example`, DNS server 192.168.50.10 over the VPN) needs access to a few of Harborline's servers.
+
+@vars
+dsrm = Dsrm#Pass2026 | Restore!Mode26 | Harbor$Dsrm77
+person = bcole | dpatel | imoreau
+@endvars
+
+@task t01 | AD DS | 25 | CORE1
+Make the Server Core machine **CORE1** a writable domain controller of `corp.example` in the site **HQ**, with DNS, a global catalog, and **DC1** as the DC it copies the directory from. Use the DSRM password `{dsrm}`.
+@check admin | CORE1 is a writable global catalog in HQ
+dc["CORE1"].readonly == No
+dc["CORE1"].gc == Yes
+dc["CORE1"].site == HQ
+@check admin | CORE1 has DNS and its own copy of the directory
+feature(CORE1, "DNS") == Installed
+@CORE1 user["{person}"].enabled == Yes
+@hint Install-WindowsFeature AD-Domain-Services -IncludeManagementTools (restart if it says so), then Install-ADDSDomainController with -InstallDns, -SiteName and -ReplicationSourceDC.
+@solution CORE1
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Restart-Computer -Force
+Install-ADDSDomainController -DomainName corp.example -InstallDns -SiteName HQ -ReplicationSourceDC DC1 -SafeModeAdministratorPassword (ConvertTo-SecureString '{dsrm}' -AsPlainText -Force) -Force
+@explain
+A DC is a global catalog unless -NoGlobalCatalog is given, and -InstallDns adds the DNS Server role with the AD-integrated zones. -ReplicationSourceDC picks the partner for the first copy; afterwards the KCC builds the normal connections.
+@endtask
+
+@task t02 | AD DS | 15 | admin
+Prepare the Password Replication Policy for the branch's future read-only DC. The Sales people work there: allow their passwords to be cached. The **Helpdesk** accounts can reset passwords, so they must never be cached on a read-only DC, whatever else changes later.
+@check admin | Sales is allowed, Helpdesk is denied
+group["Allowed RODC Password Replication Group"].members has Sales
+group["Denied RODC Password Replication Group"].members has Helpdesk
+@solution admin
+members add "Allowed RODC Password Replication Group" Sales
+members add "Denied RODC Password Replication Group" Helpdesk
+@explain
+The two domain local groups are part of every RODC's policy. A help desk member who is also in Sales would be in both groups, and deny wins, so their password stays off the RODC.
+@endtask
+
+@task t03 | AD DS | 20 | admin
+Make every Harborline DNS server able to resolve names in `tidewater.example`, with one change that Active Directory replicates to all DNS servers of the forest. Then check that **DC2** answers for `files.tidewater.example` too.
+@check admin | the forwarder exists and CL1 resolves the partner's file server
+dns(DC1).conditional["tidewater.example"] has 192.168.50.10
+resolve(client=CL1, name=files.tidewater.example) == 192.168.50.20
+@check admin | DC2 has the forwarder as well
+resolve(name=files.tidewater.example, server=DC2) == 192.168.50.20
+@hint A conditional forwarder stored in Active Directory (all DNS servers in this forest). DC2 gets it by replication, within seconds in the same site: skip a little time.
+@solution admin
+dns zone add server=DC1 name=tidewater.example type=Forwarder masters=192.168.50.10 ad=Forest
+#wait 60
+@explain
+An AD-integrated conditional forwarder is created once and reaches every DC with DNS in its replication scope. A file-based one would have to be made on each DNS server.
+@endtask
+
+@task t04 | AD DS | 25 | admin
+Create the forest trust with `tidewater.example`. Tidewater's people must be able to use Harborline's servers, but Harborline's people need nothing at Tidewater, and Tidewater's people may authenticate only to the servers Harborline allows one by one.
+@check admin | a one-way forest trust: corp.example trusts tidewater.example
+trust["tidewater.example"].type == Forest
+trust["tidewater.example"].direction == Outbound
+@check admin | selective authentication
+trust["tidewater.example"].selective == Yes
+@hint The domain with the resources trusts the domain with the accounts: from corp.example that is a one-way outgoing trust.
+@solution admin
+trust create tidewater.example type=Forest direction=Outbound auth=Selective
+@explain
+Access goes against the direction of the trust: corp.example trusts tidewater.example (outgoing from corp.example), so Tidewater's accounts can be used on Harborline's resources. Selective authentication then needs "Allowed to authenticate" on each server's computer object.
+@endtask
+
+@task t05 | AD DS | 15 | admin
+Harborline's public name is `harborline.example`. Let people sign in with it: add the UPN suffix to the forest and give it to `{person}` as a first test (`{person}@harborline.example`).
+@check admin | the suffix and the test user's sign-in name
+forest.upnsuffixes has harborline.example
+user["{person}"].upn == {person}@harborline.example
+@solution admin
+upnsuffix add harborline.example
+set user "{person}" upn={person}@harborline.example
+@endtask

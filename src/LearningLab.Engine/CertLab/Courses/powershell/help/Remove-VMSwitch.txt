@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes a virtual switch.
+DESCRIPTION:
+Remove-VMSwitch deletes the switch. VMs connected to it lose their connection (their adapters show as not connected) until you connect them elsewhere. Removing an External switch gives the physical adapter back to the host.
+
+It asks for confirmation; -Force skips it.
+PARAMETER Name:
+The switch or switches. Position 0.
+PARAMETER Force:
+Deletes without asking.
+EXAMPLE: Remove-VMSwitch -Name Isolated -Force -ComputerName HV1
+Deletes the private switch.
+RELATED: Get-VMSwitch, New-VMSwitch, Connect-VMNetworkAdapter

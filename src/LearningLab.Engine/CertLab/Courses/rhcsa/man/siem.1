@@ -1,0 +1,93 @@
+NAME
+       siem - search the practice SIEM's alerts and logs (Cyber Range)
+
+SYNOPSIS
+       siem alerts
+       siem search [TERM...] [--fields A,B,C] [--sort FIELD] [--count-by FIELD]
+                   [--limit N] [--reverse] [--since TIME] [--until TIME]
+       siem show ID
+       siem fields
+
+DESCRIPTION
+       A SIEM ("security information and event management") is the place a
+       security team collects every computer's logs, so they can search them
+       all at once and get alerts when something looks wrong. siem is Cyber
+       Range's pretend one. Every event is a list of fields such as
+       time=..., host=... (the computer that wrote it down), source=...,
+       user=..., image=... (the program), and parent=... (the program that
+       started it).
+
+       An alert is only a starting point: a rule noticed a pattern. Many
+       alerts turn out to be harmless (a "false alarm" or "false positive");
+       the events around an alert tell you whether it is real.
+
+       Sources you will meet:
+         alert     an alert one of the SIEM's rules raised (rule, severity,
+                   note); its host is the computer the alert is about
+         winsec    Windows security log events: event=4624 a sign-in worked,
+                   4625 a sign-in failed, 4634 signed out, 4672 an
+                   administrator signed in, 4688 a program started, 4720 an
+                   account was made, 4723 a person changed their password,
+                   4728 / 4732 someone was added to a group, 4740 an account
+                   was locked, 5145 a shared file was opened, 7045 a service
+                   was installed, 1102 the log was cleared. logon_type says
+                   how: 2 at the keyboard, 3 over the network (a shared
+                   folder), 7 unlocking the screen, 10 remote desktop.
+         proclog   program starts recorded by a process-logging tool
+                   (event=1: image, parent, cmdline, user)
+         dns       name lookups (query = the name asked for, answer = the
+                   address it got)
+         firewall  connections the firewall allowed or blocked (action,
+                   direction, src, dst, dport = the port, bytes)
+         auth      Linux sign-ins (sshd, sudo)
+         web       web server requests (client, method, path, status,
+                   agent = what the visitor's program says it is)
+
+COMMANDS
+       alerts
+              List the alerts: id, time, severity, rule, host, note.
+
+       search TERM...
+              Show the events that match every TERM (all of them must hold):
+                field=value    the field is exactly value (any case); a * in
+                               value matches anything (image=*powershell*)
+                field!=value   the field is not value (or the event has no
+                               such field)
+                field~text     the field contains text
+                word           any field contains word
+              The results are in time order, oldest first, and the last line
+              says how many events matched.
+
+       show ID
+              Every field of one event (IDs are the #numbers in the results).
+
+       fields
+              The fields the events have, how many have each, and the sources.
+
+OPTIONS
+       --fields A,B,C   show only these fields, as a table
+       --sort FIELD     sort by a field (the default is time)
+       --count-by FIELD count the matching events for each value of FIELD
+       --limit N        show only the first N
+       --reverse        newest (or largest) first
+       --since TIME     only events at or after TIME (HH:MM, HH:MM:SS, or a
+                        whole time such as 2026-10-20T09:15:00)
+       --until TIME     only events at or before TIME
+
+EXAMPLES
+           siem alerts
+           siem search host=WS-07 source=proclog
+           siem search source=winsec event=4625 --count-by user
+           siem search parent=*winword* --fields time,host,user,image,cmdline
+           siem search host=WS-07 --since 09:10 --until 09:30
+           siem search source=dns query~invoice --limit 5
+           siem show 42
+
+       Base64 text (for example after -EncodedCommand) can be decoded on your
+       own box with: echo 'TEXT' | base64 -d
+
+       Everything siem shows is pretend data made by Cyber Range; it never
+       reads a real computer's logs.
+
+SEE ALSO
+       journalctl(1), grep(1), base64(1)

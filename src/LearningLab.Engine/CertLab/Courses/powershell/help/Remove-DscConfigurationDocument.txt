@@ -1,0 +1,16 @@
+SYNOPSIS: Deletes one of the configuration documents the LCM keeps.
+DESCRIPTION:
+The LCM keeps up to three configuration documents: Current (the one applied last), Previous (the one before it) and Pending (one that has not finished applying). Remove-DscConfigurationDocument deletes the ones you name.
+
+Removing the Current document does not undo any change on the computer: files, registry values and settings stay as they are. The computer simply has no configuration any more, so Test-DscConfiguration and Get-DscConfiguration report that none exists.
+PARAMETER Stage:
+Current, Pending or Previous. You can give several.
+PARAMETER WhatIf:
+Shows what would be removed.
+EXAMPLE: Remove-DscConfigurationDocument -Stage Current
+Removes the current configuration, so DSC no longer checks this computer.
+EXAMPLE: Remove-DscConfigurationDocument -Stage Pending, Previous
+Cleans up the old and unfinished documents and keeps the current one.
+NOTES:
+PowerShell 7 has no Remove-DscConfigurationDocument and no LCM.
+RELATED: Start-DscConfiguration, Get-DscConfiguration, Get-DscLocalConfigurationManager

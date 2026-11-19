@@ -1,0 +1,25 @@
+NAME
+       pvchange - change settings of physical volumes
+
+SYNOPSIS
+       pvchange [-x y|n] [-u] PV...
+
+DESCRIPTION
+       pvchange changes properties of a physical volume that is already in
+       use, for example whether LVM may place new extents on it.
+
+OPTIONS
+       -x, --allocatable y|n
+              Allow (y) or forbid (n) new extents on this PV. Existing data
+              stays where it is.
+
+       -u, --uuid
+              Give the PV a new random UUID.
+
+EXAMPLES
+       Keep new logical volumes off /dev/vdb1:
+
+           pvchange -x n /dev/vdb1
+
+SEE ALSO
+       pvs(8), pvmove(8), lvm(8)

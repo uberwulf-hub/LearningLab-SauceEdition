@@ -1,0 +1,28 @@
+SYNOPSIS: Lists variables, or gets one variable's details or value.
+DESCRIPTION:
+Get-Variable shows the variables you can see from where you are: the ones you made, plus PowerShell's automatic and preference variables. Each result is a variable object with its Name and Value (and, in a list, its Description and Options).
+
+Give names without the dollar sign: Get-Variable -Name total. With $total, PowerShell would look for a variable named after the value of $total.
+
+With -ValueOnly you get just the value, which is a way to read a variable whose name you only know at run time.
+PARAMETER Name:
+The variables to get, without the $. Position 0. Wildcards work: Get-Variable P*.
+PARAMETER ValueOnly:
+Returns only the value, not the variable object.
+EXAMPLE: Get-Variable
+Lists every variable you can see, in name order.
+EXAMPLE: Get-Variable -Name P*
+Lists the variables whose names start with P, such as PID, PROFILE and PSVersionTable.
+EXAMPLE: $limit = 10; Get-Variable -Name limit -ValueOnly
+Shows 10.
+EXAMPLE: $which = 'limit'; Get-Variable $which -ValueOnly
+Reads a variable whose name is stored in another variable.
+EXAMPLE: Get-Variable -Name nothere
+Fails with "Cannot find a variable with the name 'nothere'." A wildcard that matches nothing just returns nothing.
+NOTES:
+The alias is gv.
+
+The Variable: drive gives the same information: Get-ChildItem Variable: lists the variables, and $Variable:limit reads one.
+
+Real 5.1 also has -Scope (Global, Script, Local or a number), to look at one scope only, and -Include / -Exclude to filter names with patterns.
+RELATED: Set-Variable, New-Variable, Clear-Variable, Remove-Variable, about_Variables, about_Automatic_Variables, about_Scopes

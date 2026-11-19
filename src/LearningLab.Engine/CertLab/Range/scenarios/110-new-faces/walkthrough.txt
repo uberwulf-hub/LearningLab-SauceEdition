@@ -1,0 +1,14 @@
+1. siem alerts: three "New account created" ({{N1}}, {{N2}}, {{ROGUE}}), "Account added to an admin group" and
+   "Security log cleared".
+2. siem search source=winsec event=4720: {{N1}} and {{N2}} were made in the morning by hd_{{HD}} from the help desk's
+   computer WS-{{HH}}, and both went into Staff (4732): a normal onboarding - false alarms.
+   {{ROGUE}} was made at {{T0}} by adm_{{ADMP}} and, thirty seconds later, added to Domain Admins (4728): the group
+   that controls every computer in the domain. A name made to look like a service account. Real.
+3. Follow adm_{{ADMP}}: 40 minutes earlier it signed in to RDGW01 over remote desktop (logon_type=10) from
+   {{ATKIP}}, an address outside the company, then hopped by remote desktop (mstsc) to DC01 and used net.exe to make
+   the account. Ten minutes after, on RDGW01, wevtutil cl Security wiped that computer's security log (1102).
+4. Wiping the log on RDGW01 didn't help the intruder: the SIEM had already collected those events. That is one of
+   the main reasons companies send logs somewhere else as they happen.
+
+Next steps: disable {{ROGUE}} and adm_{{ADMP}}, reset adm_{{ADMP}}'s password (and check where else it was used),
+block {{ATKIP}}, put a second sign-in step on remote desktop, and review everything done on DC01 that afternoon.

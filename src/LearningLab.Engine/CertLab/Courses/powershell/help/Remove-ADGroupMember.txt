@@ -1,0 +1,15 @@
+SYNOPSIS: Removes members from an Active Directory group.
+DESCRIPTION:
+Remove-ADGroupMember takes accounts or groups out of one group. It asks for confirmation unless you add -Confirm:$false.
+People keep the old membership in their access token until they sign out and back in.
+PARAMETER Identity:
+The group. Position 0.
+PARAMETER Members:
+The members to remove. Position 1.
+PARAMETER PassThru:
+Returns the group after the change.
+EXAMPLE: Remove-ADGroupMember "Sales Managers" -Members imoreau -Confirm:$false
+Takes Ines Moreau out of Sales Managers without asking.
+EXAMPLE: Get-ADGroupMember Helpdesk | Where-Object Name -ne "Jamal Price" | ForEach-Object { Remove-ADGroupMember Helpdesk -Members $_ }
+Empties the Helpdesk group except for Jamal Price.
+RELATED: Add-ADGroupMember, Get-ADGroupMember

@@ -1,0 +1,73 @@
+NAME
+       kill - send a signal to processes
+
+SYNOPSIS
+       kill [-s SIGNAL | -SIGNAL | -n NUMBER] PID|%JOB...
+       kill -l [SIGNAL]
+
+DESCRIPTION
+       kill sends a signal to each process given by its process ID (PID), or
+       to a job of this shell (%1). Despite its name it can send any signal,
+       but the default, SIGTERM (15), asks the process to end. A well-written
+       program cleans up and exits.
+
+       Bash has kill built in; it works the same as /usr/bin/kill and also
+       understands %JOB. Normal users may signal only their own processes;
+       root may signal any.
+
+       Find PIDs with ps, pgrep or top. To signal processes by name, use
+       pkill or killall.
+
+   Signals worth knowing
+       1  HUP     hang up; many services reload their configuration on it
+       2  INT     interrupt, what Ctrl+C sends
+       9  KILL    end at once; cannot be caught or ignored. Use it only when
+                  TERM does not work: the program gets no chance to clean up
+       15 TERM    please end (the default)
+       18 CONT    continue a stopped process
+       19 STOP    stop (pause) a process; cannot be ignored
+       20 TSTP    the stop that Ctrl+Z sends
+
+       A signal can be written as a number (-9), a name (-KILL) or a name with
+       SIG (-SIGKILL).
+
+OPTIONS
+       -s SIGNAL
+              The signal to send, by name or number.
+
+       -SIGNAL
+              The same, written short: -9, -KILL, -HUP.
+
+       -n NUMBER
+              The signal by number.
+
+       -l [SIGNAL]
+              List the signal names (or translate one name or number).
+
+       -L     List the signals as a table.
+
+EXAMPLES
+       Ask process 1234 to end:
+
+           kill 1234
+
+       If it does not, end it by force:
+
+           kill -9 1234
+
+       Make a service's main process reread its configuration:
+
+           kill -HUP $(pgrep rsyslogd)
+
+       Stop and continue background job 1:
+
+           kill -STOP %1
+           kill -CONT %1
+
+       End the process that uses the most CPU (look first, then kill):
+
+           ps -eo pid,%cpu,comm --sort=-%cpu | head -5
+           kill PID
+
+SEE ALSO
+       killall(1), pkill(1), ps(1), top(1), signal(7)

@@ -1,0 +1,37 @@
+NAME
+       dd - copy data in blocks, between files and devices
+
+SYNOPSIS
+       dd if=INPUT of=OUTPUT [bs=SIZE] [count=N] [skip=N] [seek=N] [status=WHAT]
+
+DESCRIPTION
+       dd copies from INPUT to OUTPUT in blocks of a set size. It is used to
+       make a file of a known size (for example for swap or a test), to copy
+       or wipe the start of a disk, and to write images. Without if= it reads
+       standard input; without of= it writes standard output. At the end it
+       reports how much it copied.
+
+       Be careful with of=: dd writes over a disk or partition without asking.
+
+OPERANDS
+       if=FILE         read from FILE
+       of=FILE         write to FILE
+       bs=SIZE         block size: 512, 4K, 1M, 1G (K, M, G are powers of 1024)
+       count=N         copy only N blocks
+       skip=N          skip N blocks of the input first
+       seek=N          skip N blocks of the output first
+       conv=notrunc    do not cut the output file short
+       status=progress show progress while copying; status=none prints nothing
+
+EXAMPLES
+       Make a 100 MiB file of zeros:
+
+           dd if=/dev/zero of=/root/test.img bs=1M count=100
+
+       Wipe the partition table at the start of /dev/vdb (destroys its
+       partitions):
+
+           dd if=/dev/zero of=/dev/vdb bs=1M count=1
+
+SEE ALSO
+       truncate(1), fallocate(1), wipefs(8), mkswap(8)

@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the remoting endpoints registered on this computer.
+DESCRIPTION:
+Get-PSSessionConfiguration shows each endpoint with its name, PowerShell version, who may connect (Permission) and, for JEA endpoints, its session type, roles and settings file.
+
+Windows has built-in endpoints: microsoft.powershell (the one used when you do not name one), microsoft.powershell32 and microsoft.powershell.workflow. Endpoints you register appear next to them.
+
+Remoting must be on (WinRM listening), as on WIN-SRV1; on WIN-CL1 the command fails until remoting is enabled.
+PARAMETER Name:
+The endpoint name. Wildcards work.
+EXAMPLE: Get-PSSessionConfiguration
+Lists every endpoint with its permissions.
+EXAMPLE: Get-PSSessionConfiguration -Name HelpDesk | Select-Object Name, SessionType, RunAsVirtualAccount, RoleDefinitions
+Shows the main settings of a JEA endpoint.
+NOTES:
+On a real PC this needs PowerShell run as administrator.
+RELATED: Register-PSSessionConfiguration, Unregister-PSSessionConfiguration, Get-PSSessionCapability, Enable-PSRemoting

@@ -1,0 +1,84 @@
+NAME
+       lsblk - list block devices (disks, partitions, logical volumes) as a tree
+
+SYNOPSIS
+       lsblk [-f] [-p] [-n] [-l] [-d] [-b] [-o COLUMNS] [DEVICE...]
+
+DESCRIPTION
+       lsblk shows every disk with what is on it: partitions under their disk,
+       logical volumes under the partition (physical volume) they live on,
+       and where each is mounted or whether it is swap:
+
+           NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+           vda           252:0    0   20G  0 disk
+           |-vda1        252:1    0    1G  0 part /boot
+           `-vda2        252:2    0   19G  0 part
+             |-rhel-root 253:0    0   17G  0 lvm  /
+             `-rhel-swap 253:1    0    2G  0 lvm  [SWAP]
+           vdb           252:16   0    5G  0 disk
+           sr0            11:0    1  9.8G  0 rom
+
+       It is the quickest way to see which disks are free, how big they are,
+       and whether a new partition or LV appeared. Unlike df it also shows
+       things that are not mounted. TYPE is disk, part, lvm, rom, loop...
+
+OPTIONS
+       -f, --fs
+              Show the file systems instead: FSTYPE, FSVER, LABEL, UUID,
+              FSAVAIL, FSUSE% and MOUNTPOINTS.
+
+       -p, --paths
+              Full device paths (/dev/vdb1) instead of names.
+
+       -o LIST, --output LIST
+              Choose the columns, separated by commas: NAME, PATH, SIZE,
+              TYPE, FSTYPE, LABEL, UUID, PARTUUID, MOUNTPOINT, MOUNTPOINTS,
+              RO, RM, MODEL, SERIAL, OWNER, GROUP, MODE, PKNAME, KNAME,
+              MAJ:MIN, FSSIZE, FSUSED, FSAVAIL, FSUSE%.
+
+       -n, --noheadings
+              No header line.
+
+       -l, --list
+              A flat list instead of a tree.
+
+       -r, --raw
+              Raw output, for scripts.
+
+       -d, --nodeps
+              Only the disks, without their partitions.
+
+       -b, --bytes
+              Sizes in bytes.
+
+       -a, --all
+              Include empty devices.
+
+       -m, --perms
+              Show owner, group and mode of the device files.
+
+       -S, --scsi
+              Only SCSI devices.
+
+       -J, --json
+              JSON output.
+
+EXAMPLES
+       What disks are there, and what is on them?
+
+           lsblk
+
+       File system types, labels and UUIDs:
+
+           lsblk -f
+
+       Only one disk, after partitioning it:
+
+           lsblk /dev/vdb
+
+       The size of a partition in bytes, for a script:
+
+           lsblk -b -n -o SIZE /dev/vdb1
+
+SEE ALSO
+       blkid(8), findmnt(8), df(1), fdisk(8), lvs(8)

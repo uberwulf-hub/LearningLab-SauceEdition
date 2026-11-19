@@ -1,0 +1,12 @@
+SYNOPSIS: Shows the settings of a Hyper-V host.
+DESCRIPTION:
+Get-VMHost shows the host itself: its LogicalProcessorCount, MemoryCapacity, the default folders for new VMs (VirtualMachinePath) and their disks (VirtualHardDiskPath), whether enhanced session mode is allowed and whether NUMA spanning is on.
+
+The default folders are on drive C:, which is why many admins move them to a data drive with Set-VMHost.
+PARAMETER ComputerName:
+The Hyper-V host to ask.
+EXAMPLE: Get-VMHost -ComputerName HV1
+HV1 has 16 logical processors and 64 GB of memory.
+EXAMPLE: Get-VMHost | Format-List VirtualMachinePath, VirtualHardDiskPath
+Where new VMs and disks go.
+RELATED: Set-VMHost, Get-VM, Get-VMSwitch

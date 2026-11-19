@@ -1,0 +1,27 @@
+SYNOPSIS: Sets a registry-based policy setting in a Group Policy Object.
+DESCRIPTION:
+Most Administrative Templates settings are registry values under HKLM\Software\Policies or HKCU\Software\Policies. Set-GPRegistryValue writes such a value into a GPO; computers or users that get the GPO then receive the value at the next refresh.
+Keys under HKLM go to the computer half of the GPO, keys under HKCU to the user half. The value is a real policy setting (removed again when the GPO stops applying) when the key is under one of the Policies keys; elsewhere it stays behind like a preference ("tattooing").
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Key:
+The registry key, starting with HKLM\ or HKCU\.
+PARAMETER ValueName:
+The value's name.
+PARAMETER Value:
+The data to store.
+PARAMETER Type:
+String, ExpandString, Binary, DWord, MultiString or QWord.
+PARAMETER Additive:
+Adds the value next to existing ones instead of replacing the key's values.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-GPRegistryValue "Sales Desktop" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop" -ValueName ScreenSaveTimeOut -Type String -Value 600
+Locks the screen saver timeout at 10 minutes for Sales users.
+EXAMPLE: Set-GPRegistryValue "Security Baseline" -Key "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate\AU" -ValueName NoAutoRebootWithLoggedOnUsers -Type DWord -Value 1
+A computer setting: no automatic restart for updates while someone is signed in.
+RELATED: Get-GPRegistryValue, Remove-GPRegistryValue, New-GPO, Invoke-GPUpdate

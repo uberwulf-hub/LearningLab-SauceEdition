@@ -1,0 +1,15 @@
+1. siem alerts --fields time,host,dst,note: three "Regular connections to one address" alerts, on {{TIMEH}},
+   {{UPDH}} and {{BADH}}.
+2. siem search source=proclog event=3 (event 3 = a network connection, with the program that made it):
+   - {{TIMEH}}: svchost.exe running W32Time, port 123 (the time protocol), every 64 seconds, after a DNS lookup of
+     ntp.clockwork.example. That is the computer keeping its clock right. False alarm.
+   - {{UPDH}}: svchost.exe running wuauserv (the update service), port 443, every five minutes, to the address of
+     wu.osvendor.example. False alarm.
+   - {{BADH}}: rundll32.exe, as {{BADU}}, to {{C2IP}} on port 443 every {{INT}} seconds from {{T0}} - and no name
+     lookup ever explains that address.
+3. siem search source=proclog event=1 image~rundll32: three minutes before, rundll32.exe loaded
+   C:\Users\{{BADU}}\AppData\Local\Temp\{{DLL}}. rundll32 is a Windows tool that runs code inside a DLL; a DLL
+   in a Temp folder, started by hand, checking in with a bare address, is a hidden program waiting for orders.
+
+So {{BADH}} is the infected one (the alert on WS-{{HA}} was {{VA}}). Isolate it, block {{C2IP}}, collect {{DLL}} for
+study, and find how it got there (mail? a download?).

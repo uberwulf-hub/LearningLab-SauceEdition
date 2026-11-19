@@ -1,0 +1,36 @@
+NAME
+       passwd - the local user account file
+
+SYNOPSIS
+       /etc/passwd
+
+DESCRIPTION
+       /etc/passwd has one line per local account, readable by everyone. The
+       seven fields are separated by colons:
+
+           NAME:PASSWORD:UID:GID:COMMENT:HOME:SHELL
+
+       NAME      the login name.
+       PASSWORD  x, meaning the password (hash) is kept in /etc/shadow,
+                 which only root can read.
+       UID       the user ID number. 0 is root; 1-999 are system accounts;
+                 ordinary users start at 1000 (see login.defs).
+       GID       the number of the primary group (in /etc/group). New files
+                 get this group.
+       COMMENT   free text, usually the person's full name (GECOS field).
+       HOME      the home directory.
+       SHELL     the program started at login: /bin/bash normally;
+                 /sbin/nologin refuses interactive logins.
+
+       Change the file with useradd, usermod and userdel (or vipw), not with
+       a plain editor. getent passwd NAME shows one account; id NAME shows
+       its numbers and groups.
+
+EXAMPLES
+           student:x:1000:1000:Student User:/home/student:/bin/bash
+
+           grep '^student:' /etc/passwd
+           awk -F: '$3 >= 1000 {print $1}' /etc/passwd
+
+SEE ALSO
+       shadow(5), group(5), useradd(8), usermod(8), vipw(8), getent(1)

@@ -1,0 +1,56 @@
+NAME
+       smbclient - list and read Windows file shares (Cyber Range)
+
+SYNOPSIS
+       smbclient -L //SERVER [-N] [-U USER[%PASSWORD]]
+       smbclient //SERVER/SHARE [-N] [-U USER[%PASSWORD]] [-c "COMMANDS"]
+
+DESCRIPTION
+       smbclient talks to the file sharing service (SMB, TCP port 445) of a
+       Windows computer. With -L it lists the shares; with //SERVER/SHARE it
+       opens one and shows an smb: \> prompt, much like an ftp client.
+
+       In Cyber Range smbclient reaches only the range's pretend Windows hosts.
+       Their shares are read-only for you.
+
+OPTIONS
+       -L //SERVER
+              List the server's shares (ADMIN$, C$ and IPC$ are always there).
+
+       -N     No password: sign in as an anonymous visitor (a "null session").
+              Shares that allow it open; the others say ACCESS_DENIED.
+
+       -U USER[%PASSWORD]
+              Sign in as an account. Without %PASSWORD smbclient asks for it.
+              A domain account may be written DOMAIN\\USER.
+
+       -c "COMMANDS"
+              Run the commands (separated by ;) and leave.
+
+COMMANDS AT THE smb: \> PROMPT
+       ls [MASK]           list the folder (files marked H are hidden)
+       cd FOLDER           change folder (.. goes up)
+       pwd                 show where you are
+       get FILE [LOCAL]    copy a file to the current folder on your box
+       more FILE           show a file
+       exit                leave
+
+EXAMPLES
+       Which shares does the server offer to anyone?
+
+           smbclient -L //10.10.1.30 -N
+
+       Copy a file from the Public share:
+
+           smbclient //10.10.1.30/Public -N -c 'ls; get readme.txt'
+
+       Sign in as an account:
+
+           smbclient //10.10.1.30/Finance -U kim
+
+NOTES
+       Only test computers you own or have written permission to test.
+       Everything in Cyber Range is pretend: no real share is touched.
+
+SEE ALSO
+       winrm-shell(1), nmap(1), ftp(1)

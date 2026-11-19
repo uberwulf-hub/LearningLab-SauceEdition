@@ -1,0 +1,24 @@
+NAME
+       vgchange - change a volume group, such as turning its volumes on or off
+
+SYNOPSIS
+       vgchange -a y|n [VG...]
+
+DESCRIPTION
+       vgchange changes the attributes of volume groups. Its everyday use is
+       activation: an active logical volume has a device file
+       (/dev/VG/LV) and can be used; an inactive one cannot. Volume groups
+       are normally activated at boot by themselves.
+
+OPTIONS
+       -a, --activate y|n
+              Activate (y) or deactivate (n) all logical volumes of the
+              volume group. Unmount their file systems before deactivating.
+
+EXAMPLES
+           umount /mnt/data
+           vgchange -a n vgdata
+           vgchange -a y vgdata
+
+SEE ALSO
+       lvchange(8), vgs(8), vgdisplay(8), lvm(8)

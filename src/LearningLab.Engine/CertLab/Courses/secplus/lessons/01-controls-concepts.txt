@@ -1,0 +1,263 @@
+# Unit: u01 | 1. Security controls and core concepts | General security concepts
+
+Security work starts with a shared vocabulary. This unit covers the words the rest of the course builds on: the kinds of **security controls** and what each one is for, the **CIA triad**, **non-repudiation** and **AAA**, how a **gap analysis** shows what is missing, the **zero trust** model, **physical security**, and the **deception** tools (honeypots and their relatives) that trick attackers into revealing themselves.
+
+Many Security+ questions describe a control and ask you to name its category or type. Learn to ask two questions about every control: "Who or what carries it out?" (the category) and "When does it act, compared to an attack?" (the type).
+
+## Lesson: l0101 | Control categories and control types
+
+A **security control** is anything that lowers risk: a lock, a firewall rule, a policy, a training session. Security+ sorts controls two ways at once.
+
+### Categories: how the control is carried out
+
+- **Technical** (also called logical): enforced by hardware or software. Firewalls, antivirus, encryption, multifactor sign-in, file permissions.
+- **Managerial** (also called administrative): decisions and documents that direct security. Risk assessments, security policies, hiring rules, a change management process.
+- **Operational**: carried out day to day by people. Security guards doing rounds, staff awareness training, someone reviewing logs every morning, running backups.
+- **Physical**: protects buildings, rooms and equipment. Fences, door locks, badge readers, cameras, bollards.
+
+A common trap: a guard is **operational** if the question is about the person doing the job, but guards, locks and cameras are all often grouped as **physical** too. Read what the question stresses. A policy that says "visitors must be escorted" is **managerial**; the receptionist who escorts them is carrying out an **operational** control.
+
+### Types: what the control does
+
+- **Preventive**: stops something from happening. A firewall that blocks a port, a locked door, account lockout after failed passwords.
+- **Deterrent**: discourages an attacker without physically stopping them. A "This area is monitored" sign, a login warning banner, visible cameras.
+- **Detective**: notices that something happened or is happening. An IDS alert, log review, a motion sensor, an audit.
+- **Corrective**: fixes things after an incident and limits the damage. Restoring from backup, antivirus removing malware, patching a hole that was used.
+- **Compensating**: an alternative used when the normal control can't be used, giving similar protection. A legacy machine can't be patched, so it is placed on an isolated network segment with strict firewall rules.
+- **Directive**: tells people what to do or not do. A policy, a procedure, a sign saying "Authorized staff only", a training rule.
+
+One control can be several types. A visible camera is a **deterrent** (people see it) and **detective** (it records). Pick the type the question is asking about.
+
+> Deterrent discourages, preventive stops. A sign is deterrent; a lock is preventive.
+
+### Telling compensating controls apart
+
+A compensating control always answers the question "the usual control isn't possible, so what do we do instead?" If a scenario says a system "cannot be patched", "does not support MFA" or "the vendor no longer supports it", and asks what to add, the answer is usually a **compensating** control such as isolation, extra monitoring or a jump server.
+
+### Examples to sort
+
+- Requiring two signatures on payments over a set amount: managerial, preventive.
+- A cable lock on a laptop: physical, preventive.
+- An email filter quarantining a malicious attachment: technical, preventive.
+- A file integrity monitor that alerts when a system file changes: technical, detective.
+- Rebuilding a server from a clean image after an infection: corrective.
+- An acceptable use policy that staff sign: managerial, directive.
+
+@quiz
+? An old medical device runs software that the maker no longer patches. The hospital moves it to its own VLAN that can only talk to one management server. What type of control is this?
+- Deterrent
+- Directive
++ Compensating
+- Corrective
+! The normal control (patching) is impossible, so isolation is used instead to give similar protection: that is a compensating control.
+? A login screen shows: "Unauthorized access is prohibited and will be prosecuted." Which control type is this banner?
++ Deterrent
+- Preventive
+- Detective
+- Corrective
+! The banner discourages misuse but does not stop anyone from trying, so it is a deterrent, not preventive.
+? Which of these is a managerial control?
+- A badge reader on the server room door
+- An IPS that drops malicious packets
++ A yearly risk assessment
+- A guard who checks visitor IDs
+! Risk assessments and policies are decisions made by management. The badge reader is physical, the IPS technical, and the guard is a physical (or operational) control carried out by a person.
+? After ransomware hits a file server, the team restores the files from last night's backup. What type of control is the restore?
+- Preventive
+- Detective
+- Directive
++ Corrective
+! Restoring from backup repairs the damage after an incident, which makes it corrective.
+@end
+
+## Lesson: l0102 | CIA, non-repudiation, AAA and gap analysis
+
+### The CIA triad
+
+The three goals of information security:
+
+- **Confidentiality**: only the right people can read the data. Tools: encryption, access control, data classification.
+- **Integrity**: data isn't changed without permission, and you can tell if it was. Tools: hashing, digital signatures, file integrity monitoring, version control.
+- **Availability**: systems and data are there when people need them. Tools: redundancy, backups, load balancing, patching, DDoS protection.
+
+Map attacks to the goal they hit: stealing a customer list hurts **confidentiality**, changing a payment amount hurts **integrity**, a denial-of-service attack hurts **availability**.
+
+### Non-repudiation
+
+**Non-repudiation** means someone can't credibly deny an action they took, such as sending a message or signing a contract. In technology it usually comes from a **digital signature**: only the holder of the private key could have made it, and anyone can check it with the public key. A plain hash proves integrity but not who made it; a shared secret (like an HMAC key) can't prove which of the two people who know it acted.
+
+### AAA: authentication, authorization and accounting
+
+- **Identification**: claiming an identity ("I am jsmith").
+- **Authentication**: proving that claim (a password, a token, a fingerprint).
+- **Authorization**: deciding what the proven identity may do (read this folder, not that one).
+- **Accounting**: recording what was done (logs of sign-ins, commands, file access) so actions can be traced later.
+
+Security+ expects you to think about **authenticating systems** as well as people. A server proves its identity with a **certificate**; a device joining a network may authenticate with a machine certificate through 802.1X; services may use API keys or managed identities. Devices need identities too, so that a rogue device can't simply plug in and be trusted.
+
+**Authorization models** decide how permissions are given. You will meet them in detail later (unit 15): discretionary (the owner decides), mandatory (labels and clearances set by the system), role-based (permissions follow a job role), rule-based (rules such as time of day), and attribute-based (decisions from many attributes of the user, resource and situation).
+
+A RADIUS server is a classic AAA server: it checks the user's credentials, tells the network device what the user is allowed, and records accounting data about the session.
+
+### Gap analysis
+
+A **gap analysis** compares where an organization is today with where it wants to be, usually against a framework or standard (for example NIST CSF or ISO/IEC 27001). Steps:
+
+- Choose the target: the framework, regulation or internal goal.
+- Measure the current state: interviews, document reviews, technical checks.
+- List the gaps: each requirement that is missing or only partly met.
+- Plan and prioritise fixes, with owners, cost and dates.
+
+The result is a report that shows what is missing, not a fix in itself. A gap analysis is a planning tool; an audit checks whether you meet requirements you already claim to meet.
+
+@quiz
+? An attacker changes the bank account number in a stored invoice so a payment goes to them. Which part of the CIA triad was attacked first?
+- Confidentiality
++ Integrity
+- Availability
+- Non-repudiation
+! The data was changed without permission, which is an integrity violation.
+? A manager says she never approved a purchase order. The order carries a valid digital signature made with her private key. Which property does the signature provide?
+- Availability
+- Confidentiality
++ Non-repudiation
+- Authorization
+! Only she holds her private key, so the signature shows she signed and she can't credibly deny it.
+? A user signs in successfully but gets "Access denied" when opening the payroll folder. Which step of AAA blocked her?
+- Identification
+- Authentication
++ Authorization
+- Accounting
+! She proved who she is (authentication worked); the decision about what she may open is authorization.
+? A company wants to know how far its current controls are from meeting ISO/IEC 27001 before it pays for a certification audit. What should it do?
++ A gap analysis
+- A penetration test
+- A business impact analysis
+- A tabletop exercise
+! A gap analysis compares the current state against a target standard and lists what is missing.
+@end
+
+## Lesson: l0103 | Zero trust
+
+The old "castle and moat" model trusted anything inside the network. **Zero trust** removes that assumption: no user, device or network location is trusted by default, and every request is checked, every time, with the least access needed. "Never trust, always verify."
+
+Zero trust splits into two planes, a bit like a network device's control and data planes.
+
+### The control plane: making decisions
+
+- **Adaptive identity**: the system looks at more than a password. It weighs context such as the device's health, location, time and behaviour, and may ask for more proof (MFA) or refuse when something looks risky.
+- **Threat scope reduction**: limit how far an attacker can get. Give the smallest access needed and segment resources so one compromised account or device reaches very little.
+- **Policy-driven access control**: access decisions come from written, central policies, not ad hoc exceptions.
+- **Policy engine (PE)**: the "brain" that evaluates a request against the policies, risk data and threat intelligence, and decides allow or deny.
+- **Policy administrator (PA)**: carries out the engine's decision: it sets up or tears down the session and tells the enforcement point what to do (for example by issuing a session token).
+
+### The data plane: carrying traffic
+
+- **Subject/system**: the user, device or application asking for access.
+- **Policy enforcement point (PEP)**: the gatekeeper in the path between the subject and the resource. It lets the connection through or blocks it, based on what the policy administrator told it. A gateway, proxy or agent can act as a PEP.
+- **Implicit trust zones**: the area behind a PEP where traffic is trusted once allowed. Zero trust keeps these zones as small as possible, ideally just the resource itself.
+
+> Engine decides, administrator executes, enforcement point enforces.
+
+```file
+Request: user ana@corp.example, laptop LT-2231, resource payroll.corp.example
+Policy engine: device compliant=yes, location=unusual country, risk=medium
+Decision: allow after MFA step-up
+Policy administrator: session token issued to PEP gw-02 (60 minutes)
+PEP gw-02: connection forwarded to payroll app
+```
+
+### Zero trust in practice
+
+- Strong identity for users and devices (MFA, device certificates).
+- Device posture checks before access (patched, encrypted, protected).
+- Microsegmentation so workloads talk only to what they need.
+- Continuous monitoring: trust is re-checked during the session, not just at sign-in.
+
+@quiz
+? In a zero trust architecture, which component evaluates an access request against policy and decides whether to allow it?
++ Policy engine
+- Policy enforcement point
+- Policy administrator
+- Implicit trust zone
+! The policy engine makes the decision; the administrator carries it out and the enforcement point applies it to the traffic.
+? A remote employee signs in from a new country on an unmanaged laptop, and the system asks for an extra MFA prompt before allowing access. Which zero trust idea is this?
+- Implicit trust zone
++ Adaptive identity
+- Threat scope reduction
+- Physical isolation
+! Adaptive identity uses context (location, device) to adjust how much proof is needed.
+? Which component sits in the data path and actually allows or blocks the connection to a resource?
+- Policy engine
+- Policy administrator
++ Policy enforcement point
+- Subject
+! The PEP is the gatekeeper in the traffic path; it acts on the decisions passed down by the policy administrator.
+@end
+
+## Lesson: l0104 | Physical security and deception
+
+### Physical controls
+
+- **Bollards**: short, strong posts that stop vehicles from reaching a building entrance while letting people walk through.
+- **Access control vestibule** (formerly called a mantrap): a small space with two doors where only one can be open at a time, so one person at a time passes after authenticating. It stops **tailgating** (following someone through) and **piggybacking** (being let in by someone).
+- **Fencing**: marks a boundary and slows intruders; height and anti-climb tops make it stronger.
+- **Video surveillance** (CCTV): records and deters. Modern cameras can do motion and object detection.
+- **Security guard**: a person who can make judgment calls, check IDs and respond; a strong deterrent.
+- **Access badge**: proves identity at doors; often smart cards or proximity (RFID/NFC) cards, sometimes with a photo. Badges also log who entered where and when.
+- **Lighting**: deters intruders and helps cameras and guards see.
+
+### Sensors
+
+- **Infrared**: detects body heat (passive infrared, PIR) - common motion sensors in rooms.
+- **Pressure**: detects weight on a floor mat or a change in pressure, for example under a window or on a floor.
+- **Microwave**: sends out microwave signals and detects movement from changes in the reflections; covers larger areas and can sense through some materials.
+- **Ultrasonic**: sends out high-frequency sound and detects movement from changes in the echoes.
+
+Sensors are detective controls. Combining two sensor types (for example infrared plus microwave) lowers false alarms.
+
+> Vestibule = one person at a time, stops tailgating. Bollards = stops cars, not people.
+
+### Deception and disruption
+
+These tools exist only to be found by attackers. No legitimate user should ever touch them, so any contact with them is a strong sign of malicious activity.
+
+- **Honeypot**: a decoy system that looks valuable (an old server, a fake database) and records what an attacker does.
+- **Honeynet**: a network of honeypots, imitating a realistic environment so attackers spend longer and reveal more.
+- **Honeyfile**: a decoy file with a tempting name (for example `passwords-2026.xlsx`) whose opening raises an alert.
+- **Honeytoken**: a fake piece of data planted somewhere, such as a fake user account, a fake API key in source code, or a fake customer record. If it is ever used or seen elsewhere, you know that data store was stolen or accessed.
+
+```file
+2026-03-14 02:11:07 ALERT honeytoken used: api_key=AKIAFAKE0000EXAMPLE
+  source ip 203.0.113.45  service: storage-api  action: ListBuckets
+  note: key exists only in repo config/old-settings.yml
+```
+
+The alert above tells the team that someone has read the code repository, because the key existed nowhere else.
+
+@quiz
+? A data center wants to stop an employee from holding the door open so a stranger can walk in behind them. Which control is best?
+- Bollards
++ An access control vestibule
+- Brighter lighting
+- A pressure sensor
+! A vestibule lets one authenticated person through at a time, which defeats tailgating and piggybacking.
+? A security team creates a fake database administrator account that no one uses and alerts if anyone signs in with it. What is this?
+- Honeynet
+- Honeyfile
++ Honeytoken
+- Bollard
+! A fake credential or data item planted to reveal misuse is a honeytoken; a honeyfile is a decoy document.
+? Which sensor detects motion by sensing the body heat of a person crossing a room?
++ Infrared
+- Ultrasonic
+- Microwave
+- Pressure
+! Passive infrared sensors detect heat; ultrasonic and microwave sensors detect changes in reflected sound or radio waves.
+? Concrete posts are installed outside a lobby's glass front. What threat do they mainly address?
+- Tailgating
+- Shoulder surfing
++ A vehicle driven into the entrance
+- RFID badge cloning
+! Bollards stop vehicles while letting pedestrians pass.
+@end

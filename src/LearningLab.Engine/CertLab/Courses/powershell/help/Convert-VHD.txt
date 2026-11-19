@@ -1,0 +1,18 @@
+SYNOPSIS: Copies a virtual hard disk into a new format or type.
+DESCRIPTION:
+Convert-VHD writes a new file from an existing disk: VHD to VHDX (or back), or Dynamic to Fixed (or back). The extension of -DestinationPath sets the format, -VHDType the type. The source file stays unless you add -DeleteSource.
+
+The disk must not be in use by a running VM. Then point the VM at the new file (Add-VMHardDiskDrive) before deleting the old one.
+PARAMETER Path:
+The source disk. Position 0.
+PARAMETER DestinationPath:
+The new file. Position 1.
+PARAMETER VHDType:
+Fixed, Dynamic or Differencing.
+PARAMETER DeleteSource:
+Deletes the source file afterwards.
+EXAMPLE: Convert-VHD -Path "D:\Hyper-V\Virtual Hard Disks\WEB-TEST.vhdx" -DestinationPath "D:\Hyper-V\Virtual Hard Disks\WEB-TEST-fixed.vhdx" -VHDType Fixed -ComputerName HV1
+A fixed-size copy of WEB-TEST's disk.
+EXAMPLE: Convert-VHD -Path D:\Old\legacy.vhd -DestinationPath D:\Old\legacy.vhdx
+Moves an old VHD to the VHDX format.
+RELATED: Get-VHD, New-VHD, Resize-VHD

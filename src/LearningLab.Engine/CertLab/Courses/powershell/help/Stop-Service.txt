@@ -1,0 +1,30 @@
+SYNOPSIS: Stops one or more running services.
+DESCRIPTION:
+Stop-Service stops a service. If other running services depend on it, PowerShell refuses unless you add -Force, which stops those dependent services too. Some core services (for example RpcSs) cannot be stopped at all.
+
+Each stop writes event 7036 to the System log.
+PARAMETER Name:
+The services to stop, by name or display name. Takes pipeline input.
+PARAMETER DisplayName:
+The services to stop, by display name.
+PARAMETER InputObject:
+Service objects, usually from Get-Service through the pipeline.
+PARAMETER Force:
+Also stops the services that depend on this one.
+PARAMETER NoWait:
+Does not wait for the service to finish stopping (on the practice machine services stop at once).
+PARAMETER PassThru:
+Outputs the stopped service.
+PARAMETER Include:
+Only the services whose names match these patterns.
+PARAMETER Exclude:
+Leaves out the services whose names match these patterns.
+EXAMPLE: Stop-Service -Name Spooler
+Stops the print spooler.
+EXAMPLE: Stop-Service LanmanWorkstation -Force
+Stops the Workstation service and Netlogon and the other services that need it.
+EXAMPLE: Get-Service Spooler | Stop-Service -WhatIf
+Shows what would happen without stopping anything.
+NOTES:
+An Automatic service starts again at the next restart; to keep it stopped, also set its start type to Disabled or Manual with Set-Service.
+RELATED: Start-Service, Restart-Service, Set-Service, Get-Service

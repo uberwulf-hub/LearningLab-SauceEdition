@@ -1,0 +1,14 @@
+SYNOPSIS: Empties a file but keeps it.
+DESCRIPTION:
+Clear-Content leaves a file with no content (0 bytes). Its name, folder and permissions stay. To delete the file use Remove-Item.
+PARAMETER Path:
+The files to empty. Wildcards are allowed.
+PARAMETER LiteralPath:
+The file, taken exactly as typed.
+PARAMETER Force:
+Empties read-only files too.
+PARAMETER Stream:
+Empties an alternate data stream instead.
+EXAMPLE: Clear-Content C:\LabFiles\app.log
+Starts the log again.
+RELATED: Set-Content, Remove-Item

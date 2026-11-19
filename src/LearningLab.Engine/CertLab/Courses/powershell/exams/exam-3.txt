@@ -1,0 +1,223 @@
+# Exam: exam-3 | Practice exam 3 | 120
+Two machines: WIN-SRV1 (Windows Server 2022) and WIN-CL1 (Windows 11), both with sample files in C:\LabFiles. You are the administrator on both. Hands-on work must still be there after a restart: the grader restarts both machines and checks them in a new PowerShell session. Questions: pick one answer.
+
+@vars
+dept = Engineering | Research | IT
+missing = old-notes | draft | lost-report
+alias = lsf | dirx | listit
+grp = Helpdesk | Printing | Backup
+u1 = asmith | bnguyen | cdiaz
+u2 = dpatel | eward | fkim
+src = LabBackup | NightlyJob | FileSync
+id = 4000-4999
+msg = Lunch at noon | Meeting moved to 3 PM | Server patching tonight
+acct = svc_backup | svc_report | svc_web
+pw = Bl0ck-Tower7! | Gr33n-River9! | Bl#e-Canyon4!
+arch = LogArchive | OldLogs | LogVault
+duser = pjones | rlee | tmorgan
+@endvars
+
+@task t01 | Scripting | 8 | WIN-SRV1
+Write the script `C:\Scripts\Get-Payroll.ps1` with a **mandatory** parameter `-Department` that accepts **only** `Engineering`, `Research` or `IT` (anything else must be refused by PowerShell before the script runs), and a switch `-Average`. It outputs **only a number**: the total of the Salary column of `C:\LabFiles\employees.csv` for that department, or with `-Average` the average salary rounded to a whole number.
+@check WIN-SRV1 | the total for {dept}
+$t = 0; Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}' | ForEach-Object { $t += [int]$_.Salary }; (& C:\Scripts\Get-Payroll.ps1 -Department {dept}) -eq $t
+@check WIN-SRV1 | -Average gives the rounded average
+$r = @(Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}'); $t = 0; $r | ForEach-Object { $t += [int]$_.Salary }; (& C:\Scripts\Get-Payroll.ps1 -Department {dept} -Average) -eq [math]::Round($t / $r.Count)
+@check WIN-SRV1 | another department name is refused by parameter validation
+try { & C:\Scripts\Get-Payroll.ps1 -Department Sales -ErrorAction Stop | Out-Null; $false } catch { $_.FullyQualifiedErrorId -like 'ParameterArgumentValidationError*' }
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path C:\Scripts -Force | Out-Null
+Set-Content -Path C:\Scripts\Get-Payroll.ps1 -Value @'
+param([Parameter(Mandatory)][ValidateSet('Engineering', 'Research', 'IT')][string]$Department, [switch]$Average)
+$m = Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq $Department | Measure-Object -Property Salary -Sum -Average
+if ($Average) { [math]::Round($m.Average) } else { $m.Sum }
+'@
+@explain
+[ValidateSet()] makes PowerShell check the value while binding parameters, so a wrong name fails with a clear message before any line of the script runs. Measure-Object converts the text from the CSV into numbers for -Sum and -Average.
+@endtask
+
+@task t02 | Errors | 8 | WIN-SRV1
+Write the script `C:\Scripts\Measure-Files.ps1`. It takes a mandatory parameter `-Path` that accepts **several** paths. For each path that is a file it outputs the file's size in bytes (a number). For a path that does not exist it writes a **non-terminating** error with the message `No file: <path>` and goes on with the next path. Callers must be able to hide or collect these errors with the common parameters `-ErrorAction` and `-ErrorVariable`.
+@check WIN-SRV1 | it keeps going after a missing file
+$r = & C:\Scripts\Measure-Files.ps1 -Path C:\LabFiles\notes.txt, C:\LabFiles\{missing}.txt, C:\LabFiles\servers.txt -ErrorAction SilentlyContinue; @($r).Count -eq 2 -and $r[1] -eq (Get-Item C:\LabFiles\servers.txt).Length
+@check WIN-SRV1 | the error message, collected with -ErrorVariable
+$null = & C:\Scripts\Measure-Files.ps1 -Path C:\LabFiles\{missing}.txt -ErrorAction SilentlyContinue -ErrorVariable ev; @($ev).Count -eq 1 -and "$($ev[0])" -eq 'No file: C:\LabFiles\{missing}.txt'
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path C:\Scripts -Force | Out-Null
+Set-Content -Path C:\Scripts\Measure-Files.ps1 -Value @'
+[CmdletBinding()]
+param([Parameter(Mandatory)][string[]]$Path)
+foreach ($p in $Path) {
+    if (Test-Path -LiteralPath $p -PathType Leaf) { (Get-Item -LiteralPath $p).Length }
+    else { Write-Error "No file: $p" }
+}
+'@
+@explain
+Write-Error reports a non-terminating error: it is recorded and shown, and the script carries on. [CmdletBinding()] gives the script the common parameters, so -ErrorAction SilentlyContinue hides the errors and -ErrorVariable collects them. throw would stop at the first missing file.
+@endtask
+
+@task t03 | Modules | 8 | WIN-SRV1
+Make the alias `{alias}` for `Get-ChildItem` available in **every** PowerShell session on WIN-SRV1, for **all users** and in every host program. Use the right profile file.
+@check WIN-SRV1 | the all users, all hosts profile exists
+Test-Path $PROFILE.AllUsersAllHosts
+@check WIN-SRV1 | running that profile creates the alias
+. $PROFILE.AllUsersAllHosts; (Get-Alias -Name {alias} -ErrorAction SilentlyContinue).Definition -eq 'Get-ChildItem'
+@solution WIN-SRV1
+Add-Content -Path $PROFILE.AllUsersAllHosts -Value 'Set-Alias -Name {alias} -Value Get-ChildItem'
+@explain
+$PROFILE alone is the current user, current host profile. $PROFILE.AllUsersAllHosts is profile.ps1 in $PSHOME, which every user's PowerShell runs at start, in the console and in other hosts alike. An alias typed at the prompt is gone in the next session.
+@endtask
+
+@setup WIN-CL1
+$pw = ConvertTo-SecureString 'Setup-Pa55word!' -AsPlainText -Force
+New-LocalUser -Name {u1} -Password $pw | Out-Null
+New-LocalUser -Name {u2} -Password $pw | Out-Null
+
+@task t04 | Administration | 8 | WIN-CL1
+On **WIN-CL1**, the local users `{u1}` and `{u2}` already exist. Create the local group `{grp}` with the description `{grp} team`, and make both users members of it.
+@check WIN-CL1 | the group exists with its description
+(Get-LocalGroup -Name {grp} -ErrorAction SilentlyContinue).Description -eq '{grp} team'
+@check WIN-CL1 | both users are members
+$m = @(Get-LocalGroupMember -Group {grp} | ForEach-Object { ($_.Name -split '\\')[-1] }); $m.Count -eq 2 -and $m -contains '{u1}' -and $m -contains '{u2}'
+@solution WIN-CL1
+New-LocalGroup -Name {grp} -Description '{grp} team'
+Add-LocalGroupMember -Group {grp} -Member {u1}, {u2}
+@explain
+New-LocalGroup creates the group; Add-LocalGroupMember takes several members at once. Get-LocalGroupMember shows them as COMPUTER\name.
+@endtask
+
+@task t05 | Administration | 8 | WIN-SRV1
+Register the event source `{src}` in the **Application** log, and write one **Warning** event from it with the event ID **{id}** and the message `Backup was skipped`.
+@check WIN-SRV1 | the warning is in the Application log
+$e = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; ProviderName = '{src}'; Id = {id} } -ErrorAction SilentlyContinue); $e.Count -ge 1 -and $e[0].Message -eq 'Backup was skipped' -and $e[0].Level -eq 3
+@solution WIN-SRV1
+New-EventLog -LogName Application -Source {src}
+Write-EventLog -LogName Application -Source {src} -EventId {id} -EntryType Warning -Message 'Backup was skipped'
+@explain
+Write-EventLog only writes for a source that is registered, which New-EventLog does once (as an administrator). In Get-WinEvent, Level 3 means Warning (2 is Error, 4 is Information).
+@endtask
+
+@setup WIN-CL1
+Enable-PSRemoting -Force | Out-Null
+
+@task t06 | Remoting | 8 | WIN-SRV1
+Remoting is turned on on both machines. On **WIN-SRV1**, store the text `{msg}` in a local variable `$msg`. Then, with `Invoke-Command` from WIN-SRV1, create the file `C:\Inbox\note.txt` **on WIN-CL1** (create the folder too) holding the text from `$msg`.
+@check WIN-CL1 | the note is on WIN-CL1 with the text
+(Get-Content C:\Inbox\note.txt -Raw).Trim() -eq '{msg}'
+@check WIN-SRV1 | it was not written on WIN-SRV1
+-not (Test-Path C:\Inbox\note.txt)
+@solution WIN-SRV1
+$msg = '{msg}'
+Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { New-Item -ItemType Directory -Path C:\Inbox -Force | Out-Null; Set-Content -Path C:\Inbox\note.txt -Value $using:msg }
+@explain
+The script block runs in a new session on WIN-CL1, where the local $msg does not exist. $using:msg sends its value along; a param() block with -ArgumentList $msg does the same.
+@endtask
+
+@task t07 | Security | 8 | WIN-SRV1
+Save the password `{pw}` of the account `LAB\{acct}` in `C:\Secure\{acct}.txt` so that a script running as **you** can read it back as a SecureString later, without the password ever being stored as plain text.
+@check WIN-SRV1 | the file does not contain the password as text
+(Test-Path C:\Secure\{acct}.txt) -and -not ((Get-Content C:\Secure\{acct}.txt -Raw).Contains('{pw}'))
+@check WIN-SRV1 | it reads back as the right password
+$s = Get-Content C:\Secure\{acct}.txt | ConvertTo-SecureString; (New-Object System.Management.Automation.PSCredential('LAB\{acct}', $s)).GetNetworkCredential().Password -eq '{pw}'
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path C:\Secure -Force | Out-Null
+$pw = ConvertTo-SecureString '{pw}' -AsPlainText -Force
+ConvertFrom-SecureString -SecureString $pw | Set-Content -Path C:\Secure\{acct}.txt
+@explain
+ConvertFrom-SecureString without -Key encrypts with Windows DPAPI for the current user on this computer: only you, here, can turn it back with ConvertTo-SecureString. Another account or computer cannot read it.
+@endtask
+
+@task t08 | Providers | 8 | WIN-CL1
+On **WIN-CL1**, create the folder `C:\{arch}` and copy into it every `.log` file from `C:\LabFiles` **and its subfolders**, all side by side (no subfolders in `C:\{arch}`). Then make `C:\{arch}` a **hidden** folder.
+@check WIN-CL1 | every .log file is there and nothing else
+$want = (Get-ChildItem C:\LabFiles -Filter *.log -Recurse -File | Sort-Object Name).Name -join ','; $got = (Get-ChildItem C:\{arch} -Force | Sort-Object Name).Name -join ','; $got -eq $want
+@check WIN-CL1 | the folder is hidden
+(Get-ChildItem C:\ -Name) -notcontains '{arch}' -and "$((Get-Item C:\{arch} -Force).Attributes)" -match 'Hidden'
+@solution WIN-CL1
+New-Item -ItemType Directory -Path C:\{arch} | Out-Null
+Get-ChildItem -Path C:\LabFiles -Filter *.log -Recurse -File | Copy-Item -Destination C:\{arch}
+(Get-Item C:\{arch}).Attributes = 'Directory, Hidden'
+@explain
+Piping the files found by Get-ChildItem -Recurse into Copy-Item copies each one into the same folder (Copy-Item -Recurse would keep the folder tree). The Attributes property of the folder can be set directly; afterwards Get-ChildItem only shows it with -Force.
+@endtask
+
+@setup WIN-SRV1
+New-LocalUser -Name {duser} -NoPassword | Out-Null
+
+@task t09 | DSC | 8 | WIN-SRV1
+Use **DSC** on WIN-SRV1 to make sure that the existing local account `{duser}` is **disabled** and has the description `Left the company`, and that the file `C:\LabFiles\Archive\old-app.log` does **not** exist. Compile the configuration into `C:\DscConfigs\Cleanup` and apply it.
+@check WIN-SRV1 | {duser} is disabled with the description
+$u = Get-LocalUser -Name {duser}; -not $u.Enabled -and $u.Description -eq 'Left the company'
+@check WIN-SRV1 | the old log is gone
+-not (Test-Path C:\LabFiles\Archive\old-app.log)
+@check WIN-SRV1 | compiled to a MOF and in the desired state
+(Test-Path C:\DscConfigs\Cleanup\WIN-SRV1.mof) -and (Test-DscConfiguration)
+@solution WIN-SRV1
+Configuration Cleanup { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { User Leaver { UserName = '{duser}'; Disabled = $true; Description = 'Left the company'; Ensure = 'Present' }; File OldLog { DestinationPath = 'C:\LabFiles\Archive\old-app.log'; Ensure = 'Absent' } } }
+Cleanup -OutputPath C:\DscConfigs\Cleanup
+Start-DscConfiguration -Path C:\DscConfigs\Cleanup -Wait
+@explain
+DSC describes the end state, including things that must not be there: Ensure = 'Absent' removes the file, and the User resource changes only the properties you name on an account that already exists.
+@endtask
+
+@choice c01 | Help | 4
+`Get-Help Get-Process` shows only a short syntax and says that the full help is not on this computer. Which command downloads the newest help files and installs them?
+- `Save-Help`
++ `Update-Help`
+- `Get-Help Get-Process -Full`
+- `Import-Module Help`
+! Update-Help downloads and installs help for the installed modules (run it as an administrator). Save-Help only downloads the files into a folder, for Update-Help -SourcePath on computers without internet access.
+
+@choice c02 | Pipeline | 4
+What does this print?
+    'apple', 'kiwi', 'banana' | Sort-Object Length | Select-Object -First 2
+- `apple / banana`
++ `kiwi / apple`
+- `apple / kiwi`
+- `banana / apple`
+! Sort-Object Length sorts the strings by their Length property (4, 5, 6), and -First 2 keeps the two shortest.
+
+@choice c03 | Output | 4
+In Windows PowerShell 5.1, what is the first line of the file written by `Get-Service | Export-Csv C:\Reports\services.csv`?
+- The names of the columns
++ `#TYPE System.ServiceProcess.ServiceController`
+- The first service
+- An empty line
+! Windows PowerShell 5.1 starts the file with a #TYPE line naming the .NET type, then the column names. -NoTypeInformation leaves it out; PowerShell 7 leaves it out by default.
+
+@choice c04 | Language | 4
+What does this print?
+    $o = [pscustomobject]@{ Name = 'srv' }
+    "Name: $o.Name"
+    "Name: $($o.Name)"
+- `Name: srv / Name: srv`
++ `Name: @{Name=srv}.Name / Name: srv`
+- `Name: .Name / Name: srv`
+- `Name: $o.Name / Name: srv`
+! Inside double quotes only the variable $o is expanded; .Name stays plain text. A subexpression $( ) is needed to get a property.
+
+@choice c05 | Remoting | 4
+`$s = Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { Get-Service Spooler }` works, but `$s.Stop()` fails. Why?
+- Invoke-Command returns only text
+- Services cannot be stopped on another computer
++ The object that came back is a deserialized copy: it has the properties but not the methods
+- $s holds the job that ran the command, not the service
+! Results travel back as XML and become Deserialized objects with their property values only. Stop the service inside the script block instead, for example Invoke-Command ... { Stop-Service Spooler }.
+
+@choice c06 | Security | 4
+Group Policy sets the execution policy to `AllSigned` for the computer (the MachinePolicy scope), and the LocalMachine scope says `Unrestricted`. Which policy applies to a user who has set nothing?
++ `AllSigned`
+- `Unrestricted`
+- `RemoteSigned`, the default for Windows Server
+- `Undefined`, because the two settings disagree
+! Scopes are read in this order: MachinePolicy, UserPolicy, Process, CurrentUser, LocalMachine. The first one that is not Undefined wins, so Group Policy beats everything you set yourself.
+
+@choice c07 | Scripting | 4
+What does this print?
+    function Get-Two { 'one'; return 'two'; 'three' }
+    Get-Two
+- `two`
++ `one / two`
+- `one / two / three`
+- `one`
+! Every value a function does not capture is output, not only the one after return. return adds 'two' and leaves the function, so 'three' never runs.

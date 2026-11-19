@@ -1,0 +1,30 @@
+NAME
+       grpck - check the group files for errors
+
+SYNOPSIS
+       grpck [-r] [-s] [group [gshadow]]
+
+DESCRIPTION
+       grpck reads /etc/group and /etc/gshadow and checks that every line has
+       the right number of fields, that group names are valid and unique, that
+       members are existing users and that each group in one file also appears
+       in the other. It reports each problem it finds. When nothing is wrong it
+       prints nothing and exits with status 0.
+
+       Run it after editing the group files by hand (vigr is the safer way to
+       edit them).
+
+OPTIONS
+       -r     Read-only: report problems but never offer to fix them.
+
+       -s     Sort the entries of both files by group ID.
+
+EXIT STATUS
+       0 when the files are fine, 2 or more when problems were found or the
+       files could not be read.
+
+EXAMPLES
+              # grpck -r && echo "group files look fine"
+
+SEE ALSO
+       group(5), gshadow(5), pwck(8), vigr(8), grpconv(8)

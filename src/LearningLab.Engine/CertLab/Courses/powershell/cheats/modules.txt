@@ -1,0 +1,34 @@
+# Sheet: modules | Modules and profiles | Modules
+## Finding modules
+$env:PSModulePath -split ';' :: the folders searched for modules (yours, everyone's, Windows')
+Get-Module :: modules loaded in this session
+Get-Module -ListAvailable :: every module that can be found (Name, Version, ModuleBase)
+Get-Command -Module DnsClient :: the commands of a module (-Verb, -Noun narrow it)
+$env:PSModulePath += ';C:\Tools\Modules' :: search one more folder, for this session
+## Loading and unloading
+Import-Module ScheduledTasks :: load a module by name (auto-loading usually does this)
+Import-Module C:\Tools\LabTools\LabTools.psm1 :: load a module by its path, from anywhere
+Import-Module LabTools -Force :: load it again after changing its file
+Import-Module LabTools -Verbose :: show what it loads
+Remove-Module LabTools :: unload it from this session (nothing is deleted)
+## Writing a script module
+Documents\WindowsPowerShell\Modules\LabTools\LabTools.psm1 :: where a module for you only goes (C:\Program Files\WindowsPowerShell\Modules for everyone)
+Export-ModuleMember -Function Get-Greeting :: last line of the .psm1: share only these functions
+## Manifests
+New-ModuleManifest -Path .\LabTools.psd1 -RootModule LabTools.psm1 -ModuleVersion 1.2.0 -FunctionsToExport Get-Greeting :: write a manifest
+Test-ModuleManifest .\LabTools.psd1 :: check it (parses, ModuleVersion, RootModule exists)
+Import-Module LabTools -RequiredVersion 1.2.0 :: load one version when several are installed
+## PowerShellGet (needs the internet)
+Get-PSRepository :: the repositories (PSGallery is Untrusted by default)
+Find-Module Pester :: search the PowerShell Gallery
+Install-Module PSScriptAnalyzer -Scope CurrentUser :: install for you only, no administrator
+Save-Module PSScriptAnalyzer -Path C:\Saved :: download to check before installing
+Get-InstalledModule :: what Install-Module installed
+## Profiles
+$PROFILE :: your profile for this console (CurrentUserCurrentHost)
+$PROFILE | Select-Object * :: all four: AllUsersAllHosts, AllUsersCurrentHost, CurrentUserAllHosts, CurrentUserCurrentHost
+Test-Path $PROFILE :: does it exist yet?
+New-Item -ItemType File -Path $PROFILE -Force :: create it (and its folder)
+Add-Content $PROFILE 'Set-Alias -Name gh -Value Get-Help' :: add a line
+. $PROFILE :: run it now in this session
+powershell.exe -NoProfile :: start without profiles (for scripts and tasks)

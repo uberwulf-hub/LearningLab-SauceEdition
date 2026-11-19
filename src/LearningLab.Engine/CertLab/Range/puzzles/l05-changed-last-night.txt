@@ -1,0 +1,50 @@
+title: What changed last night?
+level: Intermediate
+kind: Finding files
+topic: Linux
+teaser: one file is newer than the last deploy
+points: 55
+order: 64
+answer: {{CHANGED}}
+var: CHANGED = pick:index.html|about.html|shop.php|login.php|contact.html|footer.php
+var: MIN = num:10-59
+
+@intro
+The web site in /srv/site was last deployed on 25 February, and the deploy left a marker
+file, /srv/site/.deployed, with that time. Nobody should have touched the site since -
+but one file was changed late last night. Which one? (Give its name.)
+
+@setup
+mkdir -p /srv/site
+for f in index.html about.html shop.php login.php contact.html footer.php style.css logo.svg; do
+  echo "<!-- $f -->" > /srv/site/$f
+  touch -d '2026-02-20 10:15:00' /srv/site/$f
+done
+touch -d '2026-02-25 12:00:00' /srv/site/.deployed
+echo '<?php /* changed */ ?>' >> /srv/site/{{CHANGED}}
+touch -d '2026-03-01 23:{{MIN}}:07' /srv/site/{{CHANGED}}
+chmod -R a+rX /srv/site
+
+@solution
+ls -la /srv/site
+find /srv/site -type f -newer /srv/site/.deployed
+
+@walkthrough
+Every file keeps the time it was last modified. find can compare files with each other:
+-newer FILE keeps only files modified after FILE was.
+
+    find /srv/site -type f -newer /srv/site/.deployed
+
+prints just /srv/site/{{CHANGED}} - changed on 1 March at 23:{{MIN}}, long after the
+deploy. (ls -lt /srv/site, newest first, shows the same.) In an investigation this is how
+you find what an intruder touched: compare against a time you trust, then look inside
+the changed files.
+
+@hint 5
+Every file remembers when it was last changed. The deploy marker gives you a time you trust; look for a file changed after it.
+
+@hint 10
+ls -lt /srv/site sorts by time, newest first. Or let find do it: find /srv/site -type f -newer /srv/site/.deployed
+
+@hint 15
+find /srv/site -type f -newer /srv/site/.deployed prints one file; its name is the answer.

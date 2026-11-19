@@ -1,0 +1,29 @@
+NAME
+       sestatus - show the SELinux status
+
+SYNOPSIS
+       sestatus [-b]
+
+DESCRIPTION
+       sestatus prints whether SELinux is enabled, the loaded policy
+       (targeted on RHEL), the current mode (enforcing or permissive), the
+       mode set in /etc/selinux/config (used at the next boot) and other
+       details. When the two modes differ, the system was switched with
+       setenforce and will go back to the config file's mode at reboot.
+
+OPTIONS
+       -b     Also list every boolean and whether it is on or off.
+
+EXAMPLES
+       Check the current and the boot-time mode:
+
+           sestatus
+           getenforce
+           grep ^SELINUX= /etc/selinux/config
+
+FILES
+       /etc/selinux/config
+              SELINUX=enforcing|permissive|disabled, the mode at boot.
+
+SEE ALSO
+       getenforce(8), setenforce(8), selinux(8), getsebool(8)

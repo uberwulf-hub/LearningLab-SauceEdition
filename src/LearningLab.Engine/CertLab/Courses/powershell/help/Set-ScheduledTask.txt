@@ -1,0 +1,24 @@
+SYNOPSIS: Changes an existing scheduled task.
+DESCRIPTION:
+Set-ScheduledTask replaces a task's actions, triggers, settings or principal with the ones you give; what you leave out stays. You can also change a task object from Get-ScheduledTask (for example $t.Triggers[0].StartBoundary) and pass it with -InputObject.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER Action:
+New actions.
+PARAMETER Trigger:
+New triggers.
+PARAMETER Settings:
+New settings.
+PARAMETER Principal:
+A new principal.
+PARAMETER User:
+A new account.
+PARAMETER Password:
+The account's password.
+PARAMETER InputObject:
+A changed task object.
+EXAMPLE: Set-ScheduledTask -TaskName Nightly -Trigger (New-ScheduledTaskTrigger -Daily -At 1am)
+Moves the task to one in the morning.
+RELATED: Register-ScheduledTask, Get-ScheduledTask

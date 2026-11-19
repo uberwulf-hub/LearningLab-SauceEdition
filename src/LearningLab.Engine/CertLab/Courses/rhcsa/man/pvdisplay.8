@@ -1,0 +1,28 @@
+NAME
+       pvdisplay - show the details of physical volumes
+
+SYNOPSIS
+       pvdisplay [-m] [-s] [-C] [PV...]
+
+DESCRIPTION
+       pvdisplay prints a block of details for each physical volume: device
+       name, volume group, size, the size of one extent (PE Size), the number
+       of extents in total, free and allocated, and the UUID. With no PV
+       names it shows them all.
+
+OPTIONS
+       -m, --maps
+              Also show which extents belong to which logical volume.
+
+       -s, --short
+              One short line per PV.
+
+       -C, --columns
+              Print a table, like pvs.
+
+EXAMPLES
+           pvdisplay /dev/vdb1
+           pvdisplay -m /dev/vdc
+
+SEE ALSO
+       pvs(8), vgdisplay(8), lvdisplay(8), lvm(8)

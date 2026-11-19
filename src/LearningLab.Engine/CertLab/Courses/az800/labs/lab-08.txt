@@ -1,0 +1,76 @@
+# Lab: lab-08 | Azure Arc, updates and Azure VMs | u08 | 35
+Harborline wants every server, in the building or in Azure, to show up in the Azure portal and to be patched from one place. Connect the on-premises servers to Azure Arc, repair one that stopped reporting, add monitoring, patch, and tidy up an Azure VM.
+
+@vars
+rg = rg-arc-hq | rg-onprem-servers
+ext = AzureMonitorWindowsAgent | MDE.Windows
+size = Standard_D4s_v5 | Standard_E4s_v5
+@endvars
+
+@setup admin
+arc onboard SRV1
+
+@setup SRV1
+Stop-Service himds
+Set-Service himds -StartupType Manual
+
+@task t01 | Server management | 20 | admin
+Connect **FS1** and **CORE1** to Azure Arc in the resource group **{rg}**.
+@check admin | both are Connected in {rg}
+arc["FS1"].status == Connected
+arc["FS1"].rg == {rg}
+arc["CORE1"].status == Connected
+arc["CORE1"].rg == {rg}
+@solution admin
+arc onboard FS1 rg={rg}
+arc onboard CORE1 rg={rg}
+@explain
+Each onboarded server becomes an Azure resource in the resource group you pick, so RBAC, tags and policies of that group apply to it.
+@endtask
+
+@task t02 | Server management | 20 | SRV1
+**SRV1** was onboarded last month but has shown **Disconnected** since its last restart. Repair it on SRV1 so that it reconnects and stays connected after restarts.
+@check admin | SRV1 is Connected and its agent starts automatically
+arc["SRV1"].status == Connected
+service(SRV1, "himds").starttype == Automatic
+@hint azcmagent show tells you which agent service is stopped.
+@solution SRV1
+Set-Service himds -StartupType Automatic
+Start-Service himds
+@explain
+The Azure Hybrid Instance Metadata Service sends the heartbeat. Set to Manual it didn't start after the restart, so Azure marked the server Disconnected.
+@endtask
+
+@task t03 | Server management | 15 | admin
+Install the extension **{ext}** on **FS1** through Azure Arc.
+@check admin | the extension is on FS1
+arc["FS1"].extensions has {ext}
+@solution admin
+arc extension FS1 {ext}
+@explain
+Extensions are installed by the agent's ExtensionService, so the server must be Connected (which is why FS1 had to be onboarded first).
+@endtask
+
+@task t04 | Server management | 25 | admin
+Patch **FS1** with **Azure Update Manager**: check what it is missing, then install the **Security** updates.
+@check admin | FS1 was assessed and has the cumulative update
+updates(FS1).assessed == Yes
+hotfix(FS1) has KB5055526
+updates(FS1).missing !has KB5055526
+@solution admin
+update assess FS1
+update install FS1 classes=Security
+@explain
+An assessment comes first; a one-time update then installs the classifications you chose. In production you would put FS1 in a maintenance configuration instead.
+@endtask
+
+@task t05 | Server management | 20 | admin
+**AZ-APP1** needs more memory: change its size to **{size}**, and make its private IP **static**.
+@check admin | the new size and a static IP
+azure.vm["AZ-APP1"].size == {size}
+azure.vm["AZ-APP1"].ipallocation == Static
+@solution admin
+azure vm AZ-APP1 size={size} ipallocation=Static
+@explain
+Resizing restarts the VM (deallocate it first if the size isn't available on its current cluster). The static allocation is set on the NIC in Azure; Windows stays on DHCP.
+@endtask

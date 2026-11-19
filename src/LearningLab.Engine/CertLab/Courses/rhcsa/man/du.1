@@ -1,0 +1,60 @@
+NAME
+       du - show how much disk space files and directories use
+
+SYNOPSIS
+       du [-s] [-h] [-a] [-c] [-d N] [--apparent-size] [FILE...]
+
+DESCRIPTION
+       du adds up the space used by each FILE or directory (the current
+       directory when none is given), including everything inside it, and
+       prints one line per directory, deepest first:
+
+           4.0K    /root/work/a
+           12K     /root/work
+
+       Without -h the numbers are kibibytes (1024 bytes). du counts blocks
+       actually used on disk, so a small file still takes a whole block, and a
+       hard-linked file is counted once.
+
+       Use df to see how full a whole file system is, and du to find out what
+       is filling it.
+
+OPTIONS
+       -s, --summarize
+              Only one total for each argument.
+
+       -h, --human-readable
+              Sizes such as 4.0K, 12M, 1.5G.
+
+       -a, --all
+              Show files too, not just directories.
+
+       -c, --total
+              Add a grand total at the end.
+
+       -d N, --max-depth=N
+              Show directories at most N levels below each argument.
+              -d 1 lists each subdirectory once.
+
+       --apparent-size
+              Count the file sizes (bytes in the files) instead of the space
+              used on disk.
+
+       -b, --bytes
+              The apparent size in bytes.
+
+EXAMPLES
+       How big is /var/log?
+
+           du -sh /var/log
+
+       Which directories in /var use the most space?
+
+           du -h -d 1 /var | sort -h
+
+       Save the size of /home in kilobytes to a file:
+
+           du -s /home > /root/home-size.txt
+
+SEE ALSO
+       df(1), ls(1), find(1), sort(1)

@@ -1,0 +1,15 @@
+SYNOPSIS: Changes the schedule of Microsoft Entra Connect Sync.
+DESCRIPTION:
+Set-ADSyncScheduler turns automatic syncs off and on, or changes the interval. Turning syncs off is the usual step before maintenance or a big change in Active Directory; remember to turn them back on.
+The interval can't be shorter than 30 minutes. -NextSyncCyclePolicyType Initial makes the next run a full sync, which is needed after some configuration changes.
+PARAMETER SyncCycleEnabled:
+$false stops automatic syncs; $true starts them again.
+PARAMETER CustomizedSyncCycleInterval:
+A new interval, as a TimeSpan such as 01:00:00.
+PARAMETER NextSyncCyclePolicyType:
+Delta (only changes) or Initial (everything) for the next run.
+EXAMPLE: Set-ADSyncScheduler -SyncCycleEnabled $false
+Pauses syncing during maintenance.
+EXAMPLE: Set-ADSyncScheduler -SyncCycleEnabled $true; Start-ADSyncSyncCycle -PolicyType Delta
+Turns it back on and syncs straight away.
+RELATED: Get-ADSyncScheduler, Start-ADSyncSyncCycle

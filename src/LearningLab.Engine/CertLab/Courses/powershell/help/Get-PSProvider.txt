@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the providers: the code that lets PowerShell browse the disk, registry, certificates and more.
+DESCRIPTION:
+A provider makes a kind of data look like folders and files, so the same commands (Get-ChildItem, Get-Item, New-Item, Remove-Item...) work on all of them. Capabilities tell you what a provider supports, for example Filter (Get-ChildItem -Filter) or ShouldProcess (-WhatIf and -Confirm). Drives lists the drives each one serves.
+PARAMETER PSProvider:
+Only these providers (wildcards allowed).
+EXAMPLE: Get-PSProvider
+Lists every provider and its drives.
+EXAMPLE: Get-PSProvider Registry
+Just the registry provider.
+RELATED: Get-PSDrive, about_Providers

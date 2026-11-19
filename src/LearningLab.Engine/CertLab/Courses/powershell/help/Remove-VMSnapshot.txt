@@ -1,0 +1,18 @@
+SYNOPSIS: Deletes checkpoints and merges their changes into the disk. Alias: Remove-VMCheckpoint.
+DESCRIPTION:
+Remove-VMSnapshot (also Remove-VMCheckpoint) deletes a checkpoint. The VM's current state is not changed: Hyper-V merges the checkpoint's .avhdx files back into the parent disk, which can take a while for big ones.
+
+-IncludeAllChildSnapshots also removes the checkpoints taken after it. Never delete .avhdx files by hand; that breaks the disk chain.
+PARAMETER VMName:
+The VM. Position 0.
+PARAMETER Name:
+The checkpoint to delete. Position 1.
+PARAMETER VMSnapshot:
+Checkpoints piped from Get-VMSnapshot.
+PARAMETER IncludeAllChildSnapshots:
+Also deletes the checkpoints below it.
+EXAMPLE: Remove-VMSnapshot -VMName WEB-TEST -Name "Before IIS update" -ComputerName HV1
+The update went well; the checkpoint goes.
+EXAMPLE: Get-VMCheckpoint -VMName WEB-TEST | Remove-VMCheckpoint
+Deletes every checkpoint of WEB-TEST.
+RELATED: Checkpoint-VM, Get-VMSnapshot, Restore-VMSnapshot

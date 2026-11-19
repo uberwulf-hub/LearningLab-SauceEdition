@@ -1,0 +1,20 @@
+SYNOPSIS: Creates a Storage Spaces pool from physical disks.
+DESCRIPTION:
+New-StoragePool joins empty disks (CanPool True) into a pool. Any data on them is gone. From the pool you then create virtual disks (New-VirtualDisk) or volumes (New-Volume) with the resiliency you want.
+
+Defaults for new virtual disks can be set here: -ResiliencySettingNameDefault (Simple, Mirror, Parity) and -ProvisioningTypeDefault (Thin, Fixed).
+PARAMETER FriendlyName:
+The pool's name.
+PARAMETER StorageSubSystemFriendlyName:
+The subsystem, usually "Windows Storage*".
+PARAMETER PhysicalDisks:
+The disks, typically (Get-PhysicalDisk -CanPool $true).
+PARAMETER ResiliencySettingNameDefault:
+The default layout for its virtual disks.
+PARAMETER ProvisioningTypeDefault:
+Thin or Fixed by default.
+EXAMPLE: New-StoragePool -FriendlyName Data -StorageSubSystemFriendlyName "Windows Storage*" -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+A pool from FS1's four empty disks.
+EXAMPLE: Get-StoragePool -FriendlyName Data
+Checks its size.
+RELATED: Get-StoragePool, Add-PhysicalDisk, Remove-StoragePool, New-VirtualDisk, New-Volume, Get-PhysicalDisk

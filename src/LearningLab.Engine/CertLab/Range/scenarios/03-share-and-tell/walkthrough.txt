@@ -1,0 +1,17 @@
+1. Find and scan. nmap -sn 10.10.3.0/24 finds WIN-FS01 at 10.10.3.40; a scan shows
+   the Windows ports 135, 139, 445 and 5985 (remote management).
+
+2. Anonymous share. smbclient -L //10.10.3.40 -N lists the shares; Public allows a
+   null session. smbclient //10.10.3.40/Public -N and read every file: new-staff.txt
+   carries kim's password.
+
+3. Foothold. winrm-shell -i 10.10.3.40 -u kim -p PASSWORD opens a PowerShell session
+   as kim. Her flag is on her desktop. In her Documents is an IT script,
+   reset-local-admin.ps1, that holds the local Administrator password in plain text.
+
+4. Local administrator. winrm-shell again as Administrator with that password; the
+   administrator flag is on the Administrator desktop, which kim could not read.
+
+How to fix it: don't let a share be read by everyone unless its contents are truly
+public; never put passwords in shared files or in scripts; and don't reuse the local
+Administrator password in a readable helper.

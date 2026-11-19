@@ -1,0 +1,98 @@
+NAME
+       setfacl - set access control lists (ACLs) of files and directories
+
+SYNOPSIS
+       setfacl [-R] [-d] {-m | -x} ENTRIES FILE...
+       setfacl [-R] {-b | -k} FILE...
+       setfacl --set ENTRIES FILE...
+
+DESCRIPTION
+       ACLs give permissions to more people than the owner, the one group and
+       everybody else: for example, read-write for the user alice and read
+       for the group audit, on top of the normal mode bits. ls -l shows a +
+       after the mode of a file that has an ACL; getfacl lists the entries.
+
+       Entries are written as:
+
+       u:NAME:PERMS  permissions for a user (u::PERMS is the owner)
+       g:NAME:PERMS  permissions for a group (g::PERMS is the owning group)
+       m::PERMS      the mask: the most any named user or group, and the
+                     owning group, can get
+       o::PERMS      everybody else
+
+       PERMS is a combination of r, w and x (or X: execute only for
+       directories and files that are already executable), or - for none.
+       Several entries are separated by commas. With -x, give the entry
+       without PERMS (u:alice).
+
+       Default ACLs (-d, or entries starting with d:) belong to a directory
+       and are copied to the files and directories created in it later.
+       They do not change files that already exist; for those, run setfacl
+       -R as well.
+
+       setfacl recalculates the mask after each change, so it covers every
+       named entry. A later chmod g=... on the file changes the mask, not the
+       owning group's entry, and can take away rights the ACL gave.
+
+       Only the owner of a file (or root) can change its ACL.
+
+OPTIONS
+       -m, --modify ENTRIES
+              Add or change entries.
+
+       -x, --remove ENTRIES
+              Remove entries.
+
+       -b, --remove-all
+              Remove every ACL entry, leaving only the normal permissions.
+
+       -k, --remove-default
+              Remove the default ACL of a directory.
+
+       -d, --default
+              Apply the entries to the default ACL.
+
+       -R, --recursive
+              Apply to the directory and everything under it.
+
+       -n, --no-mask
+              Do not recalculate the mask.
+
+       --mask Do recalculate the mask (the default).
+
+       --set ENTRIES
+              Replace the whole ACL. Must include u::, g:: and o:: entries.
+
+       -M FILE, -X FILE
+              Read the entries to add (-M) or remove (-X) from FILE.
+
+       --test Show the result without changing anything.
+
+EXAMPLES
+       Let the user alice read and write /srv/report.txt, and the group
+       audit only read it:
+
+           setfacl -m u:alice:rw,g:audit:r /srv/report.txt
+           getfacl /srv/report.txt
+
+       Give student no access at all to /etc/fstab.copy:
+
+           setfacl -m u:student:- /etc/fstab.copy
+
+       Make every new file in /srv/team readable and writable by the group
+       devs, and fix the files already there:
+
+           setfacl -R -m g:devs:rwX /srv/team
+           setfacl -m d:g:devs:rwX /srv/team
+
+       Remove alice's entry, then every ACL entry:
+
+           setfacl -x u:alice /srv/report.txt
+           setfacl -b /srv/report.txt
+
+NOTES
+       cp -a, tar --acls and mv keep ACLs; plain cp does not. XFS and ext4
+       support ACLs without extra mount options.
+
+SEE ALSO
+       getfacl(1), chmod(1), ls(1), umask(1), acl(5)

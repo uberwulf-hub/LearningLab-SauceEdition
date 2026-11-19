@@ -1,0 +1,79 @@
+# Lab: lab-09 | Hyper-V virtual machines | u09 | 40
+HV1 needs work before the training week: a new VM for the web team, LAB-HOST ready to run its own Hyper-V, a test network, disks for the lab VMs, and a safe point to go back to before APP-OLD is patched.
+
+@vars
+vm = WEB-NEW | INTRANET2
+mem = 4 | 6
+sw = TestNet | LabOnly
+cp = Before patch | Pre-update
+@endvars
+
+@setup HV1
+New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx' -SizeBytes 40GB -Dynamic
+
+@task t01 | Virtualization | 20 | HV1
+Create the VM **{vm}**: generation 2 (it must boot with Secure Boot), **{mem} GB** of startup memory, a new **80 GB** VHDX `D:\Hyper-V\Virtual Hard Disks\{vm}.vhdx`, on the switch **LAN**.
+@check admin | the VM as asked
+vm["{vm}"].generation == 2
+vm["{vm}"].memorygb == {mem}
+vm["{vm}"].switch == LAN
+vm["{vm}"].secureboot == Yes
+vhd["D:\Hyper-V\Virtual Hard Disks\{vm}.vhdx"].sizegb == 80
+@solution HV1
+New-VM -Name {vm} -Generation 2 -MemoryStartupBytes {mem}GB -NewVHDPath 'D:\Hyper-V\Virtual Hard Disks\{vm}.vhdx' -NewVHDSizeBytes 80GB -SwitchName LAN
+@explain
+Secure Boot needs UEFI, so generation 2; the generation can't be changed once the VM exists.
+@endtask
+
+@task t02 | Virtualization | 25 | HV1
+Make **LAB-HOST** able to run Hyper-V VMs inside it whose traffic goes out through LAB-HOST's own network adapter. It keeps **8 GB** of memory.
+@check admin | nested virtualization with what it needs
+vm["LAB-HOST"].nested == Yes
+vm["LAB-HOST"].dynamic == No
+vm["LAB-HOST"].memorygb == 8
+vm["LAB-HOST"].spoofing == On
+@hint Three settings: memory, processor, network adapter.
+@solution HV1
+Set-VMMemory LAB-HOST -DynamicMemoryEnabled $false -StartupBytes 8GB
+Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true
+Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On
+@explain
+Nested virtualization refuses dynamic memory, and the inner VMs' frames carry their own MAC addresses, which the host's switch drops without MAC address spoofing.
+@endtask
+
+@task t03 | Virtualization | 20 | HV1
+The testers want a network where **WEB-TEST** can reach the host (to copy files) but nothing outside HV1. Create the switch **{sw}** and connect WEB-TEST to it.
+@check admin | an internal switch with WEB-TEST on it
+vswitch["{sw}"].type == Internal
+vm["WEB-TEST"].switch == {sw}
+@solution HV1
+New-VMSwitch -Name {sw} -SwitchType Internal
+Connect-VMNetworkAdapter -VMName WEB-TEST -SwitchName {sw}
+@explain
+Internal = the VMs and the host; Private would leave the host out; External would reach the real network.
+@endtask
+
+@task t04 | Virtualization | 15 | HV1
+Create the disks **LAB1.vhdx** and **LAB2.vhdx** in `D:\Hyper-V\Virtual Hard Disks` for two lab VMs. Each must store only its own changes against the image `Base-2022.vhdx` in the same folder.
+@check admin | two differencing disks of the image
+vhd["D:\Hyper-V\Virtual Hard Disks\LAB1.vhdx"].parent == "D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx"
+vhd["D:\Hyper-V\Virtual Hard Disks\LAB2.vhdx"].parent == "D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx"
+vhd["D:\Hyper-V\Virtual Hard Disks\LAB2.vhdx"].type == Differencing
+@solution HV1
+New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\LAB1.vhdx' -ParentPath 'D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx' -Differencing
+New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\LAB2.vhdx' -ParentPath 'D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx' -Differencing
+@explain
+The image is now a parent: if anyone changes Base-2022.vhdx, both lab disks break. Make it read-only on the file system.
+@endtask
+
+@task t05 | Virtualization | 20 | HV1
+APP-OLD runs a database. Before patching it, take a checkpoint named **{cp}** that is consistent the way a backup is, and make sure APP-OLD never falls back to the kind that saves memory.
+@check admin | ProductionOnly and the checkpoint
+vm["APP-OLD"].checkpointtype == ProductionOnly
+vm["APP-OLD"].checkpoints has "{cp}"
+@solution HV1
+Set-VM -Name APP-OLD -CheckpointType ProductionOnly
+Checkpoint-VM -Name APP-OLD -SnapshotName '{cp}'
+@explain
+Production checkpoints use VSS in the guest, so the database is consistent; ProductionOnly fails rather than take a standard (memory) checkpoint. Delete it once the patch is confirmed: checkpoints slow the disk down and are no backup.
+@endtask

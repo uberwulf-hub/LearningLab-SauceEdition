@@ -1,0 +1,20 @@
+NAME
+       fatlabel - show or change the label of a FAT (vfat) file system
+
+SYNOPSIS
+       fatlabel DEVICE [NEW-LABEL]
+
+DESCRIPTION
+       With only DEVICE, fatlabel prints the vfat file system's label. With
+       NEW-LABEL it sets it. FAT labels are at most 11 characters; use
+       capitals, because lowercase labels may not work on other systems
+       (the tools warn about them). Unmount the file system first.
+
+       mkfs.vfat -n LABEL sets a label when the file system is made.
+
+EXAMPLES
+           fatlabel /dev/vdb2 USBDATA
+           blkid /dev/vdb2
+
+SEE ALSO
+       mkfs.fat(8), fsck.vfat(8), blkid(8), e2label(8)

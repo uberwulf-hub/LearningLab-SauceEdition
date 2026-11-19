@@ -1,0 +1,17 @@
+NAME
+       rev - reverse the characters of each line
+
+SYNOPSIS
+       rev [FILE...]
+
+DESCRIPTION
+       rev prints every line with its characters in reverse order. A common
+       trick is to take the last field of a line: reverse, cut the first
+       field, reverse again.
+
+EXAMPLES
+           echo hello | rev
+           echo /srv/web/index.html | rev | cut -d/ -f1 | rev
+
+SEE ALSO
+       tac(1), cut(1)

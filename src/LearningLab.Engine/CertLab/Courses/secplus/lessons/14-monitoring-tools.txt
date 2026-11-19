@@ -1,0 +1,222 @@
+# Unit: u14 | 14. Monitoring and enterprise security tools | Security operations
+
+Hardening and patching reduce risk, but something will always get through. Monitoring is how you notice. This unit covers what to monitor, the activities around alerts, the main monitoring tools (SIEM, SCAP, NetFlow, SNMP and others), and the enterprise security capabilities you use to change how the network behaves: firewalls, IDS/IPS, web and DNS filtering, email authentication, file integrity monitoring, DLP, NAC, EDR/XDR and user behavior analytics.
+
+## Lesson: l1401 | Monitoring activities and tools
+
+### What to monitor
+
+- **Systems**: servers and workstations: CPU, memory, disk, services, sign-ins, security event logs.
+- **Applications**: errors, failed logins, unusual transactions, response times.
+- **Infrastructure**: network devices, firewalls, links, cloud services, power and cooling.
+
+### Activities
+
+- **Log aggregation**: collecting logs from many sources into one place, in a common format and with synchronized time (NTP), so events can be searched and correlated.
+- **Alerting**: rules that notify people when something suspicious happens, for example ten failed sign-ins followed by a success.
+- **Scanning**: regular vulnerability and configuration scans to find new weaknesses.
+- **Reporting**: summaries for managers and auditors: trends, incidents, compliance status.
+- **Archiving**: keeping logs for as long as policy, law or investigations need, on storage that protects them from changes.
+- **Alert response and remediation/validation**: someone must act on alerts: investigate, **quarantine** an infected device or file (isolate it so it can't spread), fix the cause and then check the fix. **Alert tuning** adjusts rules to cut false positives (alert fatigue makes analysts miss real alerts) without creating false negatives.
+
+### Tools
+
+- **SIEM** (security information and event management): collects and aggregates logs, **correlates** events from different sources into one picture, raises alerts, shows dashboards and keeps logs for reports and investigations. The central tool of a security operations center.
+- **SCAP** (Security Content Automation Protocol): a NIST family of standards that lets tools describe and check configurations and vulnerabilities in a common, machine-readable way (it includes formats such as XCCDF for checklists and OVAL for checks, plus CVE and CVSS). Scanners use SCAP content to test systems against a baseline automatically.
+- **Benchmarks**: published secure configuration guides, such as the CIS Benchmarks, often available as SCAP content.
+- **Agents and agentless**: an **agent** is software installed on each host that collects data and can act locally (works off-network, more detail, but must be deployed and updated). **Agentless** monitoring collects remotely over the network (through protocols or APIs), with nothing to install but less detail.
+- **Antivirus**: detects and removes known malware, mostly by signatures plus some heuristics.
+- **DLP** (data loss prevention): see the next lessons.
+- **SNMP traps**: Simple Network Management Protocol lets a monitoring station poll devices for status; a **trap** is a message the device sends on its own when something happens (a link goes down, a fan fails). Use **SNMPv3**, which adds authentication and encryption; v1 and v2c send community strings in clear text.
+- **NetFlow**: records of network conversations (flows) from routers and switches: source and destination addresses and ports, protocol, bytes, times. It shows who talked to whom and how much, but not the content. Useful for spotting data exfiltration or scanning. (sFlow and IPFIX are similar.)
+- **Vulnerability scanners**: find known flaws (see the vulnerability management unit).
+
+> Need the content of the traffic? Packet capture. Need who talked to whom and how much? NetFlow.
+
+@quiz
+? An analyst wants to link a VPN sign-in, a firewall event and a file server alert that happened within two minutes into one incident. Which tool is designed for this?
+- NetFlow collector
++ SIEM
+- SNMP manager
+- Antivirus
+! A SIEM aggregates logs from many sources and correlates related events.
+? A switch sends a message to the monitoring server the moment one of its ports goes down, without being asked. What is this message?
++ An SNMP trap
+- A NetFlow record
+- A SCAP check
+- A syslog archive
+! An SNMP trap is an unsolicited notification from the device; polling is when the manager asks.
+? The security team needs to know which internal host sent 40 GB to an unknown external address last night, but doesn't need the content. What data source fits best?
+- Antivirus logs
++ NetFlow records
+- SCAP benchmark results
+- DHCP leases
+! NetFlow records source, destination and volume of each flow without the payload.
+? Analysts are ignoring the SIEM because it raises hundreds of harmless alerts each day. What should be done?
+- Turn off alerting
++ Tune the alert rules to reduce false positives
+- Replace the SIEM with antivirus
+- Archive the logs more often
+! Alert tuning reduces noise so real alerts get attention, while keeping real detections.
+@end
+
+## Lesson: l1402 | Firewalls, IDS/IPS and filtering
+
+### Firewall rules
+
+A firewall applies an **access control list** (ACL) of rules, read **top to bottom**; the first rule that matches decides. Each rule names source, destination, **protocol and port**, and an action (allow or deny). Most firewalls end with an **implicit deny**: anything not allowed is blocked.
+
+```file
+#  Action  Source           Destination       Protocol/Port
+1  ALLOW   any              203.0.113.10      TCP 443
+2  ALLOW   10.10.5.0/24     10.10.20.15       TCP 22
+3  DENY    any              203.0.113.10      TCP 22
+4  DENY    any              any               any   (implicit deny)
+```
+
+Here the public web server (203.0.113.10) accepts HTTPS from anyone, and only the admin subnet may reach the internal server by SSH. Put specific rules above general ones: a broad "allow any" near the top would make the rules below it useless.
+
+A **screened subnet** (formerly called a DMZ) is a separate network segment for public-facing servers. Firewall rules let the internet reach those servers on the needed ports, and tightly limit what the screened subnet can reach inside.
+
+### IDS and IPS
+
+- **IDS** (intrusion detection system) watches traffic (often from a tap or mirror port) and **alerts**. **IPS** (intrusion prevention system) sits **inline** and can **block** traffic as well.
+- **Signature-based** detection matches known attack patterns: precise, but blind to new attacks, and the signatures must be kept up to date.
+- **Anomaly-based** (behavioral, **trend**) detection learns what normal looks like and alerts on deviations, such as a sudden spike or traffic at odd hours. Can catch new attacks, but gives more false positives.
+
+### Web filtering
+
+- **Agent-based**: software on each device enforces the policy anywhere, including at home or on the road.
+- **Centralized proxy**: all web traffic goes through a proxy that applies the rules for everyone on the network.
+- **URL scanning**: checks requested addresses against lists of known bad sites.
+- **Content categorization**: sites are grouped (gambling, social media, malware, news) and whole categories allowed or blocked.
+- **Block rules**: specific rules set by the organization.
+- **Reputation**: sites and domains get a score based on history (age of domain, past malware), and low-reputation sites are blocked or warned about.
+
+### DNS filtering
+
+The DNS resolver refuses to resolve (or redirects) domains known to be malicious or in blocked categories. It works for every device that uses the resolver, whatever the application, and blocks malware callbacks to known command-and-control domains.
+
+@quiz
+? A firewall has rule 1 "ALLOW any any TCP 443" and rule 2 "DENY 198.51.100.7 any TCP 443". Traffic from 198.51.100.7 on TCP 443 arrives. What happens?
++ It is allowed, because rule 1 matches first
+- It is denied, because deny rules always win
+- It is denied by the implicit deny
+- It is dropped and logged as an error
+! Rules are processed top to bottom and the first match wins; the specific deny should be placed above the broad allow.
+? Which device can block an attack as it happens, rather than only alert?
+- IDS on a mirror port
++ IPS placed inline
+- NetFlow collector
+- SNMP manager
+! An IPS sits in the traffic path and can drop packets; an IDS only observes and alerts.
+? An IDS raised an alert because a server sent far more data than usual at 03:00, though no known attack pattern matched. Which detection method was used?
+- Signature-based
++ Anomaly-based (trend analysis)
+- Reputation-based
+- Content categorization
+! Comparing activity with a learned normal baseline is anomaly-based detection.
+? Employees' laptops must be filtered for malicious websites even when they work from home without VPN. Which approach fits?
+- A centralized proxy in the office
++ Agent-based web filtering
+- A screened subnet
+- An SNMP trap
+! An agent on the device applies the policy wherever the device is.
+@end
+
+## Lesson: l1403 | Email security, secure protocols and operating systems
+
+### Email authentication
+
+Three DNS-based standards help receivers spot forged email:
+
+- **SPF** (Sender Policy Framework): a DNS TXT record listing the servers allowed to send mail for a domain. The receiver checks the sending server's IP address against it.
+- **DKIM** (DomainKeys Identified Mail): the sending server signs messages with a private key; the receiver checks the signature with the public key published in DNS. It proves the message came from the domain and wasn't changed in transit.
+- **DMARC** (Domain-based Message Authentication, Reporting and Conformance): a DNS record telling receivers what to do when SPF and DKIM checks fail or don't align with the From domain (`p=none` monitor only, `p=quarantine` send to spam, `p=reject` refuse), and where to send reports.
+
+```file
+example.com.         TXT  "v=spf1 ip4:192.0.2.25 include:mail.example.net -all"
+_dmarc.example.com.  TXT  "v=DMARC1; p=reject; rua=mailto:dmarc@example.com"
+```
+
+An **email security gateway** sits in front of the mail servers and filters incoming and outgoing mail: spam, malware attachments, malicious links (often rewriting and checking them at click time), and sometimes DLP for outgoing messages.
+
+> SPF: which servers may send. DKIM: a signature on the message. DMARC: the policy for failures, plus reports.
+
+### Implementing secure protocols
+
+Choose the secure version of each protocol and its port, and the right transport:
+
+- **Protocol selection**: HTTPS instead of HTTP, SSH/SFTP instead of Telnet/FTP, LDAPS instead of LDAP, SNMPv3 instead of v1/v2c, SRTP for voice, DNSSEC to protect DNS answers from forgery.
+- **Port selection**: secure versions often use their own ports (HTTPS 443, SSH 22, LDAPS 636, IMAPS 993, POP3S 995, SMTP submission with STARTTLS 587, SMTPS 465). Close the insecure ports.
+- **Transport method**: encrypt the channel (TLS, IPsec, SSH tunnels, a VPN) when the application itself can't.
+
+### Operating system security
+
+- **Group Policy**: in a Windows domain, Group Policy Objects push security settings (password policy, firewall, software restrictions, audit settings) to many computers at once from Active Directory.
+- **SELinux** (Security-Enhanced Linux): a **mandatory access control** system for Linux. The kernel labels processes and files and enforces a policy, so even a process running as root can only touch what the policy allows. Modes: **enforcing** (blocks and logs), **permissive** (logs only), **disabled**.
+
+@quiz
+? Customers receive phishing emails that appear to come from billing@example.com. The company wants receiving servers to reject messages that fail authentication checks. Which record sets that policy?
+- SPF
+- DKIM
++ DMARC with p=reject
+- An MX record
+! DMARC tells receivers what to do with mail that fails SPF/DKIM alignment; SPF and DKIM only provide the checks.
+? Which email standard uses a digital signature, with the public key published in DNS, to show a message wasn't altered?
+- SPF
++ DKIM
+- DMARC
+- STARTTLS
+! DKIM signs messages; SPF only lists allowed sending servers.
+? A web server process running as root on Linux was compromised, but the attacker couldn't read files outside the web content folder. Which control most likely limited it?
+- Group Policy
++ SELinux in enforcing mode
+- An SNMP trap
+- DNS filtering
+! SELinux's mandatory access control restricts even root processes to what the policy allows.
+? Which pair replaces insecure directory lookups and network management with secure versions?
++ LDAPS (636) and SNMPv3
+- LDAP (389) and SNMPv2c
+- Telnet and FTP
+- HTTP and POP3
+! LDAPS wraps LDAP in TLS; SNMPv3 adds authentication and encryption.
+@end
+
+## Lesson: l1404 | Endpoint, data and behaviour tools
+
+- **File integrity monitoring** (FIM): keeps hashes of important files (system binaries, configuration files, web pages) and alerts when one changes unexpectedly. Catches rootkits, defacement and unauthorized changes.
+- **DLP** (data loss prevention): finds sensitive data (card numbers, health records, documents labeled confidential) and stops it leaving by policy. **Endpoint DLP** watches copying to USB drives, printing and uploads; **network DLP** inspects traffic and email; **cloud DLP** watches cloud storage and SaaS apps. DLP can block, warn, encrypt or log.
+- **NAC** (network access control): checks devices before (and while) they connect: who is the user, is the device known, does it meet policy (patched, antivirus running, disk encrypted)? Devices that fail go to a quarantine or remediation network. NAC can use a permanent **agent**, a temporary (dissolvable) agent that runs once and removes itself, or work **agentless**. Often built on 802.1X.
+- **EDR** (endpoint detection and response): an agent on each endpoint records detailed activity (processes, file changes, network connections), detects suspicious behaviour, and lets responders investigate and act remotely: kill a process, isolate the host, roll back changes. Goes beyond signature antivirus.
+- **XDR** (extended detection and response): extends the EDR idea across several sources (endpoints, network, email, cloud, identity) and correlates them in one platform for detection and response.
+- **User behavior analytics** (UBA, or UEBA when it covers entities such as devices too): learns each user's normal patterns and flags unusual ones: sign-ins at odd hours or from new places, downloading far more than usual, access to systems never used before. Good at spotting insider threats and stolen accounts.
+
+> A device must be patched and running antivirus before it may join the network: NAC. Detect, investigate and isolate on the endpoint: EDR. Across many sources: XDR.
+
+@quiz
+? An accountant tries to copy a spreadsheet full of card numbers to a USB stick, and the copy is blocked with a policy message. Which tool did this?
++ Endpoint DLP
+- File integrity monitoring
+- NAC
+- SNMP
+! DLP recognizes sensitive data and enforces policy on where it may go.
+? A visitor's laptop plugs into a meeting room port and is placed on a guest network because it isn't a company device and has no current antivirus. What technology is at work?
+- EDR
++ NAC
+- DKIM
+- FIM
+! NAC checks identity and device health before granting network access, and quarantines devices that fail.
+? An alert shows that /usr/bin/ssh on a Linux server has a different hash than yesterday, although no update was scheduled. Which tool raised the alert?
+- DLP
+- UBA
++ File integrity monitoring
+- Web filter
+! FIM compares file hashes with known good values and alerts on unexpected changes.
+? A user's account suddenly downloads 9,000 files from the HR share at 02:00, which it has never done. No malware is detected. Which tool is best placed to flag this?
+- Signature-based antivirus
++ User behavior analytics
+- SNMP traps
+- SPF
+! UBA compares activity with the user's normal behaviour, which catches misuse of a valid account.
+@end

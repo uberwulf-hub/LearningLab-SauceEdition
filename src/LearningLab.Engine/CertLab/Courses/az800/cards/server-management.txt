@@ -1,0 +1,34 @@
+# Deck: server-management | Server management: Server Core, remoting, WAC and Azure Arc | Server management
+Text menu for setting up Server Core :: `sconfig`
+Can you add the desktop to a Server Core installation later? :: No: reinstall with Desktop Experience
+Turn PowerShell remoting on :: `Enable-PSRemoting -Force`
+Ports of WinRM :: 5985 (HTTP, Kerberos-encrypted in a domain) and 5986 (HTTPS)
+Interactive remote session on CORE1 :: `Enter-PSSession -ComputerName CORE1`
+Run one script block on FS1 and SRV1 at once :: `Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { Get-Service Spooler }`
+Keep a remote session open for several commands :: `New-PSSession -ComputerName CORE1`
+Remoting to a workgroup server without HTTPS needs :: The server in the client's TrustedHosts list
+The second hop problem is fixed best with :: Resource-based Kerberos constrained delegation (or JEA with a gMSA)
+JEA file that lists what a role may run :: A role capability file (.psrc) in a module's RoleCapabilities folder
+Create a JEA role capability file :: `New-PSRoleCapabilityFile`
+Create a JEA session configuration file :: `New-PSSessionConfigurationFile`
+Session type for JEA endpoints :: RestrictedRemoteServer
+JEA commands that must reach other servers run as :: A group managed service account (-GroupManagedServiceAccount)
+Register a JEA endpoint named Helpdesk :: `Register-PSSessionConfiguration -Name Helpdesk -Path C:\Helpdesk.pssc`
+Connect to a JEA endpoint :: `Enter-PSSession -ComputerName FS1 -ConfigurationName Helpdesk`
+How the WAC gateway reaches managed servers :: PowerShell remoting and WMI over WinRM (no agent)
+Default port of a WAC gateway on Windows Server :: 443 (HTTPS)
+Why register Windows Admin Center with Azure :: To use Azure hybrid services: Arc, Backup, Update Manager, Azure Network Adapter, File Sync
+Agent that makes a server Azure Arc-enabled :: The Azure Connected Machine agent
+Arc agent service that carries the heartbeat :: himds (Azure Hybrid Instance Metadata Service)
+Arc status after a server is offline for 45 days :: Expired (onboard it again)
+Check an Arc agent's status on the server :: `azcmagent show`
+Onboard many servers to Arc unattended :: The onboarding script with a service principal (Azure Connected Machine Onboarding role)
+Network the Arc agent needs :: Outbound HTTPS 443 (direct, proxy or Private Link)
+Audits settings inside an Arc server's OS :: Azure Policy machine configuration (guest configuration, GCArcService)
+Patches Azure VMs and Arc-enabled servers :: Azure Update Manager
+Daily automatic check for missing updates :: Periodic assessment in Azure Update Manager
+Run Azure Automation runbooks on your own servers :: A Hybrid Runbook Worker
+Only this stops paying for an Azure VM's compute :: Stop (deallocate) in Azure
+RDP to Azure VMs that have no public IP :: Azure Bastion
+Use existing Windows Server licenses in Azure :: Azure Hybrid Benefit
+Azure edition feature: security updates without restarts :: Hotpatch (Windows Server Datacenter: Azure Edition)

@@ -1,0 +1,36 @@
+SYNOPSIS: Puts objects with the same value of a property into groups and counts them.
+DESCRIPTION:
+Group-Object sorts objects into piles by a property: all the Engineering employees together, all the Research ones together, and so on. For each pile it outputs a group object with the Count, the Name (the shared value) and the Group (the objects themselves).
+
+It is the quickest way to answer "how many of each?" questions. Groups appear in the order their first member arrived; pipe to Sort-Object Count -Descending to see the biggest first.
+
+Instead of a property name, you can group by a script block that works out a value, for example whether a salary is over a limit.
+PARAMETER Property:
+The property (or properties, or script block) to group by. Position 0.
+PARAMETER NoElement:
+Leaves the Group out of the results, keeping just the counts and names. Faster and easier to read.
+PARAMETER AsHashTable:
+Returns one hash table instead of group objects: each key is a group's value, and each entry holds that group's objects.
+PARAMETER AsString:
+With -AsHashTable, makes every key a string, so $h['Seattle'] works whatever type the values had.
+PARAMETER CaseSensitive:
+Puts "it" and "IT" in different groups. By default case is ignored.
+PARAMETER InputObject:
+The objects to group. Usually they come through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Group-Object Department
+Three groups, Engineering, Research and IT, with their counts and members.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Group-Object Department -NoElement | Sort-Object Count -Descending
+Just the counts, biggest group first.
+EXAMPLE: $byOffice = Import-Csv C:\LabFiles\employees.csv | Group-Object Office -AsHashTable -AsString; $byOffice['Seattle']
+Builds a lookup table by office, then gets the employees in Seattle.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Group-Object { [int]$_.Salary -ge 100000 } -NoElement
+Groups by a worked-out value: True for salaries of 100000 or more, False for the rest.
+NOTES:
+The alias is group.
+
+To see the members of one group: ($groups | Where-Object Name -eq 'IT').Group.
+
+Grouping by several properties gives names like "IT, Seattle".
+
+Real 5.1 shows -NoElement results with just the Count and Name columns.
+RELATED: Sort-Object, Measure-Object, Select-Object, Where-Object, about_Hash_Tables

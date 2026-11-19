@@ -1,0 +1,138 @@
+# Deck: acronyms-2 | Acronyms E-O | Security architecture
+E2EE :: End-to-end encryption: only the sender and the receiver can read the message; servers in between see only ciphertext
+EAP :: Extensible Authentication Protocol: a framework of sign-in methods used with 802.1X on wired and wireless networks
+EAP-FAST :: EAP Flexible Authentication via Secure Tunneling: builds a tunnel with a protected access credential; designed to replace LEAP
+EAP-TLS :: EAP Transport Layer Security: certificates on both the client and the server; the strongest common EAP method
+EAP-TTLS :: EAP Tunneled TLS: the server's certificate builds a TLS tunnel, then the client signs in with another method inside it
+ECB :: Electronic codebook: block mode that encrypts each block on its own; equal blocks give equal ciphertext and show patterns, so avoid it
+ECC :: Elliptic curve cryptography: public key crypto with short keys (a 256-bit ECC key is about as strong as a 3072-bit RSA key)
+ECDHE :: Elliptic Curve Diffie-Hellman Ephemeral: fast key exchange with new keys every session, giving perfect forward secrecy
+ECDSA :: Elliptic Curve Digital Signature Algorithm: digital signatures based on elliptic curves; common in TLS certificates
+EDR :: Endpoint detection and response: an agent that records what happens on a device, detects attacks and can isolate the device
+EF :: Exposure factor: the share of an asset's value lost in one incident, as a percentage
+EFS :: Encrypting File System: Windows feature that encrypts single files and folders on NTFS
+EOL :: End of life: the vendor no longer sells or supports a product, so no more security fixes
+EOSL :: End of service life: all support and updates for a product have stopped
+ERP :: Enterprise resource planning: the large business system for finance, supply and HR; holds sensitive data
+ESN :: Electronic serial number: a unique number that identifies a mobile device
+ESP :: Encapsulating Security Payload: IPsec protocol that encrypts packets and also protects their integrity
+FACL :: File system access control list: extra Linux permissions for named users and groups, set with setfacl and read with getfacl
+FAR :: False acceptance rate: how often a biometric system lets in the wrong person; a security failure
+FDE :: Full disk encryption: encrypts a whole drive (for example BitLocker), so a stolen laptop's data stays safe
+FIDO2 :: Fast Identity Online 2: standard for passwordless sign-in with security keys and passkeys (WebAuthn plus CTAP)
+FIM :: File integrity monitoring: alerts when important files change, by comparing their hashes with a known-good baseline
+FISMA :: Federal Information Security Modernization Act: US law that makes federal agencies run security programs
+FPGA :: Field-programmable gate array: a chip whose logic can be reprogrammed after it is made; found in embedded and special systems
+FRR :: False rejection rate: how often a biometric system turns away the right person; an inconvenience
+FTP :: File Transfer Protocol: moves files with passwords in clear text on TCP 20 and 21; replace with SFTP or FTPS
+FTPS :: FTP Secure: FTP protected by TLS (implicit on port 990, or explicit with AUTH TLS on port 21)
+GCM :: Galois/Counter Mode: block mode that encrypts and authenticates in one pass; AES-GCM is the usual TLS choice
+GDPR :: General Data Protection Regulation: EU law protecting the personal data of people in the EU, with large fines
+GLBA :: Gramm-Leach-Bliley Act: US law requiring financial companies to protect customers' financial information
+GPG :: GNU Privacy Guard: free OpenPGP software for encrypting and signing files and email
+GPO :: Group Policy Object: a bundle of Windows settings that Active Directory pushes to users and computers
+GPS :: Global Positioning System: satellite location; used for geofencing and location checks, and it can be spoofed
+GPU :: Graphics processing unit: a processor that does many sums at once; makes password cracking much faster
+GRE :: Generic Routing Encapsulation: a tunneling protocol with no encryption of its own, often wrapped in IPsec
+HA :: High availability: building in redundancy so a service stays up (for example 99.999 percent of the time)
+HDD :: Hard disk drive: spinning magnetic storage; can be wiped by overwriting or degaussing
+HIDS :: Host-based intrusion detection system: watches one computer's logs, files and processes and alerts on attacks
+HIPAA :: Health Insurance Portability and Accountability Act: US law protecting health information (PHI)
+HIPS :: Host-based intrusion prevention system: like a HIDS, but it can also block the attack on that computer
+HMAC :: Hash-based message authentication code: a hash combined with a secret key; proves a message is unchanged and from a key holder
+HOTP :: HMAC-based one-time password: one-time codes made from a shared secret and a counter that moves on each use
+HSM :: Hardware security module: a tamper-resistant device that creates, stores and uses keys so they never leave it
+HTML :: Hypertext Markup Language: the language of web pages; output that isn't encoded allows XSS
+HTTP :: Hypertext Transfer Protocol: web traffic in clear text on TCP 80
+HTTPS :: HTTP Secure: HTTP inside TLS on TCP 443; encrypts traffic and proves the server's identity
+HVAC :: Heating, ventilation and air conditioning: keeps server rooms cool; networked controls can be an attack path
+IaaS :: Infrastructure as a service: the cloud gives virtual machines, storage and networks; you manage the OS and everything above it
+IaC :: Infrastructure as code: building servers and networks from definition files, so builds are repeatable and reviewable
+IAM :: Identity and access management: the processes and tools for identities, sign-in and permissions
+ICMP :: Internet Control Message Protocol: ping and network error messages; abused for floods, scans and tunneling
+ICS :: Industrial control system: computers that run physical processes in factories and utilities
+IDEA :: International Data Encryption Algorithm: an older symmetric block cipher with a 128-bit key, used in early PGP
+IDF :: Intermediate distribution frame: a wiring closet that links one floor or area to the main distribution frame
+IdP :: Identity provider: the service that signs users in and vouches for them to other services (federation and SSO)
+IDS :: Intrusion detection system: watches traffic or hosts and raises alerts, but does not block
+IEEE :: Institute of Electrical and Electronics Engineers: the standards body behind 802.1X and 802.11 Wi-Fi
+IKE :: Internet Key Exchange: sets up IPsec security associations and keys (UDP 500, and 4500 through NAT)
+IM :: Instant messaging: chat apps; a route for phishing, malware links and data leaks
+IMAP :: Internet Message Access Protocol: reads mail kept on the server (TCP 143; IMAPS on 993)
+IoC :: Indicator of compromise: evidence of an attack, such as a known bad file hash, address or domain
+IoT :: Internet of Things: small connected devices (cameras, sensors, smart plugs) that are often weakly secured
+IP :: Internet Protocol: addresses packets and routes them between networks
+IPS :: Intrusion prevention system: sits inline, detects attacks and blocks them
+IPsec :: Internet Protocol Security: a suite that encrypts and authenticates IP packets, often used for VPNs
+IPv6 :: Internet Protocol version 6: 128-bit addresses; it must be secured and monitored even when nobody planned to use it
+IR :: Incident response: handling a security incident from detection to lessons learned
+IRC :: Internet Relay Chat: an old chat protocol, once a favourite command and control channel for botnets
+IRP :: Incident response plan: the written plan for how the organization handles incidents and who does what
+ISAC :: Information Sharing and Analysis Center: an industry group whose members share threat information
+ISMS :: Information security management system: the managed set of policies, risks and controls that ISO/IEC 27001 certifies
+ISO :: International Organization for Standardization: publishes standards such as ISO/IEC 27001 and 27002
+ISP :: Internet service provider: the company that connects you to the internet
+ISSO :: Information systems security officer: the person responsible for the security of particular systems
+IV :: Initialization vector: a random or unique value that makes the same plaintext encrypt differently each time; reuse weakens it
+JIT :: Just-in-time: access granted only when needed and only for a short time, a privileged access management idea
+KDC :: Key Distribution Center: the Kerberos server that checks users and issues their tickets
+KEK :: Key encryption key: a key used only to encrypt and protect other keys
+KMS :: Key management system: a central service that creates, stores, rotates and retires encryption keys
+KPI :: Key performance indicator: a measure of how well something is working, such as patch time
+KRI :: Key risk indicator: a measure that warns when a risk is growing toward its threshold
+L2TP :: Layer 2 Tunneling Protocol: a VPN tunnel with no encryption of its own, normally paired with IPsec
+LAN :: Local area network: a network inside one building or site
+LDAP :: Lightweight Directory Access Protocol: reads and changes directory entries (TCP 389); use LDAPS for encryption
+LDAPS :: LDAP over SSL/TLS: encrypted directory traffic on TCP 636
+LEAP :: Lightweight Extensible Authentication Protocol: an old Cisco EAP method with weak password protection; don't use it
+MaaS :: Monitoring as a service: a provider watches your systems and security for you
+MAC (access control) :: Mandatory access control: the system enforces labels and clearances; users can't change who gets access
+MAC (address) :: Media access control address: a network card's hardware address; easy to spoof, so weak on its own for access control
+MAC (crypto) :: Message authentication code: a keyed checksum that proves a message wasn't changed
+MAN :: Metropolitan area network: a network that spans a city
+MBR :: Master boot record: the first sector of an older-style disk with the boot code; bootkits infect it
+MD5 :: Message Digest 5: 128-bit hash broken by collisions; only for non-security checksums
+MDF :: Main distribution frame: the central wiring room where outside lines meet the core network
+MDM :: Mobile device management: enforces rules on phones and tablets (passcode, encryption, app control, remote wipe)
+MFA :: Multifactor authentication: two or more different kinds of factor, such as something you know plus something you have
+MFD :: Multifunction device: a printer-scanner-copier; it stores documents and runs network services, so harden it
+MFP :: Multifunction printer: the same as an MFD; secure its hard drive, admin page and scan-to-email settings
+MITM :: Man-in-the-middle: the older name for an on-path attack
+ML :: Machine learning: AI that learns patterns from data; used to spot unusual behaviour
+MMS :: Multimedia Messaging Service: picture and video texts; can deliver malicious content
+MOA :: Memorandum of agreement: a written agreement of each side's duties; firmer than an MOU
+MOU :: Memorandum of understanding: a statement of shared intent between parties; usually not legally binding
+MPLS :: Multiprotocol Label Switching: a carrier WAN service that forwards by labels; private but not encrypted
+MSA :: Master service agreement: the general terms for future work between two parties; later work orders refer to it
+MS-CHAP :: Microsoft Challenge-Handshake Authentication Protocol: Microsoft's CHAP; version 2 has known weaknesses, so protect it inside a tunnel such as PEAP
+MSP :: Managed service provider: an outside company that runs your IT; a supply chain risk if it is breached
+MSSP :: Managed security service provider: an outside company that runs security monitoring for you
+MTBF :: Mean time between failures: average running time between failures of something repairable; higher is better
+MTTF :: Mean time to failure: average life of something that is replaced, not repaired
+MTTR :: Mean time to repair (or recover): average time to fix a failure; lower is better
+MTU :: Maximum transmission unit: the largest packet a link carries without splitting it
+NAC :: Network access control: checks a device's identity and health before letting it onto the network
+NAS :: Network-attached storage: file storage on the network; a favourite ransomware target
+NAT :: Network address translation: maps private addresses to public ones and hides inside addresses
+NDA :: Non-disclosure agreement: a legal promise to keep information confidential
+NFC :: Near-field communication: very short range radio for tap payments and badges; skimming is possible up close
+NGFW :: Next-generation firewall: a firewall that understands applications and users and adds IPS and URL filtering
+NIDS :: Network-based intrusion detection system: watches network traffic, often from a tap or SPAN port, and alerts
+NIPS :: Network-based intrusion prevention system: sits inline on the network and blocks attacks
+NIST :: National Institute of Standards and Technology: the US agency behind the CSF, the RMF and the SP 800 series
+NTFS :: New Technology File System: the Windows file system, with permissions and EFS
+NTLM :: NT LAN Manager: older Windows challenge-response sign-in; open to pass-the-hash and relay, so prefer Kerberos
+NTP :: Network Time Protocol: keeps clocks in step (UDP 123); correct time matters for logs and Kerberos
+NVD :: National Vulnerability Database: NIST's database that adds CVSS scores and details to CVE entries
+OAuth :: Open Authorization: lets an app use your data on another service with a token instead of your password (authorization, not sign-in)
+OCSP :: Online Certificate Status Protocol: asks the CA's responder whether one certificate is still good
+OID :: Object identifier: a dotted number that names an item, such as a certificate extension or policy
+OIDC :: OpenID Connect: an identity layer on top of OAuth 2.0 that adds sign-in with ID tokens
+OS :: Operating system: core software such as Windows or Linux; keep it patched and hardened
+OSINT :: Open-source intelligence: information gathered from public sources such as websites, social media and records
+OSPF :: Open Shortest Path First: a routing protocol inside an organization; turn on authentication between routers
+OT :: Operational technology: hardware and software that runs physical equipment in plants and utilities
+OTA :: Over the air: updates sent wirelessly to phones, cars and IoT; they must be signed
+OTP :: One-time password: a code that works for one sign-in only
+OVAL :: Open Vulnerability and Assessment Language: a standard way to write checks for flaws and settings; part of SCAP
+OWASP :: Open Worldwide Application Security Project: community known for the OWASP Top 10 web application risks

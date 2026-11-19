@@ -1,0 +1,11 @@
+SYNOPSIS: Removes users or groups from a local group.
+DESCRIPTION:
+Removes the given members. A name that is not a member is an error. Windows logs event 4733.
+PARAMETER Name:
+The group. Position 0 (or use -Group).
+PARAMETER Group:
+The group as a name or LocalGroup object.
+PARAMETER Member:
+The members to remove. Position 1.
+EXAMPLE: Remove-LocalGroupMember -Group Administrators -Member alice
+RELATED: Add-LocalGroupMember

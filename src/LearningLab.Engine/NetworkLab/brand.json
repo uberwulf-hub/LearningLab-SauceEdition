@@ -1,0 +1,15 @@
+{
+    "_about": "The made-up maker of Network Lab's routers and switches. Change it here (or per person in the app's Settings); nothing else in the app names the brand. {brand} is replaced by the brand name.",
+    "brand": "Crisco",
+    "os": "{brand} Internetwork Operating System",
+    "about": "{brand} is a made-up brand for this simulator; it isn't affiliated with Cisco Systems{aboutExtra}.",
+    "aboutExtra": " or the Crisco shortening brand",
+    "_aboutExtra": "added to the about note only while the brand is the one above",
+    "models": {
+        "router": "RX-440",
+        "switch": "SW-2400",
+        "homerouter": "HomeLink 300",
+        "ap": "AirPoint 20",
+        "patch": "PP-24"
+    }
+}

@@ -1,0 +1,55 @@
+# Lab: lab-01 | Finding your way with help | u01 | 25
+Four small hunts with Get-Command, Get-Help, Get-Alias and Get-Member on WIN-SRV1. Store each answer in the variable the task names; the checks look at those variables.
+
+@task t01 | Help | 10 | WIN-SRV1
+Store in `$convertCmds` all commands whose **verb** is `ConvertTo` (use Get-Command), so that `$convertCmds.Name` includes ConvertTo-Csv and ConvertTo-Json.
+@check WIN-SRV1 | $convertCmds holds the ConvertTo commands
+$n = @($convertCmds.Name); $n -contains 'ConvertTo-Csv' -and $n -contains 'ConvertTo-Json' -and -not ($n -like 'Get-*')
+@hint Get-Command -Verb ConvertTo
+@solution WIN-SRV1
+$convertCmds = Get-Command -Verb ConvertTo
+$convertCmds
+@explain
+Get-Command filters by -Verb, -Noun, -Module and wildcard names. Because verbs come from a fixed list, asking by verb is a reliable way to discover related commands.
+@endtask
+
+@task t02 | Help | 10 | WIN-SRV1
+Find out which cmdlet the alias `gm` stands for, and store its **full name** (as text) in `$gmCmd`.
+@check WIN-SRV1 | $gmCmd is Get-Member
+"$gmCmd" -eq 'Get-Member'
+@hint Get-Alias gm shows "gm -> ...". Its Definition (or ResolvedCommandName) property holds the cmdlet's name.
+@solution WIN-SRV1
+Get-Alias gm
+$gmCmd = (Get-Alias gm).Definition
+@explain
+Get-Alias NAME shows what an alias points to; Get-Alias -Definition CMDLET goes the other way and lists the aliases of a cmdlet.
+@endtask
+
+@task t03 | Help | 10 | WIN-SRV1
+Using Get-Help, find the **position** of the `-Seconds` parameter of `Start-Sleep` (0 means it can be given without its name). Store the number in `$pos`.
+@check WIN-SRV1 | $pos is 0
+"$pos" -eq '0'
+@check WIN-SRV1 | you looked it up with Get-Help
+($CertLabHistory -join "`n") -match '(Get-Help|help)\s+Start-Sleep'
+@hint Get-Help Start-Sleep -Parameter Seconds, or -Full.
+@solution WIN-SRV1
+Get-Help Start-Sleep -Parameter Seconds
+$pos = 0
+@explain
+The parameter details (Required, Position, Accept pipeline input) appear with -Full or -Parameter. A positional parameter is what makes Start-Sleep 5 work without -Seconds.
+@endtask
+
+@task t04 | Help | 10 | WIN-SRV1
+Use Get-Member on a string to find the method that tells whether a string **ends with** some text. Store the method's name in `$m`, then use it to store in `$isCsv` whether the text `'report.csv'` ends with `.csv`.
+@check WIN-SRV1 | $m is EndsWith
+"$m" -eq 'EndsWith'
+@check WIN-SRV1 | $isCsv is True
+$isCsv -eq $true
+@hint 'x' | Get-Member -MemberType Method shows the string methods.
+@solution WIN-SRV1
+'x' | Get-Member -MemberType Method
+$m = 'EndsWith'
+$isCsv = 'report.csv'.EndsWith('.csv')
+@explain
+Get-Member lists everything an object can do. String methods are case-sensitive: 'REPORT.CSV'.EndsWith('.csv') is False, while 'REPORT.CSV' -like '*.csv' is True.
+@endtask

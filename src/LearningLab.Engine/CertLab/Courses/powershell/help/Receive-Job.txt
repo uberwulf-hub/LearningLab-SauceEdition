@@ -1,0 +1,38 @@
+SYNOPSIS: Collects the results of background jobs.
+DESCRIPTION:
+A job keeps its output until you ask for it. Receive-Job gets that output (and the job's errors, warnings and other messages) into your session.
+
+By default the results are handed over and removed from the job, so a second Receive-Job returns nothing new. Add -Keep to look at the results and leave them in the job.
+
+You can receive while a job is still running: you get whatever it has produced so far. Add -Wait to wait until it is finished first.
+
+Results are copies made when the job sent them ("deserialized" objects): properties only, no methods.
+PARAMETER Job:
+The job objects, for example from Start-Job or Get-Job. Position 0, and they can come through the pipeline.
+PARAMETER Id:
+The numbers of the jobs to receive from.
+PARAMETER Name:
+The names of the jobs to receive from.
+PARAMETER Keep:
+Leaves the results in the job so you can receive them again.
+PARAMETER Wait:
+Waits until the job has finished, then returns all its results.
+PARAMETER AutoRemoveJob:
+With -Wait, deletes the job after its results are received.
+EXAMPLE: $j = Start-Job { Start-Sleep 5; 'done' }; Wait-Job $j; Receive-Job $j
+Waits for the job and collects its output: done.
+EXAMPLE: Receive-Job -Job $j -Keep
+Shows the results but keeps them; run it again and they are still there.
+EXAMPLE: Start-Job -Name Sum { 1..100 | Measure-Object -Sum }; Receive-Job -Name Sum -Wait -AutoRemoveJob
+Waits for the job, gets the result and removes the job in one step.
+EXAMPLE: Get-Job | Receive-Job
+Collects whatever every job has ready.
+NOTES:
+The alias is rcjb.
+
+A Failed job's error appears when you receive it. Receive-Job $j -ErrorAction SilentlyContinue hides it; $Error still records it.
+
+Results of a job with several child jobs (one per computer for Invoke-Command -AsJob) come together; their PSComputerName tells them apart.
+
+If HasMoreData is False, there is nothing left to receive (or you already received it without -Keep).
+RELATED: Start-Job, Get-Job, Wait-Job, Remove-Job, about_Jobs

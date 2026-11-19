@@ -1,0 +1,67 @@
+NAME
+       timedatectl - show and set the clock, time zone and network time sync
+
+SYNOPSIS
+       timedatectl [status]
+       timedatectl show
+       timedatectl list-timezones
+       timedatectl set-timezone ZONE
+       timedatectl set-ntp true|false
+       timedatectl set-time 'YYYY-MM-DD HH:MM:SS'
+
+DESCRIPTION
+       timedatectl shows the system clock in local time and UTC, the time
+       zone, whether the clock is synchronised over the network (NTP), and
+       whether the NTP service is active. It also changes these settings.
+
+       The time zone decides how the clock is shown (local time); the clock
+       itself counts in UTC. Zones are named Area/City, such as
+       America/New_York or Europe/Paris. Setting the zone points
+       /etc/localtime at the zone file under /usr/share/zoneinfo.
+
+       On RHEL 9 network time comes from chronyd. set-ntp true enables and
+       starts chronyd; set-ntp false stops and disables it. Which server it
+       uses is set in /etc/chrony.conf, not by timedatectl.
+
+COMMANDS
+       status Show the current settings (the default).
+
+       show   The same in NAME=VALUE form, for scripts.
+
+       list-timezones
+              List every time zone name. Pipe it into grep to find one.
+
+       set-timezone ZONE
+              Change the time zone.
+
+       set-ntp BOOL
+              Turn network time synchronisation on or off.
+
+       set-time TIME
+              Set the clock by hand. This is refused while NTP is on.
+
+EXAMPLES
+       Show the clock and whether it is synchronised:
+
+           timedatectl
+
+       Find and set the time zone for Lisbon:
+
+           timedatectl list-timezones | grep -i lisbon
+           timedatectl set-timezone Europe/Lisbon
+
+       Turn on network time after configuring /etc/chrony.conf:
+
+           timedatectl set-ntp true
+           chronyc sources
+
+NOTES
+       "System clock synchronized: yes" appears only after chronyd has
+       reached a server; right after a change it may say no for a while.
+
+FILES
+       /etc/localtime
+              A link to the current time zone file.
+
+SEE ALSO
+       chronyc(1), chrony.conf(5), date(1), hwclock(8)

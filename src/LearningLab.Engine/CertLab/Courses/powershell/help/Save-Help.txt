@@ -1,0 +1,24 @@
+SYNOPSIS: Downloads help files into a folder, so computers without internet can install them.
+DESCRIPTION:
+Update-Help downloads help from the internet and installs it. Save-Help only downloads: it saves the help files (cab and xml files) into a folder you choose, for example a shared folder on the network. Computers without internet access can then run Update-Help -SourcePath with that folder.
+
+That is the usual way to keep help up to date on servers that are not allowed to reach the internet.
+
+Cert Lab's practice machines have no internet, so Save-Help only shows a warning there.
+PARAMETER DestinationPath:
+The folder to save the help files in. Position 0, required.
+PARAMETER Module:
+The modules whose help to save. Position 1. Without it, help for all installed modules is saved.
+PARAMETER UICulture:
+The languages to download, for example en-US.
+PARAMETER Force:
+Downloads again even if the files are current, and skips the once-a-day limit.
+EXAMPLE: Save-Help -DestinationPath \\FS01\Help
+On a real PC with internet, saves help for every installed module to a shared folder.
+EXAMPLE: Update-Help -SourcePath \\FS01\Help
+On the computer without internet: installs the help from that folder (run as an administrator).
+NOTES:
+Save-Help needs to know which modules exist; to save help for modules installed only on other computers, pass their module objects (Get-Module -ListAvailable on that computer) to -Module.
+
+Help is available only for modules that support updatable help, so you may see errors for some modules. They are harmless.
+RELATED: Update-Help, Get-Help

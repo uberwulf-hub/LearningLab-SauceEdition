@@ -1,0 +1,30 @@
+SYNOPSIS: Creates a local user account.
+DESCRIPTION:
+New-LocalUser creates an account on this computer. Give a password as a SecureString (from Read-Host -AsSecureString or ConvertTo-SecureString), or -NoPassword. On Windows Server the password must meet the complexity rules: at least six characters, three of the four kinds (capitals, small letters, digits, symbols) and not the user name. A new user is not in any group yet: add it to Users or Administrators with Add-LocalGroupMember. Windows logs event 4720 in the Security log.
+
+The parameters also take values from objects' properties, so Import-Csv users.csv | New-LocalUser -NoPassword creates one user per line (columns Name, FullName, Description).
+PARAMETER Name:
+The user name, up to 20 characters. Position 0.
+PARAMETER Password:
+The password, a SecureString.
+PARAMETER NoPassword:
+Creates the account without a password.
+PARAMETER FullName:
+The person's full name.
+PARAMETER Description:
+A description, up to 48 characters.
+PARAMETER Disabled:
+Creates the account disabled.
+PARAMETER PasswordNeverExpires:
+The password does not expire (local passwords expire after 42 days by default).
+PARAMETER UserMayNotChangePassword:
+The user cannot change the password.
+PARAMETER AccountExpires:
+The date the account stops working.
+PARAMETER AccountNeverExpires:
+The account does not expire.
+EXAMPLE: $pw = Read-Host -AsSecureString 'Password'; New-LocalUser -Name alice -Password $pw -FullName 'Alice Admin'
+Asks for the password without showing it.
+EXAMPLE: New-LocalUser -Name kiosk -NoPassword -Description 'Shared kiosk'
+An account without a password.
+RELATED: Set-LocalUser, Add-LocalGroupMember, Remove-LocalUser

@@ -1,0 +1,18 @@
+NAME
+       vgrename - rename a volume group
+
+SYNOPSIS
+       vgrename OLD-NAME NEW-NAME
+
+DESCRIPTION
+       vgrename gives a volume group a new name. Its LV device paths change
+       with it (/dev/OLD/lv becomes /dev/NEW/lv), so update /etc/fstab lines
+       that use those paths, and remount. Lines that use UUID= keep working.
+       Never rename the VG that holds the root file system unless you also
+       change the boot loader's kernel arguments.
+
+EXAMPLES
+           vgrename vgdata vgprojects
+
+SEE ALSO
+       lvrename(8), vgs(8), fstab(5)

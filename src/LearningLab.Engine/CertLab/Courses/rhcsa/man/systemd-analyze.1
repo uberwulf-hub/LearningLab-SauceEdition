@@ -1,0 +1,24 @@
+NAME
+       systemd-analyze - show how long the system took to boot
+
+SYNOPSIS
+       systemd-analyze [time]
+       systemd-analyze blame
+
+DESCRIPTION
+       systemd-analyze reports on the last boot. With no command (or time) it
+       prints how long the kernel, the initial RAM disk and the rest of the
+       start-up took, and when the default target was reached. blame lists
+       units by the time they took to start, slowest first, which helps find
+       what makes a boot slow.
+
+EXAMPLES
+           systemd-analyze
+           systemd-analyze blame | head
+
+NOTES
+       A unit that takes long in blame is not always the problem: it may be
+       waiting for another unit.
+
+SEE ALSO
+       systemctl(1), journalctl(1)

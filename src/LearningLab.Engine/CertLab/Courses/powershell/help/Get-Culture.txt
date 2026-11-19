@@ -1,0 +1,20 @@
+SYNOPSIS: Shows the region settings this session uses for dates, numbers and text.
+DESCRIPTION:
+Get-Culture returns a CultureInfo object for the current user's region format, such as en-US (English, United States) or de-DE (German, Germany). The culture decides how dates and numbers look when PowerShell turns them into text: 3/2/2026 or 02.03.2026, 1,234.5 or 1.234,5.
+
+It reflects the "Regional format" setting in Windows, not the display language. The language of menus and messages is the UI culture: $PSUICulture.
+
+Cert Lab's practice machines all use en-US.
+EXAMPLE: Get-Culture
+Shows the LCID (a number for the culture), the name and the display name.
+EXAMPLE: (Get-Culture).Name
+Just the name: en-US.
+EXAMPLE: $PSCulture
+The same name, kept in an automatic variable.
+NOTES:
+On a real PC the object has much more: (Get-Culture).DateTimeFormat and .NumberFormat show the exact patterns, and Get-Date -Format uses them.
+
+Something PowerShell does that surprises people: inside the language itself (casts such as [datetime]'3/2/2026' and number literals), it always uses the invariant culture (US style), whatever the region. Cmdlet parameters and -f formatting use the current culture.
+
+Set-Culture (in the International module) changes the setting for the user; it takes effect in new PowerShell windows.
+RELATED: Get-Date, Get-Host, about_Automatic_Variables

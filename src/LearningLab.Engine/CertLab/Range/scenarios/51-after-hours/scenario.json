@@ -1,0 +1,56 @@
+{
+    "id": "after-hours",
+    "title": "After Hours",
+    "category": "blue",
+    "level": "Beginner",
+    "order": 1,
+    "summary": "Something signed in overnight. Read the logs on your server, work out who got in and from where, find what they left behind, and clean it up before it phones home.",
+    "story": "You look after one Linux server, srv, for {{CO}} (a made-up shop). This morning it was slow and a colleague noticed a file they didn't recognise. You have an administrator (root) console on srv. Nobody has touched it yet: the logs are exactly as they were left.",
+    "goal": "Work out which account was used and the address it came from, find the flag in the file the intruder dropped, then remove what they left and lock the account - before their leftover job copies the reports out.",
+    "skills": "reading /var/log/secure, last, cron jobs, finding odd files, locking an account",
+    "defender": "none",
+    "start": "srv",
+    "minutes": 25,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the reports out of the building",
+    "goalPoints": 60,
+    "vars": {
+        "CO": "company",
+        "USER": "person",
+        "PW": "word",
+        "ATKIP": "ip"
+    },
+    "machines": [
+        {
+            "name": "srv",
+            "os": "linux",
+            "hostname": "srv.{{CO_DOMAIN}}",
+            "role": "office server (the one you look after)",
+            "nics": [ "10.10.6.10/24" ],
+            "motd": "{{CO}} server srv - authorized staff only.",
+            "setup": "srv.sh"
+        }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag in the dropped file", "points": 60, "machine": "srv", "path": "/opt/.sync/payload.txt", "owner": "root", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "acct", "ask": "Which account did the intruder sign in with?", "answer": "{{USER}}", "points": 40, "explain": "In /var/log/secure, the many Failed password lines end with an Accepted password for this user." },
+        { "id": "addr", "ask": "What address did they come from?", "answer": "{{ATKIP}}", "points": 40, "explain": "The same address appears on the failed attempts and on the successful sign-in." },
+        { "id": "persist", "ask": "What did they leave to keep themselves going (the cron job's file)?", "answer": "/etc/cron.d/sync", "accept": [ "sync", "/opt/.sync.sh", ".sync.sh" ], "points": 40, "explain": "A cron file in /etc/cron.d runs a hidden script every minute." }
+    ],
+    "tasks": [
+        { "id": "remove", "name": "Remove what the intruder left (the cron job and its script)", "machine": "srv", "check": "test ! -e /etc/cron.d/sync && test ! -e /opt/.sync.sh", "points": 50, "explain": "Delete /etc/cron.d/sync and /opt/.sync.sh." },
+        { "id": "lock", "name": "Lock the account that was used", "machine": "srv", "check": "passwd -S {{USER}} | grep -q LK", "points": 40, "explain": "usermod -L {{USER}} (or passwd -l {{USER}}) locks it so the stolen password stops working." }
+    ],
+    "attacker": [
+        { "at": "240s", "machine": "srv", "run": "mkdir -p /tmp/.out; cp -r /srv/reports/* /tmp/.out/ 2>/dev/null; true", "unless": "test ! -e /opt/.sync.sh", "note": "The leftover job woke up and copied the reports to a staging folder, ready to send out.", "goal": true }
+    ],
+    "hints": [
+        { "text": "What to think about first: you are the defender, and the intruder has already been. Computers keep diaries called logs. Start with three questions: who signed in, from where, and what did they leave behind so they can come back? Answer them in the Findings tab as you go.", "cost": 3 },
+        { "text": "On this kind of Linux server, sign-ins over ssh are written to /var/log/secure. grep searches text for a word: 'grep -Ei \"failed|accepted\" /var/log/secure' shows only the lines with 'failed' or 'accepted' (-i ignores upper/lower case, -E lets | mean 'or'). Many 'Failed password' lines from one address, then one 'Accepted password', means someone guessed their way in. The user name and the address are on those lines.", "cost": 5 },
+        { "text": "Intruders like to leave a scheduled job so their program keeps running. Linux runs scheduled jobs (cron) from files in /etc/cron.d. 'ls -la /etc/cron.d' lists them (-a shows hidden files too); one called sync doesn't belong. 'cat /etc/cron.d/sync' shows the script it runs every minute; read that script too with cat.", "cost": 8 },
+        { "text": "The script mentions a hidden folder (names starting with a dot are hidden from a plain ls). 'ls -la /opt/.sync' lists it, and 'cat /opt/.sync/payload.txt' shows the dropped file with the flag. Put the flag in the flag box.", "cost": 12 },
+        { "text": "Clean up before the leftover job runs again: 'rm -f /etc/cron.d/sync /opt/.sync.sh' deletes the job and its script, and 'usermod -L {{USER}}' locks the account so the guessed password stops working ('passwd -S {{USER}}' then shows LK, locked). Then press Check on each fix in the Findings tab.", "cost": 16 }
+    ]
+}

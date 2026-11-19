@@ -1,0 +1,57 @@
+NAME
+       gzip, gunzip, zcat - compress or expand files
+
+SYNOPSIS
+       gzip [OPTION]... [FILE]...
+       gunzip [OPTION]... [FILE]...
+       zcat [FILE]...
+
+DESCRIPTION
+       gzip compresses each FILE and replaces it with FILE.gz, keeping the
+       owner, permissions and times. gunzip (the same as gzip -d) turns
+       FILE.gz back into FILE. zcat (the same as gzip -dc) writes the
+       expanded contents to standard output and leaves the file alone. With
+       no FILE, or when FILE is -, gzip reads standard input and writes
+       standard output.
+
+       gzip works on single files only. To pack a directory, use tar with
+       -z (tar czf backup.tar.gz DIR), which makes a .tar.gz (or .tgz)
+       archive. bzip2 (.bz2) and xz (.xz) work the same way with different
+       compression.
+
+OPTIONS
+       -c, --stdout
+              Write to standard output and keep the original file.
+
+       -d, --decompress
+              Expand instead of compress.
+
+       -k, --keep
+              Keep the original file next to the new one.
+
+       -f, --force
+              Overwrite an existing output file, and compress links too.
+
+       -l, --list
+              For .gz files: show the compressed and original sizes.
+
+       -r, --recursive
+              Compress every file in the directories given.
+
+       -t, --test
+              Check that a .gz file is intact.
+
+       -v, --verbose
+              Show each file's name and how much it shrank.
+
+       -1 ... -9, --fast, --best
+              Speed against size: -1 is fastest, -9 is smallest (default -6).
+
+EXAMPLES
+              $ gzip report.csv                 (leaves report.csv.gz)
+              $ gunzip report.csv.gz            (back to report.csv)
+              $ gzip -k /var/tmp/big.log        (keep big.log too)
+              $ zcat notes.txt.gz | grep error
+
+SEE ALSO
+       tar(1), bzip2(1), xz(1), zip(1)

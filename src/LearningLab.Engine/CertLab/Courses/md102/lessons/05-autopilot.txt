@@ -1,0 +1,264 @@
+# Unit: u05 | 5. Windows Autopilot | Deployment
+
+Windows Autopilot turns a new PC, straight out of its box, into a managed company device with no imaging and no IT person touching it. The PC is registered with your tenant first; when someone switches it on and connects it to the internet, Windows finds its Autopilot profile, skips the screens you chose to hide, joins Microsoft Entra ID (or your domain), enrols in Intune and installs the apps and policies before the user reaches the desktop. This unit follows a laptop through the whole journey: the hardware hash, group tags and dynamic groups, deployment profiles and their modes, the Enrollment Status Page, and Autopilot Reset. RB-LT-003 is a new laptop still in its out-of-box experience (OOBE): it is the one to practise on.
+
+## Lesson: l0501 | Registering devices: the hardware hash
+
+Autopilot recognises a device by its **hardware hash**, a long code made from the device's hardware, together with its serial number. A device must be **registered** (its hash imported into the tenant) before Autopilot can do anything with it. There are three ways:
+
+- The **manufacturer or reseller** registers the devices you buy (you give them permission as a partner). This is the normal way for new hardware.
+- You **collect the hash yourself** and import a CSV file in **Devices > Enrollment > Windows Autopilot > Devices > Import**.
+- An Autopilot profile with **Convert all targeted devices to Autopilot** registers devices that are already Entra joined and enrolled, so that they get Autopilot after a reset.
+
+To collect the hash, run the community script **Get-WindowsAutopilotInfo** on the device (in the OOBE press Shift+F10 for a command prompt and start PowerShell). On a real PC you install it first from the PowerShell Gallery with `Install-Script -Name Get-WindowsAutopilotInfo`; Cert Lab's devices already have it. With `-OutputFile` it writes the CSV, and `-GroupTag` adds a group tag column:
+
+```terminal
+#machine RB-LT-003
+PS C:\Windows\system32> Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv -GroupTag Sales
+PS C:\Windows\system32> Get-Content C:\HWID\hash.csv
+Device Serial Number,Windows Product ID,Hardware Hash,Group Tag
+LB14-55821,00329-00000-00003-AA430,T0FywiTzRQwJcVjhfj7uZvStY4F4YJ4IT9pr/QGTISvSa6ExFU5GENJOT164daaHYo2er4hPcnlGAATezUzDQyEF0aXJWO2u3n6yEmFMyqpcnDOShcEInW3l,Sales
+```
+
+The CSV's columns are the serial number, the Windows product ID, the hash and, if given, the group tag. You can put many devices in one file. (The script's `-Online` switch uploads straight to the tenant after a sign-in; Cert Lab doesn't sign in anywhere, so you always import the file.)
+
+> Importing takes a while in a real tenant, and a new device can take some minutes to show up. In Cert Lab's portal you import with **Devices > Enrollment > Windows Autopilot > Devices > Import** and pick the file on the device.
+
+@try
+@task t1 | Deployment | 10 | RB-LT-003
+Collect RB-LT-003's hardware hash into `C:\HWID\hash.csv`, then import it in the portal with the group tag **Sales**.
+@check RB-LT-003 | the hash file exists
+Test-Path C:\HWID\hash.csv
+@check portal | the laptop is registered for Autopilot with the group tag Sales
+autopilot["LB14-55821"].groupTag == Sales
+autopilot["LB14-55821"].model == "Lumen Book 14"
+@hint Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv on the device, then Import in Windows Autopilot > Devices.
+@solution RB-LT-003
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv
+@solution portal
+import autopilot "RB-LT-003" "C:\HWID\hash.csv" groupTag=Sales
+@endtask
+@end
+
+@quiz
+? What identifies a device to Windows Autopilot?
+- Its MAC address
++ Its hardware hash (with the serial number)
+- Its computer name
+- The user's UPN
+! Autopilot matches the hardware hash and serial number registered in the tenant.
+? Riverbend buys 200 laptops from a reseller. What is the least work to register them?
++ Let the reseller register them for your tenant
+- Run Get-WindowsAutopilotInfo on each laptop
+- Join each laptop to Entra ID first
+! Manufacturers and resellers can register devices for you as partners.
+? Which profile setting registers devices that are already Entra joined and enrolled?
+- Allow pre-provisioned deployment
++ Convert all targeted devices to Autopilot
+- Skip AD connectivity check
+! It registers the targeted existing devices, so they get Autopilot after a reset.
+@end
+
+
+## Lesson: l0502 | Group tags, dynamic groups and profile assignment
+
+Autopilot profiles are assigned to **device groups**. Registered devices are already in Microsoft Entra ID (as placeholder device objects), so dynamic device groups can find them before they are ever switched on. Each registered device carries **physical IDs** in `device.devicePhysicalIds`:
+
+- `[ZTDid]:...` on every Autopilot device ("zero touch deployment id");
+- `[OrderID]:TAG` when the device has a **group tag** (imported in the CSV or edited later on the Autopilot device);
+- `[PurchaseOrderId]:...` when the reseller registered it with a purchase order number.
+
+So the classic rules are:
+
+```
+(device.devicePhysicalIds -any (_ -startsWith "[ZTDid]"))
+(device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales"))
+```
+
+The first means "every Autopilot device"; the second "Autopilot devices tagged Sales". Group tags let one tenant have different profiles for different teams or uses (sales laptops, kiosks, shared PCs).
+
+### Assignment takes time
+
+After a profile is assigned to a group that holds the device, the device's **profile status** goes from **Not assigned** to **Assigning** and then **Assigned**. That takes a while (Cert Lab: 15 minutes; check the device list before you hand the laptop over). A device that starts its OOBE before the status says Assigned gets the ordinary setup, without Autopilot. If several profiles target one device, the **oldest** profile wins; avoid that by keeping the groups apart.
+
+@try
+@setup RB-LT-003
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv
+@setup portal
+import autopilot "RB-LT-003" "C:\HWID\hash.csv" groupTag=Sales
+create autopilotProfile name="Sales laptops" mode=User-driven joinType="Microsoft Entra joined"
+@task t1 | Deployment | 10 | portal
+RB-LT-003 is registered with the group tag **Sales**, and the profile **Sales laptops** exists. Create a dynamic device group **Autopilot - Sales** for Autopilot devices tagged Sales, assign the profile to it, and wait until the profile status is **Assigned**.
+@check portal | the group finds the laptop by its group tag
+group["Autopilot - Sales"].membership == "Dynamic device"
+group["Autopilot - Sales"].members has RB-LT-003
+@check portal | the profile is assigned to the laptop
+autopilot["LB14-55821"].profile == "Sales laptops"
+autopilot["LB14-55821"].profileStatus == Assigned
+@hint Rule (device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales")). After assigning, Skip time by 15 minutes.
+@solution portal
+create group name="Autopilot - Sales" type=Security membership="Dynamic device" rule="(device.devicePhysicalIds -any (_ -eq \"[OrderID]:Sales\"))"
+assign autopilotProfile "Sales laptops" "Autopilot - Sales"
+#wait 900
+@endtask
+@end
+
+@quiz
+? Which rule makes a group of every device registered for Autopilot?
++ (device.devicePhysicalIds -any (_ -startsWith "[ZTDid]"))
+- (device.deviceOSType -eq "Autopilot")
+- (device.enrollmentProfileName -eq "Autopilot")
+! Every Autopilot device has a [ZTDid] physical ID. enrollmentProfileName holds a profile's name, which a device only gets once a profile is assigned, so it can't find every registered device.
+? A device's group tag is Kiosk. What does its physical IDs list contain?
+- [GroupTag]:Kiosk
++ [OrderID]:Kiosk
+- [ZTDid]:Kiosk
+! The group tag is stored as [OrderID]:tag.
+? A user starts a laptop while its Autopilot profile status still says Assigning. What happens?
+- Setup waits until the profile arrives
++ The laptop gets the ordinary Windows setup, without the Autopilot profile
+- Setup fails with an error
+! Only an Assigned profile is used; check the status before handing a device over.
+@end
+
+## Lesson: l0503 | Deployment profiles and the Enrollment Status Page
+
+A **deployment profile** (**Devices > Enrollment > Windows Autopilot > Deployment profiles**) says how the OOBE runs:
+
+- **Deployment mode**: **User-driven** (a person signs in with their work account; the device becomes theirs) or **Self-deploying** (no user; next lesson).
+- **Join to Microsoft Entra ID as**: Microsoft Entra joined, or Microsoft Entra hybrid joined (next lesson).
+- **Language (Region)** and the keyboard, or let the user pick.
+- **Microsoft Software License Terms**, **Privacy settings** and **Change account options**: hide them so the user sees fewer screens.
+- **User account type**: **Standard** (recommended) or Administrator: whether the person who sets the device up becomes a local administrator.
+- **Allow pre-provisioned deployment** (next lesson).
+- **Apply device name template**: names like `RB-%SERIAL%` (the serial number) or `RB-%RAND:5%` (five random digits). A Windows name has at most **15 characters**, letters, digits and hyphens only, can't be only digits, and the template takes **one** of %SERIAL% or %RAND:x%. Templates are for Entra joined devices; hybrid joined devices take their names from the Domain Join profile.
+
+### The Enrollment Status Page
+
+The **Enrollment Status Page** (ESP, **Devices > Enrollment > Enrollment Status Page**) shows progress during setup (device preparation, device setup, account setup) and can **block the use of the device** until chosen apps and policies are installed, so the user doesn't reach a desktop without their security settings and key apps. Its settings include a timeout (show an error after N minutes), whether the user may continue anyway after an error, and whether they may reset the device. There is a **default** ESP for all devices; you can make others and assign them to groups.
+
+@try
+@setup RB-LT-003
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv
+@setup portal
+import autopilot "RB-LT-003" "C:\HWID\hash.csv" groupTag=Sales
+create group name="Autopilot - Sales" type=Security membership="Dynamic device" rule="(device.devicePhysicalIds -any (_ -eq \"[OrderID]:Sales\"))"
+@task t1 | Deployment | 10 | portal
+Create a user-driven, Entra joined profile **Sales laptops** where the user is a **standard** user, the licence terms and privacy screens are hidden, and devices are named **RB-** followed by the serial number. Assign it to **Autopilot - Sales**, add an Enrollment Status Page **Sales setup** that shows progress, assigned to the same group, wait for the profile to be assigned, then set up RB-LT-003 as Jordan (`jordan`).
+@check portal | the laptop was deployed with the profile and named from its serial number
+device["LB14-55821"].name == RB-LB14-55821
+device["LB14-55821"].enrollmentProfile == "Sales laptops"
+@check portal | it is corporate, enrolled and Jordan's, and Jordan is not a local administrator
+device["LB14-55821"].ownership == Corporate
+device["LB14-55821"].managed == Intune
+device["LB14-55821"].user == jordan
+device["LB14-55821"].userIsAdmin == No
+@hint Name template RB-%SERIAL%. Wait 15 minutes after assigning (Skip time), then run the device's setup.
+@solution portal
+create autopilotProfile name="Sales laptops" mode=User-driven joinType="Microsoft Entra joined" userType=Standard eula=Hide privacy=Hide nameTemplate=RB-%SERIAL%
+assign autopilotProfile "Sales laptops" "Autopilot - Sales"
+create esp name="Sales setup" showProgress=Yes blockUntil=All timeout=60
+assign esp "Sales setup" "Autopilot - Sales"
+#wait 900
+@solution RB-LT-003
+#oobe jordan
+@endtask
+@end
+
+@quiz
+? Which device name template is accepted?
+- RIVERBEND-LAPTOP-%SERIAL%
++ RB-%RAND:5%
+- RB_%SERIAL%
+- %RAND:6%
+! At most 15 characters, letters, digits and hyphens, and not only digits; RB-%RAND:5% gives names like RB-48213.
+? Users must not reach the desktop before the antivirus and VPN apps are installed. What do you configure?
+- A longer Autopilot profile assignment
++ An Enrollment Status Page that blocks device use until those apps are installed
+- A compliance policy grace period
+! The ESP can block use of the device until chosen apps are installed.
+? A user-driven profile has User account type set to Administrator. What does that mean?
++ The person who sets the device up becomes a local administrator on it
+- The device can only be set up by an administrator
+- The device joins as an administrator account
+! Standard keeps the user out of the local Administrators group, which is the safer default.
+@end
+
+## Lesson: l0504 | Self-deploying, pre-provisioning, hybrid join and Autopilot Reset
+
+### Self-deploying mode
+
+**Self-deploying** mode sets a device up with **no user at all**: switch it on, connect it to the network (wired, usually), and it joins Entra ID and enrols by itself. It suits kiosks, meeting room PCs and digital signs (Riverbend's RB-KIOSK-01 was set up this way). The device proves who it is with its **TPM 2.0** chip (device attestation), so a device with an older TPM 1.2 or no TPM can't use self-deploying mode. It supports Microsoft Entra join only, not hybrid join.
+
+```terminal
+#machine RB-DT-007
+PS C:\Windows\system32> Get-Tpm | Select-Object TpmPresent, TpmReady, ManufacturerVersionFull20
+
+TpmPresent TpmReady ManufacturerVersionFull20
+---------- -------- -------------------------
+True       True     Not Supported
+```
+
+RB-DT-007's TPM is a 1.2 chip (`ManufacturerVersionFull20` says Not Supported), so neither self-deploying mode nor Windows 11 is possible on it.
+
+### Pre-provisioned deployment
+
+**Pre-provisioning** (formerly "white glove") splits user-driven setup in two: IT or a partner starts the OOBE, presses the Windows key five times and chooses pre-provision, and the device installs the device-targeted apps and policies in advance. It is then resealed and shipped; the user's part is short. It needs **Allow pre-provisioned deployment** set to Yes in a user-driven profile, and TPM 2.0.
+
+### Hybrid join with Autopilot
+
+A user-driven profile can join devices to the **on-premises domain** (Microsoft Entra hybrid joined). It needs:
+
+- the **Intune Connector for Active Directory** installed on a server in the domain (it creates the computer objects);
+- a **Domain Join** configuration profile assigned to the same device group, with the computer name prefix, the domain name and the organizational unit (OU);
+- the device must reach a domain controller during setup, unless **Skip AD connectivity check** is set (for a VPN set up later).
+
+Microsoft recommends Entra join for new devices; use hybrid join only where something still needs the domain.
+
+### Autopilot Reset
+
+**Autopilot Reset** (a remote action, or Ctrl+Windows key+R on the lock screen when enabled) brings an Entra joined device back to a business-ready state: it removes personal files, apps and settings, keeps the device **joined and enrolled**, and reapplies its policies and apps. Use it when a laptop passes to a new person. A **wipe**, by contrast, resets the device to factory settings, and it goes through Autopilot (or the normal OOBE) again.
+
+@try
+@setup portal
+create autopilot name=LB14-55821 serial=LB14-55821 groupTag=Hybrid
+create group name="Autopilot - Hybrid" type=Security membership="Dynamic device" rule="(device.devicePhysicalIds -any (_ -eq \"[OrderID]:Hybrid\"))"
+@task t1 | Deployment | 10 | portal
+RB-LT-003 is registered with the group tag **Hybrid** and is in the group **Autopilot - Hybrid**. It must join the domain **riverbend.local** in the OU **OU=Laptops,DC=riverbend,DC=local** with names starting **RBHY-**. Create the Autopilot profile **Hybrid laptops** (user-driven, hybrid joined) and the Domain Join profile **Domain join laptops**, assign both to the group, wait for the profile, and set the laptop up as Sam (`sam`).
+@check portal | the laptop is hybrid joined with a domain name from the prefix
+device["LB14-55821"].join == "Hybrid joined"
+device["LB14-55821"].name like RBHY-*
+device["LB14-55821"].domain == riverbend.local
+@check portal | it is enrolled with the hybrid profile
+device["LB14-55821"].enrollmentProfile == "Hybrid laptops"
+device["LB14-55821"].managed == Intune
+@hint The Domain Join profile is a configuration profile (Devices > Configuration, platform Windows 10 and later, type Domain Join). The Intune Connector is already installed.
+@solution portal
+create autopilotProfile name="Hybrid laptops" mode=User-driven joinType="Microsoft Entra hybrid joined"
+create config name="Domain join laptops" platform="Windows 10 and later" type="Domain Join" prefix=RBHY- domain=riverbend.local ou="OU=Laptops,DC=riverbend,DC=local"
+assign autopilotProfile "Hybrid laptops" "Autopilot - Hybrid"
+assign config "Domain join laptops" "Autopilot - Hybrid"
+#wait 900
+@solution RB-LT-003
+#oobe sam
+@endtask
+@end
+
+@quiz
+? A meeting room PC must set itself up with nobody signing in. What do you need?
+- A user-driven profile with an assigned user
++ A self-deploying profile and a device with TPM 2.0
+- A hybrid join profile and the Intune Connector
+! Self-deploying mode needs no user, and the device authenticates with TPM 2.0 attestation.
+? Autopilot with hybrid join fails with "no Domain Join profile". What is missing?
++ A Domain Join configuration profile assigned to the device's group
+- A device name template in the Autopilot profile
+- A trusted named location for the office
+! Hybrid joined Autopilot needs the Intune Connector for Active Directory and a Domain Join profile for the same devices.
+? A laptop moves from Jordan to Priya. It must keep its enrolment and get its apps back, without Jordan's files. Which remote action?
+- Wipe
+- Retire
++ Autopilot Reset
+! Autopilot Reset removes the user's files and apps but keeps the device joined and enrolled.
+@end
+

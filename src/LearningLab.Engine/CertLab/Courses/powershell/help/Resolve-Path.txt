@@ -1,0 +1,14 @@
+SYNOPSIS: Turns a relative or wildcard path into the full paths of the items that exist.
+DESCRIPTION:
+Resolve-Path expands wildcards and .. into PathInfo objects whose Path is the full path, for example C:\LabFiles\employees.csv. It writes an error when nothing exists, so it also checks a path.
+PARAMETER Path:
+The paths to resolve; wildcards are expanded.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Relative:
+Gives the paths relative to the current location instead (.\app.log, ..\Windows).
+EXAMPLE: Resolve-Path *.csv
+Full paths of the CSV files here.
+EXAMPLE: Resolve-Path C:\LabFiles\app.log -Relative
+The path as seen from the current folder.
+RELATED: Convert-Path, Split-Path, Join-Path

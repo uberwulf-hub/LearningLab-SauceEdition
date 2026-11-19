@@ -1,0 +1,35 @@
+NAME
+       vigenere - the classic Vigenere letter cipher (Cyber Range)
+
+SYNOPSIS
+       vigenere -k WORD [-d] [FILE]
+
+DESCRIPTION
+       The Vigenere cipher moves each letter of a message on through the
+       alphabet by the matching letter of a key word (a moves 0 places, b 1,
+       c 2 ... z 25), using the key word's letters in turn and starting again
+       at its first letter when they run out. Upper and lower case are kept;
+       spaces, digits and punctuation pass through unchanged and don't use up
+       a key letter. With one key letter it is simply a Caesar shift.
+
+       vigenere reads FILE or standard input and writes the result. Without -d
+       it encrypts; with -d it decrypts (moves each letter back).
+
+       Without the key word the cipher is much harder to read than a Caesar
+       shift, so the key word is usually the real secret: look for it nearby.
+
+       vigenere is a Cyber Range practice tool; it works only inside the range.
+
+OPTIONS
+       -k WORD, --key=WORD
+              The key word (letters only; other characters are ignored).
+
+       -d, --decrypt
+              Decrypt instead of encrypt.
+
+EXAMPLES
+           echo 'attack at dawn' | vigenere -k lemon
+           vigenere -d -k lemon message.txt
+
+SEE ALSO
+       tr(1), rev(1)

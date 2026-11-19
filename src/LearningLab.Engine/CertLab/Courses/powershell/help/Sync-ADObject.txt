@@ -1,0 +1,19 @@
+SYNOPSIS: Replicates one Active Directory object between domain controllers right away.
+DESCRIPTION:
+Normal replication between sites follows the site link schedule (every 180 minutes by default). Sync-ADObject copies one object from a source domain controller to a destination at once, for example a just-unlocked account or a new user someone at a branch office is waiting for.
+-PasswordOnly replicates only the password, which is how a read-only domain controller can be given one user's password ahead of time.
+PARAMETER Object:
+The object to replicate, by distinguished name or piped in. Position 0.
+PARAMETER Source:
+The domain controller to copy from.
+PARAMETER Destination:
+The domain controller to copy to.
+PARAMETER PasswordOnly:
+Replicates only the password (for a read-only domain controller).
+PARAMETER PassThru:
+Returns the object.
+EXAMPLE: Get-ADUser bcole | Sync-ADObject -Source DC1 -Destination DC2
+Copies Bianca Cole's account from DC1 to DC2 now.
+EXAMPLE: Sync-ADObject "CN=Grace Kim,OU=HR,OU=Staff,DC=corp,DC=example" -Destination DC2
+Pulls one changed user to DC2 from the domain controller you are connected to.
+RELATED: Get-ADReplicationPartnerMetadata, Get-ADDomainController, Get-ADReplicationSiteLink

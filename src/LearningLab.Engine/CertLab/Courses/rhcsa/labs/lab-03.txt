@@ -1,0 +1,105 @@
+# Lab: lab-03 | Running systems | u03 | 45
+A morning on call: a lost root password on server2, a server stuck in the wrong target, a runaway program, a backup job that should be polite, the wrong tuning profile and a stopped service. server1's root password is redhat. Nobody knows server2's root password (task t01).
+
+@nologin server2
+
+@setup server2
+echo 'Unkn0wn-lab03-pw' | passwd --stdin root
+
+@setup server1
+systemctl set-default graphical.target
+tuned-adm profile powersave
+systemctl disable --now chronyd
+useradd -m lisa
+su - lisa -c 'dd if=/dev/zero of=/dev/null &'
+su - lisa -c 'sleep 8000 &'
+
+@task t01 | Running systems | 20 | server2
+Nobody knows the root password of server2. Interrupt the boot of server2 and set its root password to `Back1nCharge`. SELinux must stay enforcing and the machine must boot normally afterwards.
+@check server2 | root can log in with the new password
+certlab-check password root 'Back1nCharge'
+@check server2 | server2 is up normally with SELinux enforcing
+certlab-check booted && test "$(getenforce)" = Enforcing
+@hint Reset the machine, press e at the GRUB menu, go down to the line that starts with linux, press End, type a space and rd.break, and boot with Ctrl+X. Then: mount -o remount,rw /sysroot, chroot /sysroot, passwd root, touch /.autorelabel, exit twice.
+@solution server2
+#reset
+#key e
+#key Down Down Down End
+#type  rd.break
+#key Ctrl+X
+mount -o remount,rw /sysroot
+chroot /sysroot
+echo 'Back1nCharge' | passwd --stdin root
+touch /.autorelabel
+exit
+exit
+#password Back1nCharge
+getenforce
+@explain
+rd.break stops the boot inside the initramfs, where you are root without a password. The real system is on /sysroot, read-only: remount it read-write and chroot into it so passwd changes the real /etc/shadow. /.autorelabel matters because the new shadow file has no SELinux label; the relabel at the next boot fixes it (the machine reboots once more by itself). Without it, nobody could log in with SELinux enforcing.
+@endtask
+
+@task t02 | Running systems | 10 | server1
+server1 is a server without a desktop, but someone set it to boot into the graphical target. Make it boot into the text multi-user target by default.
+@check server1 | the default target is multi-user.target
+test "$(systemctl get-default)" = multi-user.target
+@hint systemctl get-default and set-default.
+@solution server1
+systemctl set-default multi-user.target
+@explain
+set-default replaces the link /etc/systemd/system/default.target. It only affects the next boots; systemctl isolate multi-user.target would also switch the running system now.
+@endtask
+
+@task t03 | Running systems | 10 | server1
+The user lisa started a program that keeps a CPU fully busy. Find it and stop it, but leave lisa's other process running.
+@check server1 | lisa's CPU-hungry dd is gone
+! pgrep -u lisa dd >/dev/null
+@check server1 | lisa's sleep is still running
+pgrep -u lisa sleep >/dev/null
+@hint ps -eo pid,user,%cpu,comm --sort=-%cpu | head (or top) shows the top CPU user. kill PID or pkill -u lisa dd.
+@solution server1
+ps -eo pid,user,%cpu,comm --sort=-%cpu | head -3
+pkill -u lisa dd
+@explain
+Sorting ps by -%cpu puts the busiest process first. kill PID sends SIGTERM, which lets the program end cleanly; use kill -9 only if it does not react. pkill -u lisa dd matches by owner and name, so it does not touch lisa's other processes. pkill -u lisa alone would stop all of them.
+@endtask
+
+@task t04 | Running systems | 10 | server1
+Start the command `sleep 9000` as root in the background, with the nice value 15 so that it gives way to other work. Leave it running.
+@check server1 | a sleep 9000 owned by root runs with nice value 15
+for p in $(pgrep -u root -f 'sleep 9000'); do test "$(ps -o ni= -p $p | tr -d ' ')" = 15 && exit 0; done; exit 1
+@hint nice -n 15 COMMAND & starts it in the background. Check the NI column with ps -o pid,ni,cmd -C sleep.
+@solution server1
+nice -n 15 sleep 9000 &
+ps -o pid,ni,cmd -C sleep
+@explain
+nice -n starts a command with the given nice value; & puts it in the background so you get the prompt back. For a process that already runs, renice -n 15 -p PID does the same. Values go from -20 (most favoured) to 19 (least); only root may lower a value.
+@endtask
+
+@task t05 | Running systems | 10 | server1
+Set the tuning profile of server1 to the one tuned recommends for it, so that it is also used after a reboot.
+@check server1 | the recommended profile is active
+test "$(tuned-adm active)" = "Current active profile: $(tuned-adm recommend)"
+@check server1 | the tuned service starts at boot
+systemctl is-enabled tuned
+@hint tuned-adm recommend, then tuned-adm profile NAME.
+@solution server1
+tuned-adm recommend
+tuned-adm profile virtual-guest
+tuned-adm active
+@explain
+tuned-adm recommend looks at the machine (here a virtual machine) and names a profile; tuned-adm profile applies it and saves the choice in /etc/tuned/active_profile. The tuned service applies the saved profile at every boot, so it must be enabled (it is, out of the box).
+@endtask
+
+@task t06 | Running systems | 10 | server1
+The time service chronyd on server1 is stopped and disabled. Start it and make sure it starts at every boot.
+@check server1 | chronyd is running
+systemctl is-active chronyd
+@check server1 | chronyd is enabled
+systemctl is-enabled chronyd
+@solution server1
+systemctl enable --now chronyd
+systemctl status chronyd | head -3
+@explain
+enable makes the service start at boot and --now also starts it immediately. Check both with systemctl is-active and is-enabled; the Loaded line of systemctl status shows enabled or disabled, the Active line whether it runs.
+@endtask

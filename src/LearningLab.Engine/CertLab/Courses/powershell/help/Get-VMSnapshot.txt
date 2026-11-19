@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the checkpoints of a virtual machine. Alias: Get-VMCheckpoint.
+DESCRIPTION:
+Get-VMSnapshot shows each checkpoint with its VMName, Name, SnapshotType, CreationTime and ParentSnapshotName (checkpoints form a tree). Get-VMCheckpoint is another name for the same command.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Name:
+Only checkpoints with this name.
+PARAMETER SnapshotType:
+Only checkpoints of this type, for example Standard.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMSnapshot -VMName WEB-TEST -ComputerName HV1
+The checkpoints of WEB-TEST.
+EXAMPLE: Get-VM | Get-VMCheckpoint
+Every checkpoint on the host, to find forgotten ones.
+RELATED: Checkpoint-VM, Restore-VMSnapshot, Remove-VMSnapshot

@@ -1,0 +1,47 @@
+# Sheet: security | Security | Security
+## Firewall
+firewall-cmd --list-all :: what the default zone allows right now (add --permanent for the saved rules)
+firewall-cmd --get-default-zone :: the zone used when you give no --zone
+firewall-cmd --permanent --add-service=http :: allow a known service in the saved rules
+firewall-cmd --permanent --add-port=8080/tcp :: open one port in the saved rules
+firewall-cmd --permanent --remove-service=cockpit :: stop allowing a service
+firewall-cmd --reload :: make the saved rules the running rules
+firewall-cmd --runtime-to-permanent :: save the running rules
+firewall-cmd --get-services :: the names of the known services
+## Default permissions
+umask :: show the umask (0022: files 644, folders 755)
+umask 027 :: for this shell: files 640, folders 750
+umask -S :: the same value as the permissions that are kept
+~/.bashrc :: put umask 027 here for one user
+/etc/profile.d/umask.sh :: put umask 027 here for every user
+## ssh keys and sshd
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519 :: a key pair without a passphrase
+ssh-copy-id student@server2 :: append your public key to authorized_keys on the server
+ssh -o StrictHostKeyChecking=accept-new student@server2 :: accept a new host key without asking
+~/.ssh/authorized_keys :: public keys that may log in (mode 600; ~/.ssh 700)
+/etc/ssh/sshd_config.d/*.conf :: read first; for each setting the first value wins
+PermitRootLogin no :: sshd setting: no root logins (prohibit-password: keys only)
+PasswordAuthentication no :: sshd setting: keys only, for everybody
+systemctl restart sshd :: apply changed sshd settings
+## SELinux modes
+getenforce :: Enforcing, Permissive or Disabled
+setenforce 0 :: permissive until the next boot (setenforce 1: enforcing)
+sestatus :: current mode and the mode from the config file
+/etc/selinux/config :: SELINUX=enforcing sets the mode at boot
+## Contexts and labels
+ls -Z /var/www/html :: the context of files (ls -dZ for the folder itself)
+ps -eZ :: the context of every process (httpd_t, sshd_t...)
+id -Z :: your own context
+restorecon -Rv /var/www/html :: put back the default labels, showing the changes
+semanage fcontext -a -t httpd_sys_content_t '/web(/.*)?' :: a new default label rule for /web
+semanage fcontext -l -C :: the rules you added (-d PATTERN removes one)
+chcon -t httpd_sys_content_t file :: a temporary label; restorecon undoes it
+semanage port -l :: port types (grep http_port_t)
+semanage port -a -t http_port_t -p tcp 8088 :: let Apache use port 8088 (-m if the port has a type)
+## Booleans and denials
+getsebool -a :: every boolean and its value
+setsebool -P httpd_can_network_connect on :: turn a boolean on for good
+semanage boolean -l :: booleans with saved value and description
+ausearch -m AVC -ts recent :: SELinux denials of the last ten minutes
+/var/log/audit/audit.log :: where the AVC messages are kept
+sealert -a /var/log/audit/audit.log :: explanations and fixes (package setroubleshoot-server)

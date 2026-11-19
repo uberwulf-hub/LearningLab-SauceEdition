@@ -1,0 +1,74 @@
+# Lab: lab-09 | Remote actions and administration | u09 | 30
+A busy day on Riverbend's help desk: a laptop moves to a new person, the shop kiosk needs a clean start, a laptop gets a proper name, a PC with out-of-date antivirus needs attention, and the Denver office gets its own help desk with rights over Denver's devices only.
+
+@vars
+newname = RB-SALES-02 | RB-DEN-LT02 | RB-LT-PRIYA
+@endvars
+
+@setup portal
+device RB-LT-002 sigAgeDays=9
+
+@task t01 | Monitoring | 20 | portal
+Jordan's laptop **RB-LT-001** goes to a new colleague. It must stay Microsoft Entra joined and enrolled in Intune, but Jordan's files, apps and settings must go, and it must be ready for the next person without reinstalling Windows by hand.
+@check portal | the laptop is still joined and managed, without its old user
+device["RB-LT-001"].join == "Entra joined"
+device["RB-LT-001"].managed == Intune
+device["RB-LT-001"].user == ""
+@hint Not a wipe (that would end the enrolment) and not a retire (that takes it out of Intune).
+@solution portal
+remote autopilot-reset RB-LT-001
+@explain
+Autopilot Reset removes personal files, apps and settings, keeps the device joined and enrolled, and lets policies and apps come back at the next check-in. A full wipe would send the device back to the out-of-box experience, and retire would remove it from Intune.
+@endtask
+
+@task t02 | Monitoring | 20 | portal
+The kiosk **RB-KIOSK-01** is full of leftovers. Reset it to factory settings, but keep its enrolment state so it comes straight back under management.
+@check portal | the kiosk was wiped and kept its enrolment
+device["RB-KIOSK-01"].log contains "Wiped (enrolment state and user account kept)"
+device["RB-KIOSK-01"].managed == Intune
+@hint Wipe, with "Retain enrollment state and user account" ticked (in a portal line: remote wipe "RB-KIOSK-01" keep-enrollment).
+@solution portal
+remote wipe RB-KIOSK-01 keep-enrollment
+@explain
+Wipe resets the device. With "Retain enrollment state and user account", the PC stays enrolled and gets its profiles and apps back at check-in; without it, it starts again at the out-of-box experience.
+@endtask
+
+@task t03 | Monitoring | 15 | portal
+Rename Priya's laptop **RB-LT-002** to **{newname}**.
+@check portal | the laptop has the new name
+device["{newname}"].originalName == RB-LT-002
+@hint Rename device on the device page (up to 15 characters; the PC restarts to use it).
+@solution portal
+remote rename RB-LT-002 {newname}
+@explain
+Rename device sets the Windows computer name; it takes effect after a restart. The name must be 15 characters at most and not only digits. For hybrid joined devices, renaming from Intune needs extra setup, because the name also lives in Active Directory.
+@endtask
+
+@task t04 | Monitoring | 20 | portal
+Priya's laptop (the one you just renamed, **{newname}**) hasn't updated Microsoft Defender's security intelligence for 9 days. From the portal, update it and then run a **quick scan**.
+@check portal | the definitions are current and a scan ran
+device["{newname}"].sigAgeDays == 0
+device["{newname}"].lastScan
+@hint Two remote actions: Update Windows Defender security intelligence, then Quick scan.
+@solution portal
+remote update-defender {newname}
+remote quick-scan {newname}
+@explain
+Both are remote actions for Microsoft Defender Antivirus. A compliance policy that requires up-to-date security intelligence would mark this laptop noncompliant until the update arrived.
+@endtask
+
+@task t05 | Monitoring | 25 | portal
+The Denver office gets its own help desk: Nils. Create the scope tag **Denver**, put it on Priya's laptop (**{newname}**; Priya works in Denver), and create an assigned group **Denver help desk** with **nils**. Then create the role assignment **Denver help desk** with the role **Help Desk Operator**, the group as members, **Sales** as the scope group, and the scope tag **Denver**. Nils must be able to manage Priya's laptop, but not Jordan's RB-LT-001 (also Sales, but not Denver).
+@check portal | Nils manages the Denver laptop only
+canmanage(nils, {newname}) == yes
+canmanage(nils, RB-LT-001) == no
+roleAssignment["Denver help desk"].scopeTags == Denver
+@hint The scope tag goes on the device's properties (set device "{newname}" scopeTags=Denver) and on the role assignment.
+@solution portal
+create scopeTag name=Denver description="Denver office"
+set device {newname} scopeTags=Denver
+create group name="Denver help desk" type=Security membership=Assigned members=nils
+create roleAssignment name="Denver help desk" role="Help Desk Operator" admins="Denver help desk" scopeGroups=Sales scopeTags=Denver
+@explain
+The scope group (Sales) holds both laptops' users, so on its own it would give Nils both. The scope tag narrows it to objects tagged Denver: Priya's laptop has the tag, RB-LT-001 only has Default.
+@endtask

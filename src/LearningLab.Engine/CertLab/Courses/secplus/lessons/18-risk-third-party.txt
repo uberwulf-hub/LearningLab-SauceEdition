@@ -1,0 +1,250 @@
+# Unit: u18 | 18. Risk management and third parties | Security program management and oversight
+
+Risk management is how an organization decides which dangers to deal with first and how much to spend on them. This unit covers identifying and assessing risk, qualitative and quantitative analysis (with the SLE, ARO and ALE formulas worked through), the risk register, appetite and tolerance, the four strategies for handling risk, business impact analysis, and the risks that come from vendors and other third parties.
+
+## Lesson: l1801 | Identifying, assessing and analysing risk
+
+A **risk** is the chance that a **threat** uses a **vulnerability** and causes harm to an asset. **Risk identification** lists what could go wrong: threats, weaknesses and the assets they affect.
+
+### When to assess
+
+- **Ad hoc**: when a need arises, for example a new threat in the news or a planned new system.
+- **Recurring**: on a regular schedule, such as every year or every quarter.
+- **One-time**: for a single event or project, such as a merger or a data center move.
+- **Continuous**: ongoing, often automated, monitoring of risk (for example constant configuration and vulnerability checks feeding a dashboard).
+
+### Qualitative and quantitative analysis
+
+- **Qualitative**: ranks risks with words or simple scales: **likelihood** (how probable: rare, possible, likely) and **impact** (how bad: low, medium, high), often in a **heat map** or matrix. Quick, uses expert judgment, good for comparing many risks, but subjective.
+- **Quantitative**: puts numbers, usually money, on risk. More objective, needs good data, helps justify spending.
+
+**Probability** is the mathematical chance of an event (for example 0.2, or 20 percent, per year); **likelihood** is the broader, often qualitative judgment of how likely it is. **Impact** is the harm if it happens: money, downtime, safety, reputation, legal trouble.
+
+### The formulas
+
+- **AV** (asset value): what the asset is worth, including replacement cost and the value of what it supports.
+- **EF** (exposure factor): the fraction of the asset's value lost in one event, from 0 to 100 percent.
+- **SLE** (single loss expectancy): the loss from one event. **SLE = AV x EF**.
+- **ARO** (annualized rate of occurrence): how many times a year the event is expected. Once a year is 1; twice a year is 2; once every ten years is 0.1; once every 20 years is 0.05.
+- **ALE** (annualized loss expectancy): the expected loss per year. **ALE = SLE x ARO**.
+
+> SLE = AV x EF. ALE = SLE x ARO. An ARO of "once every N years" is 1 / N.
+
+### Worked example 1: a flood
+
+A warehouse and its stock are worth 400,000. Engineers estimate a flood would destroy 25 percent of it. A flood like that is expected once every 20 years.
+
+- SLE = 400,000 x 0.25 = 100,000
+- ARO = 1 / 20 = 0.05
+- ALE = 100,000 x 0.05 = 5,000 per year
+
+So, on average, floods cost this warehouse 5,000 a year. Flood barriers that cost 20,000 a year to lease and maintain would cost more than the loss they prevent; insurance for less than 5,000 a year might make sense.
+
+### Worked example 2: stolen laptops
+
+Each laptop is worth 1,500 including set-up time. A stolen laptop is a total loss (EF 100 percent). The company loses about 12 laptops a year.
+
+- SLE = 1,500 x 1.0 = 1,500
+- ARO = 12
+- ALE = 1,500 x 12 = 18,000 per year
+
+A laptop lock and tracking program costs 5,000 a year and is expected to cut thefts to 4 a year. New ALE = 1,500 x 4 = 6,000. The control saves 18,000 - 6,000 = 12,000 a year for a cost of 5,000, so it is worth it. (Full-disk encryption wouldn't change this ALE, which counts only hardware, but would prevent a much bigger cost: a data breach.)
+
+### Worked example 3: finding a missing number
+
+A web server's ALE from outages is 30,000, and outages happen 3 times a year. What is the SLE? SLE = ALE / ARO = 30,000 / 3 = 10,000. If the server's AV is 50,000, the EF is SLE / AV = 10,000 / 50,000 = 20 percent.
+
+@quiz
+? A server is worth 80,000. A fire would damage 50 percent of it. What is the SLE?
+- 160,000
++ 40,000
+- 80,000
+- 4,000
+! SLE = AV x EF = 80,000 x 0.5 = 40,000.
+? The SLE of a ransomware attack is 60,000 and such an attack is expected once every 4 years. What is the ALE?
+- 240,000
+- 60,000
++ 15,000
+- 6,000
+! ARO = 1/4 = 0.25, so ALE = 60,000 x 0.25 = 15,000.
+? A risk team ranks risks as low, medium or high on likelihood and impact in a colored matrix. What kind of analysis is this?
++ Qualitative
+- Quantitative
+- Continuous
+- Business impact analysis
+! Ranking with words and scales rather than money is qualitative analysis.
+? A control would cost 10,000 a year and lower a risk's ALE from 25,000 to 20,000. Is it worth it on cost alone?
+- Yes, because any reduction in ALE is worthwhile
++ No, because it saves 5,000 a year but costs 10,000
+- Yes, because the new ALE is below 25,000
+- It can't be judged without the ARO
+! A control should cost less than the reduction in ALE it brings; here the saving (5,000) is less than the cost.
+? An event is expected to happen once every 50 years. What is its ARO?
+- 50
+- 0.5
++ 0.02
+- 5
+! ARO = 1 / 50 = 0.02.
+@end
+
+## Lesson: l1802 | The risk register, appetite and strategies
+
+### The risk register
+
+A **risk register** is a list (often a spreadsheet or tool) of identified risks with, for each: a description, the affected assets, likelihood and impact (or numbers), the current controls, the planned response, the **risk owner** and status.
+
+- **Risk owner**: the person accountable for managing a particular risk and deciding on its treatment, usually a manager of the business area.
+- **Key risk indicators** (KRIs): measurements that warn when a risk is growing, such as the number of unpatched critical systems, failed backups, or phishing click rate.
+- **Risk threshold**: the level at which a risk (or a KRI) requires action or escalation, for example "more than 5 unpatched critical servers for over a week goes to the CISO".
+
+```file
+ID   Risk                              Likelihood Impact Owner        Response  KRI
+R-07 Ransomware on file servers        Likely     High   IT Ops Mgr   Mitigate  Backups failed > 1/week
+R-12 Loss of payment provider          Rare       High   Finance Dir  Transfer  Provider SLA misses / month
+R-15 Old kiosk software unsupported    Possible   Low    Retail Mgr   Accept    Days past vendor end of life
+```
+
+### Appetite and tolerance
+
+- **Risk appetite**: the general amount and kind of risk an organization is willing to take on to pursue its goals. Security+ names three:
+  - **Expansionary**: willing to take more risk for growth or opportunity (a start-up launching quickly).
+  - **Conservative**: prefers low risk, even at the cost of missed opportunities (a hospital, a bank's core systems).
+  - **Neutral**: in between, balancing risk and reward.
+- **Risk tolerance**: how much deviation from the appetite is acceptable for a specific risk or objective, often measurable ("we can accept up to 4 hours of downtime a year for the website").
+
+### Risk management strategies
+
+- **Transfer**: shift the financial impact to someone else, for example by buying cyber insurance or outsourcing with contract terms that make the provider liable. The responsibility to protect data usually still stays with you.
+- **Accept**: knowingly live with the risk because the cost of treating it is higher than the expected loss, or it is within appetite. Should be documented and approved. An **exception** or **exemption** is a formal acceptance that a system doesn't meet a policy or standard, approved for a reason and usually for a limited time.
+- **Avoid**: stop the activity that creates the risk altogether, for example not launching a feature or not storing card numbers at all.
+- **Mitigate**: reduce the likelihood or impact with controls: patching, firewalls, training, backups. Most security work is mitigation.
+- **Residual risk** is what remains after controls. **Inherent risk** is the risk before any controls.
+
+### Risk reporting
+
+Report risks to management and the board in terms they understand: top risks, trends, which ones are above tolerance, and decisions needed. Reports drive spending and accountability.
+
+> Insurance: transfer. Stop doing it: avoid. Add controls: mitigate. Live with it, documented: accept.
+
+@quiz
+? A company stops collecting customers' dates of birth because it doesn't need them, removing the risk of leaking them. Which strategy is this?
+- Transfer
+- Accept
++ Avoid
+- Mitigate
+! Ending the activity that creates the risk is avoidance.
+? A small business buys a cyber insurance policy to cover the cost of a breach. Which strategy is this?
++ Transfer
+- Avoid
+- Accept
+- Mitigate
+! Insurance transfers the financial impact to the insurer.
+? In the risk register, who decides how a particular risk is treated and is accountable for it?
+- The security analyst who found it
++ The risk owner
+- The auditor
+- The insurance company
+! Each risk has an owner, usually a business manager, accountable for its treatment.
+? A new online business is willing to accept significant risk to grow quickly. How would its risk appetite be described?
+- Conservative
+- Neutral
++ Expansionary
+- Residual
+! An expansionary appetite accepts more risk in pursuit of growth.
+@end
+
+## Lesson: l1803 | Business impact analysis
+
+A **business impact analysis** (BIA) works out which business functions matter most, what their loss would cost over time, and how quickly they must come back. It identifies **mission-essential functions** and the systems they depend on, and its results drive the continuity and disaster recovery plans.
+
+- **RTO** (recovery time objective): the maximum time a function or system may be down before the damage is unacceptable. "Online orders must be back within 4 hours." It sets how fast recovery must be.
+- **RPO** (recovery point objective): the maximum amount of data, measured in time, that may be lost. "We can lose at most 15 minutes of orders." It sets how often to back up or replicate.
+- **MTTR** (mean time to repair or recover): the average time it takes to fix a failed component and bring it back into service. If MTTR is longer than the RTO, the plan won't meet its goal without spare equipment or failover.
+- **MTBF** (mean time between failures): the average time a repairable component runs between failures; higher is more reliable. Used to plan spares and replacement. (For parts that are replaced rather than repaired, the similar term is MTTF, mean time to failure.)
+
+Example: a ticket booking system has an RTO of 2 hours and an RPO of 10 minutes. Nightly backups give an RPO of up to 24 hours, so they don't meet the target: the system needs replication or backups at least every 10 minutes. Its database server's MTTR is 6 hours (waiting for parts), which exceeds the RTO, so a standby server or failover cluster is needed.
+
+> RPO looks backwards (how much data you can lose). RTO looks forwards (how long until it is running again).
+
+@quiz
+? Management says the payroll system can lose no more than one hour of entered data. Which value is this?
+- RTO
++ RPO
+- MTBF
+- MTTR
+! The recovery point objective is the maximum acceptable data loss, measured in time.
+? A storage array's vendor states it runs on average 200,000 hours between failures. Which metric is this?
++ MTBF
+- MTTR
+- RTO
+- ARO
+! Mean time between failures measures reliability.
+? The RTO for the website is 1 hour, but replacing a failed web server takes 5 hours on average. What does this show?
+- The RPO is too short
++ The MTTR exceeds the RTO, so redundancy or failover is needed
+- The MTBF is too high
+- The ALE is too low
+! If repair takes longer than the allowed downtime, the plan needs a faster recovery method.
+@end
+
+## Lesson: l1804 | Third-party risk management
+
+Vendors, suppliers, service providers and partners can be the weakest link: a breach at a supplier can expose your data or let attackers into your network.
+
+### Vendor assessment
+
+- **Penetration testing**: asking for (or carrying out, with permission) a pen test of the vendor's systems that will hold your data.
+- **Right-to-audit clause**: a contract term that lets you (or an auditor you choose) audit the vendor's security controls.
+- **Evidence of internal audits**: the vendor's own audit results and how findings were fixed.
+- **Independent assessments**: reports from outside auditors, such as a SOC 2 report or an ISO 27001 certificate.
+- **Supply chain analysis**: looking at the vendor's own suppliers and where components and software come from, since risk passes along the chain.
+
+### Vendor selection
+
+- **Due diligence**: checking the vendor before choosing it: financial stability, security practices, reputation, past breaches, compliance with laws that apply to you.
+- **Conflict of interest**: make sure nobody choosing the vendor has a personal or financial link to it, and that the vendor doesn't have interests that clash with yours.
+
+### Agreement types
+
+- **SLA** (service level agreement): measurable service targets, such as 99.9 percent uptime or a 4-hour response time, and what happens (credits, penalties) if they are missed.
+- **MOU** (memorandum of understanding): a usually non-binding statement of a shared intention between parties, setting out what each plans to do.
+- **MOA** (memorandum of agreement): more detailed and formal than an MOU, setting out each party's responsibilities to reach a shared goal; it may be binding.
+- **MSA** (master service agreement): the umbrella contract for an ongoing relationship, with the general terms (liability, confidentiality, payment) that later work orders inherit.
+- **WO / SOW** (work order / statement of work): describes a specific piece of work under the MSA: deliverables, timeline, cost.
+- **NDA** (non-disclosure agreement): a promise to keep shared information confidential.
+- **BPA** (business partnership agreement): sets out how partners share profits, losses, responsibilities and decision-making.
+
+### Monitoring and engagement
+
+- **Vendor monitoring**: keep checking after signing: review reports and SLA performance, watch for breaches in the news, reassess regularly.
+- **Questionnaires**: security questionnaires sent to vendors asking about their controls (encryption, access control, incident response, certifications). Quick to collect, but answers should be backed by evidence.
+- **Rules of engagement**: for tests and joint work, the agreed limits: what may be tested, when, how, who to contact, and what is off limits.
+
+> Uptime and response targets: SLA. Umbrella contract: MSA; one project under it: SOW. Keep it secret: NDA. Profits and losses shared: BPA.
+
+@quiz
+? A contract states that the hosting provider guarantees 99.95 percent monthly uptime and gives service credits if it is missed. Which agreement is this?
++ SLA
+- NDA
+- MOU
+- BPA
+! An SLA sets measurable service levels and remedies for missing them.
+? A company wants the right to inspect a cloud vendor's security controls itself whenever it chooses. What should the contract include?
+- A conflict of interest clause
++ A right-to-audit clause
+- A non-disclosure agreement
+- A business partnership agreement
+! A right-to-audit clause allows the customer or its auditor to examine the vendor's controls.
+? Two agencies sign a document stating they intend to cooperate on a project, without legally binding terms. What is it most likely?
+- MSA
+- SOW
++ MOU
+- SLA
+! A memorandum of understanding expresses shared intent and is usually not binding.
+? A consulting firm and a client sign an overall contract with general terms, and then a separate document for each project's deliverables and price. What are the two documents?
+- NDA and BPA
++ MSA and SOW
+- SLA and MOU
+- MOA and NDA
+! The master service agreement holds general terms; each statement of work describes one piece of work.
+@end

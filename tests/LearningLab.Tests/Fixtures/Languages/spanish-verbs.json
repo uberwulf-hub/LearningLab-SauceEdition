@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "verbs": [
+    { "inf": "ser", "en": "to be", "level": 1,
+      "irregular": { "present": ["soy", "eres", "es", "somos", "son"], "preterite": ["fui", "fuiste", "fue", "fuimos", "fueron"] } },
+    { "inf": "tener", "en": "to have", "level": 1, "stem": "ie",
+      "irregular": { "present": ["tengo", null, null, null, null], "preterite": ["tuve", "tuviste", "tuvo", "tuvimos", "tuvieron"] } },
+    { "inf": "hablar", "en": "to speak", "level": 1, "irregular": { } },
+    { "inf": "comer", "en": "to eat", "level": 2, "irregular": { } },
+    { "inf": "vivir", "en": "to live", "level": 2 },
+    { "inf": "leer", "en": "to read", "level": 2, "irregular": { "preterite": [null, "leíste", "leyó", "leímos", "leyeron"] } },
+    { "inf": "jugar", "en": "to play", "level": 3, "stem": "u-ue", "irregular": { } },
+    { "inf": "pedir", "en": "to ask for", "level": 3, "stem": "i", "irregular": { } },
+    { "inf": "llover", "en": "to rain", "level": 3, "stem": "ue", "irregular": { } },
+    { "inf": "gustar", "en": "to please", "level": 4, "persons": ["él", "ellos"], "irregular": { } }
+  ]
+}

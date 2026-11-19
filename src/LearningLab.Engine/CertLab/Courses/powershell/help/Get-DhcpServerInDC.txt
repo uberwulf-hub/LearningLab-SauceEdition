@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the DHCP servers authorized in Active Directory.
+DESCRIPTION:
+Get-DhcpServerInDC shows every DHCP server on the forest's authorization list, with its IP address and DNS name. A Windows DHCP server that is joined to the domain but missing here does not lease addresses.
+PARAMETER ComputerName:
+The DHCP server to ask (it reads the list from AD).
+EXAMPLE: Get-DhcpServerInDC
+Shows SRV1 (10.10.0.50) as authorized.
+EXAMPLE: Get-DhcpServerInDC | Where-Object DnsName -like "*srv1*"
+Checks one server.
+RELATED: Add-DhcpServerInDC, Remove-DhcpServerInDC

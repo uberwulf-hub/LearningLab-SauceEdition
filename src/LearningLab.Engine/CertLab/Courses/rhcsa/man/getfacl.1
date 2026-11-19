@@ -1,0 +1,95 @@
+NAME
+       getfacl - show the access control lists (ACLs) of files
+
+SYNOPSIS
+       getfacl [-a] [-d] [-c] [-e] [-n] [-p] [-R] [-t] FILE...
+
+DESCRIPTION
+       Besides the owner, group and other permissions, a file or directory
+       can have an ACL that gives extra users and groups their own
+       permissions. getfacl prints the ACL of each FILE:
+
+           # file: srv/project
+           # owner: root
+           # group: devops
+           user::rwx
+           user:student:rwx
+           group::r-x
+           mask::rwx
+           other::---
+           default:user::rwx
+           default:user:student:rwx
+           ...
+
+   Reading the entries
+       user::     the owner's permissions
+       user:NAME: a named user's permissions
+       group::    the owning group's permissions
+       group:NAME:
+                  a named group's permissions
+       mask::     the most that named users, named groups and the owning
+                  group can get. If a line shows #effective:r--, the mask
+                  cuts that entry's permissions down to these.
+       other::    everybody else
+       default:   on a directory only: the ACL that new files and
+                  subdirectories created in it get (inherited ACL)
+
+       ls -l shows a + after the permission string when a file has an ACL,
+       and then the group permissions it shows are the mask.
+
+       Set ACLs with setfacl. Leading slashes are removed from the names in
+       the output (so it can be fed back to setfacl --restore).
+
+OPTIONS
+       -a, --access
+              Show only the access ACL.
+
+       -d, --default
+              Show only the default ACL.
+
+       -c, --omit-header
+              Leave out the # file, # owner and # group lines.
+
+       -e, --all-effective
+              Show the effective rights on every entry.
+
+       -E, --no-effective
+              Never show effective rights.
+
+       -n, --numeric
+              Print UIDs and GIDs instead of names.
+
+       -p, --absolute-names
+              Keep the leading slash.
+
+       -R, --recursive
+              List directories and everything in them.
+
+       -t, --tabular
+              A table with the access and default ACL side by side.
+
+       -s, --skip-base
+              Skip files that only have the base entries (no real ACL).
+
+EXAMPLES
+       Look at the ACL of a shared directory:
+
+           getfacl /srv/project
+
+       Check one user's entry in a script:
+
+           getfacl /srv/project | grep '^user:student:'
+
+       Save the ACLs of a tree and put them back later:
+
+           getfacl -R /srv/project > /root/project.acl
+           setfacl --restore=/root/project.acl
+
+       The usual pairing: give a user rights and make new files inherit them:
+
+           setfacl -m u:student:rwx /srv/project
+           setfacl -m d:u:student:rwx /srv/project
+           getfacl /srv/project
+
+SEE ALSO
+       setfacl(1), acl(5), chmod(1), ls(1)

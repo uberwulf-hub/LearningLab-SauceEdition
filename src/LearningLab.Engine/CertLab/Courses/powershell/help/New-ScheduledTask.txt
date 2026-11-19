@@ -1,0 +1,18 @@
+SYNOPSIS: Builds a task object without registering it.
+DESCRIPTION:
+New-ScheduledTask puts actions, triggers, a principal and settings together into one task object. Register it later with Register-ScheduledTask -InputObject, or save it for several computers.
+PARAMETER Action:
+The actions. Position 0.
+PARAMETER Trigger:
+The triggers. Position 1.
+PARAMETER Settings:
+The settings. Position 2.
+PARAMETER Principal:
+Who it runs as. Position 3.
+PARAMETER Description:
+A description. Position 4.
+EXAMPLE: $task = New-ScheduledTask -Action $action -Trigger $trigger -Principal $principal
+Builds the task.
+EXAMPLE: Register-ScheduledTask -TaskName Nightly -InputObject $task
+Registers it.
+RELATED: Register-ScheduledTask

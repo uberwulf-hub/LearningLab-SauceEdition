@@ -1,0 +1,49 @@
+TOPIC
+    about_Signing
+
+SHORT DESCRIPTION
+    Adding a digital signature to scripts so others can check them.
+
+LONG DESCRIPTION
+    A signed script carries a signature block at its end. The signature
+    says who signed it and proves the text has not changed since. The
+    AllSigned and RemoteSigned execution policies use signatures to decide
+    which scripts may run.
+
+  What you need
+    A code-signing certificate with its private key, in your certificate
+    store. It can come from your organisation's certificate authority, a
+    public one, or (for practice only) New-SelfSignedCertificate. Other
+    computers trust the signature only if they trust the certificate that
+    issued it, and AllSigned also asks whether to trust a new publisher.
+
+        Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert
+
+  Signing a script
+        $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert |
+            Select-Object -First 1
+        Set-AuthenticodeSignature -FilePath C:\LabFiles\Tools.ps1 `
+            -Certificate $cert -TimestampServer http://timestamp.example
+
+    A time stamp keeps the signature valid after the certificate expires.
+
+  Checking a signature
+        Get-AuthenticodeSignature C:\LabFiles\Tools.ps1
+
+    Status Valid means the text is unchanged and the issuer is trusted.
+    HashMismatch means the script was edited after signing: sign it again.
+    NotSigned and UnknownError (an untrusted issuer) are the other common
+    answers.
+
+  Things to know
+    - Any change to the script, even one space, breaks the signature.
+    - A self-signed certificate is for learning; it proves nothing to
+      other people.
+    - Signing does not make a script safe; it tells you who wrote it.
+
+SEE ALSO
+    Set-AuthenticodeSignature
+    Get-AuthenticodeSignature
+    New-SelfSignedCertificate
+    about_Execution_Policies
+    Set-ExecutionPolicy

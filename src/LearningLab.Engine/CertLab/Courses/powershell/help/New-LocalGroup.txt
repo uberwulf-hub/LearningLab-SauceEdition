@@ -1,0 +1,9 @@
+SYNOPSIS: Creates a local group.
+DESCRIPTION:
+A group of your own collects users so you can give them rights once, for example on a folder. Windows logs event 4731.
+PARAMETER Name:
+The group name. Position 0.
+PARAMETER Description:
+A description, up to 48 characters.
+EXAMPLE: New-LocalGroup -Name WebAdmins -Description 'Web site admins'
+RELATED: Add-LocalGroupMember, Remove-LocalGroup

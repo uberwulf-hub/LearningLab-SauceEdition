@@ -1,0 +1,12 @@
+## the LOUD way: get onto the jump host, then sweep and scan the watched inside network
+ftp 10.10.7.20
+anonymous
+x
+cd pub
+get handover.txt
+bye
+ssh -o StrictHostKeyChecking=accept-new pilot@10.10.7.20
+{{JPW}}
+nmap -sn 10.10.72.0/24
+nmap -sV -p 1-1000 10.10.72.{{INNER}}
+exit

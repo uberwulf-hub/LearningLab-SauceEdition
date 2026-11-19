@@ -1,0 +1,12 @@
+SYNOPSIS: Runs a scheduled task now.
+DESCRIPTION:
+Start-ScheduledTask runs a task at once, whatever its triggers say, the same as Run in the Task Scheduler window. The schedule does not change. A disabled task cannot be started.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER InputObject:
+Task objects from the pipeline.
+EXAMPLE: Start-ScheduledTask -TaskName Nightly; Get-ScheduledTaskInfo -TaskName Nightly
+Runs it and checks the result.
+RELATED: Stop-ScheduledTask, Get-ScheduledTaskInfo

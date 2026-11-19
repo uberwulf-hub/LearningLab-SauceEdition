@@ -1,0 +1,39 @@
+TOPIC
+    about_Scopes
+
+SHORT DESCRIPTION
+    Where variables and functions are visible.
+
+LONG DESCRIPTION
+    The prompt runs in the GLOBAL scope. Every script, function and script
+    block you call gets a new CHILD scope:
+
+    - It can read the variables of the scopes above it (its callers).
+    - Assigning to a variable creates a new one in its own scope; the
+      caller's variable keeps its value.
+    - Everything it created disappears when it ends.
+
+        $x = 1
+        function Set-X { $x = 2; "inside: $x" }
+        Set-X        inside: 2
+        $x           1
+
+    Scope modifiers name a scope on purpose:
+
+        $global:x    the global scope
+        $script:x    the scope of the running script (or the global scope at
+                     the prompt)
+        $local:x     the current scope
+        $private:x   visible only in the current scope, not to children
+        $using:x     a local value inside Invoke-Command or Start-Job
+
+    Dot-sourcing (. .\Tools.ps1 or . { ... }) runs a script or script block
+    in the CURRENT scope, so its variables and functions stay.
+
+    ForEach-Object and Where-Object run their script blocks in the caller's
+    scope, which is why $sum += $_ inside ForEach-Object keeps its total.
+
+SEE ALSO
+    about_Variables
+    about_Functions
+    about_Remote_Variables

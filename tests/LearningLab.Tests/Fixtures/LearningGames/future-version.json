@@ -1,0 +1,17 @@
+[
+    {
+        "Id": "c0ffee11",
+        "Name": "Grandpa",
+        "Grade": 0,
+        "Age": 70,
+        "Color": "#A855F7",
+        "Stars": 3,
+        "Skills": {},
+        "Days": {},
+        "Mistakes": [],
+        "Best": {},
+        "Created": "2027-01-02",
+        "Avatar": { "Kind": "owl", "Hat": "beret" },
+        "Badges": ["first-week", "100-answers"]
+    }
+]

@@ -1,0 +1,23 @@
+# Deck: enrollment | Enrolling devices in Intune | Enrollment
+Two things a user needs for automatic Windows enrolment :: A place in the MDM user scope and a licence that includes Intune
+The three values of the MDM user scope :: None, Some (one group) or All
+Devices join Entra ID but never appear in Intune. Most likely cause? :: The MDM user scope doesn't include the users
+Enrol a PC in Intune without joining it to Entra ID :: Settings > Access work or school > Enroll only in device management
+How are hybrid joined domain PCs usually enrolled? :: A Group Policy: enable automatic MDM enrollment using default Microsoft Entra credentials
+Show the Group Policy objects applied to a domain PC :: `gpresult /r`
+Check that the Intune Management Extension runs on a device :: `Get-Service IntuneManagementExtension`
+Bulk enrolment without a user :: A provisioning package from Windows Configuration Designer, with a bulk token (its account must be in the MDM user scope)
+Windows enrolment methods that count as corporate :: Autopilot, provisioning packages, Group Policy, co-management, device enrollment manager, corporate identifiers
+Co-management :: Configuration Manager devices also enrolled in Intune; workloads move to Intune one at a time
+Device platform restriction :: Allows or blocks a platform, and personally owned devices, for user groups
+Device limit restriction :: How many devices one user may enrol (default 5, at most 15)
+Two restrictions apply to a user. Which wins? :: The one with the highest priority (lowest number); the default applies only when no other does
+To what are enrolment restrictions assigned? :: User groups (they are checked against the person who enrols)
+Personal Windows devices are blocked. Can Autopilot still enrol? :: Yes: Autopilot is a corporate method
+What does Intune need before any Apple device can enrol? :: An Apple MDM push certificate, renewed every year with the same Apple ID
+Corporate iPhones and iPads, supervised, enrolled during setup :: Automated device enrolment through Apple Business Manager
+Personal iPhone with work data kept separate :: User enrolment (account-driven) or device enrolment with Company Portal
+Android Enterprise for a personal phone :: Personally owned devices with a work profile
+Android Enterprise for a work-only company phone :: Fully managed
+Android Enterprise for a kiosk or scanner with no user :: Dedicated
+What must be linked before Android Enterprise enrolment? :: A managed Google Play account

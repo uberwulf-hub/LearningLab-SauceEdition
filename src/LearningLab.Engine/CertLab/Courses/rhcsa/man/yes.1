@@ -1,0 +1,17 @@
+NAME
+       yes - print a word over and over
+
+SYNOPSIS
+       yes [TEXT]
+
+DESCRIPTION
+       yes prints TEXT (or y) on a line, again and again, until it is
+       stopped. Piped into a command that asks many questions, it answers
+       all of them. Most commands have their own option for this (-y, -f),
+       which is safer.
+
+EXAMPLES
+           yes | cp -i /root/conf/* /etc/myapp/
+
+SEE ALSO
+       head(1)

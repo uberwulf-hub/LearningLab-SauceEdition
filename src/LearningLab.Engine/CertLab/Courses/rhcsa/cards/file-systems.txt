@@ -1,0 +1,31 @@
+# Deck: file-systems | File systems | File systems
+Create an xfs file system with the label WEB on /dev/vdb1 :: `mkfs.xfs -L WEB /dev/vdb1`
+Create an ext4 file system on the LV /dev/vgdata/lvlog :: `mkfs.ext4 /dev/vgdata/lvlog`
+Create a vfat file system named USB on /dev/vdb3 :: `mkfs.vfat -n USB /dev/vdb3`
+mkfs.xfs refuses because the device already has a file system. What forces it? :: The option -f. Check with lsblk -f first: formatting destroys the old data.
+Change the label of the (unmounted) xfs file system on /dev/vdb1 to SITE :: `xfs_admin -L SITE /dev/vdb1`
+Change the label of the ext4 file system on /dev/vdb2 to LOGS :: `e2label /dev/vdb2 LOGS`
+Which of xfs and ext4 can shrink? :: Only ext4 (and only unmounted). xfs can grow but never shrink.
+Mount the file system labelled DATA on /data by hand :: `mount LABEL=DATA /data`
+Show only the device mounted on /data, without a heading :: `findmnt -n -o SOURCE /data`
+List the file systems that /etc/fstab describes :: `findmnt -s`
+Mount everything in /etc/fstab that is not mounted yet (and test new lines) :: `mount -a`
+Make systemd read a changed /etc/fstab :: `systemctl daemon-reload`
+The six fields of an /etc/fstab line :: device (or UUID= / LABEL=), mount point, type, options, dump (0), fsck order (0 for xfs and swap).
+umount says "target is busy". What do you check? :: A shell whose current folder is inside it, or a program with open files there. cd out and close them.
+The boot stops in emergency mode because of a bad fstab line. How do you fix it? :: Log in as root, mount -o remount,rw / if needed, fix the line, systemctl daemon-reload, mount -a, then reboot.
+List the exports of the NFS server utility.lab.example.com :: `showmount -e utility.lab.example.com`
+Mount the NFS export server:/exports/data on /mnt/data by hand :: `mount -t nfs server:/exports/data /mnt/data`
+Which fstab option makes an NFS mount wait for the network at boot? :: _netdev (for example: server:/exports/data /mnt/data nfs defaults,_netdev 0 0)
+In autofs, what does an indirect map line `public -ro server:/exports/public` under /remote do? :: Mounts server:/exports/public read-only on /remote/public the first time that path is used.
+The autofs map line that mounts server:/home/NAME on demand for any NAME :: * -rw server:/home/& (the * matches any key and & repeats it)
+Where do you add your own autofs master map entry? :: In a file ending in .autofs in /etc/auto.master.d, for example /etc/auto.master.d/rhome.autofs
+Grow the LV vgdata/lvweb to 1 GiB together with its file system :: `lvextend -r -L 1G vgdata/lvweb`
+Grow the xfs file system mounted on /web after the LV grew :: `xfs_growfs /web`
+Grow the ext4 file system on /dev/vgdata/lvlog after the LV grew :: `resize2fs /dev/vgdata/lvlog`
+Make new files in /srv/team inherit the folder's group :: `chmod g+s /srv/team`
+What does the sticky bit do on a folder like /tmp? :: Users may delete or rename only their own files there (the folder's owner and root still may delete any).
+Give the user carol read and enter rights on /srv/team with an ACL :: `setfacl -m u:carol:rx /srv/team`
+Make every new file in /srv/team give carol read access (default ACL) :: `setfacl -m d:u:carol:rX /srv/team`
+Show the ACL of /srv/team :: `getfacl /srv/team`
+getfacl shows #effective:r-- next to an rw- entry. Why? :: The mask (the most a named entry or the group can get) is r--. Raise it with setfacl -m m::rw.

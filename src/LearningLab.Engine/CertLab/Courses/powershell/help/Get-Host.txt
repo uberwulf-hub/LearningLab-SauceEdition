@@ -1,0 +1,18 @@
+SYNOPSIS: Shows the program that is hosting PowerShell: its name, version and user interface.
+DESCRIPTION:
+PowerShell itself is an engine; a host is the program that runs it and shows its output. The console window is ConsoleHost, the PowerShell ISE is Windows PowerShell ISE Host, and Visual Studio Code has its own host. Get-Host returns an object describing the current host. The automatic variable $Host holds the same object.
+
+The host's version is the version of that program, which for the console is the same as PowerShell's. To check the PowerShell version reliably in any host, use $PSVersionTable.PSVersion.
+EXAMPLE: Get-Host
+Shows the host's name, version, culture and other details.
+EXAMPLE: $Host.Version
+The version as a table of Major, Minor, Build and Revision.
+EXAMPLE: $Host.Name
+Just the name, such as ConsoleHost. Scripts use it to tell whether they run in the console or somewhere else.
+NOTES:
+$Host.UI.RawUI holds the window's title, size and colours on a real PC: $Host.UI.RawUI.WindowTitle = 'Server work' renames the window.
+
+In a remote session, $Host describes the remote host (ServerRemoteHost), not your console.
+
+$PSVersionTable.PSVersion is 5.1.x for Windows PowerShell and 7.x for PowerShell 7. $PSVersionTable.PSEdition says Desktop (5.1) or Core (6 and later).
+RELATED: Get-Culture, about_Automatic_Variables, about_Preference_Variables

@@ -1,0 +1,255 @@
+# Unit: u11 | 11. Remoting and jobs | Remoting
+
+PowerShell remoting runs commands on other computers over the WinRM service (Windows Remote Management, HTTP port 5985). It is how one administrator manages many servers. Background jobs let a long command run while you keep working. In the practice network you work from WIN-SRV1 and manage WIN-CL1.
+
+## Lesson: l1101 | Turning remoting on
+
+Windows Server (2012 and later) has remoting turned on out of the box. Windows 10 and 11 clients do **not**: someone must run `Enable-PSRemoting` on the client first, as an administrator. It starts the WinRM service, sets it to start automatically, creates a listener and opens the firewall.
+
+```terminal
+PS C:\Windows\system32> Test-WSMan -ComputerName WIN-CL1
+Test-WSMan : Connecting to remote server WIN-CL1 failed with the following error message : WinRM cannot complete the operation. Verify that the specified computer name is valid, that the computer is accessible over the network, and that a firewall exception for the WinRM service is enabled and allows access from this computer. By default, the WinRM firewall exception for public profiles limits access to remote computers within the same local subnet. For more information, see the about_Remote_Troubleshooting Help topic.
+At line:1 char:1
++ Test-WSMan -ComputerName WIN-CL1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (WIN-CL1:String) [Test-WSMan], InvalidOperationException
+    + FullyQualifiedErrorId : WsManError,Microsoft.PowerShell.Commands.TestWSManCommand
+```
+
+That failed because WIN-CL1 does not listen yet. On WIN-CL1 itself (its own console in Cert Lab):
+
+```terminal
+#machine WIN-CL1
+PS C:\Windows\system32> Enable-PSRemoting -Force
+WinRM has been updated to receive requests.
+WinRM service type changed successfully.
+WinRM service started.
+
+WinRM has been updated for remote management.
+WinRM firewall exception enabled.
+```
+
+After that, `Test-WSMan -ComputerName WIN-CL1` from WIN-SRV1 answers with WinRM's identification.
+
+> Remoting by computer name works without extra settings inside a domain (Kerberos). Between computers in a workgroup you would also need HTTPS or the TrustedHosts list; the practice machines are in the domain lab.example.com. On a real client whose network is set to **Public**, Enable-PSRemoting stops with an error: set the network to Private first, or add `-SkipNetworkProfileCheck` (the firewall then lets in only computers on the same subnet).
+
+@try machines=2
+@task t1 | Remoting | 10 | WIN-CL1
+Turn on PowerShell remoting on WIN-CL1 (use WIN-CL1's console), so that WIN-SRV1 can run commands on it.
+@check WIN-SRV1 | WIN-SRV1 can run a command on WIN-CL1
+(Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { $env:COMPUTERNAME } -ErrorAction SilentlyContinue) -eq 'WIN-CL1'
+@hint Enable-PSRemoting -Force, typed on WIN-CL1.
+@solution WIN-CL1
+Enable-PSRemoting -Force
+@endtask
+@end
+
+@quiz
+? Which Windows edition has PowerShell remoting turned on by default?
++ Windows Server
+- Windows 11
+- Both
+! Clients need Enable-PSRemoting first.
+? Which port does WinRM use for HTTP?
+- 22
++ 5985
+- 3389
+! 5986 is WinRM over HTTPS; 3389 is Remote Desktop.
+@end
+
+## Lesson: l1102 | Invoke-Command
+
+`Invoke-Command` runs a script block on one or more computers and brings the results back.
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+PS C:\Windows\system32> Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { $env:COMPUTERNAME; (Get-Date).DayOfWeek }
+WIN-CL1
+Monday
+PS C:\Windows\system32> Invoke-Command -ComputerName WIN-SRV1, WIN-CL1 -ScriptBlock { [pscustomobject]@{ Version = $PSVersionTable.PSVersion.ToString() } }
+
+Version        PSComputerName RunspaceId
+-------        -------------- ----------
+5.1.20348.2849 WIN-SRV1       49530c21-a14f-4a07-9599-f70255cdb261
+5.1.22621.4249 WIN-CL1        bdc3580e-1945-47ce-b7ae-3e81c89a8599
+```
+
+- Every result carries a **PSComputerName** property, so you can tell the computers apart.
+- With several computer names, the commands run on all of them (in parallel on a real network).
+
+### What comes back: deserialized objects
+
+The results travel as XML and are rebuilt on your side as **property bags**: the type name starts with `Deserialized.`, the properties are there, the **methods are gone** (you cannot call `.Stop()` on a service that came back). Do the work on the remote side and bring back only the result.
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+PS C:\Windows\system32> $o = Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { [pscustomobject]@{ N = 1 } }
+PS C:\Windows\system32> $o.psobject.TypeNames[0]
+Deserialized.System.Management.Automation.PSCustomObject
+```
+
+### Passing values in: $using: and -ArgumentList
+
+The script block runs in a new session on the other computer: your local variables are not there.
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+PS C:\Windows\system32> $limit = 3
+PS C:\Windows\system32> Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { "limit is [$limit]" }
+limit is []
+PS C:\Windows\system32> Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { "limit is [$using:limit]" }
+limit is [3]
+PS C:\Windows\system32> Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { param($l) "limit is [$l]" } -ArgumentList $limit
+limit is [3]
+```
+
+`$using:name` (PowerShell 3 and later) copies a local value into the remote script block; `-ArgumentList` feeds its `param( )` block.
+
+@try machines=2
+@setup WIN-CL1
+Enable-PSRemoting -Force
+@task t1 | Remoting | 10 | WIN-SRV1
+From WIN-SRV1, store in `$clName` the value of the environment variable `COMPUTERNAME` **on WIN-CL1**, using Invoke-Command.
+@check WIN-SRV1 | $clName came from WIN-CL1
+"$clName" -eq 'WIN-CL1'
+@hint Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { $env:COMPUTERNAME }
+@solution WIN-SRV1
+$clName = Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { $env:COMPUTERNAME }
+$clName
+@endtask
+@end
+
+@quiz
+? A service object comes back from Invoke-Command. Why can you not call its Stop() method?
++ It was deserialized: properties only, no methods
+- Remote objects are read-only for security
+- Stop() needs -Force
+! Run Stop-Service inside the script block instead.
+? How do you use the local variable $path inside Invoke-Command's script block?
+- Just $path
++ $using:path
+- $global:path
+! The script block runs in another session; $using: copies the value in.
+@end
+
+## Lesson: l1103 | Sessions and interactive remoting
+
+Each `Invoke-Command -ComputerName` opens a connection and closes it again. A **PSSession** keeps the connection open, so several commands can share variables and loaded modules, and you avoid the start-up cost each time.
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+PS C:\Windows\system32> $s = New-PSSession -ComputerName WIN-CL1
+PS C:\Windows\system32> Invoke-Command -Session $s -ScriptBlock { $start = Get-Date }
+PS C:\Windows\system32> Invoke-Command -Session $s -ScriptBlock { $null -ne $start }
+True
+PS C:\Windows\system32> Get-PSSession
+
+ Id Name            ComputerName    ComputerType    State         ConfigurationName     Availability
+ -- ----            ------------    ------------    -----         -----------------     ------------
+  1 WinRM1          WIN-CL1         RemoteMachine   Opened        Microsoft.PowerShell     Available
+
+
+PS C:\Windows\system32> Remove-PSSession $s
+```
+
+### Enter-PSSession
+
+`Enter-PSSession` makes the console work on the other computer, one command at a time. The prompt shows the computer's name; `exit` (or `Exit-PSSession`) comes back.
+
+```terminal
+#setup WIN-CL1:Enable-PSRemoting -Force
+PS C:\Windows\system32> Enter-PSSession -ComputerName WIN-CL1
+[WIN-CL1]: PS C:\Users\Administrator\Documents> hostname
+WIN-CL1
+[WIN-CL1]: PS C:\Users\Administrator\Documents> exit
+PS C:\Windows\system32> hostname
+WIN-SRV1
+```
+
+Remote sessions start in the user's Documents folder, not in system32. Enter-PSSession is for typing at the console; scripts use Invoke-Command.
+
+@try machines=2
+@setup WIN-CL1
+Enable-PSRemoting -Force
+@task t1 | Remoting | 10 | WIN-SRV1
+Create a PSSession to WIN-CL1 stored in `$cl`, and use it to set the variable `$token` to `'abc'` **inside the session** (it must still be there for the next command in that session).
+@check WIN-SRV1 | $cl is an open session to WIN-CL1
+$cl.ComputerName -eq 'WIN-CL1' -and "$($cl.State)" -eq 'Opened'
+@check WIN-SRV1 | $token is set in the session
+(Invoke-Command -Session $cl -ScriptBlock { $token }) -eq 'abc'
+@hint New-PSSession -ComputerName WIN-CL1, then Invoke-Command -Session $cl -ScriptBlock { $token = 'abc' }
+@solution WIN-SRV1
+$cl = New-PSSession -ComputerName WIN-CL1
+Invoke-Command -Session $cl -ScriptBlock { $token = 'abc' }
+@endtask
+@end
+
+@quiz
+? What does a PSSession give you that `Invoke-Command -ComputerName` does not?
++ A connection that stays open, so variables survive between commands
+- Encryption
+- Access to computers outside the domain
+! -ComputerName opens a temporary session for one command.
+? How do you leave an Enter-PSSession session?
++ exit (or Exit-PSSession)
+- Remove-PSSession
+- Ctrl+Z
+! Remove-PSSession closes sessions you created with New-PSSession.
+@end
+
+## Lesson: l1104 | Background jobs
+
+`Start-Job` runs a script block in the background, in a separate session on the same computer, and gives you the prompt back at once.
+
+```terminal
+PS C:\Windows\system32> $j = Start-Job -ScriptBlock { Start-Sleep -Seconds 20; 'finished' }
+PS C:\Windows\system32> Get-Job
+
+Id     Name            PSJobTypeName   State         HasMoreData     Location             Command
+--     ----            -------------   -----         -----------     --------             -------
+1      Job1            BackgroundJob   Running       True            localhost            Start-Sleep -Seconds 20; '...
+
+
+PS C:\Windows\system32> Wait-Job $j | Out-Null
+PS C:\Windows\system32> $j.State
+Completed
+PS C:\Windows\system32> Receive-Job $j
+finished
+PS C:\Windows\system32> Receive-Job $j
+```
+
+- **Get-Job** lists the jobs: State (Running, Completed, Failed, Stopped) and HasMoreData.
+- **Wait-Job** waits until they finish; **Receive-Job** collects the output. Received output is gone afterwards (add `-Keep` to keep it), which is why the second Receive-Job printed nothing.
+- **Stop-Job** stops a running job; **Remove-Job** deletes it (a running one only with `-Force`).
+- Like remoting, a job runs in another session: use `$using:` or `-ArgumentList` for local values, and the results come back deserialized.
+
+`Invoke-Command -ComputerName ... -AsJob` runs a remote command as a job (type RemoteJob), so you can query many computers in the background.
+
+> Job Ids go 1, 3, 5...: every job has a child job that takes the next number (`Get-Job -IncludeChildJob` shows them).
+
+@try machines=1
+@task t1 | Remoting | 10 | WIN-SRV1
+Start a background job named `Squares` that outputs the squares of the numbers 1 to 5, wait for it, and store its output in `$sq` (1, 4, 9, 16, 25).
+@check WIN-SRV1 | the job named Squares exists and completed
+"$((Get-Job -Name Squares).State)" -eq 'Completed'
+@check WIN-SRV1 | $sq holds the squares
+($sq -join ',') -eq '1,4,9,16,25'
+@hint Start-Job -Name Squares -ScriptBlock { 1..5 | ForEach-Object { $_ * $_ } }, then Receive-Job -Wait
+@solution WIN-SRV1
+Start-Job -Name Squares -ScriptBlock { 1..5 | ForEach-Object { $_ * $_ } } | Out-Null
+$sq = Receive-Job -Name Squares -Wait -Keep
+@endtask
+@end
+
+@quiz
+? After `Receive-Job $j`, a second `Receive-Job $j` prints nothing. Why?
++ Received output is removed from the job unless you use -Keep
+- The job was deleted
+- The job failed
+! HasMoreData turns False once everything has been received.
+? Which parameter of Invoke-Command runs the remote command as a background job?
++ -AsJob
+- -Background
+- -NoWait
+! The result is a RemoteJob you manage with Get-Job and Receive-Job.
+@end

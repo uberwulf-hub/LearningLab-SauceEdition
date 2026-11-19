@@ -1,0 +1,637 @@
+# Unit: u11 | 11. Containers | Manage containers
+
+A container is a program packed together with everything it needs (libraries, settings, a small file system), started in its own isolated space on the host's kernel. RHEL 9 runs containers with podman, which needs no background daemon and lets ordinary users run containers of their own. This unit takes you from finding an image in a registry to a container that starts by itself at boot as a systemd service.
+
+## Lesson: l1101 | Images, registries and podman
+
+Three words to start with:
+
+- An IMAGE is a read-only template: the files of a small operating system plus the program and its default settings. Images have names like `registry.lab.example.com/ubi9/httpd-24:latest`: the registry, the repository and a tag (`latest` when you leave it out).
+- A CONTAINER is a running (or stopped) copy of an image with its own writable layer on top. You can start many containers from one image.
+- A REGISTRY is a server that stores images. Red Hat's are registry.redhat.io and registry.access.redhat.com; the lab has its own, registry.lab.example.com.
+
+### Installing the tools
+
+The tools are not installed at first. The package `container-tools` (a meta-package: it only pulls in other packages) brings podman (run and manage containers), skopeo (work with images in registries) and buildah (build images):
+
+```terminal
+[root@server1 ~]# dnf -y install container-tools > /dev/null 2>&1
+[root@server1 ~]# grep -E '^(unqualified-search-registries|short-name-mode)' /etc/containers/registries.conf
+unqualified-search-registries = ["registry.access.redhat.com", "registry.redhat.io", "docker.io"]
+short-name-mode = "enforcing"
+```
+
+/etc/containers/registries.conf says where podman looks for a short name such as `ubi9/ubi` (unqualified-search-registries). A user can have their own copy in `~/.config/containers/registries.conf`, which then replaces the system file for that user. The lab machines have no internet, so always write the full name with the registry: `registry.lab.example.com/ubi9/ubi`.
+
+### Rootless: run containers as a normal user
+
+On the exam, containers usually belong to an ordinary user, not to root. Each user has their own images and containers (under ~/.local/share/containers), and root does not see them. Log in as that user with ssh, not with su: only a real login starts the user's systemd session, which the later lessons need.
+
+```terminal
+[root@server1 ~]# ssh student@localhost
+```
+
+### Logging in, searching and pulling
+
+The lab registry wants a login (user student, password student). `podman login` stores the credentials for this user until `podman logout`:
+
+```terminal
+[student@server1 ~]$ podman login -u student -p student registry.lab.example.com
+Login Succeeded!
+[student@server1 ~]$ podman search registry.lab.example.com/
+NAME                                              DESCRIPTION
+registry.lab.example.com/ubi9/ubi                 The Universal Base Image is designed and e...
+registry.lab.example.com/ubi9/ubi-minimal         The Universal Base Image Minimal is a stri...
+registry.lab.example.com/ubi9/httpd-24            Apache HTTP Server 2.4 available as contai...
+registry.lab.example.com/rhel9/mariadb-105        MariaDB is a multi-user, multi-threaded SQ...
+registry.lab.example.com/library/nginx            Official build of Nginx.
+registry.lab.example.com/library/busybox          Busybox base image.
+[student@server1 ~]$ podman pull registry.lab.example.com/ubi9/ubi
+Trying to pull registry.lab.example.com/ubi9/ubi:latest...
+Getting image source signatures
+Copying blob 6d2e5f8a1b4c done   |
+Copying config 8a4b8c2f1e done   |
+Writing manifest to image destination
+8a4b8c2f1e4d7f0a9b3c6d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a
+[student@server1 ~]$ podman images
+REPOSITORY                               TAG         IMAGE ID      CREATED       SIZE
+registry.lab.example.com/ubi9/ubi        latest      8a4b8c2f1e4d  8 weeks ago   216.4 MB
+```
+
+Without `-p`, podman login asks for the password, which keeps it out of your shell history. Without the login, the pull fails with "unauthorized: authentication required".
+
+UBI (Universal Base Image) images are Red Hat's freely shareable base images: `ubi9/ubi` (with dnf), `ubi9/ubi-minimal` (with the smaller microdnf) and images with a ready service such as `ubi9/httpd-24`.
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As the user `student` (password student) on server1, log in to the registry registry.lab.example.com (user student, password student) and download the image `ubi9/ubi-minimal` from it into student's own image store.
+@check server1 | student's images include ubi9/ubi-minimal
+certlab-check login student 'podman images' | grep -q 'registry.lab.example.com/ubi9/ubi-minimal'
+@hint Log in with ssh student@localhost first; images pulled by root are not student's. Then podman login and podman pull with the full name.
+@solution server1
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman login -u student -p student registry.lab.example.com
+podman pull registry.lab.example.com/ubi9/ubi-minimal
+podman images
+exit
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? Which file lists the registries podman searches when you give only a short image name?
+- /etc/podman.conf
++ /etc/containers/registries.conf
+- /etc/containers/policy.json
+- ~/.docker/config.json
+! unqualified-search-registries in /etc/containers/registries.conf (or a user's ~/.config/containers/registries.conf) lists them.
+? Root pulled an image. Why does podman images as the user student not show it?
+- the image must be tagged for student first
++ every user has their own image store; root's images are separate
+- podman images only lists running containers
+- student needs sudo for podman
+! Rootless podman keeps images and containers under each user's ~/.local/share/containers.
+? Which package installs podman, skopeo and buildah in one go?
+- podman-docker
++ container-tools
+- containers-common
+- virt-tools
+! dnf install container-tools brings all three.
+@end
+
+## Lesson: l1102 | Inspecting images: skopeo and podman inspect
+
+Before you run an image you often want to know what it does: which command it starts, which ports it expects, which user it runs as and which variables it needs. Two tools answer that.
+
+### skopeo inspect: look before you pull
+
+`skopeo inspect` reads the image's information straight from the registry, without downloading the image. Image names for skopeo start with a transport, normally `docker://`:
+
+```terminal
+[student@server1 ~]$ skopeo inspect docker://registry.lab.example.com/ubi9/httpd-24
+{
+    "Name": "registry.lab.example.com/ubi9/httpd-24",
+    "Digest": "sha256:832b7e595fba45b5629f14b15c2bf8bdc741e790bef6ce71cd76e1341094a036",
+    "RepoTags": [
+        "latest"
+    ],
+    "Created": "2026-01-01T00:00:00Z",
+    "DockerVersion": "",
+    "Labels": {
+        "vendor": "Cert Lab practice registry",
+        "summary": "Apache HTTP Server 2.4 available as container, is a powerful, efficient, and extensible web server."
+    },
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Layers": [
+        "sha256:ac45bcf1d6740502ba57f181cf4a5cfcfb6757731f7540b8e9fd2c28b432ccf3"
+    ],
+    "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "container=oci"
+    ]
+}
+```
+
+RepoTags lists the tags you can pull, Labels often carry a description and a usage hint. skopeo uses the same login as podman. It can also copy images between registries and folders (`skopeo copy`), for example to keep a copy of an image on disk.
+
+### podman inspect: everything about a local image or container
+
+`podman image inspect IMAGE` (or simply `podman inspect`) prints the full JSON of an image you have pulled, and `podman inspect CONTAINER` the same for a container. `--format` picks one field with a Go template:
+
+```terminal
+[student@server1 ~]$ podman image inspect registry.lab.example.com/ubi9/ubi --format '{{.Config.Cmd}}'
+[/bin/bash]
+```
+
+Interesting fields under Config: `Cmd` (the default command), `Entrypoint`, `ExposedPorts`, `Env`, `User`, `WorkingDir` and `Labels`. For containers, `podman inspect NAME --format '{{.State.Status}}'` tells you whether it runs.
+
+### Tags and removing images
+
+- `podman tag SOURCE NEWNAME` gives an image another name (another tag); both names share the same image ID.
+- `podman rmi IMAGE` removes an image. It refuses while a container (even a stopped one) uses it: remove the container first, or use `podman rmi -f`.
+
+```terminal
+[student@server1 ~]$ podman rmi registry.lab.example.com/rhel9/mariadb-105
+Untagged: registry.lab.example.com/rhel9/mariadb-105:latest
+Deleted: 9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d
+```
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As root on server1, save the registry's information about the image `registry.lab.example.com/ubi9/httpd-24` (as skopeo inspect prints it) into the file /root/httpd-24.json. Do not download the image.
+@check server1 | /root/httpd-24.json has the image's name and digest
+grep -q '"Name": "registry.lab.example.com/ubi9/httpd-24"' /root/httpd-24.json && grep -q '"Digest": "sha256:' /root/httpd-24.json
+@check server1 | the image was not pulled
+! podman images | grep -q httpd-24
+@hint skopeo inspect needs the docker:// transport and the registry login (podman login, as root this time).
+@solution server1
+podman login -u student -p student registry.lab.example.com
+skopeo inspect docker://registry.lab.example.com/ubi9/httpd-24 > /root/httpd-24.json
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? Which command shows an image's details from the registry without downloading the image?
+- podman inspect docker://registry.lab.example.com/ubi9/ubi
++ skopeo inspect docker://registry.lab.example.com/ubi9/ubi
+- podman pull --inspect registry.lab.example.com/ubi9/ubi
+- podman search --details ubi9/ubi
+! skopeo talks to the registry directly. podman inspect only knows local images and containers.
+? Where in podman inspect's output is the command an image runs by default?
+- State.Command
++ Config.Cmd (together with Config.Entrypoint)
+- RepoTags
+- Labels.run
+! Config.Cmd is the default command; an Entrypoint, if set, runs with Cmd as its arguments.
+? podman rmi refuses to remove an image. What is the usual reason?
+- the image is too big
++ a container, running or stopped, still uses it
+- images can only be removed by root
+- the image has more than one tag
+! Remove the container first (podman rm), or force it with podman rmi -f.
+@end
+
+## Lesson: l1103 | Running and managing containers
+
+`podman run` creates a container from an image and starts it. The image is pulled first if it is missing. The options you will use all the time:
+
+- `-d`: detached, run in the background and print the container ID.
+- `--name NAME`: a name to use instead of the ID (needed for the systemd lesson).
+- `-p HOSTPORT:CONTAINERPORT`: publish a port, so clients reach the container through the host. Ordinary users can only publish ports from 1024 up.
+- `-e NAME=VALUE`: set an environment variable; many images read their settings this way.
+- `-it`: interactive with a terminal, for a shell inside the container. `--rm` removes the container when it ends.
+
+```terminal
+[student@server1 ~]$ podman run --rm registry.lab.example.com/ubi9/ubi cat /etc/os-release
+NAME="Red Hat Enterprise Linux"
+VERSION="9.5 (Plow)"
+ID="rhel"
+PRETTY_NAME="Red Hat Enterprise Linux 9.5 (Plow)"
+[student@server1 ~]$ podman run -d --name web1 -p 8080:8080 registry.lab.example.com/ubi9/httpd-24
+```
+
+The httpd-24 image runs Apache on port 8080 inside the container; `-p 8080:8080` makes it reachable on port 8080 of the host (open that port in the firewall for other machines).
+
+### Watching and controlling containers
+
+```terminal
+[student@server1 ~]$ podman ps
+CONTAINER ID  IMAGE                                          COMMAND               CREATED         STATUS                     PORTS                   NAMES
+63ab1bfb078b  registry.lab.example.com/ubi9/httpd-24:latest  /usr/bin/run-httpd    5 minutes ago   Up 5 minutes               0.0.0.0:8080->8080/tcp  web1
+[student@server1 ~]$ podman exec web1 ls /var/www/html
+index.html
+[student@server1 ~]$ podman stop web1
+web1
+[student@server1 ~]$ podman start web1
+web1
+[student@server1 ~]$ podman rm web1
+Error: cannot remove container 63ab1bfb078b001a8f6db4c576709a2147688f31b0ae22e866f9446a5c74efdd as it is running - running or paused containers cannot be removed without force: container state improper
+[student@server1 ~]$ podman rm -f web1
+web1
+```
+
+- `podman ps` lists running containers, `podman ps -a` also the stopped ones.
+- `podman logs NAME` shows what the container printed: the first place to look when a container stops at once.
+- `podman exec NAME COMMAND` runs a command inside a running container; `podman exec -it NAME /bin/bash` opens a shell there (`exit` leaves it, the container keeps running).
+- `podman stop`, `podman start` and `podman restart` control it; `podman rm` removes a stopped container, `podman rm -f` a running one.
+
+### Settings through environment variables
+
+Database images refuse to start without their settings. The logs say which variables they want:
+
+```terminal
+[student@server1 ~]$ podman run -d --name db2 registry.lab.example.com/rhel9/mariadb-105
+27e839f671fa5e05231cebd09b31afebca6c66257c21e1e718c8f2fa5133d623
+[student@server1 ~]$ podman logs db2
+=> sourcing 20-validate-variables.sh ...
+You must either specify the following environment variables:
+  MYSQL_USER
+  MYSQL_PASSWORD
+  MYSQL_DATABASE
+Or the following environment variable:
+  MYSQL_ROOT_PASSWORD (regex: '^[^\'\\]+$')
+Or both.
+[student@server1 ~]$ podman run -d --name db1 -e MYSQL_USER=app -e MYSQL_PASSWORD=apppw -e MYSQL_DATABASE=appdb -p 3306:3306 registry.lab.example.com/rhel9/mariadb-105
+4cb0c0c224dac8bca1058fe940b573635700ffe3de9d2f1c5d4ef0ff4efc46d4
+[student@server1 ~]$ podman exec db1 env
+MYSQL_DATABASE=appdb
+MYSQL_PASSWORD=apppw
+MYSQL_USER=app
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+container=oci
+```
+
+> A container you created with a mistake cannot be changed: remove it (podman rm -f NAME) and run it again with the right options. That is normal, not a failure.
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As `student` (password student), run a container named `webtest` in the background from the image registry.lab.example.com/ubi9/httpd-24. Port 8081 of the host must lead to port 8080 of the container. (The registry login is user student, password student.)
+@check server1 | student has a running container named webtest
+certlab-check login student 'podman ps' | grep -qw webtest
+@check server1 | Apache answers on port 8081
+curl -s -m 5 http://localhost:8081/ | grep -qi html
+@hint ssh student@localhost, podman login, then podman run -d --name ... -p HOST:CONTAINER IMAGE.
+@solution server1
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman login -u student -p student registry.lab.example.com
+podman run -d --name webtest -p 8081:8080 registry.lab.example.com/ubi9/httpd-24
+podman ps
+exit
+@endtask
+@task t2 | Containers | 10 | server1
+Also as `student`, run a MariaDB container named `inventorydb` in the background from registry.lab.example.com/rhel9/mariadb-105, with the database `inventory`, the database user `stock` and that user's password `St0ck!pw`.
+@check server1 | inventorydb is running
+certlab-check login student 'podman ps' | grep -qw inventorydb
+@check server1 | the container got the three settings
+certlab-check login student 'podman exec inventorydb env' > /tmp/.dbenv; grep -qx MYSQL_DATABASE=inventory /tmp/.dbenv && grep -qx MYSQL_USER=stock /tmp/.dbenv && grep -qx 'MYSQL_PASSWORD=St0ck!pw' /tmp/.dbenv
+@hint The image reads MYSQL_USER, MYSQL_PASSWORD and MYSQL_DATABASE; pass each with -e. Single quotes keep the ! safe.
+@solution server1
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman run -d --name inventorydb -e MYSQL_DATABASE=inventory -e MYSQL_USER=stock -e 'MYSQL_PASSWORD=St0ck!pw' registry.lab.example.com/rhel9/mariadb-105
+podman logs inventorydb
+exit
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? What does -p 8080:80 mean in podman run?
+- the container gets 8080 MB of memory and 80 CPU shares
++ port 8080 of the host leads to port 80 inside the container
+- port 80 of the host leads to port 8080 inside the container
+- the container may use ports 80 to 8080
+! The host port comes first, then the container port.
+? A container exits right after podman run -d. Where do you look first?
+- journalctl -u podman
++ podman logs NAME
+- /var/log/containers.log
+- podman inspect --why NAME
+! The container's own output usually explains it, for example missing environment variables.
+? Which command opens a shell inside the running container web1?
+- podman run -it web1 /bin/bash
++ podman exec -it web1 /bin/bash
+- podman attach --shell web1
+- podman start -i web1 /bin/bash
+! podman exec runs a new process in an existing container. podman run would create a new container.
+@end
+
+## Lesson: l1104 | Persistent storage for containers
+
+Everything a container writes goes into its own writable layer, and that layer is deleted with the container. Data that must survive (web pages, a database) lives outside, in a folder of the host that is mounted into the container with `-v HOSTDIR:CONTAINERDIR`.
+
+### Bind mounts and SELinux: the :Z option
+
+Containers run with the SELinux type `container_t`, which may only use files labelled `container_file_t`. A folder in your home is `user_home_t`, so the container would get "Permission denied". Add `:Z` to the volume and podman relabels the folder for this container:
+
+```terminal
+[student@server1 ~]$ mkdir ~/web
+[student@server1 ~]$ echo 'hello from a container' > ~/web/index.html
+[student@server1 ~]$ podman run -d --name web1 -p 8080:8080 -v ~/web:/var/www/html:Z registry.lab.example.com/ubi9/httpd-24
+3894496c98bdbc61f287f08967779761d6e92f22a086d21db274029e52c82b63
+[student@server1 ~]$ curl -s http://localhost:8080/
+hello from a container
+[student@server1 ~]$ ls -dZ ~/web
+system_u:object_r:container_file_t:s0:c292,c943 /home/student/web
+```
+
+- `:Z` (capital) labels the folder for this one container only (with its own categories, the c292,c943 part).
+- `:z` (small) labels it so that several containers may share it.
+- Use a full path or `~/...` for the host folder: a plain word such as `data:/data` means a named volume (below), not a folder.
+
+### File ownership inside rootless containers
+
+In a rootless container, root inside the container is your own user outside. Other users inside the container map to high numbers from /etc/subuid (100000 and up for the first user). If the program in the container runs as a specific UID (MariaDB uses 27), the folder must belong to that UID as the container sees it. `podman unshare` runs a command in the container's view of the user numbers:
+
+```terminal
+[student@server1 ~]$ mkdir ~/dbdata
+[student@server1 ~]$ podman unshare chown 27:27 ~/dbdata
+[student@server1 ~]$ ls -ld ~/dbdata
+drwxr-xr-x. 2 100026 100026 6 Mar  2 04:01 /home/student/dbdata
+```
+
+Seen from the host the folder belongs to 100026 (100000 + 27 - 1); inside the container it is 27. A MariaDB container keeps its data in /var/lib/mysql, so the full run is `podman run -d --name db -e ... -v ~/dbdata:/var/lib/mysql:Z registry.lab.example.com/rhel9/mariadb-105`.
+
+### Named volumes
+
+podman can also manage the storage itself. A named volume lives under ~/.local/share/containers/storage/volumes and keeps its data until you remove it with `podman volume rm`:
+
+```terminal
+[student@server1 ~]$ podman volume create webdata
+webdata
+[student@server1 ~]$ podman volume ls
+DRIVER      VOLUME NAME
+local       webdata
+```
+
+Use it with `-v webdata:/var/www/html`. On the exam, tasks usually name a host folder, so bind mounts with :Z are what you need most.
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As `student` (password student), create the folder /home/student/site with a file index.html that contains `my container site`. Run a container named `site` in the background from registry.lab.example.com/ubi9/httpd-24 that serves this folder (Apache's folder in the container is /var/www/html) on port 8082 of the host (port 8080 in the container). SELinux must stay enforcing.
+@check server1 | the page is served on port 8082
+curl -s -m 5 http://localhost:8082/ | grep -q 'my container site'
+@check server1 | /home/student/site is labelled for containers
+stat -c %C /home/student/site | grep -q container_file_t
+@check server1 | SELinux is enforcing
+test "$(getenforce)" = Enforcing
+@hint -v /home/student/site:/var/www/html:Z mounts the folder and relabels it.
+@solution server1
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman login -u student -p student registry.lab.example.com
+mkdir ~/site
+echo 'my container site' > ~/site/index.html
+podman run -d --name site -p 8082:8080 -v ~/site:/var/www/html:Z registry.lab.example.com/ubi9/httpd-24
+curl -s http://localhost:8082/
+exit
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? Why does a container get "Permission denied" on a folder from your home that you mounted without :Z?
+- rootless containers cannot mount folders
++ SELinux: container_t may not use files labelled user_home_t
+- the folder must be mode 777
+- only named volumes work rootless
+! :Z relabels the folder as container_file_t so the container may use it.
+? What is the difference between :Z and :z?
++ :Z labels the folder for one container only, :z so that several containers can share it
+- :Z is read-only, :z read-write
+- :z only works for root
+- there is no difference
+! The private label (:Z) adds categories unique to that container.
+? A rootless MariaDB container (running as UID 27) cannot write to ~/dbdata. Which command fixes the owner?
+- chown 27:27 ~/dbdata
++ podman unshare chown 27:27 ~/dbdata
+- sudo chown mysql ~/dbdata
+- chmod 700 ~/dbdata
+! podman unshare uses the container's mapping of user IDs, so 27 inside becomes the right high number outside.
+@end
+
+## Lesson: l1105 | Building images from a Containerfile
+
+When no image does exactly what you need, build your own. A Containerfile (the same format as a Dockerfile) is a list of instructions, run from top to bottom; each one adds a layer to the new image.
+
+- `FROM image`: the base image to start from (always first).
+- `RUN command`: runs a command during the build, for example `RUN dnf -y install httpd`.
+- `COPY file /path`: copies a file from the build folder into the image.
+- `ENV NAME=value`: sets an environment variable.
+- `EXPOSE 8080`: documents the port the program listens on.
+- `USER 1001`, `WORKDIR /path`: the user and folder for the following instructions and for the container.
+- `CMD ["program", "arg"]`: the default command when the container starts. `ENTRYPOINT` is a fixed command that CMD then gives arguments to.
+
+```terminal
+[student@server1 build]$ cat Containerfile
+FROM registry.lab.example.com/ubi9/ubi
+ENV GREETING=Hello
+COPY hello.sh /hello.sh
+CMD ["/bin/bash", "/hello.sh"]
+[student@server1 build]$ podman build -t greeter:1.0 .
+STEP 1/4: FROM registry.lab.example.com/ubi9/ubi
+STEP 2/4: ENV GREETING=Hello
+STEP 3/4: COPY hello.sh /hello.sh
+STEP 4/4: CMD ["/bin/bash", "/hello.sh"]
+COMMIT greeter:1.0
+--> 0d6101d240f
+Successfully tagged localhost/greeter:1.0
+0d6101d240f1ef962e508fe23e739b708abf9caa4fd47417e0bb4ffc493e2c86
+[student@server1 build]$ podman run --rm greeter:1.0
+Hello from server1.lab.example.com
+[student@server1 build]$ podman run --rm -e GREETING=Hi greeter:1.0
+Hi from server1.lab.example.com
+```
+
+- `podman build -t NAME:TAG FOLDER` reads the file `Containerfile` (or `Dockerfile`) in FOLDER; `.` is the current folder, which is also where COPY finds its files. `-f FILE` names another file.
+- An image you build gets the registry part `localhost/`, so it shows up as `localhost/greeter` in `podman images`.
+- `-e` at run time overrides an ENV value from the image.
+
+> If the task gives you a Containerfile on a web server, download it first (curl -O URL or wget URL) into an empty folder, look at it with cat, then build in that folder.
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As `student` (password student), download the Containerfile from http://utility.lab.example.com/files/Containerfile into the folder /home/student/motd and build an image from it named `motd` with the tag `1.0`. (Its base image is in registry.lab.example.com: user student, password student.)
+@check server1 | student has the image localhost/motd:1.0
+certlab-check login student 'podman images' | grep -Eq '^localhost/motd +1\.0 '
+@hint mkdir, cd into the folder, curl -O the file, podman login, then podman build -t motd:1.0 .
+@solution server1
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman login -u student -p student registry.lab.example.com
+mkdir ~/motd
+cd ~/motd
+curl -s -O http://utility.lab.example.com/files/Containerfile
+cat Containerfile
+podman build -t motd:1.0 .
+podman images
+cd
+exit
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? Which instruction must come first in a Containerfile?
+- RUN
++ FROM
+- CMD
+- COPY
+! FROM names the base image that every other instruction builds on.
+? What is the difference between RUN and CMD?
++ RUN runs while the image is built; CMD is the default command when a container starts
+- RUN starts the container, CMD stops it
+- they are the same
+- CMD runs as root, RUN as the user
+! RUN changes the image (installing packages, creating files). CMD is only stored as a setting.
+? You run podman build -t web:2 . in a folder. Which name does the new image get?
+- docker.io/library/web:2
+- registry.lab.example.com/web:2
++ localhost/web:2
+- web:latest
+! Images built locally get the localhost/ prefix; -t sets the name and the tag.
+@end
+
+## Lesson: l1106 | Containers as systemd services
+
+A container you started by hand stops at the next reboot. To have it start at boot, you hand it to systemd. For a rootless container that means a systemd USER service: a unit that belongs to the user and runs in that user's own systemd manager.
+
+### Three things that must be true
+
+1. You work as the user in a real login session: `ssh user@localhost`. With `su - user`, `systemctl --user` fails because no user session (and no XDG_RUNTIME_DIR) exists.
+2. The unit file lives in the user's `~/.config/systemd/user` (or, with Quadlet, `~/.config/containers/systemd`).
+3. Lingering is on for the user: `loginctl enable-linger USER`. Without it the user's systemd manager, and with it the container, only runs while the user is logged in. With it, the manager starts at boot.
+
+```terminal
+[root@server1 ~]# loginctl enable-linger student
+[root@server1 ~]# loginctl show-user student --property=Linger
+Linger=yes
+```
+
+The user can run `loginctl enable-linger` for themselves too. The file /var/lib/systemd/linger/USER shows that it is on.
+
+### Way 1: podman generate systemd
+
+Create and test the container first, then let podman write the unit. `--new` makes a unit that creates a fresh container at every start (so it does not depend on the one you made by hand), `--files` writes it to a file in the current folder:
+
+```terminal
+[student@server1 ~]$ podman run -d --name web1 -p 8080:8080 -v ~/web:/var/www/html:Z registry.lab.example.com/ubi9/httpd-24
+[student@server1 ~]$ mkdir -p ~/.config/systemd/user
+[student@server1 ~]$ cd ~/.config/systemd/user
+[student@server1 user]$ podman generate systemd --name web1 --files --new
+DEPRECATED command:
+It is recommended to use Quadlets for running containers and pods under systemd.
+
+Please refer to podman-systemd.unit(5) for details.
+/home/student/.config/systemd/user/container-web1.service
+[student@server1 user]$ podman rm -f web1
+web1
+[student@server1 user]$ systemctl --user daemon-reload
+[student@server1 user]$ systemctl --user enable --now container-web1.service
+[student@server1 user]$ systemctl --user is-active container-web1.service
+active
+[student@server1 user]$ curl -s http://localhost:8080/
+hello from a container
+```
+
+(enable also prints a "Created symlink" line for default.target.wants.) The unit is named `container-NAME.service`. Remove the hand-made container before you start the service, or the two fight over the name and the port. The DEPRECATED note is only advice: the command still works on RHEL 9.
+
+### Way 2: Quadlet
+
+Quadlet is the newer way. You write a short `NAME.container` file in `~/.config/containers/systemd`, and at `daemon-reload` systemd turns it into `NAME.service` by itself:
+
+```terminal
+[student@server1 ~]$ mkdir -p ~/.config/containers/systemd
+[student@server1 ~]$ cat > ~/.config/containers/systemd/web2.container <<'EOF'
+> [Unit]
+> Description=Web page in a container
+> [Container]
+> Image=registry.lab.example.com/ubi9/httpd-24
+> ContainerName=web2
+> PublishPort=8080:8080
+> Volume=/home/student/web:/var/www/html:Z
+> [Install]
+> WantedBy=default.target
+> EOF
+[student@server1 ~]$ systemctl --user daemon-reload
+[student@server1 ~]$ systemctl --user start web2.service
+[student@server1 ~]$ curl -s http://localhost:8080/
+hello from a container
+```
+
+The `[Install]` section with `WantedBy=default.target` is what makes it start at boot. You do not (and cannot) `systemctl --user enable` a Quadlet unit: systemd says it is "generated". Other keys you may need: `Environment=NAME=value`, `Exec=` (the command), `User=`.
+
+### Checking and troubleshooting
+
+- `systemctl --user status UNIT` and `journalctl --user -u UNIT` show what happened.
+- `podman ps` shows the container that the service started.
+- After a reboot, log in as the user again (ssh) to look; the container runs even before you do, thanks to lingering.
+
+> For root containers (rare on the exam) the unit goes into /etc/systemd/system (or /etc/containers/systemd for Quadlet) and you use systemctl without --user. Lingering is not needed then.
+
+@try machines=1
+@task t1 | Containers | 10 | server1
+As `student` (password student), run a container named `web` from registry.lab.example.com/ubi9/httpd-24 that publishes host port 8083 to container port 8080. Make it a systemd user service called `container-web.service` that starts at boot, even when student does not log in.
+@check server1 | the user service is active
+certlab-check login student 'systemctl --user is-active container-web.service' | grep -qx active
+@check server1 | it is enabled (or generated by Quadlet) to start at boot
+certlab-check login student 'systemctl --user is-enabled container-web.service' | grep -Eq '^(enabled|generated)$'
+@check server1 | lingering is on for student
+test -e /var/lib/systemd/linger/student
+@check server1 | Apache answers on port 8083
+curl -s -m 5 http://localhost:8083/ | grep -qi html
+@hint Lingering: loginctl enable-linger student. Then, logged in with ssh: podman run, podman generate systemd --name web --files --new in ~/.config/systemd/user, podman rm -f web, systemctl --user daemon-reload and enable --now.
+@solution server1
+loginctl enable-linger student
+ssh -o StrictHostKeyChecking=no student@localhost
+student
+podman login -u student -p student registry.lab.example.com
+podman run -d --name web -p 8083:8080 registry.lab.example.com/ubi9/httpd-24
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name web --files --new
+podman rm -f web
+systemctl --user daemon-reload
+systemctl --user enable --now container-web.service
+cd
+exit
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install container-tools
+@end
+
+@quiz
+? Why should you log in with ssh user@localhost rather than su - user before using systemctl --user?
+- su cannot run podman
++ only a real login starts the user's systemd session that systemctl --user talks to
+- ssh gives the user root rights
+- su changes the SELinux mode
+! su keeps you in root's session, so the user's manager and XDG_RUNTIME_DIR are missing.
+? What does loginctl enable-linger student do?
+- lets student run sudo without a password
++ starts student's systemd user manager at boot, so student's services run without a login
+- keeps student's ssh session open forever
+- allows student to use ports below 1024
+! Without lingering, user services stop when the user's last session ends and do not start at boot.
+? Where does a Quadlet file for a rootless container go?
+- /etc/systemd/system/NAME.service
+- ~/.config/systemd/user/NAME.service
++ ~/.config/containers/systemd/NAME.container
+- /var/lib/containers/NAME.quadlet
+! At systemctl --user daemon-reload, systemd generates NAME.service from ~/.config/containers/systemd/NAME.container.
+@end

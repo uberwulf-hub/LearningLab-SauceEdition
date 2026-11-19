@@ -1,0 +1,16 @@
+SYNOPSIS: Deletes an organizational unit.
+DESCRIPTION:
+Remove-ADOrganizationalUnit deletes an OU. Two things commonly stop it:
+The OU is protected from accidental deletion ("Access is denied"); turn that off first with Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false.
+The OU isn't empty; add -Recursive to delete it with everything inside it. Objects inside that are protected stop that too.
+PARAMETER Identity:
+The OU, as a distinguished name. Position 0, and takes pipeline input.
+PARAMETER Recursive:
+Also deletes everything inside the OU.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-ADOrganizationalUnit "OU=Kiosks,OU=Workstations,DC=corp,DC=example" -ProtectedFromAccidentalDeletion $false; Remove-ADOrganizationalUnit "OU=Kiosks,OU=Workstations,DC=corp,DC=example"
+Unprotects and deletes the empty Kiosks OU.
+EXAMPLE: Remove-ADOrganizationalUnit "OU=Old,DC=corp,DC=example" -Recursive -Confirm:$false
+Deletes an unprotected OU and everything in it, without asking.
+RELATED: Set-ADOrganizationalUnit, Get-ADOrganizationalUnit, Restore-ADObject

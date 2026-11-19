@@ -1,0 +1,28 @@
+# Deck: admin | Administration | Administration
+Show the status and start type of the Spooler service :: `Get-Service Spooler | Select-Object Name, Status, StartType`
+Make BITS start with Windows and start it now, in one command :: `Set-Service BITS -StartupType Automatic -Status Running`
+Stop a service that other services depend on :: `Stop-Service LanmanWorkstation -Force`
+List the services that depend on LanmanWorkstation :: `Get-Service LanmanWorkstation -DependentServices`
+The three start types Set-Service accepts for normal services in 5.1 :: Automatic, Manual and Disabled (delayed start needs sc.exe in 5.1)
+The 5 processes that have used the most processor time :: `Get-Process | Sort-Object CPU -Descending | Select-Object -First 5`
+Stop every notepad process :: `Stop-Process -Name notepad`
+Start Notepad and keep the process object in $p :: `$p = Start-Process notepad -PassThru`
+Wait at most 30 seconds for process 4120 to end :: `Wait-Process -Id 4120 -Timeout 30`
+The 10 newest events of the System log :: `Get-WinEvent -LogName System -MaxEvents 10`
+Every error of the Application log, filtered by the event log service :: `Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2 }`
+Get-WinEvent levels 1 to 4 :: 1 Critical, 2 Error, 3 Warning, 4 Information
+Warnings of the System log from the last 24 hours :: `Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 3; StartTime = (Get-Date).AddDays(-1) }`
+Which event cmdlet is missing in PowerShell 7? :: Get-EventLog (and Write-EventLog, New-EventLog, Clear-EventLog); use Get-WinEvent
+A trigger for every day at 3 AM :: `New-ScheduledTaskTrigger -Daily -At 3am`
+Register task Backup with action $a and trigger $t, running as SYSTEM :: `Register-ScheduledTask -TaskName Backup -Action $a -Trigger $t -User SYSTEM`
+When did task Backup last run, and did it work? :: `Get-ScheduledTaskInfo -TaskName Backup`
+LastTaskResult 0 and 267011 :: 0 = the last run succeeded; 267011 (0x41303) = it has not run yet
+Run task Backup now :: `Start-ScheduledTask -TaskName Backup`
+When did this computer last start? :: `(Get-CimInstance Win32_OperatingSystem).LastBootUpTime`
+Install the Telnet Client feature on Windows Server :: `Install-WindowsFeature -Name Telnet-Client`
+Create local user kim with a password typed in secretly :: `New-LocalUser -Name kim -Password (Read-Host -AsSecureString)`
+Add kim to the local Administrators group :: `Add-LocalGroupMember -Group Administrators -Member kim`
+Free space of the local disks, with CIM :: `Get-CimInstance Win32_LogicalDisk -Filter "DriveType = 3" | Select-Object DeviceID, FreeSpace`
+Does WEB01 answer on TCP port 443? :: `Test-NetConnection WEB01 -Port 443`
+Allow inbound TCP 8080 through the firewall :: `New-NetFirewallRule -DisplayName 'Web 8080' -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow`
+Set the DNS servers of the Ethernet adapter :: `Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 10.0.10.10, 10.0.10.11`

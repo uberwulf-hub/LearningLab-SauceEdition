@@ -1,0 +1,13 @@
+SYNOPSIS: Closes CIM sessions.
+DESCRIPTION:
+Closes sessions you no longer need; they also close when PowerShell exits.
+PARAMETER CimSession:
+The sessions, usually from the pipeline. Position 0.
+PARAMETER ComputerName:
+Closes the sessions to these computers.
+PARAMETER Id:
+Closes the sessions with these ids.
+PARAMETER Name:
+Closes the sessions with these names.
+EXAMPLE: Get-CimSession | Remove-CimSession
+RELATED: New-CimSession, Get-CimSession

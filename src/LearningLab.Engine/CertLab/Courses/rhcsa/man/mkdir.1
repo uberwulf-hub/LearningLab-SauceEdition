@@ -1,0 +1,42 @@
+NAME
+       mkdir - make directories
+
+SYNOPSIS
+       mkdir [-p] [-m MODE] [-v] [-Z] DIRECTORY...
+
+DESCRIPTION
+       mkdir creates each DIRECTORY. The parent directory must exist, unless
+       you add -p. New directories get mode 777 minus the umask (755 with
+       the usual umask 022), the creator as owner, and the SELinux context
+       that the parent directory passes on.
+
+OPTIONS
+       -p, --parents
+              Create missing parent directories too, and do not complain when
+              the directory exists already.
+
+       -m, --mode MODE
+              Set the permissions (octal or symbolic) instead of using the
+              umask, such as -m 2770.
+
+       -v, --verbose
+              Print each directory created.
+
+       -Z     Give the directory the default SELinux context of its path.
+
+EXAMPLES
+       Make a nested path in one step:
+
+           mkdir -p /srv/projects/2026/reports
+
+       A shared group directory where new files belong to the group:
+
+           mkdir -m 2770 /srv/team
+           chgrp devs /srv/team
+
+       Several directories at once, with brace expansion:
+
+           mkdir -p ~/lab/{in,out,tmp}
+
+SEE ALSO
+       rmdir(1), chmod(1), umask(1), install(1)

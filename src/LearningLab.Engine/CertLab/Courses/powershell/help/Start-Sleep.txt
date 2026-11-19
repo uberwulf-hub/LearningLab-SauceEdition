@@ -1,0 +1,16 @@
+SYNOPSIS: Waits for a number of seconds or milliseconds.
+DESCRIPTION:
+Start-Sleep pauses the script. Use it between retries, or to give a service time to start.
+
+In Cert Lab's practice machines, Start-Sleep moves the machines' simulated clock on at once instead of really waiting, so scheduled tasks and jobs that are due on the way run.
+PARAMETER Seconds:
+How many seconds to wait (the first positional parameter; alias s).
+PARAMETER Milliseconds:
+How many milliseconds to wait (alias ms).
+EXAMPLE: Start-Sleep -Seconds 5
+Waits five seconds.
+EXAMPLE: Start-Sleep 2; Get-Date
+Waits two seconds, then shows the time.
+NOTES:
+sleep is an alias of Start-Sleep.
+RELATED: Wait-Job, Get-Date

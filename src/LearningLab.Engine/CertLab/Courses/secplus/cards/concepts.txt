@@ -1,0 +1,41 @@
+# Deck: concepts | Controls, crypto and PKI | General security concepts
+Four control categories :: Technical, managerial, operational and physical
+A firewall rule, encryption or MFA is which control category? :: Technical (enforced by technology)
+A risk assessment or a security policy is which control category? :: Managerial (decisions and oversight by management)
+Guards, awareness training and backups done by people are which category? :: Operational (carried out day to day by people)
+Six control types :: Preventive, deterrent, detective, corrective, compensating and directive
+A warning sign "Area under video surveillance" is which control type? :: Deterrent (it discourages, it doesn't stop)
+Restoring a server from backup after malware is which control type? :: Corrective (it fixes things after an event)
+An old system can't be patched, so it is isolated on its own VLAN. Control type? :: Compensating (another control that covers the gap)
+A policy that tells staff to lock their screens is which control type? :: Directive (it tells people what to do)
+What does non-repudiation give you? :: Proof of who did something, so they can't later deny it (digital signatures provide it)
+What is a gap analysis? :: Comparing the controls you have with the ones a framework or goal requires, to find what is missing
+Zero trust in one line :: Never trust by location; check identity, device and context for every request
+Zero trust: the two parts of the policy decision point :: Policy engine (decides) and policy administrator (tells the enforcement point to allow or end the session)
+Zero trust: where is the policy enforcement point? :: In the data plane, between the subject and the resource; it allows or blocks traffic
+Zero trust control plane ideas :: Adaptive identity, threat scope reduction and policy-driven access control
+Small room with two doors where only one opens at a time :: Access control vestibule (formerly mantrap); stops tailgating
+Short sturdy posts that stop vehicles reaching a building :: Bollards
+A fake server set up to attract and study attackers :: Honeypot (a group of them is a honeynet)
+A fake credential or record that alerts when anyone uses it :: Honeytoken (a fake file that alerts on opening is a honeyfile)
+Symmetric vs asymmetric encryption :: Symmetric uses one shared key (fast, for bulk data); asymmetric uses a public and private key pair (slower, for key exchange and signatures)
+To send Ana a secret message, encrypt with which key? :: Ana's public key; only her private key can decrypt it
+To sign a document, which key do you use? :: Your own private key; anyone checks the signature with your public key
+What does a digital signature prove? :: Integrity, authentication of the signer and non-repudiation (not confidentiality)
+Hashing vs encryption :: A hash is one-way and fixed length (integrity); encryption is two-way with a key (confidentiality)
+Why add a salt to a password hash? :: Each hash becomes unique, so rainbow tables and matching identical passwords stop working
+Where are keys kept on a laptop for full disk encryption? :: The TPM chip on the motherboard
+Key escrow :: A trusted third party keeps a copy of keys so data can be recovered if the key is lost
+Hiding a message inside a picture or audio file :: Steganography
+Replacing a card number with a random stand-in kept in a secure vault :: Tokenization
+Showing only the last four digits of an account number :: Data masking
+What is a blockchain? :: An open public ledger: blocks of records chained by hashes, so changing an old record breaks the chain
+Two ways to check if a certificate is revoked :: CRL (download the list) and OCSP (ask about one certificate)
+What is OCSP stapling? :: The web server attaches a recent signed OCSP answer to the TLS handshake, so the browser doesn't have to ask the CA
+Certificate *.example.com covers which names? :: Any single-level name such as www.example.com or mail.example.com (not example.com itself or a.b.example.com)
+One certificate for example.com, shop.example.net and mail.example.com :: A SAN (subject alternative name) certificate
+What do you send to a CA to get a certificate? :: A CSR, which holds your public key and details; the private key stays with you
+Self-signed certificate: when is it fine? :: For internal tests and labs; browsers don't trust it, as no trusted CA vouches for it
+What is the root of trust in PKI? :: The root CA certificate, trusted by the system, that signs intermediate CAs, which sign server certificates
+Certificate pinning :: An app accepts only a specific certificate or public key for a server, which blocks fake but CA-signed certificates
+Perfect forward secrecy :: New key exchange (DHE or ECDHE) for each session, so a stolen server key can't decrypt recorded sessions

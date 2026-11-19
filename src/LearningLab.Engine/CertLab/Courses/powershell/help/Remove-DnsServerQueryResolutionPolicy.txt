@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes a DNS query resolution policy.
+DESCRIPTION:
+Remove-DnsServerQueryResolutionPolicy deletes a policy by name. For a zone-level policy give -ZoneName too, otherwise the server-level list is searched. The client subnets and zone scopes the policy used stay; remove them separately if nothing else needs them.
+PARAMETER Name:
+The policy to delete.
+PARAMETER ZoneName:
+The zone the policy belongs to.
+PARAMETER Force:
+Deletes without asking.
+EXAMPLE: Remove-DnsServerQueryResolutionPolicy -Name BranchPolicy -ZoneName corp.example -Force -ComputerName DC1
+Branch clients get the default answers again.
+RELATED: Get-DnsServerQueryResolutionPolicy, Add-DnsServerQueryResolutionPolicy

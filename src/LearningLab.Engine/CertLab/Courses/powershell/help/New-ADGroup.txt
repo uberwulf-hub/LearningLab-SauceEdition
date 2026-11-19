@@ -1,0 +1,27 @@
+SYNOPSIS: Creates a group in Active Directory.
+DESCRIPTION:
+New-ADGroup needs a name and a scope. The scope decides who can be a member and where the group can be used:
+Global groups hold accounts from their own domain and are used anywhere in the forest (good for "people who do the same job", such as Sales).
+Domain local groups can hold accounts and global groups from any trusted domain but are used only for permissions in their own domain (good for "access to a resource", such as FS-Sales-Modify).
+Universal groups can hold members from the whole forest and are stored in the global catalog.
+The AGDLP habit: Accounts go into Global groups, global groups into Domain Local groups, and Permissions go to the domain local group.
+GroupCategory is Security by default; Distribution groups are only for email and can't be given permissions.
+PARAMETER Name:
+The group's name. Position 0.
+PARAMETER GroupScope:
+DomainLocal, Global or Universal. Position 1.
+PARAMETER GroupCategory:
+Security (the default) or Distribution.
+PARAMETER Path:
+The OU to create it in, such as "OU=Groups,DC=corp,DC=example". Without it, the Users container.
+PARAMETER SamAccountName:
+The pre-Windows 2000 name; defaults to the name.
+PARAMETER Description:
+A note about what the group is for.
+PARAMETER DisplayName:
+The display name.
+EXAMPLE: New-ADGroup -Name "Marketing" -GroupScope Global -Path "OU=Groups,DC=corp,DC=example"
+A global security group for the marketing team.
+EXAMPLE: New-ADGroup "FS-Marketing-Modify" DomainLocal -Path "OU=Groups,DC=corp,DC=example" -Description "Modify on \\FS1\Marketing"
+A domain local group that will receive the share permission.
+RELATED: Get-ADGroup, Set-ADGroup, Add-ADGroupMember, Remove-ADGroup

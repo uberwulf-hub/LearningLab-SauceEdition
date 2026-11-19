@@ -1,0 +1,34 @@
+NAME
+       ladder-vault - the Linux Ladder's vault (Cyber Range)
+
+SYNOPSIS
+       ladder-vault
+       ladder-vault --open --step N
+
+DESCRIPTION
+       ladder-vault keeps the password for the next step of Cyber Range's Linux
+       Ladder. Run with no options it only says that it is locked.
+
+       It opens for the person who is on step N when they tell it which step
+       they are on, and then prints the password for step N+1.
+
+       ladder-vault is part of Cyber Range's pretend practice computer. It is
+       not a real Linux program.
+
+OPTIONS
+       --open
+              Ask the vault to open.
+
+       --step N
+              The step you are on (your user name is stepN). It must come
+              after --open.
+
+EXIT STATUS
+       0 when the vault opened, 1 when it stayed locked.
+
+EXAMPLES
+       On step 17 (signed in as step17):
+           ladder-vault --open --step 17
+
+SEE ALSO
+       man(1), whoami(1)

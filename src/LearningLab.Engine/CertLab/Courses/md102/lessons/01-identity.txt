@@ -1,0 +1,361 @@
+# Unit: u01 | 1. Microsoft Entra ID for devices | Identity
+
+Everything Intune does starts with identity. Before you can enrol a laptop, give it a policy or block a sign-in, the person needs an account with the right licence, the device needs an identity of its own, and you need groups to aim your settings at. This unit covers the parts of Microsoft Entra ID (the new name for Azure Active Directory) that an endpoint administrator uses every day: users and licences, groups and dynamic rules, the three ways a Windows device can be known to Entra ID, the tenant's device settings, and the admin roles.
+
+## Lesson: l0101 | Users and licences
+
+A **user** in Microsoft Entra ID is a person's work account. People sign in with their **user principal name** (UPN), which looks like an email address: `jordan@riverbend.example`. The part after the @ must be a domain the tenant owns. Each user also has properties such as department, job title and city. Those properties matter more than they seem: dynamic groups (next lesson) read them to decide who is in a group.
+
+### Usage location comes first
+
+A licence can't be given to a user until their **usage location** is set (a country such as US or GB). Microsoft needs it because not every service is offered in every country. When a licence assignment fails, a missing usage location is the first thing to check.
+
+### Which licence gives what
+
+Intune and the features around it come in several licences. You don't need prices for the exam, but you do need to know which licence includes which part:
+
+- **Microsoft 365 E3**: Intune Plan 1, Microsoft Entra ID P1, Windows Enterprise E3 and the Office apps.
+- **Microsoft 365 E5**: everything in E3, plus Microsoft Entra ID P2 and Microsoft Defender for Endpoint Plan 2.
+- **Microsoft 365 Business Premium**: for smaller companies (up to 300 users): Intune Plan 1, Entra ID P1, Defender for Business and the Office apps.
+- **Enterprise Mobility + Security E3**: Intune Plan 1 and Entra ID P1, without Office or Windows.
+- **Intune Plan 1** on its own: device management only.
+- **Office 365 E3**: the Office apps and services, but **no Intune** and no Entra ID P1.
+
+Why it matters: Conditional Access and dynamic groups need **Entra ID P1**; a user without an Intune licence can't enrol a device (Windows shows an error during enrolment); some Windows features, such as Windows Enterprise through subscription activation and Remediations, need **Windows Enterprise E3 or E5**.
+
+> Licences can be assigned to each user, or to a group (group-based licensing): everyone in the group gets the licence and loses it when they leave the group. Cert Lab's portal assigns them per user.
+
+In Cert Lab's portal, users are under **Users and groups > Users**. Microsoft's portals show the same in the Microsoft Entra admin center and the Microsoft 365 admin center.
+
+@try
+@task t1 | Identity | 10 | portal
+A new account manager starts in Sales today. Create the user **Kim Tanaka** with the sign-in name `kim@riverbend.example`, department **Sales**, and the licence **Microsoft 365 E3** so that Kim can enrol a laptop in Intune.
+@check portal | Kim exists with the right sign-in name and department
+user["kim"].upn == kim@riverbend.example
+user["kim"].department == Sales
+@check portal | Kim has a usage location and the Microsoft 365 E3 licence
+user["kim"].usageLocation != ""
+user["kim"].licenses has "Microsoft 365 E3"
+@hint The portal refuses a licence until the usage location is set: set both in the same form (US is fine).
+@solution portal
+create user name="Kim Tanaka" upn=kim@riverbend.example department=Sales jobTitle="Account manager" usageLocation=US licenses="Microsoft 365 E3"
+@endtask
+
+@task t2 | Identity | 10 | portal
+Ava Brooks in HR has an **Office 365 E3** licence only. She now needs a managed Windows laptop. Add the **Intune Plan 1** licence to her account and keep her Office licence.
+@check portal | Ava keeps Office 365 E3 and has Intune Plan 1
+user["ava"].licenses has "Office 365 E3"
+user["ava"].licenses has "Intune Plan 1"
+@hint Office 365 E3 has no Intune. Open Ava's account and tick Intune Plan 1 in her licences, leaving Office 365 E3 ticked.
+@solution portal
+set user ava +licenses="Intune Plan 1"
+@endtask
+@end
+
+@quiz
+? You try to assign a Microsoft 365 E3 licence to a new user and the portal refuses. What do you check first?
+- The user's department
++ The user's usage location
+- The user's job title
+- Whether the user has registered for MFA
+! A licence can only be assigned once the user's usage location (country) is set.
+? Which licence does NOT include Intune?
+- Microsoft 365 E3
+- Microsoft 365 Business Premium
++ Office 365 E3
+- Enterprise Mobility + Security E3
+! Office 365 E3 covers the Office apps and services only. The other three all include Intune Plan 1.
+? A company wants Conditional Access and dynamic groups. Which part of a licence is needed for that?
+- Intune Plan 1
++ Microsoft Entra ID P1
+- Windows Enterprise E3
+- Defender for Endpoint Plan 2
+! Conditional Access and dynamic membership rules are Entra ID P1 features (P2 includes P1).
+@end
+
+## Lesson: l0102 | Groups and dynamic membership
+
+Intune never assigns anything to one person or one device at a time: you assign policies, apps and profiles to **groups**. Getting groups right is half of the job.
+
+### Two group types
+
+- A **security group** is for access and targeting: Intune assignments, Conditional Access, licences. It can hold users, devices and other groups.
+- A **Microsoft 365 group** comes with a shared mailbox, calendar, SharePoint site and Teams team. It holds users only. You can target it in Intune, but for device management you will almost always use security groups.
+
+### Three membership types
+
+- **Assigned**: you add and remove members by hand. Members can be users, devices and other groups (**nested groups**). Intune follows nesting when it works out who gets a policy.
+- **Dynamic user**: Entra ID adds and removes users by a rule on their properties.
+- **Dynamic device**: the same for devices. A dynamic group holds users or devices, never both, and a Microsoft 365 group can't be a dynamic device group. Dynamic groups need Entra ID P1.
+
+> A dynamic group's members can't be edited by hand: change the rule, or change the user's or device's properties. In a real tenant a new rule can take a while to process for a large directory; Cert Lab updates members at once.
+
+### Writing rules
+
+A rule compares a property with a value. Properties start with `user.` or `device.`, operators start with a hyphen, and text values go in double quotes:
+
+```
+(user.department -eq "Sales")
+(user.department -eq "Sales") -and (user.city -eq "Denver")
+(user.jobTitle -startsWith "Sales") -or (user.department -eq "Sales")
+-not (user.accountEnabled -eq false)
+user.city -in ["Portland","Denver"]
+(device.deviceOSType -eq "Windows") -and (device.deviceOwnership -eq "Company")
+(device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales"))
+```
+
+The operators you should recognise: `-eq`, `-ne`, `-startsWith`, `-notStartsWith`, `-contains`, `-notContains`, `-match` and `-notMatch` (regular expressions), `-in` and `-notIn` (a list in square brackets), joined with `-and`, `-or` and `-not`. Brackets group the parts. `-any` and `-all` test properties that hold several values, such as `device.devicePhysicalIds` (Autopilot uses it in unit 5).
+
+Useful device properties: `deviceOSType` (Windows, IPhone, AndroidForWork...), `deviceOSVersion`, `deviceOwnership` (Company or Personal), `enrollmentProfileName`, `deviceModel`, `deviceManufacturer`, `managementType` (MDM) and `devicePhysicalIds`.
+
+> Two traps: device ownership is written `Company` in group rules, while Intune's filters (unit 7) say `Corporate`; and a rule that mixes `user.` and `device.` properties is refused.
+
+The tenant already has two dynamic device groups: **Windows devices** and **Corporate Windows devices**. Open them under **Users and groups > Groups** and read their rules.
+
+@try
+@task t1 | Identity | 10 | portal
+Create a security group called **Denver staff** whose members are, automatically, every user whose city is **Denver**.
+@check portal | the group is a dynamic user group
+group["Denver staff"].membership == "Dynamic user"
+group["Denver staff"].type == Security
+@check portal | it holds the people in Denver and nobody else
+group["Denver staff"].members has nils
+group["Denver staff"].members has priya
+group["Denver staff"].members !has jordan
+@hint Membership type Dynamic user, rule (user.city -eq "Denver").
+@solution portal
+create group name="Denver staff" type=Security membership="Dynamic user" rule="(user.city -eq \"Denver\")"
+@endtask
+
+@task t2 | Identity | 10 | portal
+Make an assigned group called **Sales and Finance** that contains the existing groups **Sales** and **Finance** (nested), so one assignment reaches both teams.
+@check portal | the group holds both teams through nesting
+group["Sales and Finance"].membership == Assigned
+group["Sales and Finance"].members has jordan
+group["Sales and Finance"].members has sam
+@hint Membership type Assigned; add the two groups as members.
+@solution portal
+create group name="Sales and Finance" type=Security membership=Assigned members="Sales,Finance"
+@endtask
+@end
+
+@quiz
+? Which rule puts every Windows device owned by the company into a group?
+- (device.deviceOSType -eq "Windows") -and (device.deviceOwnership -eq "Corporate")
++ (device.deviceOSType -eq "Windows") -and (device.deviceOwnership -eq "Company")
+- (device.deviceOSType -eq Windows) -and (device.deviceOwnership -eq Company)
+- (user.deviceOSType -eq "Windows")
+! In membership rules ownership is "Company" or "Personal", and text values need double quotes.
+? You need a group of devices that you can target with a configuration profile. Which group can't do it?
+- A security group with assigned membership
+- A security group with dynamic device membership
++ A Microsoft 365 group with dynamic device membership
+! Microsoft 365 groups hold users only: they can't have dynamic device membership.
+? An assigned group contains the group Sales. A profile is assigned to the outer group. Does Jordan, a member of Sales, get it?
++ Yes: Intune follows nested groups
+- No: Intune ignores nested groups
+- Only if Jordan is also added directly
+! Members of a nested group count as members of the outer group for Intune assignments.
+@end
+
+## Lesson: l0103 | Device identities: joined, hybrid joined, registered
+
+A device has its own object in Microsoft Entra ID, next to the users. How it got there decides what it can do. There are three ways:
+
+- **Microsoft Entra joined**: the device belongs to the organisation and people sign in to Windows with their work account. This is the normal state for new corporate Windows 10/11 PCs (Pro, Enterprise or Education; Home can't join). You join from the out-of-box experience, from Autopilot, from a provisioning package, or from **Settings > Accounts > Access work or school > Connect > Join this device to Microsoft Entra ID**.
+- **Microsoft Entra hybrid joined**: the device is joined to an on-premises Active Directory domain, and Microsoft Entra Connect also registers it in Entra ID. People sign in with their domain account. This suits companies that still need Group Policy or on-premises resources. It is set up on the domain side (Entra Connect and the domain), not by the user.
+- **Microsoft Entra registered**: a personal device (bring your own device) where the person added a work account (**Settings > Access work or school > Connect**, or by signing in to an Office app). The person keeps signing in to Windows with their own account. Works on Windows Home, iOS and Android too.
+
+Joining and registering only create the identity. Being **managed by Intune** (enrolled) is a separate step, covered in unit 2, although for joined devices it usually happens automatically at the same time.
+
+### Seeing it on the device: dsregcmd /status
+
+On Windows, `dsregcmd /status` shows the device's join state. The lines to read are `AzureAdJoined` (Entra joined, also YES for hybrid), `DomainJoined` (on-premises domain), `WorkplaceJoined` (a registered work account) and `AzureAdPrt` (the user has a primary refresh token, which gives single sign-on). Here is RB-LT-001, an Entra joined laptop:
+
+```terminal
+PS C:\Windows\system32> dsregcmd /status
+
++----------------------------------------------------------------------+
+| Device State                                                         |
++----------------------------------------------------------------------+
+
+             AzureAdJoined : YES
+          EnterpriseJoined : NO
+              DomainJoined : NO
+               Device Name : RB-LT-001
+
++----------------------------------------------------------------------+
+| Device Details                                                       |
++----------------------------------------------------------------------+
+
+                  DeviceId : ffdcd902-5d1e-4c7b-9a2f-000036025443
+               KeyProvider : Microsoft Platform Crypto Provider
+              TpmProtected : YES
+          DeviceAuthStatus : SUCCESS
+
++----------------------------------------------------------------------+
+| Tenant Details                                                       |
++----------------------------------------------------------------------+
+
+                TenantName : Riverbend Outfitters
+                  TenantId : 6f1c2a9e-4b7d-4e21-9c3a-5d8e0f7a1b24
+                       Idp : login.windows.net
+                    MdmUrl : https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc
+                 MdmTouUrl : https://portal.manage.microsoft.com/TermsofUse.aspx
+          MdmComplianceUrl : https://portal.manage.microsoft.com/?portalAction=Compliance
+
++----------------------------------------------------------------------+
+| User State                                                           |
++----------------------------------------------------------------------+
+
+                    NgcSet : NO
+           WorkplaceJoined : NO
+             WamDefaultSet : YES
+
++----------------------------------------------------------------------+
+| SSO State                                                            |
++----------------------------------------------------------------------+
+
+                AzureAdPrt : YES
+       AzureAdPrtAuthority : https://login.microsoftonline.com/6f1c2a9e-4b7d-4e21-9c3a-5d8e0f7a1b24
+             EnterprisePrt : NO
+```
+
+RB-DT-010 is hybrid joined: both `AzureAdJoined` and `DomainJoined` say YES, and the domain is shown:
+
+```terminal
+#machine RB-DT-010
+PS C:\Windows\system32> dsregcmd /status | Select-String 'Joined|DomainName|Device Name'
+
+             AzureAdJoined : YES
+          EnterpriseJoined : NO
+              DomainJoined : YES
+                DomainName : RIVERBEND
+               Device Name : RB-DT-010.riverbend.local
+           WorkplaceJoined : NO
+```
+
+Sam's own PC at home is only registered: `AzureAdJoined` is NO and `WorkplaceJoined` (in the user part) is YES:
+
+```terminal
+#machine SAM-HOME-PC
+PS C:\Windows\system32> dsregcmd /status | Select-String 'Joined|Device Name'
+
+             AzureAdJoined : NO
+          EnterpriseJoined : NO
+              DomainJoined : NO
+               Device Name : SAM-HOME-PC
+           WorkplaceJoined : YES
+```
+
+> In the portal the device list shows the same as **Join type**: Microsoft Entra joined, Microsoft Entra hybrid joined or Microsoft Entra registered. Cert Lab's portal shortens these to Entra joined, Hybrid joined and Entra registered.
+
+@try
+@setup portal
+device RB-LT-002 join=None managed=None user=""
+@task t1 | Identity | 10 | RB-LT-002
+RB-LT-002 was reset and now has only a local account. Join it to Microsoft Entra ID as Priya (`priya`) from **Settings > Accounts > Access work or school**, then run `dsregcmd /status` on it to see the result.
+@check portal | RB-LT-002 is Entra joined with Priya as its user
+device["RB-LT-002"].join == "Entra joined"
+device["RB-LT-002"].user == priya
+@check portal | it was enrolled in Intune at the same time
+device["RB-LT-002"].managed == Intune
+@hint Use Connect > Join this device to Microsoft Entra ID (not the plain work account option, which only registers).
+@solution RB-LT-002
+#settings join priya
+dsregcmd /status
+@endtask
+@end
+
+@quiz
+? A user signs in to Windows with a personal Microsoft account and has added a work account in Settings. How is the device known to Entra ID?
+- Microsoft Entra joined
+- Microsoft Entra hybrid joined
++ Microsoft Entra registered
+! Adding a work account to a personal device registers it; the person keeps signing in with their own account.
+? On a hybrid joined PC, what does dsregcmd /status show?
+- AzureAdJoined NO, DomainJoined YES
++ AzureAdJoined YES, DomainJoined YES
+- AzureAdJoined YES, DomainJoined NO
+- WorkplaceJoined YES only
+! Hybrid joined devices are in the on-premises domain and in Entra ID, so both say YES.
+? Which edition can't be Microsoft Entra joined?
+- Windows 11 Pro
+- Windows 11 Enterprise
++ Windows 11 Home
+- Windows 11 Education
+! Home can only register a work account; joining needs Pro, Enterprise or Education.
+@end
+
+## Lesson: l0104 | Device settings and admin roles
+
+### Microsoft Entra device settings
+
+Under **Devices > Device settings** in the Microsoft Entra admin center the tenant decides, for everyone:
+
+- **Users may join devices to Microsoft Entra**: All, Selected (a group) or None. If a user outside the setting tries to join, Windows shows an error and nothing is joined. The setting is about people: it doesn't apply to hybrid joined devices or to Autopilot self-deploying mode, where no user signs in. In user-driven Autopilot, the person who signs in must be allowed to join.
+- **Users may register their devices**: whether personal devices can add a work account.
+- **Require multifactor authentication to register or join devices**: the newer way is a Conditional Access policy with the "register or join devices" user action.
+- **Maximum number of devices per user** in Entra ID (not the same as Intune's enrolment device limit in unit 2).
+- **Enable Microsoft Entra Local Administrator Password Solution (LAPS)**: this switch must be on before any Intune LAPS policy can back passwords up to Entra ID (unit 13 covers LAPS itself).
+- **Local administrator settings**: who becomes a local administrator on joined devices (the Global Administrator role, the Microsoft Entra Joined Device Local Administrator role, and optionally the user who joins the device).
+
+In Cert Lab's portal these are in **Tenant administration > Settings**, section Microsoft Entra device settings, together with Intune's own tenant settings.
+
+### Admin roles at a glance
+
+Give people the smallest role that lets them do their job (least privilege). The Entra ID roles you meet most:
+
+- **Global Administrator**: everything. Keep it for very few accounts, including an **emergency access** ("break glass") account that is excluded from Conditional Access (unit 4).
+- **Intune Administrator**: everything in Intune, without being a Global Administrator.
+- **Cloud Device Administrator**: enable, disable and delete devices in Entra ID and read BitLocker recovery keys, but not manage Intune.
+- **Helpdesk Administrator**: reset passwords for non-administrators.
+- **Security Administrator** and **Global Reader** (read everything, change nothing).
+
+Intune also has its **own** role-based access control (Help Desk Operator, Policy and Profile Manager, Application Manager, Read Only Operator, Endpoint Security Manager...), assigned with scope groups and scope tags. Unit 9 covers it.
+
+@try
+@task t1 | Identity | 10 | portal
+Riverbend wants only IT to join devices to Microsoft Entra ID by hand. Allow joining for the group **IT Admins** only, and switch on Microsoft Entra LAPS so that the LAPS policy planned for next month can work.
+@check portal | only IT Admins may join devices
+tenant.joinScope == Selected
+tenant.joinGroup == "IT Admins"
+@check portal | Microsoft Entra LAPS is on
+tenant.lapsEnabled == Yes
+@hint Tenant administration > Settings, section Microsoft Entra device settings.
+@solution portal
+tenant joinScope=Selected joinGroup="IT Admins" lapsEnabled=Yes
+@endtask
+
+@task t2 | Identity | 10 | portal
+Chen on the help desk must be able to disable lost devices in Microsoft Entra ID and read their BitLocker recovery keys, without becoming an Intune or Global Administrator. Give Chen the right Entra role (keep his current role).
+@check portal | Chen has the Cloud Device Administrator role and no new admin role
+user["chen"].roles has "Cloud Device Administrator"
+user["chen"].roles has "Helpdesk Administrator"
+user["chen"].roles !has "Global Administrator"
+user["chen"].roles !has "Intune Administrator"
+@hint Cloud Device Administrator is the role for device objects in Entra ID.
+@solution portal
+set user chen +roles="Cloud Device Administrator"
+@endtask
+@end
+
+@quiz
+? An Intune LAPS policy reports that Microsoft Entra LAPS isn't enabled. Where do you fix it?
+- In the LAPS policy's settings
++ In Microsoft Entra ID's device settings (Enable Microsoft Entra LAPS)
+- In the Windows device's local security policy
+! The tenant-wide switch in the Entra device settings must be on before passwords can be backed up to Entra ID.
+? Which role lets someone delete device objects and read BitLocker keys without managing Intune?
+- Helpdesk Administrator
++ Cloud Device Administrator
+- Global Reader
+- Intune Administrator
+! Cloud Device Administrator covers device objects in Entra ID, including BitLocker recovery keys.
+? "Users may join devices to Microsoft Entra" is set to Selected with the group IT Admins. Jordan, in Sales, tries to join a new PC from Settings. What happens?
+- The PC joins but isn't enrolled
++ Windows refuses the join
+- The PC is registered instead
+! Only the selected users may join devices by hand; others get an error.
+@end
+

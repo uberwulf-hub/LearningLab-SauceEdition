@@ -1,0 +1,19 @@
+The attacker reached you through the website. Everything they did is in the web log and on disk.
+
+1. Trace it in the access log. /var/log/httpd/access_log records every request. One address ({{ATKIP}})
+   POSTs to an upload page, then requests /uploads/{{SHELL}}.php with ?cmd=... again and again. A real
+   visitor never calls the same .php with commands - that is a web shell being driven.
+
+2. Find the dropped file. ls -lat /var/www/html/uploads shows it as the newest file (or find it with
+   find /var/www -name '*.php' -newermt '2 hours ago'). Read it: the flag is in a comment inside.
+
+3. The service that keeps them in. systemctl list-units --type=service and ls /etc/systemd/system/*.service
+   show a unit you did not install ({{SVC}}). It is enabled and running so it survives reboots and can
+   beacon out.
+
+4. Pull it all out. rm the web shell; systemctl disable --now {{SVC}}; remove its unit file and run
+   systemctl daemon-reload. Do it before the service beacons out and stages more tools.
+
+For real: an upload form that doesn't check file types lets an attacker drop a script the web server will
+run. Fix the upload (allow only known types, store outside the web root, never execute uploads), and watch
+for new systemd units and files you did not create.

@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the CIM sessions opened in this PowerShell.
+DESCRIPTION:
+Shows the sessions New-CimSession created, with their Id, Name, ComputerName and Protocol.
+PARAMETER ComputerName:
+Only sessions to these computers. Position 0.
+PARAMETER Id:
+Only sessions with these ids.
+PARAMETER Name:
+Only sessions with these names.
+EXAMPLE: Get-CimSession
+EXAMPLE: Get-CimSession -ComputerName WIN-SRV1 | Remove-CimSession
+RELATED: New-CimSession, Remove-CimSession

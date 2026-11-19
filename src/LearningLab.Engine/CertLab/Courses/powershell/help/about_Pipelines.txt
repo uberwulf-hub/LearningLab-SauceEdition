@@ -1,0 +1,59 @@
+TOPIC
+    about_Pipelines
+
+SHORT DESCRIPTION
+    How commands pass objects to each other with the | operator.
+
+LONG DESCRIPTION
+    A pipeline is a chain of commands joined by the pipe character |. Each
+    command sends its output, one object at a time, to the next command,
+    and the last command's output is shown on the screen.
+
+        Get-Service | Where-Object Status -eq Stopped | Sort-Object Name
+
+    What travels down the pipeline are objects, not text. That is why the
+    next command can read properties such as Status or Name without
+    cutting text into columns.
+
+  Streaming
+    Objects move through the pipeline one by one: the first object can reach
+    the end before the first command has produced the second. Some commands
+    must see everything before they can output anything (Sort-Object,
+    Group-Object, Measure-Object), so they collect their input first.
+
+  How a command takes pipeline input
+    A cmdlet decides, for each incoming object, which of its parameters
+    receives it. PowerShell tries, in this order:
+
+    1. ByValue: a parameter whose type matches the object takes the whole
+       object (Get-Service | Stop-Service: the service goes to -InputObject).
+    2. ByPropertyName: a parameter takes the value of the object's property
+       with the same name (or one of the parameter's aliases), for example an
+       object with a Name property piped to Get-Service.
+    3. ByValue again, now converting the object to the parameter's type
+       (a string piped to Get-Service becomes its -Name).
+
+    Get-Help COMMAND -Full shows "Accept pipeline input?" for each
+    parameter. When nothing fits, the command reports that "the input
+    object cannot be bound to any parameters".
+
+  Pipeline variables
+    Inside ForEach-Object and Where-Object script blocks, $_ (or $PSItem)
+    is the current object. The common parameter -PipelineVariable keeps a
+    command's current object in a variable of your choice for the commands
+    after it.
+
+  Arrays in the pipeline
+    A collection sent down the pipeline is unrolled: its items travel one
+    by one. Write ,$list (the unary comma) or Write-Output -NoEnumerate
+    $list to send the collection as a single object.
+
+  Long pipelines
+    A line may end with | and continue on the next line, which keeps long
+    pipelines readable in scripts.
+
+SEE ALSO
+    about_Objects
+    ForEach-Object
+    Where-Object
+    about_CommonParameters

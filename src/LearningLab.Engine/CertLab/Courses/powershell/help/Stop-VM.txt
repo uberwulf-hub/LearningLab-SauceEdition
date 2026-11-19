@@ -1,0 +1,20 @@
+SYNOPSIS: Shuts down, turns off or saves a virtual machine.
+DESCRIPTION:
+By default Stop-VM asks the guest operating system to shut down cleanly, through the Shutdown integration service. If that service isn't running in the guest, use another way.
+
+-TurnOff cuts the power at once, like pulling the plug: anything unsaved inside is lost. -Save stores the memory on disk, like Save-VM. -Force shuts down without asking even when the guest has programs open.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER TurnOff:
+Turns the VM off without a shutdown.
+PARAMETER Save:
+Saves the VM's state instead.
+PARAMETER Force:
+Doesn't ask before shutting down.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Stop-VM -Name APP-OLD -ComputerName HV1
+A clean shutdown of APP-OLD.
+EXAMPLE: Stop-VM -Name WEB-TEST -TurnOff
+Turns off a VM that has stopped responding.
+RELATED: Start-VM, Save-VM, Suspend-VM, Get-VMIntegrationService

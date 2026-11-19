@@ -1,0 +1,22 @@
+SYNOPSIS: Writes a non-terminating error.
+DESCRIPTION:
+Write-Error reports a problem the way a cmdlet does: the error is shown (or not, depending on -ErrorAction and $ErrorActionPreference), added to $Error, and the script goes on. Inside a function the error is shown with the function's name.
+
+Use throw instead when the script cannot go on at all.
+PARAMETER Message:
+The error text (positional).
+PARAMETER Category:
+An error category such as ObjectNotFound, InvalidArgument or InvalidOperation.
+PARAMETER ErrorId:
+Your own identifier for the error (shown in FullyQualifiedErrorId).
+PARAMETER TargetObject:
+What you were working on when it failed.
+PARAMETER Exception:
+An exception object to report instead of a message.
+EXAMPLE: function Test-Port([int]$Port) { if ($Port -gt 65535) { Write-Error "Port $Port is out of range"; return }; "Port $Port is fine" }
+Reports a bad port and returns nothing for it.
+EXAMPLE: Write-Error -Message 'Disk almost full' -Category LimitsExceeded -ErrorId DiskFull
+An error with its own category and identifier.
+NOTES:
+With -ErrorAction Stop (or $ErrorActionPreference = 'Stop') the error becomes terminating and try / catch can catch it.
+RELATED: about_Throw, about_Try_Catch_Finally, Write-Warning

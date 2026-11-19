@@ -1,0 +1,20 @@
+SYNOPSIS: Removes the "downloaded from the internet" mark from files you trust.
+DESCRIPTION:
+When a browser or mail program saves a file, Windows adds a hidden note to it (the Zone.Identifier stream) that says where it came from. Under the RemoteSigned policy, a script with that note must be signed before it can run.
+
+Unblock-File removes the note, so the file is treated like one you made yourself. Do this only after reading the script and deciding you trust it.
+PARAMETER Path:
+The file or files to unblock. Wildcards work, for example *.ps1.
+PARAMETER LiteralPath:
+A path used exactly as written, with no wildcards. You can pipe in files from Get-ChildItem.
+PARAMETER WhatIf:
+Shows which files would be unblocked without changing them.
+EXAMPLE: Unblock-File -Path C:\Users\Administrator\Downloads\Get-Inventory.ps1
+On WIN-SRV1 (RemoteSigned), the downloaded script refuses to run until it is unblocked; after this it runs.
+EXAMPLE: Get-ChildItem C:\Users\Administrator\Downloads\*.ps1 | Unblock-File
+Unblocks every script in the Downloads folder.
+NOTES:
+Unblock-File does not change the execution policy: on WIN-CL1 (Restricted), no script runs, blocked or not.
+Signing is the better choice for scripts you share: see Set-AuthenticodeSignature.
+In PowerShell 7, Unblock-File also works on macOS, where it removes the quarantine mark.
+RELATED: Get-ExecutionPolicy, Set-ExecutionPolicy, Get-AuthenticodeSignature, about_Execution_Policies

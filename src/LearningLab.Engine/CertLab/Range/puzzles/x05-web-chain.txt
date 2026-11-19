@@ -1,0 +1,63 @@
+title: Follow the thread
+level: Expert
+kind: Web
+topic: Web
+teaser: source to login to the records
+points: 100
+order: 49
+packages: httpd
+answer: flag
+var: HID = num:1-50
+var: ADMIN = pick:admin|root|manager
+var: PWORD = word
+
+@intro
+A web site is running at http://localhost/. Nothing is handed to you directly - you have
+to follow the trail: the home page's source hints at an admin page, the admin login's
+password is sitting in a comment, and the page it unlocks lists records where one holds
+the flag. Chain it together.
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/", "kind": "page", "title": "Home",
+    "body": "<h1>Harbor Lane</h1>\n<!-- staff: the admin console is at /console (login {{ADMIN}}) -->\n<p>Welcome.</p>" },
+  { "path": "/console", "kind": "login", "title": "Admin console",
+    "logins": [ ["{{ADMIN}}", "{{PWORD}}"] ], "fail": "Wrong details.",
+    "body": "<h1>Admin console</h1>\n<!-- reminder: default password is {{PWORD}} -->\n<form method=\"post\" action=\"/console\"><input name=\"user\"><input name=\"pass\" type=\"password\"><button>Sign in</button></form>",
+    "template": "<h1>Admin console</h1><p>Records: /records?id=1 .. the confidential one is id={{HID}}</p>" },
+  { "path": "/records", "kind": "idor", "param": "id", "title": "Records",
+    "records": [ ["1","Record 1","routine"], ["{{HID}}","CONFIDENTIAL","flag: {{FLAG}}"], ["7","Record 7","routine"] ],
+    "want": "{{HID}}" }
+]
+
+@solution
+curl -s http://localhost/
+curl -s http://localhost/console
+curl -s -d "user={{ADMIN}}&pass={{PWORD}}" http://localhost/console
+curl -s "http://localhost/records?id={{HID}}"
+
+@walkthrough
+Each page points at the next:
+
+1. The home page source (curl -s http://localhost/) has a comment naming an admin page,
+   /console, and the admin user {{ADMIN}}.
+2. The /console login page's source (curl -s http://localhost/console) leaves the default
+   password {{PWORD}} in a comment. Sign in:
+   curl -s -d "user={{ADMIN}}&pass={{PWORD}}" http://localhost/console
+3. That page lists records by id and names the confidential one ({{HID}}). Request it:
+   curl -s "http://localhost/records?id={{HID}}"
+   and read the flag.
+
+The lesson: three small mistakes - secrets in page source, a default password, and no
+check that a record is yours - chain into full access. Each on its own is worth fixing.
+
+@hint 15
+Start with the home page's raw source: curl -s http://localhost/ . A comment names an
+admin page and the admin user.
+
+@hint 25
+The /console page's source leaks the password in a comment. Log in with curl -s -d
+"user=...&pass=..." then open the confidential record by its id.

@@ -1,0 +1,41 @@
+# Deck: threats | Threats, attacks and mitigations | Threats, vulnerabilities and mitigations
+Threat actor with the most resources and patience, often after espionage :: Nation-state (often called an APT)
+Attacker who uses ready-made tools with little skill :: Unskilled attacker (formerly script kiddie)
+Attacker driven by a political or social cause :: Hacktivist
+Threat actor mainly after money, run like a business :: Organized crime
+Employees setting up their own cloud apps without IT's approval :: Shadow IT
+Phishing by phone call :: Vishing (voice phishing)
+Phishing by text message :: Smishing (SMS phishing)
+Phishing aimed at one chosen person, or at an executive :: Spear phishing; whaling when the target is a senior executive
+Infecting a website the target group often visits :: Watering hole attack
+Registering exampel.com to catch people who mistype example.com :: Typosquatting
+Inventing a believable story to get someone to hand over information :: Pretexting
+Spreading false information on purpose vs by mistake :: Disinformation is deliberate; misinformation is shared without meaning harm
+Malware that copies itself across the network without anyone opening it :: Worm
+Malware hidden inside software that looks useful :: Trojan
+Malware that hides deep in the OS, often in the kernel, to stay unseen :: Rootkit
+Code that waits for a date or event, such as an account being deleted, then does damage :: Logic bomb
+Unwanted preinstalled software that wastes space and may add risk :: Bloatware
+Malware that encrypts files and demands payment :: Ransomware (main defence: offline, tested backups)
+Malware that never writes a file and lives in memory or scripts :: Fileless malware
+Program overwrites memory past the end of its buffer :: Buffer overflow (defences: bounds checking, ASLR, DEP)
+Two operations race, and an attacker changes a file between the check and the use :: Race condition (TOC/TOU)
+Input such as ' OR 1=1 -- in a login form :: SQL injection; stop it with parameterized queries
+A script in a comment runs in every visitor's browser :: Stored XSS; stop it with output encoding and input validation
+A request with ../../../etc/passwd in the path :: Directory traversal; validate and normalize paths
+A server is tricked into fetching http://169.254.169.254/ for the attacker :: SSRF (server-side request forgery)
+A captured sign-in is sent again later to gain access :: Replay attack; stop it with timestamps, nonces and session tokens
+Small spoofed requests make servers send huge replies to the victim :: Amplified (reflected) DDoS, for example DNS or NTP amplification
+Fake DNS answers put into a resolver's cache :: DNS cache poisoning; DNSSEC helps
+Attacker sits between two parties and reads or changes their traffic :: On-path attack (formerly man-in-the-middle)
+Forcing a connection to use an older, weaker protocol version :: Downgrade attack
+Two different inputs that give the same hash :: Collision; the birthday attack finds collisions faster than brute force
+One common password tried against many accounts :: Password spraying (it avoids lockouts)
+Precomputed tables of hashes to reverse unsalted passwords :: Rainbow tables; salting defeats them
+Copying a badge's radio signal to make a duplicate :: RFID cloning
+A user signs in from Lisbon and from Seoul 20 minutes later :: Impossible travel (an indicator of compromise)
+The same account has active sessions on two computers at once :: Concurrent session usage
+Logs from the night of the attack are missing :: Missing logs, a sign an attacker covered their tracks
+Phone jailbroken or apps loaded from outside the official store :: Jailbreaking / side loading; MDM can detect and block both
+Attack that uses a flaw the vendor doesn't know about or hasn't fixed yet :: Zero-day
+Escaping from a virtual machine to reach the host or other VMs :: VM escape

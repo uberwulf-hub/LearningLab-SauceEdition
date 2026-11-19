@@ -1,0 +1,24 @@
+SYNOPSIS: Formats a volume with a file system.
+DESCRIPTION:
+Format-Volume puts a file system on a partition and erases what was there. NTFS is the general choice (permissions, quotas, deduplication, BitLocker). ReFS resists corruption and is common for Hyper-V and backup volumes, but has no file compression or quotas and can't be the boot volume. FAT32 and exFAT are for removable drives.
+
+The default is a quick format; -Full also checks the disk for bad sectors and takes much longer. -AllocationUnitSize 65536 (64 KB) is often used for Hyper-V and database volumes.
+PARAMETER DriveLetter:
+The volume to format. Position 0.
+PARAMETER Partition:
+A partition piped from New-Partition or Get-Partition.
+PARAMETER FileSystem:
+NTFS, ReFS, FAT32 or exFAT.
+PARAMETER NewFileSystemLabel:
+The volume's label.
+PARAMETER AllocationUnitSize:
+The cluster size in bytes.
+PARAMETER Full:
+A full format instead of a quick one.
+PARAMETER Force:
+Formats without asking.
+EXAMPLE: Format-Volume -DriveLetter F -FileSystem ReFS -NewFileSystemLabel VMs -AllocationUnitSize 65536
+F: becomes a ReFS volume for virtual machines.
+EXAMPLE: Get-Volume -DriveLetter F
+Checks the file system and free space.
+RELATED: New-Partition, Get-Volume, New-Volume, Initialize-Disk

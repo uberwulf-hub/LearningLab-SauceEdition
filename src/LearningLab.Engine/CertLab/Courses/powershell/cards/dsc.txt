@@ -1,0 +1,26 @@
+# Deck: dsc | Desired State Configuration | DSC
+What does DSC describe: steps, or an end state? :: the end state; the LCM works out what to change
+What is the LCM? :: the Local Configuration Manager, the part of Windows that applies and checks configurations
+Compile the configuration WebBasics into C:\DscConfigs\WebBasics :: `WebBasics -OutputPath C:\DscConfigs\WebBasics`
+What file does compiling write for node WIN-SRV1? :: WIN-SRV1.mof
+Does running a configuration's name change the computer? :: no, it only writes the MOF files
+Apply the MOF files in C:\DscConfigs\WebBasics and wait :: `Start-DscConfiguration -Path C:\DscConfigs\WebBasics -Wait -Verbose`
+What does Start-DscConfiguration do without -Wait? :: starts a background job
+Is the computer still as configured? :: `Test-DscConfiguration`
+Which resources drifted? :: `Test-DscConfiguration -Detailed`
+Apply the current configuration again :: `Start-DscConfiguration -UseExisting -Wait`
+Show the current values of the configured resources :: `Get-DscConfiguration`
+When did the last run happen, and did it work? :: `Get-DscConfigurationStatus`
+Show the LCM's settings :: `Get-DscLocalConfigurationManager`
+List the DSC resources :: `Get-DscResource`
+Show the properties the Registry resource takes :: `Get-DscResource Registry -Syntax`
+Make one resource wait for another :: DependsOn = '[File]SiteFolder'
+What does the LCM run before Set? :: Test; Set runs only when Test says the resource is not in the desired state
+ConfigurationMode ApplyAndMonitor :: applies once, then only reports drift (the default)
+ConfigurationMode ApplyAndAutoCorrect :: repairs drift by itself every ConfigurationModeFrequencyMins
+RefreshMode PUSH or PULL? :: PUSH: configurations arrive with Start-DscConfiguration; PULL: the LCM fetches them from a server
+In configuration data, which entry gives values to every node? :: the one with NodeName = '*'
+Inside Node $AllNodes.NodeName { }, the current node's data :: $Node
+The three script blocks of the Script resource :: GetScript, SetScript, TestScript (TestScript returns $true or $false)
+Make sure the Spooler service runs and starts automatically :: Service S { Name = 'Spooler'; State = 'Running'; StartupType = 'Automatic' }
+Is this LCM part of PowerShell 7? :: no; DSC in 5.1 is part of Windows, PowerShell 7 uses the separate DSC 3

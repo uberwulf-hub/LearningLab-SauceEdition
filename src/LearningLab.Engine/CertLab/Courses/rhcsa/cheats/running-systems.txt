@@ -1,0 +1,59 @@
+# Sheet: running-systems | Running systems | Running systems
+## Boot, reboot, shut down
+systemctl reboot :: reboot cleanly (also reboot, shutdown -r now)
+systemctl poweroff :: power off cleanly (also poweroff, shutdown -h now)
+shutdown -r +10 :: reboot in 10 minutes; shutdown -c cancels
+uptime :: how long it runs, and the load average
+who -b :: when the machine last booted
+
+## Targets
+systemctl get-default :: the target used at boot
+systemctl set-default multi-user.target :: boot to text mode from now on (graphical.target: desktop)
+systemctl isolate rescue.target :: switch the running system now (rescue: root shell, no network)
+systemctl default :: go back to the default target
+GRUB menu: e :: edit the highlighted entry (the key alone, no Enter); any key first stops the countdown
+GRUB editor: arrows, End, type, Ctrl+X :: go to the line that starts with linux, End (Ctrl+E), add words, Ctrl+X (F10) boots; Esc throws the change away
+GRUB: systemd.unit=emergency.target :: add to the linux line (e, then Ctrl+X) to boot into that target once
+
+## Reset the root password
+GRUB: rd.break :: add to the linux line: the boot stops in the initramfs
+mount -o remount,rw /sysroot :: make the real root file system writable
+chroot /sysroot :: work inside the real system
+passwd root :: set the new password
+touch /.autorelabel :: relabel at the next boot (the new /etc/shadow needs its SELinux label)
+exit; exit :: leave the chroot, then the initramfs shell: the boot continues
+
+## Processes
+ps aux :: every process with user, CPU, memory and command
+ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head :: the biggest CPU users first (-%mem: memory)
+top :: live view (P CPU, M memory, k kill, r renice, q quit)
+pgrep -u USER -l NAME :: find PIDs by user and name
+kill PID :: SIGTERM (15): ask to stop
+kill -9 PID :: SIGKILL: stop now
+pkill -u USER NAME :: signal by user and name (killall NAME: by exact name)
+nice -n 10 CMD :: start CMD with nice value 10 (-20 favoured ... 19 polite)
+renice -n 5 -p PID :: change a running process (users may only raise it)
+
+## Tuning profiles
+tuned-adm active :: the profile in use
+tuned-adm recommend :: the profile tuned suggests
+tuned-adm profile NAME :: switch (kept across reboots)
+tuned-adm list :: all profiles
+
+## Services and copying
+systemctl status NAME :: state, PID and the last log lines
+systemctl enable --now NAME :: start now and at every boot (disable --now: the opposite)
+systemctl is-active NAME :: one word: active or inactive (is-enabled: enabled or disabled)
+scp FILE USER@HOST:/path/ :: copy to another machine (-r for folders)
+scp USER@HOST:/path/FILE . :: copy from another machine
+
+## Logs and the journal
+/var/log/messages :: most system messages (rsyslog)
+/var/log/secure :: logins, ssh, su and sudo
+journalctl -u NAME :: messages of one unit
+journalctl -p err :: priority err and more serious
+journalctl -b -1 :: the previous boot (-b alone: this boot)
+journalctl --since "2026-03-02 09:00" --until "10:00" :: a time window
+journalctl -f :: follow new messages
+mkdir -p /var/log/journal :: make the journal persistent (or Storage=persistent in journald.conf)
+logger -p local3.info -t TAG "text" :: write a message to the log

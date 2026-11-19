@@ -1,0 +1,91 @@
+NAME
+       findmnt - list mounted file systems, or check /etc/fstab
+
+SYNOPSIS
+       findmnt [OPTION...] [MOUNTPOINT | DEVICE]
+       findmnt -s
+       findmnt --verify
+
+DESCRIPTION
+       findmnt shows the mounted file systems as a tree: each mount point,
+       its source (device, LV, NFS export), the file system type and the
+       mount options. Give a mount point or a device to see just that one.
+
+           TARGET  SOURCE                 FSTYPE OPTIONS
+           /data   /dev/mapper/vgdata-lv1 xfs    rw,relatime,seclabel,attr2,...
+
+       It exits with status 1 when nothing matches, so findmnt /data is a
+       good test in scripts and checks that something is mounted there.
+
+       findmnt --verify reads /etc/fstab and reports mistakes (a device or
+       UUID that does not exist, a missing mount point, an unknown type)
+       without mounting anything. Run it after every fstab change, before you
+       reboot: a broken fstab line can stop the machine from booting.
+
+OPTIONS
+       -s, --fstab
+              List the entries of /etc/fstab instead of what is mounted.
+
+       --verify
+              Check /etc/fstab. With -v, also show the entries that are fine.
+
+       -t TYPE, --types TYPE
+              Only file systems of these types (xfs,ext4,nfs4...).
+
+       -S DEVICE, --source DEVICE
+              Only mounts of this source.
+
+       -T PATH, --target PATH
+              The file system that holds PATH.
+
+       -M DIR, --mountpoint DIR
+              Only this mount point.
+
+       -o LIST, --output LIST
+              The columns to print: TARGET, SOURCE, FSTYPE, OPTIONS, UUID,
+              LABEL, SIZE, USED, AVAIL, USE%.
+
+       -n, --noheadings
+              No header line.
+
+       -l, --list
+              A list instead of a tree.
+
+       -r, --raw
+              Raw output, columns separated by single spaces.
+
+       -D, --df
+              Sizes like df.
+
+       -f, --first-only
+              Print only the first match.
+
+       -k, --kernel
+              Read the kernel's list (the default).
+
+       -m, --mtab
+              Read /etc/mtab.
+
+       --real
+              Only real file systems (no proc, sysfs, cgroup...).
+
+EXAMPLES
+       Is something mounted on /data, and what?
+
+           findmnt /data
+
+       Only the source and type, for a script:
+
+           findmnt -n -o SOURCE,FSTYPE /data
+
+       All NFS mounts:
+
+           findmnt -t nfs4
+
+       Check /etc/fstab, then mount everything in it:
+
+           findmnt --verify
+           mount -a
+
+SEE ALSO
+       mount(8), umount(8), fstab(5), lsblk(8), df(1)

@@ -1,0 +1,16 @@
+SYNOPSIS: Shows the DHCP options (gateway, DNS servers, domain name...) a server hands out.
+DESCRIPTION:
+DHCP options are the extra settings clients get with their address. The common ones: 3 Router (default gateway), 6 DNS Servers, 15 DNS Domain Name, 44 WINS servers.
+
+Options can be set at three levels: server (every scope), scope, and reservation. The most specific one wins: a scope option beats a server option. Without -ScopeId this command shows the server-level options; with it, the options of that scope.
+PARAMETER ScopeId:
+Shows the options of this scope. Position 0.
+PARAMETER OptionId:
+Shows only these option numbers.
+PARAMETER All:
+Shows every option, including vendor and user class ones.
+EXAMPLE: Get-DhcpServerv4OptionValue -ScopeId 10.10.0.0 -ComputerName SRV1
+The HQ scope gives 10.10.0.1 as router, DC1 and DC2 as DNS servers and corp.example as domain.
+EXAMPLE: Get-DhcpServerv4OptionValue -ComputerName SRV1
+The server-level options, used by scopes that don't set their own.
+RELATED: Set-DhcpServerv4OptionValue, Get-DhcpServerv4Scope, Get-DhcpServerv4Reservation

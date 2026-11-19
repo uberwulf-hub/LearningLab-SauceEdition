@@ -1,0 +1,9 @@
+SYNOPSIS: Enables local user accounts.
+DESCRIPTION:
+An enabled account can sign in. Windows logs event 4722.
+PARAMETER Name:
+The users. Position 0, takes pipeline input.
+PARAMETER InputObject:
+LocalUser objects.
+EXAMPLE: Enable-LocalUser -Name alice
+RELATED: Disable-LocalUser

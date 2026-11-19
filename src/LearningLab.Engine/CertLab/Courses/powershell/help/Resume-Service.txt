@@ -1,0 +1,16 @@
+SYNOPSIS: Resumes a paused service.
+DESCRIPTION:
+Resume-Service continues a service that Suspend-Service paused. A service that is not paused is left as it is.
+PARAMETER Name:
+The services to resume. Takes pipeline input.
+PARAMETER DisplayName:
+The services to resume, by display name.
+PARAMETER InputObject:
+Service objects from the pipeline.
+PARAMETER PassThru:
+Outputs the resumed service.
+EXAMPLE: Resume-Service -Name LanmanServer
+Resumes the Server service.
+EXAMPLE: Get-Service | Where-Object Status -eq Paused | Resume-Service
+Resumes every paused service.
+RELATED: Suspend-Service, Start-Service

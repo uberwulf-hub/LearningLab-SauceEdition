@@ -1,0 +1,59 @@
+TOPIC
+    about_Comparison_Operators
+
+SHORT DESCRIPTION
+    The operators that compare values and find text.
+
+LONG DESCRIPTION
+    Comparison operators start with a dash. They ignore upper and lower
+    case; put a c in front for a case-sensitive version (-ceq, -clike,
+    -cmatch) or an i to say explicitly that case is ignored.
+
+    Equality
+        -eq   equal                 -ne   not equal
+        -gt   greater than          -ge   greater than or equal
+        -lt   less than             -le   less than or equal
+
+    Matching
+        -like, -notlike     wildcards: * any text, ? one character,
+                            [abc] one of these, [a-z] a range
+        -match, -notmatch   regular expressions; a successful -match on a
+                            single value fills $Matches
+
+    Containment
+        -contains, -notcontains   is the value in the collection on the left?
+        -in, -notin               is the value on the left in the collection?
+
+    Replacement
+        -replace            replaces what a regular expression finds:
+                            'a.b' -replace '\.', '-' gives a-b. In the
+                            replacement, $1 and $2 are the groups (use single
+                            quotes so PowerShell does not expand them).
+
+    Type
+        -is, -isnot         is the value of this type? 42 -is [int]
+
+  The left side decides
+    The value on the right is converted to the type of the value on the
+    left: '10' -eq 10 is True, and 10 -eq '10.0' is True as well.
+
+  A collection on the left filters
+    With an array on the left, -eq, -ne, -gt, -like, -match and their
+    friends return the items that match instead of True or False:
+
+        1, 2, 3, 2 -eq 2      gives 2 and 2
+        'a', 'b' -like 'a*'   gives a
+
+    That is why a test for $null should put $null on the left:
+    $null -eq $x answers the question even when $x is an array.
+
+  $Matches
+    After 'id=42' -match 'id=(\d+)', $Matches[0] is the whole match (id=42)
+    and $Matches[1] the first group (42). Named groups (?<name>...) can be
+    read as $Matches.name.
+
+SEE ALSO
+    about_Operators
+    about_Split
+    about_Join
+    Where-Object

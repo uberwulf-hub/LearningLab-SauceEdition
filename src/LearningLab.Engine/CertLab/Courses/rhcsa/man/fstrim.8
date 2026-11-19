@@ -1,0 +1,24 @@
+NAME
+       fstrim - tell the storage which blocks of a file system are unused
+
+SYNOPSIS
+       fstrim [-a] [-v] [MOUNTPOINT]
+
+DESCRIPTION
+       On SSDs and thin-provisioned storage it helps to tell the device which
+       blocks hold no data any more, so it can reuse them. fstrim does that
+       for a mounted file system. RHEL has a weekly fstrim.timer that can do
+       it for every file system (systemctl enable --now fstrim.timer).
+
+OPTIONS
+       -a, --all
+              Trim every mounted file system that supports it.
+
+       -v, --verbose
+              Print how much was trimmed.
+
+EXAMPLES
+           fstrim -v /
+
+SEE ALSO
+       mount(8), systemctl(1)

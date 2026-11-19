@@ -1,0 +1,13 @@
+SYNOPSIS: Turns off a user, computer or service account.
+DESCRIPTION:
+Disable-ADAccount sets the "account is disabled" flag. The account keeps its SID, groups and permissions but can't sign in. It's the usual first step when someone leaves: disable now, delete later.
+Sessions that are already signed in keep working until their Kerberos tickets run out.
+PARAMETER Identity:
+The account: a user, a computer (CL1$) or a service account. Position 0, and takes pipeline input.
+PARAMETER PassThru:
+Returns the account after the change.
+EXAMPLE: Disable-ADAccount dpatel
+Turns off Dev Patel's account.
+EXAMPLE: Get-ADUser -Filter "Department -eq 'HR'" | Disable-ADAccount -WhatIf
+Shows which HR accounts would be disabled, without changing anything.
+RELATED: Enable-ADAccount, Search-ADAccount, Remove-ADUser

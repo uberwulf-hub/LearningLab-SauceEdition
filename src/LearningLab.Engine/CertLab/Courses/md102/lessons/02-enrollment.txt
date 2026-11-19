@@ -1,0 +1,256 @@
+# Unit: u02 | 2. Enrolling devices in Intune | Enrollment
+
+A device in Microsoft Entra ID is known; a device **enrolled** in Intune is managed: it checks in, receives policies and apps, reports its compliance and accepts remote actions. This unit covers how devices get enrolled: automatic enrolment and the MDM user scope, the different ways to enrol a Windows PC, corporate and personal devices, the enrolment restrictions that decide who may enrol what, and what you need to know about enrolling iPhones, iPads and Android phones.
+
+## Lesson: l0201 | Automatic enrolment and the MDM user scope
+
+For Windows, the simplest and most common way to enrol is **automatic enrolment**: when a user joins a device to Microsoft Entra ID (or Autopilot does it for them), Windows enrols it into Intune at the same time. Two things must be true:
+
+- The user is in the **MDM user scope**: None, Some (a group) or All. In the real Intune admin center it is under **Devices > Enrollment > Windows > Automatic Enrollment** (Entra ID shows the same setting under **Mobility**). Automatic enrolment also needs Entra ID P1. In Cert Lab it is in **Tenant administration > Settings**, section Automatic enrolment.
+- The user has a **licence that includes Intune** (unit 1). Without one, enrolment fails.
+
+There is a second scope next to it, the **MAM user scope**, for app protection without enrolment (unit 11). If a user is in both, it depends on the device: on a corporate device (joined to Entra ID) the MDM scope wins and the device enrols; on a personal device (a work account added) the MAM scope wins and the device is **not** enrolled. So keep users who should enrol personal PCs out of the MAM scope.
+
+> If the MDM user scope is None, a device can still be joined to Entra ID, but it ends up joined and **not** managed. That is a classic exam scenario: "devices join but don't appear in Intune".
+
+Riverbend's tenant enrols everyone. Here is the Intune Management Extension (the agent that runs Win32 apps and scripts) on an enrolled laptop:
+
+```terminal
+PS C:\Windows\system32> Get-Service IntuneManagementExtension
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  IntuneManagemen... Microsoft Intune Management Extension
+```
+
+@try
+@setup portal
+tenant mdmScope=None
+device RB-LT-002 join=None managed=None user=""
+@task t1 | Enrollment | 10 | portal
+Someone set the MDM user scope to **None**, so new laptops join Entra ID but never reach Intune. Turn automatic enrolment on for the **Sales** group only (a pilot), then join RB-LT-002 to Microsoft Entra ID as Priya (`priya`, in Sales) and check that it is enrolled.
+@check portal | automatic enrolment covers Sales
+tenant.mdmScope == Some
+tenant.mdmGroup == Sales
+@check portal | RB-LT-002 is joined and managed by Intune
+device["RB-LT-002"].join == "Entra joined"
+device["RB-LT-002"].managed == Intune
+@hint Set the MDM user scope first; a device joined while the scope is None stays unmanaged.
+@solution portal
+tenant mdmScope=Some mdmGroup=Sales
+@solution RB-LT-002
+#settings join priya
+@endtask
+@end
+
+@quiz
+? Users can join devices to Microsoft Entra ID, but the devices never show up in Intune. What is the most likely cause?
+- The users have no MFA method
++ The MDM user scope doesn't include the users
+- The devices have no TPM
+- Conditional Access blocks the devices
+! Automatic enrolment happens only for users in the MDM user scope; otherwise the device is joined but not enrolled.
+? Which two things does automatic enrolment need for a user? (Pick the best answer.)
+- An Entra ID P2 licence and a Global Administrator role
++ A place in the MDM user scope and a licence that includes Intune
+- A personal device and the Company Portal app
+! The scope decides who is enrolled; the Intune licence allows it.
+? What are the three choices for the MDM user scope?
++ None, Some, All
+- Off, Pilot, On
+- Users, Devices, Both
+! Some takes one group.
+@end
+
+## Lesson: l0202 | Ways to enrol a Windows PC
+
+There are several ways to get a Windows device into Intune. Know when each one is used:
+
+- **Microsoft Entra join** in the out-of-box experience (OOBE) or from **Settings > Accounts > Access work or school > Connect > Join this device to Microsoft Entra ID**, with automatic enrolment. Good for small numbers of corporate PCs.
+- **Windows Autopilot** (unit 5): the device's hardware hash is registered first, then the OOBE is customised and the device joins and enrols on its own. The standard for new corporate PCs.
+- **Enroll only in device management** (Settings > Access work or school): the device is managed by Intune but not joined to Entra ID; the person keeps their local account. Used for some personal devices and special cases.
+- **Adding a work account** (Connect, then sign in): registers a personal device; with the right settings it can also enrol it ("bring your own device").
+- **Group Policy** for **hybrid joined** devices: a domain policy, *Enable automatic MDM enrollment using default Microsoft Entra credentials*, makes domain PCs that are already hybrid joined enrol on their own. RB-DT-010 was enrolled that way.
+- **Bulk enrolment with a provisioning package** made in Windows Configuration Designer (unit 6): joins and enrols many devices at once with a bulk token, no user needed.
+- **Co-management** with Configuration Manager: devices managed by Configuration Manager also enrol into Intune, and workloads (compliance, updates, apps...) move to Intune one at a time. You only need to know that it exists and that it counts as a corporate method.
+- A **device enrollment manager** (DEM) account can enrol up to 1,000 devices with one user account. The account needs an Intune licence but no admin role, and its devices count as corporate.
+
+On the hybrid desktop, `gpresult /r` shows the enrolment policy among the applied Group Policy objects:
+
+```terminal
+#machine RB-DT-010
+PS C:\Windows\system32> gpresult /r
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+
+COMPUTER SETTINGS
+------------------
+    CN=RB-DT-010,OU=Desktops,DC=riverbend,DC=local
+    Last time Group Policy was applied: 3/2/2026 at 7:00:00 AM
+    Group Policy was applied from:      DC01.riverbend.local
+    Domain Name:                         RIVERBEND
+    Domain Type:                         Windows 2008 or later
+
+    Applied Group Policy Objects
+    -----------------------------
+        Intune automatic enrollment
+        Default Domain Policy
+
+    The computer is a part of the following security groups
+    -------------------------------------------------------
+        BUILTIN\Administrators
+        Everyone
+        Domain Computers
+```
+
+@try
+@setup portal
+device RB-LT-002 join=None managed=None user="" ownership=""
+@task t1 | Enrollment | 10 | RB-LT-002
+RB-LT-002 is a shop-floor PC that must keep its local account. Enrol it in Intune with Priya's account (`priya`) **without** joining it to Microsoft Entra ID.
+@check portal | RB-LT-002 is managed by Intune
+device["RB-LT-002"].managed == Intune
+device["RB-LT-002"].enrolledBy contains "Enroll only"
+@check portal | it isn't Entra joined
+device["RB-LT-002"].join != "Entra joined"
+@hint Settings > Accounts > Access work or school has a link at the bottom: Enroll only in device management.
+@solution RB-LT-002
+#settings enroll priya
+@endtask
+@end
+
+@quiz
+? A company has 400 domain-joined PCs that are already hybrid joined. How should they be enrolled in Intune with the least effort?
+- Ask each user to run Enroll only in device management
++ A Group Policy that enables automatic MDM enrolment with Entra credentials
+- Re-image each PC with Autopilot
+- Register their hardware hashes and wait
+! The Group Policy setting enrols hybrid joined domain PCs automatically.
+? Which method enrols a device in Intune without joining it to Microsoft Entra ID?
+- Join this device to Microsoft Entra ID
++ Enroll only in device management
+- Windows Autopilot user-driven mode
+! Enroll only in device management gives MDM without a join.
+? Which of these is NOT a corporate enrolment method?
+- Windows Autopilot
+- A provisioning package (bulk enrolment)
+- Co-management
++ A user adding a work account to a home PC
+! A work account on a home PC is personal (bring your own device).
+@end
+
+## Lesson: l0203 | Corporate or personal, and enrolment restrictions
+
+Every enrolled device has an **ownership**: **Corporate** or **Personal**. Intune decides it from how the device was enrolled. Windows devices enrolled with Autopilot, a provisioning package, Group Policy, co-management or a device enrollment manager account are corporate. A device where the user adds a work account, picks Enroll only in device management or uses the Company Portal is **personal** unless you uploaded its details as a **corporate device identifier** first. A plain Entra join (in the OOBE or from Settings) is a special case: real Intune shows the device as Corporate, but it is **not** one of the approved corporate methods, so a block on personal devices still stops it (next section). Cert Lab simplifies and shows such a device as Personal. You can also change the ownership of a device by hand in its properties.
+
+Ownership matters: personal devices show less to IT (no full app inventory, no phone number), you normally retire a personal device (removes only company data) and keep a full wipe for corporate devices, and filters and dynamic groups can tell the two apart.
+
+### Enrolment restrictions
+
+Restrictions decide who may enrol what. They are in **Devices > Enrollment** and come in two kinds:
+
+- **Device platform restrictions**: per platform (Windows, iOS/iPadOS, Android Enterprise work profile, macOS...), **allow or block** the platform, and allow or block **personally owned** devices. You can also set minimum and maximum OS versions on some platforms.
+- **Device limit restrictions**: how many devices one user may enrol (default 5, from 1 to 15). They don't count Autopilot, Group Policy, co-management, bulk, device enrollment manager or Entra joined enrolments; for those, the Entra ID device limit (unit 1) is the hard limit.
+
+Each kind has a **default** restriction for all users, with the lowest priority. You can create more restrictions, assign them to **user groups**, and give each a **priority**: priority 1 is checked first, and a user gets the restriction with the highest priority (lowest number) among those assigned to them; the default applies only when no other one does.
+
+> Blocking personally owned Windows devices also blocks a plain "Join this device to Microsoft Entra ID" (from Settings or the OOBE) unless the device is registered in Autopilot, because Intune only lets approved corporate methods through. Those methods (Autopilot, provisioning packages, Group Policy, co-management, a device enrollment manager) keep working. Restrictions only count for enrolments where a user signs in; userless ones (Autopilot self-deploying and pre-provisioning, bulk, co-management) always get the default restriction. In Cert Lab's portal the default restriction's two values are in Tenant administration > Settings, section Enrolment restrictions, and extra restrictions are under Devices > Enrollment > Device platform restriction.
+
+@try
+@task t1 | Enrollment | 10 | portal
+Riverbend's Sales team must not enrol personally owned Windows devices any more; Windows devices from corporate methods must still work. Create a Windows device platform restriction called **Sales - corporate Windows only**, assigned to **Sales**, with priority **1**.
+@check portal | the restriction allows Windows but blocks personal devices
+restriction["Sales - corporate Windows only"].platform == "Windows (MDM)"
+restriction["Sales - corporate Windows only"].allow == Allow
+restriction["Sales - corporate Windows only"].personal == Block
+restriction["Sales - corporate Windows only"].priority == 1
+@check portal | it is assigned to Sales
+restriction["Sales - corporate Windows only"].include has Sales
+@hint Platform Windows (MDM): Platform Allow, Personally owned Block.
+@solution portal
+create restriction name="Sales - corporate Windows only" platform="Windows (MDM)" allow=Allow personal=Block priority=1
+assign restriction "Sales - corporate Windows only" Sales
+@endtask
+
+@task t2 | Enrollment | 10 | portal
+Lower the default device limit so that each user can enrol at most **3** devices.
+@check portal | the default device limit is 3
+tenant.enrollLimit == 3
+@hint It is the default device limit restriction.
+@solution portal
+tenant enrollLimit=3
+@endtask
+@end
+
+@quiz
+? Two Windows platform restrictions are assigned to Jordan: priority 1 allows personal devices, priority 2 blocks them. Can Jordan enrol a personal Windows PC?
++ Yes: the priority 1 restriction applies
+- No: a block always wins
+- Only after the default restriction is removed
+! The restriction with the highest priority (lowest number) among those assigned to the user is the one that counts.
+? Personally owned Windows devices are blocked. Which device can still be enrolled?
+- A home PC where the user joins Entra ID from Settings
++ A new laptop set up with Windows Autopilot
+- A laptop where the user picks Enroll only in device management
+! Autopilot is a corporate enrolment method, so the personal-device block doesn't stop it.
+? To what are enrolment restrictions assigned?
+- Device groups
++ User groups
+- Scope tags
+! Restrictions apply at enrolment time to the user who enrols; they are assigned to user groups.
+@end
+
+## Lesson: l0204 | iPhones, iPads and Android phones
+
+The exam expects you to know the enrolment options for phones and tablets, even though this course practises on Windows. In Cert Lab, Jordan's iPhone and Priya's Pixel are in the tenant only.
+
+### iOS and iPadOS
+
+- Intune needs an **Apple MDM push certificate** before any Apple device can enrol. It is made with an Apple ID and must be **renewed every year** with the **same** Apple ID. While it is expired, Apple devices can't be managed; if it isn't renewed soon (Apple allows about 30 days) or a new certificate is made with another Apple ID, every device has to enrol again.
+- **Corporate devices**: **automated device enrolment** through **Apple Business Manager** (or Apple School Manager). Devices bought through the company are assigned to Intune and enrol during setup; they can be **supervised**, which gives you more control. Apple Configurator is used for devices prepared by cable.
+- **Personal devices**: **user enrolment** (account-driven: a separate managed area for work data, the person's privacy kept) or **device enrolment** with the Company Portal app.
+
+### Android
+
+Android Enterprise is the modern way, and it needs your tenant to be linked to a **managed Google Play** account. The modes:
+
+- **Personally owned devices with a work profile**: a separate work profile holds work apps and data; IT can't see personal apps. Good for bring your own device.
+- **Corporate-owned devices with a work profile**: a company phone where personal use is allowed.
+- **Fully managed**: a company phone used only for work; IT controls the whole device.
+- **Dedicated**: kiosks and single-purpose devices (scanners, signs), often shared, with no user.
+
+The old device administrator mode is retired: Intune no longer offers it for devices with Google Play services. Don't choose it for new devices.
+
+@try
+@task t1 | Enrollment | 10 | portal
+The Finance team handles card data, so their personally owned iPhones and iPads must not enrol. Create an iOS/iPadOS platform restriction called **Finance - no personal iOS** for **Finance** that allows the platform but blocks personally owned devices.
+@check portal | the restriction blocks personal iOS devices for Finance
+restriction["Finance - no personal iOS"].platform == iOS/iPadOS
+restriction["Finance - no personal iOS"].allow == Allow
+restriction["Finance - no personal iOS"].personal == Block
+restriction["Finance - no personal iOS"].include has Finance
+@hint Devices > Enrollment > Device platform restriction, platform iOS/iPadOS.
+@solution portal
+create restriction name="Finance - no personal iOS" platform=iOS/iPadOS allow=Allow personal=Block
+assign restriction "Finance - no personal iOS" Finance
+@endtask
+@end
+
+@quiz
+? The Apple MDM push certificate expired a month ago. What happens, and how do you avoid it next year?
+- Nothing happens; it renews itself
++ Apple devices stop talking to Intune and must enrol again; renew it every year with the same Apple ID
+- Only new devices are affected; renew it with any Apple ID
+! The certificate must be renewed yearly with the Apple ID that created it; a new certificate means enrolling every device again.
+? Which Android Enterprise mode keeps a personal phone's own apps private from IT?
++ Personally owned devices with a work profile
+- Fully managed
+- Dedicated
+! The work profile separates work apps and data; IT has no view of the personal side.
+? Riverbend buys iPads through Apple and wants them supervised and enrolled during setup. What is used?
+- User enrolment with the Company Portal
++ Automated device enrolment through Apple Business Manager
+- A provisioning package
+! Automated device enrolment from Apple Business Manager enrols corporate devices during setup and supervises them.
+@end
+

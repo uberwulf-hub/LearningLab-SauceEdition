@@ -1,0 +1,30 @@
+SYNOPSIS: Turns on stricter rules that catch common scripting mistakes.
+DESCRIPTION:
+Normally PowerShell is forgiving: a variable that was never set reads as $null, and a property that does not exist reads as $null too. That hides typing mistakes such as $nmae instead of $name.
+
+Set-StrictMode makes those mistakes errors. The rules depend on the version you ask for:
+
+Version 1.0: using a variable that was never set is an error (except inside strings).
+
+Version 2.0: also reading a property that does not exist, calling a function like a method (f(1, 2)), and variables without a name (${}).
+
+Version 3.0 and Latest: also indexing past the end of an array.
+
+Strict mode applies to the scope where you set it and the scopes below it, so a script can turn it on for itself without affecting your console.
+PARAMETER Version:
+Which set of rules to use: 1.0, 2.0, 3.0 or Latest. Its alias is -v.
+PARAMETER Off:
+Turns strict mode off again.
+EXAMPLE: Set-StrictMode -Version Latest
+Turns on the strictest rules. Put it at the top of a script.
+EXAMPLE: Set-StrictMode -Version 2.0; $notSet
+Using a variable that was never set now gives an error instead of nothing.
+EXAMPLE: Set-StrictMode -Off
+Back to the forgiving default.
+NOTES:
+Latest means the newest rules of the version you run, so a script with Latest may meet new rules on a newer PowerShell. Pin a number (such as 3.0) if you want the same rules everywhere.
+
+Strict mode is different from #Requires and from the execution policy: it only changes how your code is checked while it runs.
+
+To test whether a variable exists in strict mode, use Test-Path Variable:name.
+RELATED: about_Variables, about_Scopes, about_Preference_Variables

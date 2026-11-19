@@ -1,0 +1,27 @@
+SYNOPSIS: Changes a local user account.
+DESCRIPTION:
+Set-LocalUser changes a user's password, description, full name, expiry and password rules. To enable, disable or rename an account use Enable-LocalUser, Disable-LocalUser and Rename-LocalUser.
+PARAMETER Name:
+The user. Position 0, takes pipeline input.
+PARAMETER InputObject:
+A LocalUser object.
+PARAMETER Password:
+A new password (SecureString).
+PARAMETER Description:
+A new description.
+PARAMETER FullName:
+A new full name.
+PARAMETER PasswordNeverExpires:
+$true or $false.
+PARAMETER UserMayChangePassword:
+$true or $false.
+PARAMETER AccountExpires:
+The date the account stops working.
+PARAMETER AccountNeverExpires:
+Removes the expiry date.
+EXAMPLE: Set-LocalUser -Name alice -PasswordNeverExpires $true
+EXAMPLE: Set-LocalUser -Name alice -Password (Read-Host -AsSecureString)
+Resets the password (Security event 4724).
+NOTES:
+Note the difference from New-LocalUser: here -PasswordNeverExpires and -UserMayChangePassword take $true or $false.
+RELATED: New-LocalUser, Get-LocalUser

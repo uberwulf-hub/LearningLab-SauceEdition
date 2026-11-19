@@ -1,0 +1,24 @@
+SYNOPSIS: Makes computers refresh Group Policy, locally or from a distance.
+DESCRIPTION:
+Computers refresh Group Policy every 90 minutes (plus a random delay of up to 30 minutes), domain controllers every 5 minutes. Invoke-GPUpdate asks a computer to do it now, the PowerShell way of running gpupdate there.
+On a remote computer it works by creating a scheduled task, so the remote computer must allow remote scheduled task management through its firewall. By default the task starts after a random delay of up to 10 minutes; -RandomDelayInMinutes 0 runs it at once.
+Some settings, such as software installation and folder redirection, need a restart or a new sign-in (-Boot, -LogOff).
+PARAMETER Computer:
+The computer to refresh; this one by default. Position 0.
+PARAMETER Target:
+Computer or User: refresh only one half.
+PARAMETER Force:
+Reapplies every setting, not only the changed ones.
+PARAMETER RandomDelayInMinutes:
+The longest random wait before the refresh (0 to 44640 minutes).
+PARAMETER Boot:
+Restarts the computer afterwards if a setting needs it.
+PARAMETER LogOff:
+Signs the user out afterwards if a setting needs it.
+PARAMETER AsJob:
+Runs as a background job.
+EXAMPLE: Invoke-GPUpdate -Computer CL1 -Force -RandomDelayInMinutes 0
+Refreshes every setting on CL1 right away.
+EXAMPLE: Get-ADComputer -Filter * -SearchBase "OU=Workstations,DC=corp,DC=example" | ForEach-Object { Invoke-GPUpdate -Computer $_.Name -RandomDelayInMinutes 0 }
+Refreshes every workstation.
+RELATED: Get-GPResultantSetOfPolicy, New-GPLink, Set-GPRegistryValue

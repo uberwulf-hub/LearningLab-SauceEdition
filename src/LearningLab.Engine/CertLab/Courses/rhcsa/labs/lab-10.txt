@@ -1,0 +1,121 @@
+# Lab: lab-10 | Firewall, umask, ssh keys and SELinux | u10 | 50
+Two machines need their security settings done: server1 runs a small web site, server2 is reached over ssh. Each task says which machine to work on; every change must also hold after a reboot. SELinux must be enforcing on both machines when you finish: never solve a task by switching it off.
+
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install httpd
+useradd auditor
+mkdir -p /srv/site
+echo 'security lab site' > /srv/site/index.html
+sed -i 's/^Listen 80$/Listen 8099/' /etc/httpd/conf/httpd.conf
+sed -i 's|^DocumentRoot "/var/www/html"|DocumentRoot "/srv/site"|' /etc/httpd/conf/httpd.conf
+printf '<Directory "/srv/site">\n    Require all granted\n</Directory>\n' > /etc/httpd/conf.d/site.conf
+
+@setup server2
+setenforce 0
+sed -i 's/^SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+
+@task t01 | Security | 10 | server1
+On server1, allow the services `http` and `https` through the firewall, permanently and in the running firewall. Also stop allowing the service `cockpit`.
+@check server1 | http and https are allowed now and permanently
+for o in "" --permanent; do firewall-cmd $o --list-services | grep -qw http || exit 1; firewall-cmd $o --list-services | grep -qw https || exit 1; done
+@check server1 | cockpit is no longer allowed, now or permanently
+! firewall-cmd --list-services | grep -qw cockpit && ! firewall-cmd --permanent --list-services | grep -qw cockpit
+@hint --permanent changes the saved rules; --reload makes them the running rules.
+@solution server1
+firewall-cmd --permanent --add-service=http --add-service=https
+firewall-cmd --permanent --remove-service=cockpit
+firewall-cmd --reload
+firewall-cmd --list-services
+@explain
+Always pair --permanent with --reload: --permanent alone is saved but not in force, and a rule without --permanent is lost at the next reboot or reload. firewall-cmd --list-all shows the zone's running rules at a glance; add --permanent to see the saved ones.
+@endtask
+
+@task t02 | Security | 10 | server1
+On server1, every user who logs in (including `student` and `auditor`) must get the umask `027`, so that new files are not readable by others.
+@check server1 | student's login umask is 0027
+test "$(certlab-check umask student)" = 0027
+@check server1 | auditor's login umask is 0027
+test "$(certlab-check umask auditor)" = 0027
+@hint One file in a folder that every login shell reads covers all users at once.
+@solution server1
+echo 'umask 027' > /etc/profile.d/umask.sh
+@explain
+Login shells read every file ending in .sh in /etc/profile.d, so /etc/profile.d/umask.sh reaches every user, present and future. Putting the line into each ~/.bashrc would also work for these two users, but not for users created later. With 027, files get 640 and folders 750.
+@endtask
+
+@task t03 | Security | 15 | server1
+The user `student` on server1 must be able to log in to server2 as `student` with an ssh key, without a password. Do not protect the key with a passphrase.
+@check server1 | student@server1 logs in to student@server2 with a key
+certlab-check sshkey student student@server2
+@hint As student on server1: ssh-keygen -N '' then ssh-copy-id student@server2 (password student).
+@solution server1
+su - student
+ssh-keygen -t ed25519 -N '' -f /home/student/.ssh/id_ed25519
+ssh-copy-id -o StrictHostKeyChecking=accept-new student@server2
+student
+ssh student@server2 hostname
+exit
+@explain
+ssh-keygen makes the key pair in ~/.ssh; -N '' means no passphrase. ssh-copy-id logs in once with the password and appends the public key to ~/.ssh/authorized_keys on server2 with safe modes. If you copy the key by hand, ~/.ssh must be 700 and authorized_keys 600, owned by the user, or sshd ignores them.
+@endtask
+
+@task t04 | Security | 10 | server2
+On server2, root must no longer be able to log in over ssh at all. Ordinary users must still be able to log in.
+@check server2 | the first PermitRootLogin value sshd reads is no
+test "$(cat /etc/ssh/sshd_config.d/*.conf /etc/ssh/sshd_config | grep -i '^[[:space:]]*PermitRootLogin' | head -1 | awk '{print $2}')" = no
+@check server2 | sshd is running and enabled
+systemctl is-active sshd && systemctl is-enabled sshd
+@check server2 | password logins are still allowed for ordinary users
+! cat /etc/ssh/sshd_config.d/*.conf /etc/ssh/sshd_config | grep -i '^[[:space:]]*PasswordAuthentication' | head -1 | grep -qiw no
+@hint Look in /etc/ssh/sshd_config.d first: sshd keeps the first value it reads, and the drop-in files come before the rest of sshd_config.
+@solution server2
+grep -ri permitrootlogin /etc/ssh/sshd_config /etc/ssh/sshd_config.d
+sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+systemctl restart sshd
+@explain
+The installer left /etc/ssh/sshd_config.d/01-permitrootlogin.conf with PermitRootLogin yes. Because sshd_config includes the drop-ins at its top and the first value wins, a line in sshd_config alone would change nothing. Change (or delete) the drop-in and restart sshd. Do not set PasswordAuthentication no here: that would lock out every user without a key.
+@endtask
+
+@task t05 | Security | 10 | server2
+SELinux on server2 was put into permissive mode, now and in its configuration. Make it enforcing again, now and at every boot. Also allow web applications on server2 to connect to databases over the network (the boolean `httpd_can_network_connect_db`), permanently.
+@check server2 | SELinux is enforcing and configured to stay so
+test "$(getenforce)" = Enforcing && grep -q '^SELINUX=enforcing' /etc/selinux/config
+@check server2 | the boolean is on and saved
+getsebool httpd_can_network_connect_db | grep -q -- '--> on' && semanage boolean -l -C | grep -q '^httpd_can_network_connect_db '
+@hint setenforce 1 and the SELINUX= line; setsebool -P for the boolean.
+@solution server2
+setenforce 1
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+setsebool -P httpd_can_network_connect_db on
+sestatus
+@explain
+setenforce changes the running mode only; the boot mode is SELINUX= in /etc/selinux/config. sestatus shows both, so you can see when they differ. setsebool without -P would be lost at the next boot; semanage boolean -l -C lists the booleans whose saved value differs from the default.
+@endtask
+
+@task t06 | Security | 20 | server1
+Apache on server1 has been configured to listen on port `8099` and to serve the folder /srv/site, but it will not start, and once it starts it answers 403. Make the site work with SELinux enforcing: http://server1:8099/ must show the page from server2 too, and Apache must start at boot. Do not change Apache's configuration.
+@check server1 | Apache is running and enabled
+systemctl is-active httpd && systemctl is-enabled httpd
+@check server1 | port 8099 is labelled for http
+semanage port -l | grep '^http_port_t ' | grep -qw 8099
+@check server1 | /srv/site has a lasting web content label
+semanage fcontext -l -C | grep -q '^/srv/site' && stat -c %C /srv/site/index.html | grep -q ':httpd_sys_content_t:'
+@check server2 | the page can be reached from server2
+curl -s -m 5 http://server1:8099/ | grep -q 'security lab site'
+@check server1 | SELinux is enforcing
+test "$(getenforce)" = Enforcing
+@hint systemctl status httpd and ausearch -m AVC -ts recent tell you what SELinux stopped. There are three gates: the port type, the file type and the firewall.
+@solution server1
+systemctl start httpd
+ausearch -m AVC -ts recent
+semanage port -a -t http_port_t -p tcp 8099
+semanage fcontext -a -t httpd_sys_content_t '/srv/site(/.*)?'
+restorecon -Rv /srv/site
+systemctl enable --now httpd
+firewall-cmd --permanent --add-port=8099/tcp
+firewall-cmd --reload
+curl -s http://localhost:8099/
+@explain
+The first denial is name_bind on a tcp_socket: httpd_t may only listen on ports of type http_port_t, and 8099 is not one, so semanage port -a labels it. The second is a read on a file labelled var_t: /srv is not web content, so semanage fcontext -a records the right type and restorecon applies it (chcon would not survive a relabel). The firewall is the third gate: a permanent rule for 8099/tcp plus a reload.
+@endtask

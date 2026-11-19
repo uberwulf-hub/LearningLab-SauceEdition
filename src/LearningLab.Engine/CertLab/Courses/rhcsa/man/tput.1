@@ -1,0 +1,26 @@
+NAME
+       tput - ask about or control the terminal from a script
+
+SYNOPSIS
+       tput CAPABILITY
+
+DESCRIPTION
+       tput prints a terminal's property, or the control code that makes the
+       terminal do something, looked up for the terminal in $TERM. Scripts use
+       it to learn the window size or to clear the screen without knowing
+       the terminal type.
+
+       cols   The number of columns.
+
+       lines  The number of lines.
+
+       clear  Clear the screen.
+
+       bold, sgr0
+              Start bold text; return to normal text.
+
+EXAMPLES
+           echo "This terminal is $(tput cols) columns wide"
+
+SEE ALSO
+       clear(1), stty(1), tty(1)

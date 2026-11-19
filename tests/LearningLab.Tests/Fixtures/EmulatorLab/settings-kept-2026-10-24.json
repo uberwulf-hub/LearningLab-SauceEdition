@@ -1,0 +1,11 @@
+{
+    "EditorFile":  "",
+    "EditorText":  "# changed before the update\n.text\n_start:\n    li a0, 0\n    li a7, 1\n    ecall\n",
+    "Inside":  false,
+    "InsideTab":  0,
+    "KeptForUpdate":  "2026-10-24T10:00:00.0000000-07:00",
+    "ProgName":  "myprog",
+    "Screen":  0,
+    "Speed":  7,
+    "StopOnCrash":  false
+}

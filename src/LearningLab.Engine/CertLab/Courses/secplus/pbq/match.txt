@@ -1,0 +1,54 @@
+# Practice: pbq-match | Drag and drop matching
+Drag each card on the right to the item it fits BEST. Some cards are not used, and a card may fit more than one item.
+
+@match m01 | General security concepts | 6
+Each line describes a control that Oakridge Dental already uses. Match each control to its control type (what the control does), not its category.
+columns Control | Control type
+= A sign on the car park gate says that the site is watched by cameras and that trespassers will be reported -> Deterrent
+= A firewall rule drops every inbound remote desktop connection from the internet -> Preventive
+= The SIEM raises an alert when one account signs in from two countries within an hour -> Detective
+= After a ransomware attack, the practice servers are rebuilt and restored from last night's backup -> Corrective
+= An old X-ray PC can't be patched, so it is moved to its own VLAN that only the X-ray viewer can reach until it is replaced -> Compensating
+= The acceptable use policy tells staff to lock their screen whenever they leave their desk -> Directive
+x Technical
+x Managerial
+! A deterrent discourages an attacker from trying (the sign does nothing by itself, but makes trespassing less tempting). A preventive control stops the event from happening (the firewall drops the connection). A detective control notices and reports that something happened (the impossible-travel alert). A corrective control fixes things after an incident (restoring from backup). A compensating control is a substitute used when the normal control (patching) isn't possible: isolating the PC lowers the same risk another way. A directive control tells people what they must do (the policy). Technical and Managerial are control categories (how a control is carried out: by technology, or by management decisions and plans), not types, so they are not the best answer for any line.
+
+@match m02 | Security operations | 6
+A network team is writing firewall rules for the services below and needs the default port for each one. Match each port to the protocol that uses it by default.
+columns Port | Protocol
+= 22/TCP -> SSH (also used by SFTP and SCP)
+= 636/TCP -> LDAPS (directory lookups over TLS)
+= 993/TCP -> IMAPS (reading mail over TLS)
+= 3389/TCP -> RDP (Windows remote desktop)
+= 161/UDP -> SNMP (polling network devices)
+= 1812/UDP -> RADIUS authentication
+x Telnet
+x SMB file sharing
+! SSH listens on TCP 22, and SFTP and SCP run inside SSH, so they share the port. LDAPS is LDAP wrapped in TLS on TCP 636 (plain LDAP is 389). IMAPS is IMAP over TLS on TCP 993 (plain IMAP is 143). Remote desktop (RDP) uses TCP 3389, which should never be open to the internet. SNMP polling uses UDP 161 (traps go to UDP 162); SNMPv3 is the version to use because it adds authentication and encryption. RADIUS uses UDP 1812 for authentication and 1813 for accounting. Telnet uses TCP 23 and sends everything, passwords included, in clear text; SMB uses TCP 445. Neither matches a listed port.
+
+@match m03 | Threats, vulnerabilities and mitigations | 6
+The help desk at a printing company wrote down what six different pieces of malware did. Match each description to the type of malware it describes BEST.
+columns What it did | Malware type
+= Spread by itself from PC to PC through an unpatched network service, with nobody opening anything -> Worm
+= Came as a free PDF converter that worked, but quietly opened a back door for the attacker -> Trojan
+= Changed parts of the operating system's kernel so that its files and processes stayed hidden from the task list and antivirus -> Rootkit
+= Recorded every key typed on the accounts PC, including the bank sign-in password -> Keylogger
+= Planted by an administrator, it was set to delete the payroll database if his account was ever disabled -> Logic bomb
+= Encrypted the shared drive and left a note demanding payment in cryptocurrency for the key -> Ransomware
+x Virus
+x Bloatware
+! A worm copies itself across the network without any user action, which is what separates it from a virus (a virus attaches to a file or program and needs someone to run it). A trojan pretends to be useful software and carries a hidden harmful part. A rootkit hides itself (and often other malware) by changing the operating system, often the kernel, so normal tools can't see it. A keylogger records keystrokes to steal passwords and other typed secrets (it is one kind of spyware). A logic bomb waits for a condition (a date, an event such as an account being disabled) and then runs its payload; insiders sometimes leave one behind. Ransomware encrypts data and demands payment. Bloatware is unwanted but legitimate software that came with a device, and it fits none of the lines.
+
+@match m04 | Security operations | 6
+During and after a malware outbreak, Greenway Logistics' incident response team did the things below. Match each action to the incident response phase it belongs to.
+columns Action | Phase
+= Months before the outbreak, the team wrote playbooks, set up an out-of-band chat channel and trained the on-call staff -> Preparation
+= The team worked out which hosts and accounts were affected, how the malware got in and how far it had spread -> Analysis
+= Infected laptops were moved to an isolated VLAN so the malware could not reach more machines -> Containment
+= The malware was removed, the backdoor account was deleted and the exploited flaw was patched on every host -> Eradication
+= Cleaned servers were returned to service one at a time and watched closely for signs of reinfection -> Recovery
+= Two weeks later, the team met to agree what went well, what went badly and how the playbook should change -> Lessons learned
+x Legal hold
+x Chain of custody
+! Preparation is everything done before an incident so the team is ready (plans, tools, training, communication channels). Analysis confirms the incident and works out its scope and cause. Containment limits the damage by isolating what is affected, without yet removing the cause. Eradication removes the cause: the malware, the attacker's accounts and the vulnerability they used. Recovery brings systems back to normal operation and keeps watching them. Lessons learned reviews the incident and improves the process. Legal hold (keeping data that may be needed in a lawsuit) and chain of custody (a record of who handled evidence, and when) are forensic and legal steps, not phases of the response process.

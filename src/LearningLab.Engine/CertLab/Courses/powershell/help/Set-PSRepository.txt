@@ -1,0 +1,19 @@
+SYNOPSIS: Changes the settings of a registered module repository.
+DESCRIPTION:
+Set-PSRepository changes a repository that is already registered: most often its installation policy, sometimes its source address.
+
+Making a repository Trusted means Install-Module no longer asks "Are you sure you want to install the modules from an untrusted repository?". Only trust repositories you know and control.
+PARAMETER Name:
+The repository to change, for example PSGallery.
+PARAMETER InstallationPolicy:
+Trusted or Untrusted.
+PARAMETER SourceLocation:
+The new address modules are downloaded from.
+EXAMPLE: Set-PSRepository -Name LabRepo -InstallationPolicy Trusted
+Trusts the internal LabRepo repository, so modules install from it without a question.
+EXAMPLE: Set-PSRepository -Name PSGallery -InstallationPolicy Untrusted
+Puts the PowerShell Gallery back to its default setting.
+NOTES:
+If the name is not registered, Set-PSRepository writes an error; check the names with Get-PSRepository.
+In PowerShell 7.4 and later, PSResourceGet's Set-PSResourceRepository does the same with -Trusted.
+RELATED: Get-PSRepository, Register-PSRepository, Unregister-PSRepository

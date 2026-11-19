@@ -1,0 +1,6 @@
+SYNOPSIS: Tells whether Secure Boot is on.
+DESCRIPTION:
+Confirm-SecureBootUEFI returns True when the PC starts with UEFI Secure Boot turned on and False when it is off. Compliance policies can require Secure Boot, and Windows 11 needs a Secure Boot capable PC.
+EXAMPLE: Confirm-SecureBootUEFI
+True or False.
+RELATED: Get-Tpm

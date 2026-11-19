@@ -1,0 +1,55 @@
+NAME
+       pvs - list physical volumes, one line each
+
+SYNOPSIS
+       pvs [-a] [-o FIELDS] [-O SORT] [-S SELECTION] [--units U] [--noheadings]
+           [--nosuffix] [--separator S] [PV...]
+
+DESCRIPTION
+       pvs prints a table of the physical volumes (PVs) LVM knows: the device,
+       the volume group it belongs to (empty when it is in none yet), the
+       format (lvm2), attributes, its size and how much of it is still free.
+       Use it to check that pvcreate worked and which disks a VG uses. It
+       changes nothing. Run it as root.
+
+       In the Attr column, a means the PV can take new extents (allocatable)
+       and u that it is used by a VG.
+
+OPTIONS
+       -o, --options FIELDS
+              Show these columns; a leading + adds them to the defaults.
+              Fields include pv_name, vg_name, pv_size, pv_free, pv_used,
+              pv_attr, pv_uuid, pv_pe_count, pv_pe_alloc_count, dev_size.
+
+       -O, --sort FIELDS
+              Sort by these fields.
+
+       -S, --select EXPRESSION
+              Show only matching rows, such as -S vg_name=vgdata.
+
+       -a, --all
+              Also list devices that are not PVs.
+
+       --units U
+              Sizes in one unit: b, k, m, g, t, or h (readable, the default).
+
+       --noheadings
+              Leave out the header line.
+
+       --nosuffix
+              Leave the unit letter off sizes.
+
+       --separator S
+              Separate the columns with S.
+
+EXAMPLES
+       List the PVs:
+
+           pvs
+
+       Show only the free space on /dev/vdb1, in MiB:
+
+           pvs --noheadings --units m -o pv_free /dev/vdb1
+
+SEE ALSO
+       pvcreate(8), pvdisplay(8), vgs(8), lvs(8), lvm(8)

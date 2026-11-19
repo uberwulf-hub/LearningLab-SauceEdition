@@ -1,0 +1,60 @@
+{
+    "id": "long-night",
+    "title": "Long Night",
+    "category": "soc",
+    "level": "Expert",
+    "order": 3,
+    "summary": "Two people connected to the VPN late in the evening. One is finishing a report from home, as usual. The other has never connected from that address - and is packing up the finance folder.",
+    "story": "You are the analyst on the late shift at {{CO}} (a made-up company). Staff can connect from home through the VPN (VPN01), which gives their computer an address inside the network. The SIEM raised \"VPN sign-in outside working hours\" twice this evening. Work out who is who, and if someone is stealing data, how much, how, and where it went.",
+    "goal": "Decide which VPN alert is real, then find the misused account, where it connected from, the computer it used inside, how many files it opened, the archive it made and where it was uploaded.",
+    "skills": "VPN sign-ins, comparing against an account's usual addresses, file share events (5145), remote desktop, data leaving the network",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 40,
+    "vars": {
+        "CO": "company",
+        "LATE": "person:flast", "VICT": "person:flast", "O1": "person:flast",
+        "HL": "num:10-39", "HV": "num:40-69", "H3": "num:70-99", "PL": "num:200-220", "PV": "num:221-240",
+        "NET": "subnet:10",
+        "T0": "time:20-22",
+        "ATKIP": "ip", "HOMEIP": "ip", "VHOME": "ip", "UPIP": "ip",
+        "NFILES": "num:40-90",
+        "ARCH": "pick:q4.7z|backup.zip|archive.7z|finance-copy.zip",
+        "UPDOM": "pick:files.dropzone-share.example|upload.sendbig.example|cloud.boxdrop.example",
+        "QV": "pick:late|intruder"
+    },
+    "variants": {
+        "QV": {
+            "late": { "QACC": "{{LATE}}", "VQ": "false alarm" },
+            "intruder": { "QACC": "{{VICT}}", "VQ": "real" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 220, "from": "-13h", "to": "+50m",
+            "hosts": [ "WS-{{HL}}", "WS-{{HV}}", "WS-{{H3}}" ],
+            "users": [ "{{LATE}}", "{{VICT}}", "{{O1}}" ],
+            "ips": [ "{{NET}}.{{HL}}", "{{NET}}.{{HV}}", "{{NET}}.{{H3}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}", "quiet": [ "{{VICT}}", "{{LATE}}" ],
+            "kinds": [ "process", "process", "dns", "firewall", "logon" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The \"VPN sign-in outside working hours\" alert for {{QACC}}: real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 50,
+          "explain": "{{LATE}} connected from {{HOMEIP}}, the same home address as on the morning before work, and opened a few of their own files. {{VICT}} connected from {{ATKIP}}, an address that account has never used, then used remote desktop to reach a desktop and copied a whole folder out." },
+        { "id": "acct", "ask": "Which account was misused?", "answer": "{{VICT}}", "points": 30, "explain": "The VPN sign-in from a new address." },
+        { "id": "from", "ask": "From which address did the intruder connect to the VPN?", "answer": "{{ATKIP}}", "points": 30, "explain": "src_ip of that VPN sign-in on VPN01." },
+        { "id": "inside", "ask": "Which computer inside the network did they use (by remote desktop)?", "answer": "WS-{{HV}}", "accept": [ "{{NET}}.{{HV}}" ], "points": 30, "explain": "The 4624 with logon_type=10 from the VPN address." },
+        { "id": "files", "ask": "How many files did they open on the file server?", "answer": "{{NFILES}}", "points": 40, "explain": "siem search host=FILE01 event=5145 user={{VICT}} counts them." },
+        { "id": "arch", "ask": "What was the archive they made called (just the file name)?", "answer": "{{ARCH}}", "points": 30, "explain": "7z.exe's cmdline on that computer." },
+        { "id": "dest", "ask": "Where did they upload it (the domain name)?", "answer": "{{UPDOM}}", "accept": [ "{{UPIP}}" ], "points": 40, "explain": "The DNS lookup and the large outgoing connection after the archive was made." }
+    ],
+    "hints": [
+        { "text": "Normal for a person is what they usually do: compare each account's VPN sign-ins across the whole day (siem search host=VPN01 --fields time,user,src_ip). Then follow the odd one through the addresses VPN01 gave it.", "cost": 30 },
+        { "text": "5145 events are files opened on a shared folder; count them with --count-by user. After the copying, look for a compression program and a big outgoing connection from the same computer.", "cost": 40 }
+    ]
+}

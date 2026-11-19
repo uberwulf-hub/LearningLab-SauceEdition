@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the disks Windows sees, with their number and partition style.
+DESCRIPTION:
+Get-Disk shows each disk's Number, FriendlyName, SerialNumber, HealthStatus, OperationalStatus, Size and PartitionStyle. RAW means a new disk that hasn't been initialized yet; GPT or MBR means it has.
+
+The disk number is what Initialize-Disk, New-Partition and Get-Partition use. Storage Spaces virtual disks appear here as ordinary disks.
+PARAMETER Number:
+Only this disk. Position 0.
+PARAMETER FriendlyName:
+Only disks with this name.
+PARAMETER VirtualDisk:
+A virtual disk piped in: shows the Windows disk behind it.
+EXAMPLE: Get-Disk
+On FS1: disk 0 (system), 1 (D:), 2 (E:) and four raw disks.
+EXAMPLE: Get-Disk | Where-Object PartitionStyle -eq RAW
+New disks waiting to be initialized.
+RELATED: Initialize-Disk, New-Partition, Get-Partition, Get-PhysicalDisk, Get-VirtualDisk

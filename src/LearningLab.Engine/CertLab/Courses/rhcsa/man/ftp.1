@@ -1,0 +1,36 @@
+NAME
+       ftp - file transfer program (Cyber Range)
+
+SYNOPSIS
+       ftp HOST
+
+DESCRIPTION
+       ftp connects to an FTP server (TCP port 21), asks for a user name and a
+       password, then shows an ftp> prompt. Many servers allow the user name
+       anonymous with any password; they then show only their public folder
+       (on vsftpd: /var/ftp, with the pub folder in it).
+
+       In Cyber Range ftp reaches only the range's pretend servers.
+
+COMMANDS
+       ls [FOLDER]        list a folder (ls -a also shows hidden files)
+       cd FOLDER          change folder
+       pwd                show the current folder
+       get FILE [LOCAL]   copy a file to the current folder on your box
+       binary, ascii      the transfer mode (both work the same here)
+       bye                leave (also quit, exit)
+
+EXAMPLES
+       ftp 10.10.1.20
+       Name: anonymous
+       Password: (anything)
+       ftp> cd pub
+       ftp> get notes.txt
+       ftp> bye
+
+NOTES
+       FTP sends passwords as plain text. Only test servers you own or have
+       written permission to test.
+
+SEE ALSO
+       nmap(1), curl(1), scp(1)

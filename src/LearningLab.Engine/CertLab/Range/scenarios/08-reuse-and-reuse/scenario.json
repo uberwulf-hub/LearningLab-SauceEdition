@@ -1,0 +1,28 @@
+{
+    "id": "reuse-and-reuse",
+    "title": "Reuse and Reuse",
+    "level": "Advanced",
+    "order": 8,
+    "summary": "A web server leaks a backup full of password hashes. Crack one, and the same password opens an account on a second server, where a careless program hands you root.",
+    "story": "Birchwood Rentals (made up) runs two servers on 10.10.8.0/24: a public web server, web01, and an application server, app02. You start on scout.",
+    "goal": "Capture the user flag and the root flag on app02.",
+    "skills": "web recon, cracking sha512-crypt hashes, password reuse, a set-user-ID program",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 50,
+    "vars": { "OPPW": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.8.5/24" ] },
+        { "name": "web01", "os": "linux", "hostname": "web01.birchwood.example", "role": "public web server", "nics": [ "10.10.8.20/24" ], "packages": [ "httpd" ], "setup": "web01.sh" },
+        { "name": "app02", "os": "linux", "hostname": "app02.birchwood.example", "role": "application server", "nics": [ "10.10.8.30/24" ], "setup": "app02.sh" }
+    ],
+    "flags": [
+        { "id": "user", "name": "renter flag", "points": 140, "machine": "app02", "path": "/home/renter/flag.txt", "owner": "renter", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 160, "machine": "app02", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "Scan 10.10.8.0/24. web01 (10.10.8.20) runs a web server; app02 (10.10.8.30) runs ssh. Use webscan on web01 to find a folder it forgot: a backups folder is a good sign.", "cost": 15 },
+        { "text": "web01 serves /backups/accounts.bak, a file of user:hash lines ($6$..., sha512-crypt). Save it and run hashcrack on it: hashcrack accounts.bak", "cost": 30 },
+        { "text": "The renter password you cracked is reused on app02: ssh renter@10.10.8.30. Then find a set-user-ID program (find / -perm -4000) that reads files as root.", "cost": 45 }
+    ]
+}

@@ -1,0 +1,28 @@
+SYNOPSIS: Lists aliases, the short names that stand for commands.
+DESCRIPTION:
+An alias is a second, usually shorter name for a command: dir, ls and gci all run Get-ChildItem, and ? runs Where-Object. Get-Alias shows which aliases exist and what each one stands for.
+
+Use it both ways: Get-Alias gci tells you what gci means, and Get-Alias -Definition Get-ChildItem tells you every short name for Get-ChildItem.
+
+Aliases save typing at the prompt. In scripts that other people will read, write the full command names.
+PARAMETER Name:
+The aliases to look up. Position 0. Wildcards work, for example Get-Alias g*.
+PARAMETER Definition:
+Finds the aliases for a command, for example -Definition Where-Object. Wildcards work.
+EXAMPLE: Get-Alias gci, ls
+Shows that both stand for Get-ChildItem.
+EXAMPLE: Get-Alias -Definition Get-ChildItem
+Lists dir, gci and ls.
+EXAMPLE: Get-Alias -Definition Where-Object
+Lists ? and where.
+EXAMPLE: Get-Alias g*
+Lists every alias that starts with g.
+NOTES:
+Get-Command gci also tells you what an alias points to, and Get-Help gci opens the help of the real command.
+
+An alias can only stand for a command name. It cannot include parameters: for "dir -Recurse" as a short word, write a function.
+
+Some aliases look like Linux or Command Prompt commands (ls, cat, cp, dir, copy) but take PowerShell parameters: ls -la fails, because -la is not a parameter of Get-ChildItem. PowerShell 7 on Linux and macOS removes those aliases so the real programs run.
+
+Real 5.1 also has -Exclude and -Scope; the alias is gal.
+RELATED: New-Alias, Set-Alias, Get-Command, about_Command_Syntax

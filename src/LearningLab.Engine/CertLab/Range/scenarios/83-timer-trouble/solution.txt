@@ -1,0 +1,16 @@
+## who got in, and what did they do as root
+grep -E 'Accepted|Failed|sudo' /var/log/secure
+## the new sudo rule
+ls -l /etc/sudoers.d
+cat /etc/sudoers.d/{{SUDOF}}
+## the timer and what it runs
+systemctl list-timers --all --no-pager
+systemctl cat {{TIMER}}.service
+ls -la /usr/local/lib/.{{TIMER}}
+cat /usr/local/lib/.{{TIMER}}/notes.txt
+## clean up: the timer, the rule, the account
+systemctl disable --now {{TIMER}}.timer
+rm -f /etc/systemd/system/{{TIMER}}.timer /etc/systemd/system/{{TIMER}}.service
+systemctl daemon-reload
+rm -f /etc/sudoers.d/{{SUDOF}}
+usermod -L {{DEV}}

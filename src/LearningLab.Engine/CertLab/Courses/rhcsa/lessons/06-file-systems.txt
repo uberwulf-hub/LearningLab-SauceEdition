@@ -1,0 +1,745 @@
+# Unit: u06 | 6. File systems and permissions | Create and configure file systems
+
+A partition or a logical volume is only raw space. A file system turns it into folders and files. This unit shows how to create the three file systems the exam asks for (xfs, ext4 and vfat), mount and unmount them, use folders shared by an NFS server (by hand, at boot and on demand with autofs), grow a logical volume together with its file system, and set up folders that a team shares. It ends with the tools for finding out why someone cannot open a file, including ACLs.
+
+## Lesson: l0601 | Creating file systems: xfs, ext4 and vfat
+
+Each file system type has its own `mkfs` command:
+
+- **xfs** (`mkfs.xfs`) is the default on RHEL 9 (/ and /boot use it). It is fast with big files and can grow while it is mounted, but it can never shrink.
+- **ext4** (`mkfs.ext4`) is the classic Linux file system. It can grow while mounted and shrink while unmounted.
+- **vfat** (`mkfs.vfat`) is the FAT format that Windows, cameras and USB sticks understand. It has no Linux owners or permissions.
+
+```terminal
+[root@server1 ~]# mkfs.xfs -L WEB /dev/vdb1
+meta-data=/dev/vdb1              isize=512    agcount=4, agsize=65536 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+data     =                       bsize=4096   blocks=262144, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=4096, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
+[root@server1 ~]# mkfs.ext4 -L LOGS /dev/vdb2
+mke2fs 1.46.5 (30-Dec-2021)
+Discarding device blocks: done
+Creating filesystem with 262144 4k blocks and 65536 inodes
+Filesystem UUID: a738abeb-a9ac-4c87-964a-ba47ef2000ad
+Superblock backups stored on blocks:
+	32768, 98304, 163840, 229376
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (16384 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+[root@server1 ~]# mkfs.vfat -n SHARE /dev/vdb3
+mkfs.fat 4.2 (2021-01-31)
+[root@server1 ~]# lsblk -f -l /dev/vdb
+NAME FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+vdb
+vdb1 xfs          WEB   cf0f7592-ec35-4567-be44-0ea001decb7a
+vdb2 ext4   1.0   LOGS  a738abeb-a9ac-4c87-964a-ba47ef2000ad
+vdb3 vfat   FAT32 SHARE 844A-3120
+```
+
+You do not need to understand the numbers mkfs prints; the important part is that it finished without an error. Notice that the label option is `-L` for xfs and ext4 but `-n` (name) for vfat, and that a vfat UUID is much shorter.
+
+### Formatting over an old file system
+
+mkfs.xfs refuses to write over a device that already holds a file system, and tells you how to insist:
+
+```terminal
+[root@server1 ~]# mkfs.xfs /dev/vdb2
+mkfs.xfs: /dev/vdb2 appears to contain an existing filesystem (ext4).
+mkfs.xfs: Use the -f option to force overwrite.
+```
+
+That message is a last chance to notice you picked the wrong device. Check with lsblk -f; add `-f` only when you are sure. (mkfs.ext4 asks "Proceed anyway?" instead.) Formatting destroys everything on the device.
+
+### Changing a label later
+
+Each type has its own tool:
+
+- xfs: `xfs_admin -L NEWLABEL DEVICE` (the file system must be unmounted); `xfs_admin -l DEVICE` shows the label.
+- ext4: `e2label DEVICE NEWLABEL` (or `tune2fs -L NEWLABEL DEVICE`); `e2label DEVICE` shows it.
+- vfat: `fatlabel DEVICE NEWLABEL`; `fatlabel DEVICE` shows it.
+
+```terminal
+[root@server1 ~]# xfs_admin -L SITE /dev/vdb1
+writing all SBs
+new label = "SITE"
+[root@server1 ~]# e2label /dev/vdb2 APPLOGS
+[root@server1 ~]# fatlabel /dev/vdb3 TRANSFER
+[root@server1 ~]# blkid /dev/vdb1 /dev/vdb2 /dev/vdb3
+/dev/vdb1: LABEL="SITE" UUID="cf0f7592-ec35-4567-be44-0ea001decb7a" BLOCK_SIZE="512" TYPE="xfs" PARTLABEL="one" PARTUUID="1fbd07df-7247-4727-8f38-b652255b6115"
+/dev/vdb2: LABEL="APPLOGS" UUID="a738abeb-a9ac-4c87-964a-ba47ef2000ad" BLOCK_SIZE="4096" TYPE="ext4" PARTLABEL="two" PARTUUID="0bd2230c-5003-4a37-bb3b-0ca69cfc7c2e"
+/dev/vdb3: LABEL="TRANSFER" UUID="844A-3120" BLOCK_SIZE="512" TYPE="vfat" PARTLABEL="three" PARTUUID="f7e63e38-2fbe-4e47-a73e-62f9139c9647"
+```
+
+Labels are short names you choose; keep them unique on the machine, or `LABEL=` in fstab cannot tell them apart. (PARTLABEL is the GPT partition's name from parted, a different thing.)
+
+@try machines=1
+@task t1 | File systems | 10 | server1
+Format /dev/vdb1 with xfs and the label `WEBDATA`, and /dev/vdb2 with vfat.
+@check server1 | vdb1 is xfs with the label WEBDATA
+test "$(blkid -s TYPE -o value /dev/vdb1)" = xfs && test "$(blkid -s LABEL -o value /dev/vdb1)" = WEBDATA
+@check server1 | vdb2 is vfat
+test "$(blkid -s TYPE -o value /dev/vdb2)" = vfat
+@hint mkfs.xfs -L sets the label; mkfs.vfat makes a FAT file system.
+@solution server1
+mkfs.xfs -L WEBDATA /dev/vdb1
+mkfs.vfat /dev/vdb2
+lsblk -f /dev/vdb
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart web 1MiB 1025MiB
+parted -s /dev/vdb mkpart usb 1025MiB 1537MiB
+@end
+
+@quiz
+? Which file system can be grown while mounted but never shrunk?
++ xfs
+- ext4
+- vfat
+- all three
+! xfs only grows. ext4 can grow online and shrink when unmounted.
+? How do you give a vfat file system the label PHOTOS when you create it?
+- mkfs.vfat -L PHOTOS /dev/vdb3
++ mkfs.vfat -n PHOTOS /dev/vdb3
+- mkfs.vfat /dev/vdb3 PHOTOS
+- e2label /dev/vdb3 PHOTOS
+! mkfs.vfat uses -n for the volume name; xfs and ext4 use -L. fatlabel changes it later.
+? mkfs.xfs says the device "appears to contain an existing filesystem". What should you do first?
+- run it again with -f straight away
++ check with lsblk -f that it really is the device you meant to format
+- run fsck on the device
+- reboot
+! The warning protects existing data. Use -f only once you are sure the old content can go.
+@end
+
+## Lesson: l0602 | Mounting, unmounting, and a broken fstab
+
+### mount and umount
+
+`mount DEVICE FOLDER` attaches a file system to an existing folder, the mount point. The type is detected by itself (`-t TYPE` names it), and you can name the device by its label or UUID too. `umount` takes the folder or the device.
+
+```terminal
+[root@server1 ~]# mkdir /web /logs /share
+[root@server1 ~]# mount /dev/vdb1 /web
+[root@server1 ~]# mount LABEL=APPLOGS /logs
+[root@server1 ~]# mount /dev/vdb3 /share
+[root@server1 ~]# df -hT /web /logs /share
+Filesystem Type  Size Used Avail Use% Mounted on
+/dev/vdb1  xfs  1002M  13M  990M   2% /web
+/dev/vdb2  ext4  975M  24K  927M   1% /logs
+/dev/vdb3  vfat  510M    0  510M   0% /share
+[root@server1 ~]# findmnt /logs
+TARGET SOURCE    FSTYPE OPTIONS
+/logs  /dev/vdb2 ext4   rw,relatime,seclabel
+[root@server1 ~]# findmnt -n -o SOURCE,FSTYPE /web
+/dev/vdb1 xfs
+```
+
+- `df -h` shows how full each file system is; `-T` adds the type.
+- `findmnt` shows what is mounted where, with the options. `findmnt FOLDER` answers "is something mounted here?", `-n -o` picks columns without the heading (good for scripts and checks), `findmnt -s` reads /etc/fstab instead of the live mounts, and `findmnt --verify` checks /etc/fstab for mistakes.
+- `mount` with no arguments lists every mount (long); `lsblk -f` shows mount points next to the devices.
+
+### Target is busy
+
+You cannot unmount a file system that something is using, and that includes a shell whose current folder is inside it:
+
+```terminal
+[root@server1 ~]# cd /web
+[root@server1 web]# umount /web
+umount: /web: target is busy.
+[root@server1 web]# cd
+[root@server1 ~]# umount /web
+```
+
+Leave the folder, close files that are open there (an editor, a program writing a log), then try again.
+
+### Changing options without unmounting
+
+`mount -o remount,OPTIONS FOLDER` changes the options of a mounted file system, for example read-only:
+
+```terminal
+[root@server1 ~]# mount -o remount,ro /share
+[root@server1 ~]# touch /share/x
+touch: cannot touch '/share/x': Read-only file system
+[root@server1 ~]# mount -o remount,rw /share
+```
+
+Common options for the fourth field of fstab or for `-o`: `ro` / `rw`, `noexec` (programs on it cannot run), `nosuid`, `noatime`, `_netdev` (needs the network, lesson 3), and `nofail` (the boot goes on even if this device is missing, handy for USB disks).
+
+### When a bad fstab line stops the boot
+
+At boot, systemd mounts everything in /etc/fstab. If a line names a device that does not exist (a typo in the UUID, a disk that was removed), the mount fails and the boot stops in **emergency mode**: the screen says the mount failed and asks for the root password for maintenance. The system is not broken; it just refuses to go on without that file system. To repair it:
+
+1. Type the root password. You get a root shell with only the root file system mounted.
+2. If the root file system is read-only (`touch /etc/x` fails), run `mount -o remount,rw /`.
+3. Fix or remove the bad line in /etc/fstab with vi (or comment it out with a `#`).
+4. Run `systemctl daemon-reload` and `mount -a`. When mount -a stays silent, every line works.
+5. Run `systemctl reboot` (or `systemctl default` to carry on booting).
+
+You can catch the problem before any reboot: mount -a reports a bad line straight away.
+
+```terminal
+[root@server1 ~]# echo '/dev/vdb7 /projects xfs defaults 0 0' >> /etc/fstab
+[root@server1 ~]# mount -a; echo rc=$?
+mount: /projects: mount point does not exist.
+rc=32
+[root@server1 ~]# mkdir /projects
+[root@server1 ~]# mount -a; echo rc=$?
+mount: /projects: special device /dev/vdb7 does not exist.
+rc=32
+```
+
+> On the exam, a file system you add must survive the graders' reboot, and a mistake in fstab can stop the whole machine from booting, which may cost you every task on it. Always finish with `mount -a` and look at its output.
+
+@try machines=1
+@task t1 | File systems | 15 | server1
+Someone added a line for /projects to /etc/fstab, but it names a device that does not exist, so the next boot would stop in emergency mode. The file system for /projects is on /dev/vdb1. Correct /etc/fstab so that /projects is mounted from vdb1 by its UUID, and mount it now.
+@check server1 | no fstab line uses /dev/vdb7 any more, and mount -a works
+! grep -Eq '^[[:space:]]*/dev/vdb7' /etc/fstab && mount -a
+@check server1 | fstab mounts /projects by UUID
+findmnt -s -n -o SOURCE /projects | grep -q '^UUID='
+@check server1 | /projects is mounted from vdb1
+test "$(findmnt -n -o SOURCE /projects)" = /dev/vdb1
+@hint Delete the bad line (sed -i '/vdb7/d' or vi), add a new one with UUID=, then systemctl daemon-reload and mount -a.
+@solution server1
+sed -i '/vdb7/d' /etc/fstab
+echo "UUID=$(blkid -s UUID -o value /dev/vdb1) /projects xfs defaults 0 0" >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /projects
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart projects 1MiB 1025MiB
+mkfs.xfs /dev/vdb1
+mkdir /projects
+echo '/dev/vdb7 /projects xfs defaults 0 0' >> /etc/fstab
+@end
+
+@quiz
+? umount /data says "target is busy". What is the most common reason?
+- the file system is damaged
++ a shell or program is using a file or folder inside /data
+- /data is not in /etc/fstab
+- you are not root
+! A shell whose current folder is in /data counts. cd out, close the program, then unmount.
+? Which command lists the file systems that /etc/fstab describes, without mounting anything?
+- findmnt
++ findmnt -s
+- mount -a
+- df -h
+! -s reads the fstab file. Plain findmnt shows what is mounted now.
+? The boot stopped in emergency mode because of a typo in /etc/fstab. Which step comes after you fixed the line?
+- mkfs on the device again
++ systemctl daemon-reload and mount -a to test it, then reboot
+- delete /etc/fstab
+- run grub2-mkconfig
+! systemd builds its mount units from fstab, so reload it; mount -a proves every line works before you reboot.
+@end
+
+## Lesson: l0603 | NFS: using folders from another machine
+
+NFS (Network File System) lets a server share folders, called exports, that other machines mount over the network as if they were local. The client part is the nfs-utils package, which is installed on the lab machines (on a minimal install, add it with dnf), so you only need the server's name and the export's path.
+
+`showmount -e SERVER` asks a server what it exports:
+
+```terminal
+[root@server1 ~]# showmount -e utility.lab.example.com
+Export list for utility.lab.example.com:
+/exports/shared            *
+/exports/public            *
+/exports/home/remoteuser1  *
+/exports/home/remoteuser2  *
+/exports/home/remoteuser3  *
+/exports/home/production5  *
+```
+
+(`*` means every client may mount it. Some servers, NFSv4-only ones, do not answer showmount; then you need to know the path from the task.)
+
+### Mounting by hand
+
+The source is written `SERVER:/PATH`:
+
+```terminal
+[root@server1 ~]# mkdir /mnt/shared
+[root@server1 ~]# mount -t nfs utility.lab.example.com:/exports/shared /mnt/shared
+[root@server1 ~]# findmnt -n -o SOURCE,FSTYPE /mnt/shared
+utility.lab.example.com:/exports/shared nfs4
+[root@server1 ~]# ls -l /mnt/shared
+total 8
+-rw-r--r--. 1 root root 47 Mar  2 04:00 notes.txt
+-rw-r--r--. 1 root root 57 Mar  2 04:00 README.txt
+[root@server1 ~]# touch /mnt/shared/root-file.txt
+[root@server1 ~]# ls -l /mnt/shared/root-file.txt
+-rw-r--r--. 1 nobody nobody 0 Mar  2 04:00 /mnt/shared/root-file.txt
+```
+
+The client and the server agreed on NFS version 4.2 by themselves (the type shows as nfs4). Look at the owner of the new file: nobody. NFS servers normally do not trust root on a client ("root squash"), so root's files are created as the user nobody, and root cannot read other people's private files there. Permissions are checked by UID number: a user with UID 1501 on the client is the same as UID 1501 on the server, whatever the names are.
+
+### Mounting at boot
+
+In /etc/fstab, use the type `nfs` and add the option `_netdev`, which marks the line as a network file system so that systemd mounts it only after the network is up. (systemd already knows that the type nfs needs the network, so for NFS the option mostly makes your intent clear; many tasks ask for it, and it is required for disks that are reached over the network, such as iSCSI.)
+
+```terminal
+[root@server1 ~]# umount /mnt/shared
+[root@server1 ~]# echo 'utility.lab.example.com:/exports/shared /mnt/shared nfs defaults,_netdev 0 0' >> /etc/fstab
+[root@server1 ~]# systemctl daemon-reload
+[root@server1 ~]# mount -a
+[root@server1 ~]# findmnt -n -o SOURCE,FSTYPE /mnt/shared
+utility.lab.example.com:/exports/shared nfs4
+[root@server1 ~]# df -h /mnt/shared
+Filesystem                              Size Used Avail Use% Mounted on
+utility.lab.example.com:/exports/shared  50G 9.1G   41G  19% /mnt/shared
+```
+
+The last two fields are 0 0: there is nothing for the client to check on a network file system. Useful extra options: `ro` for read-only, `vers=4.2` to insist on a version, `sync` to write through at once.
+
+> If the server is not reachable at boot, a plain NFS line in fstab can delay the boot for a long time. `_netdev` orders it after the network; `nofail` lets the boot go on without it. For shares that are used only now and then, autofs (next lesson) is the better choice.
+
+@try machines=1
+@task t1 | File systems | 10 | server1
+Mount the export /exports/public of utility.lab.example.com on /mnt/public, now and at every boot. Use the `_netdev` option.
+@check server1 | /mnt/public is an NFS mount of /exports/public
+findmnt -n -o FSTYPE /mnt/public | grep -q '^nfs' && findmnt -n -o SOURCE /mnt/public | grep -q ':/exports/public$'
+@check server1 | /etc/fstab mounts it at boot with _netdev
+findmnt -s -n -o SOURCE /mnt/public | grep -q ':/exports/public$' && findmnt -s -n -o OPTIONS /mnt/public | grep -q _netdev
+@hint The source is SERVER:/PATH and the type nfs. mkdir the mount point first.
+@solution server1
+showmount -e utility.lab.example.com
+mkdir -p /mnt/public
+echo 'utility.lab.example.com:/exports/public /mnt/public nfs ro,_netdev 0 0' >> /etc/fstab
+systemctl daemon-reload
+mount -a
+findmnt /mnt/public
+@endtask
+@end
+
+@quiz
+? How is an NFS source written in mount and in /etc/fstab?
+- //server/export
++ server:/export
+- nfs://server/export
+- /net/server/export
+! Host name, a colon, then the path on the server. //server/share is the Windows (SMB) form.
+? What does the fstab option _netdev do?
+- it makes the mount read-only
++ it tells systemd the file system needs the network, so it is mounted after the network is up
+- it turns on encryption
+- it makes NFS use version 4
+! systemd then orders the mount after the network. It recognizes the type nfs as a network file system by itself, but _netdev makes it explicit and is needed for network block devices such as iSCSI.
+? Root creates a file on an NFS mount and it belongs to nobody. Why?
+- the export is read-only
++ the server squashes root: requests from a client's root are treated as the user nobody
+- the client has no user called root
+- SELinux changed the owner
+! Root squash is the default on NFS servers, so that root on any client is not root on the server's files.
+@end
+
+## Lesson: l0604 | autofs: mounting on demand
+
+autofs watches folders and mounts a file system the moment someone uses a path inside them, then unmounts it again after a few idle minutes (5 by default). Nothing is mounted at boot, nothing hangs when the server is away, and adding a share is a one-line change. It is the usual way to give users their home folders from an NFS server.
+
+autofs is not installed at first: `dnf install -y autofs` (with repositories configured), then `systemctl enable --now autofs`.
+
+### The master map and the map files
+
+- /etc/auto.master (and any file ending in `.autofs` in /etc/auto.master.d) lists the folders that autofs manages, each with the map file that describes them. Add your own file in auto.master.d rather than editing auto.master.
+- Each map file has one line per key: the key (the folder name that appears), mount options starting with `-`, and the source.
+
+```terminal
+[root@server1 ~]# grep -v '^#' /etc/auto.master
+/misc	/etc/auto.misc
+/net	-hosts
++dir:/etc/auto.master.d
++auto.master
+[root@server1 ~]# echo '/remote /etc/auto.remote' > /etc/auto.master.d/remote.autofs
+[root@server1 ~]# echo 'public -ro utility.lab.example.com:/exports/public' > /etc/auto.remote
+```
+
+This is an **indirect map**: autofs manages /remote (you do not create it, autofs does), and the key `public` becomes /remote/public. Now `systemctl enable --now autofs` starts the service and enables it at boot.
+
+```terminal
+[root@server1 ~]# ls /remote
+[root@server1 ~]# ls /remote/public
+welcome.html
+[root@server1 ~]# ls /remote
+public
+[root@server1 ~]# findmnt -n -o SOURCE,FSTYPE,OPTIONS /remote/public
+utility.lab.example.com:/exports/public nfs4 ro,relatime,vers=4.2,rsize=262144,wsize=262144,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.50.11,local_lock=none,addr=192.168.50.254
+```
+
+At first /remote looks empty: the key is not shown until it is used (this is normal, do not panic). Using /remote/public mounted it.
+
+### Wildcard maps: one line for many users
+
+A key of `*` matches any name, and `&` in the source is replaced by that name. One line then serves every user whose home is on the server:
+
+```terminal
+[root@server1 ~]# echo '/rhome /etc/auto.rhome' > /etc/auto.master.d/rhome.autofs
+[root@server1 ~]# echo '* -rw,sync utility.lab.example.com:/exports/home/&' > /etc/auto.rhome
+[root@server1 ~]# systemctl restart autofs
+[root@server1 ~]# useradd -u 1502 -d /rhome/remoteuser2 -M remoteuser2
+[root@server1 ~]# su - remoteuser2 -c 'pwd; ls'
+/rhome/remoteuser2
+welcome.txt
+[root@server1 ~]# findmnt -n -o SOURCE,FSTYPE /rhome/remoteuser2
+utility.lab.example.com:/exports/home/remoteuser2 nfs4
+```
+
+The local account remoteuser2 has the same UID as on the NFS server (1502), its home is /rhome/remoteuser2, and `-M` stops useradd from creating that folder (autofs provides it). When remoteuser2 logs in, the home is mounted.
+
+### Direct maps
+
+A direct map mounts at full paths anywhere in the tree. In the master map its folder is `/-`, and the keys in its map are absolute paths, for example `/- /etc/auto.direct` with `/opt/docs -ro utility.lab.example.com:/exports/public` in /etc/auto.direct.
+
+> After changing a map, run `systemctl reload autofs` (or restart). If nothing mounts, check that the map file name in the .autofs file is right, that the master map entry has no typo, and `journalctl -u autofs`.
+
+@try machines=1
+@task t1 | File systems | 15 | server1
+The NFS server utility.lab.example.com exports home folders under /exports/home (for example /exports/home/remoteuser1). Configure autofs so that /rhome/NAME mounts /exports/home/NAME (read-write) for any NAME when it is used. autofs must start at boot. (Repositories are configured.)
+@check server1 | autofs is enabled and running
+systemctl is-enabled autofs && systemctl is-active autofs
+@check server1 | using /rhome/remoteuser3 mounts its export
+ls /rhome/remoteuser3 >/dev/null 2>&1; findmnt -n -o SOURCE /rhome/remoteuser3 | grep -q ':/exports/home/remoteuser3$'
+@check server1 | the map works for other names too (remoteuser1)
+ls /rhome/remoteuser1 >/dev/null 2>&1; findmnt -n -o SOURCE /rhome/remoteuser1 | grep -q ':/exports/home/remoteuser1$'
+@hint A file in /etc/auto.master.d names /rhome and a map; the map line is * with & in the path.
+@solution server1
+dnf install -y autofs
+echo '/rhome /etc/auto.rhome' > /etc/auto.master.d/rhome.autofs
+echo '* -rw,sync utility.lab.example.com:/exports/home/&' > /etc/auto.rhome
+systemctl enable --now autofs
+ls /rhome/remoteuser3
+@endtask
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+@end
+
+@quiz
+? In an autofs map, what does the line `* -rw server:/homes/&` do?
+- mounts every export of the server at once
++ for any name used under the managed folder, mounts server:/homes/ followed by that name
+- mounts /homes/& literally
+- makes every user's home read-write locally
+! * matches the key that was asked for and & repeats it in the source.
+? You configured an indirect map for /shares, but ls /shares shows nothing. What is going on?
+- autofs is broken
++ keys only appear once they are used: try ls /shares/KEY
+- you must create the folders under /shares yourself
+- the share is read-only
+! autofs mounts on demand. Using the full path triggers the mount.
+? Where should you add your own master map entry?
+- at the end of /etc/fstab
++ in a new file ending in .autofs in /etc/auto.master.d
+- in /etc/auto.misc
+- in /etc/exports
+! auto.master includes every *.autofs file from /etc/auto.master.d, and package updates leave your file alone.
+@end
+
+## Lesson: l0605 | Growing logical volumes and their file systems
+
+A file system that runs out of space on an LV can grow, often without even unmounting it. There are two layers to grow: the LV (the block device) and the file system inside it. Growing only the LV gives you nothing usable until the file system grows too.
+
+### lvextend -r: both in one step
+
+`lvextend -r` (long form `--resizefs`) grows the LV and then the file system on it, whatever its type. The size can be the new total (`-L 800M`), an amount to add (`-L +200M`), or extents (`-l +50`, `-l +100%FREE` for all the free space).
+
+```terminal
+[root@server1 ~]# df -h /db
+Filesystem            Size Used Avail Use% Mounted on
+/dev/mapper/vgdb-lvdb 390M 8.6M  382M   3% /db
+[root@server1 ~]# vgs vgdb
+  VG   #PV #LV #SN Attr    VSize  VFree
+  vgdb   1   1   0 wz--n- <2.00g <1.61g
+```
+
+Here /db is an xfs file system on the 400 MiB LV vgdb/lvdb, and the VG has 1.6 GiB free. After `lvextend -r -L 800M /dev/vgdb/lvdb` (it reports the new LV size and then the file system growth), df shows the new size, and the data is still there:
+
+```terminal
+[root@server1 ~]# df -h /db
+Filesystem            Size Used Avail Use% Mounted on
+/dev/mapper/vgdb-lvdb 782M 8.6M  774M   2% /db
+```
+
+### Doing it in two steps
+
+Without -r, grow the LV first, then the file system with the tool that belongs to its type:
+
+- xfs: `xfs_growfs MOUNTPOINT` (it takes the mount point, and the file system must be mounted)
+- ext4: `resize2fs DEVICE` (mounted or not)
+
+```terminal
+[root@server1 ~]# lvextend -L 400M vgdb/lvlog
+  Size of logical volume vgdb/lvlog changed from 200.00 MiB (50 extents) to 400.00 MiB (100 extents).
+  Logical volume vgdb/lvlog successfully resized.
+[root@server1 ~]# resize2fs /dev/vgdb/lvlog
+resize2fs 1.46.5 (30-Dec-2021)
+Filesystem at /dev/mapper/vgdb-lvlog is mounted on /applog; on-line resizing required
+old_desc_blocks = 1, new_desc_blocks = 1
+The filesystem on /dev/mapper/vgdb-lvlog is now 102400 (4k) blocks long.
+
+[root@server1 ~]# df -h /applog
+Filesystem             Size Used Avail Use% Mounted on
+/dev/mapper/vgdb-lvlog 381M  24K  362M   1% /applog
+```
+
+df always shows a little less than the LV size, because the file system keeps some space for its own records.
+
+### When the VG is full
+
+lvextend can only use free extents of the LV's own VG. If `vgs` shows no free space, add a PV first (unit 5): create a partition in free space, `vgextend VG PARTITION`, then lvextend.
+
+### Shrinking
+
+xfs cannot shrink at all: to make an xfs LV smaller you would back up, recreate and restore. ext4 can shrink, but only unmounted, and the file system must shrink before the LV (`lvreduce -r` does both in the right order). Shrinking in the wrong order destroys data, which is why tasks almost always ask you to grow.
+
+> Exam tasks often give a size range ("between 830 and 870 MiB") because of extent rounding. Pick a size in the middle that is a multiple of the extent size, and check with `lvs` and `df -h` at the end.
+
+@try machines=1
+@task t1 | File systems | 15 | server1
+The xfs file system on /db (the LV vgdb/lvdb, 400 MiB) is running out of space. Grow the LV to 800 MiB together with its file system, without losing the data on it.
+@check server1 | the LV is 800 MiB
+test "$(lvs --noheadings --units m -o lv_size vgdb/lvdb | tr -d ' ')" = "800.00m"
+@check server1 | the file system on /db uses the new space and keeps its data
+test "$(df -m --output=size /db | tail -1 | tr -d ' ')" -ge 700 && grep -q important /db/keep.txt
+@hint lvextend -r -L 800M grows both layers. (lvextend, then xfs_growfs /db, works too.)
+@solution server1
+df -h /db
+lvextend -r -L 800M /dev/vgdb/lvdb
+df -h /db
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm 1MiB 2049MiB
+vgcreate vgdb /dev/vdb1
+lvcreate -n lvdb -L 400M vgdb
+mkfs.xfs /dev/vgdb/lvdb
+mkdir /db
+echo '/dev/vgdb/lvdb /db xfs defaults 0 0' >> /etc/fstab
+mount -a
+echo important > /db/keep.txt
+@end
+
+@quiz
+? You ran lvextend -L +1G vgdata/lvweb (an xfs file system on /web) without -r. What else do you need?
+- nothing, the file system grows by itself
++ xfs_growfs /web
+- resize2fs /dev/vgdata/lvweb
+- mkfs.xfs on the LV
+! The LV is bigger but the file system still has its old size. xfs_growfs takes the mount point; resize2fs is for ext4; mkfs would wipe the data.
+? Which command grows the LV vg1/lv1 by all the free space in its VG, file system included?
+- lvextend -L 100% -r vg1/lv1
++ lvextend -r -l +100%FREE vg1/lv1
+- lvresize -s vg1/lv1
+- vgextend -r vg1 lv1
+! -l takes extents or percentages; +100%FREE adds every free extent; -r resizes the file system too.
+? Can you shrink an xfs file system?
+- yes, with xfs_growfs -s
+- yes, with lvreduce -r
++ no, xfs can only grow
+- yes, but only while mounted
+! To get a smaller xfs you back up, recreate it at the new size and restore.
+@end
+
+## Lesson: l0606 | Shared folders, special permissions and ACLs
+
+### A folder for a team: the set-GID bit
+
+When a user creates a file, it gets the user's primary group. In a team folder that is wrong: the file should belong to the team's group, so that the others can work on it. The **set-GID** bit on a folder fixes that: new files and subfolders inherit the folder's group. Set it with `chmod g+s` or with a leading 2 in the number (`chmod 2770`); ls shows an `s` where the group's x is.
+
+```terminal
+[root@server1 ~]# groupadd sales
+[root@server1 ~]# useradd -G sales alice
+[root@server1 ~]# useradd -G sales bob
+[root@server1 ~]# mkdir -p /srv/sales
+[root@server1 ~]# chgrp sales /srv/sales
+[root@server1 ~]# chmod 2770 /srv/sales
+[root@server1 ~]# ls -ld /srv/sales
+drwxrws---. 2 root sales 6 Mar  2 04:00 /srv/sales
+[root@server1 ~]# su - alice -c 'touch /srv/sales/plan.txt'
+[root@server1 ~]# ls -l /srv/sales
+total 0
+-rw-r--r--. 1 alice sales 0 Mar  2 04:00 plan.txt
+```
+
+alice's primary group is alice, but plan.txt belongs to sales. Mode 770 gives the owner and the group everything and others nothing. (For the group to edit each other's files, their umask must also leave the group's w; unit 10 covers umask. A default ACL, below, is another way.)
+
+### The sticky bit: only the owner may delete
+
+In a folder where everyone may write, anyone could also delete anyone's files. The **sticky bit** (`chmod o+t`, or a leading 1: `chmod 1777`) stops that: a file in such a folder can be deleted or renamed only by its owner, the folder's owner or root. /tmp is the classic example; ls shows a `t` in place of the others' x.
+
+```terminal
+[root@server1 ~]# ls -ld /tmp
+drwxrwxrwt. 2 root root 6 Mar  2 04:00 /tmp
+[root@server1 ~]# mkdir /srv/drop
+[root@server1 ~]# chmod 1777 /srv/drop
+[root@server1 ~]# su - alice -c 'touch /srv/drop/a.txt'
+[root@server1 ~]# su - bob -c 'rm -f /srv/drop/a.txt'
+rm: cannot remove '/srv/drop/a.txt': Operation not permitted
+```
+
+The special bits in numbers: 4 = set-UID (on programs), 2 = set-GID, 1 = sticky, written before the three usual digits. `chmod 3770` sets both set-GID and sticky.
+
+### Diagnosing "Permission denied"
+
+When a user cannot open a file, check in this order:
+
+1. **Who is the user?** `id USER` shows the UID and every group. A group added a minute ago only counts in new logins.
+2. **Every folder on the way.** To reach /srv/sales/plan.txt the user needs x on /, on /srv and on /srv/sales (and r on a folder to list it). `namei -l PATH` shows the owner and mode of every step at once.
+3. **The file itself:** r to read, w to change. The first class that matches decides (owner, then group, then others), even when a later class would give more.
+4. **ACLs:** a `+` after the mode in ls -l means there are extra rules; read them with getfacl.
+5. **SELinux** (unit 10) can deny access even when all of the above allow it.
+
+```terminal
+[root@server1 ~]# useradd carol
+[root@server1 ~]# su - carol -c 'ls /srv/sales'
+ls: cannot open directory '/srv/sales': Permission denied
+[root@server1 ~]# namei -l /srv/sales/plan.txt
+f: /srv/sales/plan.txt
+ drwxr-xr-x root     root     /
+ drwxr-xr-x root     root     srv
+ drwxrws--- root     sales    sales
+ -rw-r--r-- alice    sales    plan.txt
+```
+
+carol is not in sales, so she falls into "others" on /srv/sales, which have no rights. The fix depends on what she should get: membership in the group (usermod -aG), or, for a single person with limited rights, an ACL.
+
+### ACLs: rights for one more user or group
+
+An access control list adds entries for named users and groups on top of the owner / group / others rules. RHEL's xfs and ext4 support ACLs without any mount option.
+
+- `setfacl -m u:carol:rx FOLDER` gives carol read and enter rights; `g:GROUP:rwx` is for a group.
+- `getfacl FILE` shows all entries.
+- `setfacl -x u:carol FILE` removes one entry; `setfacl -b FILE` removes all of them.
+- `-R` applies to everything below. A capital `X` gives x only to folders (and to files that already have an x), which is what you want with -R: `setfacl -R -m u:carol:rX /srv/sales`.
+
+```terminal
+[root@server1 ~]# setfacl -m u:carol:rx /srv/sales
+[root@server1 ~]# getfacl /srv/sales
+getfacl: Removing leading '/' from absolute path names
+# file: srv/sales
+# owner: root
+# group: sales
+# flags: -s-
+user::rwx
+user:carol:r-x
+group::rwx
+mask::rwx
+other::---
+
+[root@server1 ~]# ls -ld /srv/sales
+drwxrws---+ 2 root sales 24 Mar  2 04:00 /srv/sales
+[root@server1 ~]# su - carol -c 'ls /srv/sales'
+plan.txt
+```
+
+(The first line of getfacl is only a remark that it shows the path without the leading /; the `flags: -s-` line is the set-GID bit.)
+
+### The mask
+
+The `mask` entry is the most that any named user, named group or the owning group can get. It is set by setfacl automatically, and chmod on the group digits changes the mask, not the group entry. When the mask is lower than an entry, getfacl shows what really applies with `#effective`:
+
+```terminal
+[root@server1 ~]# setfacl -m u:carol:rw /srv/sales/plan.txt
+[root@server1 ~]# chmod g=r /srv/sales/plan.txt
+[root@server1 ~]# getfacl /srv/sales/plan.txt
+getfacl: Removing leading '/' from absolute path names
+# file: srv/sales/plan.txt
+# owner: alice
+# group: sales
+user::rw-
+user:carol:rw-	#effective:r--
+group::r--
+mask::r--
+other::r--
+```
+
+carol's entry says rw, but the mask lets only r through. `setfacl -m m::rw FILE` raises the mask again (setting any named entry also recalculates it).
+
+### Default ACLs: rules for new files
+
+An ACL on a folder applies to the folder only. A **default ACL** (`d:` in front of the entry) is copied to every file and subfolder created inside it later:
+
+```terminal
+[root@server1 ~]# setfacl -m d:u:carol:rw /srv/sales
+[root@server1 ~]# su - bob -c 'touch /srv/sales/report.txt'
+[root@server1 ~]# getfacl /srv/sales/report.txt
+getfacl: Removing leading '/' from absolute path names
+# file: srv/sales/report.txt
+# owner: bob
+# group: sales
+user::rw-
+user:carol:rw-
+group::rwx	#effective:rw-
+mask::rw-
+other::---
+```
+
+The new file got carol's entry and belongs to sales (set-GID). Default ACLs do not change files that already exist: for those, use `setfacl -R -m` as well. `setfacl -k FOLDER` removes the default ACL.
+
+> A typical task: "the folder belongs to group X, members can work in it, files get group X, user Y may only read". That is chmod 2770 plus `setfacl -m u:Y:rx` on the folder, `setfacl -R -m u:Y:rX` for existing content and `setfacl -m d:u:Y:rX` for future content.
+
+@try machines=1
+@task t1 | File systems | 10 | server1
+Create the folder /srv/dev for the group `devs`: the group owns it, its members can create and change files there, other users have no access, and new files automatically belong to `devs`.
+@check server1 | /srv/dev belongs to devs, mode 2770
+test "$(stat -c '%G %a' /srv/dev)" = "devs 2770"
+@check server1 | a file dan creates there belongs to devs
+su - dan -c 'touch /srv/dev/check-file' && test "$(stat -c %G /srv/dev/check-file)" = devs
+@hint chgrp, then chmod 2770 (the 2 is the set-GID bit).
+@solution server1
+mkdir -p /srv/dev
+chgrp devs /srv/dev
+chmod 2770 /srv/dev
+ls -ld /srv/dev
+@endtask
+@task t2 | File systems | 10 | server1
+The user `auditor` must be able to list /srv/dev and read the files in it (including files created later), without being a member of `devs` and without changing the folder's mode.
+@check server1 | auditor has r-x on /srv/dev through an ACL
+getfacl /srv/dev 2>/dev/null | grep -q '^user:auditor:r-x'
+@check server1 | new files will give auditor read access (default ACL)
+getfacl /srv/dev 2>/dev/null | grep -Eq '^default:user:auditor:r-[x-]'
+@check server1 | auditor can list the folder and is not in devs
+su - auditor -c 'ls /srv/dev' >/dev/null && ! id -nG auditor | grep -qw devs
+@hint setfacl -m u:auditor:rx for the folder, and the same with d: in front for new files.
+@solution server1
+setfacl -m u:auditor:rx /srv/dev
+setfacl -m d:u:auditor:rx /srv/dev
+getfacl /srv/dev
+@endtask
+@setup server1
+groupadd devs
+useradd -G devs dan
+useradd auditor
+@end
+
+@quiz
+? What does chmod 2770 /shared do?
+- makes the folder sticky and readable by all
++ owner and group get full access, others none, and new files inherit the folder's group
+- sets the folder's owner to the group
+- runs programs in the folder as the group
+! The leading 2 is set-GID; on a folder it passes the folder's group to new files.
+? In /pub (mode 1777), user bob tries to delete alice's file and gets "Operation not permitted". Why?
+- bob has no w on /pub
++ the sticky bit lets only a file's owner (or the folder's owner, or root) delete it
+- the file is read-only
+- SELinux blocks it
+! Mode 1777 gives everyone write access to the folder, and the sticky bit (the leading 1) protects each user's files.
+? getfacl shows `user:carol:rw-	#effective:r--`. What can carol do with the file?
++ read it only, because the mask is r--
+- read and write it
+- nothing
+- write it only
+! The mask limits named entries. Raise it with setfacl -m m::rw (or set the entry again).
+@end

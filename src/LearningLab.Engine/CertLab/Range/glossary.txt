@@ -1,0 +1,145 @@
+# Cyber Range glossary: the words Beginner pages explain when you hover over or click them.
+# Each entry starts with "== term | other spellings, ..." and the lines after it are the explanation (one or two
+# sentences, plain enough for a middle schooler, still accurate for a professional). Blank lines and lines starting
+# with # are ignored. Spellings match whole words, ignoring upper / lower case; the longest spelling wins.
+
+== flag | flags, FLAG{...}
+A secret bit of text hidden somewhere a player should not normally reach, like FLAG{...}. Finding it and typing it in proves you got there.
+
+== capture the flag | CTF, CTFs
+A security game where you solve challenges to find hidden flags. Professionals use CTFs to practise, the way athletes run drills.
+
+== IP address | IP addresses, IP
+A computer's number on a network, like 10.10.1.20, so other computers know where to send things. It works like a street address for messages.
+
+== network | networks, subnet, LAN
+A group of computers connected so they can talk to each other. A subnet is one neighbourhood of that network, such as all the addresses starting 10.10.1.
+
+== port | ports, open port, open ports
+A numbered door on a computer that one kind of program listens behind: web pages usually on 80 or 443, SSH on 22. An open port means a program is answering there.
+
+== scan | scans, scanning, port scan, nmap
+Checking which computers are on a network and which doors (ports) they have open. nmap is the classic tool for it, and scans are noisy, so defenders often notice them.
+
+== server | servers
+A computer whose job is to provide something to others, like a website, shared files or email. It is just a computer that waits for requests.
+
+== host | hosts, machine, machines
+Any computer on the network. Players call the computer they work from their box.
+
+== terminal | console, command line
+A window where you control a computer by typing commands instead of clicking. Everything in Cyber Range happens in a pretend one.
+
+== shell | shells, bash, PowerShell
+The program inside the terminal that reads what you type and runs it. bash is the usual one on Linux; PowerShell is Windows' one.
+
+== command | commands
+An instruction you type into the terminal, like ls to list files or cat to show one. Most commands are a short name followed by options.
+
+== Linux
+A free family of operating systems that runs most of the world's servers. In Linux everything, even settings, is a file you can read.
+
+== Windows
+Microsoft's operating system, used on most office and home PCs. Companies often join their Windows computers into a domain.
+
+== root | superuser
+The all-powerful administrator account on Linux. Root can read and change anything, which is why attackers want it and defenders guard it.
+
+== administrator | administrators, admin, admins
+An account allowed to change anything on a computer, like installing programs or reading other people's files.
+
+== account | accounts, user account, user accounts, username, usernames
+A sign-in for one person or program on a computer, with its own name, password and permissions.
+
+== password | passwords, credentials
+A secret that proves who you are when you sign in. Credentials means the whole set: the username plus its password or key.
+
+== hash | hashes, password hash, password hashes
+A scrambled fingerprint of a password. Computers keep the hash instead of the password, but a weak password's hash can still be guessed.
+
+== password cracking | cracking, crack, cracked, hashcrack
+Guessing many possible passwords, scrambling each one the same way, and checking which hash matches. Long, unusual passwords take far too long to crack.
+
+== wordlist | wordlists, word list
+A long list of common passwords and words that cracking and guessing tools try one by one.
+
+== brute force | password guessing, guessing, pwguess
+Trying password after password until one works. It is loud and slow, so defenders watch for lots of failed sign-ins.
+
+== privilege | privileges, permissions, permission, rights
+What an account is allowed to do. Low privilege means a normal user; high privilege means administrator or root.
+
+== privilege escalation | escalate, escalation, privesc
+Going from a normal account to a more powerful one, usually by using a mistake in how the computer was set up.
+
+== sudo
+A Linux command that lets an allowed user run one command as root. A careless sudo rule can hand out far more power than intended.
+
+== foothold | foot in the door
+Your first way into a computer, often as an ordinary user. From there you look for a way to gain more power.
+
+== recon | reconnaissance, enumeration, enumerate
+Looking around carefully before doing anything else: which computers exist, what they run, and what they give away.
+
+== vulnerability | vulnerabilities, weakness, weaknesses, misconfiguration
+A weakness or mistake in software or settings that someone could take advantage of.
+
+== exploit | exploits, exploiting
+To use a vulnerability on purpose to make a computer do something it should not. Here every exploit is pretend.
+
+== encoding | encoded, decode, decoding, base64
+Writing data in a different alphabet so it travels safely, like base64. Anyone can turn it back: it hides nothing.
+
+== encryption | encrypted, decrypt, decryption, cipher, ciphers
+Scrambling data with a secret key so only someone with the key can read it. Unlike encoding, it is meant to keep secrets.
+
+== log | logs, log file, log files, event log, journal
+A diary a computer keeps of what happened and when: sign-ins, errors, programs starting. Defenders read logs to find out what an attacker did.
+
+== firewall | firewalls
+A gatekeeper that decides which network traffic may come in or go out of a computer or network.
+
+== SSH
+Secure Shell: a safe, encrypted way to sign in to another computer's terminal over the network, usually on port 22.
+
+== FTP
+File Transfer Protocol: an old way to send files between computers. It sends passwords unprotected, and anonymous FTP lets anyone in.
+
+== web server | web servers, website, web page, web pages, web app
+A program that sends web pages to browsers. Its mistakes, like files left visible, are a common way in.
+
+== HTTP | HTTPS
+The language browsers and web servers use to talk. HTTPS is the same thing wrapped in encryption.
+
+== share | shares, file share, SMB, smbclient
+A folder one computer offers to others over the network. SMB is the Windows way of sharing files; a share open to everyone can leak secrets.
+
+== domain | domains, domain controller, Active Directory
+A group of Windows computers and accounts managed together from one central server, the domain controller.
+
+== backup | backups
+A spare copy of files kept in case the originals are lost. A backup left where anyone can read it can give away secrets.
+
+== cron | cron job, cron jobs, crontab, scheduled task, scheduled tasks
+A way to make a computer run a command on a timetable, like every minute or every night. Attackers hide jobs here so they come back.
+
+== persistence
+Something an attacker leaves behind so they can get back in later, like a hidden scheduled job or an extra account.
+
+== malware
+Software made to do harm, like stealing files or letting an attacker back in. There is none here: anything that looks like it is pretend.
+
+== red team | red teamer, red teamers, attacker, attackers
+The side that plays the attacker, with permission, to find weak spots before real criminals do.
+
+== blue team | blue teamer, defenders, defender
+The side that protects computers: watching logs, spotting attacks and fixing weaknesses.
+
+== steganography | stego
+Hiding a message inside something ordinary, like a picture or a sound file, so nobody suspects it is there.
+
+== forensics | forensic
+Investigating files and computers after something happened, like a detective, to work out what took place.
+
+== OSINT
+Open-source intelligence: finding information that is already public, like on websites, to answer a question.

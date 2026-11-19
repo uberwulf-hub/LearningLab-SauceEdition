@@ -1,0 +1,26 @@
+# Deck: modules | Modules and profiles | Modules
+List the folders PowerShell searches for modules, one per line :: `$env:PSModulePath -split ';'`
+List the modules loaded in this session :: `Get-Module`
+List every module PowerShell can find, loaded or not :: `Get-Module -ListAvailable`
+The folder the Pester module is installed in :: `(Get-Module -ListAvailable Pester).ModuleBase`
+Load the ScheduledTasks module and show what was loaded :: `Import-Module ScheduledTasks -PassThru`
+Load a module again after you changed its file :: `Import-Module LabTools -Force`
+Unload the module LabTools from this session :: `Remove-Module LabTools`
+List the commands of the DnsClient module :: `Get-Command -Module DnsClient`
+What is module auto-loading? :: the first use of a command loads its module, if the module is in a PSModulePath folder (PowerShell 3.0 and later)
+Where does the module LabTools go so that it auto-loads for you only? :: Documents\WindowsPowerShell\Modules\LabTools\LabTools.psm1 (folder and file share the name)
+Where do modules for everyone on the computer go? :: C:\Program Files\WindowsPowerShell\Modules
+The last line of a .psm1 that shares only Get-Greeting :: `Export-ModuleMember -Function Get-Greeting`
+What does a script module share when it has no Export-ModuleMember? :: all its functions and aliases, none of its variables
+Create a manifest for LabTools, version 1.2.0, loading LabTools.psm1 :: `New-ModuleManifest -Path .\LabTools.psd1 -RootModule LabTools.psm1 -ModuleVersion 1.2.0`
+Check that a module manifest is valid :: `Test-ModuleManifest .\LabTools.psd1`
+Which manifest key lists the functions a module shares? :: FunctionsToExport (list names, not *, so auto-loading can find them without loading the module)
+Show the repositories PowerShellGet knows :: `Get-PSRepository`
+Search the PowerShell Gallery for a module named Pester :: `Find-Module Pester`
+Install a module from the Gallery for yourself only (no administrator) :: `Install-Module PSScriptAnalyzer -Scope CurrentUser`
+The path of your profile for this console :: `$PROFILE`
+The four profile paths of Windows PowerShell 5.1 :: `$PROFILE | Select-Object *`
+Create your profile file and its missing folders :: `New-Item -ItemType File -Path $PROFILE -Force`
+Run your profile now, in this session, after editing it :: `. $PROFILE`
+Start Windows PowerShell without running any profile :: `powershell.exe -NoProfile`
+Where is the profile of PowerShell 7 for the console? :: Documents\PowerShell\Microsoft.PowerShell_profile.ps1 (5.1 uses Documents\WindowsPowerShell)

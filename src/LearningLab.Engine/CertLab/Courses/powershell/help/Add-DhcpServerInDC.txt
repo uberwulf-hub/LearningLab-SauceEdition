@@ -1,0 +1,16 @@
+SYNOPSIS: Authorizes a DHCP server in Active Directory so it may hand out addresses.
+DESCRIPTION:
+In a domain, a Windows DHCP server checks Active Directory before it starts leasing. If it isn't on the list of authorized servers, it stays silent, which protects the network from a rogue server set up by mistake.
+
+Add-DhcpServerInDC adds a server to that list. It needs Enterprise Admins rights, because the list lives in the configuration partition of the forest. With no parameters it authorizes this machine.
+
+Authorize after installing the role; Server Manager's post-install task does the same.
+PARAMETER DnsName:
+The server's full name, for example srv1.corp.example. Position 0.
+PARAMETER IPAddress:
+The server's IP address. Position 1.
+EXAMPLE: Add-DhcpServerInDC -DnsName srv1.corp.example -IPAddress 10.10.0.50
+Authorizes SRV1.
+EXAMPLE: Get-DhcpServerInDC
+Lists the authorized DHCP servers to check.
+RELATED: Get-DhcpServerInDC, Remove-DhcpServerInDC, Add-DhcpServerv4Scope

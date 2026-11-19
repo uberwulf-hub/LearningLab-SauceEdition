@@ -1,0 +1,6 @@
+SYNOPSIS: Processes the Windows LAPS policy now.
+DESCRIPTION:
+Windows LAPS normally processes its policy about once an hour. Invoke-LapsPolicyProcessing does it at once: if the managed account's password is due (or was never set), LAPS sets a new one and backs it up to Microsoft Entra ID or Active Directory, as the policy says. Problems go to the event log Microsoft-Windows-LAPS/Operational; use -Verbose to see the outcome here.
+EXAMPLE: Invoke-LapsPolicyProcessing -Verbose
+Processes the policy and says what happened.
+RELATED: Reset-LapsPassword

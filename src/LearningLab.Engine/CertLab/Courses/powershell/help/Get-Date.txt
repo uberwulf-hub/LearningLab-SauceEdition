@@ -1,0 +1,42 @@
+SYNOPSIS: Gets the current date and time, or a date you describe, as a DateTime object.
+DESCRIPTION:
+Get-Date returns a [datetime] object. On screen it looks like text (Monday, March 2, 2026 9:00:00 AM), but it is an object with properties such as Year, Month, Day, DayOfWeek and Hour, and methods such as AddDays() and AddHours().
+
+Keep dates as objects while you work with them: compare them with -lt and -gt, subtract one from another to get a TimeSpan, and only turn them into text at the end, with -Format or -UFormat.
+
+You can also build a date from parts: change the year, month, day, hour, minute or second of the current date with the matching parameters.
+PARAMETER Date:
+The date to use instead of now. Position 0, so Get-Date '2026-01-01' works. It can also come through the pipeline.
+PARAMETER Format:
+Returns the date as text, using .NET format letters: yyyy year, MM month, dd day, HH hour (24-hour), mm minutes, ss seconds, dddd day name. Note the output is a string, no longer a date.
+PARAMETER UFormat:
+Returns the date as text, using Unix-style codes: %Y year, %m month, %d day, %H hour, %M minutes, %S seconds, %A day name, %j day of the year.
+PARAMETER Year:
+Sets the year of the date.
+PARAMETER Month:
+Sets the month (1 to 12).
+PARAMETER Day:
+Sets the day of the month.
+PARAMETER Hour:
+Sets the hour (0 to 23). -Minute and -Second work the same way.
+PARAMETER DisplayHint:
+Shows only the Date, only the Time, or both (DateTime). The object still holds the full date and time.
+EXAMPLE: Get-Date
+Shows the current date and time.
+EXAMPLE: Get-Date -Format 'yyyy-MM-dd'
+Gives text such as 2026-03-02, handy for file names.
+EXAMPLE: Get-Date -UFormat '%Y/%m/%d'
+The same idea with Unix-style codes.
+EXAMPLE: (Get-Date).AddDays(30).DayOfWeek
+Which day of the week it will be 30 days from now.
+EXAMPLE: Get-Date -Year 2020 -Month 2 -Day 29
+Builds the date February 29, 2020 (keeping the current time of day).
+NOTES:
+Watch out for capital letters in -Format: MM is the month, mm the minutes.
+
+Subtracting dates gives a TimeSpan: ((Get-Date) - (Get-Date '2026-01-01')).Days.
+
+Get-Date has no alias in 5.1, but date alone works too: when PowerShell cannot find a command, it tries again with Get- in front.
+
+In Cert Lab, the clock is the practice machine's: it starts at a fixed time and moves on when you use Start-Sleep or wait for jobs.
+RELATED: New-TimeSpan, Get-Culture, about_Operators

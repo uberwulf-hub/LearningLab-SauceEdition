@@ -1,0 +1,613 @@
+# Unit: u02 | 2. Simple shell scripts | Create simple shell scripts
+
+A shell script is a text file full of the same commands you type at the prompt. Scripts save you from typing a long job twice, and the exam asks you to write small ones: take some input, test something, loop over files or lines, and act on the output of other commands. This unit builds one piece at a time, with bash, the shell RHEL uses.
+
+## Lesson: l0201 | Your first script
+
+A script needs three things: a first line that says which program runs it, the commands, and permission to be run.
+
+- The first line `#!/bin/bash` is called the shebang. When you run the file, the kernel reads this line and starts /bin/bash to read the rest. Without it the script may still work, but you leave it to chance which shell runs it.
+- Every other line that starts with `#` is a comment. Bash skips it; people read it. Say what the script is for.
+- `chmod +x FILE` (or `chmod 755 FILE`) marks the file as a program. Without the x bit you get "Permission denied".
+
+```terminal
+[root@server1 ~]# cat > /root/hello.sh <<'EOF'
+> #!/bin/bash
+> # hello.sh: says hello and shows where we are
+> echo "Hello from $(hostname)"
+> echo "Today is $(date +%A)"
+> EOF
+[root@server1 ~]# /root/hello.sh
+bash: /root/hello.sh: Permission denied
+[root@server1 ~]# chmod +x /root/hello.sh
+[root@server1 ~]# ls -l /root/hello.sh
+-rwxr-xr-x. 1 root root 70 Mar  2 04:00 /root/hello.sh
+[root@server1 ~]# /root/hello.sh
+Hello from server1.lab.example.com
+Today is Monday
+```
+
+The quotes around the end word `<<'EOF'` matter here: they stop the shell from running `$(hostname)` while you write the file, so the script itself keeps `$(hostname)` and runs it every time. You can of course write the script with vi or nano instead.
+
+### How to run a script
+
+- With a path: `/root/hello.sh`, or `./hello.sh` when you are in its folder. The `./` is needed because the current folder is not in the list of places bash searches for commands.
+- By name only, if the script is in a folder listed in `$PATH`. For root that includes /usr/local/sbin and /usr/local/bin; /usr/local/bin is also in every normal user's PATH, so it is the usual home for a script that everyone may run. Copy the script there and `hello` works like any other command.
+- `bash hello.sh` runs it even without the x bit, because you start bash yourself and give it the file to read. Handy for testing, but a task that says "an executable script" wants the x bit.
+
+```terminal
+[root@server1 ~]# echo $PATH
+/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+[root@server1 ~]# cp /root/hello.sh /usr/local/bin/hello
+[root@server1 ~]# bash -n /root/hello.sh
+```
+
+### Finding mistakes
+
+- `bash -n script` reads the script and reports syntax errors (a missing `fi` or `done`) without running anything. No output means no syntax error.
+- `bash -x script` runs it and prints each command, with a `+` in front, after the shell has filled in the variables. That shows you what really ran.
+
+> If a task names the script file and folder (for example /usr/local/bin/sysinfo), use exactly that name, without adding .sh. The grader runs the name it asked for.
+
+@try machines=1
+@task t1 | Shell scripts | 10 | server1
+Write the script /usr/local/bin/sysinfo. It must run with bash, print the host name of the machine on the first line and the kernel release (what `uname -r` prints) on the second line, and every user must be able to run it by typing `sysinfo`.
+@check server1 | the script is executable and starts with #!/bin/bash
+test -x /usr/local/bin/sysinfo && head -1 /usr/local/bin/sysinfo | grep -q '^#! */bin/bash'
+@check server1 | student can run it by name and gets the host name and the kernel release
+test "$(su - student -c sysinfo)" = "$(hostname; uname -r)"
+@hint Two echo lines with $(hostname) and $(uname -r), or just the commands hostname and uname -r. Then chmod 755.
+@solution server1
+cat > /usr/local/bin/sysinfo <<'EOF'
+#!/bin/bash
+# sysinfo: host name and kernel release
+hostname
+uname -r
+EOF
+chmod 755 /usr/local/bin/sysinfo
+sysinfo
+@endtask
+@end
+
+@quiz
+? What does the first line #!/bin/bash do?
+- It is a comment that bash ignores and nothing else reads
++ It tells the system to run the file with /bin/bash
+- It makes the file executable
+- It loads the user's .bashrc
+! The kernel reads the #! line when the file is run and starts the program it names. chmod +x is still needed to make the file runnable.
+? Your script is /root/tools/clean.sh and you are in /root/tools. Which command runs it?
+- clean.sh
++ ./clean.sh
+- run clean.sh
+- exec clean.sh &
+! The current folder is not in PATH, so give a path: ./clean.sh (or the full /root/tools/clean.sh).
+? Which command checks a script for syntax errors without running it?
+- bash -x script
++ bash -n script
+- chmod -c script
+- test -s script
+! -n reads the commands but does not run them. -x runs them and prints each one.
+@end
+
+## Lesson: l0202 | Variables, quotes and command output
+
+A variable holds a piece of text. Set it with `NAME=value` and read it with `$NAME`. There must be no spaces around the `=`: `city = Boston` would try to run a command called city.
+
+```terminal
+[root@server1 ~]# city=Boston
+[root@server1 ~]# echo "I live in $city"
+I live in Boston
+[root@server1 ~]# echo 'I live in $city'
+I live in $city
+[root@server1 ~]# echo "I live in ${city}, MA"
+I live in Boston, MA
+[root@server1 ~]# echo "Price: \$5"
+Price: $5
+```
+
+### Quotes
+
+- Double quotes `"..."` keep spaces together as one word but still fill in `$variables` and `$(commands)`.
+- Single quotes `'...'` keep everything exactly as typed. Nothing is filled in.
+- A backslash `\` takes away the special meaning of the next character, as in `\$5`.
+- `${city}` with braces marks where the name ends. `$city_backup` would look for a variable named city_backup.
+
+Put double quotes around variables almost always, `"$file"` rather than `$file`. Without quotes the shell splits the value at spaces and expands wildcards in it, so a file name with a space becomes two names:
+
+```terminal
+[root@server1 ~]# v="a   b"
+[root@server1 ~]# echo $v
+a b
+[root@server1 ~]# echo "$v"
+a   b
+```
+
+### The output of a command
+
+`$(command)` runs the command and puts its output in its place (old scripts use backticks for the same thing). This is how a script works with what other commands print. `$(( ... ))` does whole-number arithmetic.
+
+```terminal
+[root@server1 ~]# files=$(ls /etc | wc -l)
+[root@server1 ~]# echo "/etc has $files entries"
+/etc has 66 entries
+[root@server1 ~]# echo "In a year: $((2026 + 1))"
+In a year: 2027
+```
+
+### Asking the user: read
+
+`read NAME` waits for a line of input and stores it in the variable. `read -p "Question: " NAME` shows a question first. If the script's input comes from a pipe or a file instead of the keyboard, read takes the line from there, which is how you test such a script: `echo Ann | ./greet.sh`.
+
+- Variables you set exist only in the current shell. `export NAME` passes one on to the programs and scripts you start.
+- Useful variables that are always set: `$HOME`, `$USER`, `$HOSTNAME`, `$PATH`, `$PWD`.
+
+@try machines=1
+@task t1 | Shell scripts | 10 | server1
+Write an executable script /root/greet.sh that asks `Your name: ` with read and then prints `Hello, NAME!` (for example `Hello, Ann!` when the answer is Ann).
+@check server1 | with the input Ann the script prints Hello, Ann!
+test "$(echo Ann | /root/greet.sh 2>/dev/null)" = 'Hello, Ann!'
+@check server1 | with the input Bob the script prints Hello, Bob!
+test "$(echo Bob | /root/greet.sh 2>/dev/null)" = 'Hello, Bob!'
+@hint read -p "Your name: " name, then echo "Hello, $name!". Mind the chmod.
+@solution server1
+cat > /root/greet.sh <<'EOF'
+#!/bin/bash
+read -p "Your name: " name
+echo "Hello, $name!"
+EOF
+chmod +x /root/greet.sh
+@endtask
+@task t2 | Shell scripts | 10 | server1
+Write an executable script /root/count-etc.sh that prints one line: `/etc has N entries`, where N is the number of names that `ls /etc` lists right now. The script must count them each time it runs.
+@check server1 | the line has the right number
+test "$(/root/count-etc.sh)" = "/etc has $(ls /etc | wc -l) entries"
+@check server1 | the number changes when /etc changes
+touch /etc/zz-certlab-count && test "$(/root/count-etc.sh)" = "/etc has $(ls /etc | wc -l) entries"; r=$?; rm -f /etc/zz-certlab-count; exit $r
+@hint $(ls /etc | wc -l) inside the script. Write the file with <<'EOF' so the count is not frozen when you create it.
+@solution server1
+cat > /root/count-etc.sh <<'EOF'
+#!/bin/bash
+count=$(ls /etc | wc -l)
+echo "/etc has $count entries"
+EOF
+chmod +x /root/count-etc.sh
+@endtask
+@end
+
+@quiz
+? Which line sets a variable correctly?
+- name = Ann
++ name=Ann
+- $name=Ann
+- set name Ann
+! No spaces around =, and no $ when you set it. The $ is for reading the value.
+? With city=Boston, what does echo '$city' print?
++ $city
+- Boston
+- An empty line
+- An error
+! Single quotes keep the text exactly as written. Double quotes would print Boston.
+? How do you store the output of the date command in the variable now?
+- now=date
+- now='date'
++ now=$(date)
+- now=$[date]
+! $(command) runs the command and gives its output. now=date would store the word date.
+@end
+
+## Lesson: l0203 | Script arguments and exit codes
+
+Words typed after the script's name are its arguments. Inside the script they are numbered:
+
+- `$1`, `$2`... are the first, second... argument (`${10}` needs braces).
+- `$#` is how many arguments there are, `$0` is the script's own name.
+- `"$@"` is all the arguments, each kept as one word even if it has spaces. `$*` joins them; use `"$@"` in loops.
+- `shift` drops `$1` and moves the others down by one.
+
+```terminal
+[root@server1 ~]# cat > /root/args.sh <<'EOF'
+> #!/bin/bash
+> echo "Script name: $0"
+> echo "First: $1  Second: $2"
+> echo "Number of arguments: $#"
+> for a in "$@"; do
+>   echo "Argument: [$a]"
+> done
+> EOF
+[root@server1 ~]# chmod +x /root/args.sh
+[root@server1 ~]# /root/args.sh red "light blue" green
+Script name: /root/args.sh
+First: red  Second: light blue
+Number of arguments: 3
+Argument: [red]
+Argument: [light blue]
+Argument: [green]
+```
+
+The quotes on the command line made "light blue" one argument.
+
+### Exit codes
+
+Every command ends with an exit code: 0 means success, anything else (1 to 255) means some kind of failure. `$?` holds the code of the last command. `if`, `&&` and `||` all look at exit codes.
+
+```terminal
+[root@server1 ~]# ls /etc/hosts; echo "exit code $?"
+/etc/hosts
+exit code 0
+[root@server1 ~]# ls /nowhere; echo "exit code $?"
+ls: cannot access '/nowhere': No such file or directory
+exit code 2
+[root@server1 ~]# grep -q student /etc/passwd && echo "student exists"
+student exists
+[root@server1 ~]# id ghost &>/dev/null || echo "no user ghost"
+no user ghost
+```
+
+- `A && B` runs B only if A succeeded; `A || B` runs B only if A failed.
+- `exit N` ends the script with code N. Without it, a script ends with the code of its last command.
+- A good script checks its arguments first and stops with a short usage message on standard error (`>&2`) and a non-zero code:
+
+```terminal
+[root@server1 ~]# cat > /root/need-arg.sh <<'EOF'
+> #!/bin/bash
+> if [ $# -lt 1 ]; then
+>   echo "Usage: $0 NAME" >&2
+>   exit 1
+> fi
+> echo "Hello, $1"
+> EOF
+[root@server1 ~]# chmod +x /root/need-arg.sh
+[root@server1 ~]# /root/need-arg.sh; echo $?
+Usage: /root/need-arg.sh NAME
+1
+[root@server1 ~]# /root/need-arg.sh Ann; echo $?
+Hello, Ann
+0
+```
+
+> $? changes after every command, even after echo. If you need it later, save it at once: rc=$?
+
+@try machines=1
+@task t1 | Shell scripts | 10 | server1
+Write an executable script /root/add.sh that takes two whole numbers as arguments and prints their sum (`/root/add.sh 3 4` prints `7`). If it does not get exactly two arguments, it prints `Usage: add.sh A B` to standard error and ends with exit code 1.
+@check server1 | add.sh 3 4 prints 7
+test "$(/root/add.sh 3 4)" = 7
+@check server1 | add.sh 20 22 prints 42
+test "$(/root/add.sh 20 22)" = 42
+@check server1 | with one argument it ends with code 1 and prints nothing on standard output
+out=$(/root/add.sh 5 2>/dev/null); test $? -eq 1 && test -z "$out"
+@hint Test $# with [ $# -ne 2 ]. The sum is $(( $1 + $2 )).
+@solution server1
+cat > /root/add.sh <<'EOF'
+#!/bin/bash
+if [ $# -ne 2 ]; then
+  echo "Usage: add.sh A B" >&2
+  exit 1
+fi
+echo $(( $1 + $2 ))
+EOF
+chmod +x /root/add.sh
+@endtask
+@end
+
+@quiz
+? A script is run as ./backup.sh /home /etc /srv. What is $#?
+- 1
++ 3
+- 4
+- /home
+! $# counts the arguments, not the script's name. $1 would be /home.
+? What exit code means success?
++ 0
+- 1
+- 255
+- -1
+! 0 is success; every other value is some kind of failure. That is why if and && treat 0 as true.
+? Which loop handles arguments with spaces in them correctly?
+- for a in $*; do
+- for a in $@; do
++ for a in "$@"; do
+- for a in "$#"; do
+! "$@" keeps each argument as one word. Without quotes, "light blue" would become two words.
+@end
+
+## Lesson: l0204 | Making decisions: if, test and case
+
+`if` runs a command and looks at its exit code: 0 takes the `then` branch, anything else the `elif` or `else` branch. The command is very often `test`, written as `[ ... ]`.
+
+```
+if COMMAND; then
+  ...
+elif OTHER-COMMAND; then
+  ...
+else
+  ...
+fi
+```
+
+```terminal
+[root@server1 ~]# cat > /root/check.sh <<'EOF'
+> #!/bin/bash
+> if [ -d "$1" ]; then
+>   echo "$1 is a directory"
+> elif [ -f "$1" ]; then
+>   echo "$1 is a file"
+> else
+>   echo "$1 is not here"
+> fi
+> EOF
+[root@server1 ~]# chmod +x /root/check.sh
+[root@server1 ~]# /root/check.sh /etc
+/etc is a directory
+[root@server1 ~]# /root/check.sh /etc/hosts
+/etc/hosts is a file
+[root@server1 ~]# /root/check.sh /nowhere
+/nowhere is not here
+```
+
+`[` is a command, so it needs spaces: `[ -d "$1" ]`, never `[-d "$1"]`. Any command works after if, for example `if grep -q bob /etc/passwd; then`.
+
+### What test can check
+
+- Files: `-e` exists, `-f` regular file, `-d` directory, `-L` symbolic link, `-r` / `-w` / `-x` readable, writable, executable by you, `-s` not empty.
+- Text: `"$a" = "$b"` equal, `"$a" != "$b"` different, `-z "$a"` empty, `-n "$a"` not empty.
+- Whole numbers: `-eq` equal, `-ne` not equal, `-lt` less, `-le` less or equal, `-gt` greater, `-ge` greater or equal. (`<` and `>` mean redirection in `[ ]`, not numbers.)
+- `!` turns the result around: `[ ! -d /backup ]`. `-a` (and) and `-o` (or) join tests; `&&` and `||` between two `[ ]` do the same and are easier to read.
+
+```terminal
+[root@server1 ~]# test -f /etc/passwd; echo $?
+0
+[root@server1 ~]# [ -f /etc/nothing ]; echo $?
+1
+[root@server1 ~]# [ 5 -gt 3 ] && echo "5 is bigger"
+5 is bigger
+[root@server1 ~]# [ $nosuchvar -gt 3 ]
+bash: [: -gt: unary operator expected
+[root@server1 ~]# [ "$nosuchvar" = "" ] && echo "empty"
+empty
+```
+
+The error shows why quotes matter: an empty variable without quotes disappears, and `[` sees `-gt 3` with nothing in front of it.
+
+### [[ ]]: the bash test
+
+`[[ ... ]]` is a bash keyword that does all of the above and more. Variables inside it do not need quotes, `&&` and `||` work inside, `==` compares with a wildcard pattern and `=~` with a regular expression.
+
+```terminal
+[root@server1 ~]# [[ $HOSTNAME == server* ]] && echo "a server"
+a server
+[root@server1 ~]# [[ 2026 =~ ^[0-9]{4}$ ]] && echo "four digits"
+four digits
+```
+
+### case: one value, many choices
+
+`case` compares one value with patterns, top to bottom, and runs the first branch that matches. `|` separates patterns, `*` matches anything (the "everything else" branch), and each branch ends with `;;`.
+
+```terminal
+[root@server1 ~]# cat > /root/svc.sh <<'EOF'
+> #!/bin/bash
+> case "$1" in
+>   start)
+>     echo "Starting the service" ;;
+>   stop|halt)
+>     echo "Stopping the service" ;;
+>   *)
+>     echo "Usage: $0 start|stop" >&2
+>     exit 1 ;;
+> esac
+> EOF
+[root@server1 ~]# chmod +x /root/svc.sh
+[root@server1 ~]# /root/svc.sh halt
+Stopping the service
+[root@server1 ~]# /root/svc.sh dance
+Usage: /root/svc.sh start|stop
+```
+
+@try machines=1
+@task t1 | Shell scripts | 10 | server1
+Write an executable script /root/filetype.sh that takes one path as its argument and prints exactly one word: `directory` if the path is a directory, `file` if it is a regular file, and `missing` if it does not exist.
+@check server1 | /etc gives directory
+test "$(/root/filetype.sh /etc)" = directory
+@check server1 | /etc/hosts gives file
+test "$(/root/filetype.sh /etc/hosts)" = file
+@check server1 | a path that does not exist gives missing
+test "$(/root/filetype.sh /no/such/path)" = missing
+@hint if [ -d "$1" ]; then ... elif [ -f "$1" ]; then ... else ... fi
+@solution server1
+cat > /root/filetype.sh <<'EOF'
+#!/bin/bash
+if [ -d "$1" ]; then
+  echo directory
+elif [ -f "$1" ]; then
+  echo file
+else
+  echo missing
+fi
+EOF
+chmod +x /root/filetype.sh
+@endtask
+@task t2 | Shell scripts | 10 | server1
+Write an executable script /root/answer.sh with case. With the argument `yes` or `y` it prints `OK`, with `no` or `n` it prints `Cancelled`, and with anything else it prints `Please answer yes or no` and ends with exit code 2.
+@check server1 | yes and y give OK
+test "$(/root/answer.sh yes)" = OK && test "$(/root/answer.sh y)" = OK
+@check server1 | no and n give Cancelled
+test "$(/root/answer.sh no)" = Cancelled && test "$(/root/answer.sh n)" = Cancelled
+@check server1 | maybe gives the message and exit code 2
+out=$(/root/answer.sh maybe); test $? -eq 2 && test "$out" = 'Please answer yes or no'
+@hint case "$1" in yes|y) ... ;; no|n) ... ;; *) ... ;; esac
+@solution server1
+cat > /root/answer.sh <<'EOF'
+#!/bin/bash
+case "$1" in
+  yes|y) echo OK ;;
+  no|n) echo Cancelled ;;
+  *) echo "Please answer yes or no"
+     exit 2 ;;
+esac
+EOF
+chmod +x /root/answer.sh
+@endtask
+@end
+
+@quiz
+? Which test is true when /backup is NOT a directory?
+- [ -d /backup ]
++ [ ! -d /backup ]
+- [ -n /backup ]
+- [ /backup != -d ]
+! ! in front of a test turns the result around.
+? Which comparison of two whole numbers is correct in [ ]?
+- [ $a > $b ]
++ [ $a -gt $b ]
+- [ $a => $b ]
+- [ $a gt $b ]
+! In [ ], > is a redirection (it would create a file named after $b). Numbers use -gt, -lt, -eq and friends.
+? What ends each branch of a case statement?
+- fi
+- done
++ ;;
+- esac
+! ;; ends a branch; esac (case backwards) ends the whole case statement.
+@end
+
+## Lesson: l0205 | Loops over lists, files and output
+
+### for: once for each word
+
+`for VAR in WORDS; do ...; done` runs the body once for every word, with VAR set to that word. The words can come from a list you type, from a wildcard that matches file names, from the output of a command, or from a range.
+
+```terminal
+[root@server1 ~]# for color in red green blue; do echo "Color: $color"; done
+Color: red
+Color: green
+Color: blue
+[root@server1 ~]# for f in /etc/host*; do echo "$f has $(wc -l < $f) lines"; done
+/etc/hostname has 1 lines
+/etc/hosts has 2 lines
+[root@server1 ~]# for u in $(grep /bin/bash /etc/passwd | cut -d: -f1); do echo "Login user: $u"; done
+Login user: root
+Login user: student
+[root@server1 ~]# for i in {1..3}; do echo "Pass $i"; done
+Pass 1
+Pass 2
+Pass 3
+[root@server1 ~]# for i in $(seq 2 2 6); do echo $i; done
+2
+4
+6
+```
+
+- A wildcard like `/etc/host*` is the safe way to loop over files: each name stays whole, even with spaces in it.
+- `$(command)` splits the output at spaces and new lines. That is fine for user names and numbers, not for lines that contain spaces.
+- `{1..10}` and `seq 1 10` count. `"$@"` loops over the script's arguments.
+
+### while: as long as a command succeeds
+
+`while COMMAND; do ...; done` repeats while the command succeeds. The most useful form reads a file one line at a time: `while read -r line; do ...; done < FILE`. Each line arrives whole, spaces and all (`-r` keeps backslashes as they are).
+
+```terminal
+[root@server1 ~]# printf 'alice\nbob\ncarol\n' > /root/names.txt
+[root@server1 ~]# while read -r name; do echo "Hello, $name"; done < /root/names.txt
+Hello, alice
+Hello, bob
+Hello, carol
+[root@server1 ~]# n=3; while [ $n -gt 0 ]; do echo "$n..."; n=$(($n - 1)); done; echo "Go"
+3...
+2...
+1...
+Go
+```
+
+read can also split a line into several variables. Set `IFS` to the separator for that read only:
+
+```terminal
+[root@server1 ~]# cut -d: -f1,7 /etc/passwd | grep bash | while IFS=: read -r user shell; do echo "$user uses $shell"; done
+root uses /bin/bash
+student uses /bin/bash
+```
+
+- `break` leaves the loop at once; `continue` skips to the next round.
+- `until COMMAND` is the opposite of while: it repeats until the command succeeds.
+
+### Putting it together
+
+A typical exam script reads names from a file given as an argument and does something for each one, checking first so it can be run twice:
+
+```
+#!/bin/bash
+# mkusers.sh FILE: create every user listed in FILE
+if [ ! -f "$1" ]; then
+  echo "Usage: $0 FILE" >&2
+  exit 1
+fi
+while read -r u; do
+  if id "$u" &>/dev/null; then
+    echo "$u already exists"
+  else
+    useradd "$u" && echo "created $u"
+  fi
+done < "$1"
+```
+
+> Test a loop with echo first: put echo in front of the real command (echo useradd "$u"), look at what it would do, then remove the echo.
+
+@try machines=1
+@setup server1
+curl -s -o /root/users.txt http://utility.lab.example.com/files/users.txt
+@task t1 | Shell scripts | 10 | server1
+The file /root/users.txt lists one user name per line. Write an executable script /root/mkusers.sh that takes the name of such a file as its argument and creates every user listed in it. Then run it with /root/users.txt.
+@check server1 | the script is executable
+test -x /root/mkusers.sh
+@check server1 | every user in /root/users.txt exists
+for u in $(cat /root/users.txt); do id "$u" >/dev/null 2>&1 || exit 1; done
+@hint while read -r u; do useradd "$u"; done < "$1"
+@solution server1
+cat > /root/mkusers.sh <<'EOF'
+#!/bin/bash
+while read -r u; do
+  id "$u" &>/dev/null || useradd "$u"
+done < "$1"
+EOF
+chmod +x /root/mkusers.sh
+/root/mkusers.sh /root/users.txt
+@endtask
+@task t2 | Shell scripts | 10 | server1
+Write an executable script /root/list-conf.sh that prints, one per line, the name (without the /etc/ in front) of every file directly in /etc whose name ends in `.conf`, in the order ls sorts them.
+@check server1 | the output matches the .conf files in /etc
+test "$(/root/list-conf.sh)" = "$(ls /etc | grep '\.conf$')"
+@check server1 | a new .conf file shows up in the list
+touch /etc/zz-certlab.conf && /root/list-conf.sh | grep -qx zz-certlab.conf; r=$?; rm -f /etc/zz-certlab.conf; exit $r
+@hint for f in /etc/*.conf; do ... done. basename "$f" (or ${f#/etc/}) drops the folder.
+@solution server1
+cat > /root/list-conf.sh <<'EOF'
+#!/bin/bash
+for f in /etc/*.conf; do
+  basename "$f"
+done
+EOF
+chmod +x /root/list-conf.sh
+@endtask
+@end
+
+@quiz
+? Which loop reads a file one whole line at a time?
+- for line in FILE; do
+- for line in $(cat FILE); do
++ while read -r line; do ... done < FILE
+- until read FILE; do
+! while read gets each line whole. for over $(cat FILE) splits lines at spaces.
+? What does for f in /var/log/*.log; do loop over?
+- The text /var/log/*.log once
++ Every file name in /var/log that ends in .log
+- Every line inside the .log files
+- Only the newest log file
+! The shell expands the wildcard to the matching file names before the loop starts.
+? Inside a loop, which word jumps straight to the next round?
+- break
++ continue
+- next
+- shift
+! continue skips the rest of the body for this round; break leaves the loop completely.
+@end

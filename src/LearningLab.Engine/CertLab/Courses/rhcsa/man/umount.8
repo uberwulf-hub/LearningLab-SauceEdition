@@ -1,0 +1,70 @@
+NAME
+       umount - detach a mounted file system
+
+SYNOPSIS
+       umount [-l] [-f] [-R] [-v] DIRECTORY | DEVICE
+       umount -a [-t TYPE]
+
+DESCRIPTION
+       umount detaches a file system from the directory tree. Name either the
+       mount point (umount /mnt/data) or the device (umount /dev/vdb1).
+       After umount the mount point is an ordinary empty directory again, and
+       the data on the device is complete and safe to remove.
+
+       umount refuses with "target is busy" while any process still uses the
+       file system: has a file open on it, or has its current directory
+       there. The usual cause is your own shell: cd somewhere else first. To
+       find the others, use lsof DIRECTORY or fuser -vm DIRECTORY.
+
+       umount only detaches until the next boot. If the file system is listed
+       in /etc/fstab it is mounted again at boot; remove or comment out its
+       line to stop that.
+
+OPTIONS
+       -l, --lazy
+              Detach now and clean up once nothing uses it any more.
+
+       -f, --force
+              Force the unmount (for an NFS server that cannot be reached).
+
+       -R, --recursive
+              Also unmount everything mounted below the directory.
+
+       -a, --all
+              Unmount every file system listed in /etc/mtab (except /proc and
+              some others). Rarely wanted.
+
+       -t TYPE
+              With -a: only file systems of this type, such as nfs4.
+
+       -r, --read-only
+              If unmounting fails, try to make it read-only instead.
+
+       -v, --verbose
+              Say what is being done.
+
+EXAMPLES
+       Unmount a disk mounted on /mnt/data:
+
+           umount /mnt/data
+
+       "target is busy": leave the directory, then try again:
+
+           cd /
+           umount /mnt/data
+
+       Find out who still uses it:
+
+           fuser -vm /mnt/data
+
+       Test an /etc/fstab change without a reboot:
+
+           umount /mnt/data
+           mount -a
+           findmnt /mnt/data
+
+NOTES
+       The command is umount, without an n.
+
+SEE ALSO
+       mount(8), fstab(5), findmnt(8), lsof(8), fuser(1)

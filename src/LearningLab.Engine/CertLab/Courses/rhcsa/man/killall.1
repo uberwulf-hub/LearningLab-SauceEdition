@@ -1,0 +1,27 @@
+NAME
+       killall - send a signal to all processes with a given name
+
+SYNOPSIS
+       killall [-s SIGNAL | -SIGNAL] NAME...
+
+DESCRIPTION
+       killall sends a signal (SIGTERM by default) to every process whose
+       command name is exactly NAME. It says "NAME: no process found" and
+       exits with 1 when there is none. Normal users can only signal their
+       own processes.
+
+       pkill does the same with a pattern instead of an exact name, and can
+       pick processes by user (pkill -u).
+
+       killall is in the psmisc package.
+
+OPTIONS
+       -s SIGNAL, -SIGNAL
+              Send this signal instead, for example -9 or -HUP.
+
+EXAMPLES
+           killall sleep
+           killall -9 dd
+
+SEE ALSO
+       kill(1), pkill(1), pgrep(1), ps(1)

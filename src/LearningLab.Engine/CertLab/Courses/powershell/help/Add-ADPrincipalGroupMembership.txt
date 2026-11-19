@@ -1,0 +1,14 @@
+SYNOPSIS: Adds one user, computer or group to several groups at once.
+DESCRIPTION:
+Add-ADPrincipalGroupMembership is member-centred: one account, many groups. It's handy for a new starter who needs the same groups as a colleague. Add-ADGroupMember does the opposite (one group, many members).
+PARAMETER Identity:
+The account or group to add. Position 0, and takes pipeline input.
+PARAMETER MemberOf:
+The groups to add it to. Position 1.
+PARAMETER PassThru:
+Returns the account after the change.
+EXAMPLE: Add-ADPrincipalGroupMembership dpatel -MemberOf Sales, "Sales Managers"
+Puts Dev Patel into both sales groups.
+EXAMPLE: Get-ADPrincipalGroupMembership bcole | Where-Object Name -ne "Domain Users" | ForEach-Object { Add-ADPrincipalGroupMembership lortiz -MemberOf $_ }
+Gives a new user the same groups as Bianca Cole.
+RELATED: Get-ADPrincipalGroupMembership, Add-ADGroupMember, Remove-ADGroupMember

@@ -1,0 +1,25 @@
+1. The download page. /download?name=handbook.txt serves a file from the documents
+   folder. It joins your name to the folder without removing ../, so you can climb
+   out of it (path traversal):
+
+       /download?name=../../../../etc/passwd
+
+2. The config. The app's own config sits one folder up from docs:
+
+       /download?name=../conf/db.ini
+
+   It holds the MariaDB user intranet and its password.
+
+3. The database. Connect and look around:
+
+       mysql -h 10.10.6.30 -u intranet -pPASSWORD intranet -e 'show tables; select * from staff'
+
+   The staff table keeps each person's Linux login and password in plain columns.
+   Omar's row has the dbadmin password.
+
+4. Shell and root. ssh dbadmin@10.10.6.30 with that password; the user flag is in the
+   home folder. sudo -l shows awk as root: sudo awk '{ print }' /root/flag.txt.
+
+How to fix it: refuse file names that contain slashes or ..; keep the app config out
+of a folder the app serves; never store login passwords in a table; and don't give
+sudo on awk.

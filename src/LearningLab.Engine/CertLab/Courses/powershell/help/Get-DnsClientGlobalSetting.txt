@@ -1,0 +1,14 @@
+SYNOPSIS: Shows the DNS suffix search list and other DNS settings for the whole computer.
+DESCRIPTION:
+When you look up a short name such as web01, Windows adds DNS suffixes to it and tries each one: web01.lab.example.com, and so on. Get-DnsClientGlobalSetting shows that list (SuffixSearchList) and whether it is used (UseSuffixSearchList).
+
+UseDevolution and DevolutionLevel control whether Windows also tries the parent domains of its own domain (example.com after lab.example.com).
+
+On the lab machines the list is lab.example.com, which is why Resolve-DnsName dc01 works without the full name.
+EXAMPLE: Get-DnsClientGlobalSetting
+Shows the global settings.
+EXAMPLE: (Get-DnsClientGlobalSetting).SuffixSearchList
+Only the suffixes, as text: lab.example.com.
+NOTES:
+Windows changes these with Set-DnsClientGlobalSetting (not in Cert Lab); in a domain they usually come from Group Policy. CIM-based command from the DnsClient module, Windows only.
+RELATED: Get-DnsClient, Resolve-DnsName, Get-DnsClientServerAddress

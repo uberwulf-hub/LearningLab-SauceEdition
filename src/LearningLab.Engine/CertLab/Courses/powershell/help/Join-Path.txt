@@ -1,0 +1,16 @@
+SYNOPSIS: Joins a path and a child path with exactly one \ between them.
+DESCRIPTION:
+Join-Path saves you from counting backslashes: Join-Path C:\LabFiles\ \Reports still gives C:\LabFiles\Reports. The child does not have to exist, but the drive does.
+PARAMETER Path:
+The starting path (several are allowed; each gets the child).
+PARAMETER ChildPath:
+The part to add.
+PARAMETER Resolve:
+Returns the full paths of the items that exist (wildcards allowed) instead of the joined text.
+EXAMPLE: Join-Path $env:TEMP report.txt
+A path for a file in the temporary folder.
+EXAMPLE: Join-Path C:\Users * -Resolve
+Every folder in C:\Users.
+NOTES:
+In Windows PowerShell 5.1 Join-Path takes one child path. Joining three parts needs two calls: Join-Path (Join-Path C:\ a) b. PowerShell 6 added -AdditionalChildPath.
+RELATED: Split-Path, Resolve-Path

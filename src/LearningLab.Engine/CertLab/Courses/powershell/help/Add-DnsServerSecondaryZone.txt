@@ -1,0 +1,20 @@
+SYNOPSIS: Creates a read-only secondary copy of a zone, pulled from a master server.
+DESCRIPTION:
+A secondary zone is a read-only copy kept in a file. The server copies it from the master servers you list with a zone transfer, then asks for changes each time the SOA refresh interval passes (or when the master sends a notify).
+
+The transfer only works if the master allows it: on the primary, Set-DnsServerPrimaryZone -SecureSecondaries must permit this server (AD-integrated zones allow no transfers by default). A refused transfer leaves the secondary empty, and Get-DnsServerResourceRecord on it fails.
+
+Secondary zones are always file-backed; they cannot be stored in Active Directory.
+PARAMETER Name:
+The zone to copy, for example tidewater.example.
+PARAMETER NetworkId:
+For a reverse zone: the network such as 10.10.0.0/24 instead of a name.
+PARAMETER MasterServers:
+The IP address or addresses of the servers to copy from.
+PARAMETER ZoneFile:
+The file to keep the copy in, for example tidewater.example.dns.
+EXAMPLE: Add-DnsServerSecondaryZone -Name tidewater.example -MasterServers 192.168.50.10 -ZoneFile tidewater.example.dns
+Keeps a local copy of the partner forest's zone, pulled from its DNS server.
+EXAMPLE: Start-DnsServerZoneTransfer -Name tidewater.example
+Asks for a fresh copy right away instead of waiting for the refresh interval.
+RELATED: Start-DnsServerZoneTransfer, Set-DnsServerPrimaryZone, Add-DnsServerStubZone, ConvertTo-DnsServerPrimaryZone, Get-DnsServerZone

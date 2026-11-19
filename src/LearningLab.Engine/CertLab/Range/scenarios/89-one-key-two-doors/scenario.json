@@ -1,0 +1,72 @@
+{
+    "id": "one-key-two-doors",
+    "title": "One Key, Two Doors",
+    "category": "blue",
+    "level": "Expert",
+    "order": 5,
+    "summary": "One person used the same password on the Linux server and on their Windows PC. Someone found it and walked through both doors - and tidied one log behind them. Follow them through both machines.",
+    "story": "{{CO}} (made up): srv (Linux, 10.10.29.10) and {{PC}} (Windows, 10.10.29.30). A partner says {{USER_FULL}}'s password turned up in a leaked list. You are at soc. srv: ssh itadmin (password {{ITPW}}, may use sudo). {{PC}}: Administrator / {{ADMPW}} over winrm-shell.",
+    "goal": "Find the account and the address used on both machines, what each one left behind and both flags; shut the account on both and remove both jobs before either copies its folder out.",
+    "skills": "password reuse, journalctl vs /var/log/secure, user crontabs, the Security log, scheduled tasks, Disable-LocalUser",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 50,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the HR and finance folders out",
+    "goalPoints": 100,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-HR01|WIN-PAY02|WIN-DESK12",
+        "USER": "person",
+        "PW": "word",
+        "ITPW": "word",
+        "ADMPW": "word",
+        "ATKIP": "ip",
+        "HIDE": "pick:.cache-sync|.thumbs-db|.updater",
+        "TASK": "pick:CacheRefresh|ThumbnailSync|UserProfileCheck"
+    },
+    "variants": { "HIDE": {
+        ".cache-sync": { "HIDEWIN": "CacheSync" },
+        ".thumbs-db": { "HIDEWIN": "ThumbsDb" },
+        ".updater": { "HIDEWIN": "Updater" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box", "nics": [ "10.10.29.5/24" ] },
+        { "name": "srv", "os": "linux", "hostname": "srv.{{CO_DOMAIN}}", "role": "Linux server (yours)", "nics": [ "10.10.29.10/24" ], "motd": "{{CO}} srv - staff only.", "setup": "srv.sh" },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "{{USER_FULL}}'s PC (yours)", "nics": [ "10.10.29.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{USER}}", "password": "{{PW}}", "remote": true }
+          ],
+          "events": [
+            { "log": "Security", "id": 4624, "level": 0, "ago": "30h", "repeat": 2, "every": 7200, "message": "An account was successfully logged on. Account Name: {{USER}} Source Network Address: 10.10.29.30 Logon Type: 2" },
+            { "log": "Security", "id": 4624, "level": 0, "ago": "2h", "message": "An account was successfully logged on. Account Name: {{USER}} Source Network Address: {{ATKIP}} Logon Type: 3" },
+            { "log": "Security", "id": 4698, "level": 0, "ago": "7100s", "message": "A scheduled task was created. Subject: Account Name: {{USER}} Task Name: \\{{TASK}}" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "linux", "name": "The flag in the job's folder on srv", "points": 60, "machine": "srv", "path": "/home/{{USER}}/.config/{{HIDE}}/key.txt", "owner": "root", "mode": "644", "level": "user" },
+        { "id": "windows", "name": "The flag in the task's folder on the PC", "points": 60, "machine": "{{PC}}", "path": "C:\\Users\\{{USER}}\\AppData\\Local\\{{HIDEWIN}}\\key.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "acct", "ask": "Which account was used on both machines?", "answer": "{{USER}}", "points": 40, "explain": "The journal on srv and the Security log on the PC both show it signing in from the same outside address." },
+        { "id": "addr", "ask": "From what address?", "answer": "{{ATKIP}}", "points": 40, "explain": "The same address on both machines: one leaked password, two doors." },
+        { "id": "where", "ask": "/var/log/secure on srv was tidied. What still had the sign-in (the program you read it with)?", "answer": "journalctl", "accept": [ "journal", "the journal", "systemd journal" ], "points": 50, "explain": "The sign-in went through the system logger, which keeps its own copy: journalctl -t sshd." },
+        { "id": "task", "ask": "What scheduled task was made on the PC?", "answer": "{{TASK}}", "points": 40, "explain": "Event 4698 and Get-ScheduledTask." }
+    ],
+    "tasks": [
+        { "id": "lock", "name": "Lock the account on srv", "machine": "srv", "check": "passwd -S {{USER}} | grep -q LK", "points": 30, "explain": "usermod -L {{USER}}" },
+        { "id": "cron", "name": "Remove the job from the account's crontab on srv", "machine": "srv", "check": "! crontab -l -u {{USER}} 2>/dev/null | grep -q pull.sh", "points": 40, "explain": "crontab -r -u {{USER}}" },
+        { "id": "disable", "name": "Switch the account off on the PC", "machine": "{{PC}}", "check": "if ((Get-LocalUser -Name '{{USER}}').Enabled) { exit 1 } else { exit 0 }", "points": 30, "explain": "Disable-LocalUser -Name {{USER}}" },
+        { "id": "task", "name": "Remove the scheduled task on the PC", "machine": "{{PC}}", "check": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 40, "explain": "Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "srv", "run": "/home/{{USER}}/.config/{{HIDE}}/pull.sh; true", "unless": "! crontab -l -u {{USER}} 2>/dev/null | grep -q pull.sh", "note": "The job on srv ran and copied the HR folder for pickup.", "goal": true },
+        { "at": "330s", "machine": "{{PC}}", "run": "Copy-Item 'C:\\Finance\\*' 'C:\\Users\\{{USER}}\\AppData\\Local\\{{HIDEWIN}}' -ErrorAction SilentlyContinue", "unless": "if (Get-ScheduledTask -TaskName '{{TASK}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "note": "The task on the PC ran and copied the finance folder for pickup.", "goal": true }
+    ],
+    "hints": [
+        { "text": "If /var/log/secure looks too clean, ask the journal: journalctl -t sshd. Then look for the same address on the other machine.", "cost": 25 },
+        { "text": "Each machine has its own job in the account's own space: crontab -l -u on srv, Get-ScheduledTask on the PC.", "cost": 35 }
+    ]
+}

@@ -1,0 +1,30 @@
+SYNOPSIS: Shows help for commands and for PowerShell's concepts (the about_ topics).
+DESCRIPTION:
+Get-Help shows what a command does, how to type it (the SYNTAX section, one line per parameter set) and examples. Use it before searching the web: the help on the machine matches the version you run.
+
+Square brackets in the syntax mean "optional": [-Name] means you may leave out the parameter name and give the value by position, [-Name <string>] means the whole parameter is optional. <string[]> means you may give several values separated by commas.
+
+Get-Help with a word that is not a command name lists every command and about_ topic whose name contains it, so Get-Help *service* is a quick way to find commands.
+PARAMETER Name:
+The command or topic, for example Get-Service or about_Pipelines. Wildcards list matching topics.
+PARAMETER Examples:
+Shows only the examples.
+PARAMETER Detailed:
+Adds the description of every parameter and the examples.
+PARAMETER Full:
+Everything, including for each parameter whether it is required, its position and whether it takes pipeline input.
+PARAMETER Parameter:
+Shows only the help for one parameter, for example -Parameter Name.
+PARAMETER Online:
+Opens the help on Microsoft's website on a real PC. The practice machines have no internet, so Cert Lab shows the local help.
+EXAMPLE: Get-Help Get-Service -Examples
+Shows only the examples for Get-Service.
+EXAMPLE: Get-Help Get-ChildItem -Parameter Recurse
+Explains one parameter: what it does, whether it is required, its position and whether it accepts pipeline input.
+EXAMPLE: Get-Help *event*
+Lists the commands and topics whose names contain "event".
+EXAMPLE: help about_Comparison_Operators
+help is a function that runs Get-Help (on a real console it shows one page at a time).
+NOTES:
+On a new Windows PC the full help is not installed: Update-Help (run as an administrator, with internet) downloads it. Cert Lab's machines already have their help pages.
+RELATED: Get-Command, Get-Member, about_Command_Syntax

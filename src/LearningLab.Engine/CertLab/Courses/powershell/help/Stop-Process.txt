@@ -1,0 +1,22 @@
+SYNOPSIS: Ends running processes.
+DESCRIPTION:
+Stop-Process ends processes by Id, by name or from the pipeline, like End task in Task Manager but without asking the program to save its work. For a process that belongs to another user PowerShell asks for confirmation unless you add -Force. Windows' own protected processes (System, csrss, lsass...) cannot be stopped.
+
+Ending the process of a service (for example spoolsv) makes that service stop unexpectedly, which Windows logs as event 7034.
+PARAMETER Id:
+The process ids to stop. Position 0.
+PARAMETER Name:
+The process names to stop (alias ProcessName).
+PARAMETER InputObject:
+Process objects, usually from Get-Process.
+PARAMETER Force:
+Stops without asking, even processes of other users.
+PARAMETER PassThru:
+Outputs the stopped processes.
+EXAMPLE: Stop-Process -Name notepad
+Ends every Notepad.
+EXAMPLE: Get-Process notepad | Stop-Process -WhatIf
+Shows what would end.
+EXAMPLE: Stop-Process -Id 4120 -Force
+Ends one process by its id.
+RELATED: Get-Process, Start-Process, Wait-Process

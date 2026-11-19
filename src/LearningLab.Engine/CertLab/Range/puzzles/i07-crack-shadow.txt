@@ -1,0 +1,41 @@
+title: A stolen shadow
+level: Intermediate
+kind: Password cracking
+points: 60
+order: 16
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/shadow.bak is a backup of a password file: each line is USER:HASH:... The hash
+starts with $6$, the sha512-crypt scheme. hashcrack can try the word list against it.
+What is the user "sam" password?
+
+@setup
+useradd -m sam
+echo 'sam:{{SECRET}}' | chpasswd
+grep '^sam:' /etc/shadow > /home/player/shadow.bak
+chown player: /home/player/shadow.bak
+chmod 644 /home/player/shadow.bak
+
+@solution
+cat shadow.bak
+hashcrack shadow.bak
+
+@walkthrough
+The $6$ at the start marks a sha512-crypt hash, as used in /etc/shadow. hashcrack
+recognises it and tries each word of the list:
+
+    hashcrack shadow.bak
+
+The lesson: a readable backup of /etc/shadow is as good as handing over every weak
+password on the machine. Keep shadow backups to root only.
+
+@hint 5
+A $6$ hash is salted and slow on purpose, but a weak password is still weak: guessing likely words and comparing still works.
+
+@hint 10
+Just run hashcrack on the file: hashcrack shadow.bak (it recognises the $6$ lines by itself).
+
+@hint 15
+The password is a common word; hashcrack shadow.bak finds it from the built-in list, and hashcrack --show shadow.bak shows it again next to sam's name.

@@ -1,0 +1,50 @@
+title: The stream behind the file
+level: Intermediate
+kind: Windows
+topic: Windows
+teaser: a Windows file can hide a second file inside it
+points: 60
+order: 51
+host: windows
+answer: flag
+
+@intro
+You are on a pretend Windows computer (a PowerShell window). On Windows, a single
+file can carry extra hidden contents called alternate data streams - a second file
+riding along behind the one you see. A note on the Desktop looks empty, but something
+is hidden in a stream behind it. Find the stream and read the flag.
+
+@winsetup
+$f = 'C:\Users\player\Desktop\notes.txt'
+Set-Content -Path $f -Value 'Nothing important here.'
+Set-Content -Path $f -Stream 'secret' -Value '{{FLAG}}'
+
+@solution
+Get-Item 'C:\Users\player\Desktop\notes.txt' -Stream *
+Get-Content 'C:\Users\player\Desktop\notes.txt' -Stream secret
+
+@walkthrough
+notes.txt reads as a dull one-liner, but NTFS lets a file hold extra named streams
+besides its main contents. List them:
+
+    Get-Item 'C:\Users\player\Desktop\notes.txt' -Stream *
+
+Besides :$DATA (the normal contents) there is a stream named "secret". Read it:
+
+    Get-Content 'C:\Users\player\Desktop\notes.txt' -Stream secret
+
+The flag is inside. The lesson: streams don't show in Explorer or a plain dir, so
+attackers use them to hide tools and data; dir /r and Get-Item -Stream * reveal them.
+
+@hint 4
+What to think about first: a Windows file can have more than one stream of contents.
+The one you normally see is the default; others have names. You list them with
+Get-Item and the -Stream * option.
+
+@hint 7
+Run: Get-Item 'C:\Users\player\Desktop\notes.txt' -Stream *
+It shows the default stream and a second one with a name.
+
+@hint 11
+Read the named stream: Get-Content 'C:\Users\player\Desktop\notes.txt' -Stream secret
+The FLAG{...} it prints is the answer.

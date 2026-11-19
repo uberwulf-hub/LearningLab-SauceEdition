@@ -1,0 +1,22 @@
+SYNOPSIS: Reserves one address in a scope for one device.
+DESCRIPTION:
+A reservation ties an IP address to a device's MAC address (the ClientId, written like 00-1B-A9-4C-21-07). The device still uses DHCP, but always gets the same address, and it can get its own options. Printers are the classic case.
+
+The address must be inside the scope's range. If another device already leases it, that device keeps it until it renews.
+PARAMETER ScopeId:
+The scope, for example 10.10.0.0.
+PARAMETER IPAddress:
+The address to reserve.
+PARAMETER ClientId:
+The device's MAC address.
+PARAMETER Name:
+A name for the reservation, often the device name.
+PARAMETER Description:
+A note.
+PARAMETER Type:
+Dhcp (default), Bootp or Both.
+EXAMPLE: Add-DhcpServerv4Reservation -ScopeId 10.10.0.0 -IPAddress 10.10.0.150 -ClientId 00-1B-A9-4C-21-07 -Name PRN-HQ-01 -ComputerName SRV1
+The office printer always gets 10.10.0.150.
+EXAMPLE: Get-DhcpServerv4Lease -ScopeId 10.10.0.0 | Select-Object IPAddress, ClientId, HostName
+Finds a device's MAC address from its current lease first.
+RELATED: Get-DhcpServerv4Reservation, Remove-DhcpServerv4Reservation, Get-DhcpServerv4Lease, Set-DhcpServerv4OptionValue

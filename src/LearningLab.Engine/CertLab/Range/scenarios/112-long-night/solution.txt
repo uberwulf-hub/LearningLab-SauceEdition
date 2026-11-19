@@ -1,0 +1,10 @@
+## the evening's alerts
+siem alerts --fields time,rule,user,src_ip,note
+## every VPN sign-in today: who, from which address
+siem search host=VPN01 event=4624 --fields time,user,src_ip,vpn_ip
+## follow the odd one through its VPN address
+siem search source=winsec user={{VICT}} logon_type=10 --fields time,host,src_ip
+siem search host=FILE01 event=5145 --since 20:00 --count-by user
+## what happened on that computer afterwards
+siem search host=WS-{{HV}} --since {{T0}} --fields time,source,image,cmdline,query
+siem search source=firewall src={{NET}}.{{HV}} --since {{T0}} --fields time,dst,dport,bytes

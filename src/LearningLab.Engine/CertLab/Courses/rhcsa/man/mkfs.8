@@ -1,0 +1,24 @@
+NAME
+       mkfs - create a file system (front end)
+
+SYNOPSIS
+       mkfs [-t TYPE] [TYPE-OPTIONS] DEVICE
+
+DESCRIPTION
+       mkfs is a small front end: "mkfs -t TYPE" runs the program mkfs.TYPE
+       (mkfs.xfs, mkfs.ext4, mkfs.vfat...) with the remaining arguments.
+       Without -t it makes ext2. It is usually clearer to run mkfs.TYPE
+       directly.
+
+OPTIONS
+       -t, --type TYPE
+              The file system type: xfs, ext4, ext3, ext2, vfat.
+
+       -V     Show the command mkfs runs.
+
+EXAMPLES
+           mkfs -t xfs /dev/vdb1
+           mkfs -t ext4 -L logs /dev/vgdata/logs
+
+SEE ALSO
+       mkfs.xfs(8), mke2fs(8), mkfs.fat(8), mkswap(8)

@@ -1,0 +1,10 @@
+SYNOPSIS: Ends a DHCP failover relationship.
+DESCRIPTION:
+Remove-DhcpServerv4Failover deletes the relationship. The scopes stay on this server; on the partner they are removed. Clients that leased from the partner will move to this server when they renew.
+PARAMETER Name:
+The relationship or relationships to end.
+PARAMETER Force:
+Removes without asking.
+EXAMPLE: Remove-DhcpServerv4Failover -Name HQ-Failover -ComputerName SRV1
+SRV1 serves the HQ scope alone again.
+RELATED: Get-DhcpServerv4Failover, Add-DhcpServerv4Failover

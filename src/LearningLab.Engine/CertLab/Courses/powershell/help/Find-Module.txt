@@ -1,0 +1,20 @@
+SYNOPSIS: Searches a repository, such as the PowerShell Gallery, for modules to download.
+DESCRIPTION:
+Find-Module looks up modules in the registered repositories (see Get-PSRepository) and lists their name, version and description, without installing anything. It is the safe first step before Install-Module: check the name, the author and the version first.
+
+On a real PC with internet, Find-Module talks to the PowerShell Gallery at www.powershellgallery.com.
+PARAMETER Name:
+The module to look for. Wildcards work on a real PC, for example *Network*.
+PARAMETER Repository:
+Searches only this repository, for example PSGallery or an internal one.
+PARAMETER RequiredVersion:
+Looks for exactly this version. MinimumVersion and MaximumVersion set a range instead.
+EXAMPLE: Find-Module -Name PSScriptAnalyzer
+On a real PC, shows the newest version of PSScriptAnalyzer in the Gallery. In Cert Lab it explains that the Gallery cannot be reached.
+EXAMPLE: Find-Module -Name LabTools -Repository LabRepo
+Searches only the internal LabRepo repository.
+NOTES:
+The practice network has no internet and no package server, so in Cert Lab Find-Module warns that it cannot reach the package source and then reports that no match was found. To practise with modules, copy a module folder into C:\Program Files\WindowsPowerShell\Modules and use Get-Module -ListAvailable.
+The first time PowerShellGet runs on a real Windows PowerShell 5.1 PC, it may ask to install the NuGet provider, which also needs internet.
+In PowerShell 7.4 and later, PSResourceGet's Find-PSResource is the newer command for the same job.
+RELATED: Install-Module, Save-Module, Get-PSRepository, Get-Module

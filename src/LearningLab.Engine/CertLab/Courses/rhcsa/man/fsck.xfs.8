@@ -1,0 +1,20 @@
+NAME
+       fsck.xfs - a stand-in that does nothing for xfs file systems
+
+SYNOPSIS
+       fsck.xfs DEVICE
+
+DESCRIPTION
+       fsck.xfs exists so that fsck and the boot process find a checker for
+       xfs. It does nothing and succeeds: xfs keeps a journal and replays it
+       when the file system is mounted, so it needs no check at boot.
+
+       To check or repair an xfs file system, unmount it and use xfs_repair
+       (xfs_repair -n only reports).
+
+EXAMPLES
+           umount /data
+           xfs_repair /dev/vgdata/lvdata
+
+SEE ALSO
+       xfs_repair(8), fsck(8), xfs(5)

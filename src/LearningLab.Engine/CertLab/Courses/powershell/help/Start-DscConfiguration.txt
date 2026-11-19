@@ -1,0 +1,29 @@
+SYNOPSIS: Applies compiled DSC configurations (.mof files) to computers.
+DESCRIPTION:
+DSC works in two steps. First you run a configuration like a function: it compiles each Node block into a <node>.mof file in a folder (the -OutputPath you give, or a folder named after the configuration). Then Start-DscConfiguration sends each .mof file to the computer it is named after.
+
+On each computer, the Local Configuration Manager (LCM) goes through the resources in DependsOn order. For each one it runs Test first; only if the computer is not already as described does it run Set. Running it again changes nothing that is already right.
+
+The applied document becomes the computer's current configuration, which Test-DscConfiguration and Get-DscConfiguration use later.
+PARAMETER Path:
+The folder with the .mof files, for example C:\DSC.
+PARAMETER ComputerName:
+Applies only the .mof files of these computers.
+PARAMETER Wait:
+Waits and shows the result in the console. Without it, a job object is returned.
+PARAMETER Verbose:
+With -Wait, shows each LCM step: Start Test, Skip Set or Start Set, for every resource.
+PARAMETER UseExisting:
+Applies the computer's current configuration again instead of a new .mof.
+PARAMETER JobName:
+A name for the job when -Wait is not used.
+EXAMPLE: WebBase -OutputPath C:\DSC
+Compiles the WebBase configuration: it writes C:\DSC\WIN-SRV1.mof.
+EXAMPLE: Start-DscConfiguration -Path C:\DSC -Wait -Verbose
+Applies every .mof in C:\DSC and shows what the LCM tested and changed.
+EXAMPLE: Start-DscConfiguration -UseExisting -Wait -Verbose
+Applies the current configuration again, for example to fix drift.
+NOTES:
+Pushing to another computer uses WinRM: WIN-CL1 must have remoting enabled first.
+PowerShell 7 has no Start-DscConfiguration and no LCM cmdlets. DSC 3 is a separate program (dsc.exe) without an LCM.
+RELATED: Test-DscConfiguration, Get-DscConfiguration, Get-DscConfigurationStatus, Import-DscResource, Get-DscResource

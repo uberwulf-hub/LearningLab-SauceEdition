@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Spelling practice (test page)</title></head>
+<body>
+<p>A made-up practice page in the same shape as a spelling-bee practice page: its word lists are a LISTS array.</p>
+<script>
+/* "a|b" = both spellings accepted; the first one is the main spelling. "_" = a space. */
+const LISTS = [
+ {id:"g1", name:"Garden Words", emoji:"🌱", note:"Week 1", words:`apple banana colour|color ice_cream jack-o'-lantern Zanzibar
+   pebble   meadow apple`},
+ {id:"g2", name:'Kitchen "Words"', emoji:"🍳", note:"Week 2", words:`spatula crème_brûlée|creme_brulee kettle`},
+ {id:"g3", name:"Empty", emoji:"", note:"", words:`   `},
+];
+LISTS.forEach(L => L.words = L.words.trim().split(/\s+/));
+const other = [ {id:"x", words:`not a list`} ];
+</script>
+</body>
+</html>

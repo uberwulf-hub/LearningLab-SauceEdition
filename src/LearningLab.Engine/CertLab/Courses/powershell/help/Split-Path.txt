@@ -1,0 +1,26 @@
+SYNOPSIS: Takes a path apart: its parent, its last part (leaf) or its drive (qualifier).
+DESCRIPTION:
+Split-Path works on the text of a path; nothing has to exist (unless you add -Resolve). Without a switch it returns the parent: Split-Path C:\LabFiles\app.log gives C:\LabFiles.
+PARAMETER Path:
+The path or paths to split.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+PARAMETER Parent:
+The part before the last \ (the default).
+PARAMETER Leaf:
+The last part: the file or folder name.
+PARAMETER Qualifier:
+The drive part, for example C: or HKLM:.
+PARAMETER NoQualifier:
+Everything after the drive part.
+PARAMETER IsAbsolute:
+True when the path starts at a drive or at \.
+PARAMETER Resolve:
+Expands wildcards first and splits each matching item's path.
+EXAMPLE: Split-Path C:\LabFiles\app.log -Leaf
+Gives app.log.
+EXAMPLE: Split-Path $PROFILE
+The folder that holds your profile script.
+NOTES:
+-Extension and -LeafBase do not exist in Windows PowerShell 5.1 (they arrived in PowerShell 6). In 5.1 use (Get-Item file).Extension and .BaseName, or [System.IO.Path]::GetExtension().
+RELATED: Join-Path, Resolve-Path

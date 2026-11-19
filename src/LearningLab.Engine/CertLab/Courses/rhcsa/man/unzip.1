@@ -1,0 +1,30 @@
+NAME
+       unzip - list and unpack zip archives
+
+SYNOPSIS
+       unzip [-l] [-o] [-n] [-q] [-d DIRECTORY] ARCHIVE.zip [FILE...]
+
+DESCRIPTION
+       unzip unpacks the files of a .zip archive (the format common on
+       Windows) into the current directory, or into -d DIRECTORY. When a file
+       already exists, unzip asks what to do unless -o or -n is given. It is
+       in the unzip package, which is not installed by default.
+
+OPTIONS
+       -l     List the archive's contents without unpacking.
+
+       -d DIRECTORY
+              Unpack into DIRECTORY (created if needed).
+
+       -o     Overwrite existing files without asking.
+
+       -n     Never overwrite existing files.
+
+       -q     Quiet.
+
+EXAMPLES
+           unzip -l /root/site.zip
+           unzip /root/site.zip -d /var/www/html
+
+SEE ALSO
+       zip(1), tar(1), gzip(1)

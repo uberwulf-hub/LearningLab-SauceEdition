@@ -1,0 +1,29 @@
+NAME
+       showmount - list the exports of an NFS server
+
+SYNOPSIS
+       showmount [-e] [-a] [-d] [HOST]
+
+DESCRIPTION
+       showmount asks an NFS server (HOST, or this machine) what it shares.
+       With -e it prints each exported directory and the clients allowed to
+       mount it. It is the first thing to try before mounting an export or
+       setting up autofs. It needs the nfs-utils package and talks to the
+       server's rpcbind and mountd, so a firewall on the server must allow
+       them.
+
+OPTIONS
+       -e, --exports
+              List the server's exports.
+
+       -a, --all
+              List clients and the directories they have mounted.
+
+       -d, --directories
+              List only the directories clients have mounted.
+
+EXAMPLES
+           showmount -e utility.lab.example.com
+
+SEE ALSO
+       mount.nfs(8), exportfs(8), nfsstat(8)

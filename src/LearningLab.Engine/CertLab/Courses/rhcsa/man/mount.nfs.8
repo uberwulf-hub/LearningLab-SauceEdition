@@ -1,0 +1,63 @@
+NAME
+       mount.nfs - mount an NFS file system
+
+SYNOPSIS
+       mount -t nfs [-o OPTIONS] SERVER:/PATH DIRECTORY
+       mount.nfs SERVER:/PATH DIRECTORY [-o OPTIONS] [-r] [-w] [-v]
+
+DESCRIPTION
+       mount.nfs is the helper that mount runs for file systems of type nfs
+       and nfs4. You normally do not call it directly: "mount -t nfs ..." or
+       an nfs line in /etc/fstab uses it. It comes with the nfs-utils
+       package, which also provides showmount.
+
+       RHEL 9 uses NFS version 4.2 when the server offers it, else falls
+       back to older versions. The export is named SERVER:/PATH, where PATH
+       is a directory the server exports (showmount -e SERVER lists them).
+
+       Files on NFS keep the user and group numbers of the server, so a user
+       must have the same UID on both machines to own their files. Root on
+       the client is usually mapped to nobody on the server (root_squash).
+
+       For a mount at boot, add _netdev so the mount waits for the network:
+
+           utility.lab.example.com:/exports/shared  /mnt/shared  nfs  defaults,_netdev  0 0
+
+OPTIONS
+       -o OPTIONS
+              Mount options, separated by commas.
+
+       -r, -w Mount read-only or read-write.
+
+       -v     Say more about what happens.
+
+NFS OPTIONS
+       vers=4.2, nfsvers=3
+              Ask for this NFS version.
+
+       rw, ro Read-write or read-only (the server may still refuse writes).
+
+       sync   Write changes to the server at once.
+
+       hard, soft
+              hard (the default) keeps retrying when the server is down;
+              soft gives up with an error.
+
+       timeo=N
+              Wait N tenths of a second before retrying.
+
+       _netdev
+              Mount only after the network is up (for /etc/fstab).
+
+EXAMPLES
+       List the exports, mount one and check:
+
+           showmount -e utility.lab.example.com
+           mkdir -p /mnt/shared
+           mount -t nfs utility.lab.example.com:/exports/shared /mnt/shared
+           findmnt /mnt/shared
+
+       To mount home directories on demand, use autofs instead of fstab.
+
+SEE ALSO
+       mount(8), umount(8), showmount(8), nfsstat(8), autofs(8), fstab(5)

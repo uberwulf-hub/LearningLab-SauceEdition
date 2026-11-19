@@ -1,0 +1,272 @@
+# Unit: u09 | 9. Hyper-V virtual machines | Virtualization
+
+**Hyper-V** is the hypervisor built into Windows Server: one physical server (the **host**) runs many virtual machines (**guests**), each with its own virtual hardware and operating system. This unit covers creating and sizing VMs, nested virtualization and virtual switches, and virtual hard disks and checkpoints, with a word on Hyper-V Replica and live migration. Harborline's host is HV1 (16 logical processors, 64 GB): `APP-OLD` runs an old order-tracking app, `WEB-TEST` is a test web server and `LAB-HOST` will run Hyper-V itself for the training team.
+
+## Lesson: l0901 | Creating and configuring virtual machines
+
+Install the role with `Install-WindowsFeature Hyper-V -IncludeManagementTools -Restart` (the processor needs virtualization extensions and SLAT). Manage it with Hyper-V Manager, Windows Admin Center (Virtual machines) or the **Hyper-V** PowerShell module. `New-VM` creates a VM:
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> New-VM -Name WEB2 -Generation 2 -MemoryStartupBytes 2GB -NewVHDPath 'D:\Hyper-V\Virtual Hard Disks\WEB2.vhdx' -NewVHDSizeBytes 60GB -SwitchName LAN
+
+Name         State   CPUUsage(%) MemoryAssigned(M) Uptime           Status             Version
+----         -----   ----------- ----------------- ------           ------             -------
+WEB2         Off               0                 0 00:00:00         Operating normally 10.0
+
+
+PS C:\Windows\system32> Get-VM | Format-Table Name, State, Generation, Version
+
+Name     State   Generation Version
+----     -----   ---------- -------
+APP-OLD  Running          1 9.0
+LAB-HOST Off              2 10.0
+WEB2     Off              2 10.0
+WEB-TEST Off              2 10.0
+```
+
+### Generation 1 or 2
+
+The **generation** is picked when the VM is created and **can never change**.
+
+- **Generation 2**: UEFI firmware with **Secure Boot** and an optional virtual TPM, boots from a SCSI **VHDX** disk (up to 64 TB), PXE boot with the normal network adapter, faster start-up, no emulated legacy devices. Use it for every current Windows and Linux system.
+- **Generation 1**: BIOS firmware, boots from an IDE disk (VHD or VHDX; the boot disk is limited to 2 TB), legacy network adapter for PXE. Only for old 32-bit operating systems or appliances that need it.
+
+### Memory and processors
+
+- **Static memory**: the VM always has its startup memory. Windows Server 2016 and later can change it while a supported guest runs.
+- **Dynamic memory**: Hyper-V gives the VM memory as it needs it, between **Minimum** and **Maximum**, starting at **Startup**, with a **buffer** (spare %) and a **weight** (priority when memory runs short). Turning dynamic memory on or off needs the VM **off**; while it runs you can lower the minimum and raise the maximum.
+- **Processors**: the virtual processor count (VM off to change it), **compatibility mode** (to live-migrate between hosts with different processor generations of the same maker), and **NUMA** settings for very large VMs.
+
+### Integration services, enhanced session and versions
+
+- **Integration services** connect the guest with the host: Heartbeat, Shutdown (clean shutdown from the host), Time Synchronization, Key-Value Pair Exchange, VSS (backups and production checkpoints) and **Guest Service Interface** (off by default; needed for `Copy-VMFile`). Windows guests get updates for them through Windows Update. `Enable-VMIntegrationService` switches one on.
+- **Enhanced session mode** makes Hyper-V's console (VMConnect) an RDP connection over the VM bus: clipboard, local drives, audio, USB devices and printers, resizable screen, even before the guest has a network. It is **off by default on Windows Server**: `Set-VMHost -EnableEnhancedSessionMode $true`.
+- The **configuration version** (Windows Server 2022 makes 10.0) decides which features a VM can use and which hosts can run it. A VM moved from an older host keeps its old version until you run `Update-VMVersion` with the VM off; that is one-way (the VM then can't go back to the older host).
+- **Automatic start and stop actions** decide what happens when the host restarts (start if it was running, save state, shut down).
+
+@try
+@task t1 | Virtualization | 10 | HV1
+Create a **generation 2** VM named **WEB2** with **4 GB** of startup memory, **2** virtual processors, a new **60 GB** VHDX in `D:\Hyper-V\Virtual Hard Disks\WEB2.vhdx`, connected to the switch **LAN**.
+@check admin | WEB2 as asked
+vm["WEB2"].generation == 2
+vm["WEB2"].memorygb == 4
+vm["WEB2"].cpus == 2
+vm["WEB2"].switch == LAN
+vhd["D:\Hyper-V\Virtual Hard Disks\WEB2.vhdx"].format == VHDX
+vhd["D:\Hyper-V\Virtual Hard Disks\WEB2.vhdx"].sizegb == 60
+@hint New-VM -Generation 2 -MemoryStartupBytes -NewVHDPath -NewVHDSizeBytes -SwitchName, then Set-VMProcessor -Count.
+@solution HV1
+New-VM -Name WEB2 -Generation 2 -MemoryStartupBytes 4GB -NewVHDPath 'D:\Hyper-V\Virtual Hard Disks\WEB2.vhdx' -NewVHDSizeBytes 60GB -SwitchName LAN
+Set-VMProcessor WEB2 -Count 2
+@endtask
+@task t2 | Virtualization | 10 | HV1
+**WEB-TEST** sits idle most of the day. Give it **dynamic memory**: minimum **1 GB**, startup **4 GB**, maximum **8 GB**.
+@check admin | dynamic memory between 1 and 8 GB
+vm["WEB-TEST"].dynamic == Yes
+vm["WEB-TEST"].memorygb == 4
+@solution HV1
+Set-VMMemory WEB-TEST -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 4GB -MaximumBytes 8GB
+@endtask
+@task t3 | Virtualization | 10 | HV1
+Turn on **enhanced session mode** on HV1, and the **Guest Service Interface** of APP-OLD so files can be copied into it with `Copy-VMFile`.
+@check admin | the host setting and the integration service
+vmhost.enhancedsession == Yes
+vm["APP-OLD"].integration["Guest Service Interface"] == Yes
+@solution HV1
+Set-VMHost -EnableEnhancedSessionMode $true
+Enable-VMIntegrationService -VMName APP-OLD -Name 'Guest Service Interface'
+@endtask
+@end
+
+@quiz
+? A VM must boot with Secure Boot and a virtual TPM. Which generation?
+- Generation 1
++ Generation 2
+- Either; it can be changed later
+! Only generation 2 has UEFI, Secure Boot and a vTPM, and the generation can't be changed after creation.
+? You try to turn on dynamic memory for a running VM and get an error. Why?
++ Dynamic memory can be turned on or off only while the VM is off
+- Dynamic memory needs a generation 1 VM
+- The maximum must be set first
+! The setting needs the VM off; while it runs you can only lower the minimum or raise the maximum.
+? A VM from a Windows Server 2016 host was imported on HV1. What does Update-VMVersion do?
+- Updates the integration services in the guest
++ Raises its configuration version to the host's, one-way, so it gets the newer features
+- Converts its disk from VHD to VHDX
+! After the update the VM can't run on the older host any more; the VM must be off.
+@end
+
+## Lesson: l0902 | Nested virtualization and virtual switches
+
+### Nested virtualization
+
+**Nested virtualization** lets a VM run Hyper-V itself (for labs, training, or containers with Hyper-V isolation inside a VM). On the host, with the VM **off**:
+
+- `Set-VMProcessor -VMName LAB-HOST -ExposeVirtualizationExtensions $true` passes the processor's virtualization extensions to the VM.
+- **Dynamic memory must be off** (give it enough static memory, at least 4 GB).
+- **MAC address spoofing** on the VM's network adapter (`Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On`), so the inner VMs' packets with their own MAC addresses get through; the other way is a NAT switch inside the VM.
+- Supported on Intel VT-x and, since Windows Server 2022, AMD processors. Changing the memory of the running VM (runtime memory resize) doesn't work once nested virtualization is on.
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true
+Set-VMProcessor : Nested virtualization can't be turned on while the VM uses dynamic memory: turn dynamic memory off first (Set-VMMemory -DynamicMemoryEnabled $false).
+At line:1 char:1
++ Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (LAB-HOST:String) [Set-VMProcessor], VirtualizationException
+    + FullyQualifiedErrorId : InvalidState,Microsoft.HyperV.PowerShell.Commands.SetVMProcessorCommand
+
+PS C:\Windows\system32> Set-VMMemory LAB-HOST -DynamicMemoryEnabled $false
+PS C:\Windows\system32> Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true
+PS C:\Windows\system32> Get-VMProcessor LAB-HOST | Format-List VMName, Count, ExposeVirtualizationExtensions
+
+VMName                         : LAB-HOST
+Count                          : 2
+ExposeVirtualizationExtensions : True
+```
+
+### Virtual switches
+
+A **virtual switch** connects VMs' network adapters:
+
+- **External**: bound to a physical network adapter; VMs reach the real network. **Allow management operating system to share this adapter** gives the host a virtual adapter on it too (HV1's switch LAN doesn't: the host has its own adapter). One physical adapter carries one external switch.
+- **Internal**: VMs and the host talk to each other, nothing else. Add NAT on the host (`New-NetNat`) to give them internet access.
+- **Private**: only the VMs on that host talk to each other; not even the host. Good for isolated test networks.
+
+Other settings: **VLAN ID** per adapter (`Set-VMNetworkAdapterVlan`), bandwidth management, **SR-IOV**, and **Switch Embedded Teaming** (SET: teaming of several physical adapters inside the switch, `New-VMSwitch -NetAdapterName A, B -EnableEmbeddedTeaming $true`). `Connect-VMNetworkAdapter` moves a VM to another switch.
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> New-VMSwitch -Name Isolated -SwitchType Private
+
+Name     SwitchType NetAdapterInterfaceDescription
+----     ---------- ------------------------------
+Isolated Private
+
+
+PS C:\Windows\system32> Get-VMSwitch | Format-Table Name, SwitchType, AllowManagementOS
+
+Name     SwitchType AllowManagementOS
+----     ---------- -----------------
+LAN      External   False
+Isolated Private    False
+```
+
+@try
+@task t1 | Virtualization | 10 | HV1
+The training team wants **LAB-HOST** to run its own Hyper-V VMs that reach the network through LAB-HOST's adapter. Make it ready, keeping **8 GB** of memory.
+@check admin | nested virtualization, no dynamic memory, spoofing on
+vm["LAB-HOST"].nested == Yes
+vm["LAB-HOST"].dynamic == No
+vm["LAB-HOST"].memorygb == 8
+vm["LAB-HOST"].spoofing == On
+@hint Dynamic memory first (it blocks nested virtualization), then the processor, then the network adapter.
+@solution HV1
+Set-VMMemory LAB-HOST -DynamicMemoryEnabled $false -StartupBytes 8GB
+Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true
+Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On
+@endtask
+@task t2 | Virtualization | 10 | HV1
+WEB-TEST must be tested on a network that only the VMs share, without the host. Create the switch **Isolated** and connect WEB-TEST to it.
+@check admin | a private switch with WEB-TEST on it
+vswitch["Isolated"].type == Private
+vm["WEB-TEST"].switch == Isolated
+@solution HV1
+New-VMSwitch -Name Isolated -SwitchType Private
+Connect-VMNetworkAdapter -VMName WEB-TEST -SwitchName Isolated
+@endtask
+@end
+
+@quiz
+? Which switch lets VMs talk to each other and to the host, but not to the physical network?
+- External
++ Internal
+- Private
+! Internal includes the host's virtual adapter; Private leaves the host out too.
+? Nested virtualization is on, but the inner VMs can't reach the network through the outer VM's external switch. What is missing?
+- Dynamic memory on the outer VM
++ MAC address spoofing on the outer VM's network adapter
+- A generation 1 outer VM
+! The inner VMs' frames carry their own MAC addresses; without spoofing the host's switch drops them (or use NAT inside).
+? What must be off before you expose virtualization extensions to a VM? (Choose the best answer.)
+- Secure Boot
++ The VM itself and its dynamic memory
+- Its integration services
+! The VM must be off, and nested virtualization doesn't work with dynamic memory.
+@end
+
+## Lesson: l0903 | Virtual hard disks, checkpoints and moving VMs
+
+### Virtual hard disks
+
+- **VHD**: the old format, up to 2040 GB. **VHDX**: up to **64 TB**, resilient to power failures, 4 KB sectors; use it unless something old needs VHD. `Convert-VHD` converts (the disk must not be in use).
+- **Fixed**: the whole size is allocated at once; best performance, used to be the advice for production. **Dynamic**: grows as data is written; with VHDX the performance is close to fixed. **Differencing**: holds only the changes against a read-only **parent** disk; many VMs can share one parent (lab images). Never change a parent: every child breaks.
+- `New-VHD -Path ... -SizeBytes 60GB -Dynamic|-Fixed`, `New-VHD -Path child.vhdx -ParentPath base.vhdx -Differencing`, `Resize-VHD` (grow or shrink, online for SCSI-attached VHDX), `Add-VMHardDiskDrive`. Optimize-VHD compacts a dynamic disk. **Pass-through disks** (a physical disk given to a VM) are rarely used now.
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\Base.vhdx' -SizeBytes 40GB -Dynamic | Out-Null
+PS C:\Windows\system32> New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\Child.vhdx' -ParentPath 'D:\Hyper-V\Virtual Hard Disks\Base.vhdx' -Differencing | Format-List Path, VhdType, ParentPath
+
+Path       : D:\Hyper-V\Virtual Hard Disks\Child.vhdx
+VhdType    : Differencing
+ParentPath : D:\Hyper-V\Virtual Hard Disks\Base.vhdx
+```
+
+### Checkpoints
+
+A **checkpoint** saves a VM's state so you can go back to it. Behind it is a differencing disk (`.avhdx`), so a VM with many old checkpoints runs slower: delete them when done (the changes merge back).
+
+- **Production** checkpoints (the default) use **VSS** inside Windows guests (or file system freeze in Linux): the data is consistent, like a backup, but memory isn't saved. Applying one leaves the VM **off**, and it starts like after a clean shutdown.
+- **Standard** checkpoints save the memory and device state too: applying one returns the running programs exactly as they were. Not for production servers with databases or domain controllers (replication would go back in time).
+- **ProductionOnly** fails instead of falling back to a standard checkpoint when VSS can't run; **Disabled** turns them off.
+- Commands: `Checkpoint-VM -Name APP-OLD -SnapshotName 'Before patch'`, `Get-VMCheckpoint`, `Restore-VMCheckpoint`, `Remove-VMCheckpoint`. A checkpoint is **not a backup**: it lives on the same disk.
+
+### Moving and protecting VMs
+
+- **Live migration** moves a running VM to another host with no downtime: in a failover cluster, or between stand-alone hosts (**shared-nothing** live migration also copies the storage). Authentication by CredSSP (sign in on the source host) or Kerberos with constrained delegation. **Storage migration** moves only the files while the VM runs. Export / import copies a VM offline.
+- **Hyper-V Replica** keeps an asynchronous copy of a VM on another host (every 30 seconds, 5 or 15 minutes), for disaster recovery; you fail over by hand. Azure Site Recovery can replicate to Azure.
+
+@try
+@setup HV1
+New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx' -SizeBytes 40GB -Dynamic
+@task t1 | Virtualization | 10 | HV1
+The training team gets its lab VMs from the image `D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx`. Create **LAB1.vhdx** in the same folder as a disk that stores only LAB1's changes against that image.
+@check admin | a differencing disk with the image as parent
+vhd["D:\Hyper-V\Virtual Hard Disks\LAB1.vhdx"].type == Differencing
+vhd["D:\Hyper-V\Virtual Hard Disks\LAB1.vhdx"].parent == "D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx"
+@solution HV1
+New-VHD -Path 'D:\Hyper-V\Virtual Hard Disks\LAB1.vhdx' -ParentPath 'D:\Hyper-V\Virtual Hard Disks\Base-2022.vhdx' -Differencing
+@endtask
+@task t2 | Virtualization | 10 | HV1
+Before you install IIS on WEB-TEST, make sure its checkpoints are always consistent backups-style ones (never the memory-saving kind), then take a checkpoint named **Before IIS**.
+@check admin | ProductionOnly and the checkpoint
+vm["WEB-TEST"].checkpointtype == ProductionOnly
+vm["WEB-TEST"].checkpoints has "Before IIS"
+@solution HV1
+Set-VM -Name WEB-TEST -CheckpointType ProductionOnly
+Checkpoint-VM -Name WEB-TEST -SnapshotName 'Before IIS'
+@endtask
+@end
+
+@quiz
+? You apply a production checkpoint to a VM. In what state is the VM afterwards?
+- Running, exactly as when the checkpoint was taken
++ Off; it starts like after a clean shutdown
+- Saved
+! Production checkpoints don't keep memory, so the VM is off after applying one.
+? Twenty lab VMs should share one read-only Windows Server image and keep only their own changes. Which disk type?
+- Fixed
+- Dynamic
++ Differencing
+! Each differencing disk stores only changes against the shared parent; the parent must never change.
+? You need a copy of a VM at the branch's host that is at most 5 minutes behind, to start there if head office is lost. What do you use?
+- Live migration
+- A standard checkpoint
++ Hyper-V Replica
+! Replica sends changes every 30 seconds, 5 or 15 minutes to a replica server; failover is started by an administrator.
+@end
+
+

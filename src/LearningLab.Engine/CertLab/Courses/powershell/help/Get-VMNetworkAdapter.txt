@@ -1,0 +1,18 @@
+SYNOPSIS: Lists the network adapters of virtual machines (or of the host).
+DESCRIPTION:
+Get-VMNetworkAdapter shows each virtual adapter with its VMName, SwitchName, MacAddress, Status and IPAddresses (the guest reports these through integration services).
+
+-ManagementOS shows the host's own virtual adapters, the ones an External switch with AllowManagementOS creates. -All shows both.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+PARAMETER ManagementOS:
+Shows the host's virtual adapters.
+PARAMETER All:
+Shows the adapters of every VM and of the host.
+EXAMPLE: Get-VMNetworkAdapter -VMName APP-OLD -ComputerName HV1
+Which switch APP-OLD uses and its MAC address.
+EXAMPLE: Get-VMNetworkAdapter -ManagementOS
+The host's own adapters on its switches.
+RELATED: Add-VMNetworkAdapter, Set-VMNetworkAdapter, Connect-VMNetworkAdapter, Disconnect-VMNetworkAdapter, Get-VMSwitch

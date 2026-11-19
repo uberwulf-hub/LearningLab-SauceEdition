@@ -1,0 +1,61 @@
+TOPIC
+    about_Jobs
+
+SHORT DESCRIPTION
+    Running commands in the background while you keep working.
+
+LONG DESCRIPTION
+    A job runs a command in the background and gives your prompt back at
+    once. Later you look at its state and collect its output.
+
+        $job = Start-Job -ScriptBlock {
+            Get-ChildItem C:\LabFiles -Recurse | Measure-Object Length -Sum
+        }
+        Get-Job
+        Wait-Job $job
+        Receive-Job $job
+        Remove-Job $job
+
+  Job states
+    Get-Job shows each job's State: NotStarted, Running, Completed,
+    Failed, Stopped, Blocked (waiting for input) and others. HasMoreData
+    tells you whether there is output you have not collected.
+
+  Collecting output
+    Receive-Job returns what the job produced so far and then empties it,
+    so a second Receive-Job returns nothing new. Use -Keep to leave the
+    output in place. -Wait waits for the job to finish first, and
+    -AutoRemoveJob removes it afterwards.
+
+  Kinds of jobs
+    Background jobs   Start-Job starts a separate powershell.exe process
+                      on this computer. Variables from your session are not
+                      there: pass values with -ArgumentList or $using:.
+    Remote jobs       Invoke-Command -ComputerName WIN-SRV1 -AsJob runs the
+                      command on the remote machine and keeps a job here.
+    Other jobs        Some cmdlets have -AsJob (for example Get-WmiObject
+                      and CIM-based ones such as Get-NetAdapter; not
+                      Get-CimInstance), and scheduled jobs come from the
+                      PSScheduledJob module.
+
+        Invoke-Command -ComputerName WIN-SRV1, WIN-CL1 -AsJob `
+            -ScriptBlock { Get-HotFix }
+        Get-Job | Receive-Job -Wait
+
+  Stopping and cleaning up
+    Stop-Job ends a running job. Jobs stay in the list until you remove
+    them with Remove-Job, or until the session ends.
+
+  PowerShell 7
+    PowerShell 7 adds Start-ThreadJob as a built-in, lighter kind of job,
+    and the & operator at the end of a line (Get-Process &) to start a
+    job. Neither is in 5.1 (Start-ThreadJob is a separate module there).
+
+SEE ALSO
+    Start-Job
+    Get-Job
+    Receive-Job
+    Wait-Job
+    Stop-Job
+    Remove-Job
+    about_Remote_Variables

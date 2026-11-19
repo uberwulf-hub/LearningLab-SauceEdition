@@ -1,0 +1,20 @@
+Same jump host as Deeper In, but a sensor on the inside network flags any scan of store01.
+
+1. The outside is not watched. nmap -sn 10.10.7.0/24 finds jump01; its anonymous FTP has handover.txt
+   with the pilot password ({{JPW}}), which also warns that the inside network has a sensor.
+
+2. Foothold. ssh pilot@10.10.7.20 and read the jump-host flag. ip addr shows the second network,
+   10.10.72.0/24.
+
+3. Find the target without scanning. A jump host people use every day remembers where it connects. On this
+   run {{LOOKWHERE}} names store01 at 10.10.72.{{INNER}} ({{LOOKCMD}}). Other places worth a look on real
+   systems: /etc/hosts, ~/.bash_history, ~/.ssh/config and known_hosts, and the arp table (ip neigh).
+
+4. One clean sign-in. ssh pilot@10.10.72.{{INNER}} with the same password and read the inside flag.
+
+Why the noisy way fails: nmap -sn 10.10.72.0/24 and a port scan of store01 from jump01 both cross the
+sensor's line at once; it raises the alarm, blocks the jump host's address and changes the pilot password
+it saw used.
+
+In real life: internal sensors (network detection, honeypot addresses) are tuned to catch exactly this
+"sweep after a foothold" pattern. Living off what the foothold already knows is quieter.

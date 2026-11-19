@@ -1,0 +1,275 @@
+# Unit: u13 | 13. BitLocker and LAPS | Protection
+
+Two last protections, both about secrets. **BitLocker** encrypts the disk, so a stolen laptop's data can't be read without the key; Intune turns it on and keeps the recovery key safe in Microsoft Entra ID. **Windows LAPS** gives every PC's local administrator account its own random password that changes regularly and is stored in Entra ID, so one leaked password doesn't open every PC. This unit sets both up with Intune, and shows how to check them on the device and where admins find the keys and passwords.
+
+## Lesson: l1301 | BitLocker with Intune: silent encryption
+
+The BitLocker policy lives in **Endpoint security > Disk encryption > Create policy > BitLocker** (it uses the BitLocker CSP; the same settings are in the settings catalog). The settings that matter most:
+
+- **Require Device Encryption**: Enabled turns BitLocker on.
+- **Allow Warning For Other Disk Encryption**: **Disabled** makes the encryption **silent**: no prompt asks the user to start it (or to check for other encryption software).
+- **Allow Standard User Encryption**: **Enabled** lets the silent encryption run when the signed-in user is not a local administrator, which is the normal case on Entra joined PCs. It only applies when warnings are disabled.
+- **Encryption method for operating system drives**: XTS-AES 128-bit is Windows' default; XTS-AES 256-bit is stronger. AES-CBC is for removable drives that older Windows must read.
+- **Save BitLocker recovery information to Microsoft Entra ID**, and **Do not enable BitLocker until recovery information is stored**: the recovery key goes to the device object in Entra ID before encryption starts, so it can't be lost.
+
+Silent encryption also needs a **TPM** (2.0 is the norm), a Microsoft Entra joined or hybrid joined device, and **no startup PIN or key that must be typed** (TPM-only startup). The disk encrypts in the background; in Cert Lab it takes 2 hours.
+
+```terminal
+#setup portal:create diskEncryption name="BitLocker silent" requireEncryption=Enabled allowWarning=Disabled standardUser=Enabled osMethod="XTS-AES 256-bit" backup=Enabled backupFirst=Enabled
+#setup portal:assign diskEncryption "BitLocker silent" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-BitLockerVolume -MountPoint C: | Select-Object MountPoint, VolumeStatus, ProtectionStatus, EncryptionMethod
+
+MountPoint VolumeStatus         ProtectionStatus EncryptionMethod
+---------- ------------         ---------------- ----------------
+C:         EncryptionInProgress Off              XtsAes256
+```
+
+Two hours later:
+
+```terminal
+#setup portal:create diskEncryption name="BitLocker silent" requireEncryption=Enabled allowWarning=Disabled standardUser=Enabled osMethod="XTS-AES 256-bit" backup=Enabled backupFirst=Enabled
+#setup portal:assign diskEncryption "BitLocker silent" "Windows devices"
+#setup portal:remote sync RB-LT-001
+#setup wait:7200
+PS C:\Windows\system32> Get-BitLockerVolume -MountPoint C: | Select-Object MountPoint, VolumeStatus, ProtectionStatus, EncryptionMethod, KeyProtector
+
+MountPoint       : C:
+VolumeStatus     : FullyEncrypted
+ProtectionStatus : On
+EncryptionMethod : XtsAes256
+KeyProtector     : {Tpm, RecoveryPassword}
+```
+
+The **Tpm** protector unlocks the disk at start-up without anyone typing anything; the **RecoveryPassword** protector is the 48-digit recovery key that was backed up to Entra ID.
+
+@try
+@task t1 | Protection | 20 | portal
+Encrypt the Windows PCs silently. Create a disk encryption policy **BitLocker silent**: require device encryption, **disable** the warning for other disk encryption, allow **standard users** to encrypt, use **XTS-AES 256-bit** for the OS drive, and **back up the recovery key to Microsoft Entra ID** before encrypting. Assign it to **Windows devices**, sync **RB-LT-001**, and let the 2 hours of encryption pass.
+@check portal | RB-LT-001 is encrypted and its key is in Entra ID
+device["RB-LT-001"].bitlocker == On
+device["RB-LT-001"].recoveryKeyIn == "Microsoft Entra ID"
+diskEncryption["BitLocker silent"].osMethod == "XTS-AES 256-bit"
+@check RB-LT-001 | BitLocker protects drive C:
+$v = Get-BitLockerVolume -MountPoint C:; "$($v.ProtectionStatus)" -eq 'On' -and "$($v.EncryptionMethod)" -eq 'XtsAes256'
+@hint Endpoint security > Disk encryption > Create policy > BitLocker. After the sync, Skip time by 2 hours (7200 seconds).
+@solution portal
+create diskEncryption name="BitLocker silent" requireEncryption=Enabled allowWarning=Disabled standardUser=Enabled osMethod="XTS-AES 256-bit" backup=Enabled backupFirst=Enabled
+assign diskEncryption "BitLocker silent" "Windows devices"
+remote sync RB-LT-001
+#wait 7200
+@endtask
+@end
+
+@quiz
+? Which setting makes BitLocker encryption silent, without asking the user?
+- Require Device Encryption = Enabled
++ Allow Warning For Other Disk Encryption = Disabled
+- Encryption method = XTS-AES 256-bit
+! With the warning disabled, Windows starts encryption without a prompt; Require Device Encryption alone waits for the user.
+? Jordan isn't a local administrator on his Entra joined laptop. What else must the policy allow for silent encryption to run?
++ Allow Standard User Encryption = Enabled
+- A startup PIN
+- Backup to Active Directory
+! Silent encryption for a standard user needs Allow Standard User Encryption (together with the warning disabled).
+? Which setting makes sure the recovery key is never lost?
+- Configure Recovery Password Rotation
++ Do not enable BitLocker until recovery information is stored (with backup to Entra ID)
+- Allow Warning For Other Disk Encryption
+! Encryption only starts once the key is safely in Entra ID.
+@end
+
+## Lesson: l1302 | Recovery keys, rotation and troubleshooting
+
+### When BitLocker doesn't start
+
+The device page's **Device configuration** (or the disk encryption report, **Endpoint security > Disk encryption**) shows the policy's state and the reason. The usual reasons:
+
+- **The warning isn't disabled**: Windows waits for the user to click a notification.
+- **A standard user, and standard user encryption isn't allowed.**
+- **A startup PIN is required**: a PIN must be typed by the user, so it can't be set silently. ("Allow" a PIN is fine for silent encryption; "Require" isn't.)
+- **No usable TPM**, or the device isn't Entra joined or hybrid joined.
+- The policy waits for the recovery key to be stored, but backup to Entra ID isn't on.
+
+A compliance policy that **requires BitLocker** (unit 3) reports the device as noncompliant until encryption has finished and the device has checked in again. (Real Windows reports this through Device Health Attestation, which can also need a restart; Cert Lab doesn't.)
+
+### Where the recovery key is
+
+If a PC asks for its recovery key (after a hardware change, a firmware update, too many wrong PINs), the key is in:
+
+- **Intune**: the device page > **Recovery keys**;
+- **Microsoft Entra admin center**: **Devices > All devices > the device > BitLocker keys**;
+- for the user themselves (if the tenant allows it): their **My Account** page (myaccount.microsoft.com > Devices).
+
+Admins need a role that may read BitLocker keys: **Cloud Device Administrator**, **Helpdesk Administrator**, **Intune Administrator**, **Security Administrator**, **Security Reader** and **Global Reader** can (and Global Administrator). Each read is logged in the audit log.
+
+### Rotating the key
+
+Once a recovery key has been used, someone has seen it. **Configure Recovery Password Rotation** (in the BitLocker policy) lets Windows replace it: **Refresh on for Microsoft Entra joined devices** (or for Entra joined and hybrid joined devices). With rotation on, an admin can also send the **BitLocker key rotation** remote action: the PC makes a new recovery password and backs it up to Entra ID.
+
+> Cert Lab's recovery keys are random digits in the right format; the device page shows them. `manage-bde -status` and `BackupToAAD-BitLockerKeyProtector` aren't simulated; `Get-BitLockerVolume` is.
+
+@try
+@setup portal
+create diskEncryption name="BitLocker" requireEncryption=Enabled backup=Enabled
+assign diskEncryption "BitLocker" "Windows devices"
+create compliance name="Encrypted PCs" platform="Windows 10 and later" bitlocker=Require
+assign compliance "Encrypted PCs" "Pilot devices"
+remote sync RB-LT-002
+@task t1 | Protection | 20 | portal
+Priya's laptop **RB-LT-002** still isn't encrypted and is noncompliant. Its device page says why. Fix the policy **BitLocker** so it encrypts silently for standard users (don't add a new policy), and allow key rotation for Microsoft Entra joined devices. Sync, let the encryption finish (2 hours), and sync again so compliance sees it.
+@check portal | the laptop is encrypted and compliant
+device["RB-LT-002"].bitlocker == On
+device["RB-LT-002"].compliance == Compliant
+diskEncryption["BitLocker"].rotation == "Refresh on for Microsoft Entra joined devices"
+@hint Look at RB-LT-002 > Device configuration: the BitLocker policy waits for the user. Set Allow Warning For Other Disk Encryption to Disabled and Allow Standard User Encryption to Enabled. Sync, Skip time 2 hours, Sync.
+@solution portal
+set diskEncryption "BitLocker" allowWarning=Disabled standardUser=Enabled rotation="Refresh on for Microsoft Entra joined devices"
+remote sync RB-LT-002
+#wait 7200
+remote sync RB-LT-002
+@endtask
+@end
+
+@quiz
+? A BitLocker policy requires a startup PIN with the TPM. What happens on PCs with silent encryption set up?
+- They encrypt silently and set a random PIN
++ Encryption waits until the user chooses a PIN
+- The policy is ignored
+! A required PIN must come from the user, so encryption can't be fully silent. Use TPM only (or allow, not require, a PIN) for silent encryption.
+? A user is locked out of her laptop at the BitLocker recovery screen. Where can the help desk find the key?
++ On the device in Intune (Recovery keys) or in the Entra admin center (BitLocker keys)
+- In the Intune Management Extension log on the laptop
+- In the compliance report
+! The recovery key backed up to Entra ID is shown on the device's pages in both portals, to admins with the right role.
+? What does the BitLocker key rotation remote action need?
+- The device must be hybrid joined
++ Recovery password rotation turned on in the disk encryption policy for that kind of device
+- A startup PIN
+! Without "Configure Recovery Password Rotation" on for Entra joined (and hybrid) devices, the PC won't replace its recovery password on request.
+@end
+
+## Lesson: l1303 | Windows LAPS with Intune
+
+Every Windows PC has a built-in local **Administrator** account. If all PCs share one password, one leak opens them all. **Windows LAPS** (Local Administrator Password Solution, built into Windows 10 and 11 since the April 2023 updates) gives each PC's local admin account its **own random password**, changes it on a schedule, and stores it in **Microsoft Entra ID** (or in on-premises Active Directory).
+
+### Two switches and a policy
+
+1. **Microsoft Entra admin center > Devices > Device settings > Enable Microsoft Entra Local Administrator Password Solution (LAPS) = Yes.** Without it, devices can't back up their password to Entra ID, and the policy fails. (Cert Lab: Tenant administration > Settings.)
+2. **Endpoint security > Account protection > Create policy > Local admin password solution (Windows LAPS)**, assigned to device groups:
+   - **Backup Directory**: Disabled, **Microsoft Entra ID only**, or **Active Directory only** (Active Directory needs domain joined, so hybrid joined, devices).
+   - **Password Age Days**: how often the password changes. With Entra ID the smallest value is **7** days; the default is 30.
+   - **Administrator Account Name**: empty means the built-in Administrator (found by its well-known SID, even if renamed). If you name another account, it must already exist on the PC (newer Windows versions can create it for you with automatic account management; check the documentation).
+   - **Password Complexity** and **Password Length** (14 characters by default).
+   - **Post Authentication Actions** and **Post Authentication Reset Delay** (lesson 4).
+
+```terminal
+#setup portal:tenant lapsEnabled=Yes
+#setup portal:create laps name="Windows LAPS" backup="Backup the password to Microsoft Entra ID only" ageDays=30
+#setup portal:assign laps "Windows LAPS" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-LocalUser Administrator | Select-Object Name, Enabled, PasswordLastSet
+
+Name          Enabled PasswordLastSet
+----          ------- ---------------
+Administrator False   3/2/2026 9:00:00 AM
+
+
+PS C:\Windows\system32> Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 1
+2026-03-02 09:00  LAPS: new password for Administrator, backed up to Microsoft Entra ID.
+```
+
+LAPS manages the account's password even while the account is disabled (as the built-in Administrator is on Windows clients). Windows logs LAPS activity in **Event Viewer > Applications and Services Logs > Microsoft > Windows > LAPS > Operational** (Cert Lab writes it to the IME log instead).
+
+@try
+@task t1 | Protection | 20 | portal
+Give every Windows PC its own local administrator password, stored in Microsoft Entra ID and changed every **30** days. Turn on Microsoft Entra LAPS in the tenant, create a LAPS policy **Windows LAPS** that backs up to **Microsoft Entra ID only** with a password age of **30** days for the built-in Administrator, assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | LAPS works on RB-LT-001 and the password is in Entra ID
+tenant.lapsEnabled == Yes
+device["RB-LT-001"].laps == On
+device["RB-LT-001"].laps.backup == "Microsoft Entra ID"
+@hint The tenant switch is in the Entra device settings (Cert Lab: Tenant administration > Settings). The policy: Endpoint security > Account protection > Windows LAPS.
+@solution portal
+tenant lapsEnabled=Yes
+create laps name="Windows LAPS" backup="Backup the password to Microsoft Entra ID only" ageDays=30
+assign laps "Windows LAPS" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? A LAPS policy that backs up to Microsoft Entra ID fails on every device. The policy looks right. What is missing most likely?
+- A compliance policy
++ The tenant setting that enables Microsoft Entra LAPS
+- A BitLocker policy
+! Devices can only store their password in Entra ID once Microsoft Entra LAPS is enabled in the device settings.
+? What is the smallest Password Age Days when the password is backed up to Microsoft Entra ID?
+- 1
++ 7
+- 30
+! With Entra ID as the backup directory, the age must be at least 7 days (Active Directory allows 1).
+? Which backup directory can a hybrid joined desktop use that an Entra joined laptop can't?
+- Microsoft Entra ID only
++ Active Directory only
+- Neither
+! Backing up to Active Directory needs a domain joined device; Entra joined devices back up to Entra ID.
+@end
+
+## Lesson: l1304 | Using LAPS: viewing, rotating and reacting to use
+
+### Viewing the password
+
+- **Intune**: the device page > **Local admin password** > Show local administrator password.
+- **Microsoft Entra admin center**: **Devices > Local administrator password recovery**, or the device > Local administrator password recovery.
+- PowerShell: `Get-LapsAADPassword` from Windows' LAPS module, which reads Entra ID through Microsoft Graph (not simulated in Cert Lab).
+
+Reading the password needs the right to read device local credentials: **Cloud Device Administrator**, **Intune Administrator** and **Global Administrator** have it, or a custom role with that permission. **Helpdesk Administrator**, **Security Administrator** and **Security Reader** see only the details (for example when the password changed), not the password; **Global Reader** gets neither. Every read is in the audit log.
+
+### Rotating it
+
+- From Intune: the **Rotate local admin password** remote action makes the PC set and back up a new password now.
+- On the PC (as an administrator): `Reset-LapsPassword` does the same; `Invoke-LapsPolicyProcessing` makes Windows process the LAPS policy now instead of waiting for its next cycle.
+
+### After someone signs in with it
+
+The **post-authentication actions** run after the managed account was used, once the **reset delay** (0 to 24 hours, default 24) has passed: **Reset password** only; **Reset the password and log off the managed account** (the default); **Reset the password and reboot the device**. So a password a technician read today is useless tomorrow.
+
+@try
+@setup portal
+tenant lapsEnabled=Yes
+create laps name="LAPS rbadmin" backup="Backup the password to Microsoft Entra ID only" ageDays=14 adminName=rbadmin postAuth="Reset the password and logoff the managed account" postDelay=8
+assign laps "LAPS rbadmin" "Pilot devices"
+remote sync RB-LT-002
+@task t1 | Protection | 20 | RB-LT-002
+Riverbend manages a separate local admin account, **rbadmin**, instead of the built-in one. The LAPS policy for the pilot laptop reports an error because the account doesn't exist yet. On **RB-LT-002**, create the local account `rbadmin` (no password needed: LAPS sets it), add it to the local **Administrators** group, and make Windows process the LAPS policy now.
+@check portal | LAPS manages rbadmin on the pilot laptop
+device["RB-LT-002"].laps == On
+device["RB-LT-002"].laps.account == rbadmin
+@check RB-LT-002 | the account is a local administrator
+@(Get-LocalGroupMember -Group Administrators | Where-Object Name -like '*rbadmin').Count -eq 1
+@hint New-LocalUser -Name rbadmin -NoPassword; Add-LocalGroupMember -Group Administrators -Member rbadmin; Invoke-LapsPolicyProcessing.
+@solution RB-LT-002
+New-LocalUser -Name rbadmin -NoPassword
+Add-LocalGroupMember -Group Administrators -Member rbadmin
+Invoke-LapsPolicyProcessing -Verbose
+@endtask
+@end
+
+@quiz
+? A technician read a PC's LAPS password and used it this morning. The policy's post-authentication action is "Reset the password and log off the managed account" with a delay of 8 hours. What happens?
++ About 8 hours after the sign-in, Windows sets a new password and signs the account out
+- The password stays valid until its age runs out
+- The PC restarts at once
+! The post-authentication action runs after the reset delay, so the password that was read stops working.
+? Which command, run on the PC, makes Windows apply the LAPS policy now?
+- Reset-LapsPassword
++ Invoke-LapsPolicyProcessing
+- Get-LapsAADPassword
+! Invoke-LapsPolicyProcessing processes the policy at once; Reset-LapsPassword sets a new password; Get-LapsAADPassword reads it from Entra ID through Microsoft Graph.
+? A Helpdesk Administrator opens a device's local administrator password page in Entra ID. What can they see?
+- The password
++ When the password was last changed, but not the password
+- Nothing at all
+! Helpdesk Administrator can read the LAPS details only. Reading the password itself needs a role such as Cloud Device Administrator or Intune Administrator.
+@end
+

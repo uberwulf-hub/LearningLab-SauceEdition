@@ -1,0 +1,50 @@
+title: Step 8: Search inside a file
+level: Intermediate
+category: ladder
+login: step8
+kind: Searching text
+teaser: two hundred lines of words and codes; grep finds the one you want
+points: 30
+order: 8
+answer: {{PW}}
+var: PW = hex:10
+var: KEY = pick:millionth|lighthouse|needle|goldfish|compass
+var: L = num:40-180
+
+@intro
+You are step8. The file data.txt has a couple of hundred lines, each a word and a
+code. The password for step 9 is the code next to the word {{KEY}}. Scrolling would
+work, but there is a much faster way.
+
+@setup
+useradd -m step9
+echo 'step9:{{PW}}' | chpasswd
+cat > /root/words.txt <<'WORDS'
+{{WORDLIST}}
+WORDS
+grep -v '^#' /root/words.txt | grep -v '^$' | grep -v -i '{{KEY}}' | while read w; do printf '%s %s\n' "$w" "$(printf '%s' "$w" | md5sum | cut -c1-10)"; done > /root/lines.txt
+(head -n {{L}} /root/lines.txt; printf '%s %s\n' '{{KEY}}' '{{PW}}'; tail -n +$(({{L}} + 1)) /root/lines.txt) > /home/step8/data.txt
+rm -f /root/words.txt /root/lines.txt
+chown step8: /home/step8/data.txt
+
+@solution
+wc -l data.txt
+grep {{KEY}} data.txt
+
+@walkthrough
+grep prints only the lines of a file that contain a word (or a pattern):
+
+    grep {{KEY}} data.txt
+
+One line comes back: "{{KEY}} " and the password. wc -l data.txt counts the lines, if
+you want to see how much scrolling grep saved you. grep -n would also show the line
+number, and grep -i ignores upper and lower case.
+
+@hint 5
+What to think about first: you know a word that is on the same line as the password. Linux has a tool that searches a file for a word and shows only the lines that have it.
+
+@hint 8
+That tool is grep: grep WORD FILE prints every line of FILE that contains WORD. Try it with the word from the intro and data.txt.
+
+@hint 12
+Type: grep {{KEY}} data.txt - the code after the word is the answer.

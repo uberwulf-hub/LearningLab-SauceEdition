@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes an IPv4 scope with its leases, reservations and options.
+DESCRIPTION:
+Remove-DhcpServerv4Scope deletes the scope and everything in it. Clients keep their addresses until the lease runs out, then can't renew. It asks for confirmation; -Force skips it.
+
+A scope that is part of a failover relationship should be taken out of it first.
+PARAMETER ScopeId:
+The scope or scopes to delete.
+PARAMETER Force:
+Deletes without asking.
+EXAMPLE: Remove-DhcpServerv4Scope -ScopeId 10.20.0.0 -ComputerName SRV1
+Deletes the branch scope after you confirm.
+RELATED: Get-DhcpServerv4Scope, Add-DhcpServerv4Scope, Remove-DhcpServerv4Failover

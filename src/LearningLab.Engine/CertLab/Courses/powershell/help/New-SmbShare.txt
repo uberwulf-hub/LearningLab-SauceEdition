@@ -1,0 +1,30 @@
+SYNOPSIS: Shares a folder on the network.
+DESCRIPTION:
+New-SmbShare shares an existing folder under a name. Share permissions come from -FullAccess, -ChangeAccess, -ReadAccess and -NoAccess; with none of them, only Everyone gets Read.
+
+Two layers of permissions apply over the network: the share permissions and the NTFS permissions on the folder. A user gets the more restrictive of the two. A common practice is to give the share Full or Change to Authenticated Users and control access with NTFS.
+
+-FolderEnumerationMode AccessBased hides files and folders a user can't open. -EncryptData $true encrypts the traffic with SMB 3. -CachingMode controls offline files.
+PARAMETER Name:
+The share name; add $ at the end to hide it from browsing.
+PARAMETER Path:
+The folder to share.
+PARAMETER FullAccess:
+Accounts that get Full.
+PARAMETER ChangeAccess:
+Accounts that get Change (read, write, delete).
+PARAMETER ReadAccess:
+Accounts that get Read.
+PARAMETER NoAccess:
+Accounts that are denied.
+PARAMETER FolderEnumerationMode:
+AccessBased or Unrestricted.
+PARAMETER EncryptData:
+$true to require SMB encryption.
+PARAMETER CachingMode:
+None, Manual, Documents, Programs or BranchCache.
+EXAMPLE: New-SmbShare -Name Projects -Path D:\Shares\Projects -ChangeAccess "CORP\Domain Users" -FullAccess "CORP\IT Admins" -FolderEnumerationMode AccessBased
+A share where users see only the folders they can open.
+EXAMPLE: Get-SmbShareAccess -Name Projects
+Checks the share permissions.
+RELATED: Get-SmbShare, Set-SmbShare, Remove-SmbShare, Grant-SmbShareAccess, Get-SmbShareAccess

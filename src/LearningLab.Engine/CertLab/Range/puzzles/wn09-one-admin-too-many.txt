@@ -1,0 +1,49 @@
+title: One admin too many
+level: Beginner
+kind: Windows
+topic: Windows
+teaser: who is in the Administrators group?
+points: 40
+order: 85
+host: windows
+answer: {{EXTRA}}
+var: EXTRA = person:flast
+var: EXTRAPW = word
+
+@intro
+You are on a pretend Windows computer (the PowerShell prompt starts with PS). On this
+machine only three should be administrators: the built-in Administrator, LabUser (the
+IT account) and the domain's Domain Admins group. Someone added one more account. Which
+one? (Give the account's name without the WINBOX\ part.)
+
+@winsetup
+New-LocalUser -Name '{{EXTRA}}' -Password (ConvertTo-SecureString 'Pw-{{EXTRAPW}}-91!' -AsPlainText -Force) | Out-Null
+Add-LocalGroupMember -Group Administrators -Member '{{EXTRA}}'
+
+@solution
+Get-LocalGroup
+Get-LocalGroupMember Administrators
+
+@walkthrough
+Windows gives administrator rights through a group, Administrators. Anyone in it can do
+anything on the machine, so it should be short and every name should be expected:
+
+    Get-LocalGroupMember Administrators
+
+lists Administrator, LabUser, LAB\Domain Admins - and WINBOX\{{EXTRA}}, which nobody
+asked for. That is the answer. Attackers who get in once often add an account like this
+so they can come back; defenders check this list often (Remove-LocalGroupMember takes
+it out again).
+
+@hint 2
+What to think about first: on Windows, "being an administrator" usually means being a member of a group called Administrators. So the question is simply: who is in that group, and which name doesn't belong?
+
+@hint 3
+PowerShell commands are named verb-noun. Get-LocalGroup lists the groups on this computer (you will see Administrators, Users, Remote Desktop Users and others). Try it to get used to the output.
+
+@hint 4
+Get-LocalGroupMember GROUPNAME lists who is in one group. Each line shows whether it is a User or a Group, and its name as COMPUTER\name (local) or DOMAIN\name (from the domain).
+
+@hint 6
+Run: Get-LocalGroupMember Administrators
+Cross off the three that are expected (Administrator, LabUser and LAB\Domain Admins). The one left is the answer - type its name without WINBOX\ in front.

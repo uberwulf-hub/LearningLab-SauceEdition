@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the storage subsystems, such as the built-in Windows Storage Spaces one.
+DESCRIPTION:
+A storage subsystem manages disks and pools. On a normal server it is the Windows Storage subsystem, named like "Windows Storage on FS1". New-StoragePool needs its name, so a wildcard such as "Windows Storage*" is common.
+PARAMETER FriendlyName:
+Only subsystems with this name. Position 0.
+EXAMPLE: Get-StorageSubSystem
+Shows the Windows Storage subsystem and its health.
+EXAMPLE: New-StoragePool -FriendlyName Data -StorageSubSystemFriendlyName "Windows Storage*" -PhysicalDisks (Get-PhysicalDisk -CanPool $true)
+Uses its name to create a pool.
+RELATED: New-StoragePool, Get-StoragePool, Get-PhysicalDisk

@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes a virtual disk (storage space) and all its data.
+DESCRIPTION:
+Remove-VirtualDisk deletes the storage space and returns its space to the pool. Every volume and file on it is gone. It asks for confirmation.
+
+Check which drive letter it carries before deleting: Get-VirtualDisk -FriendlyName Mirror1 | Get-Disk | Get-Partition.
+PARAMETER FriendlyName:
+The virtual disk or disks. Position 0.
+EXAMPLE: Remove-VirtualDisk -FriendlyName Mirror1
+Deletes Mirror1 after you confirm.
+EXAMPLE: Get-VirtualDisk | Remove-VirtualDisk -Confirm:$false
+Deletes every virtual disk without asking, for example before removing the pool.
+RELATED: New-VirtualDisk, Get-VirtualDisk, Remove-StoragePool

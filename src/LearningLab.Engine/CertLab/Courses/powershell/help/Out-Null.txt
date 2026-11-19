@@ -1,0 +1,18 @@
+SYNOPSIS: Throws output away.
+DESCRIPTION:
+Out-Null takes whatever comes through the pipeline and discards it. Use it when a command or method returns something you do not want to see or to end up in a function's output.
+
+Only the output (success) stream is discarded. Errors and warnings still appear; to hide those, use -ErrorAction SilentlyContinue or redirect them (2>$null).
+PARAMETER InputObject:
+What to discard. Usually it comes through the pipeline.
+EXAMPLE: 1..3 | Out-Null
+Shows nothing.
+EXAMPLE: $list = New-Object System.Collections.ArrayList; $list.Add('x') | Out-Null
+ArrayList.Add() returns the new item's index; Out-Null hides it.
+EXAMPLE: $null = $list.Add('y')
+The same effect without a pipeline, and faster.
+NOTES:
+Three other ways do the same: $null = command, [void](command) and command > $null. Assigning to $null and [void] are much faster than piping to Out-Null in Windows PowerShell 5.1, which matters in loops. PowerShell 7 made Out-Null fast too.
+
+Inside functions, forgetting to discard such return values is a classic bug: the function returns extra values you did not mean to return.
+RELATED: Out-Host, Out-Default, about_Functions, about_Redirection

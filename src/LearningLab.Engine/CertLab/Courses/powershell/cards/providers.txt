@@ -1,0 +1,26 @@
+# Deck: providers | Providers and drives | Providers
+List the providers of this session :: `Get-PSProvider`
+List the drives of this session :: `Get-PSDrive`
+Which drives does the Registry provider give you in 5.1? :: HKLM: (HKEY_LOCAL_MACHINE) and HKCU: (HKEY_CURRENT_USER)
+Make a drive Lab: for the folder C:\LabFiles :: `New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles`
+Make a drive for HKEY_CLASSES_ROOT :: `New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT`
+Go to a folder and come back later :: `Push-Location C:\LabFiles` then `Pop-Location`
+List the .log files under C:\LabFiles and all its subfolders :: `Get-ChildItem C:\LabFiles -Filter *.log -Recurse`
+Why does Get-ChildItem C:\LabFiles -Include *.csv find nothing in 5.1? :: -Include needs a path ending in \* or -Recurse
+Show hidden files too :: `Get-ChildItem -Force`
+List only the folders of C:\LabFiles :: `Get-ChildItem C:\LabFiles -Directory`
+Is C:\LabFiles\app.log a file? :: `Test-Path C:\LabFiles\app.log -PathType Leaf`
+The file name part of a path $p :: `Split-Path $p -Leaf`
+Put the folder $dir and the file name a.txt together :: `Join-Path $dir a.txt`
+Read the file summary [old].txt, whose name has brackets :: `Get-Content -LiteralPath 'summary [old].txt'`
+Make the folder C:\Work\Logs and any missing parent folders :: `New-Item C:\Work\Logs -ItemType Directory -Force`
+Copy the folder C:\Data with everything inside it to C:\Copy :: `Copy-Item C:\Data C:\Copy -Recurse`
+See what Remove-Item would delete, without deleting :: `Remove-Item C:\Temp\* -WhatIf`
+Read the last 5 lines of app.log :: `Get-Content app.log -Tail 5`
+Read a whole file as one string :: `Get-Content settings.json -Raw`
+Default encoding of Set-Content in Windows PowerShell 5.1 :: Default: the ANSI code page (Out-File and > write UTF-16)
+Find the lines with ERROR in app.log :: `Select-String -Path app.log -Pattern ERROR`
+Registry keys are items. What are registry values? :: item properties (the *-ItemProperty cmdlets)
+Read just the data of the value ProductName :: `Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName`
+Add a DWord value Port = 8080 to HKCU:\Software\Lab :: `New-ItemProperty HKCU:\Software\Lab -Name Port -PropertyType DWord -Value 8080`
+Delete the value Debug from HKCU:\Software\Lab :: `Remove-ItemProperty HKCU:\Software\Lab -Name Debug`

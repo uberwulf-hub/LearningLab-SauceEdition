@@ -1,0 +1,28 @@
+NAME
+       shuf - print lines in random order
+
+SYNOPSIS
+       shuf [-n COUNT] [FILE]
+       shuf -i LOW-HIGH [-n COUNT]
+       shuf -e WORD...
+
+DESCRIPTION
+       shuf prints the lines of its input in a random order. It can also mix
+       a range of numbers or the words on its command line.
+
+OPTIONS
+       -n, --head-count N
+              Print at most N lines.
+
+       -i, --input-range LOW-HIGH
+              Shuffle the numbers from LOW to HIGH.
+
+       -e, --echo
+              Shuffle the arguments.
+
+EXAMPLES
+           shuf -n 1 /usr/share/dict/words
+           shuf -i 1-100 -n 3
+
+SEE ALSO
+       sort(1), seq(1)

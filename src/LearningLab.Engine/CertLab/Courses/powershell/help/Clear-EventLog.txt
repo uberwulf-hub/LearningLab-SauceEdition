@@ -1,0 +1,10 @@
+SYNOPSIS: Deletes all entries of classic logs (Windows PowerShell 5.1 only).
+DESCRIPTION:
+Clear-EventLog empties a log. Clearing is itself recorded: clearing Security writes event 1102, clearing another log writes event 104 to System. Save what you need first.
+PARAMETER LogName:
+The logs to clear. Position 0.
+EXAMPLE: Clear-EventLog -LogName 'Windows PowerShell'
+Empties the Windows PowerShell log.
+NOTES:
+In PowerShell 7, the wevtutil.exe program (wevtutil cl LOGNAME) does the same.
+RELATED: Get-EventLog, Limit-EventLog

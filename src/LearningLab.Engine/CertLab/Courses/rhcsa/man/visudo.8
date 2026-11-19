@@ -1,0 +1,73 @@
+NAME
+       visudo - edit the sudo rules safely, with a syntax check
+
+SYNOPSIS
+       visudo [-f FILE]
+       visudo -c [-q] [-f FILE]
+
+DESCRIPTION
+       visudo opens /etc/sudoers (or FILE) in an editor (vi unless $SUDO_EDITOR,
+       $VISUAL or $EDITOR names another), and locks it so two people cannot
+       edit it at once. When you save and leave, visudo checks the syntax of
+       what you wrote. If there is an error it says where and asks what now:
+
+           e   edit the file again (the usual answer),
+           x   quit and keep the old file unchanged,
+           Q   save the broken file anyway (dangerous: sudo may stop working
+               for everyone).
+
+       That check is the reason to use visudo rather than a plain editor. A
+       sudoers file with a mistake can lock every administrator out of sudo;
+       on a system without a root password you would then need to boot into
+       a rescue shell to repair it.
+
+       Rules for one user or group are best kept in their own file in
+       /etc/sudoers.d, created with visudo -f. visudo gives such files the
+       safe permissions sudo needs (0440).
+
+OPTIONS
+       -f, --file=FILE
+              Edit or check FILE instead of /etc/sudoers.
+
+       -c, --check
+              Only check the syntax and report "parsed OK" (or the errors) for
+              /etc/sudoers and every file it includes. Exits with 1 on an
+              error.
+
+       -q, --quiet
+              With -c: print nothing; only the exit status tells.
+
+       -s, --strict
+              Also report things that are allowed but probably mistakes, such
+              as an alias used before it is defined.
+
+EXAMPLES
+       Let the group admins run any command as root, in a file of its own:
+
+           visudo -f /etc/sudoers.d/admins
+           (type the line:  %admins ALL=(ALL) ALL  then save with :wq)
+
+       Write such a file in one step and check it:
+
+           echo '%admins ALL=(ALL) ALL' > /etc/sudoers.d/admins
+           visudo -c
+
+       Let student restart httpd without a password:
+
+           echo 'student ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd' \
+               > /etc/sudoers.d/student
+           visudo -cf /etc/sudoers.d/student
+
+NOTES
+       Files in /etc/sudoers.d whose names contain a dot or end in ~ are
+       ignored, so call the file admins, not admins.conf.
+
+FILES
+       /etc/sudoers
+              The main rules (includes /etc/sudoers.d).
+
+       /etc/sudoers.d/
+              Extra rule files.
+
+SEE ALSO
+       sudoers(5), sudo(8), vipw(8)

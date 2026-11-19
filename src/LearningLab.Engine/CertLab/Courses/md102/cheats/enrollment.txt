@@ -1,0 +1,36 @@
+# Sheet: enrollment | Enrolling devices in Intune | Enrollment
+## Portal paths
+Tenant administration > Settings, Automatic enrolment :: MDM user scope (Intune: Devices > Enrollment > Windows > Automatic Enrollment)
+Tenant administration > Settings, Enrolment restrictions :: the default platform and device limit restrictions in Cert Lab
+Devices > Enrollment > Device platform restriction :: extra restrictions for user groups, with priorities
+## Automatic enrolment
+MDM user scope None / Some / All :: who is enrolled when they join a Windows device
+MAM user scope :: app protection without enrolment; a user in both scopes: MDM wins on corporate (joined) devices, MAM wins on personal ones
+licence with Intune :: needed by the user who enrols
+## Windows enrolment methods
+Entra join in OOBE or Settings :: Settings > Accounts > Access work or school > Connect > Join this device to Microsoft Entra ID
+Enroll only in device management :: MDM without joining Entra ID
+Add a work account :: registers a personal device (bring your own device)
+Windows Autopilot :: registered hardware hash, customised OOBE, corporate
+Group Policy :: Enable automatic MDM enrollment using default Microsoft Entra credentials (hybrid joined PCs)
+Provisioning package :: bulk join and enrolment with a bulk token; the token's account must be in the MDM user scope (All covers it)
+Co-management :: Configuration Manager clients also in Intune; workloads move one by one
+Device enrollment manager :: one account enrols up to 1,000 devices
+gpresult /r :: the Group Policy objects applied to a domain PC
+Get-Service IntuneManagementExtension :: the agent for Win32 apps and scripts on an enrolled PC
+## Ownership and restrictions
+Corporate :: Autopilot, packages, Group Policy, co-management, DEM, corporate identifiers
+Personal :: a work account added, Enroll only in device management, Company Portal (a plain Entra join shows as corporate but is still stopped by a personal-device block; Cert Lab shows it as personal)
+Platform restriction :: allow or block a platform and personally owned devices
+Device limit :: default 5 per user, at most 15
+Priority :: 1 is checked first; the default restriction is last
+Assigned to :: user groups
+## Phones
+Apple MDM push certificate :: needed for all Apple devices; renew yearly with the same Apple ID
+Automated device enrolment :: Apple Business Manager; corporate, supervised
+User enrolment :: personal iPhone or iPad, managed work area only
+Managed Google Play :: link it before Android Enterprise enrolment
+Work profile (personally owned) :: personal Android phone, work apps separate
+Corporate-owned work profile :: company phone, personal use allowed
+Fully managed :: company phone for work only
+Dedicated :: kiosk or single-purpose device, no user

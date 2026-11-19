@@ -1,0 +1,41 @@
+# Deck: operations | Security operations | Security operations
+A documented, approved standard configuration to build and check systems against :: Secure baseline (establish, deploy, maintain)
+Map of Wi-Fi signal strength across a building :: Heat map (from a site survey)
+Company-owned phone the employee may also use personally :: COPE (corporate owned, personally enabled)
+Current Wi-Fi security standard and its handshake :: WPA3 with SAE (Simultaneous Authentication of Equals)
+Checking source code for flaws without running it :: Static code analysis (SAST)
+Running untrusted code in an isolated space where it can't harm the system :: Sandboxing
+Cookie settings that protect session cookies :: Secure (HTTPS only), HttpOnly (no script access) and SameSite
+Disposing of drives: clearing vs destroying :: Sanitization (overwrite, crypto erase) keeps the drive usable; destruction (shred, incinerate, degauss) does not
+Vulnerability scan that signs in to the systems :: Credentialed scan; it finds more and has fewer false positives
+Scanner reports a flaw that isn't really there :: False positive (a real flaw that was missed is a false negative)
+Score that rates a vulnerability's severity from 0 to 10 :: CVSS (base, temporal or threat, and environmental scores)
+Program that pays outside researchers who report flaws :: Bug bounty
+After patching, how do you confirm the fix? :: Rescan, and check with an audit or verification
+A system can't be patched; the risk owner formally signs off on keeping it :: Exception (or exemption), usually with compensating controls
+Pen test where the tester knows nothing about the target :: Unknown environment (formerly black box); known is white box, partially known is grey box
+Collecting and correlating logs from many systems, with alerts :: SIEM
+Unsolicited message a network device sends when something happens :: SNMP trap
+Records of who talked to whom, how much and when, without contents :: NetFlow (flow data)
+Reducing false alarms by adjusting rules and thresholds :: Alert tuning
+DNS record that lists which servers may send mail for a domain :: SPF
+Email check that adds a signature to message headers :: DKIM
+Policy record telling receivers to quarantine or reject mail failing SPF and DKIM :: DMARC (p=none, p=quarantine or p=reject)
+Linux mandatory access control that labels processes and files :: SELinux
+Agent that records endpoint activity and can isolate a device :: EDR (XDR adds network, email and cloud data)
+Watching for unusual behaviour such as a user downloading far more than usual :: UEBA (user and entity behavior analytics)
+Access model where an administrator assigns rights by job :: Role-based access control (RBAC)
+Access model with security labels and clearances set by the system :: Mandatory access control (MAC)
+Factors: password, phone app, fingerprint :: Something you know, something you have, something you are
+Two passwords together: is that MFA? :: No, both are something you know; MFA needs different kinds of factor
+Standard behind passkeys and security keys for passwordless sign-in :: FIDO2 (WebAuthn)
+SSO protocol using XML assertions between an identity provider and a service provider :: SAML
+Admin rights given for one hour only when approved :: Just-in-time (JIT) permissions, a PAM feature
+Kerberos: what does a user get first from the KDC? :: A TGT (ticket-granting ticket), then service tickets for each server
+RADIUS vs TACACS+ :: RADIUS (UDP) is for network access and hides only the password; TACACS+ (TCP 49) separates AAA steps and encrypts everything
+Incident response phases in order :: Preparation, detection, analysis, containment, eradication, recovery, lessons learned
+Order of volatility: what to collect first :: CPU registers and cache, then RAM, then swap and temporary files, then disk, then logs and backups
+Record of everyone who handled evidence, when and why :: Chain of custody
+Instruction to keep all data related to a lawsuit, overriding normal deletion :: Legal hold
+Tool that runs automated playbooks across security tools :: SOAR
+Searching for attackers already inside, without waiting for an alert :: Threat hunting

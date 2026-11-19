@@ -1,0 +1,36 @@
+SYNOPSIS: Makes a TimeSpan: a length of time, or the time between two dates.
+DESCRIPTION:
+A TimeSpan is a length of time, such as 2 days and 3 hours. New-TimeSpan makes one either from parts (-Days, -Hours, -Minutes, -Seconds) or as the difference between two dates (-Start and -End).
+
+The result has properties for each part (Days, Hours, Minutes, Seconds) and for the whole length in one unit (TotalDays, TotalHours, TotalMinutes, TotalSeconds). Read the Total- properties when you want "how many hours in all".
+
+You can add a TimeSpan to a date: (Get-Date) + (New-TimeSpan -Days 7) is a week from now.
+PARAMETER Start:
+The earlier date. Position 0. If you leave it out, now is used.
+PARAMETER End:
+The later date. Position 1. If you leave it out, now is used.
+PARAMETER Days:
+A number of days.
+PARAMETER Hours:
+A number of hours.
+PARAMETER Minutes:
+A number of minutes.
+PARAMETER Seconds:
+A number of seconds.
+EXAMPLE: New-TimeSpan -Days 2 -Hours 3
+A TimeSpan of 2 days 3 hours. TotalHours shows 51.
+EXAMPLE: New-TimeSpan -Start '2026-01-01' -End '2026-03-01'
+The time between two dates: 59 days.
+EXAMPLE: (New-TimeSpan -End '2026-12-25').Days
+Days from now until December 25, 2026.
+EXAMPLE: (Get-Date) + (New-TimeSpan -Hours 36)
+The date and time 36 hours from now.
+NOTES:
+Subtracting dates gives the same result: (Get-Date '2026-03-01') - (Get-Date '2026-01-01').
+
+If -End is before -Start, the TimeSpan is negative.
+
+[timespan]'1:30:00' also makes a TimeSpan (one and a half hours) from text.
+
+PowerShell 7 adds -Milliseconds.
+RELATED: Get-Date, Measure-Command, Start-Sleep

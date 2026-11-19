@@ -1,0 +1,23 @@
+SYNOPSIS: Creates a remoting endpoint on this computer, for example a JEA endpoint from a .pssc file.
+DESCRIPTION:
+An endpoint (session configuration) is what a remote user connects to with Enter-PSSession -ConfigurationName or Invoke-Command -ConfigurationName. Register-PSSessionConfiguration adds one, usually from a session configuration file made with New-PSSessionConfigurationFile.
+
+For a JEA endpoint, the file's RoleDefinitions decide who may connect and which roles they get. The endpoint's Permission lists those users and groups.
+
+Remoting must be on: the WinRM service has to be listening. It is on WIN-SRV1; on WIN-CL1 it is off until you run Enable-PSRemoting.
+PARAMETER Name:
+The endpoint's name, for example HelpDesk. Users connect with -ConfigurationName HelpDesk.
+PARAMETER Path:
+The .pssc file with the endpoint's settings.
+PARAMETER Force:
+Replaces an endpoint of the same name and skips the confirmation question.
+PARAMETER NoServiceRestart:
+Does not restart WinRM afterwards (and skips the warning about it).
+EXAMPLE: Register-PSSessionConfiguration -Name HelpDesk -Path C:\LabFiles\HelpDesk.pssc -Force
+Creates the HelpDesk JEA endpoint on WIN-SRV1.
+EXAMPLE: Enter-PSSession -ComputerName WIN-SRV1 -ConfigurationName HelpDesk -Credential LAB\alice
+Connects to the endpoint as a help desk user, who sees only the allowed commands.
+NOTES:
+On a real PC this needs PowerShell run as administrator, and active remote sessions are disconnected when WinRM restarts.
+In PowerShell 7 on Windows, endpoints are registered the same way; PowerShell 7's own endpoints have names such as PowerShell.7 and are separate from Windows PowerShell's microsoft.powershell.
+RELATED: New-PSSessionConfigurationFile, Get-PSSessionConfiguration, Unregister-PSSessionConfiguration, Get-PSSessionCapability

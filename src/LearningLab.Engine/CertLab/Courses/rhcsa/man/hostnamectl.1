@@ -1,0 +1,78 @@
+NAME
+       hostnamectl - show or change the system's host name
+
+SYNOPSIS
+       hostnamectl [status]
+       hostnamectl hostname [NAME]
+       hostnamectl set-hostname NAME [--static|--transient]
+
+DESCRIPTION
+       hostnamectl talks to systemd-hostnamed, which looks after the host
+       name and a few details about the machine. It is the RHEL 9 way to set
+       the name permanently.
+
+       systemd knows three names:
+
+       static     the one stored in /etc/hostname, used at every boot;
+
+       transient  the name the kernel uses right now (normally the same as
+                  the static one; DHCP or the hostname command can change it
+                  until the next boot);
+
+       pretty     a free-form description for people ("Andrew's laptop").
+
+       Setting a name with hostnamectl writes /etc/hostname and changes the
+       running name at once. Shells that are already open keep showing the
+       old name in their prompt until you start a new one (exec bash, or log
+       in again). hostnamectl does not touch /etc/hosts or DNS: other machines
+       learn the name only if you add it there.
+
+COMMANDS
+       status
+              Show the names and some facts about the machine: machine ID,
+              boot ID, virtualization, operating system, kernel, architecture.
+              This is the default when no command is given.
+
+       hostname [NAME]
+              With no NAME, print the current host name. With a NAME, set it
+              (the same as set-hostname).
+
+       set-hostname NAME
+              Set the static and transient names to NAME. Only root (or a
+              user who can authenticate as an administrator) can do this.
+
+OPTIONS
+       --static, --transient, --pretty
+              With status, print only that name. With set-hostname, change
+              only that name: --static writes /etc/hostname without renaming
+              the running system; --transient renames the running system
+              until the next boot.
+
+EXAMPLES
+       Give server1 its full name and check it:
+              # hostnamectl set-hostname server1.lab.example.com
+              # hostnamectl hostname
+              server1.lab.example.com
+              # cat /etc/hostname
+              server1.lab.example.com
+
+       Show the full status:
+              $ hostnamectl
+               Static hostname: server1.lab.example.com
+                     Icon name: computer-vm
+                       Chassis: vm
+              ...
+              Operating System: Red Hat Enterprise Linux 9.5 (Plow)
+
+       Start a new shell so the prompt shows the new name:
+              # exec bash
+
+FILES
+       /etc/hostname
+              The static host name, one line.
+
+       /etc/machine-info
+              The pretty name and other optional details.
+
+SEE ALSO
+       hostname(1), hostname(5), hosts(5), nmcli(1), systemd-hostnamed.service(8)

@@ -1,0 +1,42 @@
+NAME
+       vgextend - add physical volumes to a volume group
+
+SYNOPSIS
+       vgextend [-y] [-f] VG PV [PV...]
+
+DESCRIPTION
+       vgextend adds the space of more physical volumes to an existing volume
+       group, without stopping anything. This is the first step when a
+       logical volume must grow but its volume group has no free extents
+       left: add a disk or partition to the VG, then lvextend the LV.
+
+       Each PV argument may be a PV already, or a plain device; vgextend
+       then initialises it as a PV first (as pvcreate would).
+
+OPTIONS
+       -y, --yes
+              Answer yes to questions, such as wiping an old signature.
+
+       -f, --force
+              Go ahead without some checks.
+
+EXAMPLES
+       Add a new partition on /dev/vdc to vgdata, then grow an LV and its file
+       system by 1 GiB:
+
+           parted -s /dev/vdc mklabel gpt mkpart lvm 1MiB 100% set 1 lvm on
+           pvcreate /dev/vdc1
+           vgextend vgdata /dev/vdc1
+           vgs vgdata
+           lvextend -r -L +1G /dev/vgdata/lvdata
+
+       Add a whole disk:
+
+           vgextend vgdata /dev/vdc
+
+NOTES
+       Check the free space after extending with vgs (the VFree column) or
+       vgdisplay (Free PE / Size).
+
+SEE ALSO
+       vgreduce(8), vgcreate(8), pvcreate(8), lvextend(8), vgs(8)

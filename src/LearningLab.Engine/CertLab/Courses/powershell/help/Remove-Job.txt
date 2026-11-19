@@ -1,0 +1,30 @@
+SYNOPSIS: Deletes background jobs from the session.
+DESCRIPTION:
+Finished jobs stay in the session's job list, with any results you have not received, until you remove them or close PowerShell. Remove-Job deletes them, along with their remaining results.
+
+A running job cannot be removed unless you add -Force (which stops it first) or stop it with Stop-Job.
+PARAMETER Job:
+The job objects to remove. Position 0, and they can come through the pipeline.
+PARAMETER Id:
+The numbers of the jobs to remove.
+PARAMETER Name:
+The names of the jobs to remove. Wildcards work.
+PARAMETER State:
+Removes all jobs in this state, for example -State Completed or -State Failed.
+PARAMETER Force:
+Removes jobs even while they are running.
+EXAMPLE: Get-Job | Remove-Job
+Removes every finished job.
+EXAMPLE: Remove-Job -State Failed
+Removes the jobs that failed.
+EXAMPLE: $x = Start-Job { Start-Sleep 30 }; Remove-Job $x
+Fails, because the job is still running.
+EXAMPLE: Remove-Job $x -Force
+Stops and removes it.
+NOTES:
+The alias is rjb.
+
+Receive the results you need before removing a job; they are gone afterwards.
+
+Receive-Job -Wait -AutoRemoveJob does the receiving and removing in one step.
+RELATED: Get-Job, Stop-Job, Start-Job, Receive-Job, about_Jobs

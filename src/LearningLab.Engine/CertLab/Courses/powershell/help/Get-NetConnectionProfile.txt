@@ -1,0 +1,16 @@
+SYNOPSIS: Shows the network profile of each connected adapter: domain, private or public.
+DESCRIPTION:
+Windows decides for each network it is connected to how much to trust it. That choice, the network category, picks which firewall profile applies: Domain (DomainAuthenticated: the computer can reach its domain controller), Private (a home or work network you trust) or Public (a cafe or airport: the strictest).
+
+Get-NetConnectionProfile shows, per connected adapter, the network Name, InterfaceAlias, NetworkCategory and IPv4Connectivity / IPv6Connectivity: Internet, LocalNetwork (no internet) or NoTraffic.
+
+The lab machines are domain members, so they show lab.example.com, DomainAuthenticated and LocalNetwork (the practice network has no internet).
+PARAMETER InterfaceAlias:
+Shows only this adapter, for example Ethernet.
+EXAMPLE: Get-NetConnectionProfile
+The profile of every connected adapter.
+EXAMPLE: (Get-NetConnectionProfile -InterfaceAlias Ethernet).NetworkCategory
+Only the category, to know which firewall profile is in use.
+NOTES:
+When a firewall rule seems to do nothing, compare its Profile (Get-NetFirewallRule) with this category. On a real PC, Set-NetConnectionProfile -NetworkCategory Private changes a Public network to Private (not in Cert Lab); DomainAuthenticated cannot be set by hand. CIM-based command from the NetConnection module, Windows only.
+RELATED: Get-NetFirewallProfile, Get-NetFirewallRule, Get-NetIPConfiguration

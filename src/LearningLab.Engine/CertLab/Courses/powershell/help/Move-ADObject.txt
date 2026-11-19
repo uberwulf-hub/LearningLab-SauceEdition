@@ -1,0 +1,15 @@
+SYNOPSIS: Moves an Active Directory object to another OU or container.
+DESCRIPTION:
+Move-ADObject moves users, computers, groups or whole OUs inside the domain. The object keeps its SID and GUID; only its distinguished name changes. Moving changes which Group Policy applies and who has delegated rights over the object.
+Protected objects (most OUs) can't be moved until the protection is turned off.
+PARAMETER Identity:
+The object, by distinguished name or GUID (or piped from Get-ADUser and similar). Position 0.
+PARAMETER TargetPath:
+The OU or container to move it into, as a distinguished name. Position 1.
+PARAMETER PassThru:
+Returns the moved object.
+EXAMPLE: Get-ADUser dpatel | Move-ADObject -TargetPath "OU=Finance,OU=Staff,DC=corp,DC=example"
+Moves Dev Patel's account to the Finance OU.
+EXAMPLE: Get-ADComputer CL2 | Move-ADObject -TargetPath "OU=Workstations,DC=corp,DC=example"
+Moves a computer out of the default Computers container so the workstation GPOs reach it.
+RELATED: Rename-ADObject, Get-ADObject, Set-ADOrganizationalUnit

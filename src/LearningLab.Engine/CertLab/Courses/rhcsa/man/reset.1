@@ -1,0 +1,18 @@
+NAME
+       reset - put the terminal back into a sane state
+
+SYNOPSIS
+       reset
+
+DESCRIPTION
+       After a program crashes or you print a binary file with cat, the
+       terminal can be left with strange characters, no echo or broken line
+       endings. reset sets the terminal's modes back to the defaults and
+       clears the screen. If you cannot see what you type, type reset
+       blindly and press Enter (or Ctrl+J).
+
+EXAMPLES
+           reset
+
+SEE ALSO
+       clear(1), stty(1)

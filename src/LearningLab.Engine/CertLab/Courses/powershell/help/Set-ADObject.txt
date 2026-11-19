@@ -1,0 +1,25 @@
+SYNOPSIS: Changes attributes of any Active Directory object.
+DESCRIPTION:
+Set-ADObject is the general way to change attributes of objects that have no Set- cmdlet of their own, or attributes the specific cmdlets don't offer. Attributes are named with their LDAP names in -Replace, -Add, -Remove and -Clear.
+It's also how you protect any object (for example a user or a group) from accidental deletion.
+PARAMETER Identity:
+The object, by distinguished name or GUID. Position 0, and takes pipeline input.
+PARAMETER ProtectedFromAccidentalDeletion:
+$true stops the object from being deleted or moved until it is turned off again.
+PARAMETER Description:
+A new description.
+PARAMETER DisplayName:
+A new display name.
+PARAMETER Replace:
+A hash table of attributes and new values.
+PARAMETER Add:
+Adds values to multi-valued attributes.
+PARAMETER Remove:
+Removes values from multi-valued attributes.
+PARAMETER Clear:
+Attributes to empty.
+EXAMPLE: Get-ADGroup "IT Admins" | Set-ADObject -ProtectedFromAccidentalDeletion $true
+Protects the IT Admins group from being deleted by mistake.
+EXAMPLE: Set-ADObject "CN=Bianca Cole,OU=Sales,OU=Staff,DC=corp,DC=example" -Replace @{info="Key account: Northwind"}
+Sets the notes field of a user by distinguished name.
+RELATED: Get-ADObject, Set-ADUser, Rename-ADObject, Move-ADObject

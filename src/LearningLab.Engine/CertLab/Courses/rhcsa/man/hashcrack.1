@@ -1,0 +1,42 @@
+NAME
+       hashcrack - try a word list against password hashes (Cyber Range)
+
+SYNOPSIS
+       hashcrack [--format=FORMAT] [--wordlist=FILE] HASHFILE
+       hashcrack --show HASHFILE
+
+DESCRIPTION
+       A password hash can't be turned back into the password, but a guess can
+       be hashed the same way and compared. hashcrack does that for every word
+       of a word list (default /usr/share/wordlists/range-common.txt, a few
+       hundred weak passwords). It finds only passwords that are in the list:
+       that is why long, unusual passwords are safe from it.
+
+       Each line of HASHFILE is a hash, USER:HASH (as in /etc/shadow), or
+       USER:RID:LM:NT::: (a Windows-style export). hashcrack recognises:
+
+           $6$...         the simulator's /etc/shadow hashes (sha512crypt-sim)
+           $rangetgs$...  service tickets from ticket-request(1)
+           32 hex digits  md5 (or a simulated Windows hash with --format=nt;
+                          the USER:RID:LM:NT::: lines are read as nt)
+           40 hex digits  sha1
+           64 hex digits  sha256
+
+       The shadow, Windows and ticket formats are Cyber Range's own pretend
+       formats: they only mean something inside the range.
+
+       Passwords it found are kept in ~/.hashcrack.pot, so --show prints them
+       again without trying the list.
+
+OPTIONS
+       --wordlist=FILE, -w FILE   the words to try
+       --format=FORMAT, -f FORMAT md5, sha1, sha256, nt, sha512crypt or rangetgs
+       --show                     print USER:PASSWORD for the hashes found
+
+EXAMPLES
+       hashcrack shadow-backup.txt
+       hashcrack --format=nt sam-export.txt
+       hashcrack --show shadow-backup.txt
+
+SEE ALSO
+       pwguess(1), sha256sum(1), ticket-request(1)

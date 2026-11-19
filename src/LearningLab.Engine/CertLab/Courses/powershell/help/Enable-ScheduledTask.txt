@@ -1,0 +1,11 @@
+SYNOPSIS: Turns a disabled scheduled task back on.
+DESCRIPTION:
+Enable-ScheduledTask sets a disabled task to Ready, so its triggers work again, and outputs the task.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER InputObject:
+Task objects from the pipeline.
+EXAMPLE: Enable-ScheduledTask -TaskName Nightly
+RELATED: Disable-ScheduledTask

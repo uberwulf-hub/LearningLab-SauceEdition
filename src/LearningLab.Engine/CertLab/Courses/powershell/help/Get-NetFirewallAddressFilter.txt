@@ -1,0 +1,14 @@
+SYNOPSIS: Shows which addresses firewall rules apply to.
+DESCRIPTION:
+Get-NetFirewallAddressFilter shows the address part of firewall rules: LocalAddress (which of this computer's addresses) and RemoteAddress (which other computers). Any means every address; LocalSubnet means the computers on the same network as this one.
+
+Pipe rules from Get-NetFirewallRule to it. It is how you check that a rule is open only to the computers that need it.
+PARAMETER AssociatedNetFirewallRule:
+The rules whose address filters you want, usually from the pipeline.
+EXAMPLE: Get-NetFirewallRule -Name WINRM-HTTP-In-TCP-PUBLIC | Get-NetFirewallAddressFilter
+The Public-profile WinRM rule only lets in the local subnet (RemoteAddress LocalSubnet).
+EXAMPLE: Get-NetFirewallRule -DisplayGroup 'Remote Desktop' | Get-NetFirewallAddressFilter | Select-Object RemoteAddress
+Who may connect with Remote Desktop.
+NOTES:
+To change the addresses, use Set-NetFirewallRule -RemoteAddress 10.0.10.0/24. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Get-NetFirewallRule, Get-NetFirewallPortFilter, Set-NetFirewallRule

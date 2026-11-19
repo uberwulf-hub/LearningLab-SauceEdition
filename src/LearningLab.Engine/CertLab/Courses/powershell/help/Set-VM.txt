@@ -1,0 +1,32 @@
+SYNOPSIS: Changes a virtual machine's settings: processors, memory, checkpoints, start and stop actions.
+DESCRIPTION:
+Set-VM changes the general settings of a VM. Most of them (processor count, turning dynamic memory on or off) need the VM turned off.
+
+CheckpointType: Production (the default) asks the guest to make a consistent backup with VSS and saves no memory; Standard also saves the memory, so a restore returns to the very moment, running programs and all; ProductionOnly fails instead of falling back to Standard; Disabled allows none.
+
+AutomaticStartAction (Nothing, StartIfRunning, Start) and AutomaticStopAction (TurnOff, Save, ShutDown) say what happens when the host starts or shuts down.
+PARAMETER Name:
+The VM or VMs to change. Also -VMName.
+PARAMETER ProcessorCount:
+Number of virtual processors.
+PARAMETER MemoryStartupBytes:
+Startup memory.
+PARAMETER DynamicMemory:
+Turns dynamic memory on.
+PARAMETER StaticMemory:
+Turns dynamic memory off.
+PARAMETER CheckpointType:
+Disabled, Production, ProductionOnly or Standard.
+PARAMETER AutomaticStartAction:
+Nothing, StartIfRunning or Start.
+PARAMETER AutomaticStopAction:
+TurnOff, Save or ShutDown.
+PARAMETER Notes:
+A note about the VM.
+PARAMETER NewVMName:
+Renames the VM.
+EXAMPLE: Set-VM -Name WEB-TEST -ProcessorCount 2 -CheckpointType Production -AutomaticStartAction StartIfRunning -ComputerName HV1
+Two processors, consistent checkpoints, and it restarts with the host if it was running.
+EXAMPLE: Set-VM -Name APP-OLD -NewVMName APP-LEGACY
+Renames the VM (its files keep their names).
+RELATED: Get-VM, Set-VMProcessor, Set-VMMemory, Checkpoint-VM, New-VM

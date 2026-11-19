@@ -1,0 +1,67 @@
+NAME
+       containers-registries.conf - which container registries podman and skopeo use
+
+SYNOPSIS
+       /etc/containers/registries.conf
+       /etc/containers/registries.conf.d/*.conf
+       ~/.config/containers/registries.conf
+
+DESCRIPTION
+       This file (in TOML format) tells podman, buildah and skopeo where to
+       look for images whose names have no registry in front (a "short
+       name" such as ubi9/ubi), which registries may be reached without
+       TLS, and which are blocked. A user's own
+       ~/.config/containers/registries.conf replaces the system file for that
+       user (rootless podman); files in registries.conf.d add to it.
+
+       Comments start with #. Lists are written in square brackets with
+       quoted strings.
+
+SETTINGS
+       unqualified-search-registries = ["REGISTRY", ...]
+              The registries tried, in order, for a short image name. With
+              more than one, podman asks which to use when it runs in a
+              terminal (short-name-mode); in scripts, give the full name.
+
+       short-name-mode = "enforcing"|"permissive"|"disabled"
+              Whether podman asks (enforcing), picks the first match, or
+              never asks.
+
+       [[registry]]
+              A table for one registry, with these keys:
+
+              location = "HOST[:PORT][/PATH]"
+                     The registry.
+
+              insecure = true|false
+                     Allow plain HTTP or a certificate that cannot be
+                     checked.
+
+              blocked = true|false
+                     Never pull from this registry.
+
+              prefix = "..." and [[registry.mirror]]
+                     Match image names and pull through mirrors.
+
+EXAMPLES
+       Search only the classroom registry for short names, and allow it
+       without TLS checks:
+
+           unqualified-search-registries = ["registry.lab.example.com"]
+
+           [[registry]]
+           location = "registry.lab.example.com"
+           insecure = true
+
+       Then:
+
+           podman login registry.lab.example.com
+           podman search ubi
+           podman pull ubi9/ubi
+
+NOTES
+       When a task names one registry, write the full image name
+       (registry.lab.example.com/ubi9/ubi) and nothing depends on this file.
+
+SEE ALSO
+       podman(1), skopeo(1), buildah(1)

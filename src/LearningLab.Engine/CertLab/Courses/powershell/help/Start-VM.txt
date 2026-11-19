@@ -1,0 +1,16 @@
+SYNOPSIS: Turns on a virtual machine.
+DESCRIPTION:
+Start-VM starts a VM that is Off, or brings back one that is Saved (its memory is read back from disk, so it carries on where it stopped). A Paused VM is continued with Resume-VM instead.
+
+Starting fails if the host doesn't have enough free memory for the VM's startup memory.
+PARAMETER Name:
+The VM or VMs to start. Also -VMName. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+PARAMETER Passthru:
+Returns the VM object afterwards.
+EXAMPLE: Start-VM -Name WEB-TEST -ComputerName HV1
+Turns on WEB-TEST.
+EXAMPLE: Get-VM | Where-Object State -eq Off | Start-VM
+Starts every VM that is off.
+RELATED: Stop-VM, Save-VM, Resume-VM, Get-VM

@@ -1,0 +1,22 @@
+NAME
+       pvresize - tell LVM that a physical volume changed size
+
+SYNOPSIS
+       pvresize [--setphysicalvolumesize SIZE] PV...
+
+DESCRIPTION
+       After the device under a PV grew (a bigger virtual disk, a partition
+       made larger with parted resizepart), pvresize lets LVM use the new
+       space: the PV, and so its volume group, gets more free extents.
+
+OPTIONS
+       --setphysicalvolumesize SIZE
+              Use this size instead of the size of the device (to shrink a PV
+              before shrinking its partition). Rarely needed.
+
+EXAMPLES
+           pvresize /dev/vdb1
+           vgs
+
+SEE ALSO
+       pvs(8), vgextend(8), parted(8), lvm(8)

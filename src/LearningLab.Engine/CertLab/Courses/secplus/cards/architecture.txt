@@ -1,0 +1,40 @@
+# Deck: architecture | Security architecture | Security architecture
+In IaaS, who patches the guest operating system? :: The customer; the provider secures the hardware, hypervisor and data center
+In SaaS, what is always still the customer's job? :: Its data, its user accounts and access settings
+Document that shows which security tasks belong to the cloud provider and which to the customer :: Responsibility matrix (shared responsibility model)
+Building servers and networks from reviewed template files :: Infrastructure as code (IaC); it avoids drift and makes builds repeatable
+Code that runs only when triggered, with no server for you to manage :: Serverless (functions as a service)
+An app built as many small services that talk over APIs :: Microservices
+Containers vs virtual machines :: Containers share the host's kernel and are lighter; VMs each run a full OS on a hypervisor and are more isolated
+A network with no connection at all to other networks :: Air-gapped (physical isolation)
+Separating the control plane from the data plane, managed by software :: Software-defined networking (SDN)
+Operating system that must respond within strict time limits :: RTOS (real-time operating system)
+Why are ICS and SCADA systems hard to secure? :: They run for decades, can rarely be patched or rebooted, and favour availability; segment them heavily
+Device that fails open vs fails closed :: Fail-open lets traffic through when it breaks (keeps availability); fail-closed blocks everything (keeps security)
+Inline vs tap/monitor sensor :: Inline sits in the path and can block (IPS); a tap or SPAN copy only watches (IDS)
+Hardened server admins connect to before reaching secure systems :: Jump server (jump box)
+Server that makes web requests for users and can filter and cache them :: Forward proxy (a reverse proxy sits in front of servers)
+Device that spreads traffic across several servers :: Load balancer
+Network segment for public-facing servers, between the internet and the inside :: Screened subnet (formerly DMZ)
+Port-based network access control with a supplicant, authenticator and authentication server :: 802.1X (with EAP and usually RADIUS)
+Firewall that inspects HTTP and HTTPS for web attacks :: WAF (web application firewall)
+Layer 4 vs layer 7 firewall :: Layer 4 decides by addresses and ports; layer 7 understands the application and its content
+One box with firewall, IPS, antivirus, web filter and VPN :: UTM (unified threat management)
+IPsec mode that encrypts the whole original packet and adds a new header :: Tunnel mode (site-to-site VPNs); transport mode protects only the payload
+IPsec part that encrypts vs part that only authenticates :: ESP encrypts (and authenticates); AH only authenticates and checks integrity
+Cloud service joining SD-WAN with security tools such as SWG, CASB and ZTNA :: SASE (secure access service edge)
+VPN that sends only company traffic through the tunnel :: Split tunnel (a full tunnel sends everything)
+Data at rest, in transit and in use: one example each :: A database file on disk; a web request over TLS; data in memory while processed
+Data protected by law, such as health or card data :: Regulated data
+Laws that say data is subject to the rules of the country where it is stored :: Data sovereignty
+Lowest to highest common classification labels :: Public, private (or internal), sensitive, confidential, restricted; critical marks data the business can't run without (names and order vary by organization)
+Clustering vs load balancing :: A cluster makes several servers act as one with failover; load balancing spreads requests across servers
+Hot vs warm vs cold site :: Hot: ready to run at once; warm: equipment but needs current data; cold: space and power only
+Spreading data centers across regions so one disaster can't hit them all :: Geographic dispersion
+Using different operating systems or vendors so one flaw can't take everything down :: Platform diversity
+Full, incremental and differential backup :: Full copies all; incremental copies changes since the last backup of any kind; differential copies changes since the last full
+Restore needs the last full plus every incremental since. Which scheme? :: Full plus incrementals (with differentials, only the full and the latest differential)
+Exercise where the team talks through a disaster scenario around a table :: Tabletop exercise
+Running the new and old systems side by side to compare results :: Parallel processing test
+Battery that keeps systems up for minutes vs power for days :: UPS for short cuts and a clean shutdown; a generator for long outages
+Writing every change to a log so data can be replayed after a crash :: Journaling

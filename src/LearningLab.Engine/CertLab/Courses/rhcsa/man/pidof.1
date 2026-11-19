@@ -1,0 +1,18 @@
+NAME
+       pidof - print the process IDs of a running program
+
+SYNOPSIS
+       pidof PROGRAM...
+
+DESCRIPTION
+       pidof prints, on one line, the PIDs of the processes running the
+       named programs. The name must match exactly (no patterns). It exits
+       with 0 when it found something and 1 when not. pgrep is more
+       flexible.
+
+EXAMPLES
+           pidof sshd
+           kill $(pidof sleep)
+
+SEE ALSO
+       pgrep(1), ps(1), kill(1)

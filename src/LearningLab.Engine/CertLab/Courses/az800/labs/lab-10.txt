@@ -1,0 +1,70 @@
+# Lab: lab-10 | Windows Server containers | u10 | 35
+The web team wants to move small apps into containers. Prepare CORE1 as a second container host, and on HV1 get the base images, run the intranet site and an old tool, and clean up after the last test.
+
+@vars
+name = intranet | portal
+port = 8080 | 8081 | 8088
+@endvars
+
+@setup HV1
+docker run --name smoke-test --isolation=hyperv mcr.microsoft.com/windows/servercore:ltsc2019 cmd /c ver
+docker pull mcr.microsoft.com/windows/servercore:ltsc2019
+
+@task t01 | Virtualization | 20 | CORE1
+**CORE1** will become a second container host. Add the Windows feature that container runtimes need, and finish its installation.
+@check admin | the Containers feature is installed
+feature(CORE1, "Containers") == Installed
+@hint The feature needs a restart before it counts as installed.
+@solution CORE1
+Install-WindowsFeature Containers
+Restart-Computer -Force
+@explain
+The Containers feature is the part Windows provides; the runtime (Docker CE, Mirantis or containerd) is installed afterwards, and Hyper-V too if CORE1 should use Hyper-V isolation.
+@endtask
+
+@task t02 | Virtualization | 15 | HV1
+On **HV1**, download the **Nano Server** and the **IIS** (`windowsservercore-ltsc2022`) images for Windows Server 2022, so later deployments don't wait for them.
+@check admin | both images are on HV1
+images has "mcr.microsoft.com/windows/nanoserver:ltsc2022"
+images has "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022"
+@solution HV1
+docker pull mcr.microsoft.com/windows/nanoserver:ltsc2022
+docker pull mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+@explain
+docker run would pull a missing image too, but pulling ahead keeps the first start quick. The tag must match the host's version for process isolation.
+@endtask
+
+@task t03 | Virtualization | 25 | HV1
+Run the intranet site from the IIS image as a background container named **{name}**, with **process isolation**, reachable on HV1's port **{port}** (the site listens on 80 inside).
+@check admin | {name} runs with the port published
+container["{name}"].status == Running
+container["{name}"].isolation == process
+container["{name}"].ports == "{port}:80"
+@solution HV1
+docker run -d --name {name} -p {port}:80 mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+@explain
+-p HOST:CONTAINER publishes the port on the nat network, so clients use HV1's address and port {port}.
+@endtask
+
+@task t04 | Virtualization | 20 | HV1
+The old label printer tool exists only as a **Server Core ltsc2019** image. Run it in the background as **labels** with the command `ping -t localhost`, in the isolation mode that lets it start on HV1.
+@check admin | labels runs with Hyper-V isolation
+container["labels"].status == Running
+container["labels"].isolation == hyperv
+@solution HV1
+docker run -d --name labels --isolation=hyperv mcr.microsoft.com/windows/servercore:ltsc2019 ping -t localhost
+@explain
+A 2019 image on a 2022 host can't use process isolation; Hyper-V isolation gives it its own kernel.
+@endtask
+
+@task t05 | Virtualization | 20 | HV1
+Remove the stopped container **smoke-test** that a test left behind.
+@check admin | smoke-test is gone, the ltsc2019 image stays
+not container["smoke-test"]
+images has "mcr.microsoft.com/windows/servercore:ltsc2019"
+@hint docker ps -a lists stopped containers too. Don't remove the image: labels needs it.
+@solution HV1
+docker rm smoke-test
+@explain
+Stopped containers keep their writable layer and their image's reference until you remove them; the ltsc2019 image stays, because labels uses it.
+@endtask

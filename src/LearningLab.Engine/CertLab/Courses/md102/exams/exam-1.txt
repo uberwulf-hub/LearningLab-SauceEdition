@@ -1,0 +1,321 @@
+# Exam: exam-1 | Practice exam 1 | 100
+A full practice exam in the style of Microsoft's: questions with one or several answers, drag-and-order questions, Yes / No statements, a case study, and four hands-on tasks in the practice portal. The tenant is Riverbend Outfitters, as in the course.
+
+@vars
+n = 1 | 2 | 3 | 4
+age = 14 | 21 | 30
+@endvars
+
+@task t01 | Compliance | 4 | portal
+Create a compliance policy for Windows 10 and later called **Windows baseline {n}**. It must require BitLocker and Secure Boot and a minimum OS version of **10.0.26100**. Devices that fail it must be marked noncompliant **1 day** after they fail. Assign it to the **Windows devices** group.
+@check portal | the policy has the right settings
+compliance["Windows baseline {n}"].platform == "Windows 10 and later"
+compliance["Windows baseline {n}"].bitlocker == Require
+compliance["Windows baseline {n}"].secureBoot == Require
+compliance["Windows baseline {n}"].minOs == 10.0.26100
+compliance["Windows baseline {n}"].noncompliantDays == 1
+@check portal | it is assigned to Windows devices
+compliance["Windows baseline {n}"].include has "Windows devices"
+@solution portal
+create compliance name="Windows baseline {n}" platform="Windows 10 and later" bitlocker=Require secureBoot=Require minOs=10.0.26100 noncompliantDays=1
+assign compliance "Windows baseline {n}" "Windows devices"
+@explain
+Devices > Compliance > Create policy, platform Windows 10 and later. BitLocker and Secure Boot are under Device Health, the minimum OS version under Device Properties, and the grace period is the first action under Actions for noncompliance ("Mark device noncompliant", 1 day after noncompliance). A policy does nothing until it is assigned.
+@endtask
+
+@task t02 | Identity | 3 | portal
+Create a security group called **Sales staff {n}** whose members are, automatically, every user whose department is **Sales**.
+@check portal | a dynamic user group with a department rule
+group["Sales staff {n}"].membership == "Dynamic user"
+group["Sales staff {n}"].rule contains department
+@check portal | it holds the Sales people and nobody else
+group["Sales staff {n}"].members has jordan
+group["Sales staff {n}"].members has priya
+group["Sales staff {n}"].members !has sam
+@solution portal
+create group name="Sales staff {n}" type=Security membership="Dynamic user" rule="(user.department -eq \"Sales\")"
+@explain
+Users and groups > Groups > New group: Security, membership type Dynamic user, and a rule on user.department. Dynamic groups need Microsoft Entra ID P1 licences. A rule uses either user properties or device properties, never both.
+@endtask
+
+@task t03 | Apps | 4 | portal
+Add 7-Zip to the tenant as a Windows app (Win32) from the package **7z2301-x64.intunewin** (its setup file is 7z2301-x64.exe, which installs silently with **/S** into C:\Program Files\7-Zip). Use a file detection rule for 7z.exe in that folder. Make it **required** for the **Sales** group, and make sure it is installed on **RB-LT-001**.
+@check portal | the app is a Win32 app with a working detection rule
+app["7-Zip"].type == "Windows app (Win32)"
+app["7-Zip"].required has Sales
+@check portal | RB-LT-001 has it installed
+device["RB-LT-001"].app["7-Zip"] == Installed
+@solution portal
+create app name=7-Zip type="Windows app (Win32)" publisher="Igor Pavlov" package=7z2301-x64.intunewin installCmd="7z2301-x64.exe /S" uninstallCmd="\"C:\Program Files\7-Zip\Uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\7-Zip" detectName=7z.exe
+assign app 7-Zip Sales intent=required
+remote sync RB-LT-001
+@explain
+Apps > All apps > Add > Windows app (Win32). The install command must be silent (the installer can't wait for someone to click), install behavior System because it writes to Program Files, and the detection rule must find what the installer leaves behind. A Required assignment installs at the device's next check-in: Sync makes it check in now. Jordan, RB-LT-001's user, is in Sales.
+@endtask
+
+@task t04 | Protection | 4 | portal
+Manage the local administrator password of every Windows device with Windows LAPS, backed up to **Microsoft Entra ID**, with a password age of **{age} days**. Make sure **RB-LT-002** already has a managed password.
+@check portal | Entra LAPS is on for the tenant
+tenant.lapsEnabled == Yes
+@check portal | a LAPS policy backs up to Microsoft Entra ID
+count(laps, backup="Backup the password to Microsoft Entra ID only") >= 1
+@check portal | RB-LT-002's password is managed and backed up
+device["RB-LT-002"].laps == On
+device["RB-LT-002"].laps.backup == "Microsoft Entra ID"
+@solution portal
+tenant lapsEnabled=Yes
+create laps name="LAPS for Windows" backup="Backup the password to Microsoft Entra ID only" ageDays={age}
+assign laps "LAPS for Windows" "Windows devices"
+remote sync RB-LT-002
+@explain
+Two switches are needed: "Enable Microsoft Entra Local Administrator Password Solution (LAPS)" in the Microsoft Entra device settings, and a LAPS policy (Endpoint security > Account protection) with the backup directory set to Microsoft Entra ID. Without the tenant switch, the device can't back the password up and the policy reports an error.
+@endtask
+
+@case cs1 | Lakeshore Dental Clinics
+## Overview
+Lakeshore Dental Clinics (a made-up company) has a head office and four clinics, and 140 staff. Every member of staff has a Microsoft 365 E3 licence, and the IT team of two manages devices with Microsoft Intune.
+
+## Existing environment
+The on-premises Active Directory domain lakeshore.local is synchronised to Microsoft Entra ID. The office PCs run Windows 10 Pro 22H2; they are hybrid joined and were enrolled in Intune through Group Policy. Some of them have a TPM 1.2 chip. Each clinic has two shared front-desk PCs. Clinicians read their email on their own iPhones, which are not enrolled. New laptops come from a reseller that can register them for Windows Autopilot.
+
+## Requirements
+- Clinicians set up their new laptops themselves, at home, without help from IT. The laptops join Microsoft Entra ID only, and clinicians must not be local administrators.
+- The front-desk PCs show only the booking website, full screen, in Microsoft Edge.
+- Email on phones is allowed only in Microsoft Outlook with company data protected. Phones must not be enrolled.
+- Every Windows device is encrypted without asking the user anything, and the recovery keys are kept in the cloud.
+- The office PCs move to Windows 11, version 24H2, before the end of the year. PCs that can't run Windows 11 stay on Windows 10 until they are replaced.
+
+## Technical constraints
+Keep administrative effort low. Licences can't change.
+@endcase
+
+@choice c1 | Deployment | 1 | case=cs1
+Which Windows Autopilot deployment for the clinicians' laptops meets the requirements?
+- Self-deploying mode, Microsoft Entra joined
++ User-driven mode, Microsoft Entra joined, user account type Standard
+- User-driven mode, Microsoft Entra hybrid joined
+- Pre-provisioned deployment, Microsoft Entra hybrid joined
+! The clinician signs in during setup (user-driven), the laptop must be Entra joined only (not hybrid, which would also need the office network or a VPN and a Domain Join profile), and the profile's user account type Standard keeps the clinician from being an administrator. Self-deploying mode is for devices without a user, such as kiosks.
+
+@choice c2 | Configuration | 1 | case=cs1
+What should you create for the front-desk PCs?
+- A settings catalog profile that hides the Start menu
++ A kiosk profile: single app, full-screen kiosk, Microsoft Edge with the booking site as the start URL
+- An edition upgrade profile
+- A Domain Join profile
+! A kiosk profile in single-app mode runs one app full screen; with Microsoft Edge as the app it opens the given start URL. The other profiles don't lock a PC to one app.
+
+@multi c3 | Apps | 1 | case=cs1
+Which two things should you configure for email on the clinicians' phones? Each right answer is part of the solution.
++ An app protection policy for iOS/iPadOS that targets Microsoft Outlook
++ A Conditional Access policy for iOS that requires an app protection policy
+- An iOS/iPadOS compliance policy that requires a passcode
+- An automated device enrolment profile for the iPhones
+! Without enrolment, data is protected at the app level: an app protection policy (MAM) for Outlook, and Conditional Access that lets only apps protected by such a policy in. A compliance policy needs an enrolled device, and automated device enrolment is for company-owned devices.
+
+@yesno c4 | Protection | 3 | case=cs1
+For the encryption requirement, decide whether each statement is true.
+Y A disk encryption policy that requires device encryption, sets Allow Warning For Other Disk Encryption to Disabled and allows standard user encryption can turn BitLocker on without prompting the clinicians.
+N Requiring a startup PIN with the TPM keeps the encryption silent.
+Y For Microsoft Entra joined laptops, the policy can back the recovery key up to Microsoft Entra ID.
+! Silent encryption needs the warning for other disk encryption disabled and, because the clinicians are standard users, Allow Standard User Encryption; a startup PIN has to be chosen by the user, so it can't be silent. Backing the recovery key up to Microsoft Entra ID keeps it in the cloud, where admins find it on the device's page.
+
+@choice c5 | Updates | 1 | case=cs1
+What should you use to move the office PCs to Windows 11, version 24H2?
+- An update ring with the feature update deferral set to 0 days
++ A feature updates policy for Windows 11, version 24H2, assigned to a group of the office PCs
+- A quality updates policy that expedites the newest update
+- A driver updates policy with automatic approval
+! A feature updates policy names the version to move to and keeps devices there. Windows Update offers Windows 11 only to PCs that meet its hardware requirements, so the PCs with a TPM 1.2 aren't upgraded and stay on Windows 10, version 22H2, the last Windows 10 feature update. Rings control timing (deferrals, deadlines), not which version.
+
+@choice q01 | Identity | 1
+On a Windows PC, `dsregcmd /status` shows AzureAdJoined : YES and DomainJoined : YES. What kind of device identity does the PC have?
+- Microsoft Entra registered
+- Microsoft Entra joined only
++ Microsoft Entra hybrid joined
+- Workplace joined
+! Joined to an Active Directory domain and to Microsoft Entra ID at the same time is hybrid join. A registered device shows WorkplaceJoined : YES under User State instead.
+
+@choice q02 | Enrollment | 1
+Ava Brooks has an Office 365 E3 licence. When she tries to enrol her Windows laptop, enrolment fails with a message about her account. What should you do?
+- Add Ava to the MDM user scope group
++ Assign Ava a licence that includes Intune, such as Microsoft 365 E3
+- Make Ava a device enrolment manager
+- Raise the device limit restriction
+! Office 365 E3 doesn't include Intune. A user needs an Intune licence (directly or through a suite such as Microsoft 365 E3 or E5) to enrol devices.
+
+@choice q03 | Enrollment | 1
+Riverbend wants to stop people enrolling their own Windows PCs, while new company laptops set up with Windows Autopilot must still enrol. What should you configure?
+- A device limit restriction of 1
++ A device platform restriction that blocks personally owned Windows devices
+- A compliance policy that marks personal devices as noncompliant
+- Set the MDM user scope to None
+! Blocking personally owned devices in a platform restriction keeps corporate methods such as Autopilot working. A scope of None would stop automatic enrolment for everyone, and compliance doesn't stop enrolment.
+
+@choice q04 | Compliance | 1
+Devices that have no compliance policy assigned show as Compliant, and Conditional Access lets them in. You want them to count as not compliant. What should you change?
+- The compliance status validity period
++ The tenant setting "Mark devices with no compliance policy assigned as", to Not compliant
+- The actions for noncompliance of every policy
+- The Conditional Access policy's grant controls
+! The setting is under Devices > Compliance > Compliance policy settings. Its default is Compliant, which is why unassigned devices pass.
+
+@choice q05 | Compliance | 1
+A compliance policy marks devices noncompliant 3 days after they fail. Conditional Access requires a compliant device. A device fails the policy today. What happens when its user signs in to Office 365 tomorrow?
++ The sign-in succeeds: the device is in its grace period, which counts as compliant
+- The sign-in is blocked: the device failed a setting
+- The user must enrol the device again
+- The sign-in succeeds only with MFA
+! Until the grace period ends, the device's state is "In grace period", and Conditional Access treats it as compliant. After 3 days it becomes Not compliant and the sign-in is blocked.
+
+@choice q06 | Deployment | 1
+A kiosk PC has an Autopilot profile in self-deploying mode assigned, but setup stops with an error about device attestation. What is the most likely cause?
+- The profile's user account type is Standard
++ The PC has no TPM 2.0, which self-deploying mode needs
+- No user was assigned to the Autopilot device
+- The PC isn't on the company network
+! Self-deploying mode proves the device's identity with the TPM 2.0 (attestation), because no user signs in. User assignment isn't needed in that mode.
+
+@choice q07 | Deployment | 1
+Applying a provisioning package made with Windows Configuration Designer to new PCs used to join them to Microsoft Entra ID. Now the same package fails to join them. What should you do?
+- Run Install-ProvisioningPackage with -ForceInstall
++ Create a new package with a new bulk token: the old token has expired
+- Turn on the Intune Connector for Active Directory
+- Give the PCs a TPM 2.0
+! The bulk enrolment token inside the package has an expiry date. After it, the package can't join devices; make a new package with a fresh token.
+
+@choice q08 | Configuration | 1
+You need a Windows setting that exists in the Policy CSP but that you can't find in the settings catalog. What should you use?
+- A Domain Join profile
++ A custom profile with an OMA-URI
+- A security baseline
+- A platform script that edits Group Policy
+! A custom profile sends any Policy CSP setting by its OMA-URI (./Device/Vendor/MSFT/Policy/Config/Area/Setting) with a data type and value.
+
+@choice q09 | Configuration | 1
+Two configuration profiles set Allow Camera on the same devices, one to Allowed and one to Not allowed. What does the device report?
+- The newest profile wins
+- The most restrictive value wins
++ A conflict: the setting isn't applied until the profiles agree
+- Both values are applied one after the other
+! When two profiles give one setting different values, Intune reports a conflict for both and the setting isn't changed. Fix it by removing one assignment or making the values the same.
+
+@choice q10 | Updates | 1
+Windows 11 devices must stay on version 24H2 until IT tests the next version. What should you use?
++ A feature updates policy for Windows 11, version 24H2
+- An update ring with quality updates paused
+- An expedited quality updates policy
+- A driver updates policy
+! A feature updates policy keeps devices at the version it names until you change it. Pausing quality updates stops security fixes, which isn't what's asked.
+
+@choice q11 | Updates | 1
+An update ring defers quality updates by 14 days. A critical security update came out yesterday and must reach every device as soon as possible. What should you do?
+- Set the ring's deadline to 0 days
++ Create a quality updates policy that expedites installation for devices below that update
+- Pause the ring and resume it
+- Create a feature updates policy
+! Expediting installs the chosen monthly update now, ignoring the ring's deferral, on devices that don't have it yet.
+
+@choice q12 | Monitoring | 1
+Jordan is leaving Riverbend. His own iPhone is enrolled. You must remove company apps, data and settings and keep his personal photos. Which remote action?
+- Wipe
++ Retire
+- Delete
+- Fresh Start
+! Retire removes what the company put on the device and takes it out of management, and leaves personal data. Wipe resets the whole device. Delete removes the device's record from Intune (on Windows and iOS it also sends a retire), so it isn't the action for keeping a clean, managed handover.
+
+@choice q13 | Monitoring | 1
+Chen must run remote actions on devices of the Sales users only. What should you create?
+- A scope tag called Sales on every device
++ A role assignment of the Help Desk Operator role with Chen's group as members and the Sales group as the scope
+- A Conditional Access policy for Chen
+- The Microsoft Entra role Helpdesk Administrator for Chen
+! An Intune role assignment says who (members), what (the role's permissions) and on whom (the scope groups). Scope tags filter which objects an admin sees; they aren't enough on their own.
+
+@choice q14 | Apps | 1
+A Win32 app shows "The application was not detected after installation completed successfully (0x87D1041C)". What should you check first?
+- The app's assignment intent
++ The app's detection rule
+- The device's compliance policy
+- The Company Portal app
+! The installer finished, but the detection rule didn't find what it looks for (a wrong path, file name or product code), so Intune reports the install as failed.
+
+@choice q15 | Protection | 1
+You are about to turn on attack surface reduction rules for all Windows devices and worry about blocking line-of-business apps. What should you do first?
+- Set the rules to Warn
++ Set the rules to Audit and review what they would have blocked
+- Exclude every device from the rules
+- Turn off real-time protection
+! Audit mode records what a rule would block without blocking it; once the reports show no harm (or you add exclusions), switch the rules to Block.
+
+@multi m1 | Protection | 1
+Windows devices must back their LAPS passwords up to Microsoft Entra ID. Which two things must be in place? Each right answer is part of the solution.
++ Microsoft Entra LAPS turned on in the Microsoft Entra device settings
++ A LAPS policy with the backup directory set to Microsoft Entra ID, assigned to the devices
+- The legacy LAPS MSI installed on every device
+- The Active Directory schema extended for LAPS
+! Windows LAPS is built into current Windows; backing up to Microsoft Entra ID needs the tenant switch and the policy. The MSI and the schema extension belong to legacy LAPS and to Active Directory backup.
+
+@multi m2 | Deployment | 1
+New laptops must be hybrid joined during Windows Autopilot. Which three things are needed? Each right answer is part of the solution.
++ The Intune Connector for Active Directory
++ A Domain Join configuration profile assigned to the laptops
++ An Autopilot deployment profile with the join type Microsoft Entra hybrid joined
+- A device name template in the deployment profile
+- Self-deploying mode
+! The connector creates the computer accounts in Active Directory, the Domain Join profile gives the domain, OU and name prefix, and the deployment profile asks for hybrid join. Name templates are for Entra joined devices, and self-deploying mode doesn't support hybrid join.
+
+@multi m3 | Apps | 1
+Which two does the Intune Management Extension on a Windows device handle? Each right answer is part of the solution.
++ Win32 apps
++ Platform scripts (PowerShell)
+- Settings catalog profiles
+- Compliance policies
+! The Intune Management Extension installs Win32 apps and runs PowerShell scripts and remediations; its log is in C:\ProgramData\Microsoft\IntuneManagementExtension\Logs. Profiles and compliance policies arrive through Windows' built-in MDM client.
+
+@order o1 | Deployment | 1
+A new laptop, still in the out-of-box experience, must be set up with an existing Autopilot profile that is assigned to the group of all Autopilot devices. Which four actions should you do, in order?
+1 Press Shift+F10, start PowerShell and save the hash with Get-WindowsAutopilotInfo -OutputFile
+2 Import the CSV file in Devices > Enrollment > Windows Autopilot > Devices
+3 Wait until the device's profile status is Assigned
+4 Restart the out-of-box experience and let the user sign in
+x Apply a provisioning package with a bulk token
+! The hash registers the device; the dynamic group then picks it up and the profile is assigned, which takes a while. Only a device that has its profile when setup starts gets the Autopilot experience. A provisioning package is a different method.
+
+@order o2 | Apps | 1
+You are adding a line-of-business installer as a Win32 app. Which four steps come in this order?
+1 Wrap the installer into an .intunewin file with the Win32 Content Prep Tool
+2 Add a Windows app (Win32) and select the .intunewin file
+3 Enter the silent install and uninstall commands
+4 Set a detection rule, then assign the app
+x Sign the .intunewin file with a code-signing certificate
+! The portal's wizard goes App information, Program, Requirements, Detection rules, Dependencies, Supersedence, Assignments. The .intunewin file doesn't need signing.
+
+@order o3 | Compliance | 1
+You are rolling out a Conditional Access policy that requires a compliant device. Which three actions should you do, in order?
+1 Create the policy in Report-only mode
+2 Check the report-only results in the sign-in logs and with What If
+3 Turn the policy On
+x Turn on security defaults
+! Report-only shows who would be blocked without blocking anyone. Security defaults and Conditional Access don't go together: you use one or the other.
+
+@yesno y1 | Identity | 3
+Decide whether each statement about device identities is true.
+Y A personal Windows PC with a work account added in Settings is Microsoft Entra registered.
+N Windows Home can be joined to Microsoft Entra ID.
+Y A hybrid joined PC is joined to an Active Directory domain and known to Microsoft Entra ID.
+! Adding a work account registers the device. Joining Microsoft Entra ID needs Windows Pro, Enterprise or Education. Hybrid join means the domain join plus a device object in Microsoft Entra ID.
+
+@yesno y2 | Updates | 3
+An update ring has a quality update deferral of 7 days and a deadline of 2 days. Decide whether each statement is true.
+Y Devices are offered a monthly update about 7 days after its release.
+N The deadline counts from the update's release date.
+Y Pausing the ring's quality updates stops new monthly updates for a while.
+! The deferral delays the offer; the deadline counts from when the update is offered to the device, after which the restart is forced (with the grace period). A pause holds updates for up to 35 days.
+
+@yesno y3 | Apps | 3
+An app is assigned to the Sales group as Available for enrolled devices. Decide whether each statement is true.
+Y Sales users can install it themselves from Company Portal.
+N It installs by itself at the next check-in.
+Y Changing the assignment to Uninstall would remove it from the Sales users' devices.
+! Available apps wait for the user in Company Portal; Required apps install by themselves. Uninstall removes an app from the devices it targets.

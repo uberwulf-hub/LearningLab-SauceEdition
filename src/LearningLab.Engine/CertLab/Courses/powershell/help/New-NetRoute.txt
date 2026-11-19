@@ -1,0 +1,22 @@
+SYNOPSIS: Adds a route: sends traffic for a network to a chosen router.
+DESCRIPTION:
+New-NetRoute adds a line to the routing table. You give the destination network with its prefix length (10.0.20.0/24), the adapter to use, and the next hop: the router on your own network that knows the way. A route to 0.0.0.0/0 is a default gateway.
+
+Like New-NetIPAddress, it outputs the new route twice, for the ActiveStore and the PersistentStore.
+PARAMETER DestinationPrefix:
+The network the route is for, with /length (required), for example 10.0.20.0/24 or 0.0.0.0/0.
+PARAMETER InterfaceAlias:
+The adapter, for example Ethernet. Give this or -InterfaceIndex.
+PARAMETER InterfaceIndex:
+The ifIndex of the adapter.
+PARAMETER NextHop:
+The router to send to. It must be on the adapter's own network. Leave it out for a network reached directly.
+PARAMETER RouteMetric:
+The cost of the route (default 256); when two routes match, the lower total metric wins.
+EXAMPLE: New-NetRoute -DestinationPrefix 0.0.0.0/0 -InterfaceAlias Ethernet -NextHop 10.0.10.1
+Puts back a missing default gateway.
+EXAMPLE: New-NetRoute -DestinationPrefix 10.0.20.0/24 -InterfaceAlias Ethernet -NextHop 10.0.10.1 -RouteMetric 10
+Adds a route for another network through the lab router.
+NOTES:
+"The parameter is incorrect" usually means the adapter name is wrong or the prefix has no /length. "The object already exists" means the same route is already there. The practice network is only 10.0.10.0/24 and has no internet, so a route to any other network is accepted but nothing answers there. CIM-based command, Windows only. Needs an administrator on a real PC.
+RELATED: Get-NetRoute, Remove-NetRoute, New-NetIPAddress

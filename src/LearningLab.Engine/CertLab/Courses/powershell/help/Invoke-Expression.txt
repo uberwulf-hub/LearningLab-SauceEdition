@@ -1,0 +1,22 @@
+SYNOPSIS: Runs a string as if you had typed it as a command.
+DESCRIPTION:
+Invoke-Expression takes text and runs it as PowerShell code, in your current scope. Variables it sets stay set afterwards.
+
+It is rarely the right tool. Almost everything people use it for has a safer way: to run a command whose name is in a variable, use the call operator (& $name); to pass a changing set of parameters, use splatting (& $name @params); to work out a calculation, write the expression directly.
+
+The danger is that whatever ends up in the string runs, including text that came from a file, a web page or a user. If someone can put "; Remove-Item ..." into that text, your script runs it.
+PARAMETER Command:
+The code to run, as a string. Position 0, required. It can also come through the pipeline.
+EXAMPLE: $cmd = 'Get-Date -Format yyyy'; Invoke-Expression $cmd
+Runs the command stored in $cmd and shows the year.
+EXAMPLE: '2 + 3 * 4' | Invoke-Expression
+Works out the text as an expression: 14.
+EXAMPLE: $name = 'Get-Date'; & $name -Format yyyy
+The safer alternative for running a command whose name is in a variable: the call operator.
+NOTES:
+The alias is iex.
+
+The text is parsed when Invoke-Expression runs, so mistakes in it show up only then, and editors cannot check it for you.
+
+Security tools and PowerShell's script block logging pay special attention to Invoke-Expression, because attackers use it to run downloaded code.
+RELATED: about_Operators, about_Splatting, about_Quoting_Rules, about_Scopes

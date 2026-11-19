@@ -1,0 +1,18 @@
+From an email attachment to a service that starts with Windows.
+
+1. The attachment. C:\Users\{{VIC}}\Downloads holds {{ATT}}. Windows hides known extensions, so
+   {{VIC}} saw a document name; the real extension is .{{KIND}}, a script. Event 4688 in the Security log
+   shows it being started from the mail program. Get-Content on it shows what it did (in Cyber Range it
+   is only a description): copy an agent to C:\ProgramData\{{SVC}}, install it as a service, report to
+   {{C2}}.
+
+2. The service. System log event 7045 ("a service was installed") names {{SVC}} ("{{SVC_DISP}}" - a
+   name made to look like part of Windows). sc.exe qc {{SVC}} shows it runs a hidden PowerShell script,
+   C:\ProgramData\{{SVC}}\agent.ps1, at every start. The flag is in id.txt beside it.
+
+3. Pull it out. Stop-Service {{SVC}}, sc.exe delete {{SVC}}, then remove agent.ps1 and the attachment.
+   If you are too slow, the agent collects {{VIC}}'s documents for {{C2}}.
+
+For real: show file extensions, block script attachments at the mail server, run office users without
+administrator rights (installing a service needs them), and watch event 7045 for services you didn't
+expect.

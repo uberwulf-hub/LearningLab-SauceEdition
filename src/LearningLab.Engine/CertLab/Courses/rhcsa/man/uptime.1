@@ -1,0 +1,26 @@
+NAME
+       uptime - show how long the system has been running and its load
+
+SYNOPSIS
+       uptime [-p] [-s]
+
+DESCRIPTION
+       uptime prints one line: the time now, how long the system has been up,
+       how many users are logged in, and the load average for the last 1, 5
+       and 15 minutes. The load average is the number of processes running
+       or waiting to run, on average. A load higher than the number of CPUs
+       (see nproc) for a long time means the system is overloaded.
+
+OPTIONS
+       -p, --pretty
+              Print only the time up, in words.
+
+       -s, --since
+              Print when the system started.
+
+EXAMPLES
+           uptime
+           uptime -s
+
+SEE ALSO
+       top(1), w(1), nproc(1)

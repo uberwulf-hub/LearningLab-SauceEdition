@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "languages": {
+    "es": {
+      "items": {
+        "5e7f2a1c3b4d": { "box": 2, "due": "2026-11-12", "seen": 3, "right": 2, "wrong": 1 }
+      },
+      "units": { "hello": { "quiz": 9, "heard": 2 } },
+      "listened": 125.5,
+      "days": ["2026-11-09", "2026-11-10"],
+      "fromNewer": { "keep": true }
+    }
+  },
+  "settings": { "voice-es": "es-2", "rate": 0.9, "pauses": "1.5" }
+}

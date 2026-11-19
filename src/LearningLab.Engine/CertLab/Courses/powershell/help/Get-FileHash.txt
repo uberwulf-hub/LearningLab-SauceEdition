@@ -1,0 +1,16 @@
+SYNOPSIS: Computes a file's hash (SHA256 by default) to check that it has not changed.
+DESCRIPTION:
+Get-FileHash reads a file's bytes and outputs the Algorithm, the Hash (hexadecimal, upper case) and the Path. Two files with the same hash have the same bytes; compare a download's hash with the one its publisher lists. The same text saved in two encodings has different bytes and so different hashes.
+PARAMETER Path:
+The files to hash. Wildcards are allowed.
+PARAMETER LiteralPath:
+A file, taken exactly as typed.
+PARAMETER Algorithm:
+SHA256 (the default), SHA1, SHA384, SHA512, MD5 or RIPEMD160. SHA1 and MD5 are only good for spotting accidents, not attacks.
+EXAMPLE: Get-FileHash C:\LabFiles\employees.csv
+The SHA256 hash of a file.
+EXAMPLE: (Get-FileHash a.txt).Hash -eq (Get-FileHash b.txt).Hash
+True if two files have the same content.
+NOTES:
+Cert Lab does not simulate -InputStream or the MACTripleDES algorithm.
+RELATED: Get-Item, Get-AuthenticodeSignature

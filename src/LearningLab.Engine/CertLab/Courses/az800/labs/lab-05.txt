@@ -1,0 +1,89 @@
+# Lab: lab-05 | Filtering, loopback and a GPO that won't apply | u05 | 45
+Group Policy at Harborline needs finer aim: a desktop meant only for managers, a server hardening GPO that must never reach PCs, a training room where everyone gets the same extra settings, and a help desk ticket about a GPO that "does nothing".
+
+@vars
+timeout = 300 | 600 | 900
+@endvars
+
+@setup admin
+gpo new "Sales managers desktop"
+gpo set "Sales managers desktop" setting=Wallpaper value=\\FS1\Public\managers.jpg
+gpo link "Sales managers desktop" "Staff/Sales"
+gpo new "Server hardening"
+gpo set "Server hardening" setting=WinRmAllow state=Enabled
+gpo set "Server hardening" setting=PsScriptBlockLog state=Enabled
+gpo link "Server hardening" "corp.example"
+new ou name=Training
+move computer "CL1" "Training"
+gpo new "HR screen saver"
+gpo set "HR screen saver" setting=ScreenSaverTimeout value={timeout}
+gpo link "HR screen saver" "Staff/HR" enabled=no
+gpo filter "HR screen saver" remove "Authenticated Users"
+gpo filter "HR screen saver" add "HR"
+
+@task t01 | Group Policy | 25 | admin
+**Sales managers desktop** must apply only to the members of **Sales Managers**, and it must actually work for them.
+@check admin | the filter
+gpo["Sales managers desktop"].filter has "Sales Managers"
+gpo["Sales managers desktop"].filter !has "Authenticated Users"
+@check admin | imoreau gets it, dpatel doesn't
+rsop(computer=CL1, user=imoreau).applied has "Sales managers desktop"
+rsop(computer=CL1, user=dpatel).reason["Sales managers desktop"] == "Denied (Security)"
+@hint Remove Authenticated Users from Security Filtering, add Sales Managers, then give Authenticated Users (or Domain Computers) Read on the Delegation tab.
+@solution admin
+gpo filter "Sales managers desktop" remove "Authenticated Users"
+gpo filter "Sales managers desktop" add "Sales Managers"
+gpo perm "Sales managers desktop" "Domain Computers" GpoRead
+@explain
+Since MS16-072 the computer reads GPOs with user settings as itself, so it needs Read. Domain Computers with Read is enough; it doesn't make the GPO apply to anyone.
+@endtask
+
+@task t02 | Group Policy | 25 | admin
+**Server hardening** is linked to the domain and is meant for **member servers** only: not domain controllers, not PCs. Without moving its link, make it apply only where the operating system is a member server, with a WMI filter named **Member servers**.
+@check admin | the filter
+gpo["Server hardening"].wmifilter == "Member servers"
+@check admin | SRV1 gets it, CL1 and DC1 don't
+rsop(computer=SRV1).computergpos has "Server hardening"
+rsop(computer=CL1).reason["Server hardening"] == "Denied (WMI Filter)"
+rsop(computer=DC1).reason["Server hardening"] == "Denied (WMI Filter)"
+@hint Win32_OperatingSystem's ProductType: 1 is a client, 2 a domain controller, 3 a member server.
+@solution admin
+wmi new name="Member servers" query="SELECT * FROM Win32_OperatingSystem WHERE ProductType = 3"
+gpo wmi "Server hardening" "Member servers"
+@endtask
+
+@task t03 | Group Policy | 25 | admin
+CL1 is now in the training room (OU **Training**). Everyone who signs in there keeps their usual settings, but also gets the training room's wallpaper `\\FS1\Public\training.jpg`, which must win over their own. Create the GPO **Training room** for it, linked to **Training**.
+@check admin | loopback Merge in a GPO linked to Training
+gpo["Training room"].setting["Loopback"].value == Merge
+gpo["Training room"].links has "OU=Training,DC=corp,DC=example"
+@check admin | bcole keeps Staff desktop but gets the training wallpaper
+rsop(computer=CL1, user=bcole).loopback == Merge
+rsop(computer=CL1, user=bcole).usergpos has "Staff desktop"
+rsop(computer=CL1, user=bcole).setting["Wallpaper"].winner == "Training room"
+@hint "Keeps their usual settings" is Merge, not Replace. The wallpaper is a user setting in the same GPO.
+@solution admin
+gpo new "Training room"
+gpo set "Training room" setting=Loopback state=Enabled value=Merge
+gpo set "Training room" setting=Wallpaper value=\\FS1\Public\training.jpg
+gpo link "Training room" "Training"
+@explain
+With Merge, the user's own GPOs apply first and the user settings of the computer's GPOs come after, so the training room wins conflicts while everything else stays.
+@endtask
+
+@task t04 | Group Policy | 25 | DC1
+Ticket: "**HR screen saver** does nothing for Grace Kim (`gkim`) on CL1." Find the two problems, fix them, then ask CL1 to refresh remotely with `Invoke-GPUpdate` (default delay) and let the time pass until CL1 has applied it for Grace.
+@check admin | the link is enabled and computers can read the GPO
+gpo["HR screen saver"].linkenabled["Staff/HR"] == Yes
+rsop(computer=CL1, user=gkim).setting["ScreenSaverTimeout"].value == {timeout}
+@check admin | CL1 applied it for gkim
+applied(CL1, user=gkim).setting["ScreenSaverTimeout"].value == {timeout}
+@hint Look at the link on Staff/HR and at the Delegation tab: HR has Apply, but who lets the computer read the GPO? Invoke-GPUpdate waits up to 10 minutes.
+@solution DC1
+Set-GPLink -Name 'HR screen saver' -Target 'OU=HR,OU=Staff,DC=corp,DC=example' -LinkEnabled Yes
+Set-GPPermission -Name 'HR screen saver' -TargetName 'Authenticated Users' -TargetType Group -PermissionLevel GpoRead
+Invoke-GPUpdate -Computer CL1
+#wait 600
+@explain
+A disabled link stops the GPO at that container; a security filter without Read for the computers stops the user half everywhere (gpresult shows "Denied (Security)"). Invoke-GPUpdate schedules the refresh on the computer after a random delay of up to 10 minutes.
+@endtask

@@ -1,0 +1,21 @@
+# Sheet: errors | Error handling | Errors
+## Looking at errors
+$Error[0] :: the newest error (an ErrorRecord)
+$Error[0].Exception.Message :: its message
+$Error[0].CategoryInfo; $Error[0].FullyQualifiedErrorId :: its category and id
+$? :: True if the last command had no error
+$Error.Clear() :: empty the list
+## Choosing what happens
+Get-Variable x -ErrorAction SilentlyContinue :: hide, keep in $Error
+Get-Variable x -ErrorAction Ignore :: hide, keep nothing
+Get-Variable x -ErrorAction Stop :: make it terminating (catchable)
+$ErrorActionPreference = 'Stop' :: the default for everything after it
+Get-Variable x, y -ErrorVariable errs :: collect a command's errors in $errs
+## Handling
+try { } catch { } finally { } :: catch terminating errors; finally always runs
+catch [System.IO.IOException] { } :: catch one kind of exception
+$_.Exception.GetType().FullName :: in catch: the exception type
+## Raising
+throw 'message' :: a terminating error
+Write-Error 'message' :: a non-terminating error
+Write-Warning 'message' :: a warning (not an error)

@@ -1,0 +1,10 @@
+SYNOPSIS: Stops Data Deduplication on a volume.
+DESCRIPTION:
+Disable-DedupVolume stops new optimization on the volume. The trap: files already optimized stay optimized, and the volume still needs the deduplication filter to read them. To turn them back into normal files, run an Unoptimization job first and make sure the volume has room for the full-size files.
+PARAMETER Volume:
+The volume or volumes. Position 0.
+EXAMPLE: Start-DedupJob -Volume E: -Type Unoptimization -Wait
+Rehydrates the optimized files first.
+EXAMPLE: Disable-DedupVolume -Volume E:
+Then turns deduplication off.
+RELATED: Enable-DedupVolume, Start-DedupJob, Get-DedupVolume

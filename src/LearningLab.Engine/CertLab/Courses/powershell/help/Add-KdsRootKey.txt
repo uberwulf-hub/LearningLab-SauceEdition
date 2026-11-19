@@ -1,0 +1,15 @@
+SYNOPSIS: Creates the KDS root key that group managed service accounts need.
+DESCRIPTION:
+Domain controllers compute the passwords of group managed service accounts (gMSAs) from a Key Distribution Service root key. Each forest needs one before the first gMSA can be created; run this once, as a Domain Admin or Enterprise Admin.
+A trap: a new key can be used only from its effective time, which is 10 hours after it is added unless you say otherwise. The wait gives every domain controller time to replicate it. -EffectiveImmediately doesn't remove the wait in a real forest; the usual lab shortcut is -EffectiveTime ((Get-Date).AddHours(-10)), which is fine in a test lab with one domain controller but not in production.
+PARAMETER EffectiveImmediately:
+Sets the effective time to now (other domain controllers still need replication before they can use it).
+PARAMETER EffectiveTime:
+When the key may first be used.
+PARAMETER LocalTestOnly:
+Only tests the key on this domain controller, without saving it.
+EXAMPLE: Add-KdsRootKey -EffectiveImmediately
+Adds the root key; in production, wait 10 hours before creating gMSAs.
+EXAMPLE: Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))
+Lab only: a key that counts as already in effect.
+RELATED: Get-KdsRootKey, New-ADServiceAccount

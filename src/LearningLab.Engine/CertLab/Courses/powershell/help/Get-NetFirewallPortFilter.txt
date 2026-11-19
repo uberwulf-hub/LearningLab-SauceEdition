@@ -1,0 +1,16 @@
+SYNOPSIS: Shows the protocol and ports of firewall rules.
+DESCRIPTION:
+A firewall rule keeps its details in separate filter objects. Get-NetFirewallPortFilter shows the port part: Protocol (TCP, UDP, ICMPv4...), LocalPort, RemotePort and IcmpType.
+
+Pipe rules from Get-NetFirewallRule to it to see which ports they open or block. Run on its own, it shows the port filter of every rule.
+PARAMETER AssociatedNetFirewallRule:
+The rules whose port filters you want, usually from the pipeline.
+EXAMPLE: Get-NetFirewallRule -DisplayGroup 'Remote Desktop' | Get-NetFirewallPortFilter
+The protocol and port of each Remote Desktop rule: TCP 3389 and UDP 3389.
+EXAMPLE: Get-NetFirewallRule -Name WINRM-HTTP-In-TCP | Get-NetFirewallPortFilter | Select-Object Protocol, LocalPort
+Shows that WinRM uses TCP 5985.
+EXAMPLE: Get-NetFirewallRule -Direction Inbound -Enabled True | Where-Object { ($_ | Get-NetFirewallPortFilter).LocalPort -eq '445' }
+Which enabled inbound rules mention port 445.
+NOTES:
+Ports are text: compare with '445' and expect values like Any or RPC. To change a port, use Set-NetFirewallRule -LocalPort. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Get-NetFirewallRule, Get-NetFirewallAddressFilter, Set-NetFirewallRule

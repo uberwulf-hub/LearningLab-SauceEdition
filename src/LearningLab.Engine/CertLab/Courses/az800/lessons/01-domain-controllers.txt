@@ -1,0 +1,279 @@
+# Unit: u01 | 1. Domain controllers, forests and trusts | AD DS
+
+Active Directory Domain Services (AD DS) is the directory most Windows networks run on: user and computer accounts, groups, Group Policy and the Kerberos sign-in all live in it. The servers that hold a copy of the directory are the **domain controllers** (DCs). This unit covers adding domain controllers (writable and read-only), what forests, domains and functional levels are, and how two forests come to trust each other. Harborline's network has one forest and one domain, `corp.example`, with two DCs: DC1 at head office and DC2 at the branch.
+
+## Lesson: l0101 | Deploying domain controllers
+
+A domain controller is an ordinary Windows Server with the **Active Directory Domain Services** role, which has been **promoted**: it receives a full copy of the domain's directory from another DC, a share called SYSVOL (Group Policy files and logon scripts) and a NETLOGON share, and it starts answering sign-ins. Every domain should have at least **two** DCs so that sign-ins and changes keep working when one is down.
+
+Promotion is two steps:
+
+- Add the role: `Install-WindowsFeature AD-Domain-Services -IncludeManagementTools` (or Server Manager > Add roles and features). This only copies the binaries; the server is not a DC yet.
+- Promote it with the ADDSDeployment module. For an extra DC in an existing domain that is `Install-ADDSDomainController`; Server Manager's notification flag offers the same wizard ("Promote this server to a domain controller").
+
+The useful parameters of `Install-ADDSDomainController`:
+
+- `-DomainName corp.example`: the domain to join as a DC. `-Credential` when you aren't signed in as a domain administrator.
+- `-InstallDns`: also make it a DNS server for the domain's AD-integrated zones. Normal for most DCs.
+- `-SiteName HQ`: the Active Directory site to put it in (unit 3). Without it the server goes to the site that matches its IP subnet.
+- `-SafeModeAdministratorPassword`: the **Directory Services Restore Mode** (DSRM) password, used to start the DC in repair mode. It is asked for if you leave it out.
+- `-NoGlobalCatalog`: a new DC is a **global catalog** server unless you say otherwise. Leave it as a GC: in a single-domain forest every DC should be one.
+- `-ReplicationSourceDC DC1`: the DC to copy the directory from (default: any DC).
+- `-ReadOnlyReplica`: make it a read-only DC (next lesson).
+- `-InstallationMediaPath`: **install from media** (IFM). On a DC you create the media with `ntdsutil` ("ifm", then "create sysvol full C:\IFM"), carry it to the new server, and the promotion reads most of the directory from it instead of copying it over a slow link. Only the changes since the media was made then come over the network.
+
+The promotion restarts the server at the end. Afterwards its computer account is in the **Domain Controllers** OU and `Get-ADDomainController` lists it.
+
+```terminal
+PS C:\Windows\system32> Get-ADDomainController -Filter * | Format-Table Name, Site, IsGlobalCatalog, IsReadOnly
+
+Name Site IsGlobalCatalog IsReadOnly
+---- ---- --------------- ----------
+DC1  HQ   True            False
+DC2  HQ   True            False
+```
+
+### New forests and new domains
+
+The first DC of a brand new forest is made with `Install-ADDSForest -DomainName corp.example -DomainNetbiosName CORP -InstallDns` on a stand-alone server. A new domain inside an existing forest uses `Install-ADDSDomain`: `-DomainType ChildDomain` for a child such as `sales.corp.example` (it shares the parent's DNS name space), or `-DomainType TreeDomain` for a new tree with its own name space in the same forest. Each new domain gets automatic **two-way transitive** trusts with its parent (or the forest root), so every domain in a forest trusts every other one.
+
+> Cert Lab's network already has its forest, so `Install-ADDSForest` explains itself instead of building one. On the exam, remember which cmdlet does what: Forest = new forest, Domain = new domain in a forest, DomainController = another DC in an existing domain.
+
+### Functional levels
+
+The **domain functional level** and **forest functional level** say which Windows Server versions the DCs must at least run, and so which features the directory may use. For Windows Server 2016, 2019 and 2022 the highest level is **Windows Server 2016** (`Windows2016Domain`, `Windows2016Forest`): there is no 2019 or 2022 level (Windows Server 2025 is the first version since then to add one, `Windows2025Domain` / `Windows2025Forest`). Raising a level is done with `Set-ADDomainMode` and `Set-ADForestMode` (or Active Directory Domains and Trusts) after the last older DC is gone, and it is in practice a one-way change. The level doesn't limit member servers or clients: a Windows 11 PC joins any domain.
+
+```terminal
+PS C:\Windows\system32> Get-ADForest | Select-Object Name, ForestMode, Domains, GlobalCatalogs
+
+Name         ForestMode        Domains        GlobalCatalogs
+----         ----------        -------        --------------
+corp.example Windows2016Forest {corp.example} {dc1.corp.example, dc2.corp.example}
+```
+
+@try
+@task t1 | AD DS | 10 | CORE1
+Harborline wants a third domain controller at head office. Make the Server Core machine **CORE1** a writable domain controller of `corp.example` with DNS, in the site **HQ**. Use any DSRM password that meets the domain's rules (for example `Dsrm#Pass2026`).
+@check admin | CORE1 is a writable DC in HQ with its own copy of the directory
+dc["CORE1"].readonly == No
+dc["CORE1"].site == HQ
+@CORE1 user["bcole"].department == Sales
+@check admin | CORE1 is a DNS server and a global catalog
+feature(CORE1, "DNS") == Installed
+dc["CORE1"].gc == Yes
+@hint Add the AD-Domain-Services role first (if the console says a restart is needed, restart with Restart-Computer), then Install-ADDSDomainController with -InstallDns and -SiteName.
+@solution CORE1
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Restart-Computer -Force
+Install-ADDSDomainController -DomainName corp.example -InstallDns -SiteName HQ -SafeModeAdministratorPassword (ConvertTo-SecureString 'Dsrm#Pass2026' -AsPlainText -Force) -Force
+@explain
+Adding the role only installs the binaries; Install-ADDSDomainController does the promotion: a copy of the directory, SYSVOL, DNS with -InstallDns and the global catalog by default. -Force skips the "are you sure" question and the server restarts when it is done.
+@endtask
+@end
+
+@quiz
+? A server has the AD DS role installed but nobody has run the promotion yet. What is it?
+- A domain controller that hasn't replicated yet
++ An ordinary member server: the role only installs the binaries
+- A read-only domain controller
+! Install-WindowsFeature AD-Domain-Services only adds the files; Install-ADDSDomainController (or the Server Manager wizard) makes it a DC.
+? Which cmdlet adds `sales.corp.example` as a child domain of `corp.example`?
+- Install-ADDSForest
+- Install-ADDSDomainController
++ Install-ADDSDomain with -DomainType ChildDomain
+! Install-ADDSDomain creates a new domain in an existing forest; Install-ADDSDomainController adds a DC to a domain that already exists.
+? What is the highest domain functional level when every DC runs Windows Server 2022?
+- Windows Server 2022
+- Windows Server 2019
++ Windows Server 2016
+! Windows Server 2019 and 2022 brought no new functional level; Windows Server 2016 is the highest for them.
+? A branch has a very slow link to head office. How do you avoid copying the whole directory over it when you promote a new DC there?
+- Promote it with -NoGlobalCatalog
++ Install from media: create IFM media with ntdsutil on a DC and promote with -InstallationMediaPath
+- Promote it at head office with -SiteName HQ and move it later
+! Install from media seeds the new DC from a copy of the database; only the newer changes travel over the link.
+@end
+
+## Lesson: l0102 | Read-only domain controllers
+
+A **read-only domain controller** (RODC) holds a copy of the directory that can't be changed. It is meant for places where a server isn't physically safe, such as a branch office with the server under a desk. What makes it safer:
+
+- **One-way replication**: an RODC only receives changes, it never sends any. A change made "on" an RODC is passed to a writable DC instead.
+- **No passwords by default**: an RODC stores the password hashes only of accounts that its **Password Replication Policy** (PRP) allows. Anyone else signs in by the RODC forwarding the request to a writable DC. If the RODC is stolen, only the cached passwords are exposed, and you can reset exactly those.
+- **Administrator role separation**: you can name a user or group as the RODC's local administrator (`-DelegatedAdministratorAccountName`) without giving them any rights in the domain.
+- **Read-only DNS**: an RODC with DNS answers queries but sends dynamic updates on to a writable DC.
+
+The Password Replication Policy uses two domain local groups that every domain has:
+
+- **Allowed RODC Password Replication Group**: empty at the start. Add the branch's users (and their computers) so they can sign in from the RODC's cache when the link to head office is down. `-AllowPasswordReplicationAccountName` at promotion adds accounts to the RODC's own allowed list.
+- **Denied RODC Password Replication Group**: Domain Admins, Enterprise Admins, Schema Admins, Cert Publishers, Group Policy Creator Owners, krbtgt and the domain controllers. **Deny wins** over allow, so administrators' passwords never land on an RODC.
+
+You can see and change the policy on the RODC's computer object (tab **Password Replication Policy**), and fill the cache in advance with `repadmin /rodcpwdrepl`. An RODC needs a writable DC running Windows Server 2008 or later in the domain to replicate from.
+
+### Promoting an RODC
+
+```terminal
+#setup admin:new site name=Branch
+#setup CORE1:Install-WindowsFeature AD-Domain-Services
+#setup CORE1:Restart-Computer -Force
+#machine CORE1
+PS C:\Windows\system32> Install-ADDSDomainController -DomainName corp.example -ReadOnlyReplica -SiteName Branch -InstallDns -SafeModeAdministratorPassword (ConvertTo-SecureString 'Dsrm#Pass2026' -AsPlainText -Force) -Force
+
+Message                          Context           RebootRequired Status
+-------                          -------           -------------- ------
+Operation completed successfully DCPromo.General.1 True           Success
+
+
+
+[CORE1 restarted. A new PowerShell window opened.]
+```
+
+`-SiteName` is required for an RODC. A **staged** installation is also possible: an administrator creates the RODC's account first (`Add-ADDSReadOnlyDomainControllerAccount`, or "Pre-create Read-only Domain Controller account" in Users and Computers), and someone at the branch with no domain rights finishes the promotion later.
+
+> Exam pattern: "users at the branch must be able to sign in when the WAN link is down, but no administrator password may be stored there" = an RODC, the branch users in the Allowed RODC Password Replication Group, and the administrators left in the Denied group.
+
+@try
+@setup admin
+new site name=Branch
+new subnet name=10.20.0.0/24 site=Branch
+@task t1 | AD DS | 10 | CORE1
+CORE1 is being built at head office and will be shipped to the warehouse in the branch. Make it a **read-only** domain controller of `corp.example` in the site **Branch**, with DNS.
+@check admin | CORE1 is a read-only DC in Branch
+dc["CORE1"].readonly == Yes
+dc["CORE1"].site == Branch
+feature(CORE1, "DNS") == Installed
+@hint Install-ADDSDomainController -ReadOnlyReplica -SiteName Branch -InstallDns (after adding the AD-Domain-Services role).
+@solution CORE1
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Restart-Computer -Force
+Install-ADDSDomainController -DomainName corp.example -ReadOnlyReplica -SiteName Branch -InstallDns -SafeModeAdministratorPassword (ConvertTo-SecureString 'Dsrm#Pass2026' -AsPlainText -Force) -Force
+@explain
+-ReadOnlyReplica makes the read-only copy, and an RODC must be told its site. The server can be promoted anywhere and shipped later: it is the site that counts.
+@endtask
+@task t2 | AD DS | 10 | admin
+The branch's people are in the **Sales** group. Allow their passwords to be cached on read-only domain controllers, without touching the Denied group.
+@check admin | Sales is allowed and not in the Denied group
+group["Allowed RODC Password Replication Group"].members has Sales
+group["Denied RODC Password Replication Group"].allmembers !has Sales
+@hint Add the group to Allowed RODC Password Replication Group (Users container).
+@solution admin
+members add "Allowed RODC Password Replication Group" Sales
+@explain
+The two domain local groups are the domain-wide part of every RODC's password replication policy. A member of both is denied: deny wins.
+@endtask
+@end
+
+@quiz
+? An RODC at a branch is stolen. Which passwords should you reset?
+- Every password in the domain
++ The accounts whose passwords were cached on that RODC
+- Only the krbtgt account's
+! An RODC only holds the passwords its Password Replication Policy allowed; Users and Computers lists them when you delete the RODC's account and offers to reset them.
+? A user is in both the Allowed and the Denied RODC Password Replication Group. Is the password cached?
+- Yes, allow is checked first
++ No, deny wins
+- Only if the user signed in at the branch
+! As with permissions, an explicit deny in the Password Replication Policy beats an allow.
+? Which parameter is required for Install-ADDSDomainController -ReadOnlyReplica?
+- -NoGlobalCatalog
++ -SiteName
+- -InstallationMediaPath
+! An RODC is always placed in a site; the cmdlet refuses to run without -SiteName.
+@end
+
+## Lesson: l0103 | Trusts and UPN suffixes
+
+A **trust** lets accounts of one domain or forest be used on the resources of another. Two words matter: the **trusting** side holds the resources, the **trusted** side holds the accounts. Access goes the opposite way to the trust: if `corp.example` trusts `tidewater.example`, Tidewater's people can be given access to Harborline's files.
+
+### Kinds of trust
+
+- **Parent-child and tree-root** trusts: made automatically inside a forest, two-way and **transitive** (if A trusts B and B trusts C, A trusts C).
+- **Forest** trust: between the root domains of two forests. Transitive for all the domains of both forests (but not on to a third forest). Uses Kerberos. The usual choice when two companies merge or partner.
+- **External** trust: to one particular domain in another forest (or an old NT 4.0 domain). **Not transitive**. SID filtering is on by default.
+- **Shortcut** trust: between two domains of the **same** forest, to shorten the Kerberos referral path between domains deep in different trees. Transitive.
+- **Realm** trust: to a non-Windows Kerberos v5 realm (for example a Linux or UNIX realm). Can be transitive or not.
+
+Each trust has a **direction**: one-way incoming, one-way outgoing, or two-way (bidirectional). And each forest or external trust has an **authentication scope**:
+
+- **Forest-wide** (domain-wide) authentication: every account of the trusted side can authenticate to every computer of the trusting side; permissions on the files still decide what they can open.
+- **Selective authentication**: nobody from the other side can authenticate to a computer until you grant them **Allowed to authenticate** on that computer's account (Security tab of the computer object). Use it when the partner should reach only a few servers.
+
+### DNS comes first
+
+Creating a trust starts by finding a DC of the other forest in DNS (its `_ldap._tcp` SRV records). Each side must be able to resolve the other's domain name, usually with a **conditional forwarder** (DNS Manager > Conditional Forwarders, or `Add-DnsServerConditionalForwarderZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest`), sometimes a stub or secondary zone. Without it the wizard stops with "the specified domain either does not exist or could not be contacted".
+
+Trusts are created in **Active Directory Domains and Trusts** (domain properties > Trusts > New Trust) or with `netdom trust`. `Get-ADTrust -Filter *` lists them.
+
+```terminal
+#setup admin:dns zone add server=DC1 name=tidewater.example type=Forwarder masters=192.168.50.10 ad=Forest
+#setup admin:trust create tidewater.example type=Forest direction=Bidirectional auth=Selective
+PS C:\Windows\system32> Get-ADTrust -Filter * | Format-Table Name, Direction, ForestTransitive, SelectiveAuthentication
+
+Name              Direction     ForestTransitive SelectiveAuthentication
+----              ---------     ---------------- -----------------------
+tidewater.example Bidirectional True             True
+```
+
+### UPN suffixes
+
+People sign in with a **user principal name** (UPN) such as `bcole@corp.example`. The part after the @ is a **UPN suffix**. By default only the domain's own DNS names are offered; to let people sign in with the company's public name (`bcole@harborline.example`), add the suffix to the forest in Active Directory Domains and Trusts (right-click the top node > Properties) or with `Set-ADForest -UPNSuffixes @{Add='harborline.example'}`, then set it on the users. This matters most for hybrid identity (unit 6): Microsoft Entra Connect uses the UPN as the cloud sign-in name, so it must end in a domain the tenant has verified. Forest trusts also route names by suffix (**name suffix routing**).
+
+```terminal
+#setup admin:upnsuffix add harborline.example
+PS C:\Windows\system32> Get-ADForest | Select-Object -ExpandProperty UPNSuffixes
+harborline.example
+```
+
+@try
+@task t1 | AD DS | 10 | admin
+Harborline and its partner Tidewater Freight (forest `tidewater.example`, DNS server 192.168.50.10, reachable over the VPN) will share a few servers. First make Harborline's DNS servers able to find `tidewater.example`, stored in Active Directory for the whole forest.
+@check admin | DC1 forwards tidewater.example to 192.168.50.10
+dns(DC1).conditional["tidewater.example"] has 192.168.50.10
+@hint DNS Manager: a conditional forwarder (dns zone add type=Forwarder) with the AD option "all DNS servers in this forest".
+@solution admin
+dns zone add server=DC1 name=tidewater.example type=Forwarder masters=192.168.50.10 ad=Forest
+@endtask
+@task t2 | AD DS | 10 | admin
+Create a two-way **forest** trust with `tidewater.example`. Tidewater's staff must reach only the servers that you allow one by one.
+@check admin | a bidirectional forest trust with selective authentication
+trust["tidewater.example"].type == Forest
+trust["tidewater.example"].direction == Bidirectional
+trust["tidewater.example"].selective == Yes
+@hint "Only the servers you allow" is selective authentication (auth=Selective).
+@solution admin
+trust create tidewater.example type=Forest direction=Bidirectional auth=Selective
+@endtask
+@task t3 | AD DS | 10 | admin
+Bianca Cole will be the first to sign in with the public name. Add the UPN suffix **harborline.example** to the forest and change her sign-in name to `bcole@harborline.example`.
+@check admin | the suffix exists and Bianca uses it
+forest.upnsuffixes has harborline.example
+user["bcole"].upn == bcole@harborline.example
+@solution admin
+upnsuffix add harborline.example
+set user "bcole" upn=bcole@harborline.example
+@endtask
+@end
+
+@quiz
+? corp.example has a one-way trust: corp.example trusts tidewater.example. Who can be given access to what?
++ Tidewater's users to Harborline's resources
+- Harborline's users to Tidewater's resources
+- Both, because forest trusts are always two-way
+! The trusting domain (corp.example) holds the resources; the trusted domain (tidewater.example) holds the accounts.
+? Which trust is not transitive?
+- Forest
+- Shortcut
++ External
+! An external trust reaches only the one domain it was made with.
+? Creating a trust fails with "the specified domain either does not exist or could not be contacted". What is the likely fix?
+- Raise the forest functional level
++ Add a conditional forwarder (or stub zone) for the other forest's DNS domain
+- Enable selective authentication
+! The trust wizard locates the other forest's domain controllers through DNS.
+? With selective authentication, what must you set before a partner user can open a share on FS1?
+- Add the user to Domain Users
++ Grant the user (or their group) Allowed to authenticate on FS1's computer object, plus the share and NTFS permissions
+- Nothing else: selective authentication only logs the access
+! Selective authentication blocks authentication to every computer that hasn't granted Allowed to authenticate.
+@end
+

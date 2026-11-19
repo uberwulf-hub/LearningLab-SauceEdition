@@ -1,0 +1,11 @@
+SYNOPSIS: Shows BitLocker Drive Encryption on the computer's volumes.
+DESCRIPTION:
+Get-BitLockerVolume returns one object per volume with its VolumeStatus (FullyEncrypted, FullyDecrypted, EncryptionInProgress), ProtectionStatus (On or Off), EncryptionMethod (for example XtsAes128) and its KeyProtector list (Tpm, RecoveryPassword...).
+On a managed device, a disk encryption policy from Intune can turn BitLocker on silently; this command is how you check the result on the PC itself.
+PARAMETER MountPoint:
+Drive letters such as C:. Without it, every volume. Position 0.
+EXAMPLE: Get-BitLockerVolume -MountPoint C:
+Is the system drive encrypted, and is protection on?
+EXAMPLE: (Get-BitLockerVolume C:).KeyProtector
+Which protectors unlock the drive: a TPM, a recovery password...
+RELATED: Get-Tpm, Confirm-SecureBootUEFI

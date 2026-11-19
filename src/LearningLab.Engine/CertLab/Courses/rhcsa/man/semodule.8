@@ -1,0 +1,29 @@
+NAME
+       semodule - manage SELinux policy modules
+
+SYNOPSIS
+       semodule -l
+       semodule -i MODULE.pp
+       semodule -r MODULE
+
+DESCRIPTION
+       The SELinux policy is built from modules, one per service or area
+       (apache, ssh, container...). semodule lists, installs and removes
+       them. Custom modules are usually made by audit2allow -M from logged
+       denials; on the RHCSA you fix labels, ports and booleans instead.
+
+OPTIONS
+       -l, --list-modules
+              List the installed modules.
+
+       -i, --install MODULE.pp
+              Install a compiled module.
+
+       -r, --remove MODULE
+              Remove a module.
+
+EXAMPLES
+           semodule -l | grep apache
+
+SEE ALSO
+       audit2allow(1), semanage(8), sestatus(8)

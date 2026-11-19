@@ -1,0 +1,120 @@
+# Lab: lab-02 | Writing shell scripts | u02 | 40
+Five scripts of the kind the exam asks for: arguments, tests, loops and the output of other commands. Every script must start with #!/bin/bash and be executable. Write them with vi, nano or cat and a here-document, and run each one a few times with different input before you check.
+
+@setup server1
+curl -s -o /root/report.csv http://utility.lab.example.com/files/report.csv
+
+@task t01 | Shell scripts | 10 | server1
+Write the script /usr/local/bin/backup-etc. Each time it runs it must create the folder /root/backups if it does not exist yet, and write a gzip-compressed tar archive of /etc named /root/backups/etc-DATE.tar.gz, where DATE is today's date in the form 2026-03-02 (what `date +%F` prints).
+@check server1 | the script is executable and starts with #!/bin/bash
+test -x /usr/local/bin/backup-etc && head -1 /usr/local/bin/backup-etc | grep -q '^#! */bin/bash'
+@check server1 | running it creates today's gzip archive of /etc
+rm -f /root/backups/etc-$(date +%F).tar.gz; /usr/local/bin/backup-etc >/dev/null 2>&1; file /root/backups/etc-$(date +%F).tar.gz | grep -q 'gzip compressed' && tar -tzf /root/backups/etc-$(date +%F).tar.gz | grep -q 'etc/hosts$'
+@hint mkdir -p does nothing if the folder exists. Put $(date +%F) inside the file name.
+@solution server1
+cat > /usr/local/bin/backup-etc <<'EOF'
+#!/bin/bash
+mkdir -p /root/backups
+tar -czf /root/backups/etc-$(date +%F).tar.gz /etc 2>/dev/null
+EOF
+chmod 755 /usr/local/bin/backup-etc
+bash -n /usr/local/bin/backup-etc
+@explain
+$(date +%F) runs date each time the script runs, so the name changes every day. The here-document uses <<'EOF' with quotes; without them the shell would put today's date into the script while you write it, and the name would never change. mkdir -p makes the script safe to run twice. 2>/dev/null hides tar's note about the leading slash.
+@endtask
+
+@task t02 | Shell scripts | 10 | server1
+Write an executable script /root/userinfo.sh that takes a user name as its only argument. For an existing user it prints one line: `USER uses SHELL and lives in HOME` (for example `student uses /bin/bash and lives in /home/student`). For a user that does not exist it prints `USER: no such user` and ends with exit code 1.
+@check server1 | student gives the right line
+test "$(/root/userinfo.sh student)" = 'student uses /bin/bash and lives in /home/student'
+@check server1 | root gives the right line
+test "$(/root/userinfo.sh root)" = 'root uses /bin/bash and lives in /root'
+@check server1 | an unknown user gives the message and exit code 1
+out=$(/root/userinfo.sh ghost42 2>&1); test $? -eq 1 && test "$out" = 'ghost42: no such user'
+@hint getent passwd USER prints the user's line, or nothing (and exit code 2) for an unknown user. Fields 6 and 7 (cut -d: -f6 and -f7) are the home and the shell.
+@solution server1
+cat > /root/userinfo.sh <<'EOF'
+#!/bin/bash
+line=$(getent passwd "$1")
+if [ -z "$line" ]; then
+  echo "$1: no such user"
+  exit 1
+fi
+home=$(echo "$line" | cut -d: -f6)
+shell=$(echo "$line" | cut -d: -f7)
+echo "$1 uses $shell and lives in $home"
+EOF
+chmod +x /root/userinfo.sh
+/root/userinfo.sh student
+@explain
+The script keeps the output of getent in a variable and tests it with -z (empty). Testing the exit code works as well: if ! getent passwd "$1" >/dev/null; then ... Then cut takes fields out of the saved line. Quote "$line" when you echo it, and quote "$1" everywhere.
+@endtask
+
+@task t03 | Shell scripts | 10 | server1
+Write the script /usr/local/bin/countlines. For every file named on its command line it prints `FILE: N`, where N is the number of lines in that file, one line per file in the order given. Run without arguments, it prints `Usage: countlines FILE...` to standard error and ends with exit code 1.
+@check server1 | countlines /etc/hosts /etc/hostname prints both counts
+test "$(/usr/local/bin/countlines /etc/hosts /etc/hostname)" = "$(printf '/etc/hosts: %s\n/etc/hostname: %s' $(wc -l < /etc/hosts) $(wc -l < /etc/hostname))"
+@check server1 | without arguments it exits with code 1 and prints nothing on standard output
+out=$(/usr/local/bin/countlines 2>/dev/null); test $? -eq 1 && test -z "$out"
+@hint Check $# first. Then for f in "$@"; do ... done, and wc -l < "$f" gives just the number.
+@solution server1
+cat > /usr/local/bin/countlines <<'EOF'
+#!/bin/bash
+if [ $# -eq 0 ]; then
+  echo "Usage: countlines FILE..." >&2
+  exit 1
+fi
+for f in "$@"; do
+  echo "$f: $(wc -l < "$f")"
+done
+EOF
+chmod 755 /usr/local/bin/countlines
+@explain
+"$@" loops over the arguments one by one. wc -l FILE prints the number and the name; with < the file comes in on standard input, so wc prints only the number. The usage message goes to standard error with >&2, which is why the check sees nothing on standard output.
+@endtask
+
+@task t04 | Shell scripts | 10 | server1
+/root/report.csv lists services in the form host,service,port (the first line is a header). Write an executable script /root/services.sh that takes a host name as its argument and prints, for every line of that host, `SERVICE PORT` (for example `sshd 22`), in file order.
+@check server1 | server1 gives sshd 22 and httpd 80
+test "$(/root/services.sh server1)" = "$(printf 'sshd 22\nhttpd 80')"
+@check server1 | server2 gives sshd 22 and chronyd 123
+test "$(/root/services.sh server2)" = "$(printf 'sshd 22\nchronyd 123')"
+@hint while IFS=, read -r host service port; do ... done < /root/report.csv splits each line at the commas.
+@solution server1
+cat > /root/services.sh <<'EOF'
+#!/bin/bash
+while IFS=, read -r host service port; do
+  if [ "$host" = "$1" ]; then
+    echo "$service $port"
+  fi
+done < /root/report.csv
+EOF
+chmod +x /root/services.sh
+/root/services.sh server1
+@explain
+IFS=, makes read split the line at commas into the three variables. The header line has host = "host", so it never matches a real host name. grep "^$1," /root/report.csv | cut -d, -f2,3 | tr , ' ' gives the same result in one pipe.
+@endtask
+
+@task t05 | Shell scripts | 15 | server1
+Write an executable script /root/cleanup.sh that takes a folder as its argument, removes every file directly in that folder whose name ends in `.tmp`, and then prints `Removed N files` with the number it removed (also `Removed 0 files` when there were none). Other files must stay.
+@check server1 | in a folder with two .tmp files and one other file it removes the two and reports 2
+rm -rf /tmp/certlab-clean; mkdir /tmp/certlab-clean && touch /tmp/certlab-clean/a.tmp /tmp/certlab-clean/b.tmp /tmp/certlab-clean/keep.txt && test "$(/root/cleanup.sh /tmp/certlab-clean)" = 'Removed 2 files' && test ! -e /tmp/certlab-clean/a.tmp && test ! -e /tmp/certlab-clean/b.tmp && test -e /tmp/certlab-clean/keep.txt
+@check server1 | in a folder without .tmp files it reports 0
+rm -rf /tmp/certlab-clean2; mkdir /tmp/certlab-clean2 && touch /tmp/certlab-clean2/keep.txt && test "$(/root/cleanup.sh /tmp/certlab-clean2)" = 'Removed 0 files'
+@hint Loop over "$1"/*.tmp, test -f each name (with no match the pattern stays as it is), remove it and add 1 to a counter.
+@solution server1
+cat > /root/cleanup.sh <<'EOF'
+#!/bin/bash
+count=0
+for f in "$1"/*.tmp; do
+  if [ -f "$f" ]; then
+    rm -f "$f"
+    count=$((count + 1))
+  fi
+done
+echo "Removed $count files"
+EOF
+chmod +x /root/cleanup.sh
+@explain
+When no file matches, bash leaves the pattern unchanged, so the loop runs once with f set to the text DIR/*.tmp. The -f test skips that case, which keeps the count right. The counter starts at 0 and $((count + 1)) adds one. rm -f never stops to ask a question (aliases such as root's rm -i do not apply inside scripts anyway).
+@endtask

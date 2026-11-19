@@ -1,0 +1,43 @@
+{
+    "id": "swap-meet",
+    "title": "Swap Meet",
+    "category": "red",
+    "level": "Beginner",
+    "order": 3,
+    "summary": "A tiny shop server with a shared folder that overshares and a sudo rule that trusts the wrong tool. Which tool it trusts changes every time - find out, then use it.",
+    "story": "{{CO}} (a made-up shop) runs one server, store1, on 10.10.11.0/24. You start on scout. The server shares a folder with anyone, and a staff account can run one program as root - but which program is different on every system you meet.",
+    "goal": "Capture the user flag in a staff home folder and the root flag in /root.",
+    "skills": "host discovery, anonymous FTP, ssh, sudo -l, abusing a trusted tool",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 25,
+    "vars": {
+        "CO": "company",
+        "USER": "person",
+        "PW1": "word",
+        "WEAK": "pick:find|awk|sed"
+    },
+    "variants": {
+        "WEAK": {
+            "find": { "SUDOBIN": "/usr/bin/find", "SUDORUN": "sudo find /root -name flag.txt -exec cat {} \\;" },
+            "awk":  { "SUDOBIN": "/usr/bin/awk",  "SUDORUN": "sudo awk '{ print }' /root/flag.txt" },
+            "sed":  { "SUDOBIN": "/usr/bin/sed",  "SUDORUN": "sudo sed -n p /root/flag.txt" }
+        }
+    },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.11.5/24" ] },
+        { "name": "store1", "os": "linux", "hostname": "store1.{{CO_DOMAIN}}", "role": "shop server", "nics": [ "10.10.11.20/24" ], "packages": [ "vsftpd" ], "setup": "store1.sh",
+          "versions": { "21": "vsftpd 3.0.5" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "{{USER_FIRST}}'s flag", "points": 100, "machine": "store1", "path": "/home/{{USER}}/flag.txt", "owner": "{{USER}}", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 150, "machine": "store1", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "What to think about first: look before you act. Find the one server, see what services it offers, and look for anything left open to the public. Once you are inside, the next question is always 'what am I allowed to do here that I shouldn't be?'", "cost": 3 },
+        { "text": "'nmap -sn 10.10.11.0/24' finds the machines that answer (no port checks). 'nmap -sV 10.10.11.20' then lists the server's open ports and what runs on them. Port 21 is FTP, a file-sharing service; port 22 is ssh, for signing in remotely.", "cost": 5 },
+        { "text": "Many FTP servers let anyone in as the user 'anonymous' with any password, for public downloads. Run 'ftp 10.10.11.20', type anonymous, then anything as the password. 'cd pub', 'ls', 'get new-staff.txt', 'bye', then 'cat new-staff.txt'. It is a welcome note with {{USER}}'s temporary password.", "cost": 8 },
+        { "text": "Sign in with that password: 'ssh {{USER}}@10.10.11.20' (answer yes to the new-host question). 'cat flag.txt' in the home folder is the user flag. Then 'sudo -l': it lists the one program {{USER}} may run as root. Which one changes every run - this time it is {{SUDOBIN}}.", "cost": 12 },
+        { "text": "{{SUDOBIN}} can read any file (some such tools can even start other programs), and with sudo it does that as root. So it can print root's flag for you. On this run: {{SUDORUN}}. The lesson: sudo should only ever allow an exact, harmless command, never a general-purpose tool.", "cost": 16 }
+    ]
+}

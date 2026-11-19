@@ -1,0 +1,21 @@
+# Deck: output | Formatting and output | Output
+Show services as a table with Name and Status, columns sized to fit :: `Get-Service | Format-Table Name, Status -AutoSize`
+Show all properties of the Spooler service as a list :: `Get-Service Spooler | Format-List *`
+Show the file names in C:\Windows in 4 columns :: `Get-ChildItem C:\Windows | Format-Wide -Column 4`
+When does PowerShell show a list instead of a table? :: for objects without a view that have 5 or more properties
+Why should Format-Table come last? :: it outputs formatting instructions, not your objects
+Save the output to a file :: `Get-Service | Out-File C:\LabFiles\svc.txt`
+Save the output as ASCII :: `Get-Service | Out-File C:\LabFiles\svc.txt -Encoding ascii`
+Which encoding do > and Out-File use in Windows PowerShell 5.1? :: UTF-16 (Unicode)
+Add to the end of a file with redirection :: `Get-Date >> C:\LabFiles\log.txt`
+Send a command's errors nowhere :: `Get-Item C:\nope 2>$null`
+Throw away the output :: `Get-Service | Out-Null`
+The output as one string :: `Get-Service Spooler | Out-String`
+Save services as CSV without the #TYPE line :: `Get-Service | Select-Object Name, Status | Export-Csv C:\LabFiles\svc.csv -NoTypeInformation`
+Read a CSV file :: `Import-Csv C:\LabFiles\employees.csv`
+Read a semicolon-separated file :: `Import-Csv C:\LabFiles\shares.csv -Delimiter ';'`
+What type are the values from Import-Csv? :: always strings
+Read a JSON file into objects :: `Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json`
+Turn objects into JSON with deeper nesting than 2 levels :: `$data | ConvertTo-Json -Depth 5`
+JSON on one line :: `$data | ConvertTo-Json -Compress`
+Why can you not save Write-Host's text with > ? :: Write-Host writes to the console (information stream), not to the output

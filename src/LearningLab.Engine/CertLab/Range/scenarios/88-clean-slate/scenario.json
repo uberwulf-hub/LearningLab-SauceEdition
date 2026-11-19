@@ -1,0 +1,69 @@
+{
+    "id": "clean-slate",
+    "title": "A Clean Slate",
+    "category": "blue",
+    "level": "Advanced",
+    "order": 7,
+    "summary": "The PC's Security log is almost empty: someone cleared it. Luckily a copy of every event was also sent to your box as it happened. Rebuild what they hid and undo it.",
+    "story": "{{CO}} (made up) has a design PC, {{PC}}, on 10.10.28.0/24. Its Security log says only one thing: it was cleared. Your box, soc, keeps a forwarded copy of that log in /var/log/forwarded. You also have the PC's administrator password: {{ADMPW}} (winrm-shell -i 10.10.28.30 -u Administrator -p {{ADMPW}}).",
+    "goal": "Find who cleared the log and how, where they signed in from and the account they made; capture the flag in their pickup folder; then delete that account and the start-up file they left before the next sign-in copies the plans out.",
+    "skills": "event 1102 (log cleared), why logs are forwarded, the Startup folder, Remove-LocalUser, Remove-Item",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 35,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "copy the plans share out",
+    "goalPoints": 80,
+    "vars": {
+        "CO": "company",
+        "PC": "pick:WIN-DESIGN1|WIN-CAD02|WIN-STUDIO|WIN-DRAW4",
+        "STAFF": "person",
+        "VIC": "person",
+        "VICPW": "word",
+        "ADMPW": "word",
+        "ROGUEPW": "word",
+        "ATKIP": "ip",
+        "M": "num:10-39",
+        "T1": "05:{{M}}:11", "T2": "05:{{M}}:39", "T3": "05:4{{MD}}:02", "T4": "06:00:00", "MD": "num:1-9",
+        "ROGUE": "pick:svc_print|sqlhelper|winsupport",
+        "START": "pick:updater.cmd|onedrive-fix.cmd|teams-cache.cmd",
+        "HOW": "pick:wevtutil|powershell"
+    },
+    "variants": { "HOW": {
+        "wevtutil": { "CLEARPROG": "C:\\Windows\\System32\\wevtutil.exe", "CLEARCMD": "wevtutil cl Security" },
+        "powershell": { "CLEARPROG": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", "CLEARCMD": "powershell -c Clear-EventLog -LogName Security" } } },
+    "machines": [
+        { "name": "soc", "os": "linux", "hostname": "soc.range.example", "role": "your box (keeps forwarded logs)", "nics": [ "10.10.28.5/24" ], "setup": "soc.sh" },
+        { "name": "{{PC}}", "os": "windows", "server": false, "hostname": "{{LOWER:PC}}.{{CO_DOMAIN}}", "role": "design PC (yours)", "nics": [ "10.10.28.30/24" ],
+          "ports": [ 135, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{STAFF}}", "password": "{{VICPW}}x", "remote": true },
+            { "user": "{{VIC}}", "password": "{{VICPW}}", "admin": true }
+          ],
+          "events": [
+            { "log": "Security", "provider": "Microsoft-Windows-Eventlog", "id": 1102, "level": 4, "ago": "3h", "message": "The audit log was cleared. Subject: Account Name: {{VIC}}" }
+          ],
+          "setup": "pc.ps1" }
+    ],
+    "flags": [
+        { "id": "pickup", "name": "The flag in the pickup folder", "points": 70, "machine": "{{PC}}", "path": "C:\\Users\\Public\\Libraries\\cache\\readme.txt", "level": "admin" }
+    ],
+    "questions": [
+        { "id": "who", "ask": "Which account cleared the Security log?", "answer": "{{VIC}}", "points": 40, "explain": "Event 1102 on the PC names it, and the forwarded copy agrees." },
+        { "id": "how", "ask": "Which program did they use to clear it (wevtutil or powershell)?", "answer": "{{HOW}}", "accept": [ "{{CLEARCMD}}", "{{CLEARPROG}}" ], "points": 40, "explain": "The 4688 (new process) line just before the 1102 in the forwarded copy: {{CLEARCMD}}." },
+        { "id": "addr", "ask": "From what address did that account sign in?", "answer": "{{ATKIP}}", "points": 40, "explain": "The forwarded 4625 then 4624 (Logon Type 10) lines." },
+        { "id": "rogue", "ask": "What account did they create?", "answer": "{{ROGUE}}", "points": 40, "explain": "The forwarded 4720 and 4732 lines: created and added to Administrators." }
+    ],
+    "tasks": [
+        { "id": "user", "name": "Delete the account they created", "machine": "{{PC}}", "check": "if (Get-LocalUser -Name '{{ROGUE}}' -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-LocalUser -Name {{ROGUE}}" },
+        { "id": "startup", "name": "Remove the file they put in the Startup folder", "machine": "{{PC}}", "check": "if (Test-Path 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\{{START}}') { exit 1 } else { exit 0 }", "points": 40, "explain": "Remove-Item on the file in C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp" }
+    ],
+    "attacker": [
+        { "at": "360s", "machine": "{{PC}}", "run": "New-Item -ItemType Directory -Path 'C:\\Users\\Public\\Libraries\\cache' -Force | Out-Null; Copy-Item 'C:\\Shares\\Plans\\*' 'C:\\Users\\Public\\Libraries\\cache' -ErrorAction SilentlyContinue", "unless": "if (Test-Path 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\{{START}}') { exit 1 } else { exit 0 }", "note": "Someone signed in, the start-up file ran and copied the plans share into the public pickup folder.", "goal": true }
+    ],
+    "hints": [
+        { "text": "Clearing a log is itself logged (event 1102), so the clearing account is easy. Everything before it is gone from the PC - but not from your box: cat /var/log/forwarded/*.log on soc is a copy made as the events happened.", "cost": 15 },
+        { "text": "The forwarded copy shows the remote sign-in, the account made and the program that cleared the log. Things that run at every sign-in can sit in C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp. Remove that file and the account (Remove-LocalUser).", "cost": 25 }
+    ]
+}

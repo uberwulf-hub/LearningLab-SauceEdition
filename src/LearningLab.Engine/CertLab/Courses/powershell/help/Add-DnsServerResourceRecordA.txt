@@ -1,0 +1,24 @@
+SYNOPSIS: Adds a host (A) record that maps a name to an IPv4 address.
+DESCRIPTION:
+An A record ties a name such as app to an IPv4 address such as 10.10.0.60. Records added this way are static: they have no timestamp and scavenging never removes them, unless you add -AgeRecord.
+
+-CreatePtr also adds the matching PTR record in the reverse zone, if that reverse zone exists on the server. Several addresses for the same name give simple round robin: clients get them in turn.
+PARAMETER ZoneName:
+The zone to add to, for example corp.example.
+PARAMETER Name:
+The host name inside the zone, for example app (not the full name).
+PARAMETER IPv4Address:
+The address or addresses.
+PARAMETER CreatePtr:
+Adds the reverse (PTR) record as well.
+PARAMETER TimeToLive:
+How long clients may cache the answer, for example 01:00:00.
+PARAMETER AgeRecord:
+Gives the record a timestamp so aging and scavenging treat it like a dynamic record.
+PARAMETER AllowUpdateAny:
+Lets any authenticated user update the record later, not only its owner.
+EXAMPLE: Add-DnsServerResourceRecordA -ZoneName corp.example -Name app -IPv4Address 10.10.0.60 -CreatePtr -ComputerName DC1
+app.corp.example now points to 10.10.0.60, and 10.10.0.60 points back to it.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -Name app
+Checks the new record.
+RELATED: Add-DnsServerResourceRecord, Add-DnsServerResourceRecordCName, Add-DnsServerResourceRecordPtr, Remove-DnsServerResourceRecord, Get-DnsServerResourceRecord

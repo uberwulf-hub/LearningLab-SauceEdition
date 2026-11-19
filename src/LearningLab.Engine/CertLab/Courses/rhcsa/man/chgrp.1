@@ -1,0 +1,46 @@
+NAME
+       chgrp - change the group of files
+
+SYNOPSIS
+       chgrp [OPTION...] GROUP FILE...
+       chgrp [OPTION...] --reference=RFILE FILE...
+
+DESCRIPTION
+       chgrp sets the group that owns each FILE. GROUP can be a name or a
+       number. root may use any group; a file's owner may choose only a group
+       they are a member of.
+
+       chgrp GROUP FILE does the same as chown :GROUP FILE.
+
+OPTIONS
+       -R, --recursive
+              Change the files and directories inside each directory too.
+
+       -v, --verbose
+              Report every file processed.
+
+       -c, --changes
+              Report only the files that really changed.
+
+       -f, --silent, --quiet
+              Do not print most error messages.
+
+       -h, --no-dereference
+              Change a symbolic link itself, not the file it points to.
+
+       --reference=RFILE
+              Use RFILE's group.
+
+EXAMPLES
+       Make devs the group of a shared directory, then add set-group-ID so
+       new files get the same group:
+
+           chgrp devs /shared/devs
+           chmod g+s /shared/devs
+
+       Change the group of a whole tree:
+
+           chgrp -R wheel /srv/admin
+
+SEE ALSO
+       chown(1), chmod(1), groups(1), newgrp(1)

@@ -1,0 +1,100 @@
+NAME
+       podman-systemd.unit - Quadlet files: containers run by systemd
+
+SYNOPSIS
+       ~/.config/containers/systemd/NAME.container   (a rootless user)
+       /etc/containers/systemd/NAME.container        (root)
+
+DESCRIPTION
+       Quadlet lets you describe a container in a small file and have systemd
+       run it as a service. At boot and at every systemctl daemon-reload, a
+       systemd generator reads each NAME.container file and makes a service
+       unit NAME.service from it. You never write the podman run command
+       yourself.
+
+       Because the service is generated, it is not enabled with systemctl
+       enable: the [Install] section of the .container file says which
+       target starts it. For a rootless user that is default.target, and the
+       user needs lingering (loginctl enable-linger USER) for it to start at
+       boot without a login. For root use multi-user.target.
+
+       The file uses the same layout as other unit files: [Unit] and
+       [Service] work as usual, and the container itself is described in the
+       [Container] section.
+
+[CONTAINER] KEYS
+       Image=IMAGE
+              The image to run (required). Give the full name with the
+              registry.
+
+       ContainerName=NAME
+              The container's name. The default is systemd-NAME.
+
+       PublishPort=HOSTPORT:CONTAINERPORT
+              Publish a port, like podman run -p (repeatable).
+
+       Volume=HOSTDIR:CONTAINERDIR[:OPTIONS]
+              Mount a directory or named volume, like podman run -v; add :Z
+              for the SELinux label (repeatable).
+
+       Environment=NAME=VALUE
+              Set an environment variable (repeatable).
+
+       Exec=COMMAND
+              The command to run instead of the image's default.
+
+OTHER SECTIONS
+       [Unit] Description=TEXT
+              The service's description.
+
+       [Service] Restart=always|on-failure|no
+              Restart the container when it stops.
+
+       [Install] WantedBy=default.target
+              Start the service with this target.
+
+EXAMPLES
+       As student (logged in through ssh student@localhost), run the httpd
+       image as a service that starts at boot:
+
+           mkdir -p ~/.config/containers/systemd ~/web
+           vi ~/.config/containers/systemd/web.container
+
+       with this content:
+
+           [Unit]
+           Description=Web server in a container
+
+           [Container]
+           Image=registry.lab.example.com/ubi9/httpd-24
+           ContainerName=web
+           PublishPort=8080:8080
+           Volume=/home/student/web:/var/www/html:Z
+
+           [Service]
+           Restart=always
+
+           [Install]
+           WantedBy=default.target
+
+       then:
+
+           systemctl --user daemon-reload
+           systemctl --user start web.service
+           systemctl --user status web.service
+           loginctl enable-linger student
+
+       Show the unit that Quadlet generated:
+
+           systemctl --user cat web.service
+
+FILES
+       ~/.config/containers/systemd/
+              A rootless user's Quadlet files.
+
+       /etc/containers/systemd/
+              Root's Quadlet files.
+
+SEE ALSO
+       podman(1), podman-run(1), podman-generate-systemd(1), systemctl(1),
+       systemd.unit(5), loginctl(1)

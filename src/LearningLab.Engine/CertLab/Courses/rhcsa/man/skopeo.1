@@ -1,0 +1,75 @@
+NAME
+       skopeo - inspect and copy container images in registries
+
+SYNOPSIS
+       skopeo [GLOBAL-OPTIONS] COMMAND [OPTIONS] ARGUMENTS
+
+DESCRIPTION
+       skopeo works with container images without pulling them into local
+       storage and without running a container. Its best-known use is to look
+       at an image while it is still in the registry: which tags exist, which
+       labels it has, what user it runs as, which ports it exposes. That lets
+       you choose the right image before you download it with podman pull.
+
+       skopeo is part of the container-tools package on RHEL 9, together with
+       podman and buildah. It reads the same registry login as podman, so after
+       "podman login registry.lab.example.com" skopeo can reach that registry
+       too.
+
+       Images are named with a transport in front:
+       docker://HOST/PATH:TAG is an image in a registry,
+       containers-storage:NAME is an image in local podman storage,
+       dir:/PATH is an image unpacked into a directory.
+
+COMMANDS
+       inspect docker://IMAGE
+              Print the image's details as JSON: name, digest, the tags of the
+              repository, creation date, architecture, labels and environment.
+
+       list-tags docker://REPOSITORY
+              Print the tags that exist for a repository.
+
+       copy SOURCE DESTINATION
+              Copy an image from one place to another, for example from a
+              registry into local storage or into a directory.
+
+       login REGISTRY, logout REGISTRY
+              Log in to (or out of) a registry, as podman login does.
+
+OPTIONS
+       --creds USER:PASSWORD
+              Use this user name and password for the registry instead of a
+              saved login.
+
+       -f, --format TEMPLATE
+              With inspect, print only the parts named in a Go template, such
+              as '{{.Labels}}'.
+
+EXAMPLES
+       Log in and look at an image before pulling it:
+
+           podman login registry.lab.example.com
+           skopeo inspect docker://registry.lab.example.com/ubi9/httpd-24
+
+       List the tags of a repository:
+
+           skopeo list-tags docker://registry.lab.example.com/ubi9/ubi
+
+       Copy an image into local storage:
+
+           skopeo copy docker://registry.lab.example.com/ubi9/ubi \
+               containers-storage:registry.lab.example.com/ubi9/ubi
+
+NOTES
+       skopeo needs the transport in front of a registry image (docker://);
+       without it, it reports an invalid source name.
+
+FILES
+       /etc/containers/registries.conf
+              Registries that are searched, blocked or allowed without TLS.
+
+       ${XDG_RUNTIME_DIR}/containers/auth.json
+              Saved registry logins.
+
+SEE ALSO
+       podman(1), buildah(1), containers-registries.conf(5)

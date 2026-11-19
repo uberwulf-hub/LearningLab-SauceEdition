@@ -1,0 +1,19 @@
+SYNOPSIS: Deletes a Group Policy Object.
+DESCRIPTION:
+Remove-GPO deletes the GPO and, by default, all its links, so the settings stop applying at the next refresh. To stop a GPO from applying without losing it, remove or disable its link instead (Remove-GPLink, Set-GPLink -LinkEnabled No).
+Take a backup first (Backup-GPO): a deleted GPO can only come back from a backup.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO's GUID.
+PARAMETER KeepLinks:
+Leaves the links in place (they then point at nothing).
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Backup-GPO "Sales Desktop" -Path C:\GPOBackups; Remove-GPO "Sales Desktop"
+Backs up a GPO and then deletes it.
+EXAMPLE: Get-GPO -All | Where-Object DisplayName -like "Test*" | ForEach-Object { Remove-GPO -Guid $_.Id }
+Deletes every GPO whose name starts with Test.
+RELATED: Get-GPO, Backup-GPO, Restore-GPO, Remove-GPLink

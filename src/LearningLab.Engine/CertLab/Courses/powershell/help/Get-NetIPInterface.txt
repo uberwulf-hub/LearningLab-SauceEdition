@@ -1,0 +1,22 @@
+SYNOPSIS: Lists the IP interfaces with their DHCP setting, metric and MTU.
+DESCRIPTION:
+Every adapter has one IP interface for IPv4 and one for IPv6. Get-NetIPInterface shows them with ifIndex, InterfaceAlias, AddressFamily, NlMtu (the largest packet in bytes), InterfaceMetric (lower is preferred when several interfaces could be used), Dhcp (Enabled or Disabled) and ConnectionState.
+
+It is the quickest way to see whether an adapter takes its IPv4 address from DHCP.
+PARAMETER InterfaceAlias:
+Shows only this adapter, for example Ethernet. Wildcards are allowed.
+PARAMETER InterfaceIndex:
+Shows only the interface with this ifIndex.
+PARAMETER AddressFamily:
+IPv4 or IPv6.
+PARAMETER Dhcp:
+Enabled or Disabled: shows only interfaces with that setting.
+EXAMPLE: Get-NetIPInterface -AddressFamily IPv4
+Shows the IPv4 interfaces. The lab machines start with fixed addresses, so Dhcp is Disabled on Ethernet.
+EXAMPLE: Get-NetIPInterface -InterfaceAlias Ethernet -AddressFamily IPv4 | Select-Object InterfaceAlias, Dhcp, InterfaceMetric
+Just the settings you usually need.
+EXAMPLE: Get-NetIPInterface -Dhcp Enabled
+Lists the interfaces that use DHCP.
+NOTES:
+Change these settings with Set-NetIPInterface. CIM-based command from the NetTCPIP module, Windows only.
+RELATED: Set-NetIPInterface, Get-NetIPAddress, Get-NetAdapter

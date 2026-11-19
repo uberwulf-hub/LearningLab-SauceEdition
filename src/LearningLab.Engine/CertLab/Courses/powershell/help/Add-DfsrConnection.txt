@@ -1,0 +1,16 @@
+SYNOPSIS: Connects two members of a DFS Replication group so they replicate.
+DESCRIPTION:
+A connection says which member sends changes to which. By default Add-DfsrConnection creates a pair, one in each direction, so changes flow both ways. -CreateOneWay makes only the source-to-destination one, for example to feed a read-only copy at a branch.
+PARAMETER GroupName:
+The replication group. Position 0.
+PARAMETER SourceComputerName:
+The sending member. Position 1.
+PARAMETER DestinationComputerName:
+The receiving member. Position 2.
+PARAMETER CreateOneWay:
+Creates only the one direction.
+PARAMETER DisableConnection:
+Creates the connection turned off.
+EXAMPLE: Add-DfsrConnection -GroupName Sales-Replication -SourceComputerName FS1 -DestinationComputerName SRV1
+Step 4: FS1 and SRV1 replicate in both directions.
+RELATED: Add-DfsrMember, Set-DfsrMembership, New-DfsReplicationGroup

@@ -1,0 +1,23 @@
+NAME
+       traceroute - show the routers on the way to a host
+
+SYNOPSIS
+       traceroute [-n] HOST
+
+DESCRIPTION
+       traceroute sends test packets with a growing "time to live", so that
+       each router on the way to HOST in turn answers that the packet expired.
+       It prints one line per router (hop) with three answer times. A * means
+       no answer arrived for that try.
+
+       traceroute is in its own package; tracepath, from iputils, does almost
+       the same and is always installed.
+
+OPTIONS
+       -n     Print addresses only; do not look up names.
+
+EXAMPLES
+           traceroute -n utility.lab.example.com
+
+SEE ALSO
+       tracepath(8), ping(8), ip(8)

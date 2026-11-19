@@ -1,0 +1,20 @@
+SYNOPSIS: Shows where you are: the current folder, registry key or drive location.
+DESCRIPTION:
+Get-Location returns a PathInfo object for the current location. Its Path property is what the prompt shows, for example C:\LabFiles or HKLM:\SOFTWARE. ProviderPath is the same place in the provider's own words (HKEY_LOCAL_MACHINE\SOFTWARE).
+
+Every drive remembers its own current location, so after cd HKLM:\SOFTWARE and cd C: you are back where you were on C:.
+PARAMETER PSDrive:
+Shows the current location of another drive instead, for example -PSDrive HKLM.
+PARAMETER PSProvider:
+Shows the current location for a provider, for example -PSProvider Registry.
+PARAMETER Stack:
+Lists the locations saved by Push-Location, newest first.
+PARAMETER StackName:
+Lists a named stack made with Push-Location -StackName.
+EXAMPLE: Get-Location
+Shows the current location (pwd and gl are aliases).
+EXAMPLE: (Get-Location).Path
+Just the path, as text, ready to use in a string.
+EXAMPLE: Get-Location -Stack
+Shows where Pop-Location would take you.
+RELATED: Set-Location, Push-Location, Pop-Location, Get-PSDrive

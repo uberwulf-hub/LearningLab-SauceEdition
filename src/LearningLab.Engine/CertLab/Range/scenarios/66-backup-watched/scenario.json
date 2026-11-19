@@ -1,0 +1,35 @@
+{
+    "base": "11-forgotten-mount",
+    "id": "backup-watched",
+    "title": "Backup, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Intermediate",
+    "order": 4,
+    "summary": "A web server with a downloadable backup - and a watcher who hates two things: page-guessing sweeps and anyone using sudo. Find the backup by reading, and reach root through a timed job instead.",
+    "story": "{{CO}} (made up) runs web3 on 10.10.12.0/24 and has someone reading two lists every few minutes: the web log (for page-guessing tools) and the sudo log. You start on scout. There is an old backup on the site and a root job on a timer; get to root without a single sudo.",
+    "goal": "Capture both flags without page guessing or sudo, and keep the quiet bonus.",
+    "skills": "robots.txt, downloading and unpacking a backup, password reuse, a writable root cron script, staying quiet",
+    "quietPoints": 110,
+    "watch": [ "web3" ],
+    "noisySolution": "noisy.txt",
+    "vars": { "JOB": "pick:rotate|cleanup|report|tidy" },
+    "variants": {
+        "JOB": {
+            "rotate":  { "JOBDIR": "/opt/maint", "JOBWHAT": "rotate temp logs" },
+            "cleanup": { "JOBDIR": "/opt/jobs", "JOBWHAT": "clean up old uploads" },
+            "report":  { "JOBDIR": "/usr/local/jobs", "JOBWHAT": "build the nightly report" },
+            "tidy":    { "JOBDIR": "/srv/cron", "JOBWHAT": "tidy the cache folder" }
+        }
+    },
+    "defenderRules": {
+        "count": { "web-scan": 6, "privilege": 6, "login-failed": 3, "password-guessing": 6 },
+        "budget": 6, "window": 1500, "react": 90, "reset": false, "isolate": false,
+        "watches": "page-guessing sweeps of the website and anyone using sudo or su"
+    },
+    "hints": [
+        { "text": "Two things trip this watcher at once: one webscan, or one sudo. So find the backup by reading (sites often list what they want hidden in robots.txt), and find another way to root: jobs that root runs on a timer are a classic.", "cost": 10 },
+        { "text": "curl -s http://10.10.12.30/robots.txt names /backup/. Download site-backup.tar.gz with curl -o, unpack it with tar xzf, and read site/config/db.php: the database password also opens ssh for {{SVCUSER}}.", "cost": 16 },
+        { "text": "On web3: cat /etc/cron.d/{{JOB}} shows root runs {{JOBDIR}}/{{JOB}}.sh every minute, and ls -l shows {{SVCUSER}} may write to it. Append: echo 'cp /root/flag.txt /tmp/r.txt; chmod 644 /tmp/r.txt' >> {{JOBDIR}}/{{JOB}}.sh, wait a minute (Skip 1 minute), then cat /tmp/r.txt.", "cost": 24 }
+    ]
+}

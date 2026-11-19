@@ -1,0 +1,138 @@
+NAME
+       grep, egrep, fgrep - print lines that match a pattern
+
+SYNOPSIS
+       grep [OPTION...] PATTERN [FILE...]
+       grep [OPTION...] -e PATTERN ... [FILE...]
+       grep [OPTION...] -f PATTERN-FILE [FILE...]
+
+DESCRIPTION
+       grep reads each FILE (standard input when there is none, or when FILE
+       is -) and prints the lines that contain a match for PATTERN. When more
+       than one file is searched, each line starts with the file's name.
+
+       By default PATTERN is a basic regular expression (BRE). In a BRE,
+       . * [ ] ^ and $ are special; to use ? + { | ( and ) as operators you
+       must put a backslash before them. With -E the pattern is an extended
+       regular expression (ERE), where those characters work without the
+       backslash. With -F the pattern is a plain string.
+
+       egrep and fgrep are old names for grep -E and grep -F. They still work,
+       but scripts should use grep -E and grep -F.
+
+       Exit status: 0 when a line matched, 1 when nothing matched, 2 when an
+       error happened (for example a missing file). That makes grep -q handy
+       in if statements.
+
+   Regular expression reminders
+       .        any one character
+       [abc]    one of a, b or c; [^abc] any character except those
+       [0-9]    a digit; [[:digit:]], [[:alpha:]], [[:space:]] also work
+       ^  $     the start and the end of the line
+       *        the item before, repeated zero or more times
+       +  ?     (ERE) one or more times, zero or one time
+       {N,M}    (ERE) between N and M times
+       a|b      (ERE) a or b
+       ( )      (ERE) a group
+       \<  \>   the start and the end of a word
+
+OPTIONS
+       -i, --ignore-case
+              Ignore the difference between upper and lower case.
+
+       -v, --invert-match
+              Print the lines that do NOT match.
+
+       -c, --count
+              Print only the number of matching lines.
+
+       -l, --files-with-matches
+              Print only the names of files that contain a match.
+
+       -L, --files-without-match
+              Print only the names of files with no match.
+
+       -n, --line-number
+              Put the line number before each line.
+
+       -w, --word-regexp
+              Match whole words only.
+
+       -x, --line-regexp
+              The whole line must match.
+
+       -o, --only-matching
+              Print only the matching part of the line, one per line.
+
+       -q, --quiet, --silent
+              Print nothing; only set the exit status.
+
+       -s, --no-messages
+              Do not report missing or unreadable files.
+
+       -r, --recursive
+              Search every file under each directory given.
+
+       -R, --dereference-recursive
+              Like -r, and follow symbolic links.
+
+       -h, --no-filename
+              Do not print file names before the lines.
+
+       -H, --with-filename
+              Always print file names.
+
+       -E, --extended-regexp
+              PATTERN is an extended regular expression.
+
+       -F, --fixed-strings
+              PATTERN is a plain string, not a regular expression.
+
+       -e PATTERN, --regexp=PATTERN
+              Use PATTERN. Give -e more than once to match any of several
+              patterns, or to use a pattern that starts with -.
+
+       -f FILE, --file=FILE
+              Read patterns from FILE, one per line.
+
+       -A N, -B N, -C N
+              Also print N lines after (-A), before (-B) or around (-C) each
+              match.
+
+       -m N, --max-count=N
+              Stop after N matching lines.
+
+       --include=GLOB, --exclude=GLOB
+              With -r, search only (or skip) files whose names match GLOB.
+
+       --color=auto
+              Highlight matches on a terminal. RHEL 9 sets an alias so that
+              grep does this by default in interactive shells.
+
+EXAMPLES
+       Show the line for the user student in /etc/passwd:
+
+           grep '^student:' /etc/passwd
+
+       Save every line of a word list that contains "ich" to a file:
+
+           grep ich /usr/share/dict/words > /root/lines.txt
+
+       Show a configuration file without comments and empty lines:
+
+           grep -v -e '^#' -e '^$' /etc/chrony.conf
+
+       The same with one extended expression:
+
+           grep -Ev '^(#|$)' /etc/ssh/sshd_config
+
+       List the files under /etc that mention lab.example.com:
+
+           grep -rl lab.example.com /etc
+
+       Use grep in a script test:
+
+           if grep -q '^student:' /etc/passwd; then echo "student exists"; fi
+
+SEE ALSO
+       sed(1), awk(1), find(1), regex(7)

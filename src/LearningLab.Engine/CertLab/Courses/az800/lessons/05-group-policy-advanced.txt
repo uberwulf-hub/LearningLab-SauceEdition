@@ -1,0 +1,301 @@
+# Unit: u05 | 5. Group Policy: filtering, loopback and troubleshooting | Group Policy
+
+Links decide which part of the directory a GPO reaches. This unit narrows that down further: **security filtering** to apply a GPO only to some groups, **WMI filters** to apply it only to some kinds of computer, and **loopback processing** to let the computer decide which user settings apply (kiosks, classrooms, Remote Desktop servers). It ends with the tools that answer the most common Group Policy question: "why didn't that setting apply?"
+
+## Lesson: l0501 | Security filtering, delegation and WMI filters
+
+### Security filtering
+
+A GPO applies to a user or computer only if that account has two permissions on it: **Read** and **Apply group policy**. A new GPO gives both to **Authenticated Users** (all users and all computers), which is the "Security Filtering" list on the GPO's Scope tab. To apply a GPO to one group only:
+
+1. Remove **Authenticated Users** from Security Filtering.
+2. Add the group (for example **Sales Managers**).
+3. Give **Authenticated Users** (or **Domain Computers**) **Read** back on the **Delegation** tab (Advanced).
+
+Step 3 is the **MS16-072** rule. Since a security update in June 2016, computers read the GPOs that hold **user** settings in the computer's own security context. If the computer can't read the GPO, the user part is silently skipped, even for the users in the filter. GPMC warns about it when you remove Authenticated Users.
+
+To exclude a group instead, leave Authenticated Users and add a **Deny** on **Apply group policy** for that group (Delegation > Advanced). Security filtering works with users, computers and **security** groups, never OUs or distribution groups.
+
+```terminal
+#setup admin:gpo filter "Staff desktop" remove "Authenticated Users"
+#setup admin:gpo filter "Staff desktop" add "Sales Managers"
+#setup admin:gpo perm "Staff desktop" "Authenticated Users" GpoRead
+PS C:\Windows\system32> Get-GPPermission -Name 'Staff desktop' -TargetName 'Sales Managers' -TargetType Group
+
+Trustee             TrusteeType Permission Inherited
+-------             ----------- ---------- ---------
+CORP\Sales Managers Group       GpoApply   False
+```
+
+The same in PowerShell: `Set-GPPermission -Name 'Staff desktop' -TargetName 'Sales Managers' -TargetType Group -PermissionLevel GpoApply`, then `Set-GPPermission ... -TargetName 'Authenticated Users' -PermissionLevel GpoRead -Replace` (Replace lowers Authenticated Users from Apply to Read).
+
+### Delegating Group Policy
+
+The **Delegation** tab of a GPO says who can read, edit, or edit and change the security of it (`Set-GPPermission -PermissionLevel GpoRead | GpoApply | GpoEdit | GpoEditDeleteModifySecurity`). Creating GPOs is allowed to **Group Policy Creator Owners** (and the domain's Group Policy Objects node lists who else); **linking** GPOs to an OU is a permission on the OU itself (the OU's Delegation tab in GPMC). A help desk can then edit one GPO without being able to link it anywhere new.
+
+### WMI filters
+
+A **WMI filter** is a WQL query that the **target computer** runs; the GPO applies only where the query returns something. A GPO can have one WMI filter; one filter can serve many GPOs. Typical queries on `Win32_OperatingSystem`:
+
+- `SELECT * FROM Win32_OperatingSystem WHERE ProductType = 1`: client Windows (2 is a domain controller, 3 a member server).
+- `SELECT * FROM Win32_OperatingSystem WHERE Version LIKE '10.0.2%' AND ProductType = 1`: Windows 11 (build 22000 and later).
+
+WMI filters cost time at every refresh and are easy to forget; when a GPO "doesn't apply" to one computer, check the filter. They are made under **WMI Filters** in GPMC and chosen at the bottom of the GPO's Scope tab.
+
+@try
+@setup admin
+gpo new "Sales managers desktop"
+gpo set "Sales managers desktop" setting=Wallpaper value=\\FS1\Public\managers.jpg
+gpo link "Sales managers desktop" "Staff/Sales"
+@task t1 | Group Policy | 10 | admin
+**Sales managers desktop** is linked to `Staff/Sales` but is meant only for the members of **Sales Managers** (such as Ines Moreau, `imoreau`). Filter it to that group, and make sure it still works for them.
+@check admin | only Sales Managers in the filter
+gpo["Sales managers desktop"].filter has "Sales Managers"
+gpo["Sales managers desktop"].filter !has "Authenticated Users"
+@check admin | imoreau gets it, bcole doesn't
+rsop(computer=CL1, user=imoreau).setting["Wallpaper"].winner == "Sales managers desktop"
+rsop(computer=CL1, user=bcole).reason["Sales managers desktop"] == "Denied (Security)"
+@hint After you remove Authenticated Users, the computer can't read the GPO any more (MS16-072): give Authenticated Users or Domain Computers Read on the Delegation tab.
+@solution admin
+gpo filter "Sales managers desktop" remove "Authenticated Users"
+gpo filter "Sales managers desktop" add "Sales Managers"
+gpo perm "Sales managers desktop" "Authenticated Users" GpoRead
+@explain
+Without the Read for the computers, imoreau's user settings would be denied with "the computer can't read it". Read alone doesn't apply the GPO to anyone: Apply group policy is what the filter list shows.
+@endtask
+@task t2 | Group Policy | 10 | admin
+Someone is about to link **Workstation baseline** to `Servers` as well. Make sure it can only ever apply to client Windows computers: create the WMI filter **Client PCs only** and use it on the GPO.
+@check admin | the GPO is filtered and still applies to CL1
+gpo["Workstation baseline"].wmifilter == "Client PCs only"
+wmifilter["Client PCs only"].query contains ProductType = 1
+rsop(computer=CL1).computergpos has "Workstation baseline"
+@solution admin
+wmi new name="Client PCs only" query="SELECT * FROM Win32_OperatingSystem WHERE ProductType = 1"
+gpo wmi "Workstation baseline" "Client PCs only"
+@endtask
+@end
+
+@quiz
+? You removed Authenticated Users from a GPO with user settings and added the group Sales Managers. Its members still don't get the settings. What is missing?
+- Apply group policy for Domain Users
++ Read for Authenticated Users or Domain Computers (MS16-072)
+- A WMI filter
+! Computers read user-setting GPOs as themselves; without Read the user part is skipped.
+? Where is a WMI filter evaluated?
+- On the domain controller that holds the GPO
++ On the computer that processes the GPO
+- On the computer running Group Policy Management
+! The target computer runs the query; the GPO applies only if it returns a result.
+? Which permission lets a help desk group link GPOs to the Staff OU?
+- GpoEdit on every GPO
++ Link GPOs permission on the Staff OU (its Delegation tab)
+- Membership in Group Policy Creator Owners
+! Editing a GPO and linking it are separate rights; linking is a right on the site, domain or OU.
+@end
+
+## Lesson: l0502 | Loopback processing
+
+Normally a user's settings come from the GPOs linked above the **user's** account, wherever they sign in. That is wrong for some computers: a kiosk in the warehouse, a training room PC, or a Remote Desktop server should give everyone the same locked-down desktop, whoever signs in. **Loopback processing** makes the computer's place in the directory decide the user settings.
+
+The setting is a **computer** setting: Computer Configuration > Policies > Administrative Templates > System > Group Policy > **Configure user Group Policy loopback processing mode**. It has two modes:
+
+- **Merge**: the user's normal GPOs apply first, then the **user settings of the GPOs linked to the computer's OU** are applied on top. When they conflict, the computer's side wins.
+- **Replace**: only the user settings of the GPOs that reach the **computer** apply; the user's own GPOs are ignored.
+
+How to set it up:
+
+1. Put the kiosk or RDS computer accounts in their own OU (for example `Kiosks`).
+2. Link a GPO to that OU that turns loopback on (Merge or Replace) and holds the **user** settings for those machines. Often it is two GPOs: one for loopback, one with the user settings.
+3. Leave the security filtering so that the **users** (and the computers, for Read) can apply the GPO: Authenticated Users is fine.
+
+> Loopback settings in a GPO linked to the **users'** OU do nothing: loopback is read from the computer's GPOs. Exam pattern: "on the RDS servers, users must get the same restricted desktop whatever OU their account is in" = loopback **Replace** in a GPO linked to the RDS servers' OU.
+
+```terminal
+#setup admin:gpo set "Workstation baseline" setting=Loopback state=Enabled value=Merge
+#setup admin:gpupdate CL1
+#machine CL1
+PS C:\Windows\system32> gpresult /r /scope computer
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+
+Created on 3/2/2026 at 9:00:00 AM
+
+RSOP data for CORP\Administrator on CL1 : Logging Mode
+----------------------------------------
+
+OS Configuration:            Member Workstation
+OS Version:                  10.0.22631
+Site Name:                   HQ
+Domain Name:                 CORP
+Domain Type:                 Windows 2008 or later
+
+COMPUTER SETTINGS
+-----------------
+    CN=CL1,OU=Workstations,DC=corp,DC=example
+    Last time Group Policy was applied: 3/2/2026 at 9:00:00 AM
+    Group Policy was applied from:      dc1.corp.example
+    Group Policy slow link threshold:   500 kbps
+    Loopback processing mode:           Merge
+
+    Applied Group Policy Objects
+    -----------------------------
+        Workstation baseline
+        Default Domain Policy
+
+    The following GPOs were not applied because they were filtered out
+    -------------------------------------------------------------------
+        N/A
+```
+
+@try
+@setup admin
+new ou name=Kiosks
+move computer "CL1" "Kiosks"
+@task t1 | Group Policy | 10 | admin
+CL1 is now the shared kiosk PC in the warehouse, in the OU **Kiosks**. Whoever signs in there must get only the kiosk's user settings: no Control Panel and no command prompt, and nothing from their own OU's GPOs. Create the GPO **Kiosk lockdown** with those settings and loopback in the right mode, link it to **Kiosks**, and refresh CL1.
+@check admin | loopback Replace, linked to Kiosks
+gpo["Kiosk lockdown"].setting["Loopback"].value == Replace
+gpo["Kiosk lockdown"].links has "OU=Kiosks,DC=corp,DC=example"
+@check admin | bcole on CL1 gets the kiosk settings and not Staff desktop
+applied(CL1, user=bcole).setting["NoControlPanel"] == Enabled
+applied(CL1, user=bcole).setting["NoCmd"] == Enabled
+applied(CL1, user=bcole).usergpos !has "Staff desktop"
+@hint "Nothing from their own OU" is Replace. Loopback is under Computer Configuration > Administrative Templates > System > Group Policy; the other two are user settings in the same GPO.
+@solution admin
+gpo new "Kiosk lockdown"
+gpo set "Kiosk lockdown" setting=Loopback state=Enabled value=Replace
+gpo set "Kiosk lockdown" setting=NoControlPanel state=Enabled
+gpo set "Kiosk lockdown" setting=NoCmd state=Enabled
+gpo link "Kiosk lockdown" "Kiosks"
+gpupdate CL1
+@endtask
+@end
+
+@quiz
+? Loopback is set to Merge on a Remote Desktop server's GPO. A user's own GPO and the server's GPO set the same user setting differently. Which wins?
+- The user's own GPO
++ The GPO that reaches the server's computer account
+- Neither, the setting is left not configured
+! In Merge mode the computer's user settings are applied after the user's own, so they win conflicts.
+? You enabled loopback Replace in a GPO linked to the users' OU. Nothing changes on the kiosks. Why?
++ Loopback is a computer setting: it must come from a GPO that applies to the kiosk computers
+- Replace only works on domain controllers
+- Loopback needs a WMI filter
+! The computer reads loopback from its own GPOs; a GPO linked to users' OUs isn't processed for the computer.
+? Which mode makes the users' own GPOs not apply at all on the kiosk?
+- Merge
++ Replace
+- Enforced
+! Replace uses only the user settings of the GPOs that reach the computer.
+@end
+
+## Lesson: l0503 | Troubleshooting Group Policy
+
+When a setting doesn't apply, work through the same list every time:
+
+1. **Scope**: is the GPO linked above the right account (users' settings above the user, computers' above the computer)? Is the **link enabled**? Is something **blocking** inheritance, or another GPO winning (link order, **Enforced**)?
+2. **The GPO itself**: its **status** (User or Computer configuration settings disabled?), its **security filtering** (and the MS16-072 Read), its **WMI filter**.
+3. **Replication**: has the GPO reached the DC the client uses? A GPO has a version number in AD and in SYSVOL; GPMC's Status tab (Infrastructure Status) compares them on every DC.
+4. **The client**: has it refreshed since (wait, `gpupdate`, `Invoke-GPUpdate`)? Does the setting need a restart or a new sign-in? Is it in the right half (a user setting in Computer Configuration does nothing)?
+
+### The tools
+
+- `gpresult /r` on the computer: which GPOs applied, which were filtered out and **why** ("Denied (Security)", "Disabled (GPO)", "Denied (WMI Filter)", "Not Applied (Empty)"). `/scope user` or `/scope computer`, `/user CORP\bcole` for another person who signed in there, `/v` for the settings, `/h report.html` for a full HTML report. Run it elevated to see the computer part.
+- **Group Policy Results** (GPMC): the same, collected remotely from a computer and a user who has signed in there. `Get-GPResultantSetOfPolicy -Computer CL1 -User bcole -ReportType Html -Path C:\rsop.html` in PowerShell.
+- **Group Policy Modeling** (GPMC): a what-if run by a DC, without touching a client. Use it for planning: "what would Erin get if her account moved to Sales and she signed in at CL1?" It can simulate a different site, group memberships, WMI filters, a slow link and loopback. Results = what happened; Modeling = what would happen.
+- The **Group Policy Operational log** on the client (Event Viewer > Applications and Services Logs > Microsoft > Windows > GroupPolicy) and the old `rsop.msc`.
+
+```terminal
+#setup admin:gpo new "Sales lockdown"
+#setup admin:gpo set "Sales lockdown" setting=NoControlPanel state=Enabled
+#setup admin:gpo link "Sales lockdown" "Staff/Sales"
+#setup admin:gpo status "Sales lockdown" UserSettingsDisabled
+#setup admin:gpupdate CL1
+#machine CL1
+PS C:\Windows\system32> gpresult /r /user bcole /scope user
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+
+Created on 3/2/2026 at 9:00:00 AM
+
+RSOP data for CORP\bcole on CL1 : Logging Mode
+----------------------------------------
+
+OS Configuration:            Member Workstation
+OS Version:                  10.0.22631
+Site Name:                   HQ
+Domain Name:                 CORP
+Domain Type:                 Windows 2008 or later
+
+USER SETTINGS
+-------------
+    CN=Bianca Cole,OU=Sales,OU=Staff,DC=corp,DC=example
+    Last time Group Policy was applied: 3/2/2026 at 9:00:00 AM
+    Group Policy was applied from:      dc1.corp.example
+    Group Policy slow link threshold:   500 kbps
+
+    Applied Group Policy Objects
+    -----------------------------
+        Staff desktop
+
+    The following GPOs were not applied because they were filtered out
+    -------------------------------------------------------------------
+        Default Domain Policy
+            Filtering:  Not Applied (Empty)
+
+        Sales lockdown
+            Filtering:  Disabled (GPO)
+```
+
+The report says it in its own words: the GPO reached Bianca, but its user half is switched off.
+
+@try
+@setup admin
+gpo new "Sales lockdown"
+gpo set "Sales lockdown" setting=NoControlPanel state=Enabled
+gpo link "Sales lockdown" "Staff/Sales" enabled=no
+gpo status "Sales lockdown" UserSettingsDisabled
+@task t1 | Group Policy | 10 | admin
+Bianca Cole (`bcole`) still has Control Panel on CL1, although **Sales lockdown** is supposed to remove it for Sales. Find the two things that stop it, fix them, and refresh CL1.
+@check admin | the link is enabled and the GPO's user half is on
+gpo["Sales lockdown"].linkenabled["Staff/Sales"] == Yes
+gpo["Sales lockdown"].status == AllSettingsEnabled
+@check admin | CL1 applied it for bcole
+applied(CL1, user=bcole).setting["NoControlPanel"] == Enabled
+@hint gpresult /r /user bcole on CL1 (or the GPO's Scope and Details tabs): look at the link and at the GPO status.
+@solution admin
+gpo setlink "Sales lockdown" "Staff/Sales" enabled=yes
+gpo status "Sales lockdown" AllSettingsEnabled
+gpupdate CL1
+@endtask
+@task t2 | Group Policy | 10 | DC1
+Workstations should refresh their computer policy every **30** minutes. Set "Set Group Policy refresh interval for computers" to 30 in **Workstation baseline** with PowerShell, then ask CL1 to refresh its computer policy remotely with `Invoke-GPUpdate` (keep its default random delay) and let the time pass until CL1 has it.
+@check admin | the GPO has 30 minutes and CL1 applied it
+gpo["Workstation baseline"].setting["RefreshInterval"].value == 30
+applied(CL1).setting["RefreshInterval"].value == 30
+@hint The setting is the registry value GroupPolicyRefreshTime (DWord, minutes) under HKLM\Software\Policies\Microsoft\Windows\System. Invoke-GPUpdate waits up to 10 minutes before CL1 refreshes: use Skip time.
+@solution DC1
+Set-GPRegistryValue -Name 'Workstation baseline' -Key 'HKLM\Software\Policies\Microsoft\Windows\System' -ValueName GroupPolicyRefreshTime -Type DWord -Value 30
+Invoke-GPUpdate -Computer CL1 -Target Computer
+#wait 600
+@endtask
+@end
+
+@quiz
+? You want to know which GPOs a user would get if her account moved to another OU, before you move it. Which tool?
+- Group Policy Results
++ Group Policy Modeling
+- gpresult /r
+! Modeling simulates a planned situation on a DC; Results and gpresult report what already happened on a computer.
+? gpresult lists a GPO under "filtered out" with the reason "Denied (Security)". What do you check?
++ The GPO's security filtering and delegation (Read and Apply group policy)
+- The GPO's WMI filter
+- Whether the link is enforced
+! Denied (Security) means the account lacks Read or Apply group policy on the GPO; a WMI filter shows as Denied (WMI Filter).
+? A user setting was configured in a GPO linked to the Workstations OU, where the computers are. The users are in Staff. Nothing happens. Why?
+- The GPO needs to be enforced
++ User settings apply from GPOs above the user account (unless loopback is on)
+- Workstations needs Block Inheritance
+! The user half is processed for GPOs that reach the user's account; for the computer's OU to decide, turn on loopback.
+@end
+

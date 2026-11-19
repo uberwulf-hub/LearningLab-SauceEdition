@@ -1,0 +1,18 @@
+SYNOPSIS: Adds a mail exchanger (MX) record that says where a domain's email goes.
+DESCRIPTION:
+An MX record names the mail server for a domain, with a preference number. Senders try the lowest number first and use the higher ones as backups.
+
+The mail server must be given by name (it needs its own A record), never as an IP address. Use -Name "." for the zone itself, so the record covers addresses like someone@corp.example.
+PARAMETER ZoneName:
+The zone, for example corp.example.
+PARAMETER Name:
+The name the mail is for; "." means the zone itself.
+PARAMETER MailExchange:
+The full name of the mail server.
+PARAMETER Preference:
+The priority: lower numbers are tried first.
+EXAMPLE: Add-DnsServerResourceRecordMX -ZoneName corp.example -Name . -MailExchange mail2.harborline.example -Preference 20
+Adds a backup mail server behind the existing one at preference 10.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -RRType MX
+Lists the mail servers with their preferences.
+RELATED: Add-DnsServerResourceRecord, Add-DnsServerResourceRecordA, Get-DnsServerResourceRecord

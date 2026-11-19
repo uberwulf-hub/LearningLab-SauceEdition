@@ -1,0 +1,68 @@
+NAME
+       blkid - show the type, label and UUID of block devices
+
+SYNOPSIS
+       blkid [-o FORMAT] [-s TAG]... [DEVICE...]
+       blkid -L LABEL
+       blkid -U UUID
+       blkid -p DEVICE
+
+DESCRIPTION
+       blkid reads the start of each block device (disk, partition, logical
+       volume) and reports what is written there: the file system or swap
+       TYPE, its UUID and LABEL, and for partitions the PARTUUID (and on GPT
+       disks the PARTLABEL). One line per device:
+
+           /dev/vdb1: UUID="3c1f6a0e-..." BLOCK_SIZE="512" TYPE="xfs" PARTUUID="..."
+
+       Without arguments it lists every device that has something on it. A
+       device that holds nothing (an empty partition) is not shown.
+
+       The UUID is what you normally use in /etc/fstab: it stays the same
+       when disks are renamed (vdb becoming vdc), unlike /dev names. Note the
+       difference between UUID (of the file system, changes when you run mkfs
+       again) and PARTUUID (of the partition).
+
+       Run it as root: a normal user sees only what was read before.
+
+OPTIONS
+       -o FORMAT, --output FORMAT
+              full (the default line above), value (only the values, one per
+              line), export (NAME=value lines, good for scripts), device
+              (only the device names).
+
+       -s TAG, --match-tag TAG
+              Show only this tag (TYPE, UUID, LABEL, PARTUUID...). Repeat it
+              for several.
+
+       -L LABEL, --label LABEL
+              Print the device that has this label.
+
+       -U UUID, --uuid UUID
+              Print the device that has this UUID.
+
+       -p, --probe
+              Read the device itself instead of the cache.
+
+EXAMPLES
+       Show what is on the new partition:
+
+           blkid /dev/vdb1
+
+       Print only the UUID, ready to paste into /etc/fstab:
+
+           blkid -s UUID -o value /dev/vdb1
+
+       Add an fstab line by UUID in one go:
+
+           echo "UUID=$(blkid -s UUID -o value /dev/vdb1) /data xfs defaults 0 0" >> /etc/fstab
+
+       Which device has the label BACKUP?
+
+           blkid -L BACKUP
+
+NOTES
+       Exit status 2 means no device matched.
+
+SEE ALSO
+       lsblk(8), findfs(8), findmnt(8), fstab(5), mkfs(8)

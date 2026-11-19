@@ -1,0 +1,14 @@
+SYNOPSIS: Starts a Microsoft Entra Connect sync now instead of waiting for the schedule.
+DESCRIPTION:
+Start-ADSyncSyncCycle runs a sync on the Entra Connect server right away, for example after creating a user who needs a cloud account now.
+Delta syncs only what changed since the last run and is what you want almost always. Initial (a full sync) reads everything again; it's needed after changing filtering or sync rules and takes much longer.
+It fails if the scheduler is disabled (Set-ADSyncScheduler -SyncCycleEnabled $true turns it on) or a sync is already running.
+PARAMETER PolicyType:
+Delta or Initial. Position 0.
+PARAMETER InteractiveMode:
+Whether to run as an interactive (immediate) sync.
+EXAMPLE: Start-ADSyncSyncCycle -PolicyType Delta
+Syncs the latest changes to Entra ID now.
+EXAMPLE: Start-ADSyncSyncCycle -PolicyType Initial
+A full sync after changing which OUs are synced.
+RELATED: Get-ADSyncScheduler, Set-ADSyncScheduler, Set-ADForest

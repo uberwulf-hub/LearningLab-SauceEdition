@@ -1,0 +1,20 @@
+SYNOPSIS: Changes (or creates) a registry value, or a property such as IsReadOnly of a file.
+DESCRIPTION:
+Set-ItemProperty writes a value. If the value exists it keeps its type; a new value gets a type from what you give it (a number becomes DWord, text becomes String) unless you say -Type. On files it sets properties such as IsReadOnly, Attributes or LastWriteTime.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+The value or property to set.
+PARAMETER Value:
+The new data.
+PARAMETER Type:
+The registry value type: String (text), ExpandString (text with %variables%), DWord (a 32-bit number), QWord (a 64-bit number), MultiString (several strings) or Binary (bytes).
+PARAMETER PassThru:
+Outputs the changed value as an object.
+EXAMPLE: Set-ItemProperty HKCU:\Software\Lab -Name Mode -Value Fast
+Sets a text value.
+EXAMPLE: Set-ItemProperty C:\LabFiles\notes.txt -Name IsReadOnly -Value $true
+Makes a file read-only.
+RELATED: New-ItemProperty, Get-ItemProperty, Remove-ItemProperty

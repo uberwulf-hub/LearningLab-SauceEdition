@@ -1,0 +1,57 @@
+# Lab: lab-11 | Remoting and jobs | u11 | 35
+Manage WIN-CL1 from WIN-SRV1. Remoting on WIN-CL1 is off at the start, as on any new Windows client.
+
+@vars
+folder = Reports | Exports | Backups
+@endvars
+
+@task t01 | Remoting | 10 | WIN-CL1
+Turn on PowerShell remoting on WIN-CL1 so that it accepts commands from WIN-SRV1.
+@check WIN-SRV1 | WIN-SRV1 can reach WIN-CL1 with Invoke-Command
+(Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { hostname } -ErrorAction SilentlyContinue) -eq 'WIN-CL1'
+@hint Use WIN-CL1's own console: Enable-PSRemoting -Force
+@solution WIN-CL1
+Enable-PSRemoting -Force
+@explain
+Windows clients do not listen for remoting until Enable-PSRemoting has run on them (it starts WinRM, sets it to start automatically, creates the listener and opens the firewall). Servers have it on already.
+@endtask
+
+@task t02 | Remoting | 10 | WIN-SRV1
+From WIN-SRV1, create the folder `C:\{folder}` **on WIN-CL1** with Invoke-Command. Pass the folder name in with `$using:` from a local variable `$name = '{folder}'`.
+@check WIN-CL1 | C:\{folder} exists on WIN-CL1
+Test-Path C:\{folder} -PathType Container
+@check WIN-SRV1 | the folder was not created on WIN-SRV1
+-not (Test-Path C:\{folder})
+@hint Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { New-Item -ItemType Directory -Path "C:\$using:name" }
+@solution WIN-SRV1
+$name = '{folder}'
+Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { New-Item -ItemType Directory -Path "C:\$using:name" | Out-Null }
+@explain
+The script block runs on WIN-CL1 in a fresh session, so the local $name is not there; $using:name copies its value in. -ArgumentList with a param( ) block works too.
+@endtask
+
+@task t03 | Remoting | 10 | WIN-SRV1
+Create a PSSession to WIN-CL1 named `ClSession` (use `-Name`), and leave it open.
+@check WIN-SRV1 | an open session named ClSession to WIN-CL1
+$s = Get-PSSession -Name ClSession -ErrorAction SilentlyContinue; $s.ComputerName -eq 'WIN-CL1' -and "$($s.State)" -eq 'Opened'
+@hint New-PSSession -ComputerName WIN-CL1 -Name ClSession
+@solution WIN-SRV1
+New-PSSession -ComputerName WIN-CL1 -Name ClSession
+@explain
+A named PSSession is easy to find again with Get-PSSession -Name and stays open for later Invoke-Command -Session calls until Remove-PSSession (or until the computer restarts).
+@endtask
+
+@task t04 | Remoting | 10 | WIN-SRV1
+Run a background job named `CountFiles` that counts the files directly in `C:\LabFiles` (not in subfolders), wait for it, and store the job's result (a number) in `$fileCount`.
+@check WIN-SRV1 | the job exists and completed
+"$((Get-Job -Name CountFiles -ErrorAction SilentlyContinue).State)" -eq 'Completed'
+@check WIN-SRV1 | $fileCount is the number of files
+$fileCount -eq @(Get-ChildItem C:\LabFiles -File).Count
+@hint Start-Job -Name CountFiles -ScriptBlock { @(Get-ChildItem C:\LabFiles -File).Count }; then Receive-Job -Wait
+@solution WIN-SRV1
+Start-Job -Name CountFiles -ScriptBlock { @(Get-ChildItem C:\LabFiles -File).Count } | Out-Null
+$fileCount = Receive-Job -Name CountFiles -Wait -Keep
+$fileCount
+@explain
+Receive-Job -Wait waits for the job and collects its output in one step. -Keep leaves the output in the job, so it can be received again; without it, a second Receive-Job returns nothing.
+@endtask

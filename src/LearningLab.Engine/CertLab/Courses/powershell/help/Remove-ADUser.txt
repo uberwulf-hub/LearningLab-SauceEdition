@@ -1,0 +1,14 @@
+SYNOPSIS: Deletes a user account from Active Directory.
+DESCRIPTION:
+Remove-ADUser deletes a user object. It asks for confirmation unless you add -Confirm:$false.
+Deleting loses the account's SID: a new account with the same name is a different security principal and gets none of the old permissions. Disabling the account first (Disable-ADAccount) is often the safer step.
+With the AD Recycle Bin enabled, a deleted user can be brought back with all its attributes and group memberships (Restore-ADObject); without it, only a stripped tombstone remains.
+PARAMETER Identity:
+The user to delete. Position 0, and takes pipeline input.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-ADUser knovak -Confirm:$false
+Deletes Kara Novak's account without asking.
+EXAMPLE: Search-ADAccount -AccountDisabled -UsersOnly | Remove-ADUser
+Deletes every disabled user, asking for each one.
+RELATED: Disable-ADAccount, Restore-ADObject, Get-ADUser, Enable-ADOptionalFeature

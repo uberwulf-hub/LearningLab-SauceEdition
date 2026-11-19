@@ -1,0 +1,44 @@
+title: Three coats of paint
+level: Expert
+kind: Decoding
+topic: Crypto & Encoding
+teaser: peel the layers in the right order
+points: 95
+order: 48
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/message.txt was put through three reversible steps, one after another: the word was
+reversed, then letters were shifted by 13 (ROT13), then the result was base64-encoded.
+Undo them in the opposite order to get the word back.
+
+@setup
+printf '%s' '{{SECRET}}' | rev | tr 'A-Za-z' 'N-ZA-Mn-za-m' | base64 > /home/player/message.txt
+chown player: /home/player/message.txt
+
+@solution
+cat message.txt
+base64 -d message.txt
+base64 -d message.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+base64 -d message.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m' | rev
+echo
+
+@walkthrough
+The steps were applied in this order: reverse, then ROT13, then base64. To undo them,
+reverse the order and undo each:
+
+    base64 -d message.txt \
+      | tr 'A-Za-z' 'N-ZA-Mn-za-m' \   # undo ROT13 (ROT13 is its own inverse)
+      | rev                            # undo the reversal
+
+The word that comes out is the answer. The lesson: stacking reversible encodings only
+looks like encryption - each layer peels off with a standard tool, so none of it is a
+secret.
+
+@hint 14
+base64 was the last step, so undo it first: base64 -d message.txt. The result still looks
+scrambled.
+
+@hint 22
+Then undo ROT13 with tr 'A-Za-z' 'N-ZA-Mn-za-m', and finally undo the reversal with rev.

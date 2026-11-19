@@ -1,0 +1,33 @@
+NAME
+       xfs_admin - show or change the label and UUID of an XFS file system
+
+SYNOPSIS
+       xfs_admin [-l] [-u] [-L LABEL] [-U UUID] DEVICE
+
+DESCRIPTION
+       xfs_admin changes settings of an XFS file system. The file system
+       must be unmounted for changes (-L, -U). For ext file systems use
+       tune2fs or e2label instead.
+
+OPTIONS
+       -l     Print the label.
+
+       -u     Print the UUID.
+
+       -L LABEL
+              Set the label (up to 12 characters). -L -- removes it.
+
+       -U UUID
+              Set the UUID: a value, generate (a new random one), or nil.
+
+EXAMPLES
+       Give the XFS file system on /dev/vdb1 the label archive and mount it
+       by label at boot:
+
+           umount /dev/vdb1
+           xfs_admin -L archive /dev/vdb1
+           echo 'LABEL=archive /archive xfs defaults 0 0' >> /etc/fstab
+           mount -a
+
+SEE ALSO
+       mkfs.xfs(8), xfs_info(8), blkid(8), tune2fs(8), fstab(5)

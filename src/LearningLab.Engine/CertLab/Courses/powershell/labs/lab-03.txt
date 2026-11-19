@@ -1,0 +1,77 @@
+# Lab: lab-03 | Formatting and output | u03 | 30
+Get data out of PowerShell in the shape other people and programs need: CSV, JSON and plain text files with a chosen encoding.
+
+@vars
+dept = Engineering | Research | IT
+server = SQL02 | SQL-EAST | DB9
+users = 300-900
+name = running | active | started
+@endvars
+
+@task t01 | Output | 10 | WIN-SRV1
+Save the **running** services as a CSV file `C:\LabFiles\{name}.csv` with only the columns `Name` and `DisplayName`, and **without** the `#TYPE` line at the top.
+@check WIN-SRV1 | the file has the running services
+$rows = Import-Csv C:\LabFiles\{name}.csv; @($rows).Count -eq @(Get-Service | Where-Object Status -eq Running).Count
+@check WIN-SRV1 | only Name and DisplayName
+((Get-Content C:\LabFiles\{name}.csv -TotalCount 1) -replace '"', '') -eq 'Name,DisplayName'
+@hint Get-Service | Where-Object Status -eq Running | Select-Object Name, DisplayName | Export-Csv ... -NoTypeInformation
+@solution WIN-SRV1
+Get-Service | Where-Object Status -eq Running | Select-Object Name, DisplayName | Export-Csv C:\LabFiles\{name}.csv -NoTypeInformation
+@explain
+Select-Object before Export-Csv chooses the columns. In Windows PowerShell 5.1, Export-Csv writes a #TYPE line unless you add -NoTypeInformation (PowerShell 7 leaves it out by default).
+@endtask
+
+@task t02 | Output | 10 | WIN-SRV1
+Save the employees of **{dept}** from `C:\LabFiles\employees.csv` as JSON in `C:\LabFiles\{dept}.json`, with the properties `Name` and `Title` only.
+@check WIN-SRV1 | the JSON holds the {dept} employees
+$j = Get-Content C:\LabFiles\{dept}.json -Raw | ConvertFrom-Json; $want = Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}'; @($j).Count -eq @($want).Count -and (@($j) | ForEach-Object Name) -join ',' -eq ((@($want) | ForEach-Object Name) -join ',')
+@check WIN-SRV1 | only Name and Title
+$j = Get-Content C:\LabFiles\{dept}.json -Raw | ConvertFrom-Json; ((@($j)[0].PSObject.Properties | ForEach-Object Name) -join ',') -eq 'Name,Title'
+@hint Import-Csv ... | Where-Object Department -eq '{dept}' | Select-Object Name, Title | ConvertTo-Json | Set-Content C:\LabFiles\{dept}.json
+@solution WIN-SRV1
+Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}' | Select-Object Name, Title | ConvertTo-Json | Set-Content C:\LabFiles\{dept}.json
+@explain
+ConvertTo-Json turns objects into JSON text; Set-Content (or Out-File) saves it. ConvertFrom-Json reads it back into objects.
+@endtask
+
+@task t03 | Output | 10 | WIN-SRV1
+Write the names of the services that are **stopped** into `C:\LabFiles\stopped.txt`, one name per line, as **ASCII** text (not the UTF-16 that `>` uses in Windows PowerShell 5.1).
+@check WIN-SRV1 | the file lists the stopped services
+$names = Get-Content C:\LabFiles\stopped.txt | Where-Object { $_.Trim() }; ($names | ForEach-Object Trim) -join ',' -eq ((Get-Service | Where-Object Status -eq Stopped).Name -join ',')
+@check WIN-SRV1 | the file is ASCII (one byte per character)
+$f = Get-Item C:\LabFiles\stopped.txt; $f.Length -eq (Get-Content C:\LabFiles\stopped.txt -Raw).Length
+@hint (Get-Service | Where-Object Status -eq Stopped).Name | Out-File C:\LabFiles\stopped.txt -Encoding ascii
+@solution WIN-SRV1
+Get-Service | Where-Object Status -eq Stopped | Select-Object -ExpandProperty Name | Out-File C:\LabFiles\stopped.txt -Encoding ascii
+@explain
+-ExpandProperty gives plain strings, so the file holds just the names. Out-File and > write UTF-16 in 5.1; -Encoding ascii (or Set-Content, which writes ANSI) keeps one byte per character.
+@endtask
+
+@task t04 | Output | 10 | WIN-CL1
+On **WIN-CL1**, change the settings file `C:\LabFiles\settings.json`: set the database server (`Database.Server`) to `{server}` and `MaxUsers` to `{users}`, and save it back as JSON in the same file. The other settings, including the list of `Features`, must stay.
+@check WIN-CL1 | the new values are saved
+$s = Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json; $s.Database.Server -eq '{server}' -and $s.MaxUsers -eq {users}
+@check WIN-CL1 | the other settings are still there
+$s = Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json; $s.AppName -eq 'Inventory' -and @($s.Features).Count -eq 3 -and $s.Database.Port -eq 1433
+@hint $s = Get-Content ... -Raw | ConvertFrom-Json; change $s.Database.Server and $s.MaxUsers; $s | ConvertTo-Json | Set-Content ...
+@solution WIN-CL1
+$s = Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json
+$s.Database.Server = '{server}'
+$s.MaxUsers = {users}
+$s | ConvertTo-Json | Set-Content C:\LabFiles\settings.json
+@explain
+ConvertFrom-Json gives objects whose properties you can change; ConvertTo-Json writes two levels deep by default, which is enough here (use -Depth for deeper data).
+@endtask
+
+@task t05 | Output | 10 | WIN-SRV1
+Store in `$sheet` the text of a table of the employees of **{dept}** with the columns `Name` and `Office`, exactly as PowerShell would show it on screen, as **one string**.
+@check WIN-SRV1 | $sheet is one string
+$sheet -is [string]
+@check WIN-SRV1 | it is the table text
+$want = Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}' | Format-Table Name, Office | Out-String; $sheet.Trim() -eq $want.Trim() -and $sheet -match 'Office'
+@hint ... | Format-Table Name, Office | Out-String
+@solution WIN-SRV1
+$sheet = Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq '{dept}' | Format-Table Name, Office | Out-String
+@explain
+Format-Table makes formatting instructions; Out-String turns them into the text you would see. Without Out-String, the variable would hold formatting objects, not text.
+@endtask

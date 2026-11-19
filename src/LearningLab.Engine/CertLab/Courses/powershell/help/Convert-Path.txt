@@ -1,0 +1,12 @@
+SYNOPSIS: Gives the provider's own path for a PowerShell path (HKLM:\SOFTWARE becomes HKEY_LOCAL_MACHINE\SOFTWARE).
+DESCRIPTION:
+Convert-Path resolves a path like Resolve-Path but returns plain strings in the provider's own form. For a drive made with New-PSDrive, Lab:\notes.txt becomes C:\LabFiles\notes.txt, which other programs understand.
+PARAMETER Path:
+The paths to convert; wildcards are expanded.
+PARAMETER LiteralPath:
+A path taken exactly as typed.
+EXAMPLE: Convert-Path .
+The current folder as a plain path.
+EXAMPLE: Convert-Path HKCU:\Software
+Returns HKEY_CURRENT_USER\Software.
+RELATED: Resolve-Path, Get-Location

@@ -1,0 +1,118 @@
+# Lab: lab-09 | Services, processes, logs and tasks | u09 | 45
+A morning of routine administration on both machines: a service on the client that should not run, programs left open on the server, a CPU report, warnings from the System log, a nightly task, a built-in task to switch off and a server feature to add.
+
+@vars
+svc = Spooler | Themes | W32Time
+app = notepad | mspaint
+n = 3-5
+id = 10016 | 1014
+task = NightlyCleanup | TempSweep | LogRotate
+hour = 1-5
+feature = Telnet-Client | SNMP-Service | Windows-Server-Backup
+@endvars
+
+@setup WIN-SRV1
+Start-Process {app}
+Start-Process {app}
+New-Item C:\Scripts -ItemType Directory -Force | Out-Null
+Set-Content C:\Scripts\Cleanup.ps1 'Get-ChildItem $env:TEMP -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item'
+
+@task t01 | Administration | 10 | WIN-CL1
+On **WIN-CL1**, the service `{svc}` must not run any more, now or after a restart: stop it and make sure it can no longer be started.
+@check WIN-CL1 | {svc} is stopped
+"$((Get-Service {svc}).Status)" -eq 'Stopped'
+@check WIN-CL1 | {svc} is disabled
+"$((Get-Service {svc}).StartType)" -eq 'Disabled'
+@hint Two commands: Stop-Service, and Set-Service with -StartupType Disabled (or Set-Service -StartupType Disabled -Status Stopped).
+@solution WIN-CL1
+Stop-Service {svc}
+Set-Service {svc} -StartupType Disabled
+Get-Service {svc} | Select-Object Name, Status, StartType
+@explain
+Stopping a service only lasts until the next restart if its start type is Automatic, and anything may start a Manual service again. Disabled is the start type that keeps it from starting at all. The property you read back is StartType, while the parameter of Set-Service is -StartupType.
+@endtask
+
+@task t02 | Administration | 10 | WIN-SRV1
+Someone left `{app}` open on WIN-SRV1, more than once. Stop **every** `{app}` process.
+@check WIN-SRV1 | no {app} process is left
+@(Get-Process -Name {app} -ErrorAction SilentlyContinue).Count -eq 0
+@hint Stop-Process -Name stops every process with that name (try Get-Process {app} first to see them).
+@solution WIN-SRV1
+Get-Process {app}
+Stop-Process -Name {app}
+@explain
+-Name matches every process with that name, which is what this task wants; -Id stops exactly one. When in doubt, add -WhatIf first, or pipe Get-Process {app} to Stop-Process so you see what you are about to stop.
+@endtask
+
+@task t03 | Administration | 10 | WIN-SRV1
+Write a report of the **{n}** processes that have used the most processor time on WIN-SRV1 to `C:\Reports\topcpu.csv`, highest first, with exactly the columns `Name`, `Id` and `CPU` (no type line at the top). Create the folder if needed.
+@check WIN-SRV1 | the file has the {n} processes, highest CPU first
+$want = @(Get-Process | Sort-Object CPU -Descending | Select-Object -First {n} | ForEach-Object Id) -join ','; $have = @(Import-Csv C:\Reports\topcpu.csv | ForEach-Object Id) -join ','; $have -eq $want
+@check WIN-SRV1 | the columns are Name, Id and CPU, with no type line
+$first = Get-Content C:\Reports\topcpu.csv -TotalCount 1; $first -eq '"Name","Id","CPU"'
+@hint Sort-Object CPU -Descending | Select-Object -First {n} Name, Id, CPU | Export-Csv ... -NoTypeInformation
+@solution WIN-SRV1
+New-Item C:\Reports -ItemType Directory -Force | Out-Null
+Get-Process | Sort-Object CPU -Descending | Select-Object -First {n} Name, Id, CPU | Export-Csv C:\Reports\topcpu.csv -NoTypeInformation
+Import-Csv C:\Reports\topcpu.csv
+@explain
+CPU is the processor time each process has used so far, in seconds. Select-Object picks both the first {n} objects and the three properties, so Export-Csv writes only those columns. In Windows PowerShell 5.1, Export-Csv adds a #TYPE line at the top unless you give -NoTypeInformation (PowerShell 7 leaves it out by default).
+@endtask
+
+@task t04 | Administration | 10 | WIN-SRV1
+Export every event with Id **{id}** from WIN-SRV1's **System** log to `C:\Reports\events-{id}.csv`, with the columns `TimeCreated`, `Id`, `LevelDisplayName` and `ProviderName`. Use `Get-WinEvent -FilterHashtable`.
+@check WIN-SRV1 | the file has every event {id} of the System log
+$want = @(Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = {id} }).Count; $rows = @(Import-Csv C:\Reports\events-{id}.csv); $want -gt 0 -and $rows.Count -eq $want -and @($rows | Where-Object Id -ne '{id}').Count -eq 0
+@check WIN-SRV1 | the columns are the four asked for
+$p = (Import-Csv C:\Reports\events-{id}.csv | Select-Object -First 1).psobject.Properties.Name -join ','; $p -eq 'TimeCreated,Id,LevelDisplayName,ProviderName'
+@check WIN-SRV1 | it used -FilterHashtable
+($CertLabHistory -join ' ') -match 'FilterHashtable'
+@hint Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = {id} } | Select-Object TimeCreated, Id, LevelDisplayName, ProviderName | Export-Csv ... -NoTypeInformation
+@solution WIN-SRV1
+New-Item C:\Reports -ItemType Directory -Force | Out-Null
+Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = {id} } | Select-Object TimeCreated, Id, LevelDisplayName, ProviderName | Export-Csv C:\Reports\events-{id}.csv -NoTypeInformation
+Import-Csv C:\Reports\events-{id}.csv
+@explain
+-FilterHashtable makes the event log service do the filtering, which matters on a real server whose System log holds tens of thousands of events. Without -MaxEvents, Get-WinEvent returns every match. Events 10016 (DCOM permissions) and 1014 (a DNS name that timed out) are common warnings that are usually harmless, which is exactly why administrators like to count them before they worry.
+@endtask
+
+@task t05 | Administration | 10 | WIN-SRV1
+The script `C:\Scripts\Cleanup.ps1` is ready on WIN-SRV1. Register a scheduled task named `{task}` that runs `powershell.exe` with the arguments `-NoProfile -File C:\Scripts\Cleanup.ps1` **every day at {hour}:00 AM**, as **SYSTEM**.
+@check WIN-SRV1 | {task} runs powershell.exe with Cleanup.ps1
+$t = Get-ScheduledTask -TaskName {task} -ErrorAction SilentlyContinue; $t.Actions[0].Execute -eq 'powershell.exe' -and $t.Actions[0].Arguments -match '-File C:\\Scripts\\Cleanup\.ps1'
+@check WIN-SRV1 | it runs every day at {hour}:00
+$tr = (Get-ScheduledTask -TaskName {task} -ErrorAction SilentlyContinue).Triggers[0]; $tr.StartBoundary -like '*T0{hour}:00:00' -and $tr.DaysInterval -eq 1
+@check WIN-SRV1 | it runs as SYSTEM
+(Get-ScheduledTask -TaskName {task} -ErrorAction SilentlyContinue).Principal.UserId -eq 'SYSTEM'
+@hint New-ScheduledTaskAction -Execute powershell.exe -Argument '...'; New-ScheduledTaskTrigger -Daily -At {hour}am; Register-ScheduledTask -TaskName {task} -Action $a -Trigger $t -User SYSTEM
+@solution WIN-SRV1
+$a = New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -File C:\Scripts\Cleanup.ps1'
+$t = New-ScheduledTaskTrigger -Daily -At {hour}am
+Register-ScheduledTask -TaskName {task} -Action $a -Trigger $t -User SYSTEM
+Get-ScheduledTaskInfo -TaskName {task}
+@explain
+A task is an action (what), a trigger (when) and a principal (as whom). -User SYSTEM makes it run as the computer's own account, without anyone signed in; without it, the task would run as you and only while you are signed in. Start-ScheduledTask -TaskName {task} runs it once now, and Get-ScheduledTaskInfo then shows LastTaskResult (0 means it worked).
+@endtask
+
+@task t06 | Administration | 10 | WIN-CL1
+On **WIN-CL1**, switch off Windows' own scheduled task `ScheduledDefrag` (in the folder `\Microsoft\Windows\Defrag\`) without deleting it.
+@check WIN-CL1 | ScheduledDefrag is disabled
+"$((Get-ScheduledTask -TaskName ScheduledDefrag -TaskPath '\Microsoft\Windows\Defrag\').State)" -eq 'Disabled'
+@hint Disable-ScheduledTask -TaskName ScheduledDefrag -TaskPath '\Microsoft\Windows\Defrag\'
+@solution WIN-CL1
+Disable-ScheduledTask -TaskName ScheduledDefrag -TaskPath '\Microsoft\Windows\Defrag\'
+@explain
+Disable-ScheduledTask keeps the task and its settings but stops its triggers; Enable-ScheduledTask turns it back on. Unregister-ScheduledTask would delete it, which is hard to undo for a task Windows created. -TaskPath is only needed when several folders hold a task of the same name, but it makes the command exact.
+@endtask
+
+@task t07 | Administration | 10 | WIN-SRV1
+Install the Windows Server feature `{feature}` on WIN-SRV1.
+@check WIN-SRV1 | {feature} is installed
+(Get-WindowsFeature -Name {feature}).Installed
+@hint Install-WindowsFeature -Name {feature}
+@solution WIN-SRV1
+Install-WindowsFeature -Name {feature}
+Get-WindowsFeature -Name {feature}
+@explain
+Install-WindowsFeature (from the ServerManager module) exists only on Windows Server; Get-WindowsFeature shows [X] for installed features. Check the Restart Needed column of the result: some features need a restart before they work, and -Restart does it for you. On Windows 10 and 11 the equivalent is Enable-WindowsOptionalFeature -Online.
+@endtask

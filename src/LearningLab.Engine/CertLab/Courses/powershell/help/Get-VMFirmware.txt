@@ -1,0 +1,10 @@
+SYNOPSIS: Shows the UEFI firmware settings of a Generation 2 VM.
+DESCRIPTION:
+Get-VMFirmware shows whether Secure Boot is on (SecureBoot), which certificate template it uses (SecureBootTemplate) and the boot order. It only works for Generation 2 VMs; Generation 1 VMs have a BIOS (see Get-VM).
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMFirmware -VMName WEB-TEST -ComputerName HV1
+Is Secure Boot on for WEB-TEST, and with which template?
+RELATED: Set-VMFirmware, Get-VM, New-VM

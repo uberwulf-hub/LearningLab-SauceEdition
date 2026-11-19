@@ -1,0 +1,24 @@
+SYNOPSIS: Gets one or more user accounts from Active Directory.
+DESCRIPTION:
+Get-ADUser asks a domain controller for user objects. Use -Identity for one known user, or -Filter to search; one of the two is required. -Filter * returns every user.
+By default only a small set of properties comes back (Name, SamAccountName, UserPrincipalName, Enabled, DistinguishedName, GivenName, Surname, ObjectGUID, SID). Ask for more with -Properties, for example -Properties Department, Title, LastLogonDate, or -Properties * for all of them.
+The filter uses the PowerShell filter language, not LDAP: -Filter "Department -eq 'Sales'". Property names in the filter are the PowerShell names (Surname, not sn).
+PARAMETER Identity:
+One user: a SamAccountName (bcole), a distinguished name, a GUID or a SID. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search in the PowerShell filter language, such as "Enabled -eq 'False'" or "Name -like 'B*'". Use * for everyone.
+PARAMETER Properties:
+Extra properties to return. * returns all of them, which is slower on a real domain.
+PARAMETER SearchBase:
+The container or OU to search in, as a distinguished name, for example "OU=Sales,OU=Staff,DC=corp,DC=example".
+PARAMETER SearchScope:
+How deep to search below SearchBase: Base (only that object), OneLevel (its direct children) or Subtree (everything below, the default).
+PARAMETER Server:
+The domain controller to ask, such as DC2. Without it, a nearby domain controller of the computer's domain answers.
+PARAMETER ResultSetSize:
+The most objects to return.
+EXAMPLE: Get-ADUser bcole -Properties Department, Title, MemberOf
+Bianca Cole's account with her department, job title and direct group memberships.
+EXAMPLE: Get-ADUser -Filter * -SearchBase "OU=Sales,OU=Staff,DC=corp,DC=example" | Select-Object Name, Enabled
+Every user in the Sales OU and whether the account is enabled.
+RELATED: Set-ADUser, New-ADUser, Remove-ADUser, Search-ADAccount, Get-ADPrincipalGroupMembership

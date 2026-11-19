@@ -1,0 +1,35 @@
+NAME
+       fixfiles - put the SELinux labels of files back to the policy's defaults
+
+SYNOPSIS
+       fixfiles [-F] onboot
+       fixfiles [-F] restore [PATH...]
+       fixfiles [-F] relabel
+
+DESCRIPTION
+       fixfiles is a wrapper around restorecon for whole file systems. It
+       gives files the SELinux contexts that the policy's file-context rules
+       (including your semanage fcontext rules) say they should have. Run it
+       as root.
+
+       onboot creates /.autorelabel (with -F in it when -F is given) so that
+       the whole system is relabelled during the next boot, which is the
+       same as touch /.autorelabel. restore and relabel relabel at once.
+
+OPTIONS
+       -F     Force: also reset the parts of the context that restorecon
+              usually keeps (the SELinux user), for customised files too.
+
+EXAMPLES
+       Relabel everything at the next boot, for example after SELinux was
+       disabled for a while:
+
+           fixfiles -F onboot
+           reboot
+
+       Fix the labels of one directory tree now:
+
+           fixfiles restore /srv/web
+
+SEE ALSO
+       restorecon(8), semanage(8), setfiles(8), chcon(1)

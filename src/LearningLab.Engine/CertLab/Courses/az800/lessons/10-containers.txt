@@ -1,0 +1,159 @@
+# Unit: u10 | 10. Windows Server containers | Virtualization
+
+A **container** packages an application with everything it needs (files, settings, libraries) and runs it isolated from other applications, but unlike a VM it **shares the host's kernel**: no guest operating system to boot or patch, start-up in seconds, many more per host. Windows Server runs Windows containers (and Linux containers only through extra tooling). This unit covers isolation modes, base images and version rules, installing a container runtime, and running containers with `docker`. On Harborline's HV1 the Containers feature and a Docker engine are already installed.
+
+## Lesson: l1001 | Containers, isolation and base images
+
+### Process or Hyper-V isolation
+
+- **Process isolation**: the container is a set of processes on the host's kernel, separated by namespaces and resource controls. Fast and light, the default on Windows Server. The container's Windows version must **match the host's build** (a Windows Server 2022 host runs `ltsc2022` images).
+- **Hyper-V isolation**: each container runs in its own small, highly optimized VM with its own kernel. Stronger isolation (for untrusted code or several customers on one host), and it can run **older** images than the host (a Windows Server 2019 image on a 2022 host), never newer ones. Needs the **Hyper-V** role on the host (or nested virtualization when the host is itself a VM). Chosen per container with `--isolation=hyperv`; the default on Windows 10 and 11.
+
+### Base images
+
+Every Windows container image is built on one of Microsoft's base images, published on the Microsoft Artifact Registry (`mcr.microsoft.com`):
+
+- **Server Core** (`mcr.microsoft.com/windows/servercore:ltsc2022`): most compatible with traditional Windows Server apps, .NET Framework, IIS. Several GB.
+- **Nano Server** (`mcr.microsoft.com/windows/nanoserver:ltsc2022`): tiny (a few hundred MB), for .NET (Core) and other modern apps; no PowerShell or .NET Framework by default, and no Windows Installer.
+- **Windows Server** (`mcr.microsoft.com/windows/server:ltsc2022`): the fullest API set, for apps that need things Server Core lacks (for example some graphics or DirectX use).
+
+The **tag** names the Windows version (`ltsc2019`, `ltsc2022`, `ltsc2025`). Microsoft also publishes ready images built on them, such as IIS (`windows/servercore/iis`) and ASP.NET (`dotnet/framework/aspnet`).
+
+### Installing the pieces
+
+1. The **Containers** feature: `Install-WindowsFeature Containers`, then restart. For Hyper-V isolation also `Hyper-V`.
+2. A **container runtime**, which Windows Server doesn't include: Docker Community Edition (Moby, installed with Microsoft's script from its Windows containers GitHub repository), the commercial **Mirantis Container Runtime**, or **containerd** (used by Kubernetes). The old `DockerMsftProvider` PowerShell package is retired.
+3. Then `docker version` / `docker info` show the engine; Windows Admin Center has a Containers extension.
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> Get-WindowsFeature Containers, Hyper-V
+
+Display Name                                            Name                       Install State
+------------                                            ----                       -------------
+[X] Containers                                          Containers                     Installed
+[X] Hyper-V                                             Hyper-V                        Installed
+
+
+PS C:\Windows\system32> docker images
+REPOSITORY                                                TAG                                     SIZE
+mcr.microsoft.com/windows/servercore                      ltsc2022                                4.79GB
+PS C:\Windows\system32> docker run mcr.microsoft.com/windows/servercore:ltsc2019 cmd /c ver
+docker: Error response from daemon: hcs::CreateComputeSystem: The container operating system does not match the host operating system. Run it with --isolation=hyperv, or use an image built for this version of Windows.
+PS C:\Windows\system32> docker run --isolation=hyperv mcr.microsoft.com/windows/servercore:ltsc2019 cmd /c ver
+
+Microsoft Windows [Version 10.0.17763.1]
+```
+
+> The rule to remember: process isolation needs the same Windows build in the image and on the host; Hyper-V isolation runs the same or older builds.
+
+@try
+@task t1 | Virtualization | 10 | HV1
+The developers will build on the smallest Windows base image. Get the **Nano Server ltsc2022** image onto HV1.
+@check admin | the image is on HV1
+images has "mcr.microsoft.com/windows/nanoserver:ltsc2022"
+@solution HV1
+docker pull mcr.microsoft.com/windows/nanoserver:ltsc2022
+@endtask
+@task t2 | Virtualization | 10 | HV1
+An old tool only exists as a **Server Core ltsc2019** image. Run it on HV1 in the background as a container named **legacy**, with the command `ping -t localhost` (it must keep running), in the isolation mode that lets it start.
+@check admin | legacy runs with Hyper-V isolation
+container["legacy"].status == Running
+container["legacy"].isolation == hyperv
+@hint HV1 runs Windows Server 2022 (build 20348); the image is 2019 (build 17763).
+@solution HV1
+docker run -d --name legacy --isolation=hyperv mcr.microsoft.com/windows/servercore:ltsc2019 ping -t localhost
+@endtask
+@end
+
+@quiz
+? A Windows Server 2022 host must run a container from a Windows Server 2019 image. What works?
+- Process isolation, because 2022 is newer
++ Hyper-V isolation
+- Nothing: images must always match the host
+! Hyper-V isolation gives the container its own kernel, so older images run; process isolation needs the same build.
+? Which base image is smallest and meant for modern .NET apps, without the .NET Framework?
++ Nano Server
+- Server Core
+- Windows Server
+! Nano Server is a few hundred MB; Server Core is the choice for .NET Framework and IIS apps.
+? What must you add to a new Windows Server 2022 machine before it can run Windows containers? (Choose the best answer.)
+- Only the Hyper-V role
++ The Containers feature and a container runtime such as Docker CE, Mirantis or containerd
+- Nothing: Docker is built into Windows Server
+! Windows Server has the Containers feature but no runtime of its own; install one (and Hyper-V for Hyper-V isolation).
+@end
+
+## Lesson: l1002 | Running and managing containers
+
+The everyday `docker` commands:
+
+- `docker pull IMAGE:TAG`, `docker images`, `docker rmi IMAGE` (an image used by any container, even a stopped one, can't be removed).
+- `docker run [-d] [--name N] [-p HOST:CONTAINER] [--isolation=process|hyperv] [-v HOSTDIR:CONTAINERDIR] IMAGE [COMMAND]`: `-d` runs it in the background, `-p 8080:80` publishes container port 80 on the host's port 8080, `-v` mounts a host folder (data inside a container is lost when the container is removed).
+- `docker ps` (running), `docker ps -a` (all, also stopped), `docker stop`, `docker start`, `docker rm` (a stopped container; `-f` for a running one), `docker exec -it NAME powershell` (a shell inside a running container), `docker inspect`.
+- `docker build -t NAME .` builds your own image from a **Dockerfile** (`FROM mcr.microsoft.com/windows/servercore:ltsc2022`, `RUN`, `COPY`, `EXPOSE`, `CMD`), and `docker push` uploads it to a registry such as Azure Container Registry.
+
+### Container networking
+
+The Windows container network drivers:
+
+- **nat** (the default): containers get private addresses behind the host (172.x by default); publish ports with `-p` to reach them from outside.
+- **transparent**: containers get addresses on the physical network, like VMs on an external switch (on a Hyper-V VM host, turn on MAC address spoofing).
+- **l2bridge** / **l2tunnel**: containers share the host's MAC address, used by Kubernetes and SDN; **overlay**: spans several hosts in a swarm or cluster.
+
+```terminal
+#machine HV1
+PS C:\Windows\system32> docker run -d --name web1 -p 8080:80 mcr.microsoft.com/windows/servercore:ltsc2022 ping -t localhost
+72009e92bebbf3a9c1b2d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d
+PS C:\Windows\system32> docker inspect -f '{{.HostConfig.Isolation}}' web1
+process
+PS C:\Windows\system32> docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+5a1f0c7e2b94   nat       nat       local
+9d3e6b8a1c27   none      null      local
+```
+
+> For many containers on many hosts, use an orchestrator: **Azure Kubernetes Service** (AKS, also on Azure Local / on premises) runs Windows node pools. For a single container without servers, **Azure Container Instances**.
+
+@try
+@setup HV1
+docker run --name oldtest --isolation=hyperv mcr.microsoft.com/windows/servercore:ltsc2019 cmd /c ver
+@task t1 | Virtualization | 10 | HV1
+Run the IIS image `mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022` in the background as **web**, with process isolation, and make its port 80 reachable on HV1's port **8080**.
+@check admin | web runs with port 8080 published
+container["web"].status == Running
+container["web"].ports == "8080:80"
+container["web"].isolation == process
+@solution HV1
+docker run -d --name web -p 8080:80 mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2022
+@endtask
+@task t2 | Virtualization | 10 | HV1
+A test left the stopped container **oldtest** and the **Server Core ltsc2019** image behind. Remove both.
+@check admin | the container and the image are gone
+not container["oldtest"]
+images !has "mcr.microsoft.com/windows/servercore:ltsc2019"
+@hint docker rmi refuses while any container (even a stopped one) uses the image.
+@solution HV1
+docker rm oldtest
+docker rmi mcr.microsoft.com/windows/servercore:ltsc2019
+@endtask
+@end
+
+@quiz
+? `docker run -d -p 8080:80 IMAGE` on a host using the nat network. How do clients reach the website?
++ On the host's address, port 8080
+- On the container's 172.x address, port 80, from anywhere on the network
+- They can't: nat networks have no inbound access
+! -p publishes container port 80 as port 8080 on the host; the nat address is private to the host.
+? `docker rmi` says the image is used by a container, but `docker ps` lists nothing. Why?
+- The image is still downloading
++ A stopped container uses it: docker ps -a shows it; remove it first
+- Images can be removed only after a restart
+! docker ps shows only running containers; stopped ones still hold their image.
+? Containers must get addresses on the office network, like physical machines. Which network driver?
+- nat
++ transparent
+- none
+! The transparent driver bridges containers onto the physical network.
+@end
+

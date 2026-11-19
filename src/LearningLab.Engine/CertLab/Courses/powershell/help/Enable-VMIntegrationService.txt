@@ -1,0 +1,14 @@
+SYNOPSIS: Turns on an integration service for a VM.
+DESCRIPTION:
+Enable-VMIntegrationService turns a service on in the VM's settings. The best-known case is Guest Service Interface, which is off by default and is needed to copy files from the host into the VM.
+
+The guest must have the integration components (current Windows and Linux have them built in).
+PARAMETER Name:
+The service or services, for example "Guest Service Interface". Position 0.
+PARAMETER VMName:
+The VM or VMs. Position 1.
+EXAMPLE: Enable-VMIntegrationService -Name "Guest Service Interface" -VMName WEB-TEST -ComputerName HV1
+Lets the host copy files into WEB-TEST.
+EXAMPLE: Get-VMIntegrationService -VMName WEB-TEST
+Checks the result.
+RELATED: Disable-VMIntegrationService, Get-VMIntegrationService

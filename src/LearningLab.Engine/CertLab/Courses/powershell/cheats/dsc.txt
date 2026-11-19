@@ -1,0 +1,27 @@
+# Sheet: dsc | Desired State Configuration | DSC
+## Writing
+Configuration Name { param(...) Node 'WIN-SRV1' { ... } } :: a configuration (like a function)
+Import-DscResource -ModuleName PSDesiredStateConfiguration :: say where the resources come from
+File Site { DestinationPath = 'C:\Site'; Type = 'Directory' } :: a resource block: type, your name, properties
+Ensure = 'Present' / 'Absent' :: should it exist?
+DependsOn = '[File]Site' :: do that block first
+Get-DscResource :: the resources that exist
+Get-DscResource File -Syntax :: the properties one resource takes
+## Compiling
+Name -OutputPath C:\DscConfigs\Name :: write one .mof file per node
+Name -ComputerName WIN-SRV1, WIN-CL1 :: when the configuration has that parameter
+Name -ConfigurationData $data :: AllNodes, NodeName, '*' for every node; $Node inside
+## Applying
+Start-DscConfiguration -Path C:\DscConfigs\Name -Wait -Verbose :: apply and watch
+Start-DscConfiguration -Path C:\DscConfigs\Name :: as a background job
+Start-DscConfiguration -UseExisting -Wait :: apply the current configuration again
+## Checking
+Test-DscConfiguration :: True when nothing drifted
+Test-DscConfiguration -Detailed :: which resources are in or out of the desired state
+Get-DscConfiguration :: the current values of the configured resources
+Get-DscConfigurationStatus :: the last run: when, result, type
+Get-DscLocalConfigurationManager :: RefreshMode, ConfigurationMode, frequencies
+Remove-DscConfigurationDocument -Stage Current :: forget the current configuration
+## Built-in resources
+File, Registry, Environment, Script, Log :: files, registry values, machine variables, your own code, a message
+Service, User, Group, WindowsFeature :: services, local accounts, server roles and features

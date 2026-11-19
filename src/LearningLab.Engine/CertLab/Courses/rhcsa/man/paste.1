@@ -1,0 +1,30 @@
+NAME
+       paste - join the lines of files side by side
+
+SYNOPSIS
+       paste [-d DELIMITERS] [-s] FILE...
+
+DESCRIPTION
+       paste writes line 1 of every file on one output line, separated by
+       tabs, then line 2 of every file, and so on. With -s it joins all the
+       lines of each file into one line instead. A FILE named - is standard
+       input.
+
+OPTIONS
+       -d, --delimiters LIST
+              Use these characters instead of tabs (used in turn).
+
+       -s, --serial
+              Join all lines of one file onto one line.
+
+EXAMPLES
+       Two columns side by side, separated by commas:
+
+           paste -d, names.txt phones.txt
+
+       All user names on one line, separated by spaces:
+
+           cut -d: -f1 /etc/passwd | paste -s -d' '
+
+SEE ALSO
+       cut(1), join(1), column(1)

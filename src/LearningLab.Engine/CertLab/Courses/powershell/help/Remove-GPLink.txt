@@ -1,0 +1,18 @@
+SYNOPSIS: Removes a GPO link from an OU, the domain or a site.
+DESCRIPTION:
+Remove-GPLink deletes one link. The GPO itself stays, with its settings and other links, and can be linked again later. The settings stop applying there at the next Group Policy refresh.
+PARAMETER Name:
+The GPO's display name. Position 0.
+PARAMETER Guid:
+The GPO, by GUID.
+PARAMETER Target:
+The OU, domain or site to unlink it from.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-GPLink "Sales Desktop" -Target "OU=Sales,OU=Staff,DC=corp,DC=example"
+Unlinks the GPO from the Sales OU.
+EXAMPLE: Get-GPInheritance "OU=Sales,OU=Staff,DC=corp,DC=example"
+Checks which GPOs are still linked there.
+RELATED: New-GPLink, Set-GPLink, Remove-GPO

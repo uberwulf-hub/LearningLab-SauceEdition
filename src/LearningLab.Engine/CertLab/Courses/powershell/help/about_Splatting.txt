@@ -1,0 +1,32 @@
+TOPIC
+    about_Splatting
+
+SHORT DESCRIPTION
+    Passing parameters from a hashtable or an array with @.
+
+LONG DESCRIPTION
+    Put the parameters in a hashtable and pass the hashtable with @ instead
+    of $:
+
+        $params = @{
+            Name        = 'ErrorActionPreference'
+            ValueOnly   = $true
+        }
+        Get-Variable @params
+
+    Each key is a parameter name and each value its value; a switch gets
+    $true. An array passed with @ gives positional arguments.
+
+    Splatting keeps long commands readable, and lets a script build the
+    parameters step by step:
+
+        $p = @{ ComputerName = 'WIN-CL1' }
+        if ($cred) { $p.Credential = $cred }
+        Invoke-Command @p -ScriptBlock { hostname }
+
+    Inside a function, @PSBoundParameters passes on the parameters the
+    function itself was called with.
+
+SEE ALSO
+    about_Hash_Tables
+    about_Functions_Advanced_Parameters

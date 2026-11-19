@@ -1,0 +1,18 @@
+SYNOPSIS: Continues a workflow job that was suspended.
+DESCRIPTION:
+Resume-Job continues a job that Suspend-Job (or the workflow itself) paused. In Windows PowerShell 5.1 only workflow jobs can be suspended and resumed.
+
+Background jobs from Start-Job and remote jobs from Invoke-Command -AsJob cannot be suspended, so there is nothing to resume for them.
+PARAMETER Id:
+The job's Id number.
+PARAMETER Name:
+The job's name. Wildcards are allowed.
+PARAMETER Job:
+The job objects, for example from Get-Job.
+PARAMETER Wait:
+Waits until the job is running again before returning.
+EXAMPLE: Resume-Job -Name Nightly
+Continues the suspended workflow job named Nightly.
+NOTES:
+The Cert Lab practice console does not simulate workflows, so this command always reports that the job cannot be resumed.
+RELATED: Suspend-Job, Get-Job, Receive-Job, about_Jobs

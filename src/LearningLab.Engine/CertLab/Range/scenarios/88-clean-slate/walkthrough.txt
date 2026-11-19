@@ -1,0 +1,19 @@
+Wiping a log hides the details, but not the fact - and a forwarded copy keeps everything.
+
+1. The clearing. On {{PC}}, Get-WinEvent -LogName Security shows almost nothing: event 1102, "the audit
+   log was cleared", by {{VIC}}. Clearing the log always leaves that one event behind.
+
+2. The copy. soc receives each event as it is written (/var/log/forwarded/{{LOWER:PC}}-security.log), so
+   the clearing on the PC didn't touch it. It shows a failed and then a successful remote sign-in for
+   {{VIC}} from {{ATKIP}} (Logon Type 10), the account {{ROGUE}} being created and added to
+   Administrators, and the program that cleared the log: {{CLEARCMD}}.
+
+3. Staying in. C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\{{START}} runs for everyone
+   who signs in and copies the plans share into C:\Users\Public\Libraries\cache. The flag is in
+   readme.txt there.
+
+4. Undo it. Remove-Item the start-up file and Remove-LocalUser {{ROGUE}}. If you are too slow, the next
+   sign-in copies the plans out. (Also change {{VIC}}'s password.)
+
+For real: forward logs to another machine as they are written (an intruder on one PC can't reach them),
+alert on event 1102, and keep the Security log big enough to hold weeks of events.

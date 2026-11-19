@@ -1,0 +1,182 @@
+NAME
+       firewall-cmd - configure the firewalld firewall
+
+SYNOPSIS
+       firewall-cmd [--permanent] [--zone=ZONE] OPTION...
+       firewall-cmd --reload
+
+DESCRIPTION
+       RHEL's firewall is the firewalld service; firewall-cmd talks to it.
+       Incoming connections are allowed or refused per zone. Each network
+       interface (and optionally each source address range) belongs to one
+       zone, and each zone has a list of allowed services and ports.
+       Anything not allowed is rejected. Outgoing traffic is not limited.
+
+       The default zone on RHEL is public, which allows ssh, cockpit and
+       dhcpv6-client. Other zones include home, work, internal, trusted
+       (everything allowed), block and drop (nothing allowed). Options
+       without --zone= work on the default zone.
+
+   Runtime and permanent
+       firewalld keeps two configurations:
+
+       runtime
+              What is in effect now. Changes without --permanent go here; they
+              work at once but are lost at the next reload or reboot.
+
+       permanent
+              What is saved in /etc/firewalld and loaded at start and by
+              --reload. Changes with --permanent go here only; they do
+              nothing until you reload.
+
+       So the usual way to make a lasting change is to add it with
+       --permanent and then run firewall-cmd --reload. Alternatively make it
+       in runtime, test it, and save everything with
+       --runtime-to-permanent.
+
+   Services
+       A service is a name for one or more ports, defined in XML files in
+       /usr/lib/firewalld/services (and your own in /etc/firewalld/services):
+       http is 80/tcp, https 443/tcp, nfs 2049/tcp, mountd, rpc-bind, dns,
+       ntp, samba, mysql... --get-services lists them all. Use a service name
+       when there is one; use a port (8080/tcp) when there is not.
+
+OPTIONS
+   General
+       --state
+              Print running or not running.
+
+       --reload
+              Throw away the runtime configuration and load the permanent
+              one. Existing connections stay.
+
+       --runtime-to-permanent
+              Save the whole runtime configuration as the permanent one.
+
+       --permanent
+              Work on the permanent configuration (see above).
+
+       --zone=ZONE
+              Work on ZONE instead of the default zone.
+
+       -q, --quiet
+              Do not print "success".
+
+       --version
+              Print the firewalld version.
+
+   Zones
+       --get-default-zone, --set-default-zone=ZONE
+              Show or change the default zone (this change is permanent at
+              once).
+
+       --get-zones
+              List all zones.
+
+       --get-active-zones
+              List the zones that have interfaces or sources, with them.
+
+       --get-zone-of-interface=IFACE
+              Which zone an interface belongs to.
+
+       --list-all
+              Everything about one zone: interfaces, sources, services,
+              ports, masquerade, rich rules.
+
+       --list-all-zones
+              The same for every zone.
+
+       --add-interface=IFACE, --change-interface=IFACE,
+       --remove-interface=IFACE
+              Put an interface in the zone, move it there, or take it out.
+
+       --add-source=CIDR, --remove-source=CIDR
+              Put traffic from an address range in the zone, whatever
+              interface it arrives on.
+
+       --list-interfaces, --list-sources
+              Show the zone's interfaces or sources.
+
+   Services and ports
+       --add-service=SERVICE, --remove-service=SERVICE
+              Allow (or stop allowing) a service.
+
+       --query-service=SERVICE
+              Is the service allowed? Prints yes or no; exit status 0 for yes.
+
+       --list-services
+              The allowed services.
+
+       --add-port=PORT/PROTOCOL, --remove-port=PORT/PROTOCOL
+              Allow a port or range, such as 8080/tcp or 5000-5010/udp.
+
+       --query-port=PORT/PROTOCOL, --list-ports
+              Check or list the allowed ports.
+
+       --get-services
+              All service names firewalld knows.
+
+       --info-service=SERVICE
+              The ports and other settings of a service.
+
+       --new-service=NAME
+              Create an empty service of your own (with --permanent).
+
+   Other
+       --add-rich-rule='RULE', --remove-rich-rule='RULE',
+       --list-rich-rules
+              Rules in firewalld's rich language, for example to allow a
+              service only from one network:
+              'rule family="ipv4" source address="192.168.50.0/24" service
+              name="http" accept'
+
+       --add-masquerade, --remove-masquerade, --query-masquerade
+              Turn address translation (NAT) on or off for the zone.
+
+       --panic-on, --panic-off, --query-panic
+              Drop all network traffic at once, or stop doing so.
+
+EXAMPLES
+       Allow the web server for good, and check it:
+
+           firewall-cmd --permanent --add-service=http
+           firewall-cmd --reload
+           firewall-cmd --list-services
+
+       Allow a container's published port 8080:
+
+           firewall-cmd --permanent --add-port=8080/tcp
+           firewall-cmd --reload
+
+       See which zone enp1s0 is in and what it allows:
+
+           firewall-cmd --get-active-zones
+           firewall-cmd --list-all
+
+       Try a change first, then keep it:
+
+           firewall-cmd --add-service=https
+           firewall-cmd --runtime-to-permanent
+
+FILES
+       /etc/firewalld/firewalld.conf
+              Settings, including DefaultZone.
+
+       /etc/firewalld/zones/*.xml
+              Your saved zone changes (written by --permanent).
+
+       /usr/lib/firewalld/services/*.xml
+              The service definitions that come with firewalld.
+
+NOTES
+       If a service still cannot be reached from server2 after you opened the
+       firewall, check that the service listens (ss -tlnp) and, for an
+       unusual port, that SELinux allows it (semanage port -l).
+
+       A forgotten --reload after --permanent, or a change made without
+       --permanent, is the most common reason a firewall task fails after a
+       reboot.
+
+SEE ALSO
+       firewall-offline-cmd(1), firewalld(1), firewalld.zones(5),
+       firewalld.richlanguage(5), semanage(8), ss(8)

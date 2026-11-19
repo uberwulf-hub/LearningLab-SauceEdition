@@ -1,0 +1,18 @@
+NAME
+       xxd - show a file as hexadecimal numbers
+
+SYNOPSIS
+       xxd [FILE]
+
+DESCRIPTION
+       xxd prints a hex dump of FILE (or standard input): each line starts
+       with the offset, then 16 bytes as hexadecimal pairs grouped two bytes
+       at a time, then the same bytes as text, with a dot for each byte that
+       is not printable. It shows what really is in a file, such as Windows
+       line endings (0d 0a) or a missing final newline. It comes with vim.
+
+EXAMPLES
+           printf 'hi\r\n' | xxd
+
+SEE ALSO
+       od(1), hexdump(1), strings(1)

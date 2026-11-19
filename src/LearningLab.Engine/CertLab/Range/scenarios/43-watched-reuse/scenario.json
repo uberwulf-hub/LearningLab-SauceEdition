@@ -1,0 +1,21 @@
+{
+    "base": "08-reuse-and-reuse",
+    "id": "watched-reuse",
+    "title": "Reuse, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Advanced",
+    "order": 3,
+    "summary": "The leaked-hash, reused-password chain from Reuse and Reuse, with a watcher on the second server. Cracking happens offline and makes no noise; it is the live steps against the target you must keep quiet.",
+    "story": "Copperline Freight (made up) is watching app02 on 10.10.8.0/24. Grab the hash dump from the first server, crack it offline, and use the reused password on the watched server - without a loud scan, failed sign-ins or guessing against it. You start on scout.",
+    "goal": "Capture both flags on app02 the quiet way and keep the full quiet bonus.",
+    "skills": "quiet recon, reading a leaked backup, offline cracking, a reused password, a set-user-ID program",
+    "quietPoints": 100,
+    "watch": [ "app02" ],
+    "noisySolution": "noisy.txt",
+    "hints": [
+        { "text": "The crack is offline - it makes no noise at all. Do your loud-looking work (reading the backup) on the FIRST server; the watcher only cares about app02. Scan app02 just once (nmap -sV 10.10.8.30) and sign in with the cracked password - one clean login.", "cost": 14 },
+        { "text": "Never run pwguess against app02: you already have the password from the crack, so use it. A set-user-ID program on app02 reads root's flag - find / -perm -4000.", "cost": 20 },
+        { "text": "Order: webscan/read the backup on web01, hashcrack it, ssh renter@10.10.8.30 with the cracked password, then the set-user-ID reader. Only the login touches the watched box.", "cost": 26 }
+    ]
+}

@@ -1,0 +1,67 @@
+title: Guess the address
+level: Advanced
+kind: OSINT
+topic: OSINT
+teaser: a staff page and a job advert
+points: 70
+order: 82
+answer: {{EMAIL}}
+var: CO = company
+var: CFO = person
+var: OTHER = person
+var: FMT = pick:first.last|last.first|first_last|firstlast
+
+@vars FMT=first.last
+EMAIL = {{LOWER:CFO_FIRST}}.{{LOWER:CFO_LAST}}@{{CO_DOMAIN}}
+EXAMPLE = {{LOWER:OTHER_FIRST}}.{{LOWER:OTHER_LAST}}@{{CO_DOMAIN}}
+@vars FMT=last.first
+EMAIL = {{LOWER:CFO_LAST}}.{{LOWER:CFO_FIRST}}@{{CO_DOMAIN}}
+EXAMPLE = {{LOWER:OTHER_LAST}}.{{LOWER:OTHER_FIRST}}@{{CO_DOMAIN}}
+@vars FMT=first_last
+EMAIL = {{LOWER:CFO_FIRST}}_{{LOWER:CFO_LAST}}@{{CO_DOMAIN}}
+EXAMPLE = {{LOWER:OTHER_FIRST}}_{{LOWER:OTHER_LAST}}@{{CO_DOMAIN}}
+@vars FMT=firstlast
+EMAIL = {{LOWER:CFO_FIRST}}{{LOWER:CFO_LAST}}@{{CO_DOMAIN}}
+EXAMPLE = {{LOWER:OTHER_FIRST}}{{LOWER:OTHER_LAST}}@{{CO_DOMAIN}}
+
+@intro
+Attackers sending a fake invoice want the finance chief's e-mail address. In ~/osint are
+two pages saved from {{CO}}'s (made-up) web site. Neither lists that address, but
+together they give it away. Work it out. (Everyone here is invented.)
+
+@setup
+mkdir -p /home/player/osint
+cat > /home/player/osint/team.html <<HTML
+<h1>Meet the team at {{CO}}</h1>
+<ul>
+<li>{{OTHER_FULL}} - Head of People</li>
+<li>{{CFO_FULL}} - Chief Financial Officer</li>
+<li>Robin Vale - Warehouse lead</li>
+</ul>
+HTML
+cat > /home/player/osint/jobs.html <<HTML
+<h2>We're hiring: accounts assistant</h2>
+<p>Send your CV and a short letter to {{OTHER_FIRST}} in People: {{EXAMPLE}}</p>
+HTML
+chown -R player: /home/player/osint
+
+@solution
+cat osint/team.html
+cat osint/jobs.html
+echo {{EMAIL}}
+
+@walkthrough
+1. team.html names the finance chief: {{CFO_FULL}}.
+2. jobs.html shows one real address, {{EXAMPLE}}, for {{OTHER_FULL}}. That reveals the
+   company's pattern (here {{FMT}}, lower case) and its domain, {{CO_DOMAIN}}.
+3. Apply the pattern to the CFO: {{EMAIL}}.
+
+This is why phishing works so well: a name on a team page plus one published address is
+enough. Defences: expect the pattern to be known, and train finance staff to confirm
+payment requests another way.
+
+@hint 15
+One page has the name you need; the other shows how this company builds its e-mail addresses.
+
+@hint 25
+Copy the pattern of the address in jobs.html (lower case, same separator, same domain) using the CFO's first and last names.

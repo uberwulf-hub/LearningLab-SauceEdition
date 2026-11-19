@@ -1,0 +1,22 @@
+SYNOPSIS: Shows objects in a custom layout, including the objects nested inside them.
+DESCRIPTION:
+Format-Custom is the least used of the four Format- cmdlets. On a real PC it draws each object as a block, such as class DateTime { Day = 2 ... }, and opens up the objects stored in its properties too, down to -Depth levels. A few types also have a custom view defined in PowerShell's format files.
+
+Cert Lab's practice console shows Format-Custom output the way Format-List does: one property per line. That is enough to see what is inside an object; for the real nested layout, try it on a Windows PC.
+
+Like every Format- cmdlet, Format-Custom produces formatting objects for the screen. Put it last in a pipeline.
+PARAMETER Property:
+The properties to show. Position 0. * means all of them.
+PARAMETER GroupBy:
+Starts a new group, with a heading, each time this property changes. Sort by it first.
+PARAMETER InputObject:
+The object to show. Usually it comes through the pipeline.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -First 1 | Format-Custom
+Shows the first employee's properties.
+EXAMPLE: Get-Date | Format-Custom
+On a real PC, shows the date as a class block with all its properties, such as Day, DayOfWeek and Ticks.
+NOTES:
+Real 5.1 also has -Depth (how many levels of nested objects to open) and -View for named custom views.
+
+To explore nested objects in a way that works everywhere, use Select-Object -ExpandProperty or ConvertTo-Json -Depth.
+RELATED: Format-List, Format-Table, Format-Wide, about_Format.ps1xml

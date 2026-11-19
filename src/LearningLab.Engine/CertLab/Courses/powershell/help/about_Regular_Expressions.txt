@@ -1,0 +1,62 @@
+TOPIC
+    about_Regular_Expressions
+
+SHORT DESCRIPTION
+    Patterns that describe text, for -match, -replace, -split and more.
+
+LONG DESCRIPTION
+    A regular expression (regex) is a small language for describing text:
+    "three digits", "a word at the start of the line", "WIN- followed by
+    letters". PowerShell uses the .NET regex engine.
+
+  Where you can use them
+    -match, -notmatch   Test a string; fills $Matches on success.
+    -replace            Replace every match.
+    -split              Split where the pattern matches.
+    switch -Regex       Pick a branch by pattern.
+    Select-String       Search files or text, like findstr.
+    [ValidatePattern()] Check a parameter value.
+
+    Like the other operators, these ignore case. Use -cmatch, -creplace
+    and -csplit to respect case.
+
+  The building blocks
+    .        any one character         \d  a digit     \w  a word letter
+    \s       white space               \D \W \S  the opposites
+    ^ $      start and end of text     \b  edge of a word
+    [abc]    one of these              [^abc]  none of these
+    [0-9a-f] a range
+    *        zero or more              +   one or more
+    ?        zero or one               {3} {2,5}  exact counts
+    ( )      a group                   |   or
+    \        makes the next special character plain: \. is a real dot
+
+  Examples
+        'WIN-SRV1' -match '^WIN-(\w+)$'
+        $Matches[1]                          # SRV1
+
+        '192.168.10.25' -match '^\d{1,3}(\.\d{1,3}){3}$'
+
+        'Server  one   two' -split '\s+'
+
+        'C:\LabFiles\a.txt' -replace '\.txt$', '.bak'
+
+        Select-String -Path C:\LabFiles\*.log -Pattern 'error \d+'
+
+  Named groups and replacements
+    (?<name>...) names a group; read it from $Matches.name. In -replace,
+    $1 or ${name} put a group back. Use single quotes so PowerShell does
+    not treat $1 as its own variable:
+
+        'Smith, Ann' -replace '(\w+), (\w+)', '$2 $1'    # Ann Smith
+
+  Wildcards are different
+    -like and -Path use wildcards (* and ?), which are much simpler and
+    are not regular expressions. [regex]::Escape() makes any text safe to
+    use as a plain pattern.
+
+SEE ALSO
+    about_Comparison_Operators
+    about_Operators
+    Select-String
+    about_Quoting_Rules

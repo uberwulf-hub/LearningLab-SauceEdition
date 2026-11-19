@@ -1,0 +1,36 @@
+SYNOPSIS: Creates a user account in Active Directory.
+DESCRIPTION:
+New-ADUser creates a user object on a domain controller. Only -Name is required, but a useful account also needs a SamAccountName (the pre-Windows 2000 logon name), a UserPrincipalName and a password.
+A common trap: without -AccountPassword and -Enabled $true the account is created disabled, because an account with no password can't be turned on. The password must meet the domain's password policy.
+Without -Path the user lands in the default Users container (CN=Users), not in an OU, so Group Policy linked to your OUs doesn't reach it.
+PARAMETER Name:
+The object's name (its CN), usually the full name, such as "Lena Ortiz". Position 0.
+PARAMETER SamAccountName:
+The short logon name, such as lortiz (CORP\lortiz). 20 characters at most.
+PARAMETER UserPrincipalName:
+The sign-in name in email form, such as lortiz@corp.example.
+PARAMETER GivenName:
+First name.
+PARAMETER Surname:
+Last name.
+PARAMETER DisplayName:
+The name shown in address lists and sign-in screens.
+PARAMETER Path:
+The OU or container for the new account, as a distinguished name.
+PARAMETER AccountPassword:
+The first password, as a SecureString (Read-Host -AsSecureString or ConvertTo-SecureString).
+PARAMETER Enabled:
+$true to turn the account on right away. Needs a password.
+PARAMETER ChangePasswordAtLogon:
+$true makes the person choose a new password at the first sign-in.
+PARAMETER PasswordNeverExpires:
+$true exempts the account from password expiry; usually only for special accounts.
+PARAMETER Department:
+The Department attribute. Title, Description, City, Company, Office and EmailAddress work the same way.
+PARAMETER OtherAttributes:
+A hash table of extra LDAP attributes to set, such as @{info='Starts Monday'}.
+EXAMPLE: New-ADUser -Name "Lena Ortiz" -SamAccountName lortiz -UserPrincipalName lortiz@corp.example -Path "OU=Sales,OU=Staff,DC=corp,DC=example" -AccountPassword (Read-Host -AsSecureString "Password") -Enabled $true -ChangePasswordAtLogon $true
+A new, enabled Sales user who must change the password at the first sign-in.
+EXAMPLE: Import-Csv .\new-staff.csv | ForEach-Object { New-ADUser -Name $_.Name -SamAccountName $_.Sam -Department $_.Dept -Path "OU=Staff,DC=corp,DC=example" }
+Creates one (disabled) account per row of a CSV file.
+RELATED: Get-ADUser, Set-ADUser, Set-ADAccountPassword, Enable-ADAccount, Add-ADGroupMember

@@ -1,0 +1,31 @@
+# Deck: security | Security | Security
+Allow the service http in the saved firewall rules :: `firewall-cmd --permanent --add-service=http`
+Open TCP port 8080 in the saved firewall rules :: `firewall-cmd --permanent --add-port=8080/tcp`
+Load the saved firewall rules into the running firewall :: `firewall-cmd --reload`
+Save the running firewall rules as the permanent ones :: `firewall-cmd --runtime-to-permanent`
+Show everything the default zone allows right now :: `firewall-cmd --list-all`
+The umask is 027. Which modes do new files and folders get? :: files 640, folders 750
+Which umask gives new files 600 and folders 700? :: 077
+Set the umask 027 for every user who logs in :: a file /etc/profile.d/umask.sh with the line umask 027
+Make an ed25519 key pair without a passphrase :: `ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519`
+Install your public key for student on server2 :: `ssh-copy-id student@server2`
+Which file on the server lists the public keys allowed to log in as a user? :: ~/.ssh/authorized_keys (mode 600, in ~/.ssh mode 700)
+sshd_config setting that forbids root logins over ssh :: PermitRootLogin no (and check /etc/ssh/sshd_config.d: the first value wins)
+sshd_config setting that allows only key logins :: PasswordAuthentication no
+Make sshd read its changed settings :: `systemctl restart sshd`
+Show the current SELinux mode :: `getenforce`
+Switch SELinux to permissive until the next boot :: `setenforce 0`
+Which file sets the SELinux mode at boot? :: /etc/selinux/config (SELINUX=enforcing)
+Show the current mode and the mode from the config file together :: `sestatus`
+Show the SELinux context of the folder /var/www/html :: `ls -dZ /var/www/html`
+Show the SELinux context of all processes :: `ps -eZ`
+Put the default SELinux labels back on /var/www/html and everything in it :: `restorecon -Rv /var/www/html`
+Make /web and everything in it web content in the label database :: `semanage fcontext -a -t httpd_sys_content_t '/web(/.*)?'`
+List only the file context rules you added :: `semanage fcontext -l -C`
+Allow Apache to listen on TCP port 8088 :: `semanage port -a -t http_port_t -p tcp 8088`
+The port already has another type. Which semanage port option changes it? :: -m (modify) instead of -a
+Turn on the boolean httpd_enable_homedirs for good :: `setsebool -P httpd_enable_homedirs on`
+List all booleans with descriptions and saved values :: `semanage boolean -l`
+Show the SELinux denials of the last ten minutes :: `ausearch -m AVC -ts recent`
+Explain the denials in the audit log in plain words (setroubleshoot-server) :: `sealert -a /var/log/audit/audit.log`
+In an AVC message, what are scontext and tcontext? :: scontext is the process (source), tcontext the object it tried to use (target)

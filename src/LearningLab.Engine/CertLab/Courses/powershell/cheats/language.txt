@@ -1,0 +1,37 @@
+# Sheet: language | Variables, types and operators | Language
+## Variables and types
+$name = 'WIN-SRV1' :: create or change a variable
+[int]$port = '8080' :: a variable that keeps its type
+$x.GetType().FullName :: the type of a value
+'42' -as [int] :: convert, or $null when it cannot
+42 -is [int] :: type test
+Get-Variable -Name p* :: the variables whose names start with p
+Remove-Variable name :: delete a variable
+## Arrays
+$a = 1, 2, 3 :: an array
+$a = @(Get-Process) :: always an array
+$a[0]; $a[-1]; $a[1..2] :: first, last, a slice
+$a += 4 :: a new, longer array
+$a -contains 2 :: is the value in it?
+$a -gt 1 :: with an array on the left, comparisons filter
+## Hashtables and objects
+$h = @{ Key = 'value' } :: a hashtable
+$h = [ordered]@{ A = 1; B = 2 } :: a hashtable that keeps its order
+$h.Key; $h['Key'] :: read a value
+$h.ContainsKey('Key') :: test for a key
+[pscustomobject]@{ Name = 'a'; Size = 1 } :: a custom object
+$o | Add-Member -NotePropertyName X -NotePropertyValue 1 :: add a property
+## Operators
+-eq -ne -gt -ge -lt -le :: compare (-ceq ... for case-sensitive)
+-like 'WIN*' :: wildcards
+-match '\d+' :: regular expression; results in $Matches
+-replace 'old', 'new' :: replace with a regular expression
+-split ',' :: split into an array
+-join ',' :: join an array into a string
+'{0} of {1:N2}' -f $a, $b :: format values into text
+## Strings
+'literal $x' :: single quotes: as written
+"expanded $x and $($obj.Prop)" :: double quotes: variables and $( ) expand
+"tab`tnew line`n" :: backtick escapes
+@" ... "@ :: a here-string over several lines
+$s.Trim(); $s.ToUpper(); $s.Substring(0, 3) :: string methods (the ones that compare text, such as .Contains(), are case-sensitive)

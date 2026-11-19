@@ -1,0 +1,81 @@
+NAME
+       loginctl - look at and control login sessions and users (systemd-logind)
+
+SYNOPSIS
+       loginctl [list-sessions]
+       loginctl list-users
+       loginctl user-status [USER]
+       loginctl show-user [-p PROPERTY] [--value] USER
+       loginctl enable-linger [USER] | disable-linger [USER]
+       loginctl terminate-user USER | kill-user USER
+
+DESCRIPTION
+       systemd-logind keeps track of who is logged in: each login (on a
+       console, through ssh, in a graphical session) is a session, and each
+       user with at least one session gets their own systemd instance
+       (user@UID.service) that runs their user services.
+
+       Normally that user instance stops when the user's last session ends,
+       and all the user's services stop with it. Lingering changes that: for
+       a user with linger enabled, the user instance starts at boot and keeps
+       running without any login. That is what a rootless container (or
+       any systemctl --user service) needs to start at boot and keep
+       running after you log out.
+
+COMMANDS
+       list-sessions
+              The open sessions: ID, UID, user, seat, terminal (the default).
+
+       list-users
+              The users with sessions (or lingering).
+
+       user-status [USER]
+              A user's sessions and the processes in them.
+
+       show-user USER
+              A user's properties, such as Linger=yes or no and State=.
+
+       enable-linger [USER], disable-linger [USER]
+              Turn lingering on or off (for yourself without USER; root for
+              others). It is stored as a file in /var/lib/systemd/linger/.
+
+       terminate-user USER
+              End all of the user's sessions.
+
+       kill-user USER
+              Send a signal to all of the user's processes.
+
+OPTIONS
+       -p NAME, --property=NAME
+              With show-user, show only this property.
+
+       --value
+              Print only the value, without NAME=.
+
+EXAMPLES
+       Make student's container service start at boot:
+
+           loginctl enable-linger student
+           loginctl show-user student -p Linger
+
+       Who is logged in?
+
+           loginctl list-sessions
+
+       Log a user out everywhere:
+
+           loginctl terminate-user student
+
+NOTES
+       Use ssh student@localhost (or a real login) rather than su - student
+       to manage systemctl --user services: su does not give the user a login
+       session of their own, so systemctl --user may fail to reach the user
+       instance.
+
+FILES
+       /var/lib/systemd/linger/USER
+              Exists while lingering is on for USER.
+
+SEE ALSO
+       systemctl(1), systemd-logind(8), podman-generate-systemd(1),
+       podman-systemd.unit(5)

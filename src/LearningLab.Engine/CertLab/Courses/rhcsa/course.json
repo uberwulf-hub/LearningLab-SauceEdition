@@ -1,0 +1,39 @@
+{
+    "id": "rhcsa",
+    "title": "Red Hat Enterprise Linux system administration (RHCSA)",
+    "short": "RHCSA",
+    "exam": "EX200",
+    "simulator": "rhel",
+    "order": 1,
+    "machines": 2,
+    "examMinutes": 180,
+    "examPoints": 300,
+    "passPercent": 70,
+    "description": "From the shell to storage, networking, SELinux and containers: everything the Red Hat Certified System Administrator exam (EX200) asks for, practised on two simulated RHEL 9 servers. Follows the public EX200 exam objectives.",
+    "disclaimer": "Cert Lab is not affiliated with, endorsed by or sponsored by Red Hat, Inc. Red Hat, Red Hat Enterprise Linux and RHCSA are trademarks of Red Hat, Inc. in the United States and other countries. The course follows the public EX200 exam objectives published on redhat.com (the RHEL 9 version); check redhat.com for the current list before you book the exam. Every lesson, card, sheet, lab and exam here was written for Cert Lab, and the practice machines are simulated by Cert Lab: they behave like RHEL 9 for what the exam covers but they are not RHEL.",
+    "objectives": [
+        "Essential tools",
+        "Shell scripts",
+        "Running systems",
+        "Local storage",
+        "File systems",
+        "Deploy and maintain",
+        "Networking",
+        "Users and groups",
+        "Security",
+        "Containers"
+    ],
+    "units": [
+        { "id": "u01", "title": "1. Essential tools", "objective": "Understand and use essential tools", "file": "lessons/01-essential-tools.txt" },
+        { "id": "u02", "title": "2. Simple shell scripts", "objective": "Create simple shell scripts", "file": "lessons/02-shell-scripts.txt" },
+        { "id": "u03", "title": "3. Operate running systems", "objective": "Operate running systems", "file": "lessons/03-running-systems.txt" },
+        { "id": "u04", "title": "4. Logs and journals", "objective": "Operate running systems", "file": "lessons/04-logs.txt" },
+        { "id": "u05", "title": "5. Local storage", "objective": "Configure local storage", "file": "lessons/05-local-storage.txt" },
+        { "id": "u06", "title": "6. File systems and permissions", "objective": "Create and configure file systems", "file": "lessons/06-file-systems.txt" },
+        { "id": "u07", "title": "7. Deploy, configure and maintain", "objective": "Deploy, configure, and maintain systems", "file": "lessons/07-deploy-maintain.txt" },
+        { "id": "u08", "title": "8. Networking", "objective": "Manage basic networking", "file": "lessons/08-networking.txt" },
+        { "id": "u09", "title": "9. Users and groups", "objective": "Manage users and groups", "file": "lessons/09-users-groups.txt" },
+        { "id": "u10", "title": "10. Security", "objective": "Manage security", "file": "lessons/10-security.txt" },
+        { "id": "u11", "title": "11. Containers", "objective": "Manage containers", "file": "lessons/11-containers.txt" }
+    ]
+}

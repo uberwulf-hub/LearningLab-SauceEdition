@@ -1,0 +1,46 @@
+NAME
+       nmtui - text menus for NetworkManager settings
+
+SYNOPSIS
+       nmtui [edit [NAME] | connect [NAME] | hostname [NAME]]
+       nmtui-edit [NAME]
+       nmtui-connect [NAME]
+       nmtui-hostname [NAME]
+
+DESCRIPTION
+       nmtui is a full-screen menu program for the terminal. It changes the
+       same NetworkManager connection profiles as nmcli, but you move with the
+       arrow keys and Tab, choose with Enter and type values into fields.
+       Some people find it easier than nmcli for a first static address.
+
+       Started with no arguments it offers three tasks:
+
+       Edit a connection
+              Add, change or delete a profile: addresses (with prefix, such
+              as 192.168.50.11/24), gateway, DNS servers, search domains and
+              "Automatically connect".
+
+       Activate a connection
+              Start or stop a profile on its device.
+
+       Set system hostname
+              Change the static host name.
+
+       The program names nmtui-edit, nmtui-connect and nmtui-hostname jump
+       straight to one of these tasks. As with nmcli, a changed profile is
+       used after it is activated again (deactivate and activate it in
+       nmtui, or run "nmcli connection up NAME").
+
+       nmtui is in the NetworkManager-tui package.
+
+EXAMPLES
+              # nmtui
+              # nmtui-edit enp1s0
+              # nmtui-hostname
+
+NOTES
+       Cert Lab's terminal does not draw full-screen menus: use nmcli for the
+       same settings there.
+
+SEE ALSO
+       nmcli(1), hostnamectl(1)

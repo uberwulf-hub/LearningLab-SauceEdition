@@ -1,0 +1,212 @@
+# Exam: exam-1 | Practice exam 1 | 120
+Two machines: WIN-SRV1 (Windows Server 2022) and WIN-CL1 (Windows 11), both with sample files in C:\LabFiles. You are the administrator on both. Hands-on work must still be there after a restart: the grader restarts both machines and checks them in a new PowerShell session. Questions: pick one answer.
+
+@vars
+corp = LabCorp | Northwind | Fabrikam
+users = 50-250
+mod = LabTools | OpsKit | SiteHelpers
+noun = Inventory | Uptime | Audit
+task = NightlyCount | FileCensus | LabFilesCount
+user = jsmith | mlopez | kchen
+full = Jo Smith | Maria Lopez | Kai Chen
+share = Projects | Teams | Shared
+@endvars
+
+@task t01 | Scripting | 8 | WIN-SRV1
+Create the script `C:\Scripts\Count-Files.ps1`. It takes a parameter `-Path` (default `C:\LabFiles`) and a switch `-Recurse`, and outputs **only a number**: how many files (not folders) are in that folder, including subfolders when `-Recurse` is given.
+@check WIN-SRV1 | without parameters it counts C:\LabFiles
+(& C:\Scripts\Count-Files.ps1) -eq @(Get-ChildItem C:\LabFiles -File).Count
+@check WIN-SRV1 | -Recurse counts the subfolders too
+(& C:\Scripts\Count-Files.ps1 -Recurse) -eq @(Get-ChildItem C:\LabFiles -File -Recurse).Count
+@check WIN-SRV1 | -Path picks another folder
+(& C:\Scripts\Count-Files.ps1 -Path C:\LabFiles\Reports) -eq @(Get-ChildItem C:\LabFiles\Reports -File).Count
+@hint param([string]$Path = 'C:\LabFiles', [switch]$Recurse) then @(Get-ChildItem -Path $Path -File -Recurse:$Recurse).Count
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path C:\Scripts -Force | Out-Null
+Set-Content -Path C:\Scripts\Count-Files.ps1 -Value @'
+param([string]$Path = 'C:\LabFiles', [switch]$Recurse)
+@(Get-ChildItem -Path $Path -File -Recurse:$Recurse).Count
+'@
+@explain
+A param() block at the top of a script declares its parameters; -Recurse:$Recurse passes the switch on. @(...).Count also gives 0 when nothing is found.
+@endtask
+
+@task t02 | Errors | 8 | WIN-SRV1
+Create the script `C:\Scripts\Read-Settings.ps1` with a parameter `-Path`. It reads that JSON file and outputs the resulting object. When the file cannot be read, it shows **no red error** and outputs the single line `Missing: <path>` instead (for example `Missing: C:\nope.json`).
+@check WIN-SRV1 | it reads a JSON file
+(& C:\Scripts\Read-Settings.ps1 -Path C:\LabFiles\settings.json).AppName -eq 'Inventory'
+@check WIN-SRV1 | a missing file gives the message
+$out = & C:\Scripts\Read-Settings.ps1 -Path C:\nope.json 2>&1; "$out" -eq 'Missing: C:\nope.json'
+@hint try { Get-Content -Path $Path -Raw -ErrorAction Stop | ConvertFrom-Json } catch { "Missing: $Path" }
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path C:\Scripts -Force | Out-Null
+Set-Content -Path C:\Scripts\Read-Settings.ps1 -Value @'
+param([string]$Path)
+try { Get-Content -Path $Path -Raw -ErrorAction Stop | ConvertFrom-Json }
+catch { "Missing: $Path" }
+'@
+@explain
+Get-Content reports a missing file as a non-terminating error, which catch never sees. -ErrorAction Stop turns it into a terminating error so the catch block runs.
+@endtask
+
+@task t03 | Modules | 8 | WIN-SRV1
+Create a script module named `{mod}` that every user's PowerShell loads automatically when it is needed. It has one function, `Get-{noun}`, which outputs the text `{noun} ready`.
+@check WIN-SRV1 | Get-{noun} works in a new session
+(Get-{noun}) -eq '{noun} ready'
+@check WIN-SRV1 | it comes from the module {mod}
+(Get-Command Get-{noun}).Source -eq '{mod}'
+@hint Put {mod}.psm1 in C:\Program Files\WindowsPowerShell\Modules\{mod}\ (a folder in $env:PSModulePath for all users).
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path 'C:\Program Files\WindowsPowerShell\Modules\{mod}' -Force | Out-Null
+Set-Content -Path 'C:\Program Files\WindowsPowerShell\Modules\{mod}\{mod}.psm1' -Value "function Get-{noun} { '{noun} ready' }"
+@explain
+A module folder in a $env:PSModulePath folder, with a .psm1 of the same name, is found and imported automatically the first time one of its commands is used.
+@endtask
+
+@task t04 | Administration | 8 | WIN-CL1
+On **WIN-CL1**, create the local user `{user}` with the full name `{full}` and any password that meets the rules, and make the user a member of the local **Administrators** group.
+@check WIN-CL1 | the user exists with the full name
+(Get-LocalUser -Name {user}).FullName -eq '{full}'
+@check WIN-CL1 | the user is an administrator
+@(Get-LocalGroupMember -Group Administrators | Where-Object Name -like '*\{user}').Count -eq 1
+@hint $pw = ConvertTo-SecureString 'Some-Pa55word' -AsPlainText -Force; New-LocalUser -Name {user} -FullName '{full}' -Password $pw; Add-LocalGroupMember -Group Administrators -Member {user}
+@solution WIN-CL1
+$pw = ConvertTo-SecureString 'Exam-Pa55word!' -AsPlainText -Force
+New-LocalUser -Name {user} -FullName '{full}' -Password $pw
+Add-LocalGroupMember -Group Administrators -Member {user}
+@explain
+New-LocalUser wants the password as a SecureString. Members are added to the group, not the group to the user.
+@endtask
+
+@task t05 | Administration | 8 | WIN-SRV1
+Create a scheduled task named `{task}` that runs every day at 3:00 AM as **SYSTEM** and starts `powershell.exe` with the arguments `-NoProfile -File C:\Scripts\Count-Files.ps1`.
+@check WIN-SRV1 | the task exists and runs as SYSTEM
+$t = Get-ScheduledTask -TaskName '{task}' -ErrorAction SilentlyContinue; $t -and $t.Principal.UserId -match 'SYSTEM'
+@check WIN-SRV1 | it starts the script with powershell.exe
+$a = (Get-ScheduledTask -TaskName '{task}').Actions[0]; $a.Execute -match 'powershell' -and $a.Arguments -match 'Count-Files\.ps1'
+@check WIN-SRV1 | it runs daily at 3:00 AM
+$tr = (Get-ScheduledTask -TaskName '{task}').Triggers[0]; $tr.DaysInterval -eq 1 -and $tr.StartBoundary -match 'T03:00'
+@hint New-ScheduledTaskAction -Execute powershell.exe -Argument '...'; New-ScheduledTaskTrigger -Daily -At 3am; Register-ScheduledTask -TaskName ... -Action $a -Trigger $tr -User SYSTEM
+@solution WIN-SRV1
+$a = New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -File C:\Scripts\Count-Files.ps1'
+$tr = New-ScheduledTaskTrigger -Daily -At 3am
+Register-ScheduledTask -TaskName '{task}' -Action $a -Trigger $tr -User SYSTEM
+@explain
+The action says what to run, the trigger when; -User SYSTEM runs it without a stored password.
+@endtask
+
+@task t06 | Remoting | 8 | WIN-CL1
+Make it possible to run commands on WIN-CL1 from WIN-SRV1 with `Invoke-Command -ComputerName WIN-CL1`, also after a restart.
+@check WIN-SRV1 | WIN-SRV1 can run a command on WIN-CL1
+(Invoke-Command -ComputerName WIN-CL1 -ScriptBlock { hostname } -ErrorAction SilentlyContinue) -eq 'WIN-CL1'
+@hint Run Enable-PSRemoting -Force on WIN-CL1 itself.
+@solution WIN-CL1
+Enable-PSRemoting -Force
+@explain
+Enable-PSRemoting starts WinRM, sets it to start automatically, creates the listener and opens the firewall, so it lasts across restarts.
+@endtask
+
+@task t07 | Security | 8 | WIN-CL1
+On **WIN-CL1**, let local scripts run for everyone on the computer while scripts downloaded from the internet still need a signature. Set it for the whole machine, not only for yourself.
+@check WIN-CL1 | LocalMachine is RemoteSigned
+"$(Get-ExecutionPolicy -Scope LocalMachine)" -eq 'RemoteSigned'
+@hint Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+@solution WIN-CL1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+@explain
+Windows 11 starts with no policy set in any scope, which means Restricted. RemoteSigned runs local scripts and wants a valid signature on files marked as downloaded. LocalMachine applies to every user.
+@endtask
+
+@task t08 | Providers | 8 | WIN-SRV1
+In the registry, create the key `HKLM:\SOFTWARE\{corp}` with a **DWORD** value `MaxUsers` of `{users}` and a **string** value `Owner` of `IT`.
+@check WIN-SRV1 | MaxUsers is {users}
+(Get-ItemProperty -Path 'HKLM:\SOFTWARE\{corp}').MaxUsers -eq {users}
+@check WIN-SRV1 | MaxUsers is a DWORD and Owner a string
+$k = Get-Item 'HKLM:\SOFTWARE\{corp}'; "$($k.GetValueKind('MaxUsers'))" -eq 'DWord' -and $k.GetValue('Owner') -eq 'IT' -and "$($k.GetValueKind('Owner'))" -eq 'String'
+@hint New-Item, then New-ItemProperty -PropertyType DWord and -PropertyType String
+@solution WIN-SRV1
+New-Item -Path 'HKLM:\SOFTWARE\{corp}' | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\{corp}' -Name MaxUsers -Value {users} -PropertyType DWord | Out-Null
+New-ItemProperty -Path 'HKLM:\SOFTWARE\{corp}' -Name Owner -Value IT -PropertyType String | Out-Null
+@explain
+Keys are items (New-Item); values are item properties (New-ItemProperty), and -PropertyType picks the registry type.
+@endtask
+
+@task t09 | DSC | 8 | WIN-SRV1
+Use **DSC** to make sure the folder `C:\Shares\{share}` exists and holds a file `readme.txt` with the text `Ask IT before deleting`. Compile the configuration into `C:\DscConfigs\{share}` and apply it to WIN-SRV1.
+@check WIN-SRV1 | the file has the text
+(Get-Content 'C:\Shares\{share}\readme.txt' -Raw).Trim() -eq 'Ask IT before deleting'
+@check WIN-SRV1 | it was compiled to a MOF and is the current configuration
+(Test-Path 'C:\DscConfigs\{share}\WIN-SRV1.mof') -and (Test-DscConfiguration)
+@hint Configuration with two File resources (the file DependsOn the folder), compile with -OutputPath, then Start-DscConfiguration -Path ... -Wait
+@solution WIN-SRV1
+Configuration ShareSetup { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Folder { DestinationPath = 'C:\Shares\{share}'; Type = 'Directory' }; File Readme { DestinationPath = 'C:\Shares\{share}\readme.txt'; Contents = 'Ask IT before deleting'; DependsOn = '[File]Folder' } } }
+ShareSetup -OutputPath 'C:\DscConfigs\{share}'
+Start-DscConfiguration -Path 'C:\DscConfigs\{share}' -Wait
+@explain
+Running the configuration writes WIN-SRV1.mof; Start-DscConfiguration applies it and makes it the current configuration that Test-DscConfiguration compares with.
+@endtask
+
+@choice c01 | Help | 4
+Which command lists every command whose noun is `Service`?
+- `Get-Help Service -Category Noun`
++ `Get-Command -Noun Service`
+- `Get-Service -ListAvailable`
+- `Get-Member -Name *Service`
+! Get-Command -Noun (or -Verb) searches the commands by the parts of their names.
+
+@choice c02 | Pipeline | 4
+What does this print?
+    'b', 'a', 'c', 'a' | Sort-Object -Unique | Select-Object -Last 1
+- `a`
+- `b`
++ `c`
+- `a / b / c`
+! Sort-Object -Unique gives a, b, c; -Last 1 keeps the last one.
+
+@choice c03 | Output | 4
+In Windows PowerShell 5.1, which encoding does `Get-Process > C:\LabFiles\p.txt` write?
+- ASCII
+- UTF-8 without a byte order mark
++ UTF-16 (Unicode) with a byte order mark
+- The encoding of the existing file
+! > works like Out-File, whose default in 5.1 is UTF-16 LE ("Unicode"). PowerShell 7 writes UTF-8 without a BOM.
+
+@choice c04 | Language | 4
+What does this print?
+    "5" + 5
+    5 + "5"
++ `55 / 10`
+- `10 / 10`
+- `55 / 55`
+- `10 / 55`
+! The left operand decides: a string on the left joins text, a number on the left adds numbers.
+
+@choice c05 | Language | 4
+What does this print?
+    1, 2, 3, 2 -eq 2
+- `True`
+- `False`
++ `2 / 2`
+- `1`
+! With an array on the left, -eq filters: it returns the items that are equal, not True or False.
+
+@choice c06 | Errors | 4
+Why does `try { Get-Item C:\nope } catch { 'caught' }` show a red error instead of `caught`?
+- catch needs an exception type, such as catch [Exception]
++ Get-Item reports a non-terminating error, which catch does not see without -ErrorAction Stop
+- try only works inside a function
+- The error goes to $Error first and catch runs later
+! Only terminating errors reach catch. -ErrorAction Stop (or $ErrorActionPreference = 'Stop') makes a cmdlet's error terminating.
+
+@choice c07 | Scripting | 4
+What does this print?
+    $n = 1
+    function Add-One { $n = $n + 1; $n }
+    Add-One
+    $n
+- `2 / 2`
++ `2 / 1`
+- `1 / 1`
+- `1 / 2`
+! The function reads $n from the script scope but the assignment creates a new local $n. The outer $n stays 1.

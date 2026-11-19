@@ -1,0 +1,92 @@
+# Lab: lab-01 | Essential tools workout | u01 | 30
+Six short tasks that use the everyday tools of unit 1: grep and pipes, redirection, tar, links, permissions and ssh. Work on server1 unless a task says otherwise. The root password of both machines is redhat; the user student has the password student.
+
+@setup server1
+curl -s -o /root/words.txt http://utility.lab.example.com/files/words.txt
+mkdir -p /srv/app/conf /srv/reports
+echo 'listen=8080' > /srv/app/conf/app.conf
+echo 'Q1 revenue: 1200' > /srv/reports/q1.txt
+
+@task t01 | Essential tools | 10 | server1
+The file /root/words.txt has one word per line. Save every word that contains the letters `tar` into /root/tar-words.txt, sorted alphabetically, one word per line.
+@check server1 | the file holds mustard, starfish, start and startle in that order
+test "$(cat /root/tar-words.txt)" = "$(printf 'mustard\nstarfish\nstart\nstartle')"
+@hint grep finds the lines, sort puts them in order; join them with a pipe and redirect the result.
+@solution server1
+grep tar /root/words.txt | sort > /root/tar-words.txt
+@explain
+grep prints the matching lines in file order (starfish, start, startle, mustard) and sort puts them in alphabetical order. The pipe joins the two commands and > writes the result into the file. Always look at the result with cat before moving on.
+@endtask
+
+@task t02 | Essential tools | 10 | server1
+Run `ls -l /etc/hosts /etc/no-such-file` so that its normal output goes into /root/ls-out.txt and its error message into /root/ls-err.txt.
+@check server1 | ls-out.txt has the listing of /etc/hosts
+grep -q '/etc/hosts' /root/ls-out.txt
+@check server1 | ls-err.txt has the error message, and ls-out.txt does not
+grep -q 'No such file or directory' /root/ls-err.txt && ! grep -q 'No such file' /root/ls-out.txt
+@hint Standard output is stream 1 (>), standard error is stream 2 (2>).
+@solution server1
+ls -l /etc/hosts /etc/no-such-file > /root/ls-out.txt 2> /root/ls-err.txt
+@explain
+> sends standard output (stream 1) to a file and 2> sends standard error (stream 2) to another one. To catch both in one file you would write > file 2>&1 (in that order) or &> file.
+@endtask
+
+@task t03 | Essential tools | 10 | server1
+Create a bzip2-compressed tar archive /root/ssh-backup.tar.bz2 that holds the folder /etc/ssh with everything in it.
+@check server1 | the archive is bzip2 compressed
+file /root/ssh-backup.tar.bz2 | grep -q 'bzip2 compressed'
+@check server1 | the archive contains etc/ssh/sshd_config
+tar -tjf /root/ssh-backup.tar.bz2 | grep -q 'etc/ssh/sshd_config$'
+@hint c creates, j means bzip2, f names the archive file.
+@solution server1
+tar -cjf /root/ssh-backup.tar.bz2 /etc/ssh
+@explain
+tar -c creates an archive, -j compresses it with bzip2 (-z would be gzip, -J xz) and -f names the file. The note about removing the leading / is normal. tar -tjf lists what is inside without unpacking it.
+@endtask
+
+@task t04 | Essential tools | 10 | server1
+Create a symbolic link /etc/app.conf that points to /srv/app/conf/app.conf, and a hard link /root/app.conf.hard to the same file.
+@check server1 | /etc/app.conf is a symbolic link to /srv/app/conf/app.conf
+test -L /etc/app.conf && test "$(readlink -f /etc/app.conf)" = /srv/app/conf/app.conf
+@check server1 | /root/app.conf.hard is a hard link (same inode, not a symbolic link)
+test ! -L /root/app.conf.hard && test "$(stat -c %i /root/app.conf.hard)" = "$(stat -c %i /srv/app/conf/app.conf)"
+@hint ln -s TARGET LINK makes a symbolic link, ln TARGET LINK a hard one. The existing file always comes first.
+@solution server1
+ln -s /srv/app/conf/app.conf /etc/app.conf
+ln /srv/app/conf/app.conf /root/app.conf.hard
+@explain
+A symbolic link stores a path, so give it an absolute target. A hard link is a second name for the same inode, which is why stat -c %i prints the same number for both names. Hard links only work inside one file system: here / holds /srv, /etc and /root alike.
+@endtask
+
+@task t05 | Essential tools | 15 | server1
+The folder /srv/reports and the file /srv/reports/q1.txt in it must belong to the user student and the group wheel. On the file, the owner may read and write, the group may only read, and others have no access. On the folder, the owner has full access, the group may list and enter it, and others have no access.
+@check server1 | both belong to student:wheel
+test "$(stat -c %U:%G /srv/reports)" = student:wheel && test "$(stat -c %U:%G /srv/reports/q1.txt)" = student:wheel
+@check server1 | the file has mode 640
+test "$(stat -c %a /srv/reports/q1.txt)" = 640
+@check server1 | the folder has mode 750
+test "$(stat -c %a /srv/reports)" = 750
+@hint chown -R student:wheel changes both at once. A folder needs x to be entered: r-x for the group is 5.
+@solution server1
+chown -R student:wheel /srv/reports
+chmod 640 /srv/reports/q1.txt
+chmod 750 /srv/reports
+@explain
+rw- r-- --- is 640 and rwx r-x --- is 750 (r=4, w=2, x=1 per set). On a folder, r lists the names and x lets you enter and open the files; a group with r but no x could see the names but not read the report. chown USER:GROUP sets both owner and group; -R works through the folder.
+@endtask
+
+@task t06 | Essential tools | 10 | server2
+From server1, log in to server2 over ssh as student and save the output of the command `id` into the file /home/student/whoami.txt on server2.
+@check server2 | the file on server2 shows student's id
+grep -q 'uid=1000(student)' /home/student/whoami.txt
+@check server2 | the file belongs to student
+test "$(stat -c %U /home/student/whoami.txt)" = student
+@hint ssh student@server2, answer yes to the key question the first time, type the password, then run id with a redirection. Leave with exit.
+@solution server1
+ssh -o StrictHostKeyChecking=accept-new student@server2
+student
+id > /home/student/whoami.txt
+exit
+@explain
+ssh USER@HOST opens a shell on the other machine; the prompt changes to [student@server2 ~]$. Everything you type runs there until you exit, so the file is created on server2 and belongs to student. The first connection asks you to trust server2's key (answer yes) and stores it in ~/.ssh/known_hosts; -o StrictHostKeyChecking=accept-new, as in the model solution, accepts a new key without asking.
+@endtask

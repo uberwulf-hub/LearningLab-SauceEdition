@@ -1,0 +1,12 @@
+SYNOPSIS: Removes forwarders from a DNS server's list.
+DESCRIPTION:
+Remove-DnsServerForwarder takes the addresses you name out of the forwarder list. With no forwarders left, the server uses the root hints for outside names (if recursion is on).
+
+It asks for confirmation; -Force skips the question.
+PARAMETER IPAddress:
+The forwarders to remove.
+PARAMETER Force:
+Removes without asking.
+EXAMPLE: Remove-DnsServerForwarder -IPAddress 198.51.100.53 -Force -ComputerName DC2
+Takes the second forwarder off DC2.
+RELATED: Get-DnsServerForwarder, Add-DnsServerForwarder, Set-DnsServerForwarder

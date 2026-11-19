@@ -1,0 +1,59 @@
+NAME
+       podman-build - build a container image from a Containerfile
+
+SYNOPSIS
+       podman build [-t NAME[:TAG]] [-f FILE] [--no-cache] [-q] [DIRECTORY]
+
+DESCRIPTION
+       podman build reads a Containerfile (or Dockerfile) and builds an image
+       from it, step by step. DIRECTORY (the current directory when not
+       given) is the build context: the files that COPY and ADD can use. The
+       file is looked for there as Containerfile, then Dockerfile, unless -f
+       names it.
+
+       Each instruction is a line starting with a keyword:
+
+       FROM IMAGE        the image to start from (first line)
+       RUN COMMAND       run a command inside, such as dnf -y install httpd
+       COPY SRC DEST     copy files from the context into the image
+       ADD SRC DEST      like COPY, also for URLs and archives
+       ENV NAME=VALUE    set an environment variable
+       EXPOSE PORT       record a port the program listens on
+       USER NAME|UID     the user later steps and the container run as
+       WORKDIR DIR       the working directory
+       LABEL KEY=VALUE   add metadata
+       CMD ["prog","arg"]         the default command
+       ENTRYPOINT ["prog"]        the fixed program; CMD gives its arguments
+
+       The new image is stored locally under the name given with -t, with
+       localhost/ in front when the name has no registry (localhost/myweb).
+
+OPTIONS
+       -t, --tag NAME[:TAG]
+              Name the image.
+
+       -f, --file FILE
+              The Containerfile to use.
+
+       --no-cache
+              Do not reuse the results of earlier builds.
+
+       -q, --quiet
+              Print only the new image's ID.
+
+EXAMPLES
+       Build an image from the Containerfile in ~/build and run it:
+
+           cd ~/build
+           podman build -t myweb:1.0 .
+           podman images
+           podman run -d --name myweb -p 8080:8080 localhost/myweb:1.0
+
+       A small Containerfile:
+
+           FROM registry.lab.example.com/ubi9/httpd-24
+           COPY index.html /var/www/html/
+           EXPOSE 8080
+
+SEE ALSO
+       podman(1), podman-run(1), buildah(1)

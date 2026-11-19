@@ -1,0 +1,322 @@
+# Unit: u07 | 7. Configuration profiles and scripts | Configuration
+
+Once a device is enrolled, you tell it how to behave: block the camera, lock the screen after ten minutes, connect to the office Wi-Fi, run as a kiosk in the shop. In Intune this is done with **configuration profiles**, and for the things a profile can't do, with **PowerShell scripts** and **remediations**. This unit covers the kinds of profiles, how assignments and filters decide which devices get them, what happens when two profiles disagree, where the settings end up on the PC, and how to run your own scripts.
+
+## Lesson: l0701 | Configuration profiles: the kinds
+
+A configuration profile is a set of settings for one platform (Windows 10 and later, iOS/iPadOS, Android...). You make it in **Devices > Configuration > Create**, pick the platform and the **profile type**, fill in the settings, and assign it to groups. The device gets it at its next check-in.
+
+### The profile types for Windows
+
+- **Settings catalog**: one long, searchable list of thousands of settings, grouped by area (Camera, Device Lock, Defender, Microsoft Edge, Start...). This is where Microsoft adds new settings, and it is the first place to look.
+- **Templates**: older, ready-made forms for one job each. The ones you still meet: **Device restrictions**, **Administrative templates** (the Group Policy settings, ADMX-based; the settings catalog has these too now), **Wi-Fi**, **VPN**, **Domain Join** (used with hybrid Autopilot), **Edition upgrade and mode switch**, **Kiosk**, **Delivery Optimization**, and **Custom**.
+- **Custom**: you type an **OMA-URI** (the address of one setting in a configuration service provider, a CSP) and a value yourself. Use it when a setting exists in Windows but not yet in the catalog or a template.
+
+> Cert Lab's portal keeps a short settings catalog (about twenty real Windows settings) and only the templates the course needs. For Windows, it asks you to use the settings catalog instead of the Device restrictions template. The real catalog is much bigger.
+
+### OMA-URIs and the Policy CSP
+
+Windows is managed through CSPs. Most everyday settings live in the **Policy CSP**, and their OMA-URI follows one pattern:
+
+- `./Device/Vendor/MSFT/Policy/Config/AREA/SETTING` for a device-wide setting
+- `./User/Vendor/MSFT/Policy/Config/AREA/SETTING` for the signed-in user only
+
+So the camera setting is `./Device/Vendor/MSFT/Policy/Config/Camera/AllowCamera`, with the data type **Integer** and the value `0` (not allowed) or `1` (allowed). A custom profile with that line and a settings catalog profile with **Camera > Allow Camera = Not allowed** send the same thing to the device. Other data types are String, Boolean, Base64, XML, date and floating point (Cert Lab offers Integer, String and Boolean).
+
+### The other templates
+
+- **Kiosk**: turns a PC into a single-purpose device. **Single app, full-screen kiosk** runs one app (Microsoft Edge on a start page, or a Store app); **Multi app kiosk** shows a fixed set of apps on Start. You choose who signs in: an automatic local account, a local account, or a Microsoft Entra user or group.
+- **Wi-Fi**: the network name (SSID), the security type and, for a personal network, the pre-shared key, so the PC connects without anyone typing it.
+- **Domain Join**: the domain, the computer name prefix and the organizational unit for hybrid joined Autopilot devices (unit 5).
+- **Edition upgrade and mode switch**: moves Windows Pro to Enterprise or Education (with a licence or key), or switches a PC out of S mode.
+
+### Where the settings land on the PC
+
+The device writes every Policy CSP setting it receives under `HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\AREA`. Looking there is a quick way to prove a setting arrived:
+
+```terminal
+#setup portal:create config name="Camera off" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera="Not allowed" s:DeviceLock/MaxInactivityTimeDeviceLock=10
+#setup portal:assign config "Camera off" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-ChildItem HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device
+
+
+    Hive: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\device
+
+
+Name                           Property
+----                           --------
+Camera                         AllowCamera : 0
+DeviceLock                     MaxInactivityTimeDeviceLock : 10
+
+
+PS C:\Windows\system32> (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Camera).AllowCamera
+0
+```
+
+The value is the CSP's number (`0`), not the label you picked in the portal. Settings for the user land under `...\PolicyManager\current\<user's SID>\AREA` instead.
+
+@try
+@task t1 | Configuration | 10 | portal
+Riverbend doesn't want cameras used on company PCs. Create a **settings catalog** profile called **Block camera** for Windows 10 and later that sets **Allow Camera** to **Not allowed**, assign it to the **Windows devices** group, and make **RB-LT-001** check in so it gets the profile now.
+@check portal | the profile is a settings catalog profile and reached RB-LT-001
+config["Block camera"].type == "Settings catalog"
+device["RB-LT-001"].policy["Block camera"] == Succeeded
+device["RB-LT-001"].setting["Camera/AllowCamera"] == "Not allowed"
+@check RB-LT-001 | the setting is under PolicyManager on the PC
+(Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Camera).AllowCamera -eq 0
+@hint Devices > Configuration > Create: platform Windows 10 and later, type Settings catalog, add Camera > Allow Camera. Then Assignments, then Sync on the device page.
+@solution portal
+create config name="Block camera" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera="Not allowed"
+assign config "Block camera" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? You need a Windows setting that exists in a CSP but not yet in the settings catalog or any template. What do you create?
+- A Device restrictions profile
++ A Custom profile with the setting's OMA-URI
+- An Administrative templates profile
+! A custom profile sends any OMA-URI with the value and data type you give it, so it covers CSP settings that the portal doesn't show yet.
+? Which OMA-URI sets the camera policy for the whole device?
+- ./User/Vendor/MSFT/Policy/Config/Camera/AllowCamera
++ ./Device/Vendor/MSFT/Policy/Config/Camera/AllowCamera
+- HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Camera
+! ./Device/... is for the device, ./User/... for the signed-in user. The registry path is where Windows stores the result, not an OMA-URI.
+? A shop PC must show only Microsoft Edge on the store's web site, full screen, without anyone signing in. Which profile type fits?
+- Edition upgrade and mode switch
+- Wi-Fi
++ Kiosk, single app with auto logon
+! A single-app kiosk with an automatic local sign-in runs one app (here Edge on a start URL) full screen.
+@end
+
+## Lesson: l0702 | Assignments and filters
+
+A profile does nothing until it is **assigned**. On the profile's **Assignments** page you add **included groups**, **excluded groups**, and optionally a **filter** on each included group.
+
+### User groups and device groups
+
+- Assigned to a **device group**, the profile applies to the device whoever signs in. Use this for things that belong to the machine: BitLocker, the firewall, kiosk mode, Windows updates.
+- Assigned to a **user group**, the profile follows the person to every enrolled device they sign in to. Use this for things that belong to the person.
+- The two built-in targets **All users** and **All devices** need no group. They are quick to evaluate, and Microsoft suggests combining them with filters rather than building huge groups.
+
+### Include and exclude
+
+An exclusion wins over an inclusion: a device in both the included and the excluded group doesn't get the profile. But an exclusion only works reliably when it is the **same kind of group** as the inclusion: users excluded from users, devices excluded from devices. Including a user group and excluding a device group (or the other way round) is **not supported**: Intune works out the user part and the device part separately, so you can't count on the exclusion. (Cert Lab treats such an exclusion as ignored and warns you when you mix them.)
+
+> To leave some devices out of a profile that targets users, don't exclude a device group: put a **filter** on the assignment instead.
+
+### Assignment filters
+
+A filter is a rule on **device properties**, made in **Tenant administration > Filters** for one platform. Examples: `(device.model -startsWith "Lumen Kiosk")`, `(device.deviceOwnership -eq "Corporate")`, `(device.operatingSystemSKU -eq "Enterprise")`, `(device.enrollmentProfileName -eq "Kiosk self-deploying")`.
+
+- On an assignment, a filter is used in **include** mode (only devices that match get the profile) or **exclude** mode (devices that match don't).
+- One filter per assignment, and only on included groups: you can't put a filter on an excluded group.
+- The filter's platform must match the profile's platform.
+- The device's properties are checked against the filter when it checks in, so a filter takes effect without waiting for group membership to change (dynamic groups can take a while).
+
+> In Cert Lab, filters support the device properties deviceName, manufacturer, model, osVersion, deviceOwnership, enrollmentProfileName, operatingSystemSKU, deviceCategory, deviceTrustType and isRooted. The real list is longer and differs a little per platform.
+
+@try
+@task t1 | Configuration | 10 | portal
+The Start menu setting **Hide Recently Added Apps = Enabled** should go to every Windows PC except the kiosk. Create a filter called **Kiosks** (Windows 10 and later) that matches devices whose model starts with `Lumen Kiosk`. Then create a settings catalog profile **Tidy Start** with that setting, assign it to **All devices** with the filter in **exclude** mode, and sync **RB-LT-001** and **RB-KIOSK-01**.
+@check portal | the profile uses the filter in exclude mode
+config["Tidy Start"].filter["All devices"] == Kiosks
+config["Tidy Start"].filtermode["All devices"] == exclude
+@check portal | RB-LT-001 has the setting and the kiosk doesn't
+device["RB-LT-001"].setting["Start/HideRecentlyAddedApps"] == Enabled
+device["RB-KIOSK-01"].setting["Start/HideRecentlyAddedApps"] == ""
+@hint Tenant administration > Filters > Create: rule (device.model -startsWith "Lumen Kiosk"). On the profile's assignment to All devices, pick the filter and "Exclude filtered devices in assignment".
+@solution portal
+create filter name=Kiosks platform="Windows 10 and later" rule="(device.model -startsWith \"Lumen Kiosk\")"
+create config name="Tidy Start" platform="Windows 10 and later" type="Settings catalog" s:Start/HideRecentlyAddedApps=Enabled
+assign config "Tidy Start" "All devices" filter=Kiosks mode=exclude
+remote sync RB-LT-001
+remote sync RB-KIOSK-01
+@endtask
+@end
+
+@quiz
+? A profile is assigned to the user group Sales, and the device group Pilot devices is excluded. Priya (Sales) uses RB-LT-002, which is in Pilot devices. What happens?
+- Priya's device doesn't get the profile, because exclusions always win
++ This mix of groups isn't supported, so you can't rely on the exclusion: the device can still get the profile
+- The assignment can't be saved
+! Excluding device groups from a user group assignment (or the reverse) isn't supported. Use a filter, or exclude a user group.
+? Which statement about assignment filters is true?
+- A filter can be added to an excluded group
++ A filter is used in include or exclude mode on an included group
+- One assignment can use several filters
+! Each included group's assignment can have one filter, in include or exclude mode. Excluded groups can't have filters.
+? You want a profile on corporate Windows PCs only, assigned to All devices. What is the simplest way?
+- Exclude a group of personal devices
++ Add a filter on deviceOwnership -eq "Corporate" in include mode
+- Assign it to All users instead
+! A filter on the ownership property in include mode keeps the profile to corporate devices without building a group.
+@end
+
+## Lesson: l0703 | Conflicts and troubleshooting
+
+With many profiles, two will sooner or later set the **same setting to different values** on one device. Intune doesn't pick a winner for configuration settings: the setting is reported as a **Conflict** and isn't changed on the device. Both profiles show the conflict for that device. (Compliance policies work differently: when two compliance policies disagree, the strictest value counts.)
+
+### Finding a conflict
+
+- **Devices > All devices > the device > Device configuration**: every profile that reached the device with its state (Succeeded, Error, Conflict, Not applicable, Pending). Open a profile to see each setting's state.
+- **Devices > Configuration > the profile > Device status / per-setting status**: the same from the profile's side.
+- **Reports > Device configuration** (Cert Lab shows the profile states on the device page): a list of profiles with errors and conflicts across the tenant.
+
+To fix a conflict, decide which value you want, then change one profile or its assignments so only one value reaches the device. Endpoint security policies (unit 12) and security baselines can conflict with configuration profiles too, so look at all of them.
+
+### On the device
+
+- **Settings > Accounts > Access work or school > the work account > Info** shows the policies and lets the user **Sync**. At the bottom, **Create report** writes an HTML MDM diagnostic report.
+- `mdmdiagnosticstool.exe` collects the same information from the command line: `-out FOLDER` writes the report into a folder; `-area 'Autopilot;DeviceEnrollment;TPM' -cab FILE.cab` (quote the list in PowerShell, where `;` ends a command) packs logs of those areas into a cab file for support.
+- The registry under `HKLM\SOFTWARE\Microsoft\PolicyManager\current\device` shows what was applied (lesson 1). A setting in conflict isn't written there.
+- **Event Viewer > Applications and Services Logs > Microsoft > Windows > DeviceManagement-Enterprise-Diagnostics-Provider > Admin** logs MDM errors (Cert Lab doesn't simulate this log).
+
+Here two profiles disagree about the camera on RB-LT-001: one is for all Windows devices, one is for the Sales users (Jordan uses this laptop). The camera key isn't written, and the report lists both profiles:
+
+```terminal
+#setup portal:create config name="Camera off" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera="Not allowed"
+#setup portal:assign config "Camera off" "Windows devices"
+#setup portal:create config name="Sales camera" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera=Allowed s:DeviceLock/MaxInactivityTimeDeviceLock=15
+#setup portal:assign config "Sales camera" Sales
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-ChildItem HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device
+
+
+    Hive: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\device
+
+
+Name                           Property
+----                           --------
+DeviceLock                     MaxInactivityTimeDeviceLock : 15
+
+
+PS C:\Windows\system32> mdmdiagnosticstool -out C:\Temp\MDM
+PS C:\Windows\system32> Get-Content C:\Temp\MDM\MDMDiagReport.xml
+MDM diagnostic report (Cert Lab)
+Device: RB-LT-001
+Enrolled: yes, Riverbend Outfitters
+Join type: Entra joined
+Policies:
+  config Camera off: Conflict
+  config Sales camera: Conflict
+  setting DeviceLock/MaxInactivityTimeDeviceLock = 15 (Sales camera)
+```
+
+> When a profile is unassigned, Windows keeps some settings as they were ("tattooing") and resets others, depending on the CSP. Cert Lab simply removes a setting that no profile sends any more. Check the documentation for the setting before you rely on either.
+
+@try
+@setup portal
+create config name="Camera off" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera="Not allowed"
+assign config "Camera off" "Windows devices"
+create config name="Sales camera" platform="Windows 10 and later" type="Settings catalog" s:Camera/AllowCamera=Allowed
+assign config "Sales camera" Sales
+remote sync RB-LT-001
+@task t1 | Configuration | 10 | portal
+RB-LT-001 reports a conflict about the camera. The rule at Riverbend is: no camera on any company PC, Sales included. Fix it without deleting **Camera off**, and sync RB-LT-001 so the camera really is blocked.
+@check portal | the camera is blocked on RB-LT-001 and Camera off succeeds
+device["RB-LT-001"].setting["Camera/AllowCamera"] == "Not allowed"
+device["RB-LT-001"].policy["Camera off"] == Succeeded
+@check RB-LT-001 | the setting is under PolicyManager
+(Get-ItemProperty HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Camera).AllowCamera -eq 0
+@hint Look at RB-LT-001's device configuration: which other profile sets Allow Camera? Remove its assignment to Sales (or delete it), then Sync.
+@solution portal
+unassign config "Sales camera" Sales
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? Two configuration profiles set Max Inactivity Time Device Lock to 5 and to 15 minutes on the same device. What happens?
+- The lower value wins
+- The profile created last wins
++ The setting is reported as a conflict and isn't changed
+! Configuration profiles don't merge conflicting values: both report a conflict and the device keeps its current value.
+? Which command packs MDM logs of chosen areas into a file for support?
+- dsregcmd /status
++ mdmdiagnosticstool -area 'DeviceEnrollment;TPM' -cab C:\Temp\mdm.cab
+- gpresult /r
+! mdmdiagnosticstool collects MDM diagnostics; -area picks the areas and -cab the output file. -out writes an HTML report into a folder.
+? Where does Windows store the Policy CSP settings it received for the device?
+- HKLM\SOFTWARE\Policies\Microsoft\Windows
++ HKLM\SOFTWARE\Microsoft\PolicyManager\current\device
+- C:\ProgramData\Microsoft\IntuneManagementExtension
+! MDM policies land under PolicyManager\current\device\AREA. The IntuneManagementExtension folder holds the agent's logs for apps and scripts.
+@end
+
+## Lesson: l0704 | Platform scripts, remediations and Group Policy analytics
+
+Some jobs have no setting: create a folder, fix a registry value a program needs, clean up after an old tool. For those, Intune runs **PowerShell scripts** on Windows devices through the **Intune Management Extension** (IME), an agent that Intune installs on the PC the first time it needs it (for a script or a Win32 app). Its log is `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log`.
+
+### Platform scripts
+
+**Devices > Scripts and remediations > Platform scripts**. You upload a `.ps1` and choose:
+
+- **Run this script using the logged on credentials**: No (the default) runs it as SYSTEM; Yes runs it as the signed-in user, with only that user's rights (normally no admin rights).
+- **Enforce script signature check**: Yes refuses scripts that aren't signed by a trusted publisher.
+- **Run script in 64 bit PowerShell Host**: No runs the 32-bit host, which sees the 32-bit view of the registry and Program Files.
+
+A platform script runs **once** per device (or per user). It runs again only if you change the script; if it fails, the IME retries a few times. The exit code counts: 0 is success, anything else is a failure in the report. Platform scripts need the device to be Microsoft Entra joined or hybrid joined (or registered with enrolment) and the IME.
+
+```terminal
+#setup portal:create script name="Riverbend folder" content="New-Item -Path C:\ProgramData\Riverbend -ItemType Directory -Force | Out-Null"
+#setup portal:assign script "Riverbend folder" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Test-Path C:\ProgramData\Riverbend
+True
+PS C:\Windows\system32> Get-Content C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log -Tail 2
+2026-03-02 09:00  Check-in with Intune.
+2026-03-02 09:00  Platform script 'Riverbend folder': ran successfully.
+```
+
+### Remediations
+
+**Devices > Scripts and remediations > Remediations** is a pair of scripts that runs on a **schedule** (once, hourly or daily):
+
+- The **detection script** checks for the problem. It must **exit 1** when there is something to fix and **exit 0** when everything is fine.
+- The **remediation script** runs only after a detection that exited 1. Then the detection script runs again to see whether the fix worked.
+
+The report shows each device as **Without issues** (detection exit 0), **With issues** (exit 1 and no remediation script), **Issue fixed**, **Recurred** (still found after the fix) or **Error**. Remediations need a licence: **Windows Enterprise E3 or E5** or **Education A3 or A5** (included in Microsoft 365 E3 and E5) for the users; Microsoft 365 Business Premium alone isn't enough. An admin also confirms in **Tenant administration > Connectors and tokens > Windows data** that the tenant owns one of these licences. Microsoft also ships some ready-made remediation script packages.
+
+> Cert Lab runs a remediation with a Daily or Hourly schedule at every check-in, and a Once schedule only the first time.
+
+### Group Policy analytics
+
+Moving from Active Directory Group Policy to Intune? Export a GPO from the Group Policy Management console as XML, import it in **Devices > Group Policy analytics**, and Intune tells you which settings have an MDM equivalent (the **MDM support** percentage), which are deprecated, and which don't exist in MDM. You can then **migrate** the supported settings into a settings catalog profile. Cert Lab doesn't simulate this page; know what it is for.
+
+@try
+@task t1 | Configuration | 10 | portal
+Some software on Riverbend PCs needs the folder `C:\RBTemp`. Create a remediation called **RBTemp folder** whose detection script exits 1 when `C:\RBTemp` is missing and 0 when it exists, and whose remediation script creates the folder. Schedule it **Daily**, assign it to **Windows devices**, and sync **RB-LT-001**.
+@check portal | the remediation fixed the issue on RB-LT-001
+remediation["RBTemp folder"].schedule == Daily
+device["RB-LT-001"].policy["RBTemp folder"] == "Issue fixed"
+@check RB-LT-001 | the folder exists
+Test-Path C:\RBTemp
+@hint Detection: if (Test-Path C:\RBTemp) { exit 0 } else { exit 1 }. Remediation: New-Item -Path C:\RBTemp -ItemType Directory.
+@solution portal
+create remediation name="RBTemp folder" detect="if (Test-Path C:\RBTemp) { exit 0 } else { exit 1 }" remediate="New-Item -Path C:\RBTemp -ItemType Directory | Out-Null" schedule=Daily
+assign remediation "RBTemp folder" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? A remediation's detection script finds the problem. What must it do so the remediation script runs?
+- Write "fix" to the output
++ Exit with code 1
+- Exit with code 0
+! Exit 1 means "needs fixing" and makes Intune run the remediation script; exit 0 means the device is fine.
+? A platform script ran successfully last week. You don't change it. Does it run again at the next check-in?
+- Yes, at every check-in
+- Yes, once a day
++ No, it runs again only if the script changes
+! Platform scripts run once per device or user. Use a remediation when something must be checked again and again on a schedule.
+? Priya has only Microsoft 365 Business Premium. A remediation assigned to her device reports an error. Why?
++ Remediations need Windows Enterprise E3/E5 or Education A3/A5 licences
+- Remediations work only on hybrid joined devices
+- Remediations need the script to be signed
+! Remediations are licensed through Windows Enterprise or Education (included in Microsoft 365 E3 and E5), which Business Premium doesn't include.
+@end
+

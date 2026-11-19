@@ -1,0 +1,25 @@
+NAME
+       telinit - change the run level (old style; switches systemd targets)
+
+SYNOPSIS
+       telinit RUNLEVEL
+
+DESCRIPTION
+       Before systemd, Linux systems had numbered run levels. telinit (and
+       init N) still accepts those numbers on RHEL 9 and switches to the
+       matching systemd target:
+
+           0      poweroff.target (switch off)
+           1, s   rescue.target (single user)
+           2,3,4  multi-user.target (text console, network)
+           5      graphical.target (graphical login)
+           6      reboot.target (restart)
+
+       New work should use systemctl isolate TARGET, systemctl reboot or
+       systemctl poweroff directly.
+
+EXAMPLES
+           telinit 3
+
+SEE ALSO
+       systemctl(1), runlevel(8), init(1)

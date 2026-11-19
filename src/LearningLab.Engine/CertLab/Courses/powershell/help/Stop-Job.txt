@@ -1,0 +1,18 @@
+SYNOPSIS: Stops background jobs that are still running.
+DESCRIPTION:
+Stop-Job ends running jobs. Their state becomes Stopped; output they produced before stopping can still be received with Receive-Job.
+PARAMETER Id:
+The job's Id (positional).
+PARAMETER Name:
+The job's name.
+PARAMETER Job:
+Job objects, for example from Get-Job (also by the pipeline).
+PARAMETER State:
+Stops the jobs in that state.
+PARAMETER PassThru:
+Outputs the stopped jobs.
+EXAMPLE: Stop-Job -Id 1
+Stops the job with Id 1.
+EXAMPLE: Get-Job -State Running | Stop-Job
+Stops every running job.
+RELATED: Start-Job, Get-Job, Remove-Job

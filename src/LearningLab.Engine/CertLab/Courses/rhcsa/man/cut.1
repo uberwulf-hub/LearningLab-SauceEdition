@@ -1,0 +1,68 @@
+NAME
+       cut - print selected fields or characters from each line
+
+SYNOPSIS
+       cut -d DELIM -f LIST [-s] [FILE...]
+       cut -c LIST [FILE...]
+       cut -b LIST [FILE...]
+
+DESCRIPTION
+       cut reads each line of FILE (or standard input) and prints only the
+       parts you choose: fields separated by a delimiter (-f with -d), or
+       character positions (-c). Use it to pull one column out of files like
+       /etc/passwd, or out of a command's output.
+
+       A LIST is one or more numbers or ranges, separated by commas:
+
+       3          the third field
+       1,6        fields 1 and 6
+       2-4        fields 2 to 4
+       5-         field 5 to the end
+       -3         fields 1 to 3
+
+       Fields are printed in file order, whatever order the list has.
+
+OPTIONS
+       -d CHAR, --delimiter=CHAR
+              The field separator (one character). The default is a tab.
+              cut does not treat several spaces as one; for space-aligned
+              output use awk '{print $2}' instead.
+
+       -f LIST, --fields=LIST
+              Print these fields.
+
+       -c LIST, --characters=LIST
+              Print these character positions.
+
+       -b LIST, --bytes=LIST
+              Print these byte positions.
+
+       -s, --only-delimited
+              Skip lines that have no delimiter at all.
+
+       --complement
+              Print everything except the selected fields.
+
+       --output-delimiter=TEXT
+              Join the printed fields with TEXT instead of the input
+              delimiter.
+
+EXAMPLES
+       List all user names:
+
+           cut -d: -f1 /etc/passwd
+
+       Show each user's name and login shell:
+
+           cut -d: -f1,7 /etc/passwd
+
+       The first three characters of each line:
+
+           cut -c1-3 /root/words.txt
+
+       Save the names of users whose shell is bash:
+
+           grep 'bash$' /etc/passwd | cut -d: -f1 > /root/bashusers.txt
+
+SEE ALSO
+       awk(1), paste(1), column(1), sort(1)

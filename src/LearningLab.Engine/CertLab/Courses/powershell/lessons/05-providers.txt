@@ -1,0 +1,712 @@
+# Unit: u05 | 5. Providers and drives | Providers
+
+Files and folders are not the only things PowerShell can browse. The registry, the environment variables, your variables, aliases and functions, and the certificate stores all look like drives with folders and items in them. A small piece of PowerShell called a **provider** makes each of them look that way, so the same handful of cmdlets (`Get-ChildItem`, `New-Item`, `Remove-Item`, `Get-Content`...) works on all of them. This unit shows those cmdlets on files first, then on the registry and the other drives.
+
+## Lesson: l0501 | Providers, drives and locations
+
+A **provider** knows how to read and change one kind of store. A **PSDrive** is a name you use to reach a place inside a provider: `C:` belongs to the FileSystem provider, `HKLM:` (HKEY_LOCAL_MACHINE) and `HKCU:` (HKEY_CURRENT_USER) to the Registry provider, `Env:` to the Environment provider.
+
+```terminal
+PS C:\Windows\system32> Get-PSProvider
+
+Name                 Capabilities                                      Drives
+----                 ------------                                      ------
+Registry             ShouldProcess, Transactions                       {HKCU, HKLM}
+Alias                ShouldProcess                                     {Alias}
+Environment          ShouldProcess                                     {Env}
+FileSystem           Filter, ShouldProcess, Credentials                {C}
+Function             ShouldProcess                                     {Function}
+Variable             ShouldProcess                                     {Variable}
+Certificate          ShouldProcess                                     {Cert}
+WSMan                Credentials                                       {WSMan}
+
+
+PS C:\Windows\system32> Get-PSDrive
+
+Name     Used (GB) Free (GB) Provider    Root                CurrentLocation
+----     --------- --------- --------    ----                ---------------
+Alias                        Alias
+C            21.38    105.07 FileSystem  C:\                Windows\system32
+Cert                         Certificate \
+Env                          Environment
+Function                     Function
+HKCU                         Registry    HKEY_CURRENT_USER
+HKLM                         Registry    HKEY_LOCAL_MACHINE
+Variable                     Variable
+WSMan                        WSMan
+```
+
+The **Capabilities** column says what a provider supports: `ShouldProcess` means `-WhatIf` and `-Confirm` work on its items, `Filter` means `-Filter` works, `Credentials` means `-Credential` does.
+
+### Locations
+
+The prompt shows your **location**, the place relative paths start from. `Set-Location` (aliases `cd`, `sl`, `chdir`) moves you, to any drive of any provider. `Get-Location` (alias `pwd`) tells you where you are.
+
+```terminal
+PS C:\Windows\system32> cd C:\LabFiles
+PS C:\LabFiles> Get-Location
+
+Path
+----
+C:\LabFiles
+
+
+PS C:\LabFiles> cd HKLM:\SOFTWARE\Microsoft
+PS HKLM:\SOFTWARE\Microsoft> cd Env:
+PS Env:\> C:
+PS C:\LabFiles> Get-Location
+
+Path
+----
+C:\LabFiles
+```
+
+Typing just `C:` (or `cd HKLM:`) goes back to where you last were on that drive: each drive remembers its own current location. (`C:` alone works because PowerShell has small functions named `A:` to `Z:`; for other drives use `cd`.)
+
+`Push-Location` (alias `pushd`) remembers where you are and moves; `Pop-Location` (alias `popd`) takes you back. They are handy in scripts that need to work somewhere else for a moment.
+
+```terminal
+PS C:\Windows\system32> Push-Location HKCU:\Software
+PS HKCU:\Software> Get-Location
+
+Path
+----
+HKCU:\Software
+
+
+PS HKCU:\Software> Pop-Location
+PS C:\Windows\system32> Get-Location
+
+Path
+----
+C:\Windows\system32
+```
+
+### Drives of your own
+
+`New-PSDrive` gives a short name to a long path. The drive lasts until you close the console (unless you add `-Persist`, which only works for network shares). Windows PowerShell has no drive for HKEY_CLASSES_ROOT, the registry part that stores file types, but you can make one.
+
+```terminal
+PS C:\Windows\system32> New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles
+
+Name Used (GB) Free (GB) Provider   Root        CurrentLocation
+---- --------- --------- --------   ----        ---------------
+Lab                      FileSystem C:\LabFiles
+
+
+PS C:\Windows\system32> Get-ChildItem Lab:\Reports -Name
+2026-01.csv
+2026-02.csv
+summary [old].txt
+PS C:\Windows\system32> New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
+
+Name Used (GB) Free (GB) Provider Root              CurrentLocation
+---- --------- --------- -------- ----              ---------------
+HKCR                     Registry HKEY_CLASSES_ROOT
+
+
+PS C:\Windows\system32> Test-Path HKCR:\
+True
+PS C:\Windows\system32> Remove-PSDrive Lab
+```
+
+> The name has no colon when you create or remove the drive (`-Name Lab`), but it has one when you use it in a path (`Lab:\Reports`). You cannot remove a drive while your location is on it: `cd` somewhere else first.
+
+@try machines=1
+@task t1 | Providers | 10 | WIN-SRV1
+Make a drive named `Rep` that starts at `C:\LabFiles\Reports`, and move your location to the top of it, so that the prompt reads `PS Rep:\>`.
+@check WIN-SRV1 | the drive Rep points at C:\LabFiles\Reports
+(Get-PSDrive Rep -ErrorAction SilentlyContinue).Root -eq 'C:\LabFiles\Reports'
+@check WIN-SRV1 | the location is Rep:\
+(Get-Location).Path -eq 'Rep:\'
+@hint New-PSDrive -Name Rep -PSProvider FileSystem -Root C:\LabFiles\Reports, then cd Rep:
+@solution WIN-SRV1
+New-PSDrive -Name Rep -PSProvider FileSystem -Root C:\LabFiles\Reports
+cd Rep:
+@endtask
+@end
+
+@quiz
+? What does the Registry provider give you in Windows PowerShell 5.1 without any setup?
+- One drive, REG:
++ The drives HKLM: and HKCU:
+- Drives for all five registry hives
+! Only HKEY_LOCAL_MACHINE and HKEY_CURRENT_USER have drives. Make others with New-PSDrive, for example HKCR for HKEY_CLASSES_ROOT.
+? Which command makes the drive `Lab:` for C:\LabFiles?
+- New-PSDrive -Name Lab: -Root C:\LabFiles
++ New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles
+- New-Item -ItemType Drive Lab: C:\LabFiles
+! The name is written without the colon, and the provider and root are both needed.
+? You ran `Push-Location HKLM:\SOFTWARE` from C:\LabFiles. What does `Pop-Location` do?
++ Takes you back to C:\LabFiles
+- Takes you up one level, to HKLM:\
+- Removes the HKLM: drive
+! Push-Location saves the old location on a stack; Pop-Location returns to the newest saved one.
+@end
+
+## Lesson: l0502 | Finding items: Get-ChildItem and the path cmdlets
+
+`Get-ChildItem` (aliases `dir`, `ls`, `gci`) lists what is inside a container: the files and folders of a folder, the subkeys of a registry key. With no path it lists your location.
+
+```terminal
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles
+
+
+    Directory: C:\LabFiles
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        1/13/2026  10:14 AM                Archive
+d-----        1/13/2026  10:14 AM                Reports
+-a----        1/13/2026  10:14 AM            593 app.log
+-a----        1/13/2026  10:14 AM            720 employees.csv
+-a----        1/13/2026  10:14 AM            122 notes.txt
+-a----        1/13/2026  10:14 AM             32 servers.txt
+-a----        1/13/2026  10:14 AM            206 settings.json
+-a----        1/13/2026  10:14 AM            126 shares.csv
+```
+
+The **Mode** letters are: `d` directory, `a` archive (changed since the last backup), `r` read-only, `h` hidden, `s` system, `l` link.
+
+### Choosing what to list
+
+- `-Path` (the first position) can hold wildcards: `dir C:\LabFiles\*.csv`.
+- `-Filter *.log` is the fastest way to match names, because the provider does the filtering (only the FileSystem provider supports it).
+- `-Include` and `-Exclude` take one or more patterns. In Windows PowerShell 5.1, `-Include` only works when the path ends in `\*` or with `-Recurse`.
+- `-Recurse` goes into every subfolder; `-Depth 1` stops after one level below (and turns on recursion by itself).
+- `-File` and `-Directory` keep only files or only folders.
+- `-Force` also shows **hidden** and system items; `-Hidden` shows only them.
+- `-Name` outputs just the names (with `-Recurse`, the paths below the starting folder) as strings.
+
+```terminal
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles -Filter *.log -Recurse -Name
+app.log
+Archive\old-app.log
+PS C:\Windows\system32> @(Get-ChildItem C:\LabFiles -Include *.csv).Count
+0
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles\* -Include *.csv -Name
+employees.csv
+shares.csv
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles -Exclude *.csv, *.log -Name
+Archive
+Reports
+notes.txt
+servers.txt
+settings.json
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles -Directory -Name
+Archive
+Reports
+PS C:\Windows\system32> Get-ChildItem C:\Users\Administrator -Force -Hidden -Name
+AppData
+NTUSER.DAT
+```
+
+The second line counted 0 files: `-Include` without `\*` or `-Recurse` is a classic trap (PowerShell 7 documents the same rule).
+
+### Get-Item: the thing itself
+
+`Get-Item` gets the item a path names, not what is inside it. Files come back as `System.IO.FileInfo` objects and folders as `System.IO.DirectoryInfo`, with useful properties.
+
+```terminal
+PS C:\Windows\system32> $f = Get-Item C:\LabFiles\app.log
+PS C:\Windows\system32> $f.Name, $f.BaseName, $f.Extension, $f.Length
+app.log
+app
+.log
+593
+PS C:\Windows\system32> $f.DirectoryName
+C:\LabFiles
+PS C:\Windows\system32> $f.LastWriteTime
+Tuesday, January 13, 2026 10:14:37 AM
+PS C:\Windows\system32> (Get-Item C:\LabFiles).GetType().Name
+DirectoryInfo
+```
+
+### Testing and taking paths apart
+
+- `Test-Path PATH` is True when the item exists. `-PathType Leaf` asks "is it a file (or a value-holding item)?", `-PathType Container` "is it a folder or key?".
+- `Resolve-Path` turns a relative or wildcard path into full paths of items that exist.
+- `Split-Path` takes a path apart: by default the parent, with `-Leaf` the last part, with `-Qualifier` the drive.
+- `Join-Path` puts a parent and a child together with exactly one backslash. In 5.1 it takes only one child; PowerShell 7 accepts more.
+
+```terminal
+PS C:\Windows\system32> Test-Path C:\LabFiles\app.log
+True
+PS C:\Windows\system32> Test-Path C:\LabFiles\app.log -PathType Container
+False
+PS C:\Windows\system32> Test-Path C:\LabFiles\nothing.txt
+False
+PS C:\Windows\system32> cd C:\LabFiles
+PS C:\LabFiles> Resolve-Path *.csv
+
+Path
+----
+C:\LabFiles\employees.csv
+C:\LabFiles\shares.csv
+
+
+PS C:\LabFiles> Split-Path C:\LabFiles\Reports\2026-01.csv
+C:\LabFiles\Reports
+PS C:\LabFiles> Split-Path C:\LabFiles\Reports\2026-01.csv -Leaf
+2026-01.csv
+PS C:\LabFiles> Join-Path C:\LabFiles\ \Archive
+C:\LabFiles\Archive
+```
+
+### -Path and -LiteralPath
+
+In `-Path`, the characters `*`, `?` and `[ ]` are wildcards. `C:\LabFiles\Reports` holds a file named `summary [old].txt`, and `[old]` means "one of the letters o, l or d", so `-Path` cannot find it. `-LiteralPath` takes every character as it is (its short name is `-PSPath` in 5.1; PowerShell 7 also accepts `-LP`).
+
+```terminal
+PS C:\Windows\system32> Get-Item 'C:\LabFiles\Reports\summary [old].txt'
+PS C:\Windows\system32> Get-Item -LiteralPath 'C:\LabFiles\Reports\summary [old].txt'
+
+
+    Directory: C:\LabFiles\Reports
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----       11/14/2025  10:14 AM             61 summary [old].txt
+```
+
+The first line printed nothing at all: no match is not an error for a wildcard. Most item and content cmdlets have `-LiteralPath`; use it in scripts whenever the name comes from somewhere you do not control.
+
+@try machines=1
+@task t1 | Providers | 10 | WIN-SRV1
+Store in `$csv` the **full paths** (as strings) of all `.csv` files under `C:\LabFiles`, including its subfolders.
+@check WIN-SRV1 | $csv holds the four paths
+(@($csv | Sort-Object) -join ',') -eq 'C:\LabFiles\employees.csv,C:\LabFiles\Reports\2026-01.csv,C:\LabFiles\Reports\2026-02.csv,C:\LabFiles\shares.csv'
+@check WIN-SRV1 | they are strings
+@($csv | Where-Object { $_ -isnot [string] }).Count -eq 0
+@hint Get-ChildItem C:\LabFiles -Filter *.csv -Recurse finds them; .FullName gives the paths.
+@solution WIN-SRV1
+$csv = (Get-ChildItem C:\LabFiles -Filter *.csv -Recurse).FullName
+$csv
+@endtask
+@end
+
+@quiz
+? In 5.1, what does `Get-ChildItem C:\LabFiles -Include *.csv` return?
+- The two .csv files in C:\LabFiles
+- All .csv files in C:\LabFiles and below
++ Nothing
+! Without a path ending in \* or -Recurse, -Include matches nothing in Windows PowerShell 5.1.
+? Which shows hidden files too?
+- Get-ChildItem -All
++ Get-ChildItem -Force
+- Get-ChildItem -Recurse
+! -Force adds hidden and system items; -Hidden shows only them.
+? Why use `-LiteralPath` for `summary [old].txt`?
++ In -Path, [old] is a wildcard that matches one character, so the real name is not found
+- -Path cannot read .txt files
+- The space in the name needs it
+! Square brackets are wildcards in -Path; -LiteralPath takes the name as written.
+@end
+
+## Lesson: l0503 | Creating, copying, moving and removing
+
+The item cmdlets work the same way on every provider: a file in a folder, a key in the registry, a variable on `Variable:`.
+
+### New-Item
+
+`New-Item PATH` makes a file; `-ItemType Directory` makes a folder (`mkdir` does the same in one word); on a registry drive it makes a key. `-Value` puts text into a new file. `-Force` creates missing parent folders or keys, and replaces a file that is already there.
+
+```terminal
+PS C:\Windows\system32> New-Item C:\Work -ItemType Directory
+
+
+    Directory: C:\
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----         3/2/2026   9:00 AM                Work
+
+
+PS C:\Windows\system32> New-Item C:\Work\todo.txt -Value 'Check the backups'
+
+
+    Directory: C:\Work
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         3/2/2026   9:00 AM             17 todo.txt
+
+
+PS C:\Windows\system32> New-Item C:\Work\todo.txt
+New-Item : The file 'C:\Work\todo.txt' already exists.
+At line:1 char:1
++ New-Item C:\Work\todo.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceExists: (C:\Work\todo.txt:String) [New-Item], IOException
+    + FullyQualifiedErrorId : NewItemIOError,Microsoft.PowerShell.Commands.NewItemCommand
+```
+
+### Copy-Item, Move-Item, Rename-Item
+
+- `Copy-Item SOURCE DESTINATION` copies. To copy a folder **with** what is inside it, add `-Recurse`: without it you get an empty folder.
+- `Move-Item` moves (and can rename at the same time).
+- `Rename-Item PATH NEWNAME` only renames: the new name is a name, not a path.
+- Add `-PassThru` to get the new item back as output.
+
+```terminal
+#setup New-Item C:\Work -ItemType Directory | Out-Null
+PS C:\Windows\system32> Copy-Item C:\LabFiles\Reports C:\Work\Reports -Recurse
+PS C:\Windows\system32> Get-ChildItem C:\Work\Reports -Name
+2026-01.csv
+2026-02.csv
+summary [old].txt
+PS C:\Windows\system32> Copy-Item C:\LabFiles\notes.txt C:\Work
+PS C:\Windows\system32> Rename-Item C:\Work\notes.txt notes-old.txt
+PS C:\Windows\system32> Move-Item C:\Work\notes-old.txt C:\Work\Reports
+PS C:\Windows\system32> Get-ChildItem C:\Work -Recurse -Name
+Reports
+Reports\2026-01.csv
+Reports\2026-02.csv
+Reports\notes-old.txt
+Reports\summary [old].txt
+```
+
+### Remove-Item, -WhatIf and -Force
+
+`Remove-Item` (aliases `del`, `rm`, `rd`) deletes. It does not use the Recycle Bin: what is gone is gone. A folder that is not empty makes it ask first, unless you add `-Recurse`. A read-only or hidden file needs `-Force`.
+
+Before a big delete, add `-WhatIf`: PowerShell tells you what it would do and does nothing.
+
+```terminal
+PS C:\Windows\system32> Remove-Item C:\LabFiles\Archive\*.log -WhatIf
+What if: Performing the operation "Remove File" on target "C:\LabFiles\Archive\old-app.log".
+PS C:\Windows\system32> Get-ChildItem C:\LabFiles\Archive -Name
+old-app.log
+readme.txt
+```
+
+The file is still there. `-Confirm` asks about every item instead.
+
+> `Get-ChildItem C:\LabFiles -Filter *.tmp -Recurse | Remove-Item` is the usual way to delete a set of files: find them first, look at the list, then pipe the same command to Remove-Item. The items bind to its `-LiteralPath`, so brackets in their names do no harm.
+
+@try machines=1
+@task t1 | Providers | 10 | WIN-SRV1
+Make a folder `C:\Backup\Reports` (with its parent), copy into it every `.csv` file of `C:\LabFiles\Reports`, and then remove the file `C:\LabFiles\Archive\readme.txt`.
+@check WIN-SRV1 | both reports were copied
+(Test-Path C:\Backup\Reports\2026-01.csv) -and (Test-Path C:\Backup\Reports\2026-02.csv)
+@check WIN-SRV1 | only .csv files were copied
+@(Get-ChildItem C:\Backup\Reports -Force).Count -eq 2
+@check WIN-SRV1 | readme.txt is gone, old-app.log is still there
+-not (Test-Path C:\LabFiles\Archive\readme.txt) -and (Test-Path C:\LabFiles\Archive\old-app.log)
+@hint New-Item C:\Backup\Reports -ItemType Directory -Force makes both folders. Copy-Item C:\LabFiles\Reports\*.csv C:\Backup\Reports copies with a wildcard.
+@solution WIN-SRV1
+New-Item C:\Backup\Reports -ItemType Directory -Force
+Copy-Item C:\LabFiles\Reports\*.csv C:\Backup\Reports
+Remove-Item C:\LabFiles\Archive\readme.txt
+@endtask
+@end
+
+@quiz
+? `Copy-Item C:\Data C:\Copy` copies a folder that has files in it. What is in C:\Copy afterwards?
+- All the files
++ Nothing: the folder was copied without its contents
+- An error is shown
+! Copying a folder with what is inside it needs -Recurse.
+? What does `-WhatIf` do on Remove-Item?
+- Asks before each item
++ Shows what would be removed and removes nothing
+- Moves the items to the Recycle Bin
+! -WhatIf only describes; -Confirm asks. Remove-Item never uses the Recycle Bin.
+? Which is right for renaming C:\Work\a.txt to b.txt?
++ Rename-Item C:\Work\a.txt b.txt
+- Rename-Item C:\Work\a.txt C:\Other\b.txt
+- Rename-Item b.txt C:\Work\a.txt
+! The new name is just a name; to move an item to another folder use Move-Item.
+@end
+
+## Lesson: l0504 | Reading and writing content
+
+### Get-Content
+
+`Get-Content` (aliases `gc`, `cat`, `type`) reads a file and outputs one string **per line**. That is often what you want, for example to loop over a list of server names.
+
+```terminal
+PS C:\Windows\system32> Get-Content C:\LabFiles\servers.txt
+WIN-SRV1
+WIN-CL1
+DC01
+WEB01
+PS C:\Windows\system32> (Get-Content C:\LabFiles\servers.txt).Count
+4
+PS C:\Windows\system32> Get-Content C:\LabFiles\app.log -TotalCount 2
+2026-03-01 08:00:01 INFO  Service started (version 2.4.1)
+2026-03-01 08:00:05 INFO  Connected to database SQL01
+PS C:\Windows\system32> Get-Content C:\LabFiles\app.log -Tail 1
+2026-03-01 12:00:00 INFO  Service health check passed
+PS C:\Windows\system32> (Get-Content C:\LabFiles\servers.txt -Raw).GetType().Name
+String
+```
+
+- `-TotalCount N` (alias `-Head`, `-First`) reads the first N lines; `-Tail N` (alias `-Last`) the last N.
+- `-Raw` reads the whole file as **one** string, line breaks included: what you need for `ConvertFrom-Json` or a multi-line `-replace`.
+
+### Set-Content, Add-Content, Clear-Content
+
+- `Set-Content PATH VALUE` replaces the whole file (and creates it if needed). Each value becomes a line.
+- `Add-Content` adds lines at the end.
+- `Clear-Content` empties the file but keeps it.
+
+```terminal
+PS C:\Windows\system32> Set-Content C:\LabFiles\list.txt 'one', 'two'
+PS C:\Windows\system32> Add-Content C:\LabFiles\list.txt 'three'
+PS C:\Windows\system32> Get-Content C:\LabFiles\list.txt
+one
+two
+three
+PS C:\Windows\system32> Clear-Content C:\LabFiles\list.txt
+PS C:\Windows\system32> (Get-Item C:\LabFiles\list.txt).Length
+0
+```
+
+### Encodings in Windows PowerShell 5.1
+
+The commands that write text do not agree on how to store it:
+
+| Command | Default encoding in 5.1 |
+|---|---|
+| `Set-Content` | Default: the Windows ANSI code page, one byte per letter |
+| `Add-Content` | the encoding of the existing file; a new file gets Default (ANSI) |
+| `Out-File`, `>`, `>>` | Unicode: UTF-16 little-endian, two bytes per letter, with a byte order mark |
+
+```terminal
+PS C:\Windows\system32> Set-Content C:\LabFiles\a.txt 'hi'
+PS C:\Windows\system32> 'hi' > C:\LabFiles\b.txt
+PS C:\Windows\system32> (Get-Item C:\LabFiles\a.txt).Length, (Get-Item C:\LabFiles\b.txt).Length
+4
+10
+PS C:\Windows\system32> Set-Content C:\LabFiles\c.txt 'hi' -Encoding UTF8
+PS C:\Windows\system32> (Get-Item C:\LabFiles\c.txt).Length
+7
+```
+
+`hi` plus a line break is 4 bytes as ANSI, 10 bytes as UTF-16 (2 for the byte order mark and 2 per character) and 7 bytes as UTF-8 (in 5.1, `-Encoding UTF8` writes a 3-byte byte order mark).
+
+> Give `-Encoding` whenever another program will read the file, and use the same encoding every time you write to one file. PowerShell 7 writes UTF-8 without a byte order mark by default with every one of these commands.
+
+### Select-String
+
+`Select-String` searches text with a regular expression, like `findstr` or `grep`. Give it files with `-Path`, or pipe strings to it. Each match shows the file name, the line number and the line.
+
+```terminal
+PS C:\Windows\system32> Select-String -Path C:\LabFiles\app.log -Pattern 'ERROR'
+
+C:\LabFiles\app.log:5:2026-03-01 09:02:41 ERROR Login failed for user 'svc_backup'
+C:\LabFiles\app.log:6:2026-03-01 09:02:44 ERROR Login failed for user 'svc_backup'
+C:\LabFiles\app.log:9:2026-03-01 11:20:58 ERROR Timeout talking to WEB01 after 30 seconds
+
+
+PS C:\Windows\system32> (Select-String -Path C:\LabFiles\app.log -Pattern 'WARN').LineNumber
+3
+8
+PS C:\Windows\system32> Select-String -Path C:\LabFiles\*.log -Pattern 'year' -SimpleMatch -Quiet
+False
+```
+
+The results are **MatchInfo** objects with `Path`, `Filename`, `LineNumber`, `Line` and `Matches`. `-SimpleMatch` searches for plain text instead of a regular expression, `-CaseSensitive` minds the case, `-NotMatch` keeps the lines that do not match and `-Quiet` answers just True or False.
+
+@try machines=1
+@task t1 | Providers | 10 | WIN-SRV1
+Create `C:\LabFiles\errors.txt` holding only the **lines** of `C:\LabFiles\app.log` that contain `ERROR` (the whole lines, as they are in app.log, and nothing else).
+@check WIN-SRV1 | errors.txt has the three ERROR lines
+$l = @(Get-Content C:\LabFiles\errors.txt | Where-Object { $_ -ne '' }); $l.Count -eq 3 -and $l[0] -eq "2026-03-01 09:02:41 ERROR Login failed for user 'svc_backup'" -and $l[2] -like '*Timeout talking to WEB01*'
+@hint Select-String gives MatchInfo objects; their Line property is the text. (Select-String -Path C:\LabFiles\app.log -Pattern ERROR).Line | Set-Content C:\LabFiles\errors.txt
+@solution WIN-SRV1
+(Select-String -Path C:\LabFiles\app.log -Pattern ERROR).Line | Set-Content C:\LabFiles\errors.txt
+Get-Content C:\LabFiles\errors.txt
+@endtask
+@end
+
+@quiz
+? What does `Get-Content C:\LabFiles\servers.txt` output for a file of 4 lines?
++ 4 strings, one per line
+- 1 string with the whole file
+- A FileInfo object
+! Get-Content outputs one string per line; -Raw gives one string.
+? In Windows PowerShell 5.1, which writes UTF-16 by default?
+- Set-Content
++ Out-File and >
+- Add-Content on a new file
+! Out-File, > and >> write Unicode (UTF-16); Set-Content and a new file from Add-Content use the ANSI code page.
+? Which gives just True or False: is WARN anywhere in app.log?
+- Select-String -Path app.log -Pattern WARN -Count
++ Select-String -Path app.log -Pattern WARN -Quiet
+- Get-Content app.log -Pattern WARN
+! -Quiet turns the results into a single True or False.
+@end
+
+## Lesson: l0505 | The registry and the other drives
+
+### Keys are items, values are properties
+
+In the registry, **keys** are the containers (like folders) and **values** are the named data inside a key. PowerShell treats keys as items and values as **item properties**. So `Get-ChildItem` lists subkeys, and the `*-ItemProperty` cmdlets read and change values.
+
+```terminal
+PS C:\Windows\system32> Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
+
+
+    Hive: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion
+
+
+Name                           Property
+----                           --------
+Policies
+Run                            SecurityHealth : C:\Windows\system32\SecurityHealthSystray.exe
+Uninstall
+
+
+PS C:\Windows\system32> Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+
+SecurityHealth : C:\Windows\system32\SecurityHealthSystray.exe
+PSPath         : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+PSParentPath   : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion
+PSChildName    : Run
+PSDrive        : HKLM
+PSProvider     : Microsoft.PowerShell.Core\Registry
+
+
+PS C:\Windows\system32> Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ProductName
+Windows Server 2022 Datacenter
+```
+
+`Get-ItemProperty` returns an object with one property per value, plus the PS* properties that say where it came from. `Get-ItemPropertyValue` (new in 5.0) returns just the data of one value.
+
+### Changing the registry
+
+```terminal
+PS C:\Windows\system32> New-Item HKCU:\Software\LabApp
+
+
+    Hive: HKEY_CURRENT_USER\Software
+
+
+Name                           Property
+----                           --------
+LabApp
+
+
+PS C:\Windows\system32> New-ItemProperty HKCU:\Software\LabApp -Name MaxUsers -PropertyType DWord -Value 250
+
+MaxUsers     : 250
+PSPath       : Microsoft.PowerShell.Core\Registry::HKEY_CURRENT_USER\Software\LabApp
+PSParentPath : Microsoft.PowerShell.Core\Registry::HKEY_CURRENT_USER\Software
+PSChildName  : LabApp
+PSDrive      : HKCU
+PSProvider   : Microsoft.PowerShell.Core\Registry
+
+
+PS C:\Windows\system32> Set-ItemProperty HKCU:\Software\LabApp -Name Mode -Value 'Fast'
+PS C:\Windows\system32> Get-Item HKCU:\Software\LabApp
+
+
+    Hive: HKEY_CURRENT_USER\Software
+
+
+Name                           Property
+----                           --------
+LabApp                         MaxUsers : 250
+                               Mode     : Fast
+
+
+PS C:\Windows\system32> Remove-ItemProperty HKCU:\Software\LabApp -Name Mode
+PS C:\Windows\system32> Remove-Item HKCU:\Software\LabApp
+```
+
+- `New-Item` makes a **key**; `-Force` also makes missing parent keys.
+- `New-ItemProperty -PropertyType` makes a **value** of a given kind: `String`, `ExpandString`, `DWord` (32-bit number), `QWord` (64-bit), `MultiString` (a list of strings) or `Binary`. It fails if the value already exists.
+- `Set-ItemProperty` changes a value, or creates it as a String when it does not exist. An existing value keeps its kind.
+- `Remove-ItemProperty` deletes a value; `Remove-Item` deletes a key (with `-Recurse` when it has subkeys).
+
+> The registry has no undo. Practise in `HKCU:\Software` under a key of your own, and use `-WhatIf` first on real keys.
+
+### Env:, Variable:, Alias:, Function:
+
+The same cmdlets work on these drives too. `$env:NAME` is a short way to reach `Env:NAME`, and `$name` is a short way to reach `Variable:name`.
+
+```terminal
+PS C:\Windows\system32> Get-ChildItem Env:COMPUTERNAME
+
+Name                           Value
+----                           -----
+COMPUTERNAME                   WIN-SRV1
+
+
+PS C:\Windows\system32> $env:LAB_SITE = 'Vienna'
+PS C:\Windows\system32> Get-Content Env:LAB_SITE
+Vienna
+PS C:\Windows\system32> $count = 5
+PS C:\Windows\system32> (Get-Item Variable:count).Value
+5
+PS C:\Windows\system32> Get-Item Alias:dir
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           dir -> Get-ChildItem
+
+
+PS C:\Windows\system32> function Get-Lab { 'lab' }
+PS C:\Windows\system32> Test-Path Function:Get-Lab
+True
+```
+
+> A change to `$env:` lasts only as long as this PowerShell window (and the programs it starts). To keep an environment variable for good, use `[Environment]::SetEnvironmentVariable('LAB_SITE', 'Vienna', 'Machine')` or the registry.
+
+### Cert:
+
+The Certificate provider shows the certificate stores as `Cert:\CurrentUser` and `Cert:\LocalMachine`, each with stores such as `My` (personal certificates), `Root` (trusted root authorities) and `CA`. You browse it like any drive; each certificate is an item with properties such as `Subject`, `Thumbprint`, `NotAfter` (when it runs out) and `HasPrivateKey`. Unit 12 uses it to sign scripts.
+
+```terminal
+PS C:\Windows\system32> Get-ChildItem Cert:\LocalMachine\My | Select-Object Subject, NotAfter, HasPrivateKey
+
+Subject                     NotAfter              HasPrivateKey
+-------                     --------              -------------
+CN=WIN-SRV1.lab.example.com 1/14/2027 10:14:37 AM True
+
+
+PS C:\Windows\system32> (Get-ChildItem Cert:\LocalMachine\Root).Count
+4
+```
+
+@try machines=1
+@task t1 | Providers | 10 | WIN-SRV1
+Create the registry key `HKCU:\Software\LabApp` with a **DWord** value `MaxUsers` set to `300` and a **String** value `Owner` set to `IT`.
+@check WIN-SRV1 | MaxUsers is a DWord with 300
+(Get-Item HKCU:\Software\LabApp).GetValueKind('MaxUsers') -eq 'DWord' -and (Get-ItemPropertyValue HKCU:\Software\LabApp -Name MaxUsers) -eq 300
+@check WIN-SRV1 | Owner is the string IT
+(Get-Item HKCU:\Software\LabApp).GetValueKind('Owner') -eq 'String' -and (Get-ItemPropertyValue HKCU:\Software\LabApp -Name Owner) -eq 'IT'
+@hint New-Item makes the key; New-ItemProperty -PropertyType DWord makes the number. Set-ItemProperty on a new value makes a String.
+@solution WIN-SRV1
+New-Item HKCU:\Software\LabApp
+New-ItemProperty HKCU:\Software\LabApp -Name MaxUsers -PropertyType DWord -Value 300
+New-ItemProperty HKCU:\Software\LabApp -Name Owner -PropertyType String -Value IT
+@endtask
+@end
+
+@quiz
+? Which cmdlet lists the **values** of a registry key with their data?
+- Get-ChildItem
++ Get-ItemProperty
+- Get-Content
+! Values are item properties. Get-ChildItem lists the subkeys.
+? Which makes a 32-bit number value in the registry?
+- New-Item -ItemType DWord
++ New-ItemProperty -PropertyType DWord
+- Set-ItemProperty -Type Number
+! New-ItemProperty takes -PropertyType: String, ExpandString, DWord, QWord, MultiString or Binary.
+? You ran `$env:LAB = 'x'`. When is it gone?
++ When this PowerShell window closes
+- Never: it is saved in the registry
+- After the next restart
+! $env: changes only the environment of the current process and the programs it starts.
+@end
+
+
+

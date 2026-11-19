@@ -1,0 +1,49 @@
+title: Step 9: The line that appears once
+level: Intermediate
+category: ladder
+login: step9
+kind: Sorting text
+teaser: every line is there twice except one: sort and uniq find it
+points: 30
+order: 9
+answer: {{PW}}
+var: PW = hex:10
+var: SALT = hex:6
+var: L = num:20-60
+
+@intro
+You are step9. The file codes.txt is a long list of codes. Every code appears twice
+somewhere in the list, except one, which appears only once - that one is the password
+for step 10. The copies are not next to each other.
+
+@setup
+useradd -m step10
+echo 'step10:{{PW}}' | chpasswd
+for i in $(seq 1 80); do printf '%s\n' "{{SALT}}-$i" | md5sum | cut -c1-10; done > /root/codes.txt
+(head -n {{L}} /root/codes.txt; printf '%s\n' '{{PW}}'; tail -n +$(({{L}} + 1)) /root/codes.txt; sort /root/codes.txt) > /home/step9/codes.txt
+rm -f /root/codes.txt
+chown step9: /home/step9/codes.txt
+
+@solution
+wc -l codes.txt
+uniq -u codes.txt | wc -l
+sort codes.txt | uniq -u
+
+@walkthrough
+uniq -u prints the lines that are not repeated - but uniq only compares each line with
+the one just before it. Here the two copies of each code are far apart, so uniq alone
+sees no repeats at all. Sort the list first, so the copies end up side by side, then
+let uniq keep the line that has no twin:
+
+    sort codes.txt | uniq -u
+
+The | (a "pipe") hands what sort prints straight to uniq.
+
+@hint 5
+What to think about first: a line that has a twin and a line that doesn't look the same until you compare them. Putting the list in order would put every pair of twins next to each other.
+
+@hint 8
+sort FILE prints the lines in order. uniq -u prints only the lines that are not the same as their neighbour. The pipe | sends one command's output into the next command: command1 | command2.
+
+@hint 12
+Type: sort codes.txt | uniq -u - one code comes out, and it is the answer.

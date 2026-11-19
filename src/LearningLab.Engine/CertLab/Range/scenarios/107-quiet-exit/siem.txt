@@ -1,0 +1,11 @@
+# Quiet Exit (offsets from {{T0}}, the first smuggling lookup)
+# the nightly backup: BACKUP01 copies the file server to the offsite backup service
+-9h host=BACKUP01 source=proclog event=1 user=svc_backup image="C:\Program Files\ColdStore\csbackup.exe" parent=C:\Windows\System32\svchost.exe cmdline="csbackup.exe --job nightly --target vault.coldstore.example"
+-9h host=BACKUP01 source=dns query=vault.coldstore.example type=A answer={{VAULTIP}} src_ip={{NET}}.6 image="C:\Program Files\ColdStore\csbackup.exe"
+-530m host=FW01 source=firewall action=allow direction=out src={{NET}}.6 dst={{VAULTIP}} dport=443 proto=tcp bytes=2147483648
+-530m host=FW01 source=alert severity=medium rule="Large upload outside working hours" src={{NET}}.6 dst={{VAULTIP}} note="2 GB left the network from {{NET}}.6 at night"
+# the leak: a script in the Startup folder started a program that hides data in DNS names
+-20m host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Windows\System32\wscript.exe parent=C:\Windows\explorer.exe cmdline="wscript.exe \"C:\Users\{{BADU}}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\{{VBS}}\""
+-19m host={{BADH}} source=proclog event=1 user={{BADU}} image=C:\Users\{{BADU}}\AppData\Local\{{TOOL}} parent=C:\Windows\System32\wscript.exe cmdline="{{TOOL}} -q"
++0 x{{NQ}}/7s host={{BADH}} source=dns query=d%N%x{{HX}}4e616d65732c656d61696c73.{{TUN}} type=TXT answer=ok src_ip={{BADIP}} image=C:\Users\{{BADU}}\AppData\Local\{{TOOL}}
++150s host={{BADH}} source=alert severity=high rule="Many lookups of one unusual domain" domain={{TUN}} note="{{BADH}} asked for 20 different names under {{TUN}} in a few minutes"

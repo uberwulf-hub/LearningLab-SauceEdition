@@ -1,0 +1,53 @@
+title: A needle in the logs
+level: Expert
+kind: File forensics
+points: 90
+order: 31
+answer: flag
+
+@intro
+~/haystack.txt is a few hundred lines of dull log output. One line carries a token=
+value. That value is the flag, but reversed and then base64-encoded, so you must pull
+it out and undo both steps (base64 decode, then reverse).
+
+@setup
+f='{{FLAG}}'
+log=/home/player/haystack.txt
+: > $log
+i=1
+while [ $i -le 250 ]; do
+  printf 'Mar  2 09:%02d:%02d node%d routine: heartbeat ok, nothing to see\n' $((i%60)) $((i*7%60)) $((i%8)) >> $log
+  i=$((i+1))
+done
+enc=$(printf '%s' "$f" | rev | base64)
+printf 'Mar  2 10:00:00 node3 audit: session token=%s stored\n' "$enc" >> $log
+j=1
+while [ $j -le 250 ]; do
+  printf 'Mar  2 11:%02d:%02d node%d routine: heartbeat ok, nothing to see\n' $((j%60)) $((j*5%60)) $((j%8)) >> $log
+  j=$((j+1))
+done
+chown player: $log
+
+@solution
+grep token= haystack.txt
+grep token= haystack.txt | sed 's/.*token=//; s/ stored//'
+grep token= haystack.txt | sed 's/.*token=//; s/ stored//' | base64 -d | rev
+echo
+
+@walkthrough
+Find the one interesting line among the noise:
+
+    grep token= haystack.txt
+
+Cut it down to just the token value, decode the base64, then reverse it:
+
+    grep token= haystack.txt | sed 's/.*token=//; s/ stored//' | base64 -d | rev
+
+grep searching for the flag text directly finds nothing, because the flag is stored
+reversed and base64-encoded.
+
+@hint 12
+grep for token= to find the one line that matters, then strip it to just the value.
+
+@hint 20
+grep token= haystack.txt | sed 's/.*token=//; s/ stored//' | base64 -d | rev

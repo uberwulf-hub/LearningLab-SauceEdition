@@ -1,0 +1,28 @@
+SYNOPSIS: Creates a self-signed certificate in a personal certificate store, for example to sign scripts in a lab.
+DESCRIPTION:
+New-SelfSignedCertificate makes a certificate with its private key and saves it in Cert:\LocalMachine\My or Cert:\CurrentUser\My. Self-signed means it vouches for itself: the issuer is the same as the subject, so no other computer trusts it until you copy it into its trusted stores.
+
+For signing scripts, use -Type CodeSigningCert. Before such a signature counts as valid, the certificate must also be in a Trusted Root store (Cert:\LocalMachine\Root), and to run signed scripts without a question, in Trusted Publishers (Cert:\LocalMachine\TrustedPublisher).
+
+A self-signed certificate is fine for practice. In a company, code signing certificates normally come from the company's certificate authority.
+PARAMETER Subject:
+The certificate's name, for example 'CN=LAB Script Signing'. CN= is added if you leave it out.
+PARAMETER DnsName:
+Host names for a server certificate, for example WIN-SRV1.lab.example.com. The first one becomes the subject if -Subject is not given.
+PARAMETER Type:
+CodeSigningCert (for scripts), SSLServerAuthentication (the default, for web servers), or DocumentEncryptionCert.
+PARAMETER CertStoreLocation:
+Cert:\CurrentUser\My or Cert:\LocalMachine\My (the default).
+PARAMETER FriendlyName:
+A label shown in the certificate tools.
+PARAMETER NotAfter:
+When it expires. The default is one year from now.
+EXAMPLE: $cert = New-SelfSignedCertificate -Subject 'CN=LAB Script Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+Creates a code signing certificate and keeps it in $cert for Set-AuthenticodeSignature.
+EXAMPLE: $cert.Thumbprint; $cert.EnhancedKeyUsageList
+Shows the new certificate's thumbprint and what it may be used for (Code Signing).
+EXAMPLE: New-SelfSignedCertificate -DnsName WIN-SRV1.lab.example.com -CertStoreLocation Cert:\LocalMachine\My
+Creates a server certificate, for example for an HTTPS listener.
+NOTES:
+Keep the private key safe: anyone with it can sign scripts in your name. Export-Certificate copies only the public part.
+RELATED: Export-Certificate, Import-Certificate, Set-AuthenticodeSignature, Get-AuthenticodeSignature, about_Signing

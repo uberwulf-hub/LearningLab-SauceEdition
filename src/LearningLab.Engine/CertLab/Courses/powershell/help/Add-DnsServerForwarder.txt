@@ -1,0 +1,16 @@
+SYNOPSIS: Adds a forwarder to the end of a DNS server's list.
+DESCRIPTION:
+Add-DnsServerForwarder appends one or more addresses to the forwarder list. The server tries the forwarders in order and moves to the next one when a server doesn't answer within the timeout.
+
+Forwarders only work while recursion is enabled on the server (Get-DnsServerRecursion).
+PARAMETER IPAddress:
+The forwarder addresses to add.
+PARAMETER UseRootHint:
+$true lets the server use root hints when no forwarder answers.
+PARAMETER Timeout:
+Seconds to wait for each forwarder.
+EXAMPLE: Add-DnsServerForwarder -IPAddress 198.51.100.53 -ComputerName DC2
+DC2 gets a second forwarder after its first one.
+EXAMPLE: Get-DnsServerForwarder -ComputerName DC2
+Checks the order of the list.
+RELATED: Get-DnsServerForwarder, Set-DnsServerForwarder, Remove-DnsServerForwarder, Add-DnsServerConditionalForwarderZone

@@ -1,0 +1,64 @@
+TOPIC
+    about_Providers
+
+SHORT DESCRIPTION
+    How the same item commands work on files, the registry and more.
+
+LONG DESCRIPTION
+    A provider makes a store of data look like a drive with folders and
+    items. Because of providers, Get-ChildItem, Set-Location, New-Item and
+    Remove-Item work on the registry and certificates just as they do on
+    files.
+
+  Built-in providers and their drives
+    FileSystem     C:, D: and other disks
+    Registry       HKLM: and HKCU:
+    Certificate    Cert:
+    Environment    Env:
+    Variable       Variable:
+    Function       Function:
+    Alias          Alias:
+    WSMan          WSMan:  (WinRM settings)
+
+        Get-PSProvider
+        Get-PSDrive
+
+  The item commands
+    *-Item         Get, New, Remove, Copy, Move, Rename, Set, Clear items
+    *-ChildItem    List what is inside a container
+    *-ItemProperty Read or change an item's properties (registry values)
+    *-Content      Read or write an item's content (files)
+    *-Location     Move around: Set-Location, Push- and Pop-Location
+
+        Set-Location HKLM:\SOFTWARE\Microsoft
+        Get-ChildItem Cert:\LocalMachine\My
+        Get-ItemProperty HKCU:\Environment
+        Get-ChildItem Env:
+        $env:COMPUTERNAME
+
+  Your own drives
+    New-PSDrive makes a short name for a long path, or maps a share. Such a
+    drive lasts until the session ends unless you add -Persist (for file
+    shares only).
+
+        New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles
+        Get-ChildItem Lab:
+        New-PSDrive -Name S -PSProvider FileSystem -Root \\WIN-SRV1\Share
+
+  Capabilities
+    Not every provider supports every parameter. -Filter, for example, is
+    passed to the provider, and only some providers understand it.
+    Get-PSProvider shows each one's Capabilities.
+
+  Paths
+    -Path accepts wildcards; -LiteralPath takes the name exactly, which
+    matters for names that contain [ or ]. Convert-Path and Resolve-Path
+    turn PowerShell paths into real ones.
+
+SEE ALSO
+    Get-PSProvider
+    Get-PSDrive
+    New-PSDrive
+    Get-ChildItem
+    Get-ItemProperty
+    Set-Location

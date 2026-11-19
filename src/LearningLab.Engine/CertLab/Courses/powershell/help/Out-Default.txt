@@ -1,0 +1,18 @@
+SYNOPSIS: Sends output to the default place, which at the console is the screen.
+DESCRIPTION:
+Every command line you type ends, invisibly, in Out-Default. That is how objects that nobody captured end up on screen: Out-Default passes them to the formatter (which picks a table, a list or plain text for each type) and then to Out-Host.
+
+You rarely type Out-Default yourself. It is worth knowing because it explains why output appears at all, and why mixing different kinds of objects in one command can give odd-looking tables: the first object decides the layout.
+PARAMETER InputObject:
+The objects to send. They come through the pipeline.
+EXAMPLE: 1..3 | Out-Default
+Shows 1, 2 and 3, exactly as if you had typed 1..3.
+EXAMPLE: Get-Date; 'text'
+Out-Default receives both results; the date is shown first, then the text.
+NOTES:
+Out-Default is the reason Write-Output in a function "prints": the function's output reaches the end of the command line and Out-Default shows it.
+
+In a script, output that is not captured is gathered the same way at the end of the command that ran the script.
+
+Since PowerShell 5.0, the formatter waits a moment (about 300 milliseconds) before drawing a table, to see more rows and choose column widths. That is one reason the first lines of a slow command can appear late, and why Write-Host text sometimes shows up before a table that was output earlier.
+RELATED: Out-Host, Out-String, Out-Null, Format-Table, about_Format.ps1xml

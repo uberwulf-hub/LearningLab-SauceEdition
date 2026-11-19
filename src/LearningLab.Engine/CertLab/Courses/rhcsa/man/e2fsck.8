@@ -1,0 +1,36 @@
+NAME
+       e2fsck - check and repair an ext2, ext3 or ext4 file system (also fsck.ext4)
+
+SYNOPSIS
+       e2fsck [-f] [-n] [-p] [-y] DEVICE
+
+DESCRIPTION
+       e2fsck reads an ext4 (or ext2, ext3) file system and checks that its
+       structures agree with each other, then fixes what it can. It prints
+       the passes it goes through and a summary line with the number of
+       files and blocks in use.
+
+       Check only file systems that are not mounted: repairing a mounted
+       file system can destroy data. Unmount it first (umount /data), or
+       boot into the emergency target for the root file system.
+
+       e2fsck also runs before resize2fs shrinks a file system. fsck.ext4 and
+       fsck -t ext4 run this same program.
+
+OPTIONS
+       -f     Check even when the file system looks clean.
+
+       -n     Answer no to every question: only report, change nothing.
+
+       -p     Repair simple problems automatically without asking.
+
+       -y     Answer yes to every question.
+
+EXAMPLES
+       Check an unmounted ext4 file system, even if it is marked clean:
+
+           umount /data
+           e2fsck -f /dev/vdb1
+
+SEE ALSO
+       fsck(8), resize2fs(8), tune2fs(8), xfs_repair(8)

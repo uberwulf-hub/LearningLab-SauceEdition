@@ -1,0 +1,54 @@
+# Sheet: file-systems | File systems | File systems
+## Create file systems
+mkfs.xfs -L WEB /dev/vdb1 :: xfs with a label
+mkfs.xfs -f /dev/vdb1 :: overwrite an old file system (check with lsblk -f first)
+mkfs.ext4 -L LOGS /dev/vdb2 :: ext4 with a label (grows, shrinks only unmounted)
+mkfs.vfat -n USB /dev/vdb3 :: vfat (FAT) with a name; no Linux owners or permissions
+xfs_admin -L NEW /dev/vdb1 :: change an xfs label (unmounted)
+e2label /dev/vdb2 NEW :: change an ext4 label
+fatlabel /dev/vdb3 NEW :: change a vfat label
+## Mount and look
+mount /dev/vdb1 /data :: mount by hand (the folder must exist)
+mount LABEL=DATA /data :: mount by label (or UUID=...)
+umount /data :: unmount (fails with "target is busy" while something uses it)
+mount -o remount,ro /data :: change options without unmounting
+findmnt /data :: what is mounted on /data, with options
+findmnt -n -o SOURCE,FSTYPE /data :: just the device and type, no heading
+findmnt -s :: what /etc/fstab describes
+df -hT :: size, use and type of mounted file systems
+## /etc/fstab
+UUID=... /data xfs defaults 0 0 :: by UUID; fields: what, where, type, options, dump, fsck order
+LABEL=DOCS /docs ext4 defaults 0 2 :: by label; fsck order 2 checks ext4 at boot
+systemctl daemon-reload :: after every fstab change
+mount -a :: test fstab now: mounts what is missing, reports bad lines (option nofail: boot goes on without a device)
+## Emergency mode (bad fstab line)
+mount -o remount,rw / :: make the root file system writable if it is read-only
+systemctl reboot :: after fixing fstab and testing it with mount -a
+## NFS
+showmount -e utility.lab.example.com :: list a server's exports
+mount -t nfs server:/exports/shared /mnt/shared :: mount an export by hand
+server:/exports/shared /mnt/shared nfs defaults,_netdev 0 0 :: fstab line; _netdev waits for the network
+## autofs
+dnf install -y autofs :: install it (not there at first)
+/etc/auto.master.d/NAME.autofs :: your master entry: "/remote /etc/auto.remote"
+Indirect map line: public -ro server:/exports/public :: key, options, source
+* -rw server:/exports/home/& :: wildcard map line: any key, & repeats it
+/- /etc/auto.direct :: master entry for a direct map (full paths as keys)
+systemctl enable --now autofs :: start it now and at boot (reload after map changes)
+## Grow an LV and its file system
+lvextend -r -L 1G vgdata/lvweb :: grow LV and file system in one step
+lvextend -r -l +100%FREE vgdata/lvweb :: add all free space of the VG
+xfs_growfs /web :: grow xfs (takes the mount point) after lvextend without -r
+resize2fs /dev/vgdata/lvlog :: grow ext4 after lvextend without -r
+## Shared folders and special bits
+chmod 2770 /srv/team :: set-GID (2): new files get the folder's group
+chmod 1777 /srv/drop :: sticky (1): only owners may delete their files
+namei -l /srv/team/file :: owner and mode of every folder on the way
+## ACLs
+setfacl -m u:carol:rx /srv/team :: rights for one more user (g:GROUP: for a group)
+setfacl -m d:u:carol:rX /srv/team :: default ACL: copied to new files and folders
+setfacl -R -m u:carol:rX /srv/team :: existing content too (X = x only on folders)
+setfacl -m m::rw file :: raise the mask (the most named entries can get)
+setfacl -x u:carol file :: remove one entry
+setfacl -b file :: remove all ACL entries
+getfacl /srv/team :: show the ACL (#effective shows what the mask allows)

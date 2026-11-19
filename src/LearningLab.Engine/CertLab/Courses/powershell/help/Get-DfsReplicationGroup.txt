@@ -1,0 +1,10 @@
+SYNOPSIS: Lists DFS Replication groups.
+DESCRIPTION:
+Get-DfsReplicationGroup shows each replication group with its GroupName, DomainName, Description and State.
+PARAMETER GroupName:
+Only these groups; wildcards work. Position 0.
+EXAMPLE: Get-DfsReplicationGroup
+Every replication group in the domain.
+EXAMPLE: Get-DfsReplicationGroup -GroupName Sales*
+The Sales groups.
+RELATED: New-DfsReplicationGroup, Get-DfsrMember, Get-DfsrMembership

@@ -1,0 +1,28 @@
+SYNOPSIS: Lists the processes (running programs) of a computer.
+DESCRIPTION:
+Get-Process returns one Process object per running program. The default table shows handles, memory (NPM, PM, WS in kilobytes), the processor seconds used (CPU), the process Id, the session (SI) and the name. Many programs run several times, svchost.exe most of all: each copy has its own Id.
+
+-IncludeUserName adds the account that owns each process (this needs an administrator).
+PARAMETER Name:
+Process names without .exe; wildcards are allowed. Position 0. A name with no match and no wildcard is an error.
+PARAMETER Id:
+Process ids (PID). $PID is the id of the PowerShell you are typing in.
+PARAMETER InputObject:
+Process objects from the pipeline.
+PARAMETER IncludeUserName:
+Adds the UserName column.
+PARAMETER FileVersionInfo:
+Shows the version information of the program files instead.
+PARAMETER Module:
+Shows the main module (.exe) of each process instead.
+PARAMETER ComputerName:
+Reads the processes of another computer (Windows PowerShell 5.1 only).
+EXAMPLE: Get-Process | Sort-Object WS -Descending | Select-Object -First 5
+The five processes that use the most memory.
+EXAMPLE: Get-Process -Id $PID
+The PowerShell process you are typing in.
+EXAMPLE: Get-Process svchost -IncludeUserName
+Who runs each copy of svchost.
+NOTES:
+CPU is the total processor time in seconds since the process started, not a percentage. PowerShell 7 has no -ComputerName here; use Invoke-Command.
+RELATED: Stop-Process, Start-Process, Wait-Process, Get-CimInstance

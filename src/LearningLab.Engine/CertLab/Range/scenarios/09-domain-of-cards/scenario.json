@@ -1,0 +1,39 @@
+{
+    "id": "domain-of-cards",
+    "title": "A Domain of Cards",
+    "level": "Expert",
+    "order": 9,
+    "summary": "A small Windows domain. An open share gives you a first account; that account asks the domain for service tickets; a weak service password cracks offline and turns out to be a domain administrator. From there the domain controller is yours.",
+    "story": "Castoak Supply (made up) runs a Windows domain, castoak.example, on 10.10.9.0/24. Its domain controller is WIN-DC01; a file server, WIN-APP01, shares a folder with everyone. You start on scout, a Linux box on the same network.",
+    "goal": "Capture the user flag on the file server and the domain-admin flag on the domain controller.",
+    "skills": "SMB shares, domain accounts, service tickets (Kerberoast-like), offline hash cracking, winrm to a domain controller",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 60,
+    "domain": "castoak.example",
+    "netbios": "CASTOAK",
+    "dc": "WIN-DC01",
+    "vars": { "JPW": "word", "SVCPW": "word" },
+    "domainAccounts": [
+        { "user": "jwade", "password": "{{JPW}}", "remote": true },
+        { "user": "svc_sql", "password": "{{SVCPW}}", "admin": true, "spn": "MSSQLSvc/win-app01.castoak.example:1433" },
+        { "user": "svc_backup", "password": "LongRandomBackup!7qZ", "spn": "BackupSvc/win-app01.castoak.example" }
+    ],
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.9.5/24" ] },
+        { "name": "WIN-DC01", "os": "windows", "server": true, "hostname": "win-dc01.castoak.example", "role": "domain controller", "nics": [ "10.10.9.10/24" ],
+          "ports": [ 53, 88, 135, 139, 389, 445, 464, 636, 3268, 5985 ], "domainJoined": true, "domainAdmins": [ "svc_sql" ], "setup": "dc01.ps1" },
+        { "name": "WIN-APP01", "os": "windows", "server": true, "hostname": "win-app01.castoak.example", "role": "domain file server", "nics": [ "10.10.9.20/24" ],
+          "ports": [ 135, 139, 445, 1433, 5985 ], "domainJoined": true, "domainAdmins": [ "svc_sql" ],
+          "shares": [ { "name": "Share", "path": "C:\\Shares\\Share", "anonymous": true, "comment": "Company share (everyone)" } ],
+          "setup": "app01.ps1" }
+    ],
+    "flags": [
+        { "id": "user", "name": "File server flag", "points": 160, "machine": "WIN-APP01", "path": "C:\\Users\\jwade\\Desktop\\flag.txt", "level": "user" },
+        { "id": "admin", "name": "Domain controller flag", "points": 240, "machine": "WIN-DC01", "path": "C:\\Users\\Administrator\\Desktop\\flag.txt", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "The file server's open share hands you one ordinary domain account. In a domain, an ordinary account can ask for service tickets.", "cost": 30 },
+        { "text": "Crack the tickets offline (hashcrack); the weak one belongs to an account that is a Domain Admin on WIN-DC01.", "cost": 50 }
+    ]
+}

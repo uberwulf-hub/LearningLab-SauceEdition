@@ -1,0 +1,38 @@
+# Deck: virtualization | Hyper-V and Windows Server containers | Virtualization
+Generation with UEFI, Secure Boot and a vTPM :: Generation 2
+Can a VM's generation be changed later? :: No
+Boot disk of a generation 1 VM :: IDE, VHD or VHDX, up to 2 TB
+Turn dynamic memory on or off: VM state needed :: Off
+Dynamic memory settings :: Startup, minimum, maximum, buffer and weight
+Turn on dynamic memory for WEB-TEST :: `Set-VMMemory WEB-TEST -DynamicMemoryEnabled $true -MinimumBytes 1GB -MaximumBytes 8GB`
+Expose virtualization extensions to LAB-HOST :: `Set-VMProcessor LAB-HOST -ExposeVirtualizationExtensions $true`
+Nested virtualization doesn't work with :: Dynamic memory (and runtime memory resize)
+Inner VMs of a nested host need, on the outer VM's adapter :: MAC address spoofing (or NAT inside the VM)
+Turn on MAC address spoofing for LAB-HOST :: `Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On`
+Switch: VMs and the physical network :: External
+Switch: VMs and the host only :: Internal
+Switch: VMs only, not even the host :: Private
+Create a private switch named Isolated :: `New-VMSwitch -Name Isolated -SwitchType Private`
+Move WEB-TEST to the switch Isolated :: `Connect-VMNetworkAdapter -VMName WEB-TEST -SwitchName Isolated`
+Turn on enhanced session mode on the host :: `Set-VMHost -EnableEnhancedSessionMode $true`
+Integration service needed for Copy-VMFile :: Guest Service Interface (off by default)
+Raise an imported VM's configuration version :: Update-VMVersion, with the VM off; one-way
+Largest VHD and VHDX :: VHD 2040 GB, VHDX 64 TB
+Disk that stores only changes against a parent :: Differencing
+Create a differencing disk :: `New-VHD -Path child.vhdx -ParentPath base.vhdx -Differencing`
+Checkpoint kind that uses VSS and leaves the VM off when applied :: Production
+Checkpoint kind that saves memory and running programs :: Standard
+Never fall back to a standard checkpoint :: `Set-VM -Name APP-OLD -CheckpointType ProductionOnly`
+Take a checkpoint named Before patch :: `Checkpoint-VM -Name APP-OLD -SnapshotName 'Before patch'`
+Move a running VM to another host without a cluster :: Shared-nothing live migration
+Asynchronous copy of a VM on another host for disaster recovery :: Hyper-V Replica (30 seconds, 5 or 15 minutes)
+Container isolation that shares the host kernel :: Process isolation (image build must match the host)
+Run an older Windows image on a newer host :: Hyper-V isolation (`--isolation=hyperv`)
+Smallest Windows base image :: Nano Server (mcr.microsoft.com/windows/nanoserver)
+Base image for .NET Framework and IIS apps :: Server Core (mcr.microsoft.com/windows/servercore)
+Windows feature every container host needs :: Containers (plus a runtime: Docker CE, Mirantis or containerd)
+Download the Nano Server 2022 image :: `docker pull mcr.microsoft.com/windows/nanoserver:ltsc2022`
+List all containers, including stopped ones :: `docker ps -a`
+Publish container port 80 on host port 8080 :: -p 8080:80
+Default container network driver :: nat
+Containers with addresses on the physical network :: transparent network driver

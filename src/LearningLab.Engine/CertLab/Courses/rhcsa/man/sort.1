@@ -1,0 +1,89 @@
+NAME
+       sort - sort lines of text
+
+SYNOPSIS
+       sort [OPTION]... [FILE]...
+
+DESCRIPTION
+       sort reads the lines of the files (or standard input when no file is
+       given, or for -) and prints them in order. The files themselves are not
+       changed: redirect the output, or use -o, to keep the result.
+
+       By default lines are compared as text, using the rules of the current
+       language (locale). Numbers compared as text come out in an odd order:
+       "10" sorts before "9". Use -n to compare numbers by their value.
+
+       A line can be split into fields. Without -t, fields are separated by
+       runs of blanks. -k picks the field to sort on.
+
+OPTIONS
+       -n, --numeric-sort
+              Compare by numeric value.
+
+       -h, --human-numeric-sort
+              Compare sizes such as 4K, 12M and 2G (as printed by du -h).
+
+       -r, --reverse
+              Reverse the order (largest or last first).
+
+       -u, --unique
+              Print only the first of a run of equal lines.
+
+       -f, --ignore-case
+              Treat lower-case letters as upper-case.
+
+       -b, --ignore-leading-blanks
+              Ignore blanks at the start of lines or fields.
+
+       -M, --month-sort
+              Compare month names (JAN < FEB < ... < DEC).
+
+       -V, --version-sort
+              Sort version numbers naturally (file2 before file10).
+
+       -g, --general-numeric-sort
+              Compare numbers, including ones written like 1.5e3.
+
+       -R, --random-sort
+              Shuffle the lines.
+
+       -t, --field-separator=CHAR
+              Fields are separated by CHAR, for example -t : for /etc/passwd.
+
+       -k, --key=START[,STOP]
+              Sort on fields START to STOP (counting from 1). -k3,3 sorts on
+              field 3 only; -k3 sorts on field 3 to the end of the line. A
+              letter after the number applies an option to that key only:
+              -k3,3n sorts field 3 numerically.
+
+       -o, --output=FILE
+              Write the result to FILE. FILE may be one of the input files,
+              which a redirection (> FILE) cannot do safely.
+
+       -c, --check
+              Only check whether the input is already sorted; report the
+              first line out of order.
+
+EXAMPLES
+       List the accounts in /etc/passwd ordered by UID, largest first:
+
+           sort -t : -k3,3nr /etc/passwd
+
+       Count how often each login shell is used:
+
+           cut -d : -f 7 /etc/passwd | sort | uniq -c | sort -nr
+
+       Show the five biggest directories under /var:
+
+           du -sh /var/* 2>/dev/null | sort -h | tail -5
+
+       Sort a word list in place, removing duplicates:
+
+           sort -u -o /root/words.txt /root/words.txt
+
+NOTES
+       uniq only notices duplicate lines that are next to each other, so sort
+       first (or use sort -u).
+
+SEE ALSO
+       uniq(1), cut(1), tac(1), du(1)

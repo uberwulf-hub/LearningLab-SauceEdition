@@ -1,0 +1,24 @@
+SYNOPSIS: Lists the commands you have run in this session.
+DESCRIPTION:
+PowerShell keeps a numbered list of the command lines you run in a session. Get-History shows it, with each entry's Id and the command line. The list belongs to this window only: a new PowerShell window starts with an empty one.
+
+History entries are objects, so you can filter them, save them to a file to build a script from what you tried, or run one again with Invoke-History (alias r) and its Id.
+PARAMETER Id:
+The numbers of the entries to show. Position 0.
+PARAMETER Count:
+Shows only this many of the newest entries. Position 1.
+EXAMPLE: Get-History
+Lists the commands typed so far, oldest first.
+EXAMPLE: Get-History -Count 5
+Shows the last five commands.
+EXAMPLE: Get-History -Id 3 | Format-List
+Shows one entry in detail, including when it started and ended.
+EXAMPLE: Get-History | Where-Object CommandLine -like '*Csv*'
+Finds the commands you typed that mention Csv.
+NOTES:
+The aliases are h, history and ghy.
+
+A real session keeps up to 4096 entries ($MaximumHistoryCount).
+
+The list you scroll with the Up arrow on a real PC comes from PSReadLine, which also saves it to a file between sessions. Get-History does not read that file; (Get-PSReadLineOption).HistorySavePath tells you where it is.
+RELATED: Clear-History, about_History

@@ -1,0 +1,28 @@
+NAME
+       lvdisplay - show the details of logical volumes
+
+SYNOPSIS
+       lvdisplay [-m] [-C] [VG | VG/LV]...
+
+DESCRIPTION
+       lvdisplay prints a block of details for each logical volume (or the
+       ones named): LV Path, LV Name, VG Name, LV UUID, LV Status (available
+       when active), LV Size, Current LE (its size in extents) and more.
+
+       lvs prints the same information as a short table, one line per LV,
+       which is easier for checking and for scripts (lvs --noheadings -o
+       lv_size vg/lv).
+
+OPTIONS
+       -m, --maps
+              Also show which physical volumes and extents the LV uses.
+
+       -C, --columns
+              Print a table, like lvs.
+
+EXAMPLES
+           lvdisplay vgdata/lvdata
+           lvdisplay -m vgdata/lvdata
+
+SEE ALSO
+       lvs(8), vgdisplay(8), pvdisplay(8), lvcreate(8)

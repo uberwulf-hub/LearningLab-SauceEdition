@@ -1,0 +1,67 @@
+{
+    "id": "front-desk",
+    "title": "Front Desk",
+    "category": "red",
+    "level": "Beginner",
+    "order": 10,
+    "summary": "A Windows PC at a front desk shares a folder with everyone, and the folder holds a welcome note with a password. Inside, someone left an administrator's password lying around - where it is changes every run.",
+    "story": "{{CO}} (made up) has a reception PC, {{HOST}}, on {{NET}}.0/24. It is a Windows computer that shares a folder with the whole office, so visitors' paperwork can be dropped there. You start on scout, a Linux box on the same network. Nobody has given you an account.",
+    "goal": "Capture the user flag on {{STAFF_FIRST}}'s desktop and the administrator flag on the Administrator desktop.",
+    "skills": "Windows file shares (SMB), signing in with winrm-shell, PowerShell basics, finding passwords left behind",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 25,
+    "vars": {
+        "CO": "company",
+        "NET": "subnet",
+        "HOST": "pick:WIN-DESK1|WIN-RECEPT|WIN-LOBBY|WIN-FRONT",
+        "STAFF": "person",
+        "STAFFPW": "word",
+        "ADMUSER": "pick:deskadmin|kioskadmin|itlocal|setupadmin",
+        "ADMPW": "word",
+        "ROOTPW": "hex:16",
+        "SHARE": "pick:Public|Scans|Shared|Drop",
+        "NOTE": "pick:new-starter.txt|welcome-pack.txt|first-day.txt",
+        "WHERE": "pick:autologon|history|unattend"
+    },
+    "variants": {
+        "WHERE": {
+            "autologon": {
+                "LOOK": "Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon'",
+                "PLACE": "the registry's automatic sign-in settings (the Winlogon key: DefaultUserName and DefaultPassword)",
+                "PLACE_SHORT": "the automatic sign-in settings in the registry" },
+            "history": {
+                "LOOK": "Get-Content C:\\Users\\{{STAFF}}\\AppData\\Roaming\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt",
+                "PLACE": "{{STAFF}}'s PowerShell history file (PowerShell remembers every command typed, in ConsoleHost_history.txt under AppData)",
+                "PLACE_SHORT": "the PowerShell history" },
+            "unattend": {
+                "LOOK": "Get-Content C:\\Windows\\Panther\\unattend.xml",
+                "PLACE": "a leftover setup answer file, C:\\Windows\\Panther\\unattend.xml (Windows setup reads it once; people forget to delete it)",
+                "PLACE_SHORT": "the leftover setup answer file" }
+        }
+    },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "{{NET}}.5/24" ] },
+        { "name": "{{HOST}}", "os": "windows", "server": false, "hostname": "{{LOWER:HOST}}.{{CO_DOMAIN}}", "role": "reception PC", "nics": [ "{{NET}}.30/24" ],
+          "ports": [ 135, 139, 445, 5985 ],
+          "versions": { "445": "Microsoft Windows 11 microsoft-ds" },
+          "accounts": [
+            { "user": "Administrator", "password": "{{ROOTPW}}", "admin": true },
+            { "user": "{{ADMUSER}}", "password": "{{ADMPW}}", "admin": true },
+            { "user": "{{STAFF}}", "password": "{{STAFFPW}}", "remote": true }
+          ],
+          "shares": [ { "name": "{{SHARE}}", "path": "C:\\Shares\\{{SHARE}}", "anonymous": true, "comment": "Drop box for the whole office" } ],
+          "setup": "desk.ps1" }
+    ],
+    "flags": [
+        { "id": "user", "name": "{{STAFF_FIRST}}'s flag", "points": 100, "machine": "{{HOST}}", "path": "C:\\Users\\{{STAFF}}\\Desktop\\flag.txt", "level": "user" },
+        { "id": "admin", "name": "Administrator's flag", "points": 150, "machine": "{{HOST}}", "path": "C:\\Users\\Administrator\\Desktop\\flag.txt", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "What to think about first: you have no account, so look for something that is open to everyone. Windows computers often share folders on the network (that is how a 'shared drive' works). Find the PC, see if it shares anything, and read whatever it lets a stranger read. People often leave notes with passwords in shared folders.", "cost": 3 },
+        { "text": "Finding the PC: 'nmap -sn {{NET}}.0/24' asks every address on your network 'are you there?' and lists the ones that answer. Then 'nmap -sV {{NET}}.30' checks which doors (ports) are open on that one. Port 445 is Windows file sharing, and port 5985 is Windows remote management - a way to type PowerShell commands on it from far away.", "cost": 5 },
+        { "text": "Reading the share: 'smbclient -L //{{NET}}.30 -N' lists the shared folders (-L means list, -N means 'no password, I am a guest'). The {{SHARE}} folder lets guests in. 'smbclient //{{NET}}.30/{{SHARE}} -N -c \"ls; get {{NOTE}}\"' lists it and copies the note to your box; then 'cat {{NOTE}}' shows it. It is a welcome note with {{STAFF}}'s password.", "cost": 8 },
+        { "text": "Signing in: 'winrm-shell -i {{NET}}.30 -u {{STAFF}} -p PASSWORD' opens a PowerShell window on the PC as {{STAFF}} (the prompt changes to PS C:\\...>). 'Get-Content C:\\Users\\{{STAFF}}\\Desktop\\flag.txt' is like cat: it prints the user flag. {{STAFF}} is not an administrator, so the Administrator desktop says 'denied' - you need an administrator's password.", "cost": 12 },
+        { "text": "This time the password was left in {{PLACE}}. Read it with: {{LOOK}} - you will see the account {{ADMUSER}} and its password. Type exit, then sign in again: 'winrm-shell -i {{NET}}.30 -u {{ADMUSER}} -p THAT-PASSWORD' and 'Get-Content C:\\Users\\Administrator\\Desktop\\flag.txt'. It works because {{ADMUSER}} is in the Administrators group, and administrators may read every folder.", "cost": 16 }
+    ]
+}

@@ -1,0 +1,204 @@
+# Unit: u11 | 11. Mobile apps and app protection | Apps
+
+Phones and tablets are where work and private life meet most: Jordan's own iPhone has his photos and his work email side by side. Intune can deploy apps to enrolled phones like it does to PCs, but it can also protect **the company's data inside the apps**, even on phones that aren't enrolled. This unit covers store apps for iOS and Android, app protection policies (MAM), app configuration policies, and the Conditional Access control that makes people use protected apps.
+
+## Lesson: l1101 | Store apps for iOS/iPadOS and Android
+
+### iOS/iPadOS
+
+- **iOS store app**: you search the App Store from the portal and add the app. On an enrolled iPhone, a **Required** assignment installs it (on supervised devices without asking; otherwise the user accepts a prompt), and **Available for enrolled devices** shows it in Company Portal.
+- **Apps and Books (VPP)**: to install paid apps, or free apps without anyone needing an Apple ID, buy licences in **Apple Business Manager** (Apple School Manager for schools) and connect its **location token** in **Tenant administration > Connectors and tokens > Apple VPP tokens**. The apps then sync into Intune and can be assigned to devices.
+- **Line-of-business apps** (`.ipa`) for your own apps.
+
+### Android
+
+- **Managed Google Play**: Android Enterprise's app store. First connect your **managed Google Play account** to Intune (Tenant administration > Connectors and tokens > Managed Google Play). Then approve apps in managed Google Play from the portal; they appear in Intune's app list and can be assigned. On a phone with a **work profile**, the apps install in the work profile (with the briefcase badge), apart from personal apps.
+- Android Enterprise is how Intune manages Android today: personally owned devices with a work profile, corporate devices fully managed, dedicated (kiosk) devices, or corporate devices with a work profile.
+
+> Cert Lab's phones are in the tenant only (no console): Jordan's iPhone (iOS 17.4, personal, enrolled) and Priya's Pixel (Android 14, work profile). Add store apps by typing the app's name in place of the store search.
+
+@try
+@task t1 | Apps | 10 | portal
+Sales need Microsoft Outlook on their phones. Add **Microsoft Outlook** as an **iOS store app** (publisher Microsoft Corporation, App Store link or bundle ID `com.microsoft.Office.Outlook`) and as a **Managed Google Play app** named **Outlook for Android** (`com.microsoft.office.outlook`). Make both **Required** for **Sales**, then sync **Jordan's iPhone** and **Priya's Pixel**.
+@check portal | both phones have Outlook
+device["Jordan's iPhone"].app["Microsoft Outlook"] == Installed
+device["Priya's Pixel"].app["Outlook for Android"] == Installed
+@hint Apps > All apps > Add > iOS store app; then Add > Managed Google Play app. Assign each to Sales as Required.
+@solution portal
+create app name="Microsoft Outlook" type="iOS store app" publisher="Microsoft Corporation" bundle=com.microsoft.Office.Outlook
+create app name="Outlook for Android" type="Managed Google Play app" publisher="Microsoft Corporation" gplay=com.microsoft.office.outlook
+assign app "Microsoft Outlook" Sales intent=required
+assign app "Outlook for Android" Sales intent=required
+remote sync "Jordan's iPhone"
+remote sync "Priya's Pixel"
+@endtask
+@end
+
+@quiz
+? You want to install a paid iOS app on company iPads without anyone signing in with an Apple ID. What do you need?
+- A managed Google Play account
++ Licences from Apple Business Manager, connected with a VPP location token
+- A Win32 app package
+! Apps and Books (VPP) licences bought in Apple Business Manager can be assigned to devices, so no Apple ID is needed.
+? Where do Android apps for Android Enterprise devices come from?
++ Managed Google Play, connected to Intune
+- The Microsoft Store
+- Apple Business Manager
+! Intune approves and deploys Android Enterprise apps through managed Google Play.
+? On Priya's personally owned Pixel with a work profile, where does a Required managed Google Play app install?
+- In her personal profile
++ In the work profile
+- On the SD card
+! A work profile keeps work apps and data apart from personal ones; managed apps install there.
+@end
+
+## Lesson: l1102 | App protection policies
+
+An **app protection policy** (APP, also called **MAM**, mobile application management) protects the organisation's data **inside** apps such as Outlook, Teams, Word, Excel, OneDrive and Edge, whatever the device. The app itself enforces it, so it works:
+
+- **without enrolment** (MAM-WE): on a personal phone that Intune doesn't manage at all; the person only signs in to the app with the work account;
+- **with enrolment**: on managed phones, as an extra layer.
+
+App protection policies are made in **Apps > App protection policies** for **iOS/iPadOS** or **Android** (there is also a Windows version for Microsoft Edge), and assigned to **user groups**: they follow the work account, not the device. **Target policy to** lets you aim at all device types, unmanaged devices only, or managed devices only.
+
+### The three pages of settings
+
+- **Data protection**: may org data be backed up to iCloud or Google; **send org data to other apps** and **receive data from other apps** (all apps, policy managed apps only, or none); **save copies of org data** (for example block saving to a personal Dropbox); **restrict cut, copy and paste** between apps; printing.
+- **Access requirements**: a **PIN for access** (numeric or passcode, a minimum length, biometrics instead of the PIN), and work or school account credentials for access.
+- **Conditional launch**: what happens when something is wrong: too many wrong PINs (reset the PIN), the app hasn't checked in for a while (the **offline grace period**: block access after some minutes, wipe the org data after some days), a **jailbroken or rooted** device (block access or wipe data), an OS or app version that is too old.
+
+A **selective wipe** (Apps > App selective wipe) removes only the org data from the apps, for example when someone leaves; the personal data stays.
+
+@try
+@task t1 | Apps | 15 | portal
+Protect the company's mail and chat on the Sales people's iPhones, enrolled or not. Create an iOS/iPadOS app protection policy **Sales iOS apps** for **Microsoft Outlook** and **Microsoft Teams**, targeted to all device types. Org data must not go into phone backups, may be sent only to **policy managed apps**, and copies may not be saved elsewhere. Require a **numeric PIN** of at least **6** digits. On a **jailbroken** device, **wipe** the org data. Assign it to **Sales**.
+@check portal | the policy has the right data protection
+appProtection["Sales iOS apps"].targetApps has "Microsoft Outlook"
+appProtection["Sales iOS apps"].targetApps has "Microsoft Teams"
+appProtection["Sales iOS apps"].backup == Block
+appProtection["Sales iOS apps"].sendData == "Policy managed apps"
+appProtection["Sales iOS apps"].saveCopies == Block
+@check portal | the access and launch rules, and the assignment
+appProtection["Sales iOS apps"].pinType == Numeric
+appProtection["Sales iOS apps"].pinLength == 6
+appProtection["Sales iOS apps"].jailbreak == "Wipe data"
+appProtection["Sales iOS apps"].include has Sales
+@hint Apps > App protection policies > Create > iOS/iPadOS. Apps: Outlook and Teams. Data protection, Access requirements (PIN), Conditional launch (jailbroken devices: Wipe data). Assign to the user group Sales.
+@solution portal
+create appProtection name="Sales iOS apps" platform=iOS/iPadOS targetApps="Microsoft Outlook,Microsoft Teams" deviceTypes="All device types" backup=Block sendData="Policy managed apps" saveCopies=Block pin=Require pinType=Numeric pinLength=6 jailbreak="Wipe data"
+assign appProtection "Sales iOS apps" Sales
+@endtask
+@end
+
+@quiz
+? Sam reads work email on his own Android phone, which isn't enrolled. Can Intune protect the email data?
+- No, data protection needs enrolment
++ Yes, with an app protection policy assigned to Sam's user group
+- Only with a compliance policy
+! App protection policies work inside the app with the work account, with or without enrolment (MAM without enrolment).
+? To which kind of group is an app protection policy assigned?
++ User groups
+- Device groups
+- Either; it makes no difference
+! App protection follows the person's work account in the apps, so it is assigned to users.
+? Which setting stops someone from pasting text from Outlook into a personal messaging app?
+- PIN for access
++ Restrict cut, copy and paste between other apps
+- Offline grace period
+! Cut, copy and paste can be limited to policy managed apps (or blocked), so org data can't be pasted into personal apps.
+@end
+
+## Lesson: l1103 | App configuration policies
+
+App protection decides what the user may do with the data. An **app configuration policy** (**Apps > App configuration policies**) instead **sets up** an app: its settings are key and value pairs that the app reads at start. There are two channels, and you pick one when you create the policy:
+
+- **Managed devices**: sent through MDM to an **enrolled** iOS or Android device, for apps that Intune deployed. Good for things like the user's email address in a mail app, or Wi-Fi only downloads.
+- **Managed apps**: delivered through the Intune App SDK to apps on any device, enrolled or not, like app protection. Microsoft's apps (Outlook, Edge, Teams, OneDrive) read many keys this way.
+
+Two examples of keys Microsoft's apps understand:
+
+- `com.microsoft.intune.mam.AllowedAccountUPNs`: on Android, the work accounts allowed in Microsoft's apps such as Outlook and OneDrive (one or more UPNs separated by `;`), so personal accounts are blocked. It is usually sent as a managed devices policy with the value `{{userprincipalname}}`. On iOS/iPadOS the same job is done by `IntuneMAMAllowedAccountsOnly = Enabled` together with `IntuneMAMUPN = {{userprincipalname}}`.
+- `com.microsoft.intune.mam.managedbrowser.homepage`: the home page shortcut of Microsoft Edge.
+
+Each app documents its own keys; check the vendor's documentation for the exact names and values.
+
+@try
+@task t1 | Apps | 10 | portal
+Microsoft Edge on the Sales people's phones should open the intranet. Create an app configuration policy **Edge intranet** for **managed apps**, targeting **Microsoft Edge**, with the setting `com.microsoft.intune.mam.managedbrowser.homepage=https://intranet.riverbend.example`, and assign it to **Sales**.
+@check portal | the policy sets Edge's home page for Sales
+appConfig["Edge intranet"].enrollment == "Managed apps"
+appConfig["Edge intranet"].targetApp == "Microsoft Edge"
+appConfig["Edge intranet"].settings contains "managedbrowser.homepage=https://intranet.riverbend.example"
+appConfig["Edge intranet"].include has Sales
+@hint Apps > App configuration policies > Add > Managed apps; targeted app Microsoft Edge; the setting as name=value.
+@solution portal
+create appConfig name="Edge intranet" enrollment="Managed apps" targetApp="Microsoft Edge" settings="com.microsoft.intune.mam.managedbrowser.homepage=https://intranet.riverbend.example"
+assign appConfig "Edge intranet" Sales
+@endtask
+@end
+
+@quiz
+? An app configuration policy must reach Outlook on personal phones that aren't enrolled. Which kind do you create?
+- Managed devices
++ Managed apps
+- A device configuration profile
+! The managed apps channel goes through the Intune App SDK, so it works without enrolment; managed devices needs an enrolled device.
+? What is the difference between app protection and app configuration?
++ Protection limits what may be done with org data; configuration sets the app's own settings
+- They are two names for the same policy
+- Configuration works only on Windows
+! App protection (MAM) guards the data; app configuration fills in settings the app reads at start.
+? A configuration key doesn't work in an app. What is the most likely reason?
+- The policy was assigned to a user group
++ The app doesn't support that key (each app documents its own keys)
+- App configuration needs Windows diagnostic data
+! Apps read only the keys they were built for, so use the names and values the app's vendor documents.
+@end
+
+## Lesson: l1104 | Conditional Access: require app protection policy
+
+App protection only protects people who use the protected apps. To stop someone reading work email in the phone's built-in mail app instead, Conditional Access (unit 4) offers the grant control **Require app protection policy**: on iOS and Android, access is granted only from an app that an app protection policy covers for that user.
+
+A typical policy: users **Sales** (or all users), target resources **Office 365**, condition **device platforms iOS and Android**, grant **Require app protection policy**. Remember:
+
+- It is made for **iOS and Android** (Microsoft Edge on Windows can also meet it, as a preview). In a phone policy, leave Windows and macOS out of the platforms and cover them with another policy, for example one that requires a compliant device.
+- The phone needs a broker app (Microsoft Authenticator on iOS, Company Portal on Android) so it is registered in Entra ID.
+- The app must be in the app protection policy's list for that user: Outlook protected, Word not, means Word is blocked.
+- An older control, **Require approved client app**, was announced for retirement in 2026 in favour of this one; use Require app protection policy in new policies.
+- Test with **report-only** first, and keep the emergency access account excluded.
+
+> Cert Lab's `signin(...)` check takes the app on the phone as `clientApp="Microsoft Outlook"` and the kind of client as `client=mobile`.
+
+@try
+@setup portal
+create appProtection name="Sales iOS apps" platform=iOS/iPadOS targetApps="Microsoft Outlook,Microsoft Teams" backup=Block sendData="Policy managed apps"
+assign appProtection "Sales iOS apps" Sales
+@task t1 | Apps | 15 | portal
+The Sales app protection policy covers Outlook and Teams on iOS. Make it count: create a Conditional Access policy **Protected apps on phones** for **Sales**, target **Office 365**, on **iOS and Android** only, granting access only with an **app protection policy**, and turn it **On**. Jordan must still get in with Outlook on his iPhone, but not with a mobile app the policy doesn't cover, such as Word.
+@check portal | protected Outlook gets in, unprotected Word doesn't
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Outlook", mfa=yes) == Allowed
+signin(user=jordan, device="Jordan's iPhone", client=mobile, clientApp="Microsoft Word", mfa=yes) == Blocked
+ca["Protected apps on phones"].state == On
+@hint Conditional Access > Policies > New: users Sales, target resources Office 365, conditions device platforms iOS and Android, grant access with Require app protection policy, enable On.
+@solution portal
+create ca name="Protected apps on phones" usersInclude=Sales apps="Office 365" platforms="iOS,Android" grant="Grant access" controls="Require app protection policy" state=On
+@endtask
+@end
+
+@quiz
+? On which platforms does the grant control Require app protection policy work?
+- Windows and macOS
++ iOS and Android
+- All platforms
+! The control is for iOS and Android apps covered by an app protection policy (on Windows only Microsoft Edge, as a preview); other platforms need other controls.
+? Jordan's app protection policy covers Outlook and Teams. With Require app protection policy on, he opens work files in Word on his iPhone. What happens?
+- Access is allowed, because Word is a Microsoft app
++ Access is blocked, because no app protection policy covers Word for him
+- Access is allowed after MFA
+! Only apps in an app protection policy for that user satisfy the control; add Word to the policy if Sales should use it.
+? Why do you leave the emergency access account out of such policies and test in report-only first?
++ So a mistake can't lock everyone out, and you see the effect before enforcing it
+- Because report-only policies are faster
+- Because Conditional Access can't target admins
+! Report-only shows what a policy would do without enforcing it, and the excluded emergency account stays usable if a policy goes wrong.
+@end

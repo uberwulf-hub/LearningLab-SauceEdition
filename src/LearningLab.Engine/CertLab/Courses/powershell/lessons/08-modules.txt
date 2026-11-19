@@ -1,0 +1,469 @@
+# Unit: u08 | 8. Modules and profiles | Modules
+
+Almost every command you have used so far came from a **module**, a package of commands that belong together. This unit shows where modules live, how PowerShell finds and loads them, how to turn your own functions into a module that loads by itself, how to describe it with a manifest, and how a **profile** sets up every new PowerShell window the way you like it.
+
+## Lesson: l0801 | What a module is and where modules live
+
+A module is a folder with a set of commands in it, such as **NetTCPIP** (Get-NetIPAddress and friends) or **ScheduledTasks**. There are three kinds:
+
+- **Script module**: a `.psm1` file with functions written in PowerShell. You can write these yourself.
+- **Binary module**: a compiled `.dll` with cmdlets, like PowerShell's own core modules. (Many Windows modules, NetTCPIP among them, are instead built on CIM classes, unit 10; you use them the same way.)
+- **Manifest**: a `.psd1` file that describes a module: its version, author, the files it loads and what it shares.
+
+PowerShell looks for modules in the folders listed in the environment variable `PSModulePath`, separated by semicolons:
+
+```terminal
+PS C:\Windows\system32> $env:PSModulePath -split ';'
+C:\Users\Administrator\Documents\WindowsPowerShell\Modules
+C:\Program Files\WindowsPowerShell\Modules
+C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+```
+
+- `Documents\WindowsPowerShell\Modules` in your own profile folder: modules for **you only**. The folder does not exist until you create it.
+- `C:\Program Files\WindowsPowerShell\Modules`: modules for **everyone** on the computer (writing here needs an administrator).
+- `C:\Windows\system32\WindowsPowerShell\v1.0\Modules`: Windows' own modules. Leave this one to Windows.
+
+### Loaded and available
+
+`Get-Module` lists the modules **loaded** in this session. `Get-Module -ListAvailable` lists every module PowerShell can **find** in those folders (shown grouped by folder). Each module has a version, and `ModuleBase` is the folder it lives in.
+
+```terminal
+PS C:\Windows\system32> Get-Module | Select-Object ModuleType, Version, Name
+
+ModuleType Version Name
+---------- ------- ----
+Manifest   3.1.0.0 Microsoft.PowerShell.Management
+Manifest   3.1.0.0 Microsoft.PowerShell.Utility
+Script     2.0.0   PSReadline
+
+
+PS C:\Windows\system32> Get-Module -ListAvailable -Name Pester, PowerShellGet | Select-Object Name, Version, ModuleBase
+
+Name          Version ModuleBase
+----          ------- ----------
+Pester        3.4.0   C:\Program Files\WindowsPowerShell\Modules\Pester\3.4.0
+PowerShellGet 1.0.0.1 C:\Program Files\WindowsPowerShell\Modules\PowerShellGet\1.0.0.1
+```
+
+### Auto-loading
+
+Since PowerShell 3.0 you rarely load a module by hand: the first time you use a command, PowerShell finds the module that has it in `PSModulePath` and loads it for you. NetTCPIP is not loaded at the start, but it is once `Get-NetIPAddress` has run:
+
+```terminal
+PS C:\Windows\system32> Get-Module NetTCPIP
+PS C:\Windows\system32> $null = Get-NetIPAddress
+PS C:\Windows\system32> Get-Module NetTCPIP | Select-Object Name, Version
+
+Name     Version
+----     -------
+NetTCPIP 1.0.0.0
+```
+
+> Auto-loading only works for modules in a `PSModulePath` folder. A module saved anywhere else must be loaded with `Import-Module` and its path. The preference variable `$PSModuleAutoloadingPreference` can turn auto-loading off (`'None'`), which is rarely a good idea.
+
+> PowerShell 7 has its own folders: `Documents\PowerShell\Modules` for you and `C:\Program Files\PowerShell\Modules` for everyone. It also searches the Windows PowerShell folders above, so most 5.1 modules still work there.
+
+@try machines=1
+@task t1 | Modules | 10 | WIN-SRV1
+Without loading it, find the folder the **Pester** module is installed in and store that folder (the module's `ModuleBase`) in `$pesterHome`.
+@check WIN-SRV1 | $pesterHome is Pester's folder
+$pesterHome -eq 'C:\Program Files\WindowsPowerShell\Modules\Pester\3.4.0'
+@check WIN-SRV1 | Pester was not loaded
+-not (Get-Module Pester)
+@hint Get-Module -ListAvailable finds modules without loading them; the folder is in its ModuleBase property.
+@solution WIN-SRV1
+$pesterHome = (Get-Module -ListAvailable Pester).ModuleBase
+$pesterHome
+@endtask
+@end
+
+@quiz
+? Where does PowerShell look for modules to auto-load?
+- In every folder on the C: drive
++ In the folders listed in $env:PSModulePath
+- Only in C:\Windows\system32
+! Modules saved elsewhere must be loaded with Import-Module and a path.
+? What is the difference between `Get-Module` and `Get-Module -ListAvailable`?
++ The first lists the modules loaded now; the second lists every module that can be found
+- The first lists Windows' modules; the second lists yours
+- There is no difference
+! -ListAvailable searches the PSModulePath folders without loading anything.
+? Which folder holds modules for you only?
+- C:\Program Files\WindowsPowerShell\Modules
++ Documents\WindowsPowerShell\Modules in your profile folder
+- C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+! Program Files is for everyone; system32 is Windows' own.
+@end
+
+## Lesson: l0802 | Import-Module, Remove-Module and Get-Command -Module
+
+`Import-Module` loads a module yourself. Reasons to do it even with auto-loading: to load a module saved outside `PSModulePath` (give its path), to load a fresh copy after you changed it (`-Force`), or to see what it brings with `-Verbose` or `-PassThru`.
+
+```terminal
+PS C:\Windows\system32> Import-Module Microsoft.PowerShell.LocalAccounts -PassThru | Select-Object Name, Version
+
+Name                               Version
+----                               -------
+Microsoft.PowerShell.LocalAccounts 1.0.0.0
+```
+
+`Get-Command -Module` lists the commands of a module. It works whether the module is loaded or not, and combines with `-Verb` and `-Noun`:
+
+```terminal
+PS C:\Windows\system32> Get-Command -Module Microsoft.PowerShell.LocalAccounts -Noun LocalGroup
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Get-LocalGroup                                     1.0.0.0    Microsoft.PowerShell.LocalAccounts
+Cmdlet          New-LocalGroup                                     1.0.0.0    Microsoft.PowerShell.LocalAccounts
+Cmdlet          Remove-LocalGroup                                  1.0.0.0    Microsoft.PowerShell.LocalAccounts
+Cmdlet          Rename-LocalGroup                                  1.0.0.0    Microsoft.PowerShell.LocalAccounts
+Cmdlet          Set-LocalGroup                                     1.0.0.0    Microsoft.PowerShell.LocalAccounts
+```
+
+### Removing a module
+
+`Remove-Module` unloads a module from the **session**. It does not delete or uninstall anything: the module stays on disk, and auto-loading brings it back the next time you use one of its commands.
+
+```terminal
+PS C:\Windows\system32> Import-Module ScheduledTasks
+PS C:\Windows\system32> Remove-Module ScheduledTasks
+PS C:\Windows\system32> Get-Module ScheduledTasks
+PS C:\Windows\system32> Import-Module NoSuchModule
+Import-Module : The specified module 'NoSuchModule' was not loaded because no valid module file was found in any module directory.
+At line:1 char:1
++ Import-Module NoSuchModule
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ResourceUnavailable: (NoSuchModule:String) [Import-Module], FileNotFoundException
+    + FullyQualifiedErrorId : Modules_ModuleNotFound,Microsoft.PowerShell.Commands.ImportModuleCommand
+```
+
+> A name you pass to `Import-Module` is searched for in `PSModulePath`. A path (`Import-Module C:\Tools\MyTools\MyTools.psm1`, or the module's folder) loads that file directly, wherever it is.
+
+@try machines=1
+@task t1 | Modules | 10 | WIN-SRV1
+Load the module **ScheduledTasks** with Import-Module, then store in `$taskCmds` the **number** of commands that module has.
+@check WIN-SRV1 | ScheduledTasks is loaded
+$null -ne (Get-Module ScheduledTasks)
+@check WIN-SRV1 | $taskCmds is the number of its commands
+$taskCmds -gt 0 -and $taskCmds -eq @(Get-Command -Module ScheduledTasks).Count
+@check WIN-SRV1 | Import-Module was used
+($CertLabHistory -join ' ') -match 'Import-Module'
+@hint Import-Module ScheduledTasks, then (Get-Command -Module ScheduledTasks).Count
+@solution WIN-SRV1
+Import-Module ScheduledTasks
+$taskCmds = (Get-Command -Module ScheduledTasks).Count
+$taskCmds
+@endtask
+@end
+
+@quiz
+? What does `Remove-Module ScheduledTasks` do?
+- Uninstalls the module from the computer
++ Unloads it from the current session; it stays on disk
+- Deletes its folder
+! Auto-loading brings it back the next time one of its commands runs.
+? How do you list the commands of the DnsClient module?
++ Get-Command -Module DnsClient
+- Get-Module DnsClient -Commands
+- Get-Help DnsClient
+! Get-Command -Module works whether the module is loaded or not.
+? You changed a module that is already loaded. How do you load the new version into this session?
+- Import-Module again with no options
++ Import-Module with -Force
+- Get-Module -Refresh
+! Without -Force, Import-Module sees the module is loaded and does nothing.
+@end
+
+## Lesson: l0803 | Writing a script module
+
+A script module is a `.psm1` file full of functions. Turning your functions into a module means every PowerShell window can use them without dot-sourcing a script first.
+
+The rule that makes auto-loading work: put the file in a **folder with the same name** inside a `PSModulePath` folder. For a module called LabTools, for you only:
+
+`C:\Users\Administrator\Documents\WindowsPowerShell\Modules\LabTools\LabTools.psm1`
+
+The module file holds two functions and, as its last line, the list of what it shares:
+
+```
+function Get-Greeting {
+    param([string]$Name = 'world')
+    "Hello, $(Format-Name $Name)"
+}
+function Format-Name([string]$Text) { $Text.Substring(0, 1).ToUpper() + $Text.Substring(1) }
+Export-ModuleMember -Function Get-Greeting
+```
+
+On a real PC you would write it in an editor such as Notepad or VS Code. In the console, a here-string does the same job:
+
+```terminal
+PS C:\Windows\system32> $dir = "$HOME\Documents\WindowsPowerShell\Modules\LabTools"
+PS C:\Windows\system32> New-Item -ItemType Directory -Path $dir -Force | Out-Null
+PS C:\Windows\system32> Set-Content -Path "$dir\LabTools.psm1" -Value @'
+>> function Get-Greeting {
+>>     param([string]$Name = 'world')
+>>     "Hello, $(Format-Name $Name)"
+>> }
+>> function Format-Name([string]$Text) { $Text.Substring(0, 1).ToUpper() + $Text.Substring(1) }
+>> Export-ModuleMember -Function Get-Greeting
+>> '@
+PS C:\Windows\system32> Get-Greeting -Name ada
+Hello, Ada
+PS C:\Windows\system32> Get-Module LabTools
+
+ModuleType Version    Name                                ExportedCommands
+---------- -------    ----                                ----------------
+Script     0.0        LabTools                            {Get-Greeting}
+
+
+PS C:\Windows\system32> Format-Name 'bob'
+Format-Name : The term 'Format-Name' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Format-Name 'bob'
++ ~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Format-Name:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+```
+
+`Get-Greeting` worked straight away: PowerShell found it in LabTools.psm1 and loaded the module. `Format-Name` is a helper the module uses inside, and it is **not** visible outside.
+
+### Export-ModuleMember
+
+Without `Export-ModuleMember`, a script module shares **all** its functions and aliases (but none of its variables). With it, only the names you list are shared, so helpers stay private. It can only run inside a module, usually as the last line of the `.psm1`.
+
+- `Export-ModuleMember -Function Get-Greeting, Set-Greeting`: share these functions.
+- `-Variable` and `-Alias` share variables and aliases the module defines.
+
+### Changing a module
+
+A loaded module does not notice that you edited its file. Load it again with `Import-Module LabTools -Force` (or open a new PowerShell window).
+
+> Folder and file names must match (`LabTools\LabTools.psm1`). A file `LabTools\Tools.psm1` is not found by name, and its functions do not auto-load.
+
+@try machines=1
+@task t1 | Modules | 10 | WIN-SRV1
+Create a script module named **Greeter** for the administrator, in the right place for auto-loading. It must share one function, `Get-Welcome`, with a parameter `$Name` that returns `Welcome, NAME` (for example `Welcome, Ada`). Any helper functions must stay private (use Export-ModuleMember).
+@check WIN-SRV1 | the module file is in the right place
+Test-Path "$HOME\Documents\WindowsPowerShell\Modules\Greeter\Greeter.psm1"
+@check WIN-SRV1 | Get-Welcome auto-loads and works
+Remove-Module Greeter -ErrorAction SilentlyContinue; (Get-Welcome -Name Ada) -eq 'Welcome, Ada'
+@check WIN-SRV1 | only Get-Welcome is shared
+Import-Module Greeter -Force; (@((Get-Module Greeter).ExportedCommands.Keys) -join ',') -eq 'Get-Welcome'
+@hint Folder $HOME\Documents\WindowsPowerShell\Modules\Greeter, file Greeter.psm1, last line Export-ModuleMember -Function Get-Welcome.
+@solution WIN-SRV1
+New-Item -ItemType Directory -Path "$HOME\Documents\WindowsPowerShell\Modules\Greeter" -Force | Out-Null
+Set-Content -Path "$HOME\Documents\WindowsPowerShell\Modules\Greeter\Greeter.psm1" -Value @'
+function Get-Welcome { param([string]$Name) "Welcome, $Name" }
+Export-ModuleMember -Function Get-Welcome
+'@
+Get-Welcome -Name Ada
+@endtask
+@end
+
+@quiz
+? Where must the module MyTools be saved so that it auto-loads for you?
+- Documents\WindowsPowerShell\Modules\MyTools.psm1
++ Documents\WindowsPowerShell\Modules\MyTools\MyTools.psm1
+- Documents\WindowsPowerShell\MyTools\Module.psm1
+! The module gets its own folder, named like the file.
+? A .psm1 has no Export-ModuleMember line. What does it share?
++ All its functions and aliases, but not its variables
+- Nothing
+- Only the first function
+! Export-ModuleMember narrows that down to the names you list.
+? You edited a loaded module's .psm1. Why do you still get the old behaviour?
+- The file was saved in the wrong encoding
++ The module stays as it was loaded until Import-Module -Force (or a new window)
+- Modules can only be changed by an administrator
+! PowerShell reads the file when it loads the module, not every time you call a function.
+@end
+
+## Lesson: l0804 | Module manifests and PowerShellGet
+
+A **manifest** is a `.psd1` file next to the `.psm1`, with the same name. It is a hash table of facts about the module: its version, author, description, the file to load (**RootModule**) and what to share (**FunctionsToExport**). `New-ModuleManifest` writes one with every key and a comment for each:
+
+```terminal
+#setup $dir = "$HOME\Documents\WindowsPowerShell\Modules\LabTools"; New-Item -ItemType Directory -Path $dir -Force | Out-Null
+#setup Set-Content -Path "$dir\LabTools.psm1" -Value 'function Get-Greeting { param($Name = "world") "Hello, $Name" }', 'function Format-Name { param($Text) $Text }'
+PS C:\Windows\system32> $dir = "$HOME\Documents\WindowsPowerShell\Modules\LabTools"
+PS C:\Windows\system32> New-ModuleManifest -Path "$dir\LabTools.psd1" -RootModule LabTools.psm1 -ModuleVersion 1.2.0 -Author 'Ada' -Description 'Tools for the lab' -FunctionsToExport Get-Greeting
+PS C:\Windows\system32> Test-ModuleManifest "$dir\LabTools.psd1"
+
+ModuleType Version    Name                                ExportedCommands
+---------- -------    ----                                ----------------
+Script     1.2.0      LabTools                            {Get-Greeting}
+
+
+PS C:\Windows\system32> Get-Module -ListAvailable LabTools | Format-List Name, Version, Author, Description, ExportedCommands
+
+Name             : LabTools
+Version          : 1.2.0
+Author           : Ada
+Description      : Tools for the lab
+ExportedCommands : {Get-Greeting}
+```
+
+- **RootModule**: the `.psm1` (or `.dll`) the manifest loads. Without it, the manifest loads nothing of its own.
+- **ModuleVersion**: the version, shown by Get-Module. Several versions can sit side by side in subfolders named after the version (`LabTools\1.2.0\LabTools.psd1`); PowerShell loads the newest unless you ask for one with `-RequiredVersion`.
+- **FunctionsToExport**: the functions to share. Listing them by name (not `*`) also lets PowerShell know what is inside without loading the module, which makes auto-loading faster. When both a manifest and Export-ModuleMember limit the list, a function must be allowed by both.
+- `Test-ModuleManifest` checks the file: it must parse, have a ModuleVersion, and its RootModule must exist. When all is well it returns the module's details, as Get-Module would.
+
+> Edit a manifest in a text editor or regenerate it; `Update-ModuleManifest` (from PowerShellGet) changes single keys.
+
+### PowerShellGet and the PowerShell Gallery
+
+The **PowerShell Gallery** (powershellgallery.com) is the public library of modules. The PowerShellGet module talks to it:
+
+- `Find-Module NAME` searches it; `Install-Module NAME -Scope CurrentUser` downloads and installs into your own Modules folder (`-Scope AllUsers`, the default of the PowerShellGet that comes with 5.1, needs an administrator).
+- `Save-Module NAME -Path C:\Saved` downloads without installing, so you can check the code first.
+- `Get-InstalledModule` lists what Install-Module installed; `Update-Module` updates it.
+- `Get-PSRepository` shows the repositories PowerShellGet knows. PSGallery is **Untrusted** by default, so Install-Module asks before installing from it.
+
+```terminal
+PS C:\Windows\system32> Get-PSRepository
+
+Name                      InstallationPolicy   SourceLocation
+----                      ------------------   --------------
+PSGallery                 Untrusted            https://www.powershellgallery.com/api/v2
+
+
+PS C:\Windows\system32> Find-Module Pester
+WARNING: Unable to resolve package source 'https://www.powershellgallery.com/api/v2'.
+WARNING: Cert Lab: the practice network has no internet, so the PowerShell Gallery cannot be reached. Copy a module folder into C:\Program Files\WindowsPowerShell\Modules instead.
+PackageManagement\Find-Package : No match was found for the specified search criteria and module name 'Pester'. Try Get-PSRepository to see all available registered module repositories.
+At line:1 char:1
++ Find-Module Pester
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Microsoft.Power....FindPackageCommand:FindPackageCommand) [Find-Package], Exception
+    + FullyQualifiedErrorId : NoMatchFoundForCriteria,Microsoft.PowerShell.PackageManagement.Cmdlets.FindPackageCommand
+```
+
+The practice network has no internet, so Find-Module and Install-Module fail here, as they would on a real server without internet access. To install a module by hand, copy its folder into one of the PSModulePath folders. On a real PC, the first Find-Module or Install-Module in 5.1 may also ask to install the NuGet provider that PowerShellGet needs.
+
+> Only install modules you trust: a module is code that runs with your rights. Look at the publisher, the download count and the code (Save-Module) first.
+
+> PowerShell 7.4 and later also include **PSResourceGet** (`Find-PSResource`, `Install-PSResource`), the newer replacement for PowerShellGet.
+
+@try machines=1
+@setup WIN-SRV1
+New-Item -ItemType Directory -Path "$HOME\Documents\WindowsPowerShell\Modules\NetTools" -Force | Out-Null
+Set-Content -Path "$HOME\Documents\WindowsPowerShell\Modules\NetTools\NetTools.psm1" -Value 'function Get-Subnet { "10.0.10.0/24" }', 'function Test-Gateway { $true }'
+
+@task t1 | Modules | 10 | WIN-SRV1
+The module **NetTools** (in your Documents\WindowsPowerShell\Modules folder) has no manifest. Create `NetTools.psd1` next to `NetTools.psm1` with RootModule `NetTools.psm1`, version **2.0.0** and only the function `Get-Subnet` in FunctionsToExport.
+@check WIN-SRV1 | the manifest passes Test-ModuleManifest with version 2.0.0
+$m = Test-ModuleManifest "$HOME\Documents\WindowsPowerShell\Modules\NetTools\NetTools.psd1" -ErrorAction Stop; "$($m.Version)" -eq '2.0.0'
+@check WIN-SRV1 | it loads NetTools.psm1 and shares only Get-Subnet
+Import-Module NetTools -Force; $c = @((Get-Module NetTools).ExportedCommands.Keys); ($c -join ',') -eq 'Get-Subnet'
+@hint New-ModuleManifest -Path ...\NetTools\NetTools.psd1 -RootModule NetTools.psm1 -ModuleVersion 2.0.0 -FunctionsToExport Get-Subnet
+@solution WIN-SRV1
+New-ModuleManifest -Path "$HOME\Documents\WindowsPowerShell\Modules\NetTools\NetTools.psd1" -RootModule NetTools.psm1 -ModuleVersion 2.0.0 -FunctionsToExport Get-Subnet
+Test-ModuleManifest "$HOME\Documents\WindowsPowerShell\Modules\NetTools\NetTools.psd1"
+@endtask
+@end
+
+@quiz
+? Which manifest key names the .psm1 file the module loads?
+- ModuleToLoad
++ RootModule
+- NestedFile
+! RootModule (called ModuleToProcess in PowerShell 2.0) points at the module's main file.
+? What does `Install-Module PSScriptAnalyzer -Scope CurrentUser` need that the practice network does not have?
++ Internet access to the PowerShell Gallery
+- An administrator
+- A module manifest
+! CurrentUser installs into your own Modules folder, so no administrator is needed.
+? What does Test-ModuleManifest check?
+- That the module's functions have no bugs
++ That the .psd1 parses, has a ModuleVersion and that the files it names exist
+- That the module is signed
+! When the manifest is valid it returns the module's details; otherwise it shows an error.
+@end
+
+## Lesson: l0805 | Profiles
+
+A **profile** is a script that PowerShell runs every time it starts, before you get the prompt. It is the place for things you want in every session: your functions, aliases, a different prompt, modules you always import, or preference variables.
+
+`$PROFILE` holds the path of the profile for **you** in **this program** (the console). It is a string with four extra properties, one for each profile PowerShell 5.1 looks for:
+
+```terminal
+PS C:\Windows\system32> $PROFILE
+C:\Users\Administrator\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+PS C:\Windows\system32> $PROFILE | Select-Object *
+
+AllUsersAllHosts       : C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
+AllUsersCurrentHost    : C:\Windows\System32\WindowsPowerShell\v1.0\Microsoft.PowerShell_profile.ps1
+CurrentUserAllHosts    : C:\Users\Administrator\Documents\WindowsPowerShell\profile.ps1
+CurrentUserCurrentHost : C:\Users\Administrator\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+Length                 : 83
+
+
+PS C:\Windows\system32> Test-Path $PROFILE
+False
+```
+
+| Profile | Runs for | File |
+|---|---|---|
+| AllUsersAllHosts | everyone, every PowerShell program | `$PSHOME\profile.ps1` |
+| AllUsersCurrentHost | everyone, this program | `$PSHOME\Microsoft.PowerShell_profile.ps1` |
+| CurrentUserAllHosts | you, every PowerShell program | `Documents\WindowsPowerShell\profile.ps1` |
+| CurrentUserCurrentHost | you, this program | `Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1` |
+
+They run in that order, so a later one can change what an earlier one set. A "host" is the program PowerShell runs in: the console has one profile name, the PowerShell ISE another (`Microsoft.PowerShellISE_profile.ps1`). Changing an AllUsers profile needs an administrator.
+
+### Creating your profile
+
+None of the files exists at first, and neither does the `WindowsPowerShell` folder. `New-Item -Force` creates the file and any missing folders:
+
+```terminal
+PS C:\Windows\system32> New-Item -ItemType File -Path $PROFILE -Force | Out-Null
+PS C:\Windows\system32> Add-Content -Path $PROFILE -Value 'Set-Alias -Name gh -Value Get-Help'
+PS C:\Windows\system32> Add-Content -Path $PROFILE -Value 'function prompt { "[$env:COMPUTERNAME] PS> " }'
+PS C:\Windows\system32> Get-Content $PROFILE
+Set-Alias -Name gh -Value Get-Help
+function prompt { "[$env:COMPUTERNAME] PS> " }
+PS C:\Windows\system32> . $PROFILE
+[WIN-SRV1] PS>
+```
+
+Dot-sourcing (`. $PROFILE`) runs the profile in the current session, so you can try it without opening a new window. Here the new `prompt` function changed the prompt at once.
+
+A profile is a script, so the **execution policy** decides whether it runs. On Windows 11 the default policy is Restricted: a new window then shows an error instead of running the profile, until you allow scripts (unit 12; `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` is the usual choice).
+
+> Keep profiles short and quick: they run before every prompt. `powershell.exe -NoProfile` starts without them, which is what scripts and scheduled tasks should use, so they do not depend on one person's settings.
+
+> PowerShell 7 uses `Documents\PowerShell\Microsoft.PowerShell_profile.ps1` (no "Windows" in the folder name) and `$PSHOME` is its own folder, so 5.1 and 7 do not share profiles.
+
+@try machines=1
+@task t1 | Modules | 10 | WIN-SRV1
+Create your profile for the console (the file in `$PROFILE`) so that every new session has an alias **ll** for `Get-ChildItem` and a variable `$LabRoot` set to `C:\LabFiles`.
+@check WIN-SRV1 | the profile file exists
+Test-Path $PROFILE.CurrentUserCurrentHost
+@check WIN-SRV1 | running it defines ll and $LabRoot
+. $PROFILE.CurrentUserCurrentHost; (Get-Alias ll).Definition -eq 'Get-ChildItem' -and $LabRoot -eq 'C:\LabFiles'
+@hint New-Item -ItemType File -Path $PROFILE -Force, then Add-Content $PROFILE with each line.
+@solution WIN-SRV1
+New-Item -ItemType File -Path $PROFILE -Force | Out-Null
+Add-Content -Path $PROFILE -Value 'Set-Alias -Name ll -Value Get-ChildItem'
+Add-Content -Path $PROFILE -Value '$LabRoot = ''C:\LabFiles'''
+Get-Content $PROFILE
+@endtask
+@end
+
+@quiz
+? Which profile runs for you only, in every PowerShell program (console, ISE...)?
+- AllUsersAllHosts
++ CurrentUserAllHosts
+- CurrentUserCurrentHost
+! CurrentUserCurrentHost is the one $PROFILE points to: you, in this program only.
+? `Test-Path $PROFILE` says False. How do you create the profile?
++ New-Item -ItemType File -Path $PROFILE -Force
+- Set-Profile
+- Enable-Profile -Scope CurrentUser
+! -Force also creates the missing WindowsPowerShell folder.
+? Why might a new profile not run on a fresh Windows 11 PC?
+- Profiles only work on servers
++ The default execution policy, Restricted, does not run any script, profiles included
+- The profile must be signed by Microsoft
+! Allowing scripts for your account (for example RemoteSigned for CurrentUser) lets it run.
+@end

@@ -1,0 +1,63 @@
+NAME
+       vgcreate - create an LVM volume group from physical volumes
+
+SYNOPSIS
+       vgcreate [-s EXTENT-SIZE] [-y] [-f] VG-NAME PV [PV...]
+
+DESCRIPTION
+       A volume group (VG) pools the space of one or more physical volumes
+       (PVs: whole disks or partitions prepared for LVM) into one store, from
+       which logical volumes (LVs) are then cut with lvcreate.
+
+       The space of a VG is counted in physical extents (PEs), all of the
+       same size: 4 MiB unless -s says otherwise. Every LV is a whole number
+       of extents, so sizes round up to a multiple of the extent size, and
+       the extent size cannot be changed later. When a task asks for LVs made
+       of a number of extents (lvcreate -l 20), the extent size of the VG
+       decides how big they are.
+
+       Each PV argument may be a device that is already a PV, or a device
+       that is not yet one: vgcreate then runs the pvcreate step itself.
+
+       The new VG's device directory is /dev/VG-NAME.
+
+OPTIONS
+       -s, --physicalextentsize SIZE
+              The extent size, a power of 2 such as 8M, 16M or 32M (units k,
+              m, g; without a unit, MiB).
+
+       -y, --yes
+              Answer yes to questions (for example, to wipe an old file system
+              signature on a device).
+
+       -f, --force
+              Go ahead without some checks.
+
+       -v, --verbose
+              Say more about what is done.
+
+EXAMPLES
+       Make a partition on /dev/vdb, turn it into a PV and create the VG
+       vgdata with 16 MiB extents:
+
+           parted -s /dev/vdb mklabel gpt mkpart lvm 1MiB 2GiB set 1 lvm on
+           pvcreate /dev/vdb1
+           vgcreate -s 16M vgdata /dev/vdb1
+
+       Create a VG from two whole disks:
+
+           vgcreate vgshare /dev/vdb /dev/vdc
+
+       Check the extent size and free space:
+
+           vgs -o vg_name,vg_extent_size,vg_size,vg_free vgdata
+           vgdisplay vgdata
+
+NOTES
+       A device that holds a partition table or a file system is refused (or
+       vgcreate asks before wiping its signature). Use an empty disk or a new
+       partition, or clear it first with wipefs -a.
+
+SEE ALSO
+       pvcreate(8), vgextend(8), vgs(8), vgdisplay(8), lvcreate(8),
+       vgremove(8), lvm(8)

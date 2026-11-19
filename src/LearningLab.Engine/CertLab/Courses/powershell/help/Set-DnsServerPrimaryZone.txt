@@ -1,0 +1,26 @@
+SYNOPSIS: Changes the settings of a primary zone: updates, zone transfers, replication.
+DESCRIPTION:
+Set-DnsServerPrimaryZone changes how an existing primary zone behaves. The settings asked about most often:
+
+DynamicUpdate: Secure lets only authenticated domain members register their records; NonsecureAndSecure lets anyone, which is a security risk; None turns registration off.
+
+SecureSecondaries controls zone transfers: NoTransfer, TransferAnyServer (risky), TransferToZoneNameServer (only servers in the zone's NS records) or TransferToSecureServers (only the addresses in -SecondaryServers). Notify picks which servers are told when the zone changes.
+
+ReplicationScope moves an AD-integrated zone to another scope, for example from Domain to Forest.
+PARAMETER Name:
+The zone to change.
+PARAMETER DynamicUpdate:
+None, Secure or NonsecureAndSecure.
+PARAMETER SecureSecondaries:
+NoTransfer, TransferAnyServer, TransferToZoneNameServer or TransferToSecureServers.
+PARAMETER SecondaryServers:
+The addresses allowed to copy the zone, with TransferToSecureServers.
+PARAMETER ReplicationScope:
+Forest, Domain, Legacy or Custom.
+PARAMETER Notify:
+NoNotify, Notify (servers in the NS records) or NotifyServers.
+EXAMPLE: Set-DnsServerPrimaryZone -Name corp.example -SecureSecondaries TransferToSecureServers -SecondaryServers 192.168.50.10
+Lets only the partner's DNS server copy the zone.
+EXAMPLE: Set-DnsServerPrimaryZone -Name corp.example -DynamicUpdate Secure
+Only domain members may register or change their records.
+RELATED: Get-DnsServerZone, Add-DnsServerPrimaryZone, Add-DnsServerSecondaryZone, Set-DnsServerZoneAging

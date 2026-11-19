@@ -1,0 +1,10 @@
+SYNOPSIS: Shows each member's settings for its replicated folders.
+DESCRIPTION:
+Get-DfsrMembership shows, per server and replicated folder, the ContentPath, PrimaryMember, ReadOnly, StagingPath and its quota, and whether the membership is enabled. A member with no ContentPath doesn't replicate yet.
+PARAMETER GroupName:
+Only these groups. Position 0.
+PARAMETER ComputerName:
+Only these servers.
+EXAMPLE: Get-DfsrMembership -GroupName Sales-Replication | Format-Table ComputerName, FolderName, ContentPath, PrimaryMember, ReadOnly
+How each server takes part.
+RELATED: Set-DfsrMembership, Get-DfsrMember, Get-DfsrBacklog

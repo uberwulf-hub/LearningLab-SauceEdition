@@ -1,0 +1,73 @@
+NAME
+       stat - show the details of a file: size, owner, permissions, times
+
+SYNOPSIS
+       stat [OPTION]... FILE...
+
+DESCRIPTION
+       stat prints everything the file system keeps about a file (its inode):
+       size, number of blocks, the kind of file, the device it lives on, the
+       inode number, the number of hard links, the permissions in octal and
+       in letters, the owner and group (names and numbers), the SELinux
+       context, and four times:
+
+       Access   when the contents were last read,
+       Modify   when the contents were last changed,
+       Change   when the inode was last changed (owner, permissions, links,
+                and every contents change too),
+       Birth    when the file was created, where the file system records it.
+
+       With -c, stat prints only the parts you name, which makes it the best
+       way to check one property in a script or a test.
+
+OPTIONS
+       -c, --format=FORMAT
+              Print FORMAT for each file, followed by a newline. Common
+              sequences:
+                  %n  file name               %s  size in bytes
+                  %a  permissions in octal    %A  permissions in letters
+                  %U  owner name              %u  owner UID
+                  %G  group name              %g  group GID
+                  %F  kind of file            %h  number of hard links
+                  %i  inode number            %C  SELinux context
+                  %x  last access             %y  last modification
+                  %z  last status change      %Y  modification, in seconds
+                                                  since 1970
+
+       --printf=FORMAT
+              Like -c, but backslash escapes such as \n are understood and no
+              newline is added.
+
+       -L, --dereference
+              Follow a symbolic link and show the file it points to.
+
+       -f, --file-system
+              Show the file system the file is on (type, block size, free
+              blocks, free inodes) instead of the file.
+
+       -t, --terse
+              Print all the details on one line.
+
+EXAMPLES
+       Show everything about /etc/passwd:
+
+           stat /etc/passwd
+
+       Check the octal permissions and owner of a shared directory:
+
+           stat -c '%a %U:%G' /srv/shared
+
+       Print the SELinux context of a web page:
+
+           stat -c %C /var/www/html/index.html
+
+       Check that two names are hard links to the same file (same inode):
+
+           stat -c '%i %h %n' /root/a /root/b
+
+NOTES
+       In octal permissions from %a, a leading 2 means set-group-ID (2770),
+       a 1 the sticky bit (1777) and a 4 set-user-ID.
+
+SEE ALSO
+       ls(1), chmod(1), touch(1), df(1)

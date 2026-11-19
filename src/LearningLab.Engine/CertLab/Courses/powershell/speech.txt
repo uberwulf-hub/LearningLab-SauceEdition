@@ -1,0 +1,44 @@
+# How read aloud says the tech words of this course (Engine\ReadText.cs, Pronounce). One rule a line:
+#   written => said        whole words, case matters, the longest first
+#   spell: WORD word       said letter by letter
+#   word: WORD             in capitals, but said as a word (not spelt)
+# Anything else: PowerShell names are split (Get-ChildItem -> Get Child Item), paths are read with "slash", words in
+# capitals of 2 to 6 letters are spelt.
+$PSVersionTable => dollar P S version table
+$_ => dollar underscore
+$PSItem => dollar P S item
+$null => dollar null
+$true => dollar true
+$false => dollar false
+$env: => dollar env colon
+-eq => dash E Q
+-ne => dash N E
+-gt => dash G T
+-lt => dash L T
+-ge => dash G E
+-le => dash L E
+-like => dash like
+-match => dash match
+cmdlet => command-let
+cmdlets => command-lets
+PSRemoting => P S remoting
+PowerShell => PowerShell
+WinRM => Win R M
+WMI => W M I
+CIM => sim
+CSV => C S V
+JSON => jason
+DSC => D S C
+ISE => I S E
+UNC => U N C
+.ps1 => dot P S one
+.psm1 => dot P S M one
+.psd1 => dot P S D one
+ps1 => P S one
+HKLM: => H K L M colon
+HKCU: => H K C U colon
+gci => G C I
+ls => L S
+dir => dir
+cd => C D
+word: JSON

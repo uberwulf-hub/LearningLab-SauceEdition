@@ -1,0 +1,14 @@
+SYNOPSIS: Empties the DNS server's cache of answers from other servers.
+DESCRIPTION:
+A DNS server remembers answers it got from other servers until their time to live runs out. After a record changes elsewhere, or after you change a forwarder, Clear-DnsServerCache makes the server ask again.
+
+This is the server's cache. A Windows client keeps its own, which Clear-DnsClientCache (or ipconfig /flushdns) empties on that PC.
+PARAMETER ComputerName:
+The DNS server whose cache to empty.
+PARAMETER Force:
+Clears without asking.
+EXAMPLE: Clear-DnsServerCache -ComputerName DC1 -Force
+DC1 forgets every cached answer.
+EXAMPLE: Clear-DnsClientCache
+Then the client on this PC forgets its answers too.
+RELATED: Clear-DnsClientCache, Get-DnsServerRecursion, Get-DnsServerForwarder

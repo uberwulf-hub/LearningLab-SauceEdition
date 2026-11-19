@@ -1,0 +1,25 @@
+SYNOPSIS: Changes the execution policy for a scope.
+DESCRIPTION:
+Set-ExecutionPolicy sets which scripts may run (Restricted, AllSigned, RemoteSigned, Unrestricted, Bypass or Undefined) at one scope. Without -Scope it changes LocalMachine, the setting for everyone on the computer.
+
+It asks for confirmation first; -Force skips the question. Default sets the Windows default back: RemoteSigned on a server, Restricted on a client. Undefined removes the setting at that scope.
+
+If a more specific scope still has another policy, the change is saved but does not take effect, and PowerShell says so with an error. Run Get-ExecutionPolicy -List to see which scope wins.
+PARAMETER ExecutionPolicy:
+The policy to set.
+PARAMETER Scope:
+Process (this window only), CurrentUser (your account) or LocalMachine (the default). MachinePolicy and UserPolicy can only be set by Group Policy.
+PARAMETER Force:
+Changes the policy without asking.
+PARAMETER WhatIf:
+Shows what would change without changing it.
+EXAMPLE: Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+On WIN-CL1, lets local scripts run while downloaded scripts still need a signature.
+EXAMPLE: Set-ExecutionPolicy Bypass -Scope Process
+Allows scripts in this window only; the setting is gone when the window closes.
+EXAMPLE: Set-ExecutionPolicy Undefined -Scope CurrentUser
+Removes your own setting so the LocalMachine policy applies again.
+NOTES:
+On a real PC, the LocalMachine scope needs PowerShell run as administrator; CurrentUser and Process do not.
+In PowerShell 7 the execution policy exists only on Windows, and its setting is separate from Windows PowerShell's.
+RELATED: Get-ExecutionPolicy, Unblock-File, Set-AuthenticodeSignature, about_Execution_Policies

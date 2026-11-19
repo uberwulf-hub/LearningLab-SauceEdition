@@ -1,0 +1,14 @@
+SYNOPSIS: Removes a drive made with New-PSDrive.
+DESCRIPTION:
+Remove-PSDrive takes a drive name away. The items it pointed at are not touched. You cannot remove the drive you are standing in; move to another drive first.
+PARAMETER Name:
+The drive to remove (wildcards allowed).
+PARAMETER LiteralName:
+The drive to remove, name taken exactly.
+PARAMETER PSProvider:
+Only drives of this provider.
+PARAMETER Force:
+Removes it even if it is the current drive.
+EXAMPLE: Remove-PSDrive Lab
+Removes the Lab: drive.
+RELATED: New-PSDrive, Get-PSDrive

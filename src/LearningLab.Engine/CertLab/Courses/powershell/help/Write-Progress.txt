@@ -1,0 +1,18 @@
+SYNOPSIS: Shows a progress bar above the console text.
+DESCRIPTION:
+Write-Progress draws or updates a progress bar for a long task: an activity, a status and a percentage. Call it again with new values as the work goes on, and with -Completed at the end.
+
+The practice console does not draw progress bars; Write-Progress is accepted and does nothing.
+PARAMETER Activity:
+The title of the bar.
+PARAMETER Status:
+The line under the title.
+PARAMETER PercentComplete:
+How far along, 0 to 100.
+PARAMETER Completed:
+Removes the bar.
+EXAMPLE: foreach ($i in 1..5) { Write-Progress -Activity 'Copying' -Status "File $i" -PercentComplete ($i * 20) }
+Updates a bar five times.
+NOTES:
+$ProgressPreference = 'SilentlyContinue' hides all progress bars, which can make some cmdlets (like Invoke-WebRequest in 5.1) much faster.
+RELATED: Write-Host, Write-Verbose

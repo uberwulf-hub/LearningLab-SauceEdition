@@ -1,0 +1,42 @@
+NAME
+       hostname - show or set the system's host name
+
+SYNOPSIS
+       hostname [-s|-f|-d|-i|-I]
+       hostname NAME
+
+DESCRIPTION
+       With no argument hostname prints the current host name. With a NAME,
+       root can change the name the running system uses, but only until the
+       next boot: hostname does not write /etc/hostname. To change the name
+       for good on RHEL 9 use hostnamectl set-hostname.
+
+OPTIONS
+       -s, --short
+              Print the name up to the first dot (server1).
+
+       -f, --fqdn, --long
+              Print the full name (server1.lab.example.com).
+
+       -d, --domain
+              Print the DNS domain: the part after the first dot.
+
+       -i, --ip-address
+              Print the address the host name resolves to.
+
+       -I, --all-ip-addresses
+              Print every address of the machine's interfaces (not loopback).
+
+EXAMPLES
+              $ hostname
+              server1.lab.example.com
+              $ hostname -s
+              server1
+              $ hostname -I
+              192.168.50.11
+
+FILES
+       /etc/hostname
+
+SEE ALSO
+       hostnamectl(1), hosts(5)

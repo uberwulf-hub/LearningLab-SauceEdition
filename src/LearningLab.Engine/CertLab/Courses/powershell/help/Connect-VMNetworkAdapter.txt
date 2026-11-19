@@ -1,0 +1,14 @@
+SYNOPSIS: Connects a VM's network adapter to a virtual switch.
+DESCRIPTION:
+Connect-VMNetworkAdapter plugs a VM's adapter into a switch, or moves it from one switch to another. It works while the VM runs. Without -Name every adapter of the VM is connected.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Name:
+The adapter to connect, when the VM has several.
+PARAMETER SwitchName:
+The switch. Position 1.
+EXAMPLE: Connect-VMNetworkAdapter -VMName WEB-TEST -SwitchName LAN -ComputerName HV1
+WEB-TEST is on the LAN switch.
+EXAMPLE: Connect-VMNetworkAdapter -VMName WEB-TEST -Name Isolated -SwitchName Isolated
+Connects only the adapter named Isolated.
+RELATED: Disconnect-VMNetworkAdapter, Get-VMNetworkAdapter, Get-VMSwitch

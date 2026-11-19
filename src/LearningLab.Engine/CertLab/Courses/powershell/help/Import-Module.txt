@@ -1,0 +1,30 @@
+SYNOPSIS: Loads a module into the current session so its commands can be used.
+DESCRIPTION:
+Import-Module finds a module by name in the folders of $env:PSModulePath, or loads it from a path you give. A path can point to a .psm1 script module, a .psd1 manifest or a module folder.
+
+When the module has a manifest (.psd1), Import-Module reads it first: it checks ModuleVersion, loads the modules listed in RequiredModules, runs the NestedModules and the RootModule, and makes visible only the functions listed in FunctionsToExport.
+
+Module code runs in its own scope. Helper functions and variables that the module does not export stay hidden from your session.
+
+Module files are scripts, so the execution policy applies to them: on WIN-CL1 (Restricted) importing a .psm1 file fails until the policy allows scripts.
+PARAMETER Name:
+The module name, or the path to a .psm1, .psd1 or module folder. You can also pipe in the output of Get-Module -ListAvailable.
+PARAMETER Force:
+Loads the module again even if it is already loaded. Use it after editing a module's files.
+PARAMETER PassThru:
+Returns the module object. Without it, Import-Module shows nothing.
+PARAMETER Prefix:
+Adds a prefix to the noun of every imported function: with -Prefix Lab, Get-Report becomes Get-LabReport. Useful when two modules have commands with the same name.
+PARAMETER Function:
+Imports only the functions whose names match these names or patterns.
+PARAMETER RequiredVersion:
+Loads the module only if it has exactly this version.
+EXAMPLE: Import-Module LabTools -Verbose
+Loads LabTools from C:\Program Files\WindowsPowerShell\Modules. -Verbose shows each file it loads and each function it imports.
+EXAMPLE: Import-Module C:\LabFiles\Helpers.psm1 -Force -PassThru
+Reloads a module from a path after a change and shows the module object.
+EXAMPLE: Import-Module LabTools -Prefix Lab
+Imports the module with Lab added to every function's noun.
+NOTES:
+In PowerShell 7 on Windows, Import-Module -UseWindowsPowerShell can load an old Windows PowerShell module through a hidden Windows PowerShell 5.1 session.
+RELATED: Get-Module, Remove-Module, Export-ModuleMember, New-ModuleManifest, about_Modules

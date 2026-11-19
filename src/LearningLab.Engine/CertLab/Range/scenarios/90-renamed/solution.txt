@@ -1,0 +1,25 @@
+## the file server: what renames, and stop it first
+winrm-shell -i 10.10.30.40 -u Administrator -p {{ADMPW}}
+Get-ChildItem C:\Shares\Team
+Get-Content C:\Shares\Team\{{NOTE}}
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624,4698 } -MaxEvents 6 | Format-List TimeCreated, Id, Message
+(Get-ScheduledTask -TaskName {{TASK}}).Actions
+Get-Content C:\ProgramData\{{TASK}}\run.ps1
+Get-Content C:\ProgramData\{{TASK}}\id.txt
+Unregister-ScheduledTask -TaskName {{TASK}} -Confirm:$false
+## put the names back (only renamed, nothing scrambled)
+Get-ChildItem C:\Shares\Team -Filter *.{{EXT}} | ForEach-Object { Rename-Item $_.FullName ($_.Name -replace '\.{{EXT}}$','') }
+Get-ChildItem C:\Shares\Team
+Disable-LocalUser -Name {{SVC}}
+exit
+## the scanner box the account came from
+ssh -o StrictHostKeyChecking=accept-new itadmin@10.10.30.20
+{{ITPW}}
+sudo -i
+{{ITPW}}
+grep -E 'Failed|Accepted' /var/log/secure
+cat /home/scanner/.bash_history
+ls -l /etc/scan-to-share.conf
+usermod -L scanner
+exit
+exit

@@ -1,0 +1,16 @@
+SYNOPSIS: Deletes a virtual machine's configuration (its disks stay).
+DESCRIPTION:
+Remove-VM deletes the VM from Hyper-V. The trap: its virtual hard disk files are not deleted. They stay where they were, so you can attach them to a new VM, or delete them yourself to free space.
+
+The VM must be turned off. It asks for confirmation; -Force skips that.
+PARAMETER Name:
+The VM or VMs. Also -VMName. Position 0.
+PARAMETER Force:
+Deletes without asking.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Stop-VM APP-OLD -ComputerName HV1; Remove-VM APP-OLD -Force -ComputerName HV1
+Shuts the VM down, then removes it.
+EXAMPLE: Get-VHD -Path "D:\Hyper-V\Virtual Hard Disks\APP-OLD.vhdx"
+The disk is still there afterwards.
+RELATED: Get-VM, Stop-VM, New-VM, Get-VHD

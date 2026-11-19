@@ -1,0 +1,28 @@
+SYNOPSIS: Switches Windows Firewall rules on.
+DESCRIPTION:
+Enable-NetFirewallRule turns on rules that exist but are disabled. Windows comes with many such rules, ready for features like File and Printer Sharing or remote management: enabling the right group is usually better than writing your own rule.
+
+Pick the rules with -Name, -DisplayName or -DisplayGroup, or pipe them from Get-NetFirewallRule.
+PARAMETER Name:
+The rule's Name (id). Wildcards are allowed.
+PARAMETER DisplayName:
+The display name. Wildcards are allowed.
+PARAMETER DisplayGroup:
+Every rule of one group, for example "Remote Desktop".
+PARAMETER Group:
+The group as Windows stores it.
+PARAMETER Direction:
+Only the Inbound or only the Outbound rules of what you picked.
+PARAMETER InputObject:
+Rules piped from Get-NetFirewallRule.
+PARAMETER PassThru:
+Outputs each rule after the change.
+EXAMPLE: Enable-NetFirewallRule -Name FPS-ICMP4-ERQ-In
+Allows ping in. Run it on WIN-CL1, then Test-Connection WIN-CL1 from WIN-SRV1 works.
+EXAMPLE: Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'
+Turns on all Remote Desktop rules.
+EXAMPLE: Enable-NetFirewallRule -DisplayGroup 'File and Printer Sharing' -Direction Inbound -PassThru
+Only the inbound rules of the group, and shows them.
+NOTES:
+Needs an administrator on a real PC. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Disable-NetFirewallRule, Get-NetFirewallRule, Set-NetFirewallRule

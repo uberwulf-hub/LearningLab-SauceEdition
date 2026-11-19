@@ -1,0 +1,44 @@
+NAME
+       wc - count lines, words and bytes
+
+SYNOPSIS
+       wc [-l] [-w] [-c] [-m] [-L] [FILE]...
+
+DESCRIPTION
+       wc prints, for each FILE (or standard input), the number of lines,
+       words and bytes, followed by the file name. With several files a
+       total line is added. A word is a run of characters between blanks.
+       With options only the chosen counts are printed, always in the order
+       lines, words, characters, bytes.
+
+OPTIONS
+       -l, --lines
+              Count lines (newline characters).
+
+       -w, --words
+              Count words.
+
+       -c, --bytes
+              Count bytes.
+
+       -m, --chars
+              Count characters (differs from bytes for non-ASCII text).
+
+       -L, --max-line-length
+              Print the length of the longest line.
+
+EXAMPLES
+       How many accounts are there?
+
+           wc -l /etc/passwd
+
+       How many lines contain "error" in the log? (grep -c does the same)
+
+           grep -i error /var/log/messages | wc -l
+
+       Print only the number, without the file name:
+
+           wc -l < /root/found.txt
+
+SEE ALSO
+       grep(1), sort(1), uniq(1)

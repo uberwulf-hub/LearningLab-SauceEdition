@@ -1,0 +1,30 @@
+SYNOPSIS: Creates an alias or changes what an existing alias stands for.
+DESCRIPTION:
+Set-Alias makes a short name for a command. Unlike New-Alias, it also changes an alias that already exists, without complaining.
+
+Aliases last until PowerShell closes. Put Set-Alias lines in your profile script ($PROFILE) to have them in every session.
+PARAMETER Name:
+The alias. Position 0, required.
+PARAMETER Value:
+The command it should stand for. Position 1, required.
+PARAMETER Description:
+A note about the alias.
+PARAMETER PassThru:
+Outputs the alias after setting it.
+PARAMETER Force:
+On a real PC, needed to change a read-only alias.
+EXAMPLE: Set-Alias -Name np -Value notepad.exe
+Makes np start Notepad (or changes np if it existed).
+EXAMPLE: Set-Alias np calc.exe -PassThru
+Points np at the calculator instead, and shows the result.
+EXAMPLE: Set-Alias -Name list -Value Get-ChildItem; Get-Alias list
+Makes list another name for Get-ChildItem and checks it.
+NOTES:
+The alias is sal.
+
+Some built-in aliases are read-only or constant and cannot be changed, for example the ones for ForEach-Object and Where-Object (% and ?).
+
+An alias cannot hold parameters; use a function for that.
+
+Real 5.1 also has -Option and -Scope.
+RELATED: New-Alias, Get-Alias, about_Functions

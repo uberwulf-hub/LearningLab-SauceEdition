@@ -1,0 +1,64 @@
+TOPIC
+    about_Functions
+
+SHORT DESCRIPTION
+    Naming a block of code so you can run it again like a command.
+
+LONG DESCRIPTION
+    A function is a named script block. Once it is defined, you call it by
+    its name, just like a cmdlet:
+
+        function Get-LabFolder {
+            Get-ChildItem -Path C:\LabFiles
+        }
+        Get-LabFolder
+
+    Use a Verb-Noun name with an approved verb (Get-Verb lists them), so
+    your functions fit in with the built-in commands.
+
+  Parameters
+    Put the parameters in a param() block at the top. Each one can have a
+    type and a default value:
+
+        function Test-Lab {
+            param(
+                [string]$ComputerName = 'WIN-SRV1',
+                [int]$Count = 2
+            )
+            Test-Connection -ComputerName $ComputerName -Count $Count
+        }
+        Test-Lab -ComputerName WIN-CL1
+
+    A [switch] parameter is on when it is named and off when it is not.
+
+  Output
+    Everything a function outputs and does not capture is its result, not
+    only what follows "return". return just leaves the function early.
+
+        function Get-Square { param([int]$n) $n * $n }
+        $x = Get-Square 7        # $x is 49
+
+    Avoid Write-Host for results: it writes to the screen and nothing can
+    be piped or stored.
+
+  Pipeline input
+    A function can work on pipeline input with begin, process and end
+    blocks. process runs once per object, with the object in $_:
+
+        function Show-Name {
+            process { "Name: $($_.Name)" }
+        }
+        Get-Service | Show-Name
+
+  Where functions live
+    A function exists in the scope where it was defined and disappears with
+    it. Functions you type at the prompt last until you close the session;
+    put them in your profile or a module to keep them. The Function: drive
+    lists them: Get-ChildItem Function:
+
+SEE ALSO
+    about_Functions_Advanced_Parameters
+    about_Scopes
+    about_Modules
+    about_Splatting
+    Get-Verb

@@ -1,0 +1,21 @@
+SYNOPSIS: Lists the DSC resources available on this computer and shows how to write them.
+DESCRIPTION:
+A DSC resource is a building block of a configuration: File manages files and folders, Registry registry keys and values, Environment environment variables, Script runs your own Get, Set and Test scripts, Log writes a message. Each has properties you set in the configuration.
+
+Get-DscResource lists the resources with the module they come from and their properties. With -Syntax it prints a template of the resource block: required properties without brackets, optional ones in brackets, and the allowed values in braces.
+PARAMETER Name:
+The resource name, for example File or Registry. Wildcards work.
+PARAMETER Module:
+Only the resources of this module, for example PSDesiredStateConfiguration.
+PARAMETER Syntax:
+Shows the resource block syntax instead of the resource objects.
+EXAMPLE: Get-DscResource
+Lists every resource with ImplementedAs, Name, ModuleName, Version and Properties.
+EXAMPLE: Get-DscResource -Name File -Syntax
+Shows every property of the File resource, such as DestinationPath, Ensure and Type, with their allowed values.
+EXAMPLE: (Get-DscResource Registry).Properties
+Lists just the property names of the Registry resource.
+NOTES:
+Every resource also accepts DependsOn (run after another resource, written as '[File]Tools') and PsDscRunAsCredential.
+In PowerShell 7, Get-DscResource comes with the PSDesiredStateConfiguration 2.x module from the Gallery, not with PowerShell.
+RELATED: Import-DscResource, Start-DscConfiguration, about_DesiredStateConfiguration

@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes a classic log you created, or unregisters a source (Windows PowerShell 5.1 only).
+DESCRIPTION:
+With -LogName, Remove-EventLog deletes the log and its sources. With -Source, it only unregisters the source. Windows' own logs cannot be removed.
+PARAMETER LogName:
+The logs to delete. Position 0.
+PARAMETER Source:
+The sources to unregister.
+EXAMPLE: Remove-EventLog -Source LabApp
+Unregisters a source.
+EXAMPLE: Remove-EventLog -LogName LabLog
+Deletes a log you created.
+RELATED: New-EventLog, Clear-EventLog

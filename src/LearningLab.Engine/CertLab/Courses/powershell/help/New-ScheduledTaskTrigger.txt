@@ -1,0 +1,36 @@
+SYNOPSIS: Describes when a scheduled task runs.
+DESCRIPTION:
+A trigger is the "when" of a task. Pick one kind: -Once (at a time, optionally repeating every -RepetitionInterval for -RepetitionDuration), -Daily, -Weekly with -DaysOfWeek, -AtStartup or -AtLogOn. -At takes a time such as 3am or '18:30'; without a date it means today.
+PARAMETER Once:
+Runs once at -At.
+PARAMETER Daily:
+Runs every day (or every -DaysInterval days) at -At.
+PARAMETER Weekly:
+Runs on -DaysOfWeek every week (or every -WeeksInterval weeks) at -At.
+PARAMETER AtStartup:
+Runs when the computer starts.
+PARAMETER AtLogOn:
+Runs when a user signs in (-User for one user).
+PARAMETER At:
+The time (and date) of the first run.
+PARAMETER DaysOfWeek:
+For -Weekly: Monday, Tuesday...
+PARAMETER DaysInterval:
+For -Daily: every N days.
+PARAMETER WeeksInterval:
+For -Weekly: every N weeks.
+PARAMETER RepetitionInterval:
+For -Once: repeat every this long (a TimeSpan, at least one minute).
+PARAMETER RepetitionDuration:
+For -Once: keep repeating for this long. Leave it out to repeat forever.
+PARAMETER RandomDelay:
+Starts up to this much later, at random.
+EXAMPLE: New-ScheduledTaskTrigger -Daily -At 3am
+Every night at three.
+EXAMPLE: New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, Friday -At 6pm
+Twice a week.
+EXAMPLE: New-ScheduledTaskTrigger -Once -At 9am -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Hours 8)
+Every quarter of an hour during the working day.
+NOTES:
+On Windows Server 2016 and later, [TimeSpan]::MaxValue as -RepetitionDuration fails; leave the parameter out to repeat indefinitely.
+RELATED: New-ScheduledTaskAction, Register-ScheduledTask

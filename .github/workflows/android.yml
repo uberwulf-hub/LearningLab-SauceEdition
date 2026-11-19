@@ -1,0 +1,105 @@
+# Builds the signed release .apk (LearningLabSE-android.apk). Called by every Release, or run on its
+# own from Actions > Android > Run workflow to get a test build.
+#
+# Signing (same setup as Bored Games, KidRampage and Race Track Mayhem): Android only installs an
+# update over an older copy if both were signed with the same key. To use a key of your own, set these
+# repository secrets once (Settings > Secrets and variables > Actions):
+#   ANDROID_KEYSTORE_BASE64   the .keystore file, base64-encoded
+#   ANDROID_KEYSTORE_ALIAS    the key's alias
+#   ANDROID_KEYSTORE_PASSWORD its password
+# The repository is public: the key belongs only in those secrets. Until backup-android-key.yml has moved it
+# there, the key cached by earlier builds is used; a new key is never made (phones would have to uninstall).
+name: Android
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # .NET for Android builds on Windows here, like the Build workflow
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - name: Install the .NET Android workload
+        run: dotnet workload install android
+      - name: Android SDK platform 36
+        shell: pwsh
+        run: |
+          $sm = Get-ChildItem "$env:ANDROID_HOME\cmdline-tools" -Recurse -Filter sdkmanager.bat | Select-Object -First 1
+          'y' * 20 -split '' | & $sm.FullName --sdk_root="$env:ANDROID_HOME" 'platforms;android-36' 'build-tools;36.0.0' | Out-Null
+      - name: Build the release .apk
+        shell: pwsh
+        run: |
+          dotnet publish src/LearningLab.Android/LearningLab.Android.csproj -c Release -f net10.0-android -o apk-out "-p:AndroidSdkDirectory=$env:ANDROID_HOME" "-p:JavaSdkDirectory=$env:JAVA_HOME"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $apk = Get-ChildItem apk-out -Filter *.apk | Sort-Object { $_.Name -notlike '*-Signed.apk' } | Select-Object -First 1
+          if (-not $apk) { Write-Error 'No .apk was built.'; exit 1 }
+          Copy-Item $apk.FullName app-release.apk
+          Get-Item app-release.apk | Select-Object Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-unsigned
+          path: app-release.apk
+          retention-days: 1
+
+  sign:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: actions/download-artifact@v4
+        with: { name: android-unsigned }
+
+      - name: The key cached by earlier builds (until it is moved into the secrets)
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/android-key
+          key: learninglab-android-signing-key-v1
+
+      - name: Set up signing
+        env:
+          KEY_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -e
+          mkdir -p ~/android-key
+          if [ -n "$KEY_B64" ]; then
+            printf '%s' "$KEY_B64" | base64 -d > "$RUNNER_TEMP/secret.keystore"
+            KS="$RUNNER_TEMP/secret.keystore"; ALIAS="$KEY_ALIAS"; PASS="$KEY_PASS"
+            echo "Using the signing key from the repository secrets."
+          else
+            KS=~/android-key/release.keystore; ALIAS="learninglab"; PASS="learninglab"
+            if [ ! -f "$KS" ]; then
+              echo "::error::No signing key: set the ANDROID_KEYSTORE_* secrets (backup-android-key.yml moves the cached key there). A new key is never made here: phones would have to uninstall Learning Lab."
+              exit 1
+            fi
+            echo "Using the cached signing key (move it into the secrets with backup-android-key.yml)."
+          fi
+          { echo "LL_KEYSTORE=$KS"; echo "LL_KEY_ALIAS=$ALIAS"; echo "LL_KEY_PASS=$PASS"; } >> "$GITHUB_ENV"
+
+      - name: Sign it (replaces the build's debug signature)
+        run: |
+          set -e
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" sign --ks "$LL_KEYSTORE" --ks-key-alias "$LL_KEY_ALIAS" \
+            --ks-pass env:LL_KEY_PASS --key-pass env:LL_KEY_PASS \
+            --out LearningLabSE-android.apk app-release.apk
+          "$BT/apksigner" verify --print-certs LearningLabSE-android.apk | tee certs.txt | head -5
+          if grep -qi "Android Debug" certs.txt; then echo "::error::Still signed with a debug key."; exit 1; fi
+          rm -f "$RUNNER_TEMP/secret.keystore"
+          ls -la LearningLabSE-android.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: LearningLabSE-android.apk

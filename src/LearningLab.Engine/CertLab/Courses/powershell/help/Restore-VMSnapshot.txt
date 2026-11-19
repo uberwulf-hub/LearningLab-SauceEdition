@@ -1,0 +1,16 @@
+SYNOPSIS: Returns a virtual machine to a checkpoint. Alias: Restore-VMCheckpoint.
+DESCRIPTION:
+Restore-VMSnapshot (also Restore-VMCheckpoint) puts the VM back to the state of a checkpoint. Everything that changed since then is lost, unless you take a new checkpoint first.
+
+After restoring a Production checkpoint the VM is off; after a Standard checkpoint it is in the saved state of that moment. A domain controller or other replicated server should not be rolled back this way unless you know how it handles it.
+PARAMETER Name:
+The checkpoint. Position 0.
+PARAMETER VMName:
+The VM it belongs to.
+PARAMETER VMSnapshot:
+A checkpoint piped from Get-VMSnapshot.
+EXAMPLE: Restore-VMSnapshot -Name "Before IIS update" -VMName WEB-TEST -Confirm:$false -ComputerName HV1
+WEB-TEST goes back to before the update.
+EXAMPLE: Get-VMSnapshot -VMName WEB-TEST | Sort-Object CreationTime | Select-Object -Last 1 | Restore-VMSnapshot -Confirm:$false
+Goes back to the newest checkpoint.
+RELATED: Checkpoint-VM, Get-VMSnapshot, Remove-VMSnapshot, Start-VM

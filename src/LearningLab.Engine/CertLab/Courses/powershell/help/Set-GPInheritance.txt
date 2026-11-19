@@ -1,0 +1,17 @@
+SYNOPSIS: Blocks or restores Group Policy inheritance on an OU or the domain.
+DESCRIPTION:
+With inheritance blocked, an OU ignores GPOs linked to its parents and the domain; only its own links apply. Enforced links from above still get through: enforcement beats blocking.
+Use blocking sparingly; it makes it harder to see which settings apply where.
+PARAMETER Target:
+The OU or domain, as a distinguished name. Position 0.
+PARAMETER IsBlocked:
+Yes to block inheritance, No to restore it. Position 1.
+PARAMETER Domain:
+The domain, if not your own.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Set-GPInheritance "OU=Kiosks,OU=Workstations,DC=corp,DC=example" -IsBlocked Yes
+The kiosks get only the GPOs linked to their own OU (and enforced ones).
+EXAMPLE: Set-GPInheritance "OU=Kiosks,OU=Workstations,DC=corp,DC=example" -IsBlocked No
+Inheritance back to normal.
+RELATED: Get-GPInheritance, Set-GPLink, New-GPLink

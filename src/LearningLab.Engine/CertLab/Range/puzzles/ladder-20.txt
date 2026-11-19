@@ -1,0 +1,49 @@
+title: Step 20: Borrowing someone's program
+level: Expert
+category: ladder
+login: step20
+kind: Set-user-ID programs
+teaser: a program in your folder runs as someone else; use it to read their file
+points: 50
+order: 20
+answer: {{PW}}
+var: PW = hex:10
+var: PROG = pick:helper|do-as-top|borrowed|reader
+
+@intro
+You are step20, on the last rung. The final password, which belongs to the user top,
+is in /etc/ladder/top, and only top can read it. But there is a program in your home
+folder that top owns and that has a special permission: it runs as its owner, whoever
+starts it. Find out what it does and use it to read the file.
+
+@setup
+useradd -m top
+echo 'top:{{PW}}' | chpasswd
+mkdir -p /etc/ladder
+printf '%s\n' '{{PW}}' > /etc/ladder/top
+chown top: /etc/ladder/top
+chmod 400 /etc/ladder/top
+install -m 0750 /usr/bin/cat /home/step20/{{PROG}}
+chown top:step20 /home/step20/{{PROG}}
+chmod 4750 /home/step20/{{PROG}}
+
+@solution
+ls -l
+cat /etc/ladder/top
+./{{PROG}} --version
+./{{PROG}} /etc/ladder/top
+
+@walkthrough
+ls -l shows the program as -rwsr-x--- owned by top: the s where an x would be is the
+set-user-ID permission. A program with it runs as its owner, so ./{{PROG}} runs as top
+even when you start it. --version shows it is really a copy of cat, so
+
+    ./{{PROG}} /etc/ladder/top
+
+prints top's file. That is the last password: you have climbed the ladder! Programs
+with set-user-ID are needed for things like passwd (which must change a file only root
+may write), but a copy of an ordinary tool with that bit set lets anyone borrow its
+owner's rights - a classic mistake to look for.
+
+@hint 25
+In ls -l, an s in place of the owner's x means the program runs as its owner. Run it with --version or --help to see what program it really is, then give it the file you want.

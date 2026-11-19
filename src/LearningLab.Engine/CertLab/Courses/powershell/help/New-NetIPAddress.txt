@@ -1,0 +1,26 @@
+SYNOPSIS: Adds a fixed (static) IP address to a network adapter.
+DESCRIPTION:
+New-NetIPAddress gives an adapter an IP address you choose, with its prefix length and, if you like, a default gateway. If the adapter was getting its address from DHCP, DHCP is switched off for it and the DHCP address goes away, so the new address takes its place.
+
+The command outputs the new address twice: once for the ActiveStore (in use now) and once for the PersistentStore (kept after a restart). That is normal.
+
+An adapter may have more than one address. To change an address, add the new one and then remove the old one with Remove-NetIPAddress.
+PARAMETER IPAddress:
+The address to add (required), for example 10.0.10.12.
+PARAMETER InterfaceAlias:
+The adapter, for example Ethernet. Give this or -InterfaceIndex.
+PARAMETER InterfaceIndex:
+The ifIndex of the adapter.
+PARAMETER PrefixLength:
+The size of the network: 24 for 255.255.255.0. Always give it: without it an IPv4 address gets 8 (255.0.0.0), which is wrong for the lab network.
+PARAMETER DefaultGateway:
+The router for other networks, 10.0.10.1 in the lab. It is an error if the adapter already has a default gateway.
+PARAMETER AddressFamily:
+IPv4 or IPv6 (normally worked out from the address).
+EXAMPLE: New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.12 -PrefixLength 24
+Adds a second address to WIN-SRV1 next to 10.0.10.11.
+EXAMPLE: New-NetIPAddress -InterfaceAlias Ethernet -IPAddress 10.0.10.21 -PrefixLength 24 -DefaultGateway 10.0.10.1
+Gives WIN-CL1 its fixed address and gateway. If the adapter still has a gateway, remove it first: Remove-NetRoute -DestinationPrefix 0.0.0.0/0 -Confirm:$false
+NOTES:
+"The object already exists" means the address is already on the computer. Set the DNS server separately with Set-DnsClientServerAddress. CIM-based command, Windows only. Needs an administrator on a real PC.
+RELATED: Remove-NetIPAddress, Get-NetIPAddress, Set-NetIPInterface, Set-DnsClientServerAddress, New-NetRoute

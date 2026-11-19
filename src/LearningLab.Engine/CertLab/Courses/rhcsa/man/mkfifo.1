@@ -1,0 +1,21 @@
+NAME
+       mkfifo - make named pipes
+
+SYNOPSIS
+       mkfifo [-m MODE] NAME...
+
+DESCRIPTION
+       A named pipe (FIFO) is a special file that connects two programs:
+       what one writes into it, the other reads out, in order. ls -l shows it
+       with the type letter p. Nothing is stored on disk.
+
+OPTIONS
+       -m, --mode MODE
+              Set the permissions of the pipe.
+
+EXAMPLES
+           mkfifo /tmp/pipe1
+           ls -l /tmp/pipe1
+
+SEE ALSO
+       mknod(1), find(1)

@@ -1,0 +1,17 @@
+SYNOPSIS: Unloads a module from the current session.
+DESCRIPTION:
+Remove-Module takes a loaded module out of your session: its commands, and the variables and aliases it exported, disappear. The files on disk are not touched, so you can import the module again at any time.
+
+It is mostly used while writing a module: remove it, edit the files, import it again (Import-Module -Force does both steps at once).
+PARAMETER Name:
+The name of the loaded module. Wildcards remove every loaded module that matches. You can also pipe module objects from Get-Module.
+PARAMETER WhatIf:
+Shows which modules would be removed without removing them.
+EXAMPLE: Remove-Module LabTools
+Unloads the LabTools module. Its functions are gone until you import it again.
+EXAMPLE: Get-Module Lab* | Remove-Module
+Unloads every loaded module whose name starts with Lab.
+NOTES:
+If no loaded module matches, Remove-Module reports an error. It only works on loaded modules: use Get-Module (without -ListAvailable) to see them.
+Remove-Module never uninstalls anything. To take a module off the computer, delete its folder from the modules folder.
+RELATED: Import-Module, Get-Module, about_Modules

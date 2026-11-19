@@ -1,0 +1,42 @@
+title: Step 12: Text in disguise
+level: Advanced
+category: ladder
+login: step12
+kind: Encodings
+teaser: a line of letters, digits, + and / that turns back into a sentence
+points: 40
+order: 12
+answer: {{PW}}
+var: PW = hex:10
+var: LINE = The password for step 13 is {{PW}}
+
+@intro
+You are step12. The file message.txt holds one line of text, but it doesn't read like
+any language: it is the password sentence written in base64, a way of turning any data
+into plain letters and digits so it can travel safely through email and web pages.
+Turn it back.
+
+@setup
+useradd -m step13
+echo 'step13:{{PW}}' | chpasswd
+printf '%s\n' '{{B64:LINE}}' > /home/step12/message.txt
+chown step12: /home/step12/message.txt
+
+@solution
+cat message.txt
+base64 -d message.txt
+
+@walkthrough
+base64 text uses A-Z, a-z, 0-9, + and /, often with one or two = at the end as
+padding. It is not a secret code - anyone can turn it back:
+
+    base64 -d message.txt
+
+(-d means decode.) base64 is everywhere: email attachments, web pages, keys and
+certificates are carried as base64.
+
+@hint 10
+Text made of letters, digits, + and / (maybe ending in =) is very often base64. There is a command with that very name, and an option to decode (turn it back).
+
+@hint 18
+Type: base64 -d message.txt

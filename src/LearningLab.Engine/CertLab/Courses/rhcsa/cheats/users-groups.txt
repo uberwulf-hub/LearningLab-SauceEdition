@@ -1,0 +1,51 @@
+# Sheet: users-groups | Users and groups | Users and groups
+## Account files
+/etc/passwd :: name:x:UID:GID:comment:home:shell, one line per user, readable by all
+/etc/shadow :: password hashes and aging values (root only)
+/etc/group :: name:x:GID:extra members
+/etc/login.defs :: defaults for new users: PASS_MAX_DAYS, PASS_MIN_DAYS, PASS_WARN_AGE, UID_MIN, UMASK
+/etc/skel :: files copied into every new home folder
+getent passwd ana :: ana's account line (fails when the user does not exist)
+getent group devs :: the group's line with its members
+id ana :: UID, primary group and all groups
+id -nG ana :: only the group names, on one line
+## Users
+useradd ana :: new user: next free UID from 1000, private group, /home/ana, /bin/bash
+useradd -u 2001 -c "Ana Lima" ana :: a chosen UID and a comment
+useradd -G devs,ops ana :: secondary groups at creation
+useradd -s /sbin/nologin svc1 :: an account that cannot log in interactively
+useradd -M -d /srv/app app :: no home folder created, another home path
+usermod -aG devs ana :: ADD a secondary group (without -a the list is replaced)
+usermod -s /bin/bash ana :: change the login shell
+usermod -u 3001 ana :: change the UID (files in the home folder follow)
+usermod -c "Ana M. Lima" ana :: change the comment
+usermod -L ana :: lock the password (-U unlocks)
+userdel ana :: remove the account, keep the home folder
+userdel -r ana :: remove the account, the home folder and the mail spool
+## Groups
+groupadd -g 3000 devs :: new group with a chosen GID
+groupmod -n developers devs :: rename a group
+groupmod -g 3100 developers :: change a group's GID
+groupdel developers :: remove a group (not someone's primary group)
+gpasswd -a sam devs :: add one member
+gpasswd -d sam devs :: remove one member
+gpasswd -M ana,sam devs :: set the whole member list
+## Passwords and aging
+passwd ana :: set ana's password (asks twice)
+echo 'S3cret!pw' | passwd --stdin ana :: set it from standard input (RHEL)
+echo 'ana:S3cret!pw' | chpasswd :: set passwords from user:password lines
+chage -l ana :: show the aging values in plain words
+chage -M 90 -m 7 -W 10 ana :: maximum age, minimum age, warning days
+chage -d 0 ana :: the password must be changed at the next login
+chage -E 2026-12-31 ana :: the account expires on that day (-E -1 removes it)
+passwd -l ana :: lock the password (-u unlocks)
+## Switching users and sudo
+su - student :: login shell as student (asks student's password unless you are root)
+su - student -c 'id' :: run one command as student
+sudo -i :: a root login shell, with your own password
+sudo -l :: what you may run with sudo
+usermod -aG wheel ana :: full sudo rights through the %wheel line in /etc/sudoers
+%ops ALL=(ALL) NOPASSWD: ALL :: sudoers rule: the group ops runs everything without a password
+/etc/sudoers.d/tom :: a rule file, for example tom ALL=(root) /usr/bin/systemctl (tom may run only systemctl as root)
+chmod 440 /etc/sudoers.d/ops :: the usual mode for a sudoers drop-in file
+visudo -c :: check /etc/sudoers and every file in /etc/sudoers.d

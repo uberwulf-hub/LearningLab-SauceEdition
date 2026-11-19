@@ -1,0 +1,26 @@
+NAME
+       ssh-agent - keep unlocked private keys in memory for ssh
+
+SYNOPSIS
+       ssh-agent [-k]
+       eval $(ssh-agent)
+
+DESCRIPTION
+       ssh-agent is a small background program that holds private keys after
+       their passphrase was typed once (with ssh-add). ssh, scp and
+       ssh-copy-id ask the agent to sign logins, so you are not asked for the
+       passphrase again during the session.
+
+       When it starts, ssh-agent prints shell commands that set
+       SSH_AUTH_SOCK and SSH_AGENT_PID. Run it inside eval so that your shell
+       runs those commands; otherwise ssh-add cannot find the agent.
+
+OPTIONS
+       -k     Stop the agent named by SSH_AGENT_PID.
+
+EXAMPLES
+           eval $(ssh-agent)
+           ssh-add
+
+SEE ALSO
+       ssh-add(1), ssh(1), ssh-keygen(1)

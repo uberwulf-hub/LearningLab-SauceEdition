@@ -1,0 +1,13 @@
+## connect to the PC as its administrator
+winrm-shell -i 10.10.12.30 -u Administrator -p {{ADMPW}}
+## what starts at every sign-in: the Run key
+Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+## who signed in: the remote sign-in (type 10) gives the account and the address
+Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4624 } | Format-List TimeCreated, Message
+## the attacker's folder holds the flag
+Get-ChildItem C:\ProgramData\{{VAL}}
+Get-Content C:\ProgramData\{{VAL}}\config.txt
+## clean up: the start-up entry and the script
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run' -Name {{VAL}}
+Remove-Item C:\ProgramData\{{VAL}}\run.ps1
+exit

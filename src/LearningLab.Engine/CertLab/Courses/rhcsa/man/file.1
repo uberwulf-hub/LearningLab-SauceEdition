@@ -1,0 +1,33 @@
+NAME
+       file - guess what kind of data a file contains
+
+SYNOPSIS
+       file [-b] [-i] [-s] [-L] FILE...
+
+DESCRIPTION
+       file looks at the contents of each FILE (not its name) and prints a
+       description: ASCII text, a shell script, a gzip archive, an ELF
+       program, a directory, a symbolic link and where it points. Linux
+       does not need file name extensions, so file is how you find out what
+       an unknown file is before you open it.
+
+OPTIONS
+       -b, --brief
+              Do not print the file name.
+
+       -i, --mime
+              Print a MIME type, such as text/plain; charset=us-ascii.
+
+       -s, --special-files
+              Read block devices too (file -s /dev/vdb1 tells which file
+              system is on it).
+
+       -L, --dereference
+              Follow symbolic links.
+
+EXAMPLES
+           file /etc/passwd /usr/bin/ls /root/backup.tar.gz
+           file -s /dev/vdb1
+
+SEE ALSO
+       ls(1), stat(1), blkid(8)

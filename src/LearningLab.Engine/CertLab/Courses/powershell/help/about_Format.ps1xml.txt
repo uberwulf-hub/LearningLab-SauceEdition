@@ -1,0 +1,55 @@
+TOPIC
+    about_Format.ps1xml
+
+SHORT DESCRIPTION
+    Where the default table and list layouts of objects come from.
+
+LONG DESCRIPTION
+    When a command's output reaches the end of the pipeline, PowerShell has
+    to decide how to show it. Get-Service shows Status, Name and
+    DisplayName in a table, even though a service object has many more
+    properties. That choice is a view.
+
+  Format files
+    Views are kept in XML files whose names end in .format.ps1xml. Windows
+    PowerShell 5.1 has its own in $PSHOME, and modules can bring more.
+    Each view says which type it is for, whether it is a table, list, wide
+    or custom view, and which properties (or calculated values) to show.
+
+    If no view exists for a type, PowerShell picks by itself: a table when
+    the object has four properties or fewer, a list when it has more.
+
+  Choosing another view
+    You do not need to edit format files to see other properties. Use the
+    formatting cmdlets:
+
+        Get-Service Spooler | Format-List *
+        Get-Process | Format-Table Name, Id, WS -AutoSize
+        Get-ChildItem C:\LabFiles | Format-Wide Name -Column 3
+
+    Some types have more than one named view, for example:
+
+        Get-Process | Format-Table -View Priority
+
+  Your own format files
+    You can write a .format.ps1xml file and load it into the session with
+    Update-FormatData -PrependPath, so your view wins over the built-in
+    one. Get-FormatData shows the views that are loaded. Modules list
+    their format files in the FormatsToProcess entry of the manifest.
+
+  In this practice console
+    The practice console has its views built in. It cannot load .ps1xml
+    files, so Update-FormatData has no effect here. On a real PC you can
+    try it.
+
+  PowerShell 7
+    PowerShell 7 keeps its default views inside the program instead of in
+    .format.ps1xml files, but Update-FormatData still loads your own.
+
+SEE ALSO
+    Format-Table
+    Format-List
+    Format-Wide
+    Format-Custom
+    about_Calculated_Properties
+    about_Objects

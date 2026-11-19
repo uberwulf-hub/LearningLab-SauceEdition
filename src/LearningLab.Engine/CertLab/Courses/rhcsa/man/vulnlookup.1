@@ -1,0 +1,24 @@
+NAME
+       vulnlookup - search the range's vulnerability notes (Cyber Range)
+
+SYNOPSIS
+       vulnlookup WORD...
+       vulnlookup -x NUMBER
+
+DESCRIPTION
+       When a scan shows which program and version a server runs (nmap -sV, a
+       Server header, a page footer), the next step is to look up what is known
+       about that version. vulnlookup searches a small list of notes about the
+       range's own products, which are all made up, and shows each note's
+       number and title. -x NUMBER shows the whole note: what goes wrong, how
+       to check it, and how the vendor fixed it.
+
+       A version without notes isn't proof that it is safe, and a note isn't
+       proof that a server is open to it: always check.
+
+EXAMPLES
+       vulnlookup acmecms
+       vulnlookup -x 1
+
+SEE ALSO
+       nmap(1), curl(1), webscan(1)

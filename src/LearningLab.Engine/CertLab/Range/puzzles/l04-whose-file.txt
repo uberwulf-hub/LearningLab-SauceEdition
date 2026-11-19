@@ -1,0 +1,52 @@
+title: Whose file is this?
+level: Intermediate
+kind: Finding files
+topic: Linux
+teaser: find a leaver's file by its owner
+points: 55
+order: 63
+answer: {{DIR}}/{{NAME}}.txt
+var: LEAVER = person
+var: DIR = pick:/var/tmp/.cache|/opt/old/build|/usr/share/doc/.notes|/srv/backup/old|/var/lib/misc/keep
+var: NAME = hex:6
+
+@intro
+{{LEAVER_FULL}} (user {{LEAVER}}) has left the company, and before their account is
+removed someone must check they didn't leave files lying around. Apart from their home
+folder and their mail box, they own exactly one file somewhere on this computer. Give its
+full path.
+
+@setup
+useradd -m -c '{{LEAVER_FULL}}' {{LEAVER}}
+mkdir -p {{DIR}} /opt/old/build /srv/backup/old
+for n in a1 b2 c3 d4; do echo "build $n" > /opt/old/build/part-$n.txt; done
+for n in mon tue wed; do echo "backup $n" > /srv/backup/old/$n.txt; done
+echo "copied from the old laptop" > {{DIR}}/{{NAME}}.txt
+chown {{LEAVER}}: {{DIR}}/{{NAME}}.txt
+chmod 600 {{DIR}}/{{NAME}}.txt
+echo 'hello' > /home/{{LEAVER}}/todo.txt
+chown {{LEAVER}}: /home/{{LEAVER}}/todo.txt
+
+@solution
+find / -user {{LEAVER}} -type f 2>/dev/null
+
+@walkthrough
+find can search by owner: -user NAME keeps only what that user owns, and -type f keeps
+only files (not folders). 2>/dev/null throws away the "Permission denied" messages for
+places you can't look into:
+
+    find / -user {{LEAVER}} -type f 2>/dev/null
+
+It lists their home folder's files, their mail box under /var/spool/mail - and one
+more, {{DIR}}/{{NAME}}.txt, tucked away where nobody would look. That is the answer.
+When an account is removed (userdel -r), only the home folder and mail go with it;
+files elsewhere stay behind with a number instead of an owner, so find them first.
+
+@hint 5
+Searching every folder by hand would take ages. find can search the whole disk for files that belong to one user.
+
+@hint 10
+find / -user NAME lists everything NAME owns; add -type f for files only, and 2>/dev/null to hide the "Permission denied" lines.
+
+@hint 15
+find / -user {{LEAVER}} -type f 2>/dev/null - ignore /home/{{LEAVER}} and /var/spool/mail; the remaining path is the answer.

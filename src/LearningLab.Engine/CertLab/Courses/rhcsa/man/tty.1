@@ -1,0 +1,18 @@
+NAME
+       tty - print the name of the terminal you are typing in
+
+SYNOPSIS
+       tty
+
+DESCRIPTION
+       tty prints the device of the terminal connected to standard input,
+       such as /dev/tty1 for the first text console or /dev/pts/0 for an ssh
+       or terminal-window session. It prints "not a tty" (and exits with 1)
+       when standard input is not a terminal, for example in a script run by
+       cron. The names match the TTY column of who, w and ps.
+
+EXAMPLES
+           tty
+
+SEE ALSO
+       who(1), w(1), ps(1)

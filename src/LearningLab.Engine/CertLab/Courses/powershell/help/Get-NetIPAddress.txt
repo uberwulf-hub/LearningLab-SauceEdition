@@ -1,0 +1,26 @@
+SYNOPSIS: Lists the IP addresses of the computer.
+DESCRIPTION:
+Get-NetIPAddress shows every IPv4 and IPv6 address on every interface, one block of properties each. The important ones are IPAddress, InterfaceAlias (which adapter), PrefixLength (24 means the mask 255.255.255.0) and PrefixOrigin: Manual for an address typed in by hand, Dhcp for one handed out by a DHCP server, WellKnown for the loopback addresses.
+
+The output is long, so filter it with the parameters or pipe it to Format-Table.
+PARAMETER IPAddress:
+Shows only this address. Wildcards are allowed (10.0.10.*).
+PARAMETER InterfaceAlias:
+Shows only the addresses of one adapter, for example Ethernet.
+PARAMETER InterfaceIndex:
+Shows only the addresses of the interface with this ifIndex.
+PARAMETER AddressFamily:
+IPv4 or IPv6.
+PARAMETER PrefixLength:
+Shows only addresses with this prefix length.
+PARAMETER PrefixOrigin:
+Manual, Dhcp, WellKnown and so on.
+EXAMPLE: Get-NetIPAddress -AddressFamily IPv4
+Shows the IPv4 addresses: on WIN-SRV1, 10.0.10.11 on Ethernet and 127.0.0.1 on the loopback interface.
+EXAMPLE: Get-NetIPAddress -InterfaceAlias Ethernet -AddressFamily IPv4 | Format-Table IPAddress, PrefixLength, PrefixOrigin
+A short table of the adapter's IPv4 settings.
+EXAMPLE: (Get-NetIPAddress -InterfaceAlias Ethernet -AddressFamily IPv4).IPAddress
+Just the address as text, handy in scripts.
+NOTES:
+A filter that finds nothing is an error ("No matching MSFT_NetIPAddress objects found"); add -ErrorAction SilentlyContinue when that is expected. The default gateway and DNS servers are not here: see Get-NetIPConfiguration. CIM-based command from the NetTCPIP module, Windows only (PowerShell 7 on Linux or macOS does not have it).
+RELATED: New-NetIPAddress, Remove-NetIPAddress, Get-NetIPConfiguration, Get-NetIPInterface

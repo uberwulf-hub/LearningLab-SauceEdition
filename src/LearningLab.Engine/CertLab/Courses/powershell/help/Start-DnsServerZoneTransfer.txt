@@ -1,0 +1,16 @@
+SYNOPSIS: Makes a secondary or stub zone copy its master right now.
+DESCRIPTION:
+A secondary zone normally checks its master when the SOA refresh interval passes. Start-DnsServerZoneTransfer asks for the copy now.
+
+By default the server checks the serial number and asks only for the changes (an incremental transfer, IXFR). -FullTransfer asks for the whole zone (AXFR), which helps when the copy is damaged or out of step.
+
+If the master refuses transfers to this server, the zone stays empty or old: fix SecureSecondaries on the master with Set-DnsServerPrimaryZone.
+PARAMETER Name:
+The secondary or stub zone.
+PARAMETER FullTransfer:
+Copies the whole zone instead of only the changes.
+EXAMPLE: Start-DnsServerZoneTransfer -Name tidewater.example
+Pulls the latest changes from the master.
+EXAMPLE: Start-DnsServerZoneTransfer -Name tidewater.example -FullTransfer
+Copies the whole zone again.
+RELATED: Add-DnsServerSecondaryZone, Set-DnsServerPrimaryZone, Get-DnsServerZone

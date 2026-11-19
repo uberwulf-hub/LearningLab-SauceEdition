@@ -1,0 +1,164 @@
+# Unit: u10 | 10. Protecting data | Security architecture
+
+In the end, most attacks are after data: customer records, designs, money, secrets. Protecting it starts with knowing what you have, how valuable or sensitive it is, where it lives and where it travels. This unit covers **data types**, **data classifications**, the three **data states** (at rest, in transit, in use), **data sovereignty** and **geolocation**, and the methods used to secure data: geographic restrictions, encryption, hashing, masking, tokenization, obfuscation, segmentation and permission restrictions.
+
+## Lesson: l1001 | Data types and classifications
+
+### Data types
+
+- **Regulated data**: data whose handling is controlled by law or industry rules: personal data under privacy laws (such as GDPR), health records (HIPAA in the US), payment card data (PCI DSS). Mishandling it brings fines and legal action.
+  - **PII** (personally identifiable information): data that identifies a person: name with address, ID numbers, date of birth, email.
+  - **PHI** (protected health information): health data linked to a person.
+- **Trade secret**: business information that is valuable because it is kept secret, such as a recipe, a manufacturing process or a customer pricing model. Protected only as long as it stays secret (no registration), so access controls and NDAs are vital.
+- **Intellectual property (IP)**: creations of the mind protected by law: patents, copyrights, trademarks, and trade secrets. Source code, product designs and research are typical targets of espionage.
+- **Legal information**: contracts, court documents, legal advice, documents under legal hold. Often confidential and subject to retention rules.
+- **Financial information**: bank and card details, accounts, payroll, financial reports (some of which are regulated before publication).
+- **Human-readable** data: a person can read it directly: documents, emails, spreadsheets.
+- **Non-human-readable** data: meant for machines: binary files, barcodes and QR codes, encrypted data, database files, compiled code. Still needs protection: a QR code or a database file can hold sensitive information, and some security tools struggle to inspect it.
+
+### Data classifications
+
+A **classification** labels data by how much harm its exposure would cause, and the label decides how it must be handled (who may see it, whether it must be encrypted, where it may be stored). Organizations choose their own labels; Security+ uses these common ones:
+
+- **Public**: meant to be seen by anyone (published prices, marketing, press releases). No harm if disclosed, though its integrity still matters.
+- **Private**: personal or internal information that shouldn't be shared outside, such as an employee's personal details. (Some schemes use "private" for personal data, "internal" for company-only data.)
+- **Sensitive**: information whose disclosure would cause harm and needs protection: PII, financial details.
+- **Confidential**: for specific people or groups only; disclosure would cause serious harm to the organization (contracts, unreleased plans, source code).
+- **Restricted**: the highest level in many schemes, for the most damaging data; access is limited to named individuals, and strict controls apply.
+- **Critical**: data the organization can't operate without, where loss of **availability** or **integrity** would be the big problem (for example the order database, or patient records in a hospital).
+
+Government and military schemes use labels such as Top Secret, Secret, Confidential and Unclassified.
+
+> Classification drives handling. The data owner decides the classification; the custodian applies the controls.
+
+```file
+Classification: CONFIDENTIAL - Finance only
+Owner: CFO office   Retention: 7 years   Storage: encrypted finance share only
+Do not email outside corp.example. Do not copy to removable media.
+```
+
+@quiz
+? A bakery chain's secret dough recipe isn't patented and gives it an edge over rivals. Which data type is it?
+- Regulated data
++ Trade secret
+- Public data
+- Legal information
+! A trade secret is valuable because it stays secret; it isn't registered like a patent.
+? Which classification best fits a published product price list on the company website?
++ Public
+- Confidential
+- Restricted
+- Critical
+! Information intended for anyone is public; its disclosure causes no harm.
+? A hospital's patient records system must always be available and accurate, or care stops. Which classification label stresses this?
+- Public
+- Private
++ Critical
+- Human-readable
+! Critical data is data the organization can't work without; the main concerns are availability and integrity.
+? Which data type is most directly controlled by laws such as HIPAA and GDPR?
+- Trade secrets
+- Non-human-readable data
++ Regulated data such as PHI and PII
+- Public data
+! Privacy and health laws regulate how personal and health data are handled.
+@end
+
+## Lesson: l1002 | Data states, sovereignty and geolocation
+
+### The three data states
+
+- **Data at rest**: stored data: on disks, in databases, on backup tapes, in cloud storage. Protect it with full disk, file or database encryption, access permissions and physical security.
+- **Data in transit** (in motion): data moving across a network: between a browser and a server, between offices, to the cloud. Protect it with TLS, IPsec and other VPNs, SSH, and secure Wi-Fi.
+- **Data in use**: data being processed, loaded in memory or shown on screen. It usually has to be decrypted to be used, which makes it the hardest state to protect. Protections: access control, secure enclaves and trusted execution environments (confidential computing), memory protections, screen privacy, and DLP that watches copy and print actions.
+
+> Encryption at rest and in transit is routine. Data in use is the exposed moment: it is decrypted to be worked on.
+
+### Data sovereignty
+
+**Data sovereignty** means data is subject to the laws of the country where it is stored or collected. Data about EU residents falls under GDPR even if it is stored elsewhere, and some countries require certain data (government, health, financial) to stay inside their borders (**data localization** or residency). With cloud services, you must know which regions your data and backups are stored in, and choose them deliberately.
+
+### Geolocation
+
+**Geolocation** is working out where a device or user physically is, from IP address, GPS, Wi-Fi or cell towers. It is used two ways:
+
+- As a control: allow sign-ins only from expected countries, flag impossible travel, keep data within a region.
+- As a risk: location data is itself personal and sensitive; photos and apps can leak it (for example location tags in image metadata).
+
+Geolocation from IP addresses is approximate, and VPNs can hide the real location, so it should be one signal among several.
+
+@quiz
+? An analyst's laptop decrypts a customer spreadsheet to edit it. Which data state is the spreadsheet in while she edits?
+- At rest
+- In transit
++ In use
+- Archived
+! Data being processed in memory or shown on screen is in use.
+? A European company plans to store customer records in a cloud region in another continent. Which concept must it consider first?
++ Data sovereignty
+- Tokenization
+- Fail-open
+- Steganography
+! The laws of the country where data is stored, and of its residents, apply: that is data sovereignty.
+? Which control best protects data in transit between a branch office and head office?
+- Full disk encryption
++ An IPsec VPN tunnel
+- Data masking on reports
+- A honeyfile
+! Data moving across a network is protected with encrypted tunnels such as IPsec or TLS.
+@end
+
+## Lesson: l1003 | Methods to secure data
+
+- **Geographic restrictions**: limit access, storage or processing to certain locations: block sign-ins from countries where you have no staff, keep data in particular cloud regions, restrict certain data from leaving a country. Often enforced by conditional access rules and cloud region policies.
+- **Encryption**: makes data unreadable without the key; the main protection for data at rest and in transit (unit 3). Remember to protect the keys.
+- **Hashing**: a one-way digest used to store passwords (with salt and key stretching) and to check that data wasn't changed. It doesn't let you read the data back, so it isn't a way to store data you need again.
+- **Masking**: hides part of the data when it is shown or used, for example showing only the last four digits of a card number, or replacing real names with fake ones in a test copy of a database. Static masking changes a copy permanently; dynamic masking hides data as it is displayed, depending on who is looking.
+- **Tokenization**: replaces sensitive data with a random token and keeps the real value in a secure vault. Systems that only handle tokens are out of reach for an attacker wanting card numbers, and the scope of compliance (such as PCI DSS) shrinks.
+- **Obfuscation**: any technique that makes data hard to understand without being proper encryption: masking, tokenization, steganography, and making code hard to read. It slows attackers down but shouldn't be the only protection.
+- **Segmentation**: store sensitive data in separate network zones, databases or storage accounts with their own stricter access, so a breach elsewhere doesn't reach it.
+- **Permission restrictions**: only the people and services who need data get access to it (least privilege), with access reviewed regularly. File permissions, database roles, and cloud identity policies all apply. Data loss prevention (DLP) tools can add rules on what may be sent, copied or printed.
+
+### Choosing the method
+
+- Need the real value back later, but unreadable if stolen: **encryption**.
+- Need to check a value without storing it (passwords): **hashing** with salt.
+- Need to show part of a value to staff, or use realistic test data: **masking**.
+- Need to process payments without holding card numbers: **tokenization**.
+- Need data to stay in one country: **geographic restrictions**.
+
+```file
+Customer support view (dynamic masking)
+Name: Priya S.        Card: **** **** **** 4821     Phone: ***-***-0147
+Finance view (role: billing-admin)
+Name: Priya Shah      Card: token tok_8f2c19e0      Phone: 555-0147
+```
+
+> Masking hides data for display and testing. Tokenization swaps it for a token with the real value kept in a vault. Encryption can be reversed with the key.
+
+@quiz
+? Developers need a realistic copy of the customer database for testing, but must not see real names or card numbers. What is the best method?
+- Hashing every field
++ Data masking
+- Geographic restrictions
+- Full disk encryption
+! Masking replaces real values with realistic fakes or hides parts, so test data looks real but exposes nothing.
+? A retailer wants its point-of-sale systems to keep no real card numbers, to reduce the scope of PCI DSS. Which method fits best?
++ Tokenization
+- Steganography
+- Segmentation only
+- Hashing with MD5
+! Tokens replace card numbers in the retailer's systems while the real numbers stay with the payment provider's vault.
+? A company has staff only in Canada and wants to refuse all sign-ins from other countries. What method is this?
+- Masking
+- Obfuscation
++ Geographic restrictions
+- Data in use protection
+! Limiting access by location is a geographic restriction, often enforced with conditional access.
+? Which method lets authorised staff recover the original data later, while keeping it unreadable if stolen?
+- Hashing
+- Masking
++ Encryption
+- Salting
+! Encryption is reversible with the key; hashing is one-way and static masking permanently changes the copy.
+@end

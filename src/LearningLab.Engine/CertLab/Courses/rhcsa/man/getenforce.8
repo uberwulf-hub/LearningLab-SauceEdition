@@ -1,0 +1,30 @@
+NAME
+       getenforce - print the current SELinux mode
+
+SYNOPSIS
+       getenforce
+
+DESCRIPTION
+       getenforce prints Enforcing, Permissive or Disabled.
+
+       Enforcing
+              SELinux blocks and logs what the policy does not allow.
+
+       Permissive
+              It only logs (useful to test whether SELinux is the cause of
+              a problem).
+
+       Disabled
+              SELinux is off.
+
+       setenforce 0 or 1 switches between permissive and enforcing until the
+       next boot. The mode at boot is SELINUX= in /etc/selinux/config;
+       sestatus shows both.
+
+EXAMPLES
+           getenforce
+           setenforce 1
+           grep ^SELINUX= /etc/selinux/config
+
+SEE ALSO
+       setenforce(8), sestatus(8), selinux(8)

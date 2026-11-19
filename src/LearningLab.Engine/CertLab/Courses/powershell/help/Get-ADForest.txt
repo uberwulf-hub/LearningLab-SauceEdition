@@ -1,0 +1,14 @@
+SYNOPSIS: Shows information about an Active Directory forest.
+DESCRIPTION:
+Get-ADForest returns the forest root domain, every domain in the forest, the sites, the global catalog servers, the forest functional level (ForestMode), the extra UPN suffixes, and the two forest-wide operations master roles: SchemaMaster and DomainNamingMaster.
+PARAMETER Identity:
+The forest, by its root domain name, such as corp.example. Position 0.
+PARAMETER Current:
+LocalComputer or LoggedOnUser.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADForest | Format-List Name, ForestMode, SchemaMaster, DomainNamingMaster
+The forest's level and its two forest-wide role holders.
+EXAMPLE: (Get-ADForest).GlobalCatalogs
+The domain controllers that are global catalog servers.
+RELATED: Get-ADDomain, Set-ADForest, Get-ADDomainController, Get-ADReplicationSite

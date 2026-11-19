@@ -1,0 +1,45 @@
+NAME
+       sha256sum - compute and check SHA-256 checksums
+
+SYNOPSIS
+       sha256sum [FILE...]
+       sha256sum -c [--quiet] [--status] CHECKSUM-FILE
+       sha1sum, sha512sum: the same with SHA-1 and SHA-512
+
+DESCRIPTION
+       sha256sum reads each FILE (or standard input) and prints its SHA-256
+       checksum (64 hexadecimal digits), two spaces and the file name. Any
+       change to a file changes its checksum, so comparing checksums tells
+       whether a file was copied or downloaded intact.
+
+       sha1sum and sha512sum work the same way with other algorithms.
+       SHA-256 and SHA-512 are the safe choices today; SHA-1 and MD5 are
+       only good for spotting accidental damage.
+
+OPTIONS
+       -c, --check
+              Read lines of checksums and names from the file and check each
+              file: it prints NAME: OK or NAME: FAILED.
+
+       --quiet
+              With -c, print only the failures.
+
+       --status
+              With -c, print nothing; the exit status says whether all files
+              matched (0) or not (1).
+
+       -b, -t Read in binary or text mode (the same on Linux).
+
+EXAMPLES
+       Save checksums of some files and check them later:
+
+           sha256sum /etc/passwd /etc/group > /root/sums.txt
+           sha256sum -c /root/sums.txt
+
+       Compare a copy with the original:
+
+           sha256sum /root/backup.tar.gz
+           ssh root@server2 sha256sum /tmp/backup.tar.gz
+
+SEE ALSO
+       md5sum(1), b2sum(1), cksum(1)

@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the local groups of the computer.
+DESCRIPTION:
+Local groups give rights on this computer: Administrators (full control), Users, Remote Desktop Users (may sign in remotely), Remote Management Users (may use PowerShell remoting), Event Log Readers, Backup Operators and more.
+PARAMETER Name:
+Group names; wildcards are allowed. Position 0.
+PARAMETER SID:
+Groups by security identifier (Administrators is S-1-5-32-544 on every computer).
+EXAMPLE: Get-LocalGroup
+EXAMPLE: Get-LocalGroup -Name Remote*
+RELATED: Get-LocalGroupMember, New-LocalGroup

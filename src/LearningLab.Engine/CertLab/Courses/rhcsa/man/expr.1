@@ -1,0 +1,24 @@
+NAME
+       expr - evaluate a simple expression
+
+SYNOPSIS
+       expr ARGUMENT OPERATOR ARGUMENT
+
+DESCRIPTION
+       expr works out an expression and prints the result. Each number and
+       operator must be a separate argument (with spaces in between), and
+       characters the shell treats specially, such as * < >, must be quoted
+       or escaped.
+
+       Operators: + - \* / % for whole-number arithmetic; = != < <= > >= for
+       comparisons, which print 1 (true) or 0 (false).
+
+       It comes from older shells; in bash, $(( )) and [[ ]] are simpler.
+
+EXAMPLES
+           expr 7 + 5             prints 12
+           expr 7 \* 5            prints 35
+           count=$(expr $count + 1)
+
+SEE ALSO
+       bash(1), bc(1), test(1)

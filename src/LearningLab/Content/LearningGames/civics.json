@@ -1,0 +1,4807 @@
+{
+  "id": "civics",
+  "name": "US Citizenship",
+  "levels": {
+    "prek": [
+      {
+        "name": "Our flag",
+        "questions": [
+          {
+            "q": "What colors are on the American flag?",
+            "choices": [
+              "Red, white and blue",
+              "Green and yellow",
+              "Pink and purple",
+              "Orange and black"
+            ],
+            "answer": 0,
+            "explain": "The American flag is red, white and blue.",
+            "tip": "Red, white and blue, just like a firework's boom: red, white, BLUE!"
+          },
+          {
+            "q": "What shapes are in the blue part of the American flag?",
+            "choices": [
+              "Stars",
+              "Hearts",
+              "Circles",
+              "Moons"
+            ],
+            "answer": 0,
+            "explain": "The blue part of the flag is full of white stars.",
+            "tip": "Look up at night: stars live in the dark blue sky, and on the flag too!"
+          },
+          {
+            "q": "The American flag has long red and white lines. What are they called?",
+            "choices": [
+              "Stripes",
+              "Spots",
+              "Dots",
+              "Squiggles"
+            ],
+            "answer": 0,
+            "explain": "The red and white lines on the flag are called stripes.",
+            "tip": "Stripes are like a candy cane: red, white, red, white!"
+          },
+          {
+            "q": "The American flag is the flag of which country?",
+            "choices": [
+              "The United States",
+              "France",
+              "Mexico",
+              "Japan"
+            ],
+            "answer": 0,
+            "explain": "The red, white and blue flag with stars and stripes is the flag of the United States of America.",
+            "tip": "Stars and stripes, USA, we wave it high on the Fourth of July!"
+          },
+          {
+            "q": "When we say the Pledge of Allegiance, where do we put our right hand?",
+            "choices": [
+              "Over our heart",
+              "On our head",
+              "On our knee",
+              "In our pocket"
+            ],
+            "answer": 0,
+            "explain": "We put our right hand over our heart to show respect for the flag.",
+            "tip": "Hand on heart means I love my country with all my heart."
+          },
+          {
+            "q": "What do we say to the flag at school in the morning?",
+            "choices": [
+              "The Pledge of Allegiance",
+              "Happy birthday",
+              "Good night",
+              "The ABCs"
+            ],
+            "answer": 0,
+            "explain": "Many schools say the Pledge of Allegiance to the flag each morning.",
+            "tip": "Pledge means promise: each morning we make a promise to the flag."
+          },
+          {
+            "q": "True or false: The American flag has stars on it.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! The flag has white stars on a blue square.",
+            "tip": "Twinkle, twinkle, little star, 50 on the flag, near and far!"
+          }
+        ]
+      },
+      {
+        "name": "American symbols",
+        "questions": [
+          {
+            "q": "Which bird is a symbol of America?",
+            "choices": [
+              "The bald eagle",
+              "The penguin",
+              "The parrot",
+              "The ostrich"
+            ],
+            "answer": 0,
+            "explain": "The bald eagle is the national bird and a symbol of the United States.",
+            "tip": "The bald eagle soars high and free, the bird of the land of liberty!"
+          },
+          {
+            "q": "The Statue of Liberty is a big statue of a lady. What does she hold up high in her hand?",
+            "choices": [
+              "A torch",
+              "An umbrella",
+              "A balloon",
+              "A flower"
+            ],
+            "answer": 0,
+            "explain": "The Statue of Liberty holds a torch up high. Its light stands for freedom.",
+            "tip": "Lady Liberty lights the way with her torch held high."
+          },
+          {
+            "q": "The Liberty Bell is a famous old bell. What does it have?",
+            "choices": [
+              "A big crack",
+              "Polka dots",
+              "Wheels",
+              "A smiley face"
+            ],
+            "answer": 0,
+            "explain": "The Liberty Bell has a big crack in it, so it is not rung anymore.",
+            "tip": "Ding, dong, CRACK! The Liberty Bell cracked and can't ring back."
+          },
+          {
+            "q": "On the Fourth of July we celebrate America's birthday. What do people often watch that night?",
+            "choices": [
+              "Fireworks",
+              "Snow fall",
+              "A solar eclipse",
+              "Leaves change color"
+            ],
+            "answer": 0,
+            "explain": "The Fourth of July is Independence Day, and many people watch fireworks.",
+            "tip": "Happy birthday, America! Fireworks are the birthday candles in the sky."
+          },
+          {
+            "q": "The national anthem is a special kind of what?",
+            "choices": [
+              "Song",
+              "Food",
+              "Game",
+              "Animal"
+            ],
+            "answer": 0,
+            "explain": "The national anthem is a song about our country. It is called The Star-Spangled Banner.",
+            "tip": "Anthem rhymes with... well, nothing, but you SING it!"
+          },
+          {
+            "q": "True or false: The Statue of Liberty is green.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! The statue is made of copper, which slowly turned green over many years.",
+            "tip": "Copper turns green like an old penny left out in the rain."
+          }
+        ]
+      },
+      {
+        "name": "The President",
+        "questions": [
+          {
+            "q": "Who is the leader of our whole country?",
+            "choices": [
+              "The President",
+              "The mail carrier",
+              "The principal",
+              "The baker"
+            ],
+            "answer": 0,
+            "explain": "The President is the leader of the United States.",
+            "tip": "The President is like the captain of America's team."
+          },
+          {
+            "q": "Where does the President live?",
+            "choices": [
+              "The White House",
+              "A castle",
+              "A tree house",
+              "A boat"
+            ],
+            "answer": 0,
+            "explain": "The President lives and works in the White House.",
+            "tip": "The White House is the President's house, painted all white."
+          },
+          {
+            "q": "What color is the White House?",
+            "choices": [
+              "White",
+              "Red",
+              "Blue",
+              "Purple"
+            ],
+            "answer": 0,
+            "explain": "Just like its name, the White House is white.",
+            "tip": "The answer is right in the name: WHITE House!"
+          },
+          {
+            "q": "How do grown-ups pick the President?",
+            "choices": [
+              "They vote",
+              "They race",
+              "They pick a name from a hat",
+              "They play tag"
+            ],
+            "answer": 0,
+            "explain": "Grown-up citizens vote to choose the President.",
+            "tip": "Vote, vote, pick the boat: grown-ups vote to choose who leads."
+          },
+          {
+            "q": "True or false: The President lives in the White House.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! The White House is the home of the President.",
+            "tip": "President plus White House, a perfect pair like peanut butter and jelly."
+          },
+          {
+            "q": "The White House is in a city. Which city?",
+            "choices": [
+              "Washington, D.C.",
+              "Disney World",
+              "The North Pole",
+              "The moon"
+            ],
+            "answer": 0,
+            "explain": "The White House is in Washington, D.C., the capital of the United States.",
+            "tip": "D.C. is where the President you'll see."
+          }
+        ]
+      },
+      {
+        "name": "Being a good helper",
+        "questions": [
+          {
+            "q": "Your friend wants a turn on the swing. What is a good thing to do?",
+            "choices": [
+              "Take turns",
+              "Never get off",
+              "Push your friend away",
+              "Hide the swing"
+            ],
+            "answer": 0,
+            "explain": "Taking turns is fair and kind. Good citizens share.",
+            "tip": "Taking turns makes everyone grin: you go, I go, we all win!"
+          },
+          {
+            "q": "Why do we have rules?",
+            "choices": [
+              "To keep us safe and be fair",
+              "To make us sad",
+              "To make things messy",
+              "For no reason"
+            ],
+            "answer": 0,
+            "explain": "Rules help keep everyone safe and help us treat each other fairly.",
+            "tip": "Rules are like a seat belt: they keep us safe and sound."
+          },
+          {
+            "q": "You see trash on the playground. What can you do to help?",
+            "choices": [
+              "Throw it in the trash can",
+              "Kick it",
+              "Add more trash",
+              "Hide it in the sand"
+            ],
+            "answer": 0,
+            "explain": "Picking up trash helps keep our community clean. That is being a good citizen.",
+            "tip": "See it, pick it, bin it!"
+          },
+          {
+            "q": "What should you do when a traffic light is red?",
+            "choices": [
+              "Stop",
+              "Go fast",
+              "Dance",
+              "Close your eyes"
+            ],
+            "answer": 0,
+            "explain": "Red means stop. Following safety rules keeps people safe.",
+            "tip": "Red means stop, green means go, yellow means slow!"
+          },
+          {
+            "q": "Who helps keep us safe in our town?",
+            "choices": [
+              "Police officers and firefighters",
+              "Dragons",
+              "Pirates",
+              "Cartoon characters"
+            ],
+            "answer": 0,
+            "explain": "Police officers and firefighters are community helpers who keep us safe.",
+            "tip": "Helpers in blue and helpers in red trucks keep our town safe."
+          },
+          {
+            "q": "True or false: Being kind to others is part of being a good citizen.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! Good citizens are kind, helpful and fair to others.",
+            "tip": "Kind is a superpower every good citizen has."
+          },
+          {
+            "q": "Your teacher says, quiet time now. What should you do?",
+            "choices": [
+              "Listen and be quiet",
+              "Shout loudly",
+              "Run around",
+              "Bang on a drum"
+            ],
+            "answer": 0,
+            "explain": "Following class rules helps everyone learn.",
+            "tip": "Zip your lips and open your ears!"
+          }
+        ]
+      }
+    ],
+    "k2": [
+      {
+        "name": "The flag and the Pledge",
+        "questions": [
+          {
+            "q": "How many stars are on the American flag?",
+            "choices": [
+              "50",
+              "13",
+              "10",
+              "100"
+            ],
+            "answer": 0,
+            "explain": "The flag has 50 stars, one for each state.",
+            "tip": "50 stars for 50 states, one star each, like a name tag."
+          },
+          {
+            "q": "How many stripes are on the American flag?",
+            "choices": [
+              "13",
+              "50",
+              "7",
+              "20"
+            ],
+            "answer": 0,
+            "explain": "The flag has 13 stripes: 7 red and 6 white.",
+            "tip": "13 stripes for 13 colonies, the very first states in the country's story."
+          },
+          {
+            "q": "What do the 50 stars on the flag stand for?",
+            "choices": [
+              "The 50 states",
+              "50 presidents",
+              "50 cities",
+              "50 years"
+            ],
+            "answer": 0,
+            "explain": "Each star stands for one of the 50 states.",
+            "tip": "Stars equal states: both start with ST!"
+          },
+          {
+            "q": "What do the 13 stripes on the flag stand for?",
+            "choices": [
+              "The 13 original colonies",
+              "13 presidents",
+              "13 holidays",
+              "13 rivers"
+            ],
+            "answer": 0,
+            "explain": "The 13 stripes stand for the 13 colonies that became the first states.",
+            "tip": "Stripes are for the start: the 13 colonies."
+          },
+          {
+            "q": "What is a nickname for the American flag?",
+            "choices": [
+              "The Stars and Stripes",
+              "The Red Rocket",
+              "The Blue Moon",
+              "The Big Apple"
+            ],
+            "answer": 0,
+            "explain": "The flag is often called the Stars and Stripes or Old Glory.",
+            "tip": "Just say what you see: stars and stripes!"
+          },
+          {
+            "q": "When we say the Pledge of Allegiance, we promise to be loyal to what?",
+            "choices": [
+              "The flag and our country",
+              "Our favorite team",
+              "Our toys",
+              "Our school bus"
+            ],
+            "answer": 0,
+            "explain": "The Pledge is a promise of loyalty to the flag and to the United States.",
+            "tip": "Pledge to the flag, pledge to the land."
+          },
+          {
+            "q": "How do people usually stand for the Pledge of Allegiance?",
+            "choices": [
+              "Facing the flag with the right hand over the heart",
+              "Sitting on the floor with eyes closed",
+              "Hopping on one foot",
+              "Facing away from the flag"
+            ],
+            "answer": 0,
+            "explain": "People stand, face the flag and put their right hand over their heart.",
+            "tip": "Face the flag, right hand on heart, stand up tall from the start."
+          },
+          {
+            "q": "What color is the square with the stars on the flag?",
+            "choices": [
+              "Blue",
+              "Red",
+              "Green",
+              "White"
+            ],
+            "answer": 0,
+            "explain": "The stars sit on a blue square in the top corner of the flag.",
+            "tip": "Stars shine in a blue sky, so the star square is blue."
+          },
+          {
+            "q": "True or false: The stripes on the flag are red and white.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! The flag has red and white stripes.",
+            "tip": "Red and white like a peppermint stripe."
+          },
+          {
+            "q": "Flag Day celebrates the American flag. In which month is Flag Day?",
+            "choices": [
+              "June",
+              "December",
+              "October",
+              "February"
+            ],
+            "answer": 0,
+            "explain": "Flag Day is June 14.",
+            "tip": "June has a flag tune: Flag Day is June 14."
+          }
+        ]
+      },
+      {
+        "name": "Symbols and songs",
+        "questions": [
+          {
+            "q": "What is the name of the national anthem?",
+            "choices": [
+              "The Star-Spangled Banner",
+              "Twinkle Twinkle Little Star",
+              "Happy Birthday",
+              "Row, Row, Row Your Boat"
+            ],
+            "answer": 0,
+            "explain": "The national anthem of the United States is The Star-Spangled Banner.",
+            "tip": "Star-Spangled Banner: the flag still waved over Fort McHenry."
+          },
+          {
+            "q": "Who wrote the words to The Star-Spangled Banner?",
+            "choices": [
+              "Francis Scott Key",
+              "George Washington",
+              "Abraham Lincoln",
+              "Benjamin Franklin"
+            ],
+            "answer": 0,
+            "explain": "Francis Scott Key wrote the words in 1814 after seeing the flag still flying over a fort.",
+            "tip": "Francis Scott KEY wrote the KEY song of our country."
+          },
+          {
+            "q": "Which country gave the Statue of Liberty to the United States?",
+            "choices": [
+              "France",
+              "England",
+              "Spain",
+              "China"
+            ],
+            "answer": 0,
+            "explain": "The people of France gave the Statue of Liberty as a gift of friendship.",
+            "tip": "France sent a friendship present: a giant green lady!"
+          },
+          {
+            "q": "In which city's harbor does the Statue of Liberty stand?",
+            "choices": [
+              "New York",
+              "Los Angeles",
+              "Chicago",
+              "Miami"
+            ],
+            "answer": 0,
+            "explain": "The Statue of Liberty stands on Liberty Island in New York Harbor.",
+            "tip": "Lady Liberty says hello to ships sailing into New York."
+          },
+          {
+            "q": "In which city is the Liberty Bell?",
+            "choices": [
+              "Philadelphia",
+              "New York",
+              "Boston",
+              "Seattle"
+            ],
+            "answer": 0,
+            "explain": "The Liberty Bell is in Philadelphia, Pennsylvania.",
+            "tip": "Philadelphia means city of brotherly love, and the Liberty Bell lives there."
+          },
+          {
+            "q": "What is the national bird of the United States?",
+            "choices": [
+              "The bald eagle",
+              "The turkey",
+              "The robin",
+              "The blue jay"
+            ],
+            "answer": 0,
+            "explain": "The bald eagle is the national bird. It appears on the Great Seal of the United States.",
+            "tip": "Eagle, eagle, strong and free, America's bird it will always be."
+          },
+          {
+            "q": "On what date do we celebrate Independence Day?",
+            "choices": [
+              "July 4",
+              "December 25",
+              "January 1",
+              "October 31"
+            ],
+            "answer": 0,
+            "explain": "Independence Day is July 4. It celebrates the day in 1776 the Declaration of Independence was adopted.",
+            "tip": "Fourth of July, fireworks in the sky!"
+          },
+          {
+            "q": "Which character with a tall hat and white beard is a symbol of the US government?",
+            "choices": [
+              "Uncle Sam",
+              "Santa Claus",
+              "The Easter Bunny",
+              "Mother Goose"
+            ],
+            "answer": 0,
+            "explain": "Uncle Sam, often drawn in red, white and blue, is a symbol of the United States.",
+            "tip": "Uncle Sam has the same initials as the United States: U.S.!"
+          },
+          {
+            "q": "True or false: The bald eagle is bald, with no feathers on its head.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 1,
+            "explain": "False! A bald eagle has white feathers on its head. Long ago, bald could mean white.",
+            "tip": "A bald eagle wears a white feather hat, not a bare head."
+          }
+        ]
+      },
+      {
+        "name": "Leaders and the capital",
+        "questions": [
+          {
+            "q": "What is the capital city of the United States?",
+            "choices": [
+              "Washington, D.C.",
+              "New York City",
+              "Los Angeles",
+              "Philadelphia"
+            ],
+            "answer": 0,
+            "explain": "Washington, D.C. is the capital, where the President and Congress work.",
+            "tip": "Washington, D.C. was named after George Washington, our first President."
+          },
+          {
+            "q": "Who was the first President of the United States?",
+            "choices": [
+              "George Washington",
+              "Abraham Lincoln",
+              "Benjamin Franklin",
+              "Thomas Edison"
+            ],
+            "answer": 0,
+            "explain": "George Washington was the first President.",
+            "tip": "George Washington is on the one-dollar bill: number one bill, number one President."
+          },
+          {
+            "q": "Who leads a city?",
+            "choices": [
+              "A mayor",
+              "A king",
+              "A coach",
+              "A pilot"
+            ],
+            "answer": 0,
+            "explain": "A mayor is the leader of a city or town.",
+            "tip": "Mayor of the city, it is pretty witty."
+          },
+          {
+            "q": "Who leads a state?",
+            "choices": [
+              "A governor",
+              "A mayor",
+              "A captain",
+              "A principal"
+            ],
+            "answer": 0,
+            "explain": "Each state has a governor as its leader.",
+            "tip": "Governor for a state, Mayor for a city, President for the country."
+          },
+          {
+            "q": "Who leads the whole country?",
+            "choices": [
+              "The President",
+              "A governor",
+              "A mayor",
+              "A judge"
+            ],
+            "answer": 0,
+            "explain": "The President is the leader of the United States.",
+            "tip": "President of the whole land, the leader of the band."
+          },
+          {
+            "q": "How many years does a President serve in one term?",
+            "choices": [
+              "4 years",
+              "1 year",
+              "10 years",
+              "Forever"
+            ],
+            "answer": 0,
+            "explain": "A President is elected for a four-year term.",
+            "tip": "A President's term is 4 years, just like the Olympics come every 4 years."
+          },
+          {
+            "q": "What is the building called where the President lives and works?",
+            "choices": [
+              "The White House",
+              "The Capitol",
+              "The Pentagon",
+              "The Library of Congress"
+            ],
+            "answer": 0,
+            "explain": "The President lives and works in the White House.",
+            "tip": "The President's house is the White House."
+          },
+          {
+            "q": "Congress makes the country's laws. In which building does Congress meet?",
+            "choices": [
+              "The Capitol",
+              "The White House",
+              "The Statue of Liberty",
+              "The Liberty Bell"
+            ],
+            "answer": 0,
+            "explain": "Congress meets in the US Capitol building, which has a big white dome.",
+            "tip": "Capitol with an O has a dome on top; Congress meets under the dome."
+          },
+          {
+            "q": "True or false: A king rules the United States.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 1,
+            "explain": "False! The United States has no king. The people vote for their leaders.",
+            "tip": "No crown in this town: Americans vote for their leaders."
+          }
+        ]
+      },
+      {
+        "name": "Rules and laws",
+        "questions": [
+          {
+            "q": "What is a law?",
+            "choices": [
+              "A rule that everyone in a place must follow",
+              "A kind of game",
+              "A type of food",
+              "A song"
+            ],
+            "answer": 0,
+            "explain": "Laws are rules made by the government that everyone must follow.",
+            "tip": "A law is a rule for everyone, everywhere in the land."
+          },
+          {
+            "q": "Why do we wear seat belts in the car?",
+            "choices": [
+              "To stay safe, and it is the law",
+              "To look funny",
+              "To make the car go faster",
+              "To keep snacks in place"
+            ],
+            "answer": 0,
+            "explain": "Seat belts keep us safe in a crash, and laws say we must wear them.",
+            "tip": "Click it before you go; it's the law, you know!"
+          },
+          {
+            "q": "Who helps people follow the law and stay safe?",
+            "choices": [
+              "Police officers",
+              "Clowns",
+              "Chefs",
+              "Painters"
+            ],
+            "answer": 0,
+            "explain": "Police officers help enforce laws and keep communities safe.",
+            "tip": "Police protect: P for police, P for protect."
+          },
+          {
+            "q": "Who decides what happens when people disagree about a law in court?",
+            "choices": [
+              "A judge",
+              "A chef",
+              "A lifeguard",
+              "A pilot"
+            ],
+            "answer": 0,
+            "explain": "Judges work in courts and help settle disagreements about the law.",
+            "tip": "Judge sounds like JUDGE-ment: a judge decides."
+          },
+          {
+            "q": "Where is the safest place to cross the street?",
+            "choices": [
+              "At a crosswalk",
+              "In the middle of the block",
+              "Between parked cars",
+              "Wherever you want"
+            ],
+            "answer": 0,
+            "explain": "Crosswalks are the safe place to cross. Look both ways first.",
+            "tip": "Stripes on the street say cross here with your feet."
+          },
+          {
+            "q": "Which of these is a good citizen?",
+            "choices": [
+              "Someone who follows rules and helps others",
+              "Someone who breaks rules",
+              "Someone who is mean to others",
+              "Someone who litters"
+            ],
+            "answer": 0,
+            "explain": "Good citizens follow rules, are honest and help their community.",
+            "tip": "Good citizens follow, help and share."
+          },
+          {
+            "q": "True or false: Laws are the same for everyone, even leaders.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! In America, everyone must follow the law, including leaders. This is called the rule of law.",
+            "tip": "Nobody is above the law, not even the boss."
+          },
+          {
+            "q": "What happens if there were no rules at a game?",
+            "choices": [
+              "It would not be fair and people might get hurt",
+              "Everyone would always win",
+              "It would be more fair",
+              "Nothing would change"
+            ],
+            "answer": 0,
+            "explain": "Rules make games fair and safe. Laws do the same for a country.",
+            "tip": "No rules, no fun: just ask anyone who played tag where nobody is ever it."
+          },
+          {
+            "q": "What does a stop sign tell drivers to do?",
+            "choices": [
+              "Stop",
+              "Speed up",
+              "Turn around",
+              "Honk"
+            ],
+            "answer": 0,
+            "explain": "A red stop sign tells drivers to come to a full stop.",
+            "tip": "Eight sides, red and bright, S-T-O-P means stop right."
+          }
+        ]
+      },
+      {
+        "name": "Voting",
+        "questions": [
+          {
+            "q": "What does it mean to vote?",
+            "choices": [
+              "To make a choice",
+              "To go to sleep",
+              "To eat lunch",
+              "To sing a song"
+            ],
+            "answer": 0,
+            "explain": "When you vote, you make your choice known.",
+            "tip": "Vote equals choose: you pick, you choose!"
+          },
+          {
+            "q": "Your class votes on a game. 15 kids pick tag and 7 kids pick hopscotch. Which game wins?",
+            "choices": [
+              "Tag",
+              "Hopscotch",
+              "Both",
+              "Neither"
+            ],
+            "answer": 0,
+            "explain": "Tag got more votes. In a vote, the choice with the most votes usually wins.",
+            "tip": "Most votes wins, just like the biggest pile wins."
+          },
+          {
+            "q": "How old must a citizen be to vote for President?",
+            "choices": [
+              "18",
+              "10",
+              "30",
+              "50"
+            ],
+            "answer": 0,
+            "explain": "US citizens can vote when they are 18 years old.",
+            "tip": "18 to vote: you can vote when you are grown."
+          },
+          {
+            "q": "What is the paper or screen people use to vote called?",
+            "choices": [
+              "A ballot",
+              "A menu",
+              "A ticket",
+              "A map"
+            ],
+            "answer": 0,
+            "explain": "People mark their choices on a ballot.",
+            "tip": "A BALLot: you mark your choice and drop it in, like a ball in a hoop."
+          },
+          {
+            "q": "In an election, how many times can each person vote?",
+            "choices": [
+              "One time",
+              "As many times as they want",
+              "Ten times",
+              "Zero times"
+            ],
+            "answer": 0,
+            "explain": "Each voter gets one vote. That keeps elections fair.",
+            "tip": "One person, one vote: fair for everyone."
+          },
+          {
+            "q": "True or false: In America, your vote is secret.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True! Voters mark their ballot in private, so no one has to know how they voted.",
+            "tip": "Your vote is your secret, like a wish on a birthday candle."
+          },
+          {
+            "q": "Why is voting important?",
+            "choices": [
+              "It lets people choose their leaders",
+              "It makes it rain",
+              "It gets you free toys",
+              "It is only for fun"
+            ],
+            "answer": 0,
+            "explain": "Voting lets citizens choose leaders and have a say in their government.",
+            "tip": "Voting is your voice: it lets you say who leads."
+          },
+          {
+            "q": "In which month do Americans vote for President?",
+            "choices": [
+              "November",
+              "July",
+              "March",
+              "January"
+            ],
+            "answer": 0,
+            "explain": "Elections for President are held in November.",
+            "tip": "November: vote, then Thanksgiving turkey!"
+          }
+        ]
+      },
+      {
+        "name": "Helpers, Needs and Wants",
+        "questions": [
+          {
+            "q": "Who helps put out fires?",
+            "choices": [
+              "A firefighter",
+              "A dentist",
+              "A farmer",
+              "A pilot"
+            ],
+            "answer": 0,
+            "explain": "Firefighters put out fires and help people stay safe. They are community helpers.",
+            "tip": "Firefighters fight fires: it's right in their name!"
+          },
+          {
+            "q": "Who takes care of sick animals?",
+            "choices": [
+              "A veterinarian",
+              "A chef",
+              "A mechanic",
+              "A librarian"
+            ],
+            "answer": 0,
+            "explain": "A veterinarian, or vet, is a doctor for animals.",
+            "tip": "A vet is a doctor for pets."
+          },
+          {
+            "q": "Who brings letters and packages to your home?",
+            "choices": [
+              "A mail carrier",
+              "A baker",
+              "A judge",
+              "A coach"
+            ],
+            "answer": 0,
+            "explain": "Mail carriers deliver letters and packages.",
+            "tip": "Mail carriers carry the mail."
+          },
+          {
+            "q": "Who helps you find books at the library?",
+            "choices": [
+              "A librarian",
+              "A plumber",
+              "A firefighter",
+              "A pilot"
+            ],
+            "answer": 0,
+            "explain": "A librarian takes care of the library and helps people find books.",
+            "tip": "Library, librarian: the helper's name hides in the place's name."
+          },
+          {
+            "q": "Which one is a need, not a want?",
+            "choices": [
+              "Water",
+              "Video games",
+              "Candy",
+              "Toys"
+            ],
+            "answer": 0,
+            "explain": "Needs are things we must have to live, like water, food and a home. Wants are nice to have.",
+            "tip": "Need it to live? It's a need. Just nice to have? It's a want."
+          },
+          {
+            "q": "Which one is a want, not a need?",
+            "choices": [
+              "A new toy",
+              "Food",
+              "Water",
+              "A warm home"
+            ],
+            "answer": 0,
+            "explain": "You can live without a new toy, so it is a want. Food, water and a home are needs.",
+            "tip": "A want is a wish; a need is a must."
+          },
+          {
+            "q": "Money you keep to use later is called...",
+            "say": "Money you keep to use later is called what?",
+            "choices": [
+              "Savings",
+              "Spending",
+              "Trading",
+              "Losing"
+            ],
+            "answer": 0,
+            "explain": "Savings is money you put away, like in a piggy bank, to use later.",
+            "tip": "Save it in a piggy bank for later: that's savings."
+          },
+          {
+            "q": "A farmer grows apples to sell. What is the farmer?",
+            "choices": [
+              "A producer",
+              "A consumer",
+              "A mayor",
+              "A customer"
+            ],
+            "answer": 0,
+            "explain": "A producer makes or grows things to sell. A consumer buys and uses them.",
+            "tip": "Producers produce, or make; consumers consume, or use."
+          },
+          {
+            "q": "You buy an apple and eat it. What are you?",
+            "choices": [
+              "A consumer",
+              "A producer",
+              "A farmer",
+              "A mayor"
+            ],
+            "answer": 0,
+            "explain": "A consumer is a person who buys and uses goods, like food.",
+            "tip": "Consume means use up, like eating a snack."
+          },
+          {
+            "q": "Which one is a way to be a good citizen?",
+            "choices": [
+              "Tell the truth",
+              "Litter",
+              "Cut in line",
+              "Yell at others"
+            ],
+            "answer": 0,
+            "explain": "Good citizens are honest, follow the rules and treat others kindly.",
+            "tip": "Be honest, be kind, be fair."
+          }
+        ]
+      }
+    ],
+    "g35": [
+      {
+        "name": "Three branches of government",
+        "questions": [
+          {
+            "q": "How many branches does the US government have?",
+            "choices": [
+              "3",
+              "2",
+              "4",
+              "5"
+            ],
+            "answer": 0,
+            "explain": "The three branches are legislative, executive and judicial.",
+            "tip": "Three branches like a tree: Legislative, Executive, Judicial, L-E-J."
+          },
+          {
+            "q": "Which branch makes the laws?",
+            "choices": [
+              "Legislative",
+              "Executive",
+              "Judicial",
+              "Military"
+            ],
+            "answer": 0,
+            "explain": "The legislative branch, Congress, makes federal laws.",
+            "tip": "LEgislative = LEgislate = make Laws: both have an L for Laws."
+          },
+          {
+            "q": "Which branch carries out and enforces the laws?",
+            "choices": [
+              "Executive",
+              "Legislative",
+              "Judicial",
+              "Electoral"
+            ],
+            "answer": 0,
+            "explain": "The executive branch, led by the President, carries out the laws.",
+            "tip": "EXecutive EXecutes: it carries out the laws."
+          },
+          {
+            "q": "Which branch explains the laws and decides if they follow the Constitution?",
+            "choices": [
+              "Judicial",
+              "Executive",
+              "Legislative",
+              "Cabinet"
+            ],
+            "answer": 0,
+            "explain": "The judicial branch, the courts, interprets the laws.",
+            "tip": "JUDicial has JUDges who JUDge the laws."
+          },
+          {
+            "q": "What is the name for the legislative branch of the US government?",
+            "choices": [
+              "Congress",
+              "The Cabinet",
+              "The Supreme Court",
+              "The Pentagon"
+            ],
+            "answer": 0,
+            "explain": "Congress is the legislative branch.",
+            "tip": "Congress comes together: con means together, like a convention of lawmakers."
+          },
+          {
+            "q": "What are the two parts of Congress?",
+            "choices": [
+              "The Senate and the House of Representatives",
+              "The President and the Vice President",
+              "The Supreme Court and the Cabinet",
+              "The states and the cities"
+            ],
+            "answer": 0,
+            "explain": "Congress has two parts, or houses: the Senate and the House of Representatives.",
+            "tip": "Senate and House: two rooms in one big law-making home."
+          },
+          {
+            "q": "Who is the head of the executive branch?",
+            "choices": [
+              "The President",
+              "The Chief Justice",
+              "The Speaker of the House",
+              "A governor"
+            ],
+            "answer": 0,
+            "explain": "The President leads the executive branch.",
+            "tip": "The President PRESIDES over the executive branch."
+          },
+          {
+            "q": "What is the highest court in the United States?",
+            "choices": [
+              "The Supreme Court",
+              "The High Court of Congress",
+              "The White House Court",
+              "The State Court"
+            ],
+            "answer": 0,
+            "explain": "The Supreme Court is the highest court in the nation.",
+            "tip": "Supreme means the top, the best, the highest court."
+          },
+          {
+            "q": "Why does the government have three branches?",
+            "choices": [
+              "So no one branch becomes too powerful",
+              "So there are more holidays",
+              "So the President can make all the decisions",
+              "To make laws faster"
+            ],
+            "answer": 0,
+            "explain": "Splitting power among three branches, with checks and balances, keeps any one branch from becoming too powerful.",
+            "tip": "Three branches share the power, like friends sharing a pizza so no one hogs it."
+          },
+          {
+            "q": "What is it called when the President rejects a bill passed by Congress?",
+            "choices": [
+              "A veto",
+              "A vote",
+              "A verdict",
+              "A ballot"
+            ],
+            "answer": 0,
+            "explain": "The President can veto, or reject, a bill.",
+            "tip": "Veto is Latin for I forbid; the President says no way, veto!"
+          },
+          {
+            "q": "How many justices are on the Supreme Court?",
+            "choices": [
+              "9",
+              "5",
+              "12",
+              "50"
+            ],
+            "answer": 0,
+            "explain": "The Supreme Court has nine justices, including the Chief Justice.",
+            "tip": "Nine justices, like nine players on a baseball team."
+          }
+        ]
+      },
+      {
+        "name": "The Constitution and Bill of Rights",
+        "questions": [
+          {
+            "q": "What is the supreme law of the land?",
+            "choices": [
+              "The Constitution",
+              "The Declaration of Independence",
+              "The Pledge of Allegiance",
+              "The national anthem"
+            ],
+            "answer": 0,
+            "explain": "The Constitution is the supreme law of the United States.",
+            "tip": "The Constitution is the boss of all the laws."
+          },
+          {
+            "q": "In which year was the Constitution written?",
+            "choices": [
+              "1787",
+              "1776",
+              "1492",
+              "1865"
+            ],
+            "answer": 0,
+            "explain": "The Constitution was written at the Constitutional Convention in 1787.",
+            "tip": "In 1787, the Constitution came to heaven: 11 years after 1776."
+          },
+          {
+            "q": "In which city was the Constitution written?",
+            "choices": [
+              "Philadelphia",
+              "Washington, D.C.",
+              "Boston",
+              "New York City"
+            ],
+            "answer": 0,
+            "explain": "Delegates met in Philadelphia in 1787 to write the Constitution.",
+            "tip": "Philadelphia is America's birthplace: the Declaration AND the Constitution were written there."
+          },
+          {
+            "q": "What are the first three words of the Constitution?",
+            "choices": [
+              "We the People",
+              "Four score and",
+              "In the beginning",
+              "Hear ye, hear ye"
+            ],
+            "answer": 0,
+            "explain": "The Constitution begins with We the People, showing that the government gets its power from the people.",
+            "tip": "We the People: the people are in charge!"
+          },
+          {
+            "q": "What is an amendment?",
+            "choices": [
+              "A change or addition to the Constitution",
+              "A type of court",
+              "A tax",
+              "A kind of election"
+            ],
+            "answer": 0,
+            "explain": "An amendment is a change or addition to the Constitution.",
+            "tip": "Amend means mend or fix: an amendment changes the Constitution."
+          },
+          {
+            "q": "What do we call the first ten amendments to the Constitution?",
+            "choices": [
+              "The Bill of Rights",
+              "The Preamble",
+              "The Declaration",
+              "The Articles of Confederation"
+            ],
+            "answer": 0,
+            "explain": "The first ten amendments are called the Bill of Rights.",
+            "tip": "Ten fingers, ten rights: the Bill of Rights is the first ten."
+          },
+          {
+            "q": "Which right is protected by the First Amendment?",
+            "choices": [
+              "Freedom of speech",
+              "The right to drive a car",
+              "The right to a free house",
+              "The right to skip school"
+            ],
+            "answer": 0,
+            "explain": "The First Amendment protects freedom of speech, religion, press, assembly and petition.",
+            "tip": "First comes first: speech, the right to speak your mind."
+          },
+          {
+            "q": "Who is called the Father of the Constitution?",
+            "choices": [
+              "James Madison",
+              "Abraham Lincoln",
+              "Thomas Edison",
+              "Paul Revere"
+            ],
+            "answer": 0,
+            "explain": "James Madison did so much planning and writing for the Constitution that he is called its father.",
+            "tip": "MADison MADe the Constitution plan."
+          },
+          {
+            "q": "How many amendments does the Constitution have?",
+            "choices": [
+              "27",
+              "10",
+              "50",
+              "13"
+            ],
+            "answer": 0,
+            "explain": "The Constitution has 27 amendments.",
+            "tip": "27 amendments: 2 plus 7 is 9, like the number of Supreme Court justices."
+          },
+          {
+            "q": "What is the short opening part of the Constitution called?",
+            "choices": [
+              "The Preamble",
+              "The Conclusion",
+              "The Chorus",
+              "The Index"
+            ],
+            "answer": 0,
+            "explain": "The Preamble is the introduction that explains the purposes of the Constitution.",
+            "tip": "PRE-amble: PRE means before, the part that comes before everything else."
+          },
+          {
+            "q": "True or false: The Constitution can never be changed.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 1,
+            "explain": "False! The Constitution can be changed through amendments. It has 27 of them.",
+            "tip": "The Constitution can be updated: 27 changes so far."
+          }
+        ]
+      },
+      {
+        "name": "The Declaration of Independence",
+        "questions": [
+          {
+            "q": "In which year was the Declaration of Independence adopted?",
+            "choices": [
+              "1776",
+              "1787",
+              "1620",
+              "1812"
+            ],
+            "answer": 0,
+            "explain": "The Declaration of Independence was adopted on July 4, 1776.",
+            "tip": "Spirit of '76: 1776 is the year America said goodbye to Britain."
+          },
+          {
+            "q": "Who was the main writer of the Declaration of Independence?",
+            "choices": [
+              "Thomas Jefferson",
+              "George Washington",
+              "Abraham Lincoln",
+              "John Adams"
+            ],
+            "answer": 0,
+            "explain": "Thomas Jefferson wrote most of the Declaration of Independence.",
+            "tip": "Jefferson's pen wrote the Declaration then."
+          },
+          {
+            "q": "What did the Declaration of Independence do?",
+            "choices": [
+              "Announced that the colonies were free from Great Britain",
+              "Created the Supreme Court",
+              "Ended the Civil War",
+              "Made Washington, D.C. the capital"
+            ],
+            "answer": 0,
+            "explain": "It declared that the 13 colonies were independent from Great Britain.",
+            "tip": "INDEPENDENCE means we don't depend on Britain anymore."
+          },
+          {
+            "q": "From which country did the colonies declare independence?",
+            "choices": [
+              "Great Britain",
+              "France",
+              "Spain",
+              "Canada"
+            ],
+            "answer": 0,
+            "explain": "The colonies declared independence from Great Britain.",
+            "tip": "Bye-bye, Britain! The colonies broke up with Great Britain."
+          },
+          {
+            "q": "Which three rights does the Declaration of Independence name?",
+            "choices": [
+              "Life, liberty and the pursuit of happiness",
+              "Food, water and shelter",
+              "Speech, press and religion",
+              "Voting, driving and working"
+            ],
+            "answer": 0,
+            "explain": "The Declaration says people have rights to life, liberty and the pursuit of happiness.",
+            "tip": "L, L, H: Life, Liberty and the pursuit of Happiness."
+          },
+          {
+            "q": "How many colonies declared independence in 1776?",
+            "choices": [
+              "13",
+              "50",
+              "10",
+              "7"
+            ],
+            "answer": 0,
+            "explain": "The 13 colonies declared independence together.",
+            "tip": "13 colonies, 13 stripes on the flag."
+          },
+          {
+            "q": "Who was the king of Great Britain when the colonies declared independence?",
+            "choices": [
+              "King George III",
+              "King Henry VIII",
+              "King Arthur",
+              "King Louis XVI"
+            ],
+            "answer": 0,
+            "explain": "King George III ruled Great Britain during the American Revolution.",
+            "tip": "George vs. George: King George III lost to General George Washington."
+          },
+          {
+            "q": "Which group of colonial leaders approved the Declaration of Independence?",
+            "choices": [
+              "The Second Continental Congress",
+              "The Supreme Court",
+              "The Senate",
+              "The Cabinet"
+            ],
+            "answer": 0,
+            "explain": "The Second Continental Congress, meeting in Philadelphia, approved the Declaration.",
+            "tip": "The Continental Congress gathered delegates from across the continent."
+          },
+          {
+            "q": "Why were many colonists angry with Great Britain?",
+            "choices": [
+              "They were taxed without having a vote in Parliament",
+              "Britain gave them too much freedom",
+              "Britain built them too many schools",
+              "They wanted a king of their own"
+            ],
+            "answer": 0,
+            "explain": "Colonists objected to taxation without representation and other British policies.",
+            "tip": "No taxation without representation: no say, no pay!"
+          },
+          {
+            "q": "Which holiday celebrates the Declaration of Independence?",
+            "choices": [
+              "Independence Day",
+              "Thanksgiving",
+              "Labor Day",
+              "Presidents Day"
+            ],
+            "answer": 0,
+            "explain": "Independence Day, July 4, celebrates the adoption of the Declaration in 1776.",
+            "tip": "Independence Day celebrates the Declaration of Independence: same word, same day."
+          }
+        ]
+      },
+      {
+        "name": "How a bill becomes a law",
+        "questions": [
+          {
+            "q": "What is a bill?",
+            "choices": [
+              "An idea for a new law",
+              "A law that was cancelled",
+              "A court decision",
+              "A President's speech"
+            ],
+            "answer": 0,
+            "explain": "A bill is a proposed law that Congress considers.",
+            "tip": "A bill is a law's baby picture: a law before it grows up."
+          },
+          {
+            "q": "Who can introduce a bill in Congress?",
+            "choices": [
+              "A member of Congress",
+              "Only the President",
+              "Only a judge",
+              "Any child"
+            ],
+            "answer": 0,
+            "explain": "Only members of Congress can introduce bills, but anyone can suggest an idea to them.",
+            "tip": "Only lawmakers make law proposals."
+          },
+          {
+            "q": "After a bill is introduced, where does it usually go first to be studied?",
+            "choices": [
+              "A committee",
+              "The Supreme Court",
+              "The White House",
+              "A state governor"
+            ],
+            "answer": 0,
+            "explain": "Committees study bills, hold hearings and decide whether to send them to a vote.",
+            "tip": "Committee: where a bill sits and gets a good look."
+          },
+          {
+            "q": "Which parts of Congress must pass a bill before it goes to the President?",
+            "choices": [
+              "Both the House and the Senate",
+              "Only the Senate",
+              "Only the House",
+              "Neither"
+            ],
+            "answer": 0,
+            "explain": "Both the House and the Senate must pass the same bill.",
+            "tip": "Two houses, two yeses, then the President."
+          },
+          {
+            "q": "What happens when the President signs a bill?",
+            "choices": [
+              "It becomes a law",
+              "It is thrown away",
+              "It goes to the Supreme Court automatically",
+              "It goes back to committee"
+            ],
+            "answer": 0,
+            "explain": "When the President signs a bill, it becomes law.",
+            "tip": "Signed, sealed, it's a law!"
+          },
+          {
+            "q": "If the President vetoes a bill, how can Congress still make it a law?",
+            "choices": [
+              "By a two-thirds vote in both the House and Senate",
+              "By asking the Supreme Court",
+              "By waiting one year",
+              "It can never become a law"
+            ],
+            "answer": 0,
+            "explain": "Congress can override a veto with a two-thirds vote in both houses.",
+            "tip": "Two-thirds to override: Congress needs a super big team to win."
+          },
+          {
+            "q": "Who signs bills to make them laws?",
+            "choices": [
+              "The President",
+              "The Chief Justice",
+              "The Speaker of the House",
+              "A governor"
+            ],
+            "answer": 0,
+            "explain": "The President signs bills into law.",
+            "tip": "The President's pen turns bills into laws."
+          },
+          {
+            "q": "Can ordinary citizens help a bill become a law?",
+            "choices": [
+              "Yes, by contacting their members of Congress",
+              "No, never",
+              "Only if they are judges",
+              "Only if they live in the White House"
+            ],
+            "answer": 0,
+            "explain": "Citizens can share ideas and opinions with their representatives and senators.",
+            "tip": "Write, call or email: your idea can travel to Congress."
+          },
+          {
+            "q": "True or false: A bill passed only by the Senate becomes a law.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 1,
+            "explain": "False. Both the House and the Senate must pass it, and then it goes to the President.",
+            "tip": "One house is half the job: both houses must say yes."
+          },
+          {
+            "q": "What is it called when Congress votes to cancel a President's veto?",
+            "choices": [
+              "An override",
+              "An election",
+              "An impeachment",
+              "A recount"
+            ],
+            "answer": 0,
+            "explain": "Overriding a veto takes a two-thirds vote in both the House and the Senate.",
+            "tip": "OVERride: Congress rides over the veto."
+          }
+        ]
+      },
+      {
+        "name": "States and the nation",
+        "questions": [
+          {
+            "q": "How many states are in the United States?",
+            "choices": [
+              "50",
+              "13",
+              "48",
+              "52"
+            ],
+            "answer": 0,
+            "explain": "There are 50 states.",
+            "tip": "50 states, 50 stars."
+          },
+          {
+            "q": "What is the national government in Washington, D.C. called?",
+            "choices": [
+              "The federal government",
+              "The county government",
+              "The city council",
+              "The school board"
+            ],
+            "answer": 0,
+            "explain": "The national government is called the federal government.",
+            "tip": "Federal = national, the government for the whole nation."
+          },
+          {
+            "q": "Who is the leader of a state's executive branch?",
+            "choices": [
+              "The governor",
+              "The President",
+              "The mayor",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "A governor leads each state.",
+            "tip": "Governor GOVERNs the state."
+          },
+          {
+            "q": "Which of these is a power of the federal government?",
+            "choices": [
+              "Printing money",
+              "Issuing driver's licenses",
+              "Running local fire departments",
+              "Setting school bus routes"
+            ],
+            "answer": 0,
+            "explain": "Only the federal government prints money. States handle things like driver's licenses.",
+            "tip": "Big national jobs like printing money, declaring war and making treaties belong to the federal government."
+          },
+          {
+            "q": "Which of these is a power of state governments?",
+            "choices": [
+              "Issuing driver's licenses",
+              "Declaring war",
+              "Printing money",
+              "Making treaties with other countries"
+            ],
+            "answer": 0,
+            "explain": "States issue driver's licenses. The federal government declares war, prints money and makes treaties.",
+            "tip": "Your driver's license has your STATE's name on it."
+          },
+          {
+            "q": "Does each state have its own constitution?",
+            "choices": [
+              "Yes",
+              "No"
+            ],
+            "answer": 0,
+            "explain": "Every state has its own constitution, but it cannot go against the US Constitution.",
+            "tip": "Every state has its own rule book, but the US Constitution is the big boss."
+          },
+          {
+            "q": "What is the city where a state's government meets called?",
+            "choices": [
+              "The state capital",
+              "The county seat of the nation",
+              "The White House",
+              "The harbor"
+            ],
+            "answer": 0,
+            "explain": "Each state has a capital city where its government meets.",
+            "tip": "Capital with an A for the city, like a capital A at the start of a sentence."
+          },
+          {
+            "q": "Is Washington, D.C. a state?",
+            "choices": [
+              "No, it is a federal district",
+              "Yes, it is the 51st state",
+              "Yes, it is the first state",
+              "No, it is part of Virginia"
+            ],
+            "answer": 0,
+            "explain": "Washington, D.C. is a federal district, not a state.",
+            "tip": "D.C. stands for District of Columbia: a district, not a state."
+          },
+          {
+            "q": "Who makes the laws for a state?",
+            "choices": [
+              "The state legislature",
+              "The President",
+              "The Supreme Court",
+              "The mayor"
+            ],
+            "answer": 0,
+            "explain": "Each state has a legislature that makes state laws.",
+            "tip": "Each state has a mini-Congress: the state legislature."
+          },
+          {
+            "q": "Which two countries border the United States?",
+            "choices": [
+              "Canada and Mexico",
+              "Brazil and Cuba",
+              "England and France",
+              "Japan and Russia"
+            ],
+            "answer": 0,
+            "explain": "Canada is to the north and Mexico is to the south.",
+            "tip": "Canada on the top, Mexico at the bottom, like a sandwich."
+          }
+        ]
+      }
+    ],
+    "g68": [
+      {
+        "name": "Articles of the Constitution",
+        "questions": [
+          {
+            "q": "How many articles are in the original Constitution?",
+            "choices": [
+              "7",
+              "10",
+              "13",
+              "27"
+            ],
+            "answer": 0,
+            "explain": "The Constitution has seven articles, followed by its amendments.",
+            "tip": "Seven articles, like seven days of the week."
+          },
+          {
+            "q": "Which article of the Constitution creates Congress?",
+            "choices": [
+              "Article I",
+              "Article II",
+              "Article III",
+              "Article VI"
+            ],
+            "answer": 0,
+            "explain": "Article I sets up the legislative branch, Congress.",
+            "tip": "LEJ in order: Article I Legislative, II Executive, III Judicial."
+          },
+          {
+            "q": "Which article of the Constitution creates the presidency?",
+            "choices": [
+              "Article II",
+              "Article I",
+              "Article III",
+              "Article V"
+            ],
+            "answer": 0,
+            "explain": "Article II sets up the executive branch.",
+            "tip": "Article II, second in line, just like the executive enforces after Congress makes laws."
+          },
+          {
+            "q": "Which article of the Constitution creates the Supreme Court?",
+            "choices": [
+              "Article III",
+              "Article I",
+              "Article II",
+              "Article IV"
+            ],
+            "answer": 0,
+            "explain": "Article III sets up the judicial branch.",
+            "tip": "Article III: three for the third branch, the courts."
+          },
+          {
+            "q": "Which article explains how to amend the Constitution?",
+            "choices": [
+              "Article V",
+              "Article I",
+              "Article VII",
+              "Article III"
+            ],
+            "answer": 0,
+            "explain": "Article V describes how amendments are proposed and ratified.",
+            "tip": "Article V: Five rhymes with revise."
+          },
+          {
+            "q": "Article VI makes the Constitution and federal laws the supreme law of the land. What is this part called?",
+            "choices": [
+              "The Supremacy Clause",
+              "The Elastic Clause",
+              "The Commerce Clause",
+              "The Preamble"
+            ],
+            "answer": 0,
+            "explain": "The Supremacy Clause in Article VI says federal law wins when it conflicts with state law.",
+            "tip": "Supremacy sounds like supreme: federal law is top dog."
+          },
+          {
+            "q": "According to Article VII, how many states had to ratify the Constitution for it to take effect?",
+            "choices": [
+              "9",
+              "13",
+              "7",
+              "6"
+            ],
+            "answer": 0,
+            "explain": "Ratification by nine of the thirteen states was required.",
+            "tip": "Nine to sign: 9 of 13 states had to say yes."
+          },
+          {
+            "q": "Which article deals with how states treat each other, such as respecting each other's public records?",
+            "choices": [
+              "Article IV",
+              "Article II",
+              "Article V",
+              "Article VII"
+            ],
+            "answer": 0,
+            "explain": "Article IV covers relations among the states, including the Full Faith and Credit Clause.",
+            "tip": "Article IV: four is for fellow states."
+          },
+          {
+            "q": "What plan of government did the Constitution replace?",
+            "choices": [
+              "The Articles of Confederation",
+              "The Magna Carta",
+              "The Mayflower Compact",
+              "The Bill of Rights"
+            ],
+            "answer": 0,
+            "explain": "The Articles of Confederation created a weak national government and were replaced by the Constitution.",
+            "tip": "Articles of Confederation were Attempt One, the Constitution is Attempt Two."
+          },
+          {
+            "q": "What was a major weakness of the Articles of Confederation?",
+            "choices": [
+              "Congress could not collect taxes",
+              "The President had too much power",
+              "The Supreme Court had too much power",
+              "There were too many states"
+            ],
+            "answer": 0,
+            "explain": "Under the Articles, Congress could not tax and there was no national executive or court system.",
+            "tip": "No taxes, no money, no power: the Articles had empty pockets."
+          },
+          {
+            "q": "The Great Compromise created a Congress with two houses. How is each state represented?",
+            "choices": [
+              "Equally in the Senate and by population in the House",
+              "By population in both houses",
+              "Equally in both houses",
+              "By land area in both houses"
+            ],
+            "answer": 0,
+            "explain": "Each state gets two senators, while House seats are based on population.",
+            "tip": "Senate is the Same for every state; the House grows with how many people live there."
+          }
+        ]
+      },
+      {
+        "name": "Key amendments",
+        "questions": [
+          {
+            "q": "Which amendment abolished slavery?",
+            "choices": [
+              "13th",
+              "1st",
+              "19th",
+              "26th"
+            ],
+            "answer": 0,
+            "explain": "The 13th Amendment, ratified in 1865, abolished slavery.",
+            "tip": "13 ended slavery: 13 set all free."
+          },
+          {
+            "q": "Which amendment gave women the right to vote?",
+            "choices": [
+              "19th",
+              "13th",
+              "15th",
+              "21st"
+            ],
+            "answer": 0,
+            "explain": "The 19th Amendment, ratified in 1920, protects women's right to vote.",
+            "tip": "19 for women in 1920: 19 and 1920 share the 19."
+          },
+          {
+            "q": "Which amendment lowered the voting age to 18?",
+            "choices": [
+              "26th",
+              "19th",
+              "22nd",
+              "15th"
+            ],
+            "answer": 0,
+            "explain": "The 26th Amendment, ratified in 1971, set the voting age at 18.",
+            "tip": "26 makes 18 vote: 2 times 13 is 26, and 18 can finally vote."
+          },
+          {
+            "q": "Which amendment says citizens cannot be denied the vote because of race or color?",
+            "choices": [
+              "15th",
+              "19th",
+              "10th",
+              "18th"
+            ],
+            "answer": 0,
+            "explain": "The 15th Amendment, ratified in 1870, banned denying the vote based on race.",
+            "tip": "13 freed, 14 made citizens, 15 let them vote: a 13-14-15 staircase to freedom."
+          },
+          {
+            "q": "Which amendment says that all persons born in the United States are citizens and guarantees equal protection of the laws?",
+            "choices": [
+              "14th",
+              "2nd",
+              "5th",
+              "25th"
+            ],
+            "answer": 0,
+            "explain": "The 14th Amendment, ratified in 1868, defines citizenship and guarantees due process and equal protection.",
+            "tip": "14 is for citizens and equal protection: 14 lines up everyone equally."
+          },
+          {
+            "q": "Which amendment protects freedom of religion, speech, press, assembly and petition?",
+            "choices": [
+              "1st",
+              "2nd",
+              "4th",
+              "10th"
+            ],
+            "answer": 0,
+            "explain": "All five freedoms are in the First Amendment.",
+            "tip": "RAPPS: Religion, Assembly, Press, Petition, Speech, all in the First."
+          },
+          {
+            "q": "Which amendment protects against unreasonable searches and seizures?",
+            "choices": [
+              "4th",
+              "1st",
+              "8th",
+              "6th"
+            ],
+            "answer": 0,
+            "explain": "The 4th Amendment generally requires warrants based on probable cause.",
+            "tip": "Fourth for your door: police need a warrant to come through it."
+          },
+          {
+            "q": "Pleading the Fifth means refusing to do what?",
+            "choices": [
+              "Testify against yourself",
+              "Pay taxes",
+              "Serve in the military",
+              "Vote"
+            ],
+            "answer": 0,
+            "explain": "The 5th Amendment protects people from being forced to be witnesses against themselves.",
+            "tip": "Take the Fifth and keep your lips shut: you don't have to testify against yourself."
+          },
+          {
+            "q": "Which amendment limits a President to being elected twice?",
+            "choices": [
+              "22nd",
+              "12th",
+              "25th",
+              "20th"
+            ],
+            "answer": 0,
+            "explain": "The 22nd Amendment, ratified in 1951, says no one can be elected President more than twice.",
+            "tip": "22: two 2s, two terms."
+          },
+          {
+            "q": "Which amendment says senators are elected directly by the people?",
+            "choices": [
+              "17th",
+              "16th",
+              "12th",
+              "24th"
+            ],
+            "answer": 0,
+            "explain": "Before the 17th Amendment (1913), state legislatures chose senators.",
+            "tip": "17: Seventeen, the people pick senators clean."
+          },
+          {
+            "q": "Which amendment bans cruel and unusual punishment?",
+            "choices": [
+              "8th",
+              "4th",
+              "6th",
+              "3rd"
+            ],
+            "answer": 0,
+            "explain": "The 8th Amendment bans cruel and unusual punishment and excessive bail and fines.",
+            "tip": "Eight is great: no cruel punishment, no huge bail."
+          }
+        ]
+      },
+      {
+        "name": "Checks and balances",
+        "questions": [
+          {
+            "q": "What does checks and balances mean?",
+            "choices": [
+              "Each branch can limit the power of the other branches",
+              "The government checks your bank balance",
+              "Only the President can make decisions",
+              "States control the federal government"
+            ],
+            "answer": 0,
+            "explain": "Checks and balances let each branch limit the others so no branch becomes too powerful.",
+            "tip": "Like a seesaw: each branch balances the others so none goes too high."
+          },
+          {
+            "q": "How can the President check Congress?",
+            "choices": [
+              "By vetoing bills",
+              "By removing members of Congress",
+              "By cancelling elections",
+              "By writing new amendments alone"
+            ],
+            "answer": 0,
+            "explain": "The President can veto bills passed by Congress.",
+            "tip": "The President's veto is a big red NO stamp."
+          },
+          {
+            "q": "How can Congress check a President's veto?",
+            "choices": [
+              "Override it with a two-thirds vote in both houses",
+              "Ask the governors to vote",
+              "Hold a new presidential election",
+              "Ignore it"
+            ],
+            "answer": 0,
+            "explain": "A two-thirds vote in both the House and Senate overrides a veto.",
+            "tip": "Two-thirds beats the veto: 67 senators and 290 representatives if everyone votes."
+          },
+          {
+            "q": "Who nominates Supreme Court justices?",
+            "choices": [
+              "The President",
+              "The House of Representatives",
+              "The governors",
+              "The voters"
+            ],
+            "answer": 0,
+            "explain": "The President nominates federal judges, including Supreme Court justices.",
+            "tip": "President Picks, Senate Says yes: P then S."
+          },
+          {
+            "q": "Who must confirm a President's nominee for the Supreme Court?",
+            "choices": [
+              "The Senate",
+              "The House of Representatives",
+              "The Chief Justice",
+              "The voters"
+            ],
+            "answer": 0,
+            "explain": "The Senate must give its advice and consent to confirm judicial nominees.",
+            "tip": "The Senate has the final say on judges: Senate Seats the justices."
+          },
+          {
+            "q": "What fraction of the Senate must approve a treaty?",
+            "choices": [
+              "Two-thirds",
+              "One-half",
+              "Three-fourths",
+              "One-third"
+            ],
+            "answer": 0,
+            "explain": "Treaties need the approval of two-thirds of the senators present.",
+            "tip": "Treaty takes two-thirds."
+          },
+          {
+            "q": "Which part of Congress has the power to impeach, or formally charge, a federal official?",
+            "choices": [
+              "The House of Representatives",
+              "The Senate",
+              "The Supreme Court",
+              "The Cabinet"
+            ],
+            "answer": 0,
+            "explain": "The House impeaches, and the Senate holds the trial.",
+            "tip": "House Hands up charges; Senate Sits as the jury."
+          },
+          {
+            "q": "How many senators must vote to convict an impeached official and remove them from office?",
+            "choices": [
+              "Two-thirds",
+              "A simple majority",
+              "All 100",
+              "Three-fourths"
+            ],
+            "answer": 0,
+            "explain": "Conviction in an impeachment trial requires two-thirds of the senators present.",
+            "tip": "Two-thirds to remove: the bar is high on purpose."
+          },
+          {
+            "q": "What is the power of courts to strike down laws that violate the Constitution called?",
+            "choices": [
+              "Judicial review",
+              "Executive order",
+              "Veto power",
+              "Filibuster"
+            ],
+            "answer": 0,
+            "explain": "Judicial review lets courts declare laws or actions unconstitutional.",
+            "tip": "Judges review the laws: judicial review."
+          },
+          {
+            "q": "Which branch has the power to declare war?",
+            "choices": [
+              "Congress",
+              "The President",
+              "The Supreme Court",
+              "The states"
+            ],
+            "answer": 0,
+            "explain": "The Constitution gives Congress the power to declare war. The President is Commander in Chief.",
+            "tip": "Congress Declares, the President Commands."
+          },
+          {
+            "q": "Which branch controls federal spending, sometimes called the power of the purse?",
+            "choices": [
+              "Congress",
+              "The President",
+              "The Supreme Court",
+              "The Federal Reserve"
+            ],
+            "answer": 0,
+            "explain": "Congress must approve taxes and spending.",
+            "tip": "Congress holds the purse strings, like a parent with the allowance."
+          }
+        ]
+      },
+      {
+        "name": "Federalism",
+        "questions": [
+          {
+            "q": "What is federalism?",
+            "choices": [
+              "Power is shared between the national government and the states",
+              "All power belongs to the national government",
+              "All power belongs to the states",
+              "Power belongs to one ruler"
+            ],
+            "answer": 0,
+            "explain": "In federalism, the national and state governments each have their own powers.",
+            "tip": "Federalism is a layer cake: national on top, states underneath, both with their own powers."
+          },
+          {
+            "q": "Which amendment says powers not given to the federal government are reserved to the states or the people?",
+            "choices": [
+              "10th",
+              "1st",
+              "14th",
+              "9th"
+            ],
+            "answer": 0,
+            "explain": "The 10th Amendment reserves powers to the states or the people.",
+            "tip": "10th for the states: the last one in the Bill of Rights saves the rest for the states."
+          },
+          {
+            "q": "Powers that both the federal and state governments have, like collecting taxes, are called what?",
+            "choices": [
+              "Concurrent powers",
+              "Reserved powers",
+              "Enumerated powers",
+              "Implied powers"
+            ],
+            "answer": 0,
+            "explain": "Concurrent powers are shared, such as taxing and making courts.",
+            "tip": "Concurrent means at the same time, like current flowing in two wires."
+          },
+          {
+            "q": "Powers specifically listed in the Constitution for Congress are called what?",
+            "choices": [
+              "Enumerated powers",
+              "Reserved powers",
+              "Concurrent powers",
+              "State powers"
+            ],
+            "answer": 0,
+            "explain": "Enumerated, or expressed, powers are listed, mostly in Article I, Section 8.",
+            "tip": "Enumerated sounds like numbered: they are listed one by one."
+          },
+          {
+            "q": "If a state law conflicts with a valid federal law, which one wins?",
+            "choices": [
+              "The federal law",
+              "The state law",
+              "Whichever is older",
+              "Neither one"
+            ],
+            "answer": 0,
+            "explain": "Under the Supremacy Clause, valid federal law overrides conflicting state law.",
+            "tip": "Federal beats state, like an ace beats a king."
+          },
+          {
+            "q": "Which of these is a power of the federal government?",
+            "choices": [
+              "Making treaties",
+              "Providing police protection in towns",
+              "Approving zoning for a neighborhood",
+              "Issuing driver's licenses"
+            ],
+            "answer": 0,
+            "explain": "Making treaties is a federal power. The others are state or local.",
+            "tip": "Big national jobs like printing money, declaring war and making treaties belong to the federal government."
+          },
+          {
+            "q": "Which of these is mainly a power of state governments?",
+            "choices": [
+              "Providing schooling and education",
+              "Creating an army",
+              "Printing money",
+              "Declaring war"
+            ],
+            "answer": 0,
+            "explain": "USCIS lists providing schooling, police protection and driver's licenses as state powers.",
+            "tip": "Schools are state-run: S for state, S for school."
+          },
+          {
+            "q": "The clause letting Congress make laws needed to carry out its listed powers is often called what?",
+            "choices": [
+              "The Elastic Clause",
+              "The Supremacy Clause",
+              "The Establishment Clause",
+              "The Due Process Clause"
+            ],
+            "answer": 0,
+            "explain": "The Necessary and Proper Clause is nicknamed the Elastic Clause because it stretches Congress's powers.",
+            "tip": "Elastic stretches like a rubber band, and so does Congress's power."
+          },
+          {
+            "q": "Which type of government gives most power to the states, like under the Articles of Confederation?",
+            "choices": [
+              "A confederation",
+              "A monarchy",
+              "A unitary government",
+              "A dictatorship"
+            ],
+            "answer": 0,
+            "explain": "In a confederation, states keep most power and the central government is weak.",
+            "tip": "Confederation = a club of states where the club itself is weak."
+          },
+          {
+            "q": "Who leads a state's executive branch?",
+            "choices": [
+              "The governor",
+              "The President",
+              "The lieutenant mayor",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "The governor heads the executive branch of a state.",
+            "tip": "Governor governs."
+          }
+        ]
+      },
+      {
+        "name": "Rights and responsibilities",
+        "questions": [
+          {
+            "q": "Which is a responsibility that is only for United States citizens?",
+            "choices": [
+              "Vote in a federal election",
+              "Pay taxes",
+              "Obey the law",
+              "Respect others' rights"
+            ],
+            "answer": 0,
+            "explain": "USCIS lists serving on a jury and voting in federal elections as responsibilities only for citizens.",
+            "tip": "Citizens only: Vote and Jury, V and J."
+          },
+          {
+            "q": "Which is a right of everyone living in the United States, not just citizens?",
+            "choices": [
+              "Freedom of speech",
+              "Voting in federal elections",
+              "Running for President",
+              "Serving on a federal jury"
+            ],
+            "answer": 0,
+            "explain": "Freedom of speech, religion, assembly and petition protect everyone in the US.",
+            "tip": "Speech is for everyone who's here."
+          },
+          {
+            "q": "Which is a right only for United States citizens?",
+            "choices": [
+              "Run for federal office",
+              "Freedom of religion",
+              "Freedom of speech",
+              "Freedom of assembly"
+            ],
+            "answer": 0,
+            "explain": "USCIS lists voting in federal elections and running for federal office as rights only for citizens.",
+            "tip": "To run for federal office, you must be a citizen first."
+          },
+          {
+            "q": "What is the rule of law?",
+            "choices": [
+              "Everyone must follow the law, including leaders",
+              "Only citizens must follow the law",
+              "The President is above the law",
+              "Laws apply only in courts"
+            ],
+            "answer": 0,
+            "explain": "The rule of law means no one is above the law, including government leaders.",
+            "tip": "Rule of law: nobody is above it, not even the President."
+          },
+          {
+            "q": "What do we show loyalty to when we say the Pledge of Allegiance?",
+            "choices": [
+              "The United States and the flag",
+              "A political party",
+              "A state governor",
+              "A sports team"
+            ],
+            "answer": 0,
+            "explain": "The Pledge shows loyalty to the United States and to the flag.",
+            "tip": "Allegiance means loyalty: to the flag and the nation."
+          },
+          {
+            "q": "At what age must most young men register for the Selective Service?",
+            "choices": [
+              "18",
+              "16",
+              "21",
+              "25"
+            ],
+            "answer": 0,
+            "explain": "Men must register with the Selective Service at age 18 (between 18 and 26).",
+            "tip": "Turn 18, register: a birthday to-do."
+          },
+          {
+            "q": "What does freedom of religion mean?",
+            "choices": [
+              "You can practice any religion, or not practice a religion",
+              "Everyone must follow the same religion",
+              "Religion is not allowed",
+              "Only leaders can choose a religion"
+            ],
+            "answer": 0,
+            "explain": "Freedom of religion lets you practice any religion or none at all.",
+            "tip": "Freedom of religion means freedom to choose: any faith or none."
+          },
+          {
+            "q": "Which of these is a way Americans can take part in their democracy?",
+            "choices": [
+              "Write to an elected official",
+              "Ignore all laws",
+              "Vote more than once",
+              "Refuse all jury summons"
+            ],
+            "answer": 0,
+            "explain": "USCIS lists voting, joining a civic group, contacting officials and helping campaigns, among others.",
+            "tip": "Participation is a team sport: write, vote, volunteer."
+          },
+          {
+            "q": "What is the idea of self-government expressed in the first three words of the Constitution?",
+            "choices": [
+              "We the People",
+              "Life, liberty, happiness",
+              "E pluribus unum",
+              "Liberty and justice"
+            ],
+            "answer": 0,
+            "explain": "We the People means the people govern themselves.",
+            "tip": "We the People: WE run the show."
+          },
+          {
+            "q": "What is the economic system of the United States?",
+            "choices": [
+              "A market economy (capitalist economy)",
+              "A feudal system",
+              "A barter-only system",
+              "A command economy"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts capitalist economy or market economy.",
+            "tip": "Market economy: like a giant farmers' market where people buy and sell freely."
+          },
+          {
+            "q": "Who lived in America before the Europeans arrived?",
+            "choices": [
+              "American Indians (Native Americans)",
+              "The French",
+              "The Vikings only",
+              "No one"
+            ],
+            "answer": 0,
+            "explain": "American Indians, or Native Americans, lived here long before Europeans arrived.",
+            "tip": "Native means born here: Native Americans were here first."
+          }
+        ]
+      }
+    ],
+    "g912": [
+      {
+        "name": "The amendments",
+        "questions": [
+          {
+            "q": "What did the 12th Amendment change?",
+            "choices": [
+              "Electors cast separate votes for President and Vice President",
+              "It created the income tax",
+              "It set presidential term limits",
+              "It gave women the vote"
+            ],
+            "answer": 0,
+            "explain": "After the 1800 Jefferson-Burr electoral tie, the 12th Amendment (1804) required separate electoral votes for President and Vice President.",
+            "tip": "12 split the ticket: President and VP get separate votes."
+          },
+          {
+            "q": "Which amendment allows Congress to collect an income tax?",
+            "choices": [
+              "16th",
+              "18th",
+              "24th",
+              "11th"
+            ],
+            "answer": 0,
+            "explain": "The 16th Amendment (1913) allows a federal income tax without apportioning it among the states.",
+            "tip": "16 = income tax: sweet 16 gets a paycheck, and the IRS takes a cut."
+          },
+          {
+            "q": "Which amendment established Prohibition, banning alcoholic beverages?",
+            "choices": [
+              "18th",
+              "21st",
+              "16th",
+              "19th"
+            ],
+            "answer": 0,
+            "explain": "The 18th Amendment (1919) began Prohibition.",
+            "tip": "18 banned the drink: ironic, since 18 sounds like a grown-up age."
+          },
+          {
+            "q": "Which amendment repealed Prohibition?",
+            "choices": [
+              "21st",
+              "18th",
+              "20th",
+              "23rd"
+            ],
+            "answer": 0,
+            "explain": "The 21st Amendment (1933) repealed the 18th. It is the only amendment that repealed another.",
+            "tip": "21 undid 18: 21 is today's drinking age too."
+          },
+          {
+            "q": "Which amendment moved the start of presidential terms to January 20?",
+            "choices": [
+              "20th",
+              "22nd",
+              "25th",
+              "12th"
+            ],
+            "answer": 0,
+            "explain": "The 20th Amendment (1933), the Lame Duck Amendment, set January 20 for presidential terms and January 3 for Congress.",
+            "tip": "20th Amendment, January 20: twenty and twenty."
+          },
+          {
+            "q": "Which amendment gave Washington, D.C. electoral votes for President?",
+            "choices": [
+              "23rd",
+              "24th",
+              "26th",
+              "17th"
+            ],
+            "answer": 0,
+            "explain": "The 23rd Amendment (1961) gives D.C. electors, no more than the least populous state.",
+            "tip": "23: D.C. gets 3, and 23 ends in 3."
+          },
+          {
+            "q": "Which amendment banned poll taxes in federal elections?",
+            "choices": [
+              "24th",
+              "15th",
+              "19th",
+              "27th"
+            ],
+            "answer": 0,
+            "explain": "The 24th Amendment (1964) prohibits poll taxes in federal elections.",
+            "tip": "24: no paying at the poll; voting is free for all."
+          },
+          {
+            "q": "Which amendment covers presidential disability and filling a Vice President vacancy?",
+            "choices": [
+              "25th",
+              "22nd",
+              "20th",
+              "12th"
+            ],
+            "answer": 0,
+            "explain": "The 25th Amendment (1967) covers succession, VP vacancies and presidential disability.",
+            "tip": "25 keeps the presidency alive: a plan B for the top job."
+          },
+          {
+            "q": "Which amendment delays any change in congressional pay until after the next House election?",
+            "choices": [
+              "27th",
+              "26th",
+              "16th",
+              "20th"
+            ],
+            "answer": 0,
+            "explain": "The 27th Amendment was proposed in 1789 and finally ratified in 1992.",
+            "tip": "27: the last amendment, and it took the longest, over 202 years."
+          },
+          {
+            "q": "The 13th, 14th and 15th Amendments are known together as what?",
+            "choices": [
+              "The Reconstruction Amendments",
+              "The Bill of Rights",
+              "The Progressive Amendments",
+              "The Federalist Amendments"
+            ],
+            "answer": 0,
+            "explain": "They were ratified between 1865 and 1870, after the Civil War, during Reconstruction.",
+            "tip": "Reconstruction rebuilt the nation after the Civil War: 13 free, 14 citizen, 15 vote."
+          },
+          {
+            "q": "The 14th Amendment contains which two famous clauses limiting the states?",
+            "choices": [
+              "Due Process and Equal Protection",
+              "Commerce and Supremacy",
+              "Establishment and Free Exercise",
+              "Necessary and Proper and Take Care"
+            ],
+            "answer": 0,
+            "explain": "Section 1 says no state shall deprive any person of life, liberty or property without due process, nor deny equal protection of the laws.",
+            "tip": "DP and EP: Due Process and Equal Protection."
+          },
+          {
+            "q": "Which amendment protects against being tried twice for the same crime, known as double jeopardy?",
+            "choices": [
+              "5th",
+              "6th",
+              "8th",
+              "4th"
+            ],
+            "answer": 0,
+            "explain": "The 5th Amendment includes protection against double jeopardy.",
+            "tip": "Fifth: you can't be tried twice, the Fifth won't let the court roll the dice twice."
+          }
+        ]
+      },
+      {
+        "name": "Landmark Supreme Court cases",
+        "questions": [
+          {
+            "q": "Which 1803 case established the Supreme Court's power of judicial review?",
+            "choices": [
+              "Marbury v. Madison",
+              "McCulloch v. Maryland",
+              "Gibbons v. Ogden",
+              "Plessy v. Ferguson"
+            ],
+            "answer": 0,
+            "explain": "In Marbury v. Madison, Chief Justice John Marshall held that courts can strike down laws that conflict with the Constitution.",
+            "tip": "Marbury Made the court Mighty: M, M, M."
+          },
+          {
+            "q": "McCulloch v. Maryland (1819) upheld the national bank and ruled that what?",
+            "choices": [
+              "Congress has implied powers and states cannot tax a federal bank",
+              "States can tax federal agencies freely",
+              "The national bank was unconstitutional",
+              "Only states can charter banks"
+            ],
+            "answer": 0,
+            "explain": "The Court relied on the Necessary and Proper Clause and the Supremacy Clause.",
+            "tip": "The power to tax is the power to destroy, so Maryland couldn't tax the bank."
+          },
+          {
+            "q": "Gibbons v. Ogden (1824), a case about steamboats, gave Congress broad power over what?",
+            "choices": [
+              "Interstate commerce",
+              "State elections",
+              "Public schools",
+              "Criminal trials"
+            ],
+            "answer": 0,
+            "explain": "The Court read the Commerce Clause broadly to cover navigation between states.",
+            "tip": "Gibbons Governs Goods: steamboats moving goods between states."
+          },
+          {
+            "q": "Which 1857 decision held that Black Americans could not be US citizens and was later overturned by the 14th Amendment?",
+            "choices": [
+              "Dred Scott v. Sandford",
+              "Brown v. Board of Education",
+              "Loving v. Virginia",
+              "Marbury v. Madison"
+            ],
+            "answer": 0,
+            "explain": "Dred Scott also struck down the Missouri Compromise. The 14th Amendment's citizenship clause reversed it.",
+            "tip": "Dred Scott: a dreadful decision undone by the 14th Amendment."
+          },
+          {
+            "q": "Which 1896 case upheld racial segregation under the separate but equal doctrine?",
+            "choices": [
+              "Plessy v. Ferguson",
+              "Brown v. Board of Education",
+              "Miranda v. Arizona",
+              "Gideon v. Wainwright"
+            ],
+            "answer": 0,
+            "explain": "Plessy v. Ferguson allowed separate but equal facilities until it was rejected in Brown v. Board.",
+            "tip": "Plessy Permitted separation; Brown Broke it."
+          },
+          {
+            "q": "What did Brown v. Board of Education (1954) decide?",
+            "choices": [
+              "Racial segregation in public schools is unconstitutional",
+              "Schools must offer free lunch",
+              "States must fund private schools",
+              "Students may not wear armbands"
+            ],
+            "answer": 0,
+            "explain": "A unanimous Court led by Chief Justice Earl Warren held that separate educational facilities are inherently unequal.",
+            "tip": "Brown v. BOARD: the Board of Education had to integrate schools."
+          },
+          {
+            "q": "Because of Miranda v. Arizona (1966), police must do what before questioning a suspect in custody?",
+            "choices": [
+              "Inform them of their rights, such as the right to remain silent",
+              "Get permission from a judge",
+              "Contact the suspect's family",
+              "Release them on bail"
+            ],
+            "answer": 0,
+            "explain": "Miranda warnings protect the 5th Amendment right against self-incrimination.",
+            "tip": "You have the right to remain silent: that's the Miranda warning from every TV cop show."
+          },
+          {
+            "q": "Gideon v. Wainwright (1963) held that states must do what?",
+            "choices": [
+              "Provide a lawyer to criminal defendants who cannot afford one",
+              "Hold all trials in federal court",
+              "Allow cameras in courtrooms",
+              "End the death penalty"
+            ],
+            "answer": 0,
+            "explain": "The Court applied the 6th Amendment right to counsel to state felony trials.",
+            "tip": "Gideon's trumpet: a poor man wrote to the Court in pencil and won a lawyer for defendants who cannot afford one."
+          },
+          {
+            "q": "Mapp v. Ohio (1961) applied which rule to state courts?",
+            "choices": [
+              "The exclusionary rule: illegally obtained evidence cannot be used",
+              "The rule against double jeopardy",
+              "The separate but equal rule",
+              "The one person, one vote rule"
+            ],
+            "answer": 0,
+            "explain": "Mapp applied the 4th Amendment exclusionary rule to the states.",
+            "tip": "Mapp: if police break the rules, the evidence goes off the map."
+          },
+          {
+            "q": "Tinker v. Des Moines (1969) protected students who wore black armbands to protest the Vietnam War. What did it hold?",
+            "choices": [
+              "Students keep free speech rights at school unless their speech substantially disrupts",
+              "Schools may ban any political speech",
+              "Students have no constitutional rights",
+              "Only teachers have free speech rights"
+            ],
+            "answer": 0,
+            "explain": "The Court said students do not shed their constitutional rights at the schoolhouse gate.",
+            "tip": "Tinker's armbands: students keep their rights at the schoolhouse gate."
+          },
+          {
+            "q": "In United States v. Nixon (1974), the Court ruled that the President had to do what?",
+            "choices": [
+              "Turn over subpoenaed tape recordings",
+              "Resign immediately",
+              "Pardon his aides",
+              "Testify before the Senate"
+            ],
+            "answer": 0,
+            "explain": "The unanimous Court held executive privilege is not absolute. Nixon resigned soon after.",
+            "tip": "Nixon's tapes had to be handed over: no one is above the law."
+          },
+          {
+            "q": "New York Times v. Sullivan (1964) held that a public official suing for libel must prove what?",
+            "choices": [
+              "Actual malice",
+              "Only that the statement was false",
+              "That the newspaper was unpopular",
+              "Nothing; the newspaper must prove truth"
+            ],
+            "answer": 0,
+            "explain": "Public officials must show the statement was made knowing it was false or with reckless disregard for the truth.",
+            "tip": "Actual Malice: public officials need to show A M, knowing lies or reckless disregard."
+          }
+        ]
+      },
+      {
+        "name": "The Electoral College",
+        "questions": [
+          {
+            "q": "How many electors are in the Electoral College?",
+            "choices": [
+              "538",
+              "435",
+              "100",
+              "270"
+            ],
+            "answer": 0,
+            "explain": "435 representatives plus 100 senators plus 3 for D.C. equals 538.",
+            "tip": "435 + 100 + 3 = 538: House plus Senate plus D.C."
+          },
+          {
+            "q": "How many electoral votes does a candidate need to win the presidency?",
+            "choices": [
+              "270",
+              "269",
+              "218",
+              "300"
+            ],
+            "answer": 0,
+            "explain": "270 is a majority of 538.",
+            "tip": "Half of 538 is 269, plus one makes 270."
+          },
+          {
+            "q": "How is the number of electors for each state determined?",
+            "choices": [
+              "Its number of senators plus its number of representatives",
+              "Its land area",
+              "One elector per million people",
+              "Every state gets 10"
+            ],
+            "answer": 0,
+            "explain": "Article II gives each state electors equal to its total seats in Congress.",
+            "tip": "Electors equal your state's seats in Congress: senators plus reps."
+          },
+          {
+            "q": "How many electoral votes does Washington, D.C. have?",
+            "choices": [
+              "3",
+              "0",
+              "1",
+              "2"
+            ],
+            "answer": 0,
+            "explain": "The 23rd Amendment gives D.C. as many electors as the least populous state, which is three.",
+            "tip": "The 23rd Amendment gave D.C. 3: look at the 3 at the end of 23."
+          },
+          {
+            "q": "If no candidate wins a majority of electoral votes, who chooses the President?",
+            "choices": [
+              "The House of Representatives",
+              "The Senate",
+              "The Supreme Court",
+              "The outgoing President"
+            ],
+            "answer": 0,
+            "explain": "Under the 12th Amendment, the House chooses, with each state delegation casting one vote.",
+            "tip": "House picks the President: H for House, H for Head of state."
+          },
+          {
+            "q": "If no vice presidential candidate wins a majority of electoral votes, who chooses the Vice President?",
+            "choices": [
+              "The Senate",
+              "The House of Representatives",
+              "The Supreme Court",
+              "The new President"
+            ],
+            "answer": 0,
+            "explain": "The 12th Amendment gives that choice to the Senate.",
+            "tip": "Senate picks the VP, and the VP presides over the Senate: they go together."
+          },
+          {
+            "q": "Which two states have split their electoral votes by congressional district?",
+            "choices": [
+              "Maine and Nebraska",
+              "Texas and California",
+              "Ohio and Florida",
+              "Alaska and Hawaii"
+            ],
+            "answer": 0,
+            "explain": "Under their state laws, Maine and Nebraska have awarded two electors statewide and one per congressional district. Each state decides how to award its electors, so such laws can change.",
+            "tip": "Maine and Nebraska: M and N, side by side in the alphabet."
+          },
+          {
+            "q": "On what day is the general election for President held?",
+            "choices": [
+              "The Tuesday after the first Monday in November",
+              "The first Monday in November",
+              "November 1",
+              "The second Tuesday in October"
+            ],
+            "answer": 0,
+            "explain": "Federal law sets Election Day as the Tuesday after the first Monday in November.",
+            "tip": "Tuesday after the first Monday: so Election Day is never November 1."
+          },
+          {
+            "q": "On what date does a new presidential term begin?",
+            "choices": [
+              "January 20",
+              "January 1",
+              "March 4",
+              "November 5"
+            ],
+            "answer": 0,
+            "explain": "The 20th Amendment sets noon on January 20. Before 1937, terms began March 4.",
+            "tip": "Inauguration on January 20: the 20th Amendment says so."
+          },
+          {
+            "q": "True or false: A candidate can win the presidency without winning the national popular vote.",
+            "choices": [
+              "True",
+              "False"
+            ],
+            "answer": 0,
+            "explain": "True. Because the winner is decided by electoral votes, this has happened several times, including 1876, 1888, 2000 and 2016.",
+            "tip": "Win states, not just votes: it's 270 electors that count."
+          },
+          {
+            "q": "Can a member of Congress serve as an elector?",
+            "choices": [
+              "No",
+              "Yes"
+            ],
+            "answer": 0,
+            "explain": "Article II says no senator, representative or federal officeholder may be an elector.",
+            "tip": "Electors must be outsiders: no federal officeholders allowed."
+          }
+        ]
+      },
+      {
+        "name": "How Congress works",
+        "questions": [
+          {
+            "q": "How many US senators are there?",
+            "choices": [
+              "100",
+              "50",
+              "435",
+              "538"
+            ],
+            "answer": 0,
+            "explain": "Each of the 50 states has two senators.",
+            "tip": "100 senators: 2 per state times 50 states."
+          },
+          {
+            "q": "How long is a senator's term?",
+            "choices": [
+              "6 years",
+              "2 years",
+              "4 years",
+              "Life"
+            ],
+            "answer": 0,
+            "explain": "Senators serve six-year terms.",
+            "tip": "Senators Six, Representatives Two, Presidents Four: 6-2-4."
+          },
+          {
+            "q": "How many voting members are in the House of Representatives?",
+            "choices": [
+              "435",
+              "100",
+              "538",
+              "50"
+            ],
+            "answer": 0,
+            "explain": "The House has 435 voting members.",
+            "tip": "435: think 4-3-5, count down then up."
+          },
+          {
+            "q": "How long is a representative's term?",
+            "choices": [
+              "2 years",
+              "4 years",
+              "6 years",
+              "1 year"
+            ],
+            "answer": 0,
+            "explain": "Representatives serve two-year terms, so the whole House is elected every two years.",
+            "tip": "House = Hurry: they run every 2 years."
+          },
+          {
+            "q": "About what share of the Senate is up for election every two years?",
+            "choices": [
+              "One-third",
+              "One-half",
+              "All of it",
+              "One-fourth"
+            ],
+            "answer": 0,
+            "explain": "Senate terms are staggered so about one-third of seats are elected every two years.",
+            "tip": "6-year terms split into three 2-year chunks: one-third each time."
+          },
+          {
+            "q": "What is the minimum age to serve as a US senator?",
+            "choices": [
+              "30",
+              "25",
+              "35",
+              "21"
+            ],
+            "answer": 0,
+            "explain": "Senators must be at least 30, citizens for nine years, and live in their state.",
+            "tip": "25, 30, 35: House, Senate, President, climbing by fives."
+          },
+          {
+            "q": "What is the minimum age to serve in the House of Representatives?",
+            "choices": [
+              "25",
+              "18",
+              "30",
+              "35"
+            ],
+            "answer": 0,
+            "explain": "Representatives must be at least 25 and citizens for seven years.",
+            "tip": "25 for the House: the youngest rung on the 25-30-35 ladder."
+          },
+          {
+            "q": "Who is the President of the Senate and can break tie votes?",
+            "choices": [
+              "The Vice President",
+              "The Speaker of the House",
+              "The Chief Justice",
+              "The Majority Whip"
+            ],
+            "answer": 0,
+            "explain": "The Constitution makes the Vice President President of the Senate, voting only to break ties.",
+            "tip": "VP = Vote Picker in a tie."
+          },
+          {
+            "q": "Who presides over the House of Representatives?",
+            "choices": [
+              "The Speaker of the House",
+              "The Vice President",
+              "The President pro tempore",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "The House chooses its Speaker.",
+            "tip": "The Speaker speaks for the House."
+          },
+          {
+            "q": "Bills to raise revenue, like tax bills, must start in which chamber?",
+            "choices": [
+              "The House of Representatives",
+              "The Senate",
+              "Either chamber",
+              "The Treasury Department"
+            ],
+            "answer": 0,
+            "explain": "The Origination Clause in Article I, Section 7 requires revenue bills to begin in the House.",
+            "tip": "House of the People pays the bills: money starts in the House."
+          },
+          {
+            "q": "How often is the census taken to reapportion House seats among the states?",
+            "choices": [
+              "Every 10 years",
+              "Every 4 years",
+              "Every 2 years",
+              "Every 20 years"
+            ],
+            "answer": 0,
+            "explain": "The Constitution requires a census every ten years.",
+            "tip": "Every decade, count every head: years ending in zero."
+          },
+          {
+            "q": "Why do some states have more representatives than others?",
+            "choices": [
+              "Because of the state's population",
+              "Because of the state's land area",
+              "Because of the state's age",
+              "Because of the state's wealth"
+            ],
+            "answer": 0,
+            "explain": "House seats are apportioned by population.",
+            "tip": "More people, more reps: it's a head count."
+          }
+        ]
+      },
+      {
+        "name": "The Federalist Papers",
+        "questions": [
+          {
+            "q": "What was the main purpose of the Federalist Papers?",
+            "choices": [
+              "To persuade people to ratify the Constitution",
+              "To declare independence from Britain",
+              "To oppose the Constitution",
+              "To create the Bill of Rights"
+            ],
+            "answer": 0,
+            "explain": "The essays argued for ratifying the new Constitution, especially in New York.",
+            "tip": "Federalists were FOR the Constitution: they wrote to sell it."
+          },
+          {
+            "q": "Which three men wrote the Federalist Papers?",
+            "choices": [
+              "Alexander Hamilton, James Madison and John Jay",
+              "Thomas Jefferson, John Adams and Ben Franklin",
+              "George Washington, Patrick Henry and George Mason",
+              "Samuel Adams, John Hancock and Paul Revere"
+            ],
+            "answer": 0,
+            "explain": "Hamilton, Madison and Jay wrote the essays.",
+            "tip": "HMJ: Hamilton, Madison, Jay, like Ham, Mad and Jay."
+          },
+          {
+            "q": "Under what pen name were the Federalist Papers published?",
+            "choices": [
+              "Publius",
+              "Brutus",
+              "Common Sense",
+              "Cato the Elder"
+            ],
+            "answer": 0,
+            "explain": "All 85 essays were signed Publius, after a founder of the Roman Republic.",
+            "tip": "Publius sounds like public: they wrote to the public."
+          },
+          {
+            "q": "How many essays make up the Federalist Papers?",
+            "choices": [
+              "85",
+              "10",
+              "27",
+              "100"
+            ],
+            "answer": 0,
+            "explain": "There are 85 essays, published in 1787 and 1788.",
+            "tip": "85 essays: 8 and 5 add up to 13, like the 13 states they wanted to convince."
+          },
+          {
+            "q": "Who wrote the most Federalist essays?",
+            "choices": [
+              "Alexander Hamilton",
+              "James Madison",
+              "John Jay",
+              "Thomas Jefferson"
+            ],
+            "answer": 0,
+            "explain": "Hamilton wrote about 51, Madison about 29 and Jay 5.",
+            "tip": "Hamilton was the heavy hitter: about 51 of the 85 essays, more than half."
+          },
+          {
+            "q": "Federalist No. 10 argues that a large republic helps control what?",
+            "choices": [
+              "Factions",
+              "Taxes",
+              "Foreign invasions",
+              "Slavery"
+            ],
+            "answer": 0,
+            "explain": "Madison argued that a large republic makes it hard for any one faction to dominate.",
+            "tip": "Ten for factions: big republic, many groups, no one wins it all."
+          },
+          {
+            "q": "Federalist No. 51 says ambition must be made to counteract ambition. What idea does it defend?",
+            "choices": [
+              "Checks and balances and separation of powers",
+              "A strong monarchy",
+              "Abolishing the states",
+              "Direct democracy"
+            ],
+            "answer": 0,
+            "explain": "Madison argued that each branch should have the means to resist encroachment by the others.",
+            "tip": "51 = checks and balances: if men were angels, no government would be necessary."
+          },
+          {
+            "q": "Federalist No. 78 describes which branch as the least dangerous?",
+            "choices": [
+              "The judiciary",
+              "The executive",
+              "The legislature",
+              "The military"
+            ],
+            "answer": 0,
+            "explain": "Hamilton wrote that the judiciary has neither force nor will, only judgment.",
+            "tip": "78: courts have no sword and no purse, only judgment."
+          },
+          {
+            "q": "What were opponents of ratifying the Constitution called?",
+            "choices": [
+              "Anti-Federalists",
+              "Loyalists",
+              "Whigs",
+              "Tories"
+            ],
+            "answer": 0,
+            "explain": "Anti-Federalists, such as Patrick Henry and George Mason, feared a strong central government.",
+            "tip": "ANTI means against: Anti-Federalists were against the Constitution."
+          },
+          {
+            "q": "What concession did supporters of the Constitution make to win over many Anti-Federalists?",
+            "choices": [
+              "Adding a Bill of Rights",
+              "Abolishing the presidency",
+              "Removing the Supreme Court",
+              "Giving each state a veto"
+            ],
+            "answer": 0,
+            "explain": "The promise of a Bill of Rights helped win ratification; it was ratified in 1791.",
+            "tip": "Anti-Federalists said no rights, no deal, so the Bill of Rights sealed it."
+          }
+        ]
+      }
+    ],
+    "college": [
+      {
+        "name": "Judicial review and the courts",
+        "questions": [
+          {
+            "q": "Is the power of judicial review explicitly stated in the text of the Constitution?",
+            "choices": [
+              "No, it was established by Marbury v. Madison",
+              "Yes, in Article III, Section 1",
+              "Yes, in the 10th Amendment",
+              "Yes, in the Preamble"
+            ],
+            "answer": 0,
+            "explain": "Judicial review is not spelled out in the text; Marshall reasoned it from the nature of a written constitution and Article III.",
+            "tip": "Not in the text, but in Marbury's context."
+          },
+          {
+            "q": "Article III limits federal courts to hearing actual what?",
+            "choices": [
+              "Cases and controversies",
+              "Advisory questions",
+              "Legislative proposals",
+              "Hypothetical disputes"
+            ],
+            "answer": 0,
+            "explain": "The case-or-controversy requirement is why federal courts do not issue advisory opinions.",
+            "tip": "Real cases, real controversies: no what-ifs."
+          },
+          {
+            "q": "Under Lujan v. Defenders of Wildlife (1992), the three elements of Article III standing are injury in fact, causation and what?",
+            "choices": [
+              "Redressability",
+              "Ripeness",
+              "Mootness",
+              "Diversity"
+            ],
+            "answer": 0,
+            "explain": "A plaintiff must show a concrete injury, fairly traceable to the defendant, likely to be redressed by a favorable decision.",
+            "tip": "Standing is I-C-R: Injury, Causation, Redressability, I see red."
+          },
+          {
+            "q": "In which cases does the Supreme Court have original jurisdiction under Article III?",
+            "choices": [
+              "Cases affecting ambassadors and those in which a state is a party",
+              "All federal criminal cases",
+              "All cases involving the President",
+              "All cases involving more than $1 million"
+            ],
+            "answer": 0,
+            "explain": "Article III, Section 2 limits original jurisdiction to these categories; other jurisdiction is appellate.",
+            "tip": "States and ambassadors go straight to the top."
+          },
+          {
+            "q": "Which 1958 case held that state officials are bound by Supreme Court interpretations of the Constitution?",
+            "choices": [
+              "Cooper v. Aaron",
+              "Baker v. Carr",
+              "Plessy v. Ferguson",
+              "Ex parte Milligan"
+            ],
+            "answer": 0,
+            "explain": "Arising from Little Rock school desegregation, Cooper v. Aaron declared that Brown bound the states.",
+            "tip": "Cooper says the states must cooperate with the Court."
+          },
+          {
+            "q": "The political question doctrine holds that courts should not decide which issues?",
+            "choices": [
+              "Those committed to other branches or lacking manageable judicial standards",
+              "All cases involving elected officials",
+              "All cases involving states",
+              "Any case with political consequences"
+            ],
+            "answer": 0,
+            "explain": "Baker v. Carr (1962) set out the factors, while holding that legislative apportionment was justiciable.",
+            "tip": "Some questions belong to the political branches, not the courts."
+          },
+          {
+            "q": "Under Article III, federal judges hold office during what?",
+            "choices": [
+              "Good behavior",
+              "A ten-year term",
+              "The President's term",
+              "Until age 70"
+            ],
+            "answer": 0,
+            "explain": "Good-behavior tenure, along with protection against salary cuts, secures judicial independence.",
+            "tip": "Good behavior equals a lifetime job, as long as they behave."
+          },
+          {
+            "q": "Ex parte McCardle (1869) is often cited for Congress's power to do what?",
+            "choices": [
+              "Limit the Supreme Court's appellate jurisdiction",
+              "Remove justices by majority vote",
+              "Overrule Supreme Court decisions by statute",
+              "Abolish the Supreme Court"
+            ],
+            "answer": 0,
+            "explain": "The Exceptions Clause lets Congress make exceptions to appellate jurisdiction; McCardle upheld a repeal mid-case.",
+            "tip": "McCardle: Congress can take a card out of the Court's appellate deck."
+          },
+          {
+            "q": "What is the term for the principle that courts should follow their prior decisions?",
+            "choices": [
+              "Stare decisis",
+              "Habeas corpus",
+              "Certiorari",
+              "Res ipsa loquitur"
+            ],
+            "answer": 0,
+            "explain": "Stare decisis means to stand by things decided.",
+            "tip": "Stare decisis: stand by what's decided, like staring at the old rulebook."
+          },
+          {
+            "q": "How do most cases reach the Supreme Court today?",
+            "choices": [
+              "By a writ of certiorari, which the Court grants at its discretion",
+              "By automatic appeal from every federal court",
+              "By referral from Congress",
+              "By request of the President"
+            ],
+            "answer": 0,
+            "explain": "The Court grants certiorari in a small fraction of petitions; four justices must agree to hear a case.",
+            "tip": "Rule of four: four justices say yes, cert is granted."
+          }
+        ]
+      },
+      {
+        "name": "Due process and equal protection",
+        "questions": [
+          {
+            "q": "Which two amendments contain Due Process Clauses?",
+            "choices": [
+              "The 5th and the 14th",
+              "The 1st and the 4th",
+              "The 6th and the 8th",
+              "The 13th and the 15th"
+            ],
+            "answer": 0,
+            "explain": "The 5th binds the federal government; the 14th binds the states.",
+            "tip": "5 for the feds, 14 for the states."
+          },
+          {
+            "q": "What is the difference between procedural and substantive due process?",
+            "choices": [
+              "Procedural concerns fair procedures; substantive protects certain rights from government interference regardless of procedure",
+              "Procedural applies to states; substantive applies only to the federal government",
+              "They are the same doctrine",
+              "Substantive applies only to criminal cases"
+            ],
+            "answer": 0,
+            "explain": "Procedural due process asks how government acts; substantive asks whether it may act at all.",
+            "tip": "Procedural = How; Substantive = Whether."
+          },
+          {
+            "q": "Barron v. Baltimore (1833) held that the Bill of Rights applied to whom?",
+            "choices": [
+              "Only the federal government",
+              "Both federal and state governments",
+              "Only state governments",
+              "Only private businesses"
+            ],
+            "answer": 0,
+            "explain": "Barron held the Bill of Rights did not limit states, which set the stage for later incorporation through the 14th Amendment.",
+            "tip": "Barron barred the Bill of Rights from binding the states."
+          },
+          {
+            "q": "Making Bill of Rights protections apply to the states through the 14th Amendment's Due Process Clause is called what?",
+            "choices": [
+              "Incorporation",
+              "Preemption",
+              "Nullification",
+              "Apportionment"
+            ],
+            "answer": 0,
+            "explain": "The Court has used selective incorporation, applying rights one by one.",
+            "tip": "Incorporate = put into the body: rights put into the 14th."
+          },
+          {
+            "q": "Which 1925 case assumed that freedom of speech applies to the states through the 14th Amendment?",
+            "choices": [
+              "Gitlow v. New York",
+              "Schenck v. United States",
+              "Marbury v. Madison",
+              "Plessy v. Ferguson"
+            ],
+            "answer": 0,
+            "explain": "Gitlow is widely seen as the start of incorporating First Amendment rights.",
+            "tip": "Gitlow got the ball rolling on incorporation."
+          },
+          {
+            "q": "Lochner v. New York (1905) struck down a limit on bakers' working hours based on what idea?",
+            "choices": [
+              "Liberty of contract under substantive due process",
+              "The Commerce Clause",
+              "Equal protection",
+              "The Takings Clause"
+            ],
+            "answer": 0,
+            "explain": "The Lochner era ended with West Coast Hotel v. Parrish (1937), which upheld a minimum wage law.",
+            "tip": "Lochner's bakers baked up liberty of contract."
+          },
+          {
+            "q": "Mathews v. Eldridge (1976) set a balancing test for what?",
+            "choices": [
+              "How much process is due before the government deprives someone of a protected interest",
+              "When police may search a car",
+              "Whether a law is a valid tax",
+              "When states may regulate commerce"
+            ],
+            "answer": 0,
+            "explain": "It weighs the private interest, the risk of error and the value of more safeguards, and the government's interest.",
+            "tip": "Mathews does the math: weigh three factors for due process."
+          },
+          {
+            "q": "What level of scrutiny do courts apply to government classifications based on race?",
+            "choices": [
+              "Strict scrutiny",
+              "Rational basis review",
+              "Intermediate scrutiny",
+              "No review"
+            ],
+            "answer": 0,
+            "explain": "Racial classifications must be narrowly tailored to a compelling government interest.",
+            "tip": "Race gets the strictest look: strict scrutiny."
+          },
+          {
+            "q": "Craig v. Boren (1976) applied which standard to sex-based classifications?",
+            "choices": [
+              "Intermediate scrutiny",
+              "Strict scrutiny",
+              "Rational basis review",
+              "Actual malice"
+            ],
+            "answer": 0,
+            "explain": "Sex classifications must be substantially related to an important government objective.",
+            "tip": "Craig's in the middle: intermediate scrutiny for sex."
+          },
+          {
+            "q": "Most economic regulations are reviewed under which deferential standard?",
+            "choices": [
+              "Rational basis review",
+              "Strict scrutiny",
+              "Intermediate scrutiny",
+              "Clear and present danger"
+            ],
+            "answer": 0,
+            "explain": "A law survives if it is rationally related to a legitimate government interest.",
+            "tip": "Rational basis: just needs a reason that makes sense."
+          },
+          {
+            "q": "The 14th Amendment's Equal Protection Clause applies to states. How did Bolling v. Sharpe (1954) apply equal protection to the federal government?",
+            "choices": [
+              "Through the 5th Amendment's Due Process Clause",
+              "Through the 10th Amendment",
+              "Through the Commerce Clause",
+              "Through Article IV"
+            ],
+            "answer": 0,
+            "explain": "Bolling, a companion case to Brown, struck down school segregation in Washington, D.C.",
+            "tip": "Bolling went backward: equal protection reverse-incorporated into the Fifth."
+          },
+          {
+            "q": "The Slaughter-House Cases (1873) gave a narrow reading to which 14th Amendment clause?",
+            "choices": [
+              "The Privileges or Immunities Clause",
+              "The Equal Protection Clause",
+              "The Citizenship Clause",
+              "The Enforcement Clause"
+            ],
+            "answer": 0,
+            "explain": "The narrow reading left later rights protection to the Due Process and Equal Protection Clauses.",
+            "tip": "Slaughter-House slaughtered Privileges or Immunities."
+          }
+        ]
+      },
+      {
+        "name": "The Commerce Clause and federal power",
+        "questions": [
+          {
+            "q": "The Commerce Clause gives Congress power to regulate commerce with foreign nations, among the several states, and with whom?",
+            "choices": [
+              "The Indian tribes",
+              "The territories only",
+              "Private corporations",
+              "The District of Columbia only"
+            ],
+            "answer": 0,
+            "explain": "Article I, Section 8, Clause 3 lists foreign, interstate and Indian commerce.",
+            "tip": "Three Fs of commerce: Foreign, Fellow states and First nations (tribes)."
+          },
+          {
+            "q": "Wickard v. Filburn (1942) upheld federal limits on wheat a farmer grew for his own use based on what reasoning?",
+            "choices": [
+              "In the aggregate, such activity substantially affects interstate commerce",
+              "The wheat was sold across state lines",
+              "Farming is a federal property right",
+              "The Taxing Clause"
+            ],
+            "answer": 0,
+            "explain": "Wickard's aggregation principle greatly expanded the reach of the Commerce Clause.",
+            "tip": "Wickard's wheat: one farmer's crop adds up across all farms."
+          },
+          {
+            "q": "Heart of Atlanta Motel v. United States (1964) upheld which law under the Commerce Clause?",
+            "choices": [
+              "The Civil Rights Act of 1964's ban on discrimination in public accommodations",
+              "The Social Security Act",
+              "The Sherman Antitrust Act",
+              "The Voting Rights Act"
+            ],
+            "answer": 0,
+            "explain": "The Court found racial discrimination by motels serving travelers burdened interstate commerce.",
+            "tip": "Heart of Atlanta: travelers cross states, so motels touch commerce."
+          },
+          {
+            "q": "United States v. Lopez (1995) was significant because the Court did what?",
+            "choices": [
+              "Struck down a federal law as exceeding the Commerce Clause for the first time in nearly 60 years",
+              "Expanded the Commerce Clause to all activity",
+              "Overruled Marbury v. Madison",
+              "Upheld a federal school curriculum"
+            ],
+            "answer": 0,
+            "explain": "The Gun-Free School Zones Act regulated non-economic activity without a substantial effect on interstate commerce.",
+            "tip": "Lopez lopped off a federal law: guns near schools aren't commerce."
+          },
+          {
+            "q": "United States v. Morrison (2000) struck down which provision as beyond Congress's commerce power?",
+            "choices": [
+              "The civil remedy in the Violence Against Women Act",
+              "The Civil Rights Act of 1964",
+              "The minimum wage",
+              "The federal income tax"
+            ],
+            "answer": 0,
+            "explain": "The Court held that gender-motivated violence was not economic activity Congress could regulate under the Commerce Clause.",
+            "tip": "Morrison followed Lopez: non-economic means not commerce."
+          },
+          {
+            "q": "What is the dormant Commerce Clause?",
+            "choices": [
+              "An implied limit on states discriminating against or unduly burdening interstate commerce",
+              "A clause that has never been used",
+              "Congress's power to ban all trade",
+              "A clause repealed by the 21st Amendment"
+            ],
+            "answer": 0,
+            "explain": "Courts infer it from the grant of commerce power to Congress.",
+            "tip": "Dormant means sleeping: the clause still bites states while Congress sleeps."
+          },
+          {
+            "q": "In NFIB v. Sebelius (2012), the Court upheld the Affordable Care Act's individual mandate under which power?",
+            "choices": [
+              "The taxing power",
+              "The Commerce Clause",
+              "The Treaty Power",
+              "The 10th Amendment"
+            ],
+            "answer": 0,
+            "explain": "A majority said the mandate exceeded the commerce power but could be sustained as a tax.",
+            "tip": "Not commerce, but a tax: the mandate survived as a tax."
+          },
+          {
+            "q": "South Dakota v. Dole (1987) upheld conditioning some federal highway funds on states adopting what?",
+            "choices": [
+              "A drinking age of 21",
+              "A speed limit of 55",
+              "Seat belt laws",
+              "Motorcycle helmet laws"
+            ],
+            "answer": 0,
+            "explain": "The Court approved this use of the Spending Clause and set limits on conditional grants.",
+            "tip": "Dole doles out highway dollars with strings: drinking age 21."
+          },
+          {
+            "q": "Which clause did McCulloch v. Maryland rely on to find that Congress could charter a bank?",
+            "choices": [
+              "The Necessary and Proper Clause",
+              "The Commerce Clause",
+              "The Contracts Clause",
+              "The Full Faith and Credit Clause"
+            ],
+            "answer": 0,
+            "explain": "Marshall read necessary as convenient or useful, not absolutely indispensable.",
+            "tip": "Necessary and Proper = the Elastic Clause stretches to a bank."
+          },
+          {
+            "q": "Gonzales v. Raich (2005) held that Congress could regulate what under the Commerce Clause?",
+            "choices": [
+              "Marijuana grown at home for personal medical use",
+              "Gun possession near schools",
+              "Gender-motivated violence",
+              "State elections"
+            ],
+            "answer": 0,
+            "explain": "Relying on Wickard, the Court found home-grown marijuana part of a national market Congress could regulate.",
+            "tip": "Raich is Wickard with weed: home-grown still affects the market."
+          }
+        ]
+      },
+      {
+        "name": "Separation of powers",
+        "questions": [
+          {
+            "q": "Which French thinker's writings on separating legislative, executive and judicial power influenced the framers?",
+            "choices": [
+              "Montesquieu",
+              "Rousseau",
+              "Voltaire",
+              "Descartes"
+            ],
+            "answer": 0,
+            "explain": "Montesquieu's The Spirit of the Laws (1748) is cited in Federalist No. 47.",
+            "tip": "Montesquieu: the three-branch mon-sieur."
+          },
+          {
+            "q": "Youngstown Sheet and Tube Co. v. Sawyer (1952) held that President Truman could not do what?",
+            "choices": [
+              "Seize steel mills without congressional authorization",
+              "Fire a Cabinet secretary",
+              "Veto a defense bill",
+              "Send troops to Korea"
+            ],
+            "answer": 0,
+            "explain": "The Court rejected the seizure, made during the Korean War to avert a strike.",
+            "tip": "Truman couldn't steal the steel."
+          },
+          {
+            "q": "In Justice Jackson's Youngstown concurrence, presidential power is at its lowest ebb when the President acts how?",
+            "choices": [
+              "In a way incompatible with the expressed or implied will of Congress",
+              "With express authorization from Congress",
+              "When Congress is silent",
+              "During wartime"
+            ],
+            "answer": 0,
+            "explain": "Jackson's three categories are authorization, silence (the zone of twilight) and opposition.",
+            "tip": "Jackson's tide: high with Congress, twilight in silence, low ebb against Congress."
+          },
+          {
+            "q": "INS v. Chadha (1983) struck down the one-house legislative veto because it violated what?",
+            "choices": [
+              "Bicameralism and presentment requirements",
+              "The Commerce Clause",
+              "The 10th Amendment",
+              "The Appointments Clause only"
+            ],
+            "answer": 0,
+            "explain": "Legislative action must pass both houses and be presented to the President.",
+            "tip": "Chadha: no shortcuts, two houses plus the President."
+          },
+          {
+            "q": "Clinton v. City of New York (1998) struck down which presidential power?",
+            "choices": [
+              "The line-item veto",
+              "The pardon power",
+              "The pocket veto",
+              "Executive privilege"
+            ],
+            "answer": 0,
+            "explain": "The Line Item Veto Act let the President cancel parts of signed laws, violating the Presentment Clause.",
+            "tip": "No line-item veto: the President signs the whole bill or none."
+          },
+          {
+            "q": "Morrison v. Olson (1988) upheld what?",
+            "choices": [
+              "The independent counsel provisions of the Ethics in Government Act",
+              "The line-item veto",
+              "The legislative veto",
+              "Presidential seizure of industries"
+            ],
+            "answer": 0,
+            "explain": "The Court ruled 7 to 1, with Justice Scalia's lone dissent defending a strong unitary executive.",
+            "tip": "Morrison v. Olson: 7 to 1, with Scalia's famous wolf dissent."
+          },
+          {
+            "q": "The nondelegation doctrine requires that when Congress delegates authority, it provide what?",
+            "choices": [
+              "An intelligible principle",
+              "A two-thirds vote",
+              "A sunset date",
+              "Approval by the states"
+            ],
+            "answer": 0,
+            "explain": "The intelligible principle test comes from J.W. Hampton v. United States (1928).",
+            "tip": "Delegate with an IP: an Intelligible Principle."
+          },
+          {
+            "q": "In which year did the Supreme Court strike down federal statutes on nondelegation grounds, in Panama Refining and Schechter Poultry?",
+            "choices": [
+              "1935",
+              "1803",
+              "1954",
+              "1995"
+            ],
+            "answer": 0,
+            "explain": "Both 1935 cases involved the National Industrial Recovery Act.",
+            "tip": "1935: nondelegation struck twice, both New Deal laws."
+          },
+          {
+            "q": "The War Powers Resolution of 1973 generally requires the President to withdraw forces after how many days without congressional authorization?",
+            "choices": [
+              "60 days, plus up to 30 for withdrawal",
+              "10 days",
+              "6 months",
+              "1 year"
+            ],
+            "answer": 0,
+            "explain": "It also requires notifying Congress within 48 hours. It was passed over President Nixon's veto.",
+            "tip": "48 hours to tell, 60 days to stay, 30 more to pull away."
+          },
+          {
+            "q": "The Constitution divides war powers. Which power does Article II give the President?",
+            "choices": [
+              "Commander in Chief of the armed forces",
+              "Declaring war",
+              "Raising and supporting armies",
+              "Making rules for the armed forces"
+            ],
+            "answer": 0,
+            "explain": "Article I gives Congress the power to declare war, raise armies and regulate the military.",
+            "tip": "Congress declares, the President commands."
+          },
+          {
+            "q": "What does the Take Care Clause in Article II require?",
+            "choices": [
+              "That the President take care that the laws be faithfully executed",
+              "That Congress take care of federal property",
+              "That courts take care of the poor",
+              "That states take care of elections"
+            ],
+            "answer": 0,
+            "explain": "It is central to debates over presidential enforcement discretion.",
+            "tip": "Take care to execute: the President's job description in a phrase."
+          }
+        ]
+      },
+      {
+        "name": "History of the amendments",
+        "questions": [
+          {
+            "q": "The 11th Amendment (1795) was a response to which Supreme Court case?",
+            "choices": [
+              "Chisholm v. Georgia",
+              "Marbury v. Madison",
+              "Dred Scott v. Sandford",
+              "Pollock v. Farmers' Loan and Trust"
+            ],
+            "answer": 0,
+            "explain": "Chisholm allowed a citizen of another state to sue Georgia; the 11th Amendment limited such suits.",
+            "tip": "Chisholm chilled: the 11th shielded states from suits."
+          },
+          {
+            "q": "Which election prompted the 12th Amendment?",
+            "choices": [
+              "1800, when Jefferson and Burr tied in electoral votes",
+              "1824, when the House chose John Quincy Adams",
+              "1876, Hayes vs. Tilden",
+              "1860, Lincoln's election"
+            ],
+            "answer": 0,
+            "explain": "Electors originally cast two votes without distinguishing President from Vice President.",
+            "tip": "1800's tie between Jefferson and Burr led to the 12th, a deal sealed for sure."
+          },
+          {
+            "q": "The 16th Amendment overturned the effect of which 1895 case striking down a federal income tax?",
+            "choices": [
+              "Pollock v. Farmers' Loan and Trust Co.",
+              "Lochner v. New York",
+              "Plessy v. Ferguson",
+              "Gibbons v. Ogden"
+            ],
+            "answer": 0,
+            "explain": "Pollock held an income tax on property income was a direct tax requiring apportionment.",
+            "tip": "Pollock polled out the income tax; the 16th brought it back."
+          },
+          {
+            "q": "The 21st Amendment is unique because it was ratified by what method?",
+            "choices": [
+              "State ratifying conventions",
+              "State legislatures",
+              "A national referendum",
+              "A presidential proclamation"
+            ],
+            "answer": 0,
+            "explain": "It is the only amendment ratified by state conventions, an option allowed by Article V.",
+            "tip": "21: the one done by conventions, not legislatures."
+          },
+          {
+            "q": "Which amendment was proposed in 1789 but not ratified until 1992?",
+            "choices": [
+              "27th",
+              "26th",
+              "21st",
+              "10th"
+            ],
+            "answer": 0,
+            "explain": "The congressional pay amendment was one of Madison's original proposals; a student-led campaign revived it in the 1980s.",
+            "tip": "27 waited over 202 years: the slowest amendment ever."
+          },
+          {
+            "q": "The 22nd Amendment (1951) followed which President's four election victories?",
+            "choices": [
+              "Franklin D. Roosevelt",
+              "Theodore Roosevelt",
+              "Woodrow Wilson",
+              "Ulysses S. Grant"
+            ],
+            "answer": 0,
+            "explain": "FDR won in 1932, 1936, 1940 and 1944, breaking the two-term tradition begun by Washington.",
+            "tip": "FDR won four, so 22 said two and no more."
+          },
+          {
+            "q": "The 25th Amendment (1967) was first used under Section 2 to fill a vice presidential vacancy with whom?",
+            "choices": [
+              "Gerald Ford",
+              "Nelson Rockefeller",
+              "Spiro Agnew",
+              "Lyndon Johnson"
+            ],
+            "answer": 0,
+            "explain": "Nixon nominated Ford in 1973 after Agnew resigned; Ford later named Rockefeller the same way.",
+            "tip": "Ford was the first VP nobody elected, thanks to the 25th."
+          },
+          {
+            "q": "Article V provides two ways to propose amendments: by two-thirds of both houses of Congress, or by what?",
+            "choices": [
+              "A convention called on application of two-thirds of state legislatures",
+              "A national popular vote",
+              "Unanimous Supreme Court decision",
+              "Executive order"
+            ],
+            "answer": 0,
+            "explain": "No amendment has ever been proposed by an Article V convention.",
+            "tip": "Two doors in: Congress or a Convention, C and C."
+          },
+          {
+            "q": "How many states must ratify an amendment for it to become part of the Constitution?",
+            "choices": [
+              "Three-fourths of the states",
+              "Two-thirds of the states",
+              "A simple majority of states",
+              "All states"
+            ],
+            "answer": 0,
+            "explain": "With 50 states, that means 38.",
+            "tip": "38 of 50 equals three-fourths: a supermajority of states."
+          },
+          {
+            "q": "Which amendment was the first to be repealed by another amendment?",
+            "choices": [
+              "The 18th",
+              "The 16th",
+              "The 13th",
+              "The 3rd"
+            ],
+            "answer": 0,
+            "explain": "The 21st Amendment repealed the 18th in 1933. No other amendment has been repealed.",
+            "tip": "18 was the only one ever undone, by 21."
+          },
+          {
+            "q": "The Reconstruction Amendments were ratified during which span of years?",
+            "choices": [
+              "1865 to 1870",
+              "1791 to 1804",
+              "1913 to 1920",
+              "1961 to 1971"
+            ],
+            "answer": 0,
+            "explain": "The 13th (1865), 14th (1868) and 15th (1870).",
+            "tip": "Five years, three amendments: 1865 to 1870."
+          }
+        ]
+      }
+    ],
+    "adult": [
+      {
+        "name": "Citizenship test practice",
+        "questions": [
+          {
+            "q": "What is the supreme law of the land?",
+            "choices": [
+              "The Constitution",
+              "The Declaration of Independence",
+              "The Bill of Rights only",
+              "State constitutions"
+            ],
+            "answer": 0,
+            "explain": "The Constitution is the supreme law of the land.",
+            "tip": "The Constitution is the boss of all the laws."
+          },
+          {
+            "q": "What does the Constitution do?",
+            "choices": [
+              "Sets up the government and protects basic rights of Americans",
+              "Declares independence from Great Britain",
+              "Lists the names of the 50 states",
+              "Ends slavery"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts: sets up the government, defines the government, protects basic rights of Americans.",
+            "tip": "The Constitution is the blueprint: it builds the government and protects rights."
+          },
+          {
+            "q": "The idea of self-government is in the first three words of the Constitution. What are these words?",
+            "choices": [
+              "We the People",
+              "In Congress assembled",
+              "When in the",
+              "Four score and"
+            ],
+            "answer": 0,
+            "explain": "We the People expresses that the people govern themselves.",
+            "tip": "We the People: the people are the bosses."
+          },
+          {
+            "q": "What is an amendment?",
+            "choices": [
+              "A change or addition to the Constitution",
+              "A Supreme Court ruling",
+              "A presidential order",
+              "A treaty"
+            ],
+            "answer": 0,
+            "explain": "An amendment changes or adds to the Constitution.",
+            "tip": "Amend means mend or fix: an amendment changes the Constitution."
+          },
+          {
+            "q": "What do we call the first ten amendments to the Constitution?",
+            "choices": [
+              "The Bill of Rights",
+              "The Articles of Confederation",
+              "The Federalist Papers",
+              "The Preamble"
+            ],
+            "answer": 0,
+            "explain": "The first ten amendments are the Bill of Rights, ratified in 1791.",
+            "tip": "Ten fingers, ten rights: the Bill of Rights is the first ten."
+          },
+          {
+            "q": "How many amendments does the Constitution have?",
+            "choices": [
+              "27",
+              "26",
+              "10",
+              "33"
+            ],
+            "answer": 0,
+            "explain": "There are 27 amendments.",
+            "tip": "27 amendments: 2 plus 7 is 9, like the number of Supreme Court justices."
+          },
+          {
+            "q": "What did the Declaration of Independence do?",
+            "choices": [
+              "Announced and declared independence from Great Britain",
+              "Created the Constitution",
+              "Freed the slaves",
+              "Established the Supreme Court"
+            ],
+            "answer": 0,
+            "explain": "It announced that the colonies were free from Great Britain.",
+            "tip": "INDEPENDENCE means we don't depend on Britain anymore."
+          },
+          {
+            "q": "What are two rights in the Declaration of Independence?",
+            "choices": [
+              "Life and liberty",
+              "Speech and press",
+              "Voting and jury trial",
+              "Bear arms and assembly"
+            ],
+            "answer": 0,
+            "explain": "The Declaration names life, liberty and the pursuit of happiness.",
+            "tip": "Life, Liberty and the pursuit of Happiness: L, L, H."
+          },
+          {
+            "q": "What is the economic system in the United States?",
+            "choices": [
+              "Capitalist economy (market economy)",
+              "Socialist economy",
+              "Feudal economy",
+              "Command economy"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts capitalist economy or market economy.",
+            "tip": "Capitalism and market: buying and selling in a free marketplace."
+          },
+          {
+            "q": "What is the rule of law?",
+            "choices": [
+              "Everyone must follow the law; leaders and government must obey the law",
+              "The President decides what the law is",
+              "Only citizens must obey the law",
+              "Courts make all the laws"
+            ],
+            "answer": 0,
+            "explain": "No one is above the law.",
+            "tip": "Rule of law: nobody is above it, not even the President."
+          },
+          {
+            "q": "What stops one branch of government from becoming too powerful?",
+            "choices": [
+              "Checks and balances (separation of powers)",
+              "The Electoral College",
+              "The Cabinet",
+              "Political parties"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts checks and balances or separation of powers.",
+            "tip": "Checks and balances: every branch keeps the others in check."
+          },
+          {
+            "q": "Who is in charge of the executive branch?",
+            "choices": [
+              "The President",
+              "The Speaker of the House",
+              "The Chief Justice",
+              "The Secretary of State"
+            ],
+            "answer": 0,
+            "explain": "The President heads the executive branch.",
+            "tip": "The President executes the laws."
+          },
+          {
+            "q": "Who makes federal laws?",
+            "choices": [
+              "Congress",
+              "The President",
+              "The Supreme Court",
+              "The governors"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts Congress, Senate and House, or the US or national legislature.",
+            "tip": "Congress makes laws: think CongresS and StatuteS."
+          },
+          {
+            "q": "We elect a US senator for how many years?",
+            "choices": [
+              "6",
+              "2",
+              "4",
+              "8"
+            ],
+            "answer": 0,
+            "explain": "Senators serve six-year terms.",
+            "tip": "Six for Senators: S and S."
+          },
+          {
+            "q": "We elect a US representative for how many years?",
+            "choices": [
+              "2",
+              "4",
+              "6",
+              "3"
+            ],
+            "answer": 0,
+            "explain": "Representatives serve two-year terms.",
+            "tip": "Representatives: 2 years, they're always running."
+          },
+          {
+            "q": "We elect a President for how many years?",
+            "choices": [
+              "4",
+              "2",
+              "6",
+              "8"
+            ],
+            "answer": 0,
+            "explain": "A presidential term is four years.",
+            "tip": "Four years, like a high school or college term."
+          },
+          {
+            "q": "Who does a US senator represent?",
+            "choices": [
+              "All people of the state",
+              "Only the people who voted for them",
+              "Only members of their party",
+              "Only the state governor"
+            ],
+            "answer": 0,
+            "explain": "A senator represents everyone in the state.",
+            "tip": "Senators speak for the whole state."
+          },
+          {
+            "q": "In what month do we vote for President?",
+            "choices": [
+              "November",
+              "January",
+              "October",
+              "March"
+            ],
+            "answer": 0,
+            "explain": "Presidential elections are held in November.",
+            "tip": "Remember, remember, vote in November."
+          },
+          {
+            "q": "If the President can no longer serve, who becomes President?",
+            "choices": [
+              "The Vice President",
+              "The Speaker of the House",
+              "The Secretary of State",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "The Vice President is first in the line of succession.",
+            "tip": "VP = Very next President."
+          },
+          {
+            "q": "If both the President and the Vice President can no longer serve, who becomes President?",
+            "choices": [
+              "The Speaker of the House",
+              "The Secretary of State",
+              "The President pro tempore of the Senate",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "Under the Presidential Succession Act, the Speaker of the House is next after the Vice President.",
+            "tip": "President, VP, Speaker: third in line."
+          },
+          {
+            "q": "Who is the Commander in Chief of the military?",
+            "choices": [
+              "The President",
+              "The Secretary of Defense",
+              "The Chairman of the Joint Chiefs",
+              "Congress"
+            ],
+            "answer": 0,
+            "explain": "Article II makes the President Commander in Chief.",
+            "tip": "Chief of the country, chief of the military."
+          },
+          {
+            "q": "What does the President's Cabinet do?",
+            "choices": [
+              "Advises the President",
+              "Makes federal laws",
+              "Decides court cases",
+              "Counts electoral votes"
+            ],
+            "answer": 0,
+            "explain": "Cabinet members head executive departments and advise the President.",
+            "tip": "A Cabinet holds the President's advisors, like a cabinet holds dishes."
+          },
+          {
+            "q": "What does the judicial branch do?",
+            "choices": [
+              "Reviews laws, explains laws and resolves disputes",
+              "Writes and passes laws",
+              "Commands the military",
+              "Collects taxes"
+            ],
+            "answer": 0,
+            "explain": "USCIS also accepts: decides if a law goes against the Constitution.",
+            "tip": "Judges judge: review, explain, resolve."
+          },
+          {
+            "q": "Under our Constitution, some powers belong to the federal government. What is one?",
+            "choices": [
+              "To declare war",
+              "To issue driver's licenses",
+              "To provide police protection",
+              "To provide schooling"
+            ],
+            "answer": 0,
+            "explain": "Federal powers include printing money, declaring war, creating an army and making treaties.",
+            "tip": "Big national stuff: war, money, army, treaties."
+          },
+          {
+            "q": "Under our Constitution, some powers belong to the states. What is one?",
+            "choices": [
+              "Approve zoning and land use",
+              "Make treaties",
+              "Print money",
+              "Create an army"
+            ],
+            "answer": 0,
+            "explain": "State powers include schooling, police, safety, driver's licenses and zoning.",
+            "tip": "Local stuff: schools, police, licenses, zoning."
+          },
+          {
+            "q": "There are four amendments to the Constitution about who can vote. Which describes one of them?",
+            "choices": [
+              "Citizens 18 and older can vote",
+              "Only property owners can vote",
+              "Citizens must pass a literacy test",
+              "Voters must pay a poll tax"
+            ],
+            "answer": 0,
+            "explain": "The voting amendments: race (15th), women (19th), no poll tax (24th), age 18 (26th).",
+            "tip": "15, 19, 24, 26: race, women, no poll tax, age 18."
+          },
+          {
+            "q": "What is one responsibility that is only for United States citizens?",
+            "choices": [
+              "Serve on a jury",
+              "Pay taxes",
+              "Obey the law",
+              "Get a driver's license"
+            ],
+            "answer": 0,
+            "explain": "Serving on a jury and voting in federal elections are responsibilities only for citizens.",
+            "tip": "Jury and vote: what citizens alone owe."
+          },
+          {
+            "q": "What is one promise you make when you become a United States citizen?",
+            "choices": [
+              "Defend the Constitution and laws of the United States",
+              "Never travel abroad",
+              "Join a political party",
+              "Live in one state permanently"
+            ],
+            "answer": 0,
+            "explain": "The oath also includes giving up loyalty to other countries, obeying the laws and serving the nation if needed.",
+            "tip": "The oath is a promise to defend, obey and serve."
+          },
+          {
+            "q": "How old do citizens have to be to vote for President?",
+            "choices": [
+              "18 and older",
+              "21 and older",
+              "16 and older",
+              "25 and older"
+            ],
+            "answer": 0,
+            "explain": "The 26th Amendment set the voting age at 18.",
+            "tip": "18: old enough to vote."
+          },
+          {
+            "q": "When is the last day you can send in federal income tax forms, in a typical year?",
+            "choices": [
+              "April 15",
+              "January 1",
+              "June 30",
+              "December 31"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts April 15. The deadline shifts when April 15 falls on a weekend or holiday.",
+            "tip": "April 15: Tax Day, right in the middle of April."
+          },
+          {
+            "q": "When must all men register for the Selective Service?",
+            "choices": [
+              "At age 18 (between 18 and 26)",
+              "At age 16",
+              "At age 21",
+              "Only during wartime"
+            ],
+            "answer": 0,
+            "explain": "Men must register between ages 18 and 26.",
+            "tip": "18 to 26: register when you turn 18."
+          },
+          {
+            "q": "Who wrote the Declaration of Independence?",
+            "choices": [
+              "Thomas Jefferson",
+              "James Madison",
+              "Benjamin Franklin",
+              "John Hancock"
+            ],
+            "answer": 0,
+            "explain": "Jefferson was the principal author.",
+            "tip": "Jefferson, the Declaration's pen."
+          },
+          {
+            "q": "When was the Declaration of Independence adopted?",
+            "choices": [
+              "July 4, 1776",
+              "September 17, 1787",
+              "July 4, 1789",
+              "December 15, 1791"
+            ],
+            "answer": 0,
+            "explain": "The Continental Congress adopted it on July 4, 1776.",
+            "tip": "July 4, 1776: the nation's birthday."
+          },
+          {
+            "q": "When was the Constitution written?",
+            "choices": [
+              "1787",
+              "1776",
+              "1791",
+              "1781"
+            ],
+            "answer": 0,
+            "explain": "It was written at the Constitutional Convention in 1787.",
+            "tip": "1787: eleven years after 1776."
+          },
+          {
+            "q": "The Federalist Papers supported passage of the Constitution. Name one of the writers.",
+            "choices": [
+              "James Madison",
+              "Thomas Jefferson",
+              "Patrick Henry",
+              "Samuel Adams"
+            ],
+            "answer": 0,
+            "explain": "The writers were Madison, Alexander Hamilton and John Jay, under the name Publius.",
+            "tip": "Hamilton, Madison, Jay: HMJ."
+          },
+          {
+            "q": "What is one thing Benjamin Franklin is famous for?",
+            "choices": [
+              "He was the oldest member of the Constitutional Convention",
+              "He was the first President",
+              "He wrote the Bill of Rights",
+              "He was the first Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "USCIS also accepts: diplomat, first Postmaster General, writer of Poor Richard's Almanac, started the first free libraries.",
+            "tip": "Franklin, at 81, was the oldest founder in the room."
+          },
+          {
+            "q": "Who is the Father of Our Country?",
+            "choices": [
+              "George Washington",
+              "Thomas Jefferson",
+              "John Adams",
+              "Benjamin Franklin"
+            ],
+            "answer": 0,
+            "explain": "George Washington is called the Father of Our Country.",
+            "tip": "George Washington, father of the nation, face on the dollar."
+          },
+          {
+            "q": "What territory did the United States buy from France in 1803?",
+            "choices": [
+              "The Louisiana Territory",
+              "Alaska",
+              "Florida",
+              "Texas"
+            ],
+            "answer": 0,
+            "explain": "The Louisiana Purchase roughly doubled the size of the country.",
+            "tip": "Louisiana sounds like Louis, the French kings' name."
+          },
+          {
+            "q": "Name one war fought by the United States in the 1800s.",
+            "choices": [
+              "The Mexican-American War",
+              "World War I",
+              "The Korean War",
+              "The Vietnam War"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts the War of 1812, Mexican-American War, Civil War and Spanish-American War.",
+            "tip": "1800s: 1812, Mexican-American, Civil, Spanish-American."
+          },
+          {
+            "q": "What was one important thing that Abraham Lincoln did?",
+            "choices": [
+              "Freed the slaves with the Emancipation Proclamation",
+              "Wrote the Declaration of Independence",
+              "Bought Alaska",
+              "Led the US in World War I"
+            ],
+            "answer": 0,
+            "explain": "USCIS also accepts: saved or preserved the Union, led the US during the Civil War.",
+            "tip": "Honest Abe freed the slaves and saved the Union."
+          },
+          {
+            "q": "What did the Emancipation Proclamation do?",
+            "choices": [
+              "Freed the slaves in the Confederate states",
+              "Ended World War I",
+              "Gave women the right to vote",
+              "Created the national park system"
+            ],
+            "answer": 0,
+            "explain": "Issued in 1863, it declared slaves in Confederate-held areas free.",
+            "tip": "Emancipate means set free."
+          },
+          {
+            "q": "What did Susan B. Anthony do?",
+            "choices": [
+              "Fought for women's rights",
+              "Wrote the national anthem",
+              "Led troops in the Civil War",
+              "Was the first woman on the Supreme Court"
+            ],
+            "answer": 0,
+            "explain": "She was a leader for women's rights and civil rights.",
+            "tip": "Susan B. fought for women's right to vote: she's on a dollar coin."
+          },
+          {
+            "q": "Who was President during World War I?",
+            "choices": [
+              "Woodrow Wilson",
+              "Franklin Roosevelt",
+              "Theodore Roosevelt",
+              "Herbert Hoover"
+            ],
+            "answer": 0,
+            "explain": "Woodrow Wilson led the country during World War I.",
+            "tip": "Wilson, W for World War I."
+          },
+          {
+            "q": "Who was President during the Great Depression and World War II?",
+            "choices": [
+              "Franklin Roosevelt",
+              "Harry Truman",
+              "Woodrow Wilson",
+              "Dwight Eisenhower"
+            ],
+            "answer": 0,
+            "explain": "Franklin D. Roosevelt served from 1933 until his death in 1945.",
+            "tip": "FDR: Fought Depression and Rivals in World War II."
+          },
+          {
+            "q": "Before he was President, Eisenhower was a general. What war was he in?",
+            "choices": [
+              "World War II",
+              "The Civil War",
+              "The Vietnam War",
+              "The War of 1812"
+            ],
+            "answer": 0,
+            "explain": "Eisenhower was Supreme Allied Commander in Europe during World War II.",
+            "tip": "Ike liked D-Day: World War II general."
+          },
+          {
+            "q": "During the Cold War, what was the main concern of the United States?",
+            "choices": [
+              "Communism",
+              "Slavery",
+              "Taxes on tea",
+              "Prohibition"
+            ],
+            "answer": 0,
+            "explain": "The Cold War was a rivalry with the Soviet Union and the spread of communism.",
+            "tip": "Cold War, Communism: C and C."
+          },
+          {
+            "q": "What did Martin Luther King, Jr. do?",
+            "choices": [
+              "Fought for civil rights and equality for all Americans",
+              "Wrote the Constitution",
+              "Was the first Black Supreme Court justice",
+              "Led the Union army"
+            ],
+            "answer": 0,
+            "explain": "He was a leader of the civil rights movement.",
+            "tip": "I Have a Dream: equality for all."
+          },
+          {
+            "q": "What major event happened on September 11, 2001, in the United States?",
+            "choices": [
+              "Terrorists attacked the United States",
+              "The Berlin Wall fell",
+              "The first moon landing",
+              "The end of World War II"
+            ],
+            "answer": 0,
+            "explain": "Terrorists hijacked planes and attacked New York City and Washington, D.C.; another plane crashed in Pennsylvania.",
+            "tip": "9/11: terrorists attacked the United States."
+          },
+          {
+            "q": "Name one US territory.",
+            "choices": [
+              "Puerto Rico",
+              "Hawaii",
+              "Alaska",
+              "Cuba"
+            ],
+            "answer": 0,
+            "explain": "Territories include Puerto Rico, Guam, the US Virgin Islands, American Samoa and the Northern Mariana Islands. Hawaii and Alaska are states.",
+            "tip": "Puerto Rico: a territory, not a state."
+          },
+          {
+            "q": "Why does the flag have 13 stripes?",
+            "choices": [
+              "Because there were 13 original colonies",
+              "Because there were 13 founding fathers",
+              "Because of 13 amendments",
+              "Because of 13 battles"
+            ],
+            "answer": 0,
+            "explain": "The stripes represent the 13 original colonies.",
+            "tip": "13 stripes for 13 colonies."
+          },
+          {
+            "q": "What is the name of the national anthem?",
+            "choices": [
+              "The Star-Spangled Banner",
+              "America the Beautiful",
+              "My Country, 'Tis of Thee",
+              "God Bless America"
+            ],
+            "answer": 0,
+            "explain": "The Star-Spangled Banner became the official anthem in 1931.",
+            "tip": "Star-Spangled Banner: the flag still waved over Fort McHenry."
+          },
+          {
+            "q": "What group of people was taken to America and sold as slaves?",
+            "choices": [
+              "Africans (people from Africa)",
+              "The Irish",
+              "The French",
+              "The Dutch"
+            ],
+            "answer": 0,
+            "explain": "Enslaved Africans were brought to America against their will.",
+            "tip": "Africans were brought to America in chains."
+          }
+        ]
+      },
+      {
+        "name": "Things adults forget",
+        "questions": [
+          {
+            "q": "How long is a US senator's term?",
+            "choices": [
+              "6 years",
+              "4 years",
+              "2 years",
+              "8 years"
+            ],
+            "answer": 0,
+            "explain": "Six years; about one-third of the Senate is elected every two years.",
+            "tip": "Senators Six: S and S."
+          },
+          {
+            "q": "How long is a term for a member of the House of Representatives?",
+            "choices": [
+              "2 years",
+              "4 years",
+              "6 years",
+              "3 years"
+            ],
+            "answer": 0,
+            "explain": "Two years; every House seat is up each even-numbered year.",
+            "tip": "House Hurries: every 2 years."
+          },
+          {
+            "q": "How long do federal judges, including Supreme Court justices, serve?",
+            "choices": [
+              "During good behavior, effectively for life",
+              "10 years",
+              "Until age 70",
+              "4 years"
+            ],
+            "answer": 0,
+            "explain": "Article III judges have no fixed term and can be removed only by impeachment and conviction.",
+            "tip": "Good behavior is forever: life tenure."
+          },
+          {
+            "q": "What does the First Amendment protect?",
+            "choices": [
+              "Religion, speech, press, assembly and petition",
+              "The right to bear arms",
+              "Protection from unreasonable searches",
+              "The right to a jury trial"
+            ],
+            "answer": 0,
+            "explain": "Five freedoms: religion, speech, press, peaceable assembly and petitioning the government.",
+            "tip": "RAPPS: Religion, Assembly, Press, Petition, Speech."
+          },
+          {
+            "q": "What does the Second Amendment protect?",
+            "choices": [
+              "The right to keep and bear arms",
+              "Freedom of the press",
+              "The right to a speedy trial",
+              "Protection from quartering soldiers"
+            ],
+            "answer": 0,
+            "explain": "The Second Amendment protects the right to keep and bear arms.",
+            "tip": "Two arms, Second Amendment: the right to bear arms."
+          },
+          {
+            "q": "What does the Third Amendment protect against?",
+            "choices": [
+              "Being forced to quarter soldiers in your home in peacetime",
+              "Unreasonable searches",
+              "Excessive bail",
+              "Self-incrimination"
+            ],
+            "answer": 0,
+            "explain": "No soldier may be quartered in a house without the owner's consent in peacetime, or in wartime except as law prescribes.",
+            "tip": "Third: no soldiers on your couch."
+          },
+          {
+            "q": "What does the Fourth Amendment protect against?",
+            "choices": [
+              "Unreasonable searches and seizures",
+              "Cruel and unusual punishment",
+              "Double jeopardy",
+              "Establishment of religion"
+            ],
+            "answer": 0,
+            "explain": "Warrants require probable cause and must describe the place and items to be searched or seized.",
+            "tip": "Fourth for your door: no unreasonable searches."
+          },
+          {
+            "q": "Which protections are in the Fifth Amendment?",
+            "choices": [
+              "Grand jury, no double jeopardy, no self-incrimination, due process and just compensation",
+              "Speedy and public trial and right to counsel",
+              "Freedom of speech and press",
+              "Right to a jury in civil cases"
+            ],
+            "answer": 0,
+            "explain": "The 5th also includes the Takings Clause: private property cannot be taken for public use without just compensation.",
+            "tip": "Five protections in the Fifth: grand jury, double jeopardy, self-incrimination, due process, takings."
+          },
+          {
+            "q": "What does the Sixth Amendment guarantee in criminal cases?",
+            "choices": [
+              "A speedy and public trial by an impartial jury, and the assistance of counsel",
+              "Protection from double jeopardy",
+              "Freedom from excessive fines",
+              "A jury in civil lawsuits"
+            ],
+            "answer": 0,
+            "explain": "It also includes the rights to be informed of the charges and to confront witnesses.",
+            "tip": "Six for a speedy trial: quick, public, fair, with a lawyer."
+          },
+          {
+            "q": "What does the Seventh Amendment guarantee?",
+            "choices": [
+              "A jury trial in many civil cases",
+              "A jury trial in criminal cases",
+              "A lawyer for the accused",
+              "Freedom of assembly"
+            ],
+            "answer": 0,
+            "explain": "It preserves the right to a civil jury where the value in controversy exceeds twenty dollars.",
+            "tip": "Seven for civil: jury in lawsuits over $20."
+          },
+          {
+            "q": "What does the Eighth Amendment prohibit?",
+            "choices": [
+              "Excessive bail, excessive fines, and cruel and unusual punishment",
+              "Unreasonable searches",
+              "Quartering soldiers",
+              "Poll taxes"
+            ],
+            "answer": 0,
+            "explain": "The 8th Amendment limits punishments and bail.",
+            "tip": "Eight is great: no cruel punishment, no crazy bail."
+          },
+          {
+            "q": "What does the Ninth Amendment say?",
+            "choices": [
+              "Listing certain rights does not deny other rights retained by the people",
+              "Powers not delegated are reserved to the states",
+              "Citizens may bear arms",
+              "Congress may tax incomes"
+            ],
+            "answer": 0,
+            "explain": "The 9th Amendment guards against reading the Bill of Rights as a complete list of rights.",
+            "tip": "Nine: there are more rights than the list."
+          },
+          {
+            "q": "What does the Tenth Amendment say?",
+            "choices": [
+              "Powers not delegated to the federal government are reserved to the states or the people",
+              "The people retain unlisted rights",
+              "Federal law is supreme",
+              "States may not tax imports"
+            ],
+            "answer": 0,
+            "explain": "The 10th Amendment is the basis of reserved state powers.",
+            "tip": "Ten: the leftovers go to the states and people."
+          },
+          {
+            "q": "What are the qualifications to be President?",
+            "choices": [
+              "Natural-born citizen, at least 35, and 14 years a US resident",
+              "Citizen for 7 years and at least 25",
+              "Citizen for 9 years and at least 30",
+              "Any citizen at least 18"
+            ],
+            "answer": 0,
+            "explain": "Article II, Section 1 sets these requirements.",
+            "tip": "35, 14, born here: President's three rules."
+          },
+          {
+            "q": "In what year was the Bill of Rights ratified?",
+            "choices": [
+              "1791",
+              "1787",
+              "1776",
+              "1789"
+            ],
+            "answer": 0,
+            "explain": "It was ratified on December 15, 1791.",
+            "tip": "1791: four years after 1787."
+          },
+          {
+            "q": "What is the maximum number of times a person can be elected President?",
+            "choices": [
+              "Two",
+              "One",
+              "Three",
+              "No limit"
+            ],
+            "answer": 0,
+            "explain": "Under the 22nd Amendment. Someone who served more than two years of another's term can be elected only once.",
+            "tip": "22nd Amendment: two terms, two 2s."
+          }
+        ]
+      },
+      {
+        "name": "How the system works",
+        "questions": [
+          {
+            "q": "What vote does Congress need to override a presidential veto?",
+            "choices": [
+              "Two-thirds of both houses",
+              "A simple majority of both houses",
+              "Three-fourths of the Senate only",
+              "Unanimous consent"
+            ],
+            "answer": 0,
+            "explain": "Article I, Section 7 requires two-thirds of each house.",
+            "tip": "Two-thirds in both: a supermajority beats a veto."
+          },
+          {
+            "q": "How many states must ratify a constitutional amendment?",
+            "choices": [
+              "Three-fourths (38 of 50)",
+              "Two-thirds (34 of 50)",
+              "A majority (26 of 50)",
+              "All 50"
+            ],
+            "answer": 0,
+            "explain": "Article V requires ratification by three-fourths of the states.",
+            "tip": "38 of 50: three-fourths of the states."
+          },
+          {
+            "q": "Who presides over the Senate trial when a President is impeached?",
+            "choices": [
+              "The Chief Justice",
+              "The Vice President",
+              "The Speaker of the House",
+              "The Senate Majority Leader"
+            ],
+            "answer": 0,
+            "explain": "Article I, Section 3 says the Chief Justice presides when the President is tried.",
+            "tip": "The Chief Justice presides, not the VP, who could become President."
+          },
+          {
+            "q": "How many days (excluding Sundays) does the President have to sign or veto a bill?",
+            "choices": [
+              "10",
+              "30",
+              "5",
+              "60"
+            ],
+            "answer": 0,
+            "explain": "If the President does nothing for ten days while Congress is in session, the bill becomes law without a signature.",
+            "tip": "Ten days to decide: count on your fingers."
+          },
+          {
+            "q": "What is a pocket veto?",
+            "choices": [
+              "A bill dies when Congress adjourns and the President does not sign it within ten days",
+              "The President vetoes a bill secretly",
+              "Congress vetoes a President's order",
+              "A veto of only part of a bill"
+            ],
+            "answer": 0,
+            "explain": "Because Congress has adjourned, the bill cannot be returned and so does not become law.",
+            "tip": "Pocket veto: the President pockets the bill and it dies when Congress leaves."
+          },
+          {
+            "q": "How many electoral votes are needed to win the presidency?",
+            "choices": [
+              "270",
+              "218",
+              "51",
+              "300"
+            ],
+            "answer": 0,
+            "explain": "A majority of the 538 electors.",
+            "tip": "270 to win."
+          },
+          {
+            "q": "What fraction of the Senate must approve a treaty?",
+            "choices": [
+              "Two-thirds of senators present",
+              "A simple majority",
+              "Three-fourths",
+              "All senators"
+            ],
+            "answer": 0,
+            "explain": "Article II, Section 2.",
+            "tip": "Treaty takes two-thirds."
+          },
+          {
+            "q": "Which crime is defined in the Constitution itself?",
+            "choices": [
+              "Treason",
+              "Murder",
+              "Bribery",
+              "Perjury"
+            ],
+            "answer": 0,
+            "explain": "Article III defines treason as levying war against the US or adhering to its enemies, giving them aid and comfort.",
+            "tip": "Treason is the only crime the Constitution spells out."
+          },
+          {
+            "q": "Who is the President of the Senate?",
+            "choices": [
+              "The Vice President",
+              "The Senate Majority Leader",
+              "The President pro tempore",
+              "The Chief Justice"
+            ],
+            "answer": 0,
+            "explain": "The Vice President presides and votes only to break ties.",
+            "tip": "VP presides, VP decides ties."
+          },
+          {
+            "q": "Which writ, protected in Article I, lets a prisoner challenge unlawful detention?",
+            "choices": [
+              "Habeas corpus",
+              "Certiorari",
+              "Mandamus",
+              "Subpoena"
+            ],
+            "answer": 0,
+            "explain": "It may be suspended only when public safety requires it in cases of rebellion or invasion.",
+            "tip": "Habeas corpus: you have the body, so show why you hold it."
+          },
+          {
+            "q": "What is the Constitution's minimum age for a member of the House, the Senate and the presidency, in that order?",
+            "choices": [
+              "25, 30, 35",
+              "21, 25, 30",
+              "18, 25, 35",
+              "30, 35, 40"
+            ],
+            "answer": 0,
+            "explain": "Articles I and II set these minimums.",
+            "tip": "25, 30, 35: climb by fives from House to President."
+          }
+        ]
+      },
+      {
+        "name": "Founding history refresher",
+        "questions": [
+          {
+            "q": "On what date was the Constitution signed?",
+            "choices": [
+              "September 17, 1787",
+              "July 4, 1776",
+              "December 15, 1791",
+              "March 4, 1789"
+            ],
+            "answer": 0,
+            "explain": "September 17 is observed as Constitution Day and Citizenship Day.",
+            "tip": "September 17: Constitution Day."
+          },
+          {
+            "q": "Which state was the ninth to ratify, making the Constitution take effect?",
+            "choices": [
+              "New Hampshire",
+              "Virginia",
+              "New York",
+              "Delaware"
+            ],
+            "answer": 0,
+            "explain": "New Hampshire ratified on June 21, 1788.",
+            "tip": "New Hampshire made nine: Live Free or Die."
+          },
+          {
+            "q": "Which state was the first to ratify the Constitution?",
+            "choices": [
+              "Delaware",
+              "Pennsylvania",
+              "Massachusetts",
+              "Virginia"
+            ],
+            "answer": 0,
+            "explain": "Delaware ratified on December 7, 1787, earning the nickname the First State.",
+            "tip": "Delaware: the First State, on its license plates."
+          },
+          {
+            "q": "Who presided over the Constitutional Convention?",
+            "choices": [
+              "George Washington",
+              "Benjamin Franklin",
+              "James Madison",
+              "John Adams"
+            ],
+            "answer": 0,
+            "explain": "Washington was unanimously chosen president of the Convention.",
+            "tip": "Washington chaired the Convention."
+          },
+          {
+            "q": "Which compromise created a House based on population and a Senate with equal representation?",
+            "choices": [
+              "The Great (Connecticut) Compromise",
+              "The Missouri Compromise",
+              "The Three-Fifths Compromise",
+              "The Compromise of 1850"
+            ],
+            "answer": 0,
+            "explain": "Roger Sherman and Oliver Ellsworth of Connecticut proposed it.",
+            "tip": "The Great Compromise: big states and small states both win."
+          },
+          {
+            "q": "The Virginia Plan favored representation based on population. What did the New Jersey Plan favor?",
+            "choices": [
+              "Equal representation for each state",
+              "A king",
+              "No national legislature",
+              "Representation based on land area"
+            ],
+            "answer": 0,
+            "explain": "The Great Compromise blended the two plans.",
+            "tip": "Virginia was big; New Jersey was small."
+          },
+          {
+            "q": "Which 1786-1787 uprising in Massachusetts exposed the weakness of the Articles of Confederation?",
+            "choices": [
+              "Shays' Rebellion",
+              "The Whiskey Rebellion",
+              "The Boston Tea Party",
+              "Bacon's Rebellion"
+            ],
+            "answer": 0,
+            "explain": "Shays' Rebellion helped build support for a stronger national government.",
+            "tip": "Shays' Rebellion shook the Articles."
+          },
+          {
+            "q": "Who first proposed the amendments that became the Bill of Rights in the First Congress?",
+            "choices": [
+              "James Madison",
+              "Thomas Jefferson",
+              "Alexander Hamilton",
+              "George Mason"
+            ],
+            "answer": 0,
+            "explain": "Madison introduced them in the House in 1789.",
+            "tip": "Madison: Father of the Constitution AND the Bill of Rights."
+          },
+          {
+            "q": "Why did the colonists fight the British?",
+            "choices": [
+              "High taxes without representation, soldiers housed in their homes, and lack of self-government",
+              "To gain more land in Europe",
+              "To end slavery",
+              "To install a new king"
+            ],
+            "answer": 0,
+            "explain": "These are the reasons USCIS accepts.",
+            "tip": "No taxation without representation."
+          },
+          {
+            "q": "What problem was a central cause of the Civil War?",
+            "choices": [
+              "Slavery",
+              "Taxes on tea",
+              "Prohibition",
+              "The Louisiana Purchase"
+            ],
+            "answer": 0,
+            "explain": "USCIS accepts slavery, economic reasons and states' rights.",
+            "tip": "Slavery split the nation."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+NAME
+       arping - send ARP requests to a neighbour on the local network
+
+SYNOPSIS
+       arping [-c COUNT] [-I INTERFACE] ADDRESS
+
+DESCRIPTION
+       arping asks "who has ADDRESS?" with ARP (address resolution) packets on
+       the local network and prints the hardware (MAC) address of whoever
+       answers. Unlike ping it works below IP, so it gets an answer even when
+       the other machine's firewall drops ICMP. Only machines on the same
+       network segment can be reached.
+
+       It is handy for checking that an address is really in use (or free)
+       before you give it to a machine.
+
+OPTIONS
+       -c COUNT
+              Stop after COUNT requests.
+
+       -I INTERFACE
+              Send the requests out of this interface, for example enp1s0.
+
+EXAMPLES
+       Check who answers for the gateway:
+
+           arping -c 1 -I enp1s0 192.168.50.254
+
+SEE ALSO
+       ping(8), ip(8)

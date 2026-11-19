@@ -1,0 +1,28 @@
+SYNOPSIS: Creates a module manifest, the .psd1 file that describes a module.
+DESCRIPTION:
+A manifest is a data file (a hashtable) that tells PowerShell about a module: its version, its author, the .psm1 file to run (RootModule), the modules it needs first and which commands it exports.
+
+New-ModuleManifest writes a manifest with a short comment above every key. Keys you do not give are written as comments, so you can fill them in later. Save the manifest in the module's folder with the folder's name, for example C:\Program Files\WindowsPowerShell\Modules\LabTools\LabTools.psd1.
+PARAMETER Path:
+The file to create. It must end in .psd1.
+PARAMETER RootModule:
+The .psm1 file that runs when the module is imported, for example LabTools.psm1. Without it the module is a manifest-only module.
+PARAMETER ModuleVersion:
+The module's version, for example 1.2.0. The default is 1.0.
+PARAMETER Author:
+Who wrote it. The default is your user name.
+PARAMETER Description:
+A sentence about what the module does.
+PARAMETER RequiredModules:
+Modules that must be loaded first. Import-Module loads them for you, or fails if it cannot find them.
+PARAMETER FunctionsToExport:
+The functions the module makes visible. The default is * (all of them).
+PARAMETER PassThru:
+Shows the manifest text instead of writing the file.
+EXAMPLE: New-ModuleManifest -Path 'C:\Program Files\WindowsPowerShell\Modules\LabTools\LabTools.psd1' -RootModule LabTools.psm1 -ModuleVersion 1.0.0 -FunctionsToExport Get-Inventory
+Creates a manifest for the LabTools module that exports one function.
+EXAMPLE: New-ModuleManifest .\LabTools.psd1 -Description 'Tools for the lab' -PassThru
+Shows the manifest it would write, without creating the file.
+NOTES:
+CompanyName, Copyright, Guid, PowerShellVersion, NestedModules, CmdletsToExport, VariablesToExport and AliasesToExport fill the keys of the same names. Check the result with Test-ModuleManifest.
+RELATED: Test-ModuleManifest, Import-Module, Export-ModuleMember, about_Modules

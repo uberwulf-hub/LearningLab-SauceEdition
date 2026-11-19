@@ -1,0 +1,191 @@
+# Unit: u07 | 7. Managing servers: Server Core, remoting and Windows Admin Center | Server management
+
+Nobody should have to sign in at a server's console to look after it. Windows Server is built to be managed from somewhere else: PowerShell remoting, Windows Admin Center in a browser, Server Manager and the RSAT consoles on an admin workstation. This unit covers Server Core (the installation without a desktop), PowerShell remoting, Just Enough Administration for giving limited rights, and Windows Admin Center. Harborline's CORE1 is a Server Core machine; SRV1 runs the Windows Admin Center gateway.
+
+## Lesson: l0701 | Server Core and PowerShell remoting
+
+**Server Core** is Windows Server without the desktop: no Explorer, no Start menu, a command prompt and PowerShell. It uses less disk and memory, has fewer updates to install and less to attack, and it is the default choice in Setup. You can't add the desktop to a Server Core installation later (or remove it from "Desktop Experience"): the choice is made at installation. The **Server Core App Compatibility Feature on Demand** adds a few tools such as MMC and Event Viewer, but not a desktop.
+
+On the console, **sconfig** is a text menu for the first jobs: domain or workgroup, computer name, local administrators, **remote management**, Windows Update, Remote Desktop, network settings, date and time, activation, restart. Each item has a PowerShell equivalent (`Rename-Computer`, `Add-Computer`, `Enable-PSRemoting`, `Set-NetIPAddress`...). After that you manage the server from elsewhere.
+
+### PowerShell remoting
+
+PowerShell remoting runs over **WinRM** (WS-Management): HTTP on port **5985** (the traffic is still encrypted with Kerberos inside a domain) or HTTPS on 5986 with a certificate. On Windows Server it is **on by default** for domain and private networks; `Enable-PSRemoting -Force` turns it on again (starts the WinRM service, sets it to Automatic, creates the listener and the firewall rule). Only administrators (and the **Remote Management Users** group) may connect.
+
+- `Enter-PSSession -ComputerName CORE1`: an interactive session, one server at a time. The prompt shows `[CORE1]:`; `Exit-PSSession` leaves.
+- `Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { ... }`: runs the same commands on many servers at once (32 at a time by default, `-ThrottleLimit`), and the results come back with a `PSComputerName` property.
+- `New-PSSession` keeps a session open for several commands (`Invoke-Command -Session $s`), `Get-PSSession` lists them, `Remove-PSSession` closes them.
+- Outside a domain (workgroup servers), Kerberos can't prove who the server is: add it to the client's **TrustedHosts** (`Set-Item WSMan:\localhost\Client\TrustedHosts`) or use HTTPS.
+- The **second hop**: inside a remote session you can't reach a third computer with your credentials (for example a file share on another server). Fix it with **resource-based Kerberos constrained delegation** on the third computer, or JEA with a group managed service account; CredSSP works but leaves your credentials on the middle server.
+
+```terminal
+PS C:\Windows\system32> Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { Get-Service Spooler }
+
+Status   Name               DisplayName                            PSComputerName
+------   ----               -----------                            --------------
+Running  Spooler            Print Spooler                          FS1
+Running  Spooler            Print Spooler                          SRV1
+
+
+PS C:\Windows\system32> Enter-PSSession -ComputerName CORE1
+[CORE1]: PS C:\Users\Administrator\Documents> hostname
+CORE1
+[CORE1]: PS C:\Users\Administrator\Documents> Exit-PSSession
+```
+
+@try
+@setup CORE1
+Disable-PSRemoting -Force
+Stop-Service WinRM
+Set-Service WinRM -StartupType Disabled
+@task t1 | Server management | 10 | CORE1
+Someone turned remote management off on **CORE1**. Turn PowerShell remoting back on (you are at its console), so that the other servers can manage it again.
+@check DC1 | DC1 can run commands on CORE1
+(Invoke-Command -ComputerName CORE1 -ScriptBlock { hostname }) -eq 'CORE1'
+@hint sconfig option 4, or the cmdlet that does the same.
+@solution CORE1
+Enable-PSRemoting -Force
+@explain
+Enable-PSRemoting starts WinRM, sets it to start automatically, makes sure the HTTP listener and the firewall rule exist, and lets remote users into the PowerShell endpoints again. Starting the service alone isn't enough: Disable-PSRemoting had also blocked remote connections to those endpoints.
+@endtask
+@task t2 | Server management | 10 | DC1
+The print spooler isn't needed on the file server and the member server. From **DC1**, with one command, stop the **Print Spooler** service on **FS1** and **SRV1** and set it to **Disabled**.
+@check admin | the spooler is stopped and disabled on both
+service(FS1, "Spooler") == Stopped
+service(FS1, "Spooler").starttype == Disabled
+service(SRV1, "Spooler") == Stopped
+service(SRV1, "Spooler").starttype == Disabled
+@hint Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { ... }
+@solution DC1
+Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { Stop-Service Spooler; Set-Service Spooler -StartupType Disabled }
+@endtask
+@end
+
+@quiz
+? A server was installed with Server Core. The team now wants the full desktop on it. What do they do?
+- Install-WindowsFeature Server-Gui-Shell
+- Run sconfig and pick the desktop option
++ Reinstall with Desktop Experience (the choice can't be changed after setup)
+! Since Windows Server 2016 the installation option is fixed; manage Server Core remotely instead.
+? Which port does PowerShell remoting use by default inside a domain?
+- 3389
++ 5985 (HTTP, encrypted by Kerberos)
+- 443
+! WinRM listens on 5985 for HTTP and 5986 for HTTPS; RDP is 3389.
+? You must run the same script on 40 servers and collect the results. What is the best tool?
+- Enter-PSSession on each server in turn
++ Invoke-Command -ComputerName with the list of servers
+- Remote Desktop
+! Invoke-Command fans out to many computers in parallel and tags each result with PSComputerName.
+@end
+
+## Lesson: l0702 | Just Enough Administration (JEA)
+
+The help desk needs to restart a stuck service on the file server. Making them administrators of the server gives them far more than that. **Just Enough Administration** is a PowerShell remoting endpoint that lets chosen people run **only the commands you list**, and runs those commands as a temporary administrator so the people themselves need no rights on the server.
+
+Two files make a JEA endpoint:
+
+- A **role capability** file (`.psrc`, made with `New-PSRoleCapabilityFile`): what a role may run (`VisibleCmdlets`, `VisibleFunctions`, `VisibleExternalCommands`, even single parameters and values). It must be in a folder called **RoleCapabilities** inside a PowerShell module, for example `C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc`; the role's name is the file's name.
+- A **session configuration** file (`.pssc`, made with `New-PSSessionConfigurationFile`): `-SessionType RestrictedRemoteServer` (a locked-down session with only a few basic commands), `-RunAsVirtualAccount` (commands run as a temporary local administrator; use `-GroupManagedServiceAccount` when they must reach the network), `-RoleDefinitions` (which group gets which role), and often `-TranscriptDirectory` to record every session.
+
+`Test-PSSessionConfigurationFile` checks the file, and `Register-PSSessionConfiguration -Name Helpdesk -Path ...` creates the endpoint (it restarts WinRM). People then connect with `Enter-PSSession -ComputerName FS1 -ConfigurationName Helpdesk`, and `Get-Command` shows only what they may run. The session uses **NoLanguage** mode: no variables, no scripts of their own.
+
+```terminal
+#machine FS1
+PS C:\Windows\system32> New-Item -ItemType Directory 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities' -Force | Out-Null
+PS C:\Windows\system32> New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc' -VisibleCmdlets 'Get-Service', 'Restart-Service'
+PS C:\Windows\system32> New-PSSessionConfigurationFile -Path C:\Helpdesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'CORP\Helpdesk' = @{ RoleCapabilities = 'Helpdesk' } }
+PS C:\Windows\system32> Test-PSSessionConfigurationFile C:\Helpdesk.pssc
+True
+```
+
+> JEA endpoints are per server. To give the same role on many servers, copy the module and register the configuration with a script, Group Policy or DSC.
+
+@try
+@task t1 | Server management | 10 | FS1
+On **FS1**, give the **Helpdesk** group a JEA endpoint named **Helpdesk** in which they can run only `Get-Service` and `Restart-Service`, as a virtual account. Put the role capability file in the module **HelpdeskJEA**.
+@check FS1 | the endpoint exists, is restricted and runs as a virtual account for CORP\Helpdesk
+$c = Get-PSSessionConfiguration -Name Helpdesk -ErrorAction Stop; $c.RunAsVirtualAccount -eq 'true' -and $c.SessionType -eq 'RestrictedRemoteServer' -and ($c.Permission -like '*Helpdesk*')
+@check FS1 | the role capability allows Get-Service and Restart-Service
+$t = Get-Content 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc' -Raw; $t -match 'Restart-Service' -and $t -match 'Get-Service'
+@hint Make the RoleCapabilities folder, New-PSRoleCapabilityFile, New-PSSessionConfigurationFile -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions, Register-PSSessionConfiguration.
+@solution FS1
+New-Item -ItemType Directory 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities' -Force | Out-Null
+New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\HelpdeskJEA\RoleCapabilities\Helpdesk.psrc' -VisibleCmdlets 'Get-Service', 'Restart-Service'
+New-PSSessionConfigurationFile -Path C:\Helpdesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'CORP\Helpdesk' = @{ RoleCapabilities = 'Helpdesk' } }
+Register-PSSessionConfiguration -Name Helpdesk -Path C:\Helpdesk.pssc -Force
+@explain
+The role name in RoleDefinitions is the .psrc file's name, found in any module's RoleCapabilities folder. Registering grants the groups in RoleDefinitions permission to connect to the endpoint.
+@endtask
+@end
+
+@quiz
+? Where must a JEA role capability file be for `RoleCapabilities = 'Helpdesk'` to find it?
+- Next to the .pssc file
++ In a RoleCapabilities folder inside a PowerShell module on the server
+- In C:\Windows\System32\WindowsPowerShell\v1.0
+! JEA looks for <role>.psrc in the RoleCapabilities folder of the modules in PSModulePath.
+? Help desk commands run through JEA must open a file share on another server. What should the endpoint run as?
+- A virtual account
++ A group managed service account (-GroupManagedServiceAccount)
+- The help desk user's own account with CredSSP
+! A virtual account is local to the server; a gMSA has a domain identity that can reach the network.
+? Which session type is meant for JEA?
+- Default
++ RestrictedRemoteServer
+- Empty, with every cmdlet visible
+! RestrictedRemoteServer starts with only a handful of safe commands; the roles add what each group needs.
+@end
+
+## Lesson: l0703 | Windows Admin Center
+
+**Windows Admin Center** (WAC) is Microsoft's browser-based management tool, free with Windows Server. You install it once as a **gateway** on a server (it listens on HTTPS, port 443 by default) and open it from Edge or Chrome. The gateway talks to the servers you add with **PowerShell remoting and WMI over WinRM**, so a server needs no agent, only remote management turned on.
+
+- **Connections**: add servers, clusters, PCs and Azure VMs by name, from a list or from Active Directory. Each connection opens tools such as Overview, Files and file sharing, Roles and features, Services, Events, Certificates, Storage, Updates, Virtual machines and switches, PowerShell and Remote Desktop.
+- **Access**: gateway users and gateway administrators are groups you choose in the gateway's settings; a person still needs rights on each server (or a JEA endpoint for WAC). Use Kerberos constrained delegation or "Manage as" credentials to avoid typing a password per server.
+- **Extensions**: tools from Microsoft and partners added from the extension feed (Settings > Extensions), for example for a hardware vendor's servers.
+- **Azure registration**: register the gateway with Azure (Settings > Azure) to use **Azure hybrid services** from inside WAC: Azure Arc, Azure Update Manager, Azure Backup, Azure Monitor, Azure File Sync, Azure Network Adapter (a VPN from a server to a VNet) and others.
+- WAC is also built into the Azure portal for Azure VMs and Arc-enabled servers, without a gateway of your own.
+
+@try
+@setup CORE1
+Disable-PSRemoting -Force
+@task t1 | Server management | 10 | admin
+Add **CORE1** to Windows Admin Center. Its remote management is off at the moment: fix that first.
+@check admin | CORE1 is a connection in WAC
+wac.connections has CORE1
+@hint WAC connects over WinRM: Enable-PSRemoting on CORE1, then Add > Servers.
+@solution CORE1
+Enable-PSRemoting -Force
+@solution admin
+wac add CORE1
+@endtask
+@task t2 | Server management | 10 | admin
+Register Windows Admin Center with Azure, and use it to install **Windows Server Backup** on CORE1.
+@check admin | WAC is registered and CORE1 has the feature
+wac.registered == Yes
+feature(CORE1, "Windows-Server-Backup") == Installed
+@solution admin
+wac register
+feature install CORE1 Windows-Server-Backup
+@endtask
+@end
+
+@quiz
+? What does a server need before Windows Admin Center can manage it?
+- The Windows Admin Center agent
++ PowerShell remoting (WinRM) turned on and the gateway allowed through the firewall
+- The Desktop Experience
+! WAC is agentless: the gateway uses PowerShell remoting and WMI over WinRM.
+? Why register Windows Admin Center with Azure?
+- WAC stops working after 180 days otherwise
++ To use Azure hybrid services such as Azure Arc, Backup, Update Manager and Azure Network Adapter from WAC
+- To manage servers on the local network
+! Registration links the gateway to a tenant and subscription; local management works without it.
+? Which port does the WAC gateway use by default on Windows Server?
+- 5985
++ 443
+- 3389
+! The gateway is a web server on HTTPS (443 by default on a server installation).
+@end
+

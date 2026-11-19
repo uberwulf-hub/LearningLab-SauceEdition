@@ -1,0 +1,20 @@
+SYNOPSIS: Creates a partition on an initialized disk.
+DESCRIPTION:
+New-Partition makes a partition of a given -Size or of all the free space (-UseMaximumSize). -AssignDriveLetter picks the next free letter; -DriveLetter picks one. The partition still needs a file system: pipe it to Format-Volume.
+PARAMETER DiskNumber:
+The disk. Position 0.
+PARAMETER InputObject:
+A disk piped from Get-Disk.
+PARAMETER Size:
+The size, for example 50GB.
+PARAMETER UseMaximumSize:
+Uses all the free space.
+PARAMETER AssignDriveLetter:
+Gives it the next free drive letter.
+PARAMETER DriveLetter:
+Gives it this letter.
+EXAMPLE: New-Partition -DiskNumber 3 -UseMaximumSize -DriveLetter F | Format-Volume -FileSystem NTFS -NewFileSystemLabel Projects
+A full-size F: drive, formatted, in one line.
+EXAMPLE: Get-Partition -DiskNumber 3
+Checks the result.
+RELATED: Initialize-Disk, Format-Volume, Get-Partition, Get-Disk, New-Volume

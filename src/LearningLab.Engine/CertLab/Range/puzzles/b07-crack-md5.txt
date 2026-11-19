@@ -1,0 +1,43 @@
+title: One hash, one guess
+level: Beginner
+kind: Password cracking
+points: 50
+order: 7
+answer: {{SECRET}}
+var: SECRET = word
+
+@intro
+~/hash.txt holds one password written as an MD5 hash (32 hex digits). A hash can't
+be turned back into the password, but you can hash every word of a list and see
+which one matches. The tool hashcrack does exactly that. What is the password?
+
+@setup
+printf 'bob:{{MD5:SECRET}}\n' > /home/player/hash.txt
+chown player: /home/player/hash.txt
+
+@solution
+cat hash.txt
+hashcrack hash.txt
+hashcrack --show hash.txt
+
+@walkthrough
+hashcrack hashes every word of the built-in list (/usr/share/wordlists/range-common.txt)
+and compares it with the hash in the file. Because the password is a common, weak one,
+it is in the list and hashcrack finds it:
+
+    hashcrack hash.txt
+
+The lesson: short, common passwords fall in seconds; long, unusual ones do not.
+
+@hint 3
+What to think about first: a hash is a one-way fingerprint of a password. Systems store the fingerprint instead of the password, so you can't "decode" it. But the same password always gives the same fingerprint - so if you guess the right word and fingerprint it, the two will match.
+
+@hint 4
+That is what "cracking" a hash is: take a list of likely passwords, hash each one, and compare. Weak, common passwords fall in seconds, which is why long unique passwords matter. Look at the file first: cat hash.txt shows a name, a colon and 32 hex characters - the length of an MD5 hash.
+
+@hint 6
+hashcrack is Cyber Range's practice cracker. Give it the file and it tries every word of the built-in word list (/usr/share/wordlists/range-common.txt) against each hash it recognises. man hashcrack explains it.
+
+@hint 9
+Run: hashcrack hash.txt
+It prints the password next to the user's name. hashcrack --show hash.txt shows it again later. That password is the answer.

@@ -1,0 +1,17 @@
+SYNOPSIS: Lists the site links that connect Active Directory sites for replication.
+DESCRIPTION:
+A site link says which sites may replicate with each other, at what cost and how often. When several paths exist, the one with the lowest total cost is used. The default link, DEFAULTIPSITELINK, has cost 100 and replicates every 180 minutes; the shortest interval is 15 minutes.
+Every site must be in at least one site link, or its domain controllers won't receive changes from the other sites.
+PARAMETER Identity:
+One site link, by name. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search, such as *.
+PARAMETER Properties:
+Extra properties to return.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADReplicationSiteLink -Filter * | Select-Object Name, Cost, ReplicationFrequencyInMinutes, SitesIncluded
+Every site link with its cost, interval and sites.
+EXAMPLE: Get-ADReplicationSiteLink DEFAULTIPSITELINK
+The default site link.
+RELATED: New-ADReplicationSiteLink, Set-ADReplicationSiteLink, Get-ADReplicationSite

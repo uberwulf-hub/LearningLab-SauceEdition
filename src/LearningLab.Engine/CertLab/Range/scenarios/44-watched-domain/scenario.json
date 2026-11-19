@@ -1,0 +1,20 @@
+{
+    "base": "09-domain-of-cards",
+    "id": "watched-domain",
+    "title": "A Domain, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Expert",
+    "order": 4,
+    "summary": "The Kerberoast-style domain chain from A Domain of Cards, with the domain controller watched. Ticket cracking is offline and silent; it is the live steps against the DC you must keep clean.",
+    "story": "Castoak (made up) is watching its domain controller, WIN-DC01 (10.10.9.10). Use the open share to get a first account, ask for service tickets, crack a weak service password offline, and reach the DC - without a loud scan of it or a string of failed sign-ins against it. You start on scout.",
+    "goal": "Capture both flags the quiet way and keep the full quiet bonus.",
+    "skills": "quiet recon, open shares, service tickets, offline cracking, pass-the-password, staying quiet",
+    "quietPoints": 120,
+    "watch": [ "WIN-DC01" ],
+    "noisySolution": "noisy.txt",
+    "hints": [
+        { "text": "Only WIN-DC01 is watched, and cracking is offline. Do the noisy-looking parts against the file server or on your own box.", "cost": 25 },
+        { "text": "One ticket-request, one correct sign-in to the DC. No scans of the DC beyond what you need, and never a wrong password there.", "cost": 40 }
+    ]
+}

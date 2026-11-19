@@ -1,0 +1,49 @@
+title: The journal remembers
+level: Intermediate
+kind: System logs
+topic: Linux
+teaser: a program wrote more than it should to the system log
+points: 60
+order: 65
+answer: {{CODE}}
+var: TAG = pick:vaultd|keyminder|recoveryd|safekeep|lockbox
+var: CODE = hex:8
+
+@intro
+Modern Linux keeps one big system log, the journal. Programs write to it all day. One
+of them, while helping someone who was locked out, wrote a temporary recovery code into
+it - and logs are read by more people than you'd think. You are in the adm group, which
+may read the whole journal. Find the recovery code.
+
+@setup
+usermod -aG adm player
+logger -t backupjob "nightly backup finished: 412 files"
+logger -t crond-helper "rotated 3 log files"
+logger -t {{TAG}} "user locked out after 5 attempts"
+logger -t {{TAG}} "temporary recovery code issued: {{CODE}} (valid 24h)"
+logger -t backupjob "disk usage 61%"
+logger -t sshd-watch "no new sign-ins"
+
+@solution
+id
+journalctl | grep -i recovery
+
+@walkthrough
+journalctl reads the journal. Only members of a few groups (adm, wheel,
+systemd-journal) may read all of it; id shows you are in adm.
+
+    journalctl | grep -i recovery
+
+finds "{{TAG}}: temporary recovery code issued: {{CODE}}". (journalctl -t {{TAG}} shows
+just that program's lines.) The lesson: programs must never log secrets - passwords,
+tokens, recovery codes - because logs are copied, kept for months and read by many
+people.
+
+@hint 5
+journalctl prints the system journal. It is long; you need a way to search it for the word that matters.
+
+@hint 10
+Pipe it into grep: journalctl | grep -i code (or -i recovery). -i ignores upper and lower case.
+
+@hint 15
+journalctl | grep -i recovery shows the line; the hex code on it is the answer.

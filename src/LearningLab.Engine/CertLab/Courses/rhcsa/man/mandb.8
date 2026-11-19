@@ -1,0 +1,18 @@
+NAME
+       mandb - rebuild the index used by man -k and whatis
+
+SYNOPSIS
+       mandb
+
+DESCRIPTION
+       mandb reads the manual pages under /usr/share/man and rebuilds the
+       index that man -k, apropos and whatis search. A daily job does this
+       automatically; run it by hand (as root) right after installing
+       software when man -k does not find the new pages yet.
+
+EXAMPLES
+           mandb
+           man -k vsftpd
+
+SEE ALSO
+       man(1), apropos(1), whatis(1)

@@ -1,0 +1,47 @@
+title: Shouting quietly
+level: Expert
+kind: Steganography
+points: 90
+order: 32
+answer: {{SECRET}}
+var: SECRET = pick:lantern|compass|anchor|thistle|harvest|meridian
+
+@intro
+~/story.txt reads like a normal note, but a few letters in the middle of words are
+capital when they shouldn't be. Read those stray capital letters in order: they
+spell a word. What is it?
+
+@setup
+word='{{SECRET}}'
+normals="morning river valley meadow harbor garden willow summer window autumn"
+out=""
+i=1
+while [ $i -le ${#word} ]; do
+  ch=$(printf '%s' "$word" | cut -c$i | tr 'a-z' 'A-Z')
+  nm=$(printf '%s' "$normals" | cut -d' ' -f$(( (i-1) % 10 + 1 )))
+  out="$out $nm we${ch}re"
+  i=$((i+1))
+done
+printf 'down by the%s again.\n' "$out" > /home/player/story.txt
+chown player: /home/player/story.txt
+
+@solution
+cat story.txt
+grep -oE '[A-Z]' story.txt | tr -d '\n'
+echo
+
+@walkthrough
+Every few words one has a capital letter in the middle where it shouldn't. Pull out
+just the capital letters, in order:
+
+    grep -oE '[A-Z]' story.txt | tr -d '\n'
+
+The lesson: changes too small to notice at a glance (odd capitals, extra spaces,
+look-alike characters) can carry a hidden message that tools see even when eyes skip
+over it.
+
+@hint 12
+Some letters are capital in the middle of words. Read only those, left to right.
+
+@hint 18
+grep -oE '[A-Z]' story.txt | tr -d '\n'

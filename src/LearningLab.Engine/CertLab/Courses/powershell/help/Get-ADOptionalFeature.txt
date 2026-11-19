@@ -1,0 +1,14 @@
+SYNOPSIS: Lists Active Directory optional features, such as the Recycle Bin, and whether they are on.
+DESCRIPTION:
+Optional features are forest-wide switches. The best known is the Recycle Bin Feature. A feature is turned on where its EnabledScopes property lists something; an empty EnabledScopes means it is off.
+PARAMETER Identity:
+One feature, such as "Recycle Bin Feature". Position 0.
+PARAMETER Filter:
+A search, such as *.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADOptionalFeature -Filter * | Select-Object Name, EnabledScopes
+Every optional feature and where it is on.
+EXAMPLE: Get-ADOptionalFeature "Recycle Bin Feature"
+Whether the Recycle Bin is on.
+RELATED: Enable-ADOptionalFeature, Restore-ADObject, Get-ADForest

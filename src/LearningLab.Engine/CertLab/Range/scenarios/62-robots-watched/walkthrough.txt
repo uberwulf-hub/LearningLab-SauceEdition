@@ -1,0 +1,16 @@
+Same web server as Robots and Roots; this time a watcher reads its web log.
+
+1. A visitor's look. nmap -sV 10.10.2.30 shows ssh and a website. curl -s http://10.10.2.30/ is one
+   ordinary page view.
+
+2. Ask, don't guess. curl -s http://10.10.2.30/robots.txt lists Disallow: /site-backup/ - the site tells
+   you where its secrets are. Opening /site-backup/deploy-notes.txt is one more visit, and it holds the
+   deploy password ({{PW1}} on this run).
+
+3. One clean sign-in and root. ssh deploy@10.10.2.30 with that password, cat flag.txt, sudo -l, then
+   sudo awk '{ print }' /root/flag.txt.
+
+Why the noisy way fails: webscan fires a request for every name on its list, and pwguess tries hundreds of
+passwords. Both fill the logs in seconds; the watcher raises the alarm and blocks your address. In real life
+a web application firewall or log alert catches page-guessing sweeps. The quiet path uses what the site
+publishes about itself.

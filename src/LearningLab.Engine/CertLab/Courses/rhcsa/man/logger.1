@@ -1,0 +1,63 @@
+NAME
+       logger - write a message to the system log
+
+SYNOPSIS
+       logger [-p FACILITY.LEVEL] [-t TAG] [-i] [-s] [MESSAGE...]
+       logger [-p ...] [-t TAG] -f FILE
+
+DESCRIPTION
+       logger sends MESSAGE (or the lines of standard input or of a file) to
+       the system log, as if a program had logged it. It reaches the journal
+       (journalctl) and, through rsyslog, the text files in /var/log. Scripts
+       and cron jobs use it to leave a note of what they did, and it is handy
+       to test where log messages end up.
+
+       Every syslog message has a facility (what kind of program sent it) and
+       a level (how serious it is). rsyslog's rules in /etc/rsyslog.conf and
+       /etc/rsyslog.d/*.conf decide which file each combination goes to;
+       for example authpriv.* goes to /var/log/secure, and most others of
+       level info and above to /var/log/messages.
+
+       Facilities: kern, user (the default), mail, daemon, auth, authpriv,
+       syslog, cron, local0 to local7.
+       Levels: emerg, alert, crit, err, warning, notice (the default), info,
+       debug.
+
+OPTIONS
+       -p FACILITY.LEVEL, --priority FACILITY.LEVEL
+              The facility and level, such as user.err or local3.info. A
+              level alone (-p err) uses facility user.
+
+       -t TAG, --tag TAG
+              Put TAG in front of the message instead of your user name. Find
+              the messages again with journalctl -t TAG.
+
+       -i, --id
+              Add logger's process ID.
+
+       -s, --stderr
+              Also print the message on standard error.
+
+       -f FILE, --file FILE
+              Log every line of FILE.
+
+EXAMPLES
+       Leave a note from a backup script:
+
+           logger -t backup "backup of /etc finished"
+           journalctl -t backup
+
+       Log a test error and see it in the text log:
+
+           logger -p user.err "Cert Lab test message"
+           tail -n 3 /var/log/messages
+
+       Test a custom rsyslog rule that sends local5 to its own file:
+
+           echo "local5.* /var/log/local5.log" > /etc/rsyslog.d/local5.conf
+           systemctl restart rsyslog
+           logger -p local5.info "hello local5"
+           cat /var/log/local5.log
+
+SEE ALSO
+       journalctl(1), rsyslogd(8), rsyslog.conf(5), systemd-cat(1)

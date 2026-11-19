@@ -1,0 +1,52 @@
+NAME
+       lvm - the logical volume manager and its command shell
+
+SYNOPSIS
+       lvm [COMMAND [ARGUMENTS...]]
+
+DESCRIPTION
+       LVM (the logical volume manager) builds flexible storage out of disks
+       and partitions in three layers:
+
+       Physical volumes (PVs)
+              Disks or partitions prepared with pvcreate. Each is cut into
+              equal pieces called physical extents (4 MiB by default).
+
+       Volume groups (VGs)
+              Pools made of one or more PVs (vgcreate, vgextend). Their size
+              is the total of their PVs.
+
+       Logical volumes (LVs)
+              Parts of a VG used like partitions (lvcreate). They hold file
+              systems or swap, appear as /dev/VG/LV and /dev/mapper/VG-LV,
+              and can grow later (lvextend) while in use.
+
+       Every LVM task has its own command (pvcreate, vgcreate, lvcreate,
+       lvs...). "lvm COMMAND ARGS" runs the same commands; plain "lvm" opens
+       an lvm> prompt that accepts them one per line, which is handy in the
+       rd.break emergency shell, where only the lvm binary may be present.
+
+       The usual order for new storage: partition the disk (or use it
+       whole), pvcreate, vgcreate (or vgextend an existing VG), lvcreate,
+       mkfs, mkdir the mount point, a line in /etc/fstab, mount -a.
+
+COMMANDS
+       Physical volumes: pvcreate, pvremove, pvs, pvdisplay, pvscan,
+       pvresize, pvmove, pvchange.
+       Volume groups: vgcreate, vgextend, vgreduce, vgremove, vgrename, vgs,
+       vgdisplay, vgscan, vgchange.
+       Logical volumes: lvcreate, lvextend, lvreduce, lvresize, lvremove,
+       lvrename, lvs, lvdisplay, lvscan, lvchange.
+
+EXAMPLES
+       From the emergency shell, list and activate the volumes:
+
+           lvm lvs
+           lvm vgchange -ay
+
+FILES
+       /etc/lvm/lvm.conf
+              Settings for every LVM command.
+
+SEE ALSO
+       pvcreate(8), vgcreate(8), lvcreate(8), lvs(8), lvextend(8)

@@ -1,0 +1,4 @@
+## the LOUD way: sweep the website with a page guesser, then guess the password
+nmap -sV 10.10.2.30
+webscan http://10.10.2.30/
+pwguess -l deploy -P /usr/share/wordlists/range-common.txt ssh://10.10.2.30

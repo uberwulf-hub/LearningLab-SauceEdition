@@ -1,0 +1,14 @@
+SYNOPSIS: Lists the virtual switches on a Hyper-V host.
+DESCRIPTION:
+A virtual switch connects VMs to each other and maybe to the outside. Get-VMSwitch shows each switch's Name, SwitchType and the physical adapter it uses (NetAdapterInterfaceDescription).
+
+External: bound to a physical adapter, VMs reach the real network. Internal: VMs and the host only. Private: VMs only, not even the host. On HV1 the lab has an External switch LAN on the adapter Ethernet 2.
+PARAMETER Name:
+Shows only this switch. Position 0.
+PARAMETER SwitchType:
+Only switches of this type: External, Internal or Private.
+EXAMPLE: Get-VMSwitch -ComputerName HV1
+Lists HV1's switches.
+EXAMPLE: Get-VMSwitch -SwitchType Private
+Only the isolated ones.
+RELATED: New-VMSwitch, Remove-VMSwitch, Connect-VMNetworkAdapter, Get-VMNetworkAdapter

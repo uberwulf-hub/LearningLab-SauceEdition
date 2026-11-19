@@ -1,0 +1,13 @@
+SYNOPSIS: Unlocks a user account that was locked out by too many wrong passwords.
+DESCRIPTION:
+When the account lockout threshold is reached, the account stays locked for the lockout duration. Unlock-ADAccount ends the lockout at once; the password doesn't change.
+If the account locks again straight away, something (a phone, a mapped drive, a service) is still trying an old password.
+PARAMETER Identity:
+The user to unlock. Position 0, and takes pipeline input.
+PARAMETER PassThru:
+Returns the account after the change.
+EXAMPLE: Unlock-ADAccount ewalsh
+Unlocks Erin Walsh's account.
+EXAMPLE: Search-ADAccount -LockedOut | Unlock-ADAccount
+Unlocks every locked account.
+RELATED: Search-ADAccount, Set-ADAccountPassword, Get-ADDefaultDomainPasswordPolicy

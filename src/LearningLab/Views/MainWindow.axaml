@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:LearningLab.Views"
+        x:Class="LearningLab.Views.MainWindow"
+        Icon="/Assets/LearningLab.ico"
+        Width="1180" Height="800" MinWidth="420" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Th.Bg}"
+        Title="Learning Lab">
+    <views:MainView />
+</Window>

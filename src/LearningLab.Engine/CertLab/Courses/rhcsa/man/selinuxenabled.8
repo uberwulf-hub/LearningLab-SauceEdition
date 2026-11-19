@@ -1,0 +1,16 @@
+NAME
+       selinuxenabled - tell scripts whether SELinux is enabled
+
+SYNOPSIS
+       selinuxenabled
+
+DESCRIPTION
+       selinuxenabled prints nothing. Its exit status is 0 when SELinux is
+       enabled (enforcing or permissive) and 1 when it is disabled, which
+       suits if-tests in scripts.
+
+EXAMPLES
+           if selinuxenabled; then restorecon -R /srv/web; fi
+
+SEE ALSO
+       getenforce(8), sestatus(8)

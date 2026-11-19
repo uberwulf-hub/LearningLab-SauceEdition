@@ -1,0 +1,92 @@
+NAME
+       ssh - log in to another computer and run commands on it securely
+
+SYNOPSIS
+       ssh [-p PORT] [-i IDENTITY-FILE] [-l USER] [-o OPTION] [-q] [-t] [-v]
+           [USER@]HOST [COMMAND]
+
+DESCRIPTION
+       ssh (the OpenSSH client) opens an encrypted connection to the sshd
+       service on HOST and starts a shell there, or runs COMMAND and returns
+       its output and exit status. Everything sent over the connection,
+       passwords included, is encrypted.
+
+       Without USER@, ssh logs in with the same user name you have on the
+       local machine. Type exit (or press Ctrl+D) to close the remote shell and
+       return to the local one. Watch the prompt: it shows which machine you
+       are on.
+
+   Host keys
+       Each server has host keys that prove who it is. The first time you
+       connect to a host, ssh shows the key's fingerprint and asks whether to
+       go on; answer yes, and the key is saved in ~/.ssh/known_hosts. On later
+       connections ssh checks that the server still has the same key and
+       refuses to connect, with a loud warning, if it changed (a reinstalled
+       server, or someone in the middle). When you know the change is
+       expected, remove the old entry with ssh-keygen -R HOST.
+
+   Authentication
+       ssh tries public keys first: if you have a key pair (see ssh-keygen)
+       and the public key is listed in ~/.ssh/authorized_keys of the remote
+       account, you are logged in without the account's password (you may be
+       asked for the key's passphrase). Otherwise the server asks for the
+       password, if password logins are allowed.
+
+OPTIONS
+       -p PORT
+              Connect to this port instead of 22.
+
+       -i FILE
+              Use this private key file instead of the defaults
+              (~/.ssh/id_ed25519, ~/.ssh/id_ecdsa, ~/.ssh/id_rsa).
+
+       -l USER
+              Log in as USER (the same as USER@HOST).
+
+       -o OPTION=VALUE
+              Set an option the way ssh_config does, for example
+              -o StrictHostKeyChecking=no, -o PasswordAuthentication=no
+              (proves that a key login works) or -o BatchMode=yes (never ask
+              questions; fail instead).
+
+       -q     Quiet: do not print warnings and banners.
+
+       -t     Ask for a terminal even when a command is given (for commands
+              that need one, such as sudo asking for a password).
+
+       -v     Verbose: print what ssh is doing, to find out why a login fails.
+
+EXAMPLES
+       Log in to server2 as student:
+
+           ssh student@server2
+
+       Run one command on server2 as root and come back:
+
+           ssh root@server2 'systemctl is-active sshd'
+
+       Check that a key login works without falling back to a password:
+
+           ssh -o PasswordAuthentication=no student@server2 hostname
+
+       Connect to an sshd that listens on port 2222:
+
+           ssh -p 2222 student@server1.lab.example.com
+
+FILES
+       ~/.ssh/known_hosts
+              Host keys of the servers you have connected to.
+
+       ~/.ssh/id_ed25519, ~/.ssh/id_rsa ...
+              Your private keys; the .pub files next to them are the public
+              halves.
+
+       ~/.ssh/config, /etc/ssh/ssh_config
+              Client settings (see ssh_config(5)).
+
+       ~/.ssh/authorized_keys
+              On the server: the public keys that may log in to this account.
+
+SEE ALSO
+       scp(1), ssh-keygen(1), ssh-copy-id(1), ssh_config(5), sshd(8),
+       sshd_config(5)

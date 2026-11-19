@@ -1,0 +1,20 @@
+SYNOPSIS: Pauses a workflow job so it can be resumed later.
+DESCRIPTION:
+Suspend-Job pauses a job that supports it: in Windows PowerShell 5.1 those are workflow jobs (started from a workflow with -AsJob). The job keeps its state and can be continued with Resume-Job.
+
+Ordinary background jobs from Start-Job and remote jobs from Invoke-Command -AsJob cannot be suspended; for them Suspend-Job reports an error. Use Stop-Job to end such a job instead.
+PARAMETER Id:
+The job's Id number.
+PARAMETER Name:
+The job's name. Wildcards are allowed.
+PARAMETER Job:
+The job objects, for example from Get-Job.
+PARAMETER Force:
+Suspends a workflow job right away instead of at its next checkpoint.
+PARAMETER Wait:
+Waits until the job is suspended before returning.
+EXAMPLE: Get-Job -Name Nightly | Suspend-Job
+Pauses the workflow job named Nightly.
+NOTES:
+Workflows are not part of PowerShell 7, so Suspend-Job and Resume-Job have little use there. The Cert Lab practice console does not simulate workflows, so this command always reports that the job cannot be suspended.
+RELATED: Resume-Job, Stop-Job, Get-Job, about_Jobs

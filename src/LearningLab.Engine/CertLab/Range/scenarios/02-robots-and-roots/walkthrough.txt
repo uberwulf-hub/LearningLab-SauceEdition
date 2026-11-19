@@ -1,0 +1,18 @@
+1. Find and scan. nmap -sn 10.10.2.0/24 shows web01 at 10.10.2.30; nmap -sV 10.10.2.30
+   shows ssh (22) and a web server (80).
+
+2. robots.txt. curl http://10.10.2.30/robots.txt lists Disallow: /site-backup/. That
+   folder is meant to be hidden, which makes it the first place to look. Inside is
+   deploy-notes.txt, with the deploy password in plain text.
+
+3. Foothold. ssh deploy@10.10.2.30 with that password; the user flag is in
+   /home/deploy/flag.txt.
+
+4. Root. sudo -l shows deploy may run /usr/bin/awk as root. awk reads and prints any
+   file (and can run shell commands), so it reads root's flag:
+
+       sudo awk '{ print }' /root/flag.txt
+
+How to fix it: don't leave backup folders in the web root (and robots.txt should not
+be your only "protection"); keep nothing private in a readable file; and never give
+sudo rights to a tool that can read any file or run commands (awk, find, vi...).

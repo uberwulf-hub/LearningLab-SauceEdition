@@ -1,0 +1,83 @@
+# Lab: lab-09 | Scanning for attack surface | u13 | 40
+server2's only job is to receive the nightly backups over SSH (SFTP). Over the years it collected other software, and nobody is sure what it offers to the network. Find out the way an attacker would, with a port scan from server1, then remove what is not needed and scan again to prove the change worked (validation of remediation). You own both machines and have permission to scan them: never scan systems you do not have written permission to test.
+
+@setup server2
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install httpd vsftpd
+echo 'old test page' > /var/www/html/index.html
+systemctl enable --now httpd vsftpd
+firewall-cmd --permanent --add-service=http --add-service=ftp
+firewall-cmd --reload
+
+@task t01 | Security operations | 10 | server1
+nmap is not installed on server1, and server1 has no repositories configured yet. Create /etc/yum.repos.d/lab.repo with the two repositories http://repo.lab.example.com/BaseOS and http://repo.lab.example.com/AppStream (without GPG checks, for this lab), then install the package `nmap`.
+@check server1 | nmap is installed
+rpm -q nmap
+@hint A repo file has a [name] section per repository with name=, baseurl= and gpgcheck=0. Then dnf install -y nmap.
+@solution server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf install -y nmap
+@explain
+Scanners are dual-use tools: defenders use them to see their own attack surface, attackers to find a way in. On real networks only scan with written permission (rules of engagement), because a scan of someone else's systems can break the law. gpgcheck=0 is acceptable on this closed lab network only; on real systems keep package signatures checked, as they protect against tampered packages.
+@endtask
+
+@task t02 | Security operations | 15 | server1
+From server1, scan server2's common TCP ports with nmap and save the report in /root/scan-before.txt. Then write the numbers of the open ports, one per line in ascending order, into /root/open-ports.txt.
+@check server1 | the report is a scan of server2 that shows SSH, FTP and HTTP open
+grep -q 'Nmap scan report for server2' /root/scan-before.txt && grep -Eq '^22/tcp +open' /root/scan-before.txt && grep -Eq '^21/tcp +open' /root/scan-before.txt && grep -Eq '^80/tcp +open' /root/scan-before.txt
+@check server1 | /root/open-ports.txt lists exactly the open ports of the report
+test "$(grep -E '^[0-9]+/tcp +open' /root/scan-before.txt | cut -d/ -f1 | tr '\n' ' ')" = "$(tr '\n' ' ' < /root/open-ports.txt)"
+@hint nmap server2 > FILE saves the report. grep open FILE | cut -d/ -f1 gives the port numbers.
+@solution server1
+nmap server2 > /root/scan-before.txt
+cat /root/scan-before.txt
+grep -E '^[0-9]+/tcp +open' /root/scan-before.txt | cut -d/ -f1 > /root/open-ports.txt
+cat /root/open-ports.txt
+@explain
+This is a non-credentialed scan: it sees only what the network offers, as an outside attacker would. open means a program answers, closed that the host answered but nothing listens, filtered that a firewall blocked the probe. A credentialed scan (logged in to the system) would also find missing patches and weak settings that a port scan cannot see.
+@endtask
+
+@task t03 | Security operations | 15 | server2
+FTP is not needed on server2 (and it sends passwords in clear text). Stop the FTP server, remove its package `vsftpd`, and stop allowing the service `ftp` in the firewall, now and permanently.
+@check server2 | vsftpd is not installed and not running
+! rpm -q vsftpd && ! systemctl is-active vsftpd
+@check server2 | the firewall no longer allows ftp
+! firewall-cmd --list-services | grep -qw ftp && ! firewall-cmd --permanent --list-services | grep -qw ftp
+@hint systemctl stop, dnf remove -y, firewall-cmd --permanent --remove-service=ftp and --reload.
+@solution server2
+ss -tlnp
+systemctl stop vsftpd
+dnf remove -y vsftpd
+firewall-cmd --permanent --remove-service=ftp
+firewall-cmd --reload
+@explain
+Removing software that is not needed is the strongest hardening step: a program that is not installed cannot be attacked, misconfigured or forgotten when patches come out. Closing the firewall as well keeps the configuration tidy, so a later review is not left wondering why ftp is allowed.
+@endtask
+
+@task t04 | Security operations | 15 | server2
+The web server on server2 only shows an old test page, but the team wants to keep the package for now. Stop httpd, make sure it does not start at boot, and stop allowing the service `http` in the firewall, now and permanently.
+@check server2 | httpd is stopped and disabled
+! systemctl is-active httpd && ! systemctl is-enabled httpd
+@check server2 | the firewall no longer allows http
+! firewall-cmd --list-services | grep -qw http && ! firewall-cmd --permanent --list-services | grep -qw http
+@hint systemctl disable --now does both at once.
+@solution server2
+systemctl disable --now httpd
+firewall-cmd --permanent --remove-service=http
+firewall-cmd --reload
+firewall-cmd --list-services
+@explain
+disable --now stops the service and removes it from the boot, so it cannot come back after the next restart. If someone could start it again by accident, systemctl mask would block that too. Keeping a package you do not use is a risk you accept (and should write down); removing it, as with vsftpd, is better.
+@endtask
+
+@task t05 | Security operations | 10 | server1
+Validate the remediation: scan server2 again from server1 and save the report in /root/scan-after.txt. SSH must still be open; FTP and HTTP must not be.
+@check server1 | the new report shows SSH open and neither FTP nor HTTP open
+grep -q 'Nmap scan report for server2' /root/scan-after.txt && grep -Eq '^22/tcp +open' /root/scan-after.txt && ! grep -Eq '^(21|80)/tcp +open' /root/scan-after.txt
+@hint The same nmap command as before, into a new file. diff shows what changed.
+@solution server1
+nmap server2 > /root/scan-after.txt
+diff /root/scan-before.txt /root/scan-after.txt
+@explain
+A fix is only finished when a test shows it worked: a rescan is the usual validation, and the two reports together are evidence for the change record or the audit. Comparing scans over time also finds services that appear without a change request.
+@endtask

@@ -1,0 +1,18 @@
+SYNOPSIS: Stops a service and starts it again.
+DESCRIPTION:
+Restart-Service is a stop followed by a start, the usual way to make a service read a changed setting. A stopped service is simply started. When other running services depend on it you need -Force; the dependent services that were running are started again afterwards.
+PARAMETER Name:
+The services to restart. Takes pipeline input.
+PARAMETER DisplayName:
+The services to restart, by display name.
+PARAMETER InputObject:
+Service objects from the pipeline.
+PARAMETER Force:
+Allows the restart when other services depend on this one.
+PARAMETER PassThru:
+Outputs the restarted service.
+EXAMPLE: Restart-Service -Name Spooler
+Restarts the print spooler.
+EXAMPLE: Restart-Service LanmanServer -Force -PassThru
+Restarts the Server service even though others depend on it, and shows it.
+RELATED: Start-Service, Stop-Service, Get-Service

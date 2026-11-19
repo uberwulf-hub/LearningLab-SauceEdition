@@ -1,0 +1,386 @@
+# Unit: u02 | 2. The pipeline and objects | Pipeline
+
+The pipeline is what makes PowerShell different from older shells: commands pass **objects** to each other, not text. You can sort, filter, count and change those objects with a handful of general cmdlets that work on anything: Select-Object, Where-Object, Sort-Object, Group-Object, Measure-Object and ForEach-Object.
+
+## Lesson: l0201 | Objects in the pipeline
+
+`|` sends the output of one command to the next. What travels are objects with properties, so the next command can use a property by name.
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+Running  WinRM              Windows Remote Management (WS-Management)
+
+
+PS C:\Windows\system32> Get-Service -Name Spooler | Select-Object Name, Status, StartType
+
+Name    Status  StartType
+----    ------  ---------
+Spooler Running Automatic
+
+
+PS C:\Windows\system32> (Get-Service -Name Spooler).Status
+Running
+```
+
+The table shows only some properties. `Get-Member` lists all of them, and `Select-Object *` shows all values:
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler | Select-Object *
+
+Name                : Spooler
+RequiredServices    : {RpcSs, http}
+CanPauseAndContinue : False
+CanShutdown         : False
+CanStop             : True
+DisplayName         : Print Spooler
+DependentServices   : {}
+MachineName         : .
+ServiceName         : Spooler
+ServicesDependedOn  : {RpcSs, http}
+ServiceHandle       :
+Status              : Running
+ServiceType         : Win32OwnProcess, InteractiveProcess
+StartType           : Automatic
+Site                :
+Container           :
+```
+
+> Text tools need to cut columns out of lines. With objects you say what you want: `Status`, `StartType`. Nothing breaks when a column is wider than you expected.
+
+@try machines=1
+@task t1 | Pipeline | 10 | WIN-SRV1
+Store in `$st` the **start type** of the WinRM service (a property of the object Get-Service returns).
+@check WIN-SRV1 | $st is WinRM's start type
+"$st" -eq "$((Get-Service WinRM).StartType)"
+@hint (Get-Service -Name WinRM).StartType
+@solution WIN-SRV1
+$st = (Get-Service -Name WinRM).StartType
+$st
+@endtask
+@end
+
+@quiz
+? What travels through a PowerShell pipeline?
++ Objects with properties and methods
+- Lines of text
+- Only strings and numbers
+! That is why Sort-Object Status works without cutting text.
+? How do you see all property values of one service?
+- Get-Service Spooler -All
++ Get-Service Spooler | Select-Object *
+- Get-Service Spooler | Get-Help
+! Select-Object * (or Format-List *) shows every property and its value.
+@end
+
+## Lesson: l0202 | Selecting, sorting and filtering
+
+```terminal
+PS C:\Windows\system32> Get-Process | Sort-Object WS -Descending | Select-Object -First 3 Name, Id, WS
+
+Name          Id       WS
+----          --       --
+explorer    4476 98000000
+powershell 15460 83656704
+Registry      92 57577472
+
+
+PS C:\Windows\system32> Get-Service | Where-Object Status -eq Stopped | Select-Object -First 5 Name, StartType
+
+Name                 StartType
+----                 ---------
+AppIDSvc             Manual
+AudioEndpointBuilder Manual
+AudioSrv             Manual
+BITS                 Manual
+MSiSCSI              Manual
+
+
+PS C:\Windows\system32> Get-Service | Where-Object { $_.Status -eq 'Running' -and $_.StartType -eq 'Manual' } | Select-Object -First 3 Name
+
+Name
+----
+Appinfo
+CertPropSvc
+KeyIso
+```
+
+- **Select-Object**: choose properties (`Name, Id`), or the first / last N objects (`-First 3`, `-Last 2`), or `-Unique`, or one property's values without the object around them (`-ExpandProperty Name`).
+- **Sort-Object**: by one or more properties, `-Descending`, `-Unique`.
+- **Where-Object**: keep what passes a test. The short form `Where-Object Status -eq Stopped` takes one condition; the script block form `{ $_.Status -eq 'Running' -and ... }` takes anything.
+
+### Filter left
+
+Filter as early as possible. When the first command can filter by itself, let it: `Get-ChildItem -Filter *.log` is faster than `Get-ChildItem | Where-Object Name -like '*.log'`, because fewer objects are created at all. Where-Object is for what the first command cannot filter.
+
+### -ExpandProperty
+
+`Select-Object Name` makes new objects that have one property, Name. `Select-Object -ExpandProperty Name` outputs the names themselves, as strings. Use it when the next step wants plain values:
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | Select-Object Name
+
+Name
+----
+Spooler
+WinRM
+
+
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | Select-Object -ExpandProperty Name
+Spooler
+WinRM
+```
+
+@try machines=1
+@task t1 | Pipeline | 10 | WIN-SRV1
+Store in `$names` the **names** (plain strings) of the 3 processes that use the most memory (`WS`), largest first.
+@check WIN-SRV1 | $names holds the three names as strings
+$want = Get-Process | Sort-Object WS -Descending | Select-Object -First 3 -ExpandProperty Name; ($names -join ',') -eq ($want -join ',') -and $names[0] -is [string]
+@hint Sort-Object WS -Descending | Select-Object -First 3 -ExpandProperty Name
+@solution WIN-SRV1
+$names = Get-Process | Sort-Object WS -Descending | Select-Object -First 3 -ExpandProperty Name
+$names
+@endtask
+@end
+
+@quiz
+? Which gives the service names as plain strings?
+- Get-Service | Select-Object Name
++ Get-Service | Select-Object -ExpandProperty Name
+- Get-Service | Sort-Object Name
+! Select-Object Name makes objects with a Name property; -ExpandProperty outputs the values.
+? Why "filter left"?
++ Filtering in the first command means fewer objects are made and passed on
+- Where-Object only works on the left
+- Sorting must come last
+! Use the first command's own filter parameters when it has them.
+@end
+
+## Lesson: l0203 | Grouping and measuring
+
+```terminal
+PS C:\Windows\system32> Import-Csv C:\LabFiles\employees.csv | Group-Object Department
+
+Count Name        Group
+----- ----        -----
+    4 Engineering {@{Name=Ada Lovelace; Department=Engineering; Title=Software Developer; Office=London; Salary=9800...
+    3 Research    {@{Name=Alan Turing; Department=Research; Title=Research Scientist; Office=Manchester; Salary=1050...
+    3 IT          {@{Name=Linus Ewing; Department=IT; Title=Systems Administrator; Office=Seattle; Salary=79000; Sta...
+
+
+PS C:\Windows\system32> Import-Csv C:\LabFiles\employees.csv | Group-Object Department -NoElement | Sort-Object Count -Descending
+
+Count Name
+----- ----
+    4 Engineering
+    3 Research
+    3 IT
+
+
+PS C:\Windows\system32> Get-Process | Measure-Object WS -Sum -Average -Maximum
+
+Count    : 79
+Average  : 27122560
+Sum      : 2142682240
+Maximum  : 98000000
+Minimum  :
+Property : WS
+
+
+PS C:\Windows\system32> (Get-Service | Where-Object Status -eq Running | Measure-Object).Count
+47
+```
+
+- **Group-Object** puts objects with the same value together; each group has Count, Name and Group (the objects). `-NoElement` leaves out the objects.
+- **Measure-Object** counts, and with a property name adds up (`-Sum`), averages (`-Average`) and finds `-Minimum` / `-Maximum`. For text, `-Line -Word -Character` count lines, words and characters.
+- `(... | Measure-Object).Count` or `@(...).Count` counts what came out of a pipeline.
+
+> Values read from a CSV file are **text**. Measure-Object -Sum converts them to numbers by itself, but Sort-Object sorts text alphabetically ('100000' comes before '79000'): sort with a script block, `Sort-Object { [int]$_.Salary }`.
+
+@try machines=1
+@task t1 | Pipeline | 10 | WIN-SRV1
+From `C:\LabFiles\employees.csv` store in `$total` the **sum** of all salaries (a number).
+@check WIN-SRV1 | $total is the sum
+[int]$total -eq ((Import-Csv C:\LabFiles\employees.csv | Measure-Object Salary -Sum).Sum)
+@hint Import-Csv ... | Measure-Object Salary -Sum, then the Sum property
+@solution WIN-SRV1
+$total = (Import-Csv C:\LabFiles\employees.csv | Measure-Object Salary -Sum).Sum
+$total
+@endtask
+@end
+
+@quiz
+? What property of a Group-Object group holds the objects in it?
+- Items
++ Group
+- Values
+! Count, Name and Group are the properties of each group.
+? How do you get the largest value of a property?
++ Measure-Object PROPERTY -Maximum
+- Sort-Object PROPERTY -Max
+- Group-Object PROPERTY -Largest
+! Measure-Object also does -Minimum, -Sum and -Average.
+@end
+
+## Lesson: l0204 | ForEach-Object and calculated properties
+
+**ForEach-Object** runs a script block once for every object; `$_` is the current object. Use it to do something with each object, or to compute a new value.
+
+```terminal
+PS C:\Windows\system32> 1..3 | ForEach-Object { $_ * 10 }
+10
+20
+30
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | ForEach-Object { "$($_.Name) is $($_.Status)" }
+Spooler is Running
+WinRM is Running
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | ForEach-Object Name
+Spooler
+WinRM
+```
+
+`ForEach-Object Name` (a property name instead of a script block) is a short way to get one property of each object.
+
+### Calculated properties
+
+`Select-Object` can add a property of your own: a hashtable with **Name** (or Label) and **Expression**:
+
+```terminal
+PS C:\Windows\system32> Get-Process | Sort-Object WS -Descending | Select-Object -First 3 Name, @{ Name = 'MemoryMB'; Expression = { [math]::Round($_.WS / 1MB, 1) } }
+
+Name       MemoryMB
+----       --------
+explorer       93.5
+powershell     79.8
+Registry       54.9
+
+
+PS C:\Windows\system32> Import-Csv C:\LabFiles\employees.csv | Select-Object -First 3 Name, @{ n = 'Monthly'; e = { [int]$_.Salary / 12 } }
+
+Name                  Monthly
+----                  -------
+Ada Lovelace 8166.66666666667
+Grace Hopper 10333.3333333333
+Alan Turing              8750
+```
+
+The short keys `n` and `e` work too. Calculated properties are how you rename a property, change its unit or combine several into one.
+
+@try machines=1
+@task t1 | Pipeline | 10 | WIN-SRV1
+Store in `$staff` the employees of `C:\LabFiles\employees.csv` as objects with two properties: `Name` and `Started`, where `Started` is the **year** they started (a number, from the date in the Started column).
+@check WIN-SRV1 | $staff has Name and Started (a number) for every employee
+$staff.Count -eq 10 -and ($staff[0].psobject.Properties.Name -join ',') -eq 'Name,Started' -and $staff[0].Started -eq 2019
+@hint Select-Object Name, @{ Name = 'Started'; Expression = { ([datetime]$_.Started).Year } }
+@solution WIN-SRV1
+$staff = Import-Csv C:\LabFiles\employees.csv | Select-Object Name, @{ Name = 'Started'; Expression = { ([datetime]$_.Started).Year } }
+$staff
+@endtask
+@end
+
+@quiz
+? In `ForEach-Object { ... }`, what is `$_`?
++ The current pipeline object
+- The whole input array
+- The previous result
+! $PSItem is another name for it.
+? Which hashtable keys make a calculated property?
+- Key and Value
++ Name (or Label) and Expression
+- Property and Script
+! n and e are accepted shortcuts.
+@end
+
+## Lesson: l0205 | How cmdlets take pipeline input
+
+Why does `Get-Service | Stop-Service` stop those services, while `Get-Process | Stop-Service` only gives errors (it looks for services named like each process)? Each cmdlet says which parameters accept pipeline input, and how. `Get-Help Stop-Service -Full` shows it under each parameter as "Accept pipeline input?".
+
+PowerShell binds each incoming object like this:
+
+1. **ByValue**: a parameter of the same type takes the whole object. A ServiceController goes to Stop-Service's `-InputObject`, and a string piped to Get-Service goes to its `-Name`.
+2. **ByPropertyName**: a parameter takes the value of the object's property with the **same name** (or an alias of the parameter). Any object with a `Name` property can feed Get-Service's `-Name`.
+3. If neither fits as it is, PowerShell tries both again, this time converting types (for example, a number piped to a parameter that takes strings).
+
+```terminal
+PS C:\Windows\system32> 'Spooler', 'WinRM' | Get-Service
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+Running  WinRM              Windows Remote Management (WS-Management)
+
+
+PS C:\Windows\system32> [pscustomobject]@{ Name = 'W32Time' } | Get-Service
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  W32Time            Windows Time
+
+
+PS C:\Windows\system32> Get-Help Get-Service -Parameter Name
+
+-Name <string[]>
+    The short service names (or display names) to get. Wildcards are allowed. Position 0, and it takes strings from the pipeline, both as values and from a Name property.
+
+    Required?                    false
+    Position?                    0
+    Default value
+    Accept pipeline input?       True (ByPropertyName, ByValue)
+    Accept wildcard characters?  true
+    Aliases                      ServiceName
+```
+
+When nothing fits, the cmdlet reports for each object that "The input object cannot be bound to any parameters...". Get-Service fails differently: its `-Name` takes text by value, so an object without a Name property is turned into text (`@{ServiceToCheck=Spooler}`) and searched for as a service name. The fix is often a calculated property that gives the object the name the cmdlet expects:
+
+```terminal
+PS C:\Windows\system32> [pscustomobject]@{ ServiceToCheck = 'Spooler' } | Get-Service
+Get-Service : Cannot find any service with service name '@{ServiceToCheck=Spooler}'.
+At line:1 char:51
++ [pscustomobject]@{ ServiceToCheck = 'Spooler' } | Get-Service
++                                                   ~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (@{ServiceToCheck=Spooler}:String) [Get-Service], ServiceCommandException
+    + FullyQualifiedErrorId : NoServiceFoundForGivenName,Microsoft.PowerShell.Commands.GetServiceCommand
+
+PS C:\Windows\system32> [pscustomobject]@{ ServiceToCheck = 'Spooler' } | Select-Object @{ n = 'Name'; e = { $_.ServiceToCheck } } | Get-Service
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+```
+
+> This is also how `Import-Csv users.csv | New-LocalUser` style commands work: the CSV's column names must match the parameter names.
+
+@try machines=1
+@setup WIN-SRV1
+Set-Content C:\LabFiles\check.csv -Value 'Service', 'Spooler', 'WinRM', 'W32Time'
+@task t1 | Pipeline | 10 | WIN-SRV1
+The file `C:\LabFiles\check.csv` (made for you) has a column `Service`. Pipe its rows to Get-Service so that you get the service objects, and store them in `$svc`. (Get-Service has no parameter called Service; rename the column on the way.)
+@check WIN-SRV1 | $svc holds the three service objects
+($svc.Name -join ',') -eq 'Spooler,WinRM,W32Time' -and $svc[0].GetType().Name -eq 'ServiceController'
+@hint Import-Csv ... | Select-Object @{ n = 'Name'; e = { $_.Service } } | Get-Service
+@solution WIN-SRV1
+$svc = Import-Csv C:\LabFiles\check.csv | Select-Object @{ n = 'Name'; e = { $_.Service } } | Get-Service
+$svc
+@endtask
+@end
+
+@quiz
+? `Get-Service | Stop-Service` binds each service to which parameter of Stop-Service?
++ -InputObject, by value (same type)
+- -Name, by property name
+- It cannot bind
+! ByValue with the exact type is tried first.
+? An object has a Name property and is piped to Get-Service. Which binding is used?
+- ByValue
++ ByPropertyName
+- None
+! Get-Service's -Name accepts input by property name.
+? Where do you see which parameters take pipeline input?
++ Get-Help COMMAND -Full (Accept pipeline input?)
+- Get-Command COMMAND -Pipeline
+- Get-Member -Pipeline
+! -Parameter NAME shows the same details for one parameter.
+@end

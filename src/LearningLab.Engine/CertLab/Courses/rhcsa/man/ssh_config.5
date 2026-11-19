@@ -1,0 +1,64 @@
+NAME
+       ssh_config - settings of the ssh client
+
+SYNOPSIS
+       ~/.ssh/config
+       /etc/ssh/ssh_config
+       /etc/ssh/ssh_config.d/*.conf
+
+DESCRIPTION
+       ssh, scp and ssh-copy-id read their settings from the command line
+       (-o), then from your own ~/.ssh/config, then from the system file
+       /etc/ssh/ssh_config (which includes /etc/ssh/ssh_config.d/*.conf).
+       For each keyword the first value found wins, so your own file beats
+       the system one.
+
+       The file is split into blocks by Host lines. The settings under
+       "Host PATTERN" apply when the name you typed matches the pattern
+       (* matches anything). Put specific hosts first and "Host *" last.
+
+       ~/.ssh/config must not be writable by others, or ssh refuses it.
+
+KEYWORDS
+       Host PATTERN...
+              Start a block for these host names.
+
+       HostName NAME
+              The real host name or address to connect to (so a short alias
+              can stand for a long name).
+
+       User NAME
+              The remote user name.
+
+       Port N The remote port.
+
+       IdentityFile FILE
+              The private key to use.
+
+       StrictHostKeyChecking yes|no|accept-new|ask
+              What to do with an unknown host key: ask (default), refuse,
+              accept-new (save new keys without asking, still refuse changed
+              ones) or no.
+
+       UserKnownHostsFile FILE
+              Where to keep known host keys.
+
+       PasswordAuthentication yes|no, PubkeyAuthentication yes|no
+              Which login methods to try.
+
+       BatchMode yes|no
+              Never ask questions (for scripts).
+
+       LogLevel QUIET|ERROR|INFO|VERBOSE
+              How much to print.
+
+EXAMPLES
+       Make "ssh s2" log in to server2 as student with a particular key:
+
+           Host s2
+               HostName server2.lab.example.com
+               User student
+               IdentityFile ~/.ssh/lab_key
+
+SEE ALSO
+       ssh(1), sshd_config(5), ssh-keygen(1)

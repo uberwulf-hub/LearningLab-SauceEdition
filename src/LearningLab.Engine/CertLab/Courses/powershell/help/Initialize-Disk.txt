@@ -1,0 +1,16 @@
+SYNOPSIS: Prepares a new (RAW) disk for partitions, as GPT or MBR.
+DESCRIPTION:
+Initialize-Disk writes a partition table to a raw disk. GPT is the default and the right choice for data disks and UEFI systems: it supports disks over 2 TB and many partitions. MBR is only for old systems.
+
+It works only on RAW disks; a disk that already has a partition style must be cleared first.
+PARAMETER Number:
+The disk number. Position 0.
+PARAMETER InputObject:
+A disk piped from Get-Disk.
+PARAMETER PartitionStyle:
+GPT or MBR.
+EXAMPLE: Initialize-Disk -Number 3 -PartitionStyle GPT
+Disk 3 is ready for partitions.
+EXAMPLE: Get-Disk | Where-Object PartitionStyle -eq RAW | Initialize-Disk -PartitionStyle GPT
+Initializes every new disk.
+RELATED: Get-Disk, New-Partition, Format-Volume

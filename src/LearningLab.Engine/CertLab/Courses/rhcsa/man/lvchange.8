@@ -1,0 +1,26 @@
+NAME
+       lvchange - change the settings of a logical volume (active, read-only)
+
+SYNOPSIS
+       lvchange -a y|n VG/LV
+       lvchange -p r|rw VG/LV
+
+DESCRIPTION
+       lvchange changes attributes of existing logical volumes. The most
+       used is activation: an inactive LV has no device file (/dev/VG/LV) and
+       cannot be mounted. LVs are activated at boot automatically.
+
+OPTIONS
+       -a y|n, --activate y|n
+              Activate or deactivate the LV. Unmount it before deactivating.
+
+       -p r|rw, --permission r|rw
+              Make the LV read-only or read-write.
+
+EXAMPLES
+           umount /data
+           lvchange -a n vgdata/lvdata
+           lvchange -a y vgdata/lvdata
+
+SEE ALSO
+       lvcreate(8), lvs(8), lvdisplay(8), vgchange(8)

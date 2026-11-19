@@ -1,0 +1,17 @@
+NAME
+       mesg - allow or refuse messages on your terminal
+
+SYNOPSIS
+       mesg [y|n]
+
+DESCRIPTION
+       mesg controls whether other users can write to your terminal with
+       write or wall. "mesg n" refuses, "mesg y" allows; without an argument
+       mesg says which is set. Messages from root (such as shutdown
+       warnings) always get through.
+
+EXAMPLES
+           mesg n
+
+SEE ALSO
+       wall(1), write(1)

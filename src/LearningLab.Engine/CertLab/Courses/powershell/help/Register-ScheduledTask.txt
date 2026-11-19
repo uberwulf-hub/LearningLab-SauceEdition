@@ -1,0 +1,36 @@
+SYNOPSIS: Creates a scheduled task in Task Scheduler.
+DESCRIPTION:
+Register-ScheduledTask saves a task: its name and folder, what it runs (-Action), when (-Trigger), who runs it (-User and -Password, or -Principal) and its settings. Without -User or -Principal the task runs as you, only while you are signed in. A task with the same name already in that folder is an error unless you add -Force, which replaces it.
+
+The task runs on the computer's clock: on the practice network it runs when simulated time passes its NextRunTime.
+PARAMETER TaskName:
+The name. Position 0, required.
+PARAMETER TaskPath:
+The folder, for example \Lab\ (the root folder \ by default). Position 1.
+PARAMETER Action:
+The actions from New-ScheduledTaskAction.
+PARAMETER Trigger:
+The triggers from New-ScheduledTaskTrigger.
+PARAMETER Settings:
+The settings from New-ScheduledTaskSettingsSet.
+PARAMETER User:
+The account, for example SYSTEM.
+PARAMETER Password:
+The account's password, so the task runs whether or not the user is signed in.
+PARAMETER RunLevel:
+Limited or Highest.
+PARAMETER Principal:
+A principal from New-ScheduledTaskPrincipal, instead of -User.
+PARAMETER InputObject:
+A task from New-ScheduledTask.
+PARAMETER Description:
+A description.
+PARAMETER Force:
+Replaces a task with the same name.
+EXAMPLE: Register-ScheduledTask -TaskName Nightly -Action $action -Trigger $trigger -User SYSTEM -RunLevel Highest
+A nightly task that runs as SYSTEM.
+EXAMPLE: Register-ScheduledTask -TaskName Report -TaskPath \Lab\ -Action $action -Trigger $trigger -Force
+Creates or replaces a task in the \Lab\ folder.
+NOTES:
+The error "Cannot create a file when that file already exists." means the task exists: add -Force, or remove it first with Unregister-ScheduledTask.
+RELATED: Get-ScheduledTask, Set-ScheduledTask, Unregister-ScheduledTask, Start-ScheduledTask

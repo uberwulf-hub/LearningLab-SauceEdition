@@ -1,0 +1,266 @@
+# Unit: u12 | 12. Endpoint security: Defender, firewall and attack surface reduction | Protection
+
+The **Endpoint security** blade of Intune gathers the policies that protect Windows devices: Microsoft Defender Antivirus, the Windows Firewall, attack surface reduction, onboarding to Microsoft Defender for Endpoint, and the security baselines. They are profiles like the ones in unit 7 (assigned to groups, with filters, and they can conflict), with forms made for security admins. This unit goes through them and shows how to check each one on the PC with PowerShell.
+
+## Lesson: l1201 | Microsoft Defender Antivirus and tamper protection
+
+**Endpoint security > Antivirus > Create policy**, platform Windows, offers several profiles (also one only for antivirus exclusions, and one for Defender update controls). The two you use most:
+
+- **Microsoft Defender Antivirus**: real-time monitoring, **cloud-delivered protection** and its block level (High, High plus, Zero tolerance), **potentially unwanted app (PUA) protection** (on, off, or audit), how often to check for new security intelligence, scheduled scans, and **exclusions** (paths, file extensions, processes). Keep exclusions few and narrow: every excluded folder is a place malware can hide.
+- **Windows Security experience**: what the Windows Security app shows the user, and **tamper protection**, which stops other programs (and local admins) from switching Defender's protection off. To manage tamper protection from Intune, the devices must be **onboarded to Microsoft Defender for Endpoint** (lesson 4; until then the setting shows Not applicable) and managed by Intune (co-managed devices aren't supported for it). Cert Lab doesn't check the onboarding.
+
+### Checking on the PC
+
+`Get-MpComputerStatus` shows Defender's state: is it running, real-time protection, tamper protection, how old the security intelligence is. `Get-MpPreference` shows its configuration: PUA, cloud protection (MAPS), exclusions, attack surface reduction rules. `Start-MpScan` and `Update-MpSignature` do what the portal's Quick scan and Update security intelligence buttons do.
+
+```terminal
+#setup portal:create av name="Defender standard" rtp=Allowed cloud=Allowed cloudLevel=High pua="PUA Protection on" exclusions="C:\Builds"
+#setup portal:assign av "Defender standard" "Windows devices"
+#setup portal:create wsx name="Tamper protection" tamper=On
+#setup portal:assign wsx "Tamper protection" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-MpComputerStatus | Format-List AntivirusEnabled, RealTimeProtectionEnabled, IsTamperProtected, TamperProtectionSource, AntivirusSignatureAge
+
+AntivirusEnabled          : True
+RealTimeProtectionEnabled : True
+IsTamperProtected         : True
+TamperProtectionSource    : Intune
+AntivirusSignatureAge     : 0
+
+
+PS C:\Windows\system32> Get-MpPreference | Format-List PUAProtection, MAPSReporting, ExclusionPath, DisableRealtimeMonitoring
+
+PUAProtection             : 1
+MAPSReporting             : 2
+ExclusionPath             : {C:\Builds}
+DisableRealtimeMonitoring : False
+```
+
+`PUAProtection` 1 means on (2 is audit); `MAPSReporting` 2 means cloud protection with advanced reporting.
+
+@try
+@task t1 | Protection | 15 | portal
+Create a **Microsoft Defender Antivirus** policy **Defender standard** that allows real-time monitoring and cloud protection, turns **PUA protection on**, and excludes the build folder `C:\Builds` (nothing else). Also create a **Windows Security experience** policy **Tamper protection** that turns tamper protection **On**. Assign both to **Windows devices** and sync **RB-LT-001**.
+@check portal | both policies reached RB-LT-001
+device["RB-LT-001"].policy["Defender standard"] == Succeeded
+device["RB-LT-001"].tamper == On
+@check RB-LT-001 | Defender has the settings
+$p = Get-MpPreference; $p.PUAProtection -eq 1 -and ($p.ExclusionPath -join ',') -eq 'C:\Builds'
+@hint Endpoint security > Antivirus > Create policy: profile Microsoft Defender Antivirus (Allow Realtime Monitoring, Allow Cloud Protection, PUA Protection, Excluded Paths); then the profile Windows Security experience (TamperProtection).
+@solution portal
+create av name="Defender standard" rtp=Allowed cloud=Allowed pua="PUA Protection on" exclusions="C:\Builds"
+create wsx name="Tamper protection" tamper=On
+assign av "Defender standard" "Windows devices"
+assign wsx "Tamper protection" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? Which setting stops a local administrator from turning off Defender's real-time protection?
+- PUA protection
++ Tamper protection
+- Cloud block level
+! Tamper protection locks Defender's security settings so local changes (by people or malware) can't switch them off.
+? Which PowerShell command shows the folders excluded from Defender scans?
+- Get-MpComputerStatus
++ Get-MpPreference
+- Get-BitLockerVolume
+! Get-MpPreference shows the configuration (ExclusionPath, PUAProtection...); Get-MpComputerStatus shows the running state.
+? Why keep antivirus exclusions few and narrow?
++ Every excluded path is a place malware can run without being scanned
+- Exclusions slow down the PC
+- Intune allows only three exclusions
+! Attackers look for excluded folders; exclude only what a measured performance problem requires.
+@end
+
+## Lesson: l1202 | Windows Firewall policies and rules
+
+**Endpoint security > Firewall** has two profiles:
+
+- **Windows Firewall**: per network profile (**Domain**, **Private**, **Public**): turn the firewall on, and the **default inbound action** (Block is the safe default; only allowed traffic gets in) and outbound action. Windows picks the profile by the network: Domain when it can reach its domain controller, Private for networks the user trusts, Public for everything else (the coffee shop).
+- **Windows Firewall rules**: individual rules: a name, direction (inbound or outbound), allow or block, protocol, ports, and optionally a program or addresses. Rules from several policies add up on the device.
+
+On the PC, `Get-NetFirewallProfile` shows each profile's state, and a compliance policy can require the firewall to be on.
+
+```terminal
+#setup portal:create firewall name="Firewall on" domainOn=True privateOn=True publicOn=True privateIn=Block publicIn=Block
+#setup portal:assign firewall "Firewall on" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction
+
+Name    Enabled DefaultInboundAction
+----    ------- --------------------
+Domain  True    NotConfigured
+Private True    Block
+Public  True    Block
+```
+
+> Cert Lab applies the profile settings to the PC, but a firewall rules policy only reports Succeeded: its rules don't appear in `Get-NetFirewallRule` on the pretend device.
+
+@try
+@task t1 | Protection | 15 | portal
+Create a firewall policy **Firewall on** that turns the firewall on for the **Domain**, **Private** and **Public** profiles and **blocks** inbound connections by default on **Private** and **Public**. Assign it to **Windows devices** and sync **RB-LT-002**.
+@check portal | the policy reached the laptop
+device["RB-LT-002"].policy["Firewall on"] == Succeeded
+@check RB-LT-002 | the Public profile blocks inbound by default
+"$((Get-NetFirewallProfile -Name Public).DefaultInboundAction)" -eq 'Block'
+@hint Endpoint security > Firewall > Create policy > Windows Firewall: Enable ... Network Firewall = True for each profile; Default Inbound Action for Private and Public = Block.
+@solution portal
+create firewall name="Firewall on" domainOn=True privateOn=True publicOn=True privateIn=Block publicIn=Block
+assign firewall "Firewall on" "Windows devices"
+remote sync RB-LT-002
+@endtask
+@end
+
+@quiz
+? A laptop is on the Wi-Fi in a coffee shop. Which firewall profile does Windows use?
+- Domain
+- Private
++ Public
+! Unknown networks are Public, which should have the strictest settings.
+? Two firewall rules policies, each with different rules, target the same PC. What happens?
++ The rules from both policies are added on the device
+- Only the newest policy's rules apply
+- Both report a conflict and no rule applies
+! Firewall rules add up; conflicts happen when two policies set the same profile setting differently.
+? Which default inbound action is the safe choice for the Public profile?
+- Allow
++ Block
+- Not configured
+! Block lets in only what a rule allows.
+@end
+
+## Lesson: l1203 | Attack surface reduction rules
+
+Attackers love the tricks ordinary programs allow: a Word macro that starts PowerShell, a script in an email that downloads a program, a tool that reads passwords from the memory of LSASS. **Attack surface reduction (ASR) rules** block those behaviours. They are part of Microsoft Defender Antivirus (which must be the active antivirus with real-time protection on; some rules also need cloud protection). Create them in **Endpoint security > Attack surface reduction > Create policy > Attack Surface Reduction Rules**.
+
+Each rule has a mode:
+
+- **Block**: the behaviour is stopped and the user sees a notification.
+- **Audit**: nothing is stopped, but every time the rule *would* have blocked, an event is written (and shown in Microsoft Defender for Endpoint's reports if the device is onboarded).
+- **Warn**: the user is warned and may let it through (not every rule supports it).
+- **Off** (disabled), or **Not configured**.
+
+### Audit first
+
+An ASR rule can break real work: an accounting add-in that starts a child process, an old script your IT team uses. So turn new rules on in **Audit** mode for a few weeks, read what they would have blocked, add **exclusions** for the legitimate cases (files or folders, for all ASR rules or per rule), then switch to **Block**. The rule to block credential stealing from LSASS rarely breaks anything and is a good one to block early.
+
+The policy page also holds **Controlled folder access** (protects Documents and other folders from ransomware; enabled, audit, or disabled).
+
+On the PC, `Get-MpPreference` lists the rules as GUIDs with an action for each: **0** off, **1** block, **2** audit, **6** warn.
+
+```terminal
+#setup portal:create asr name="ASR pilot" asr:officeChild=Audit asr:obfuscated=Audit asr:lsass=Block
+#setup portal:assign asr "ASR pilot" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> $p = Get-MpPreference
+PS C:\Windows\system32> $p.AttackSurfaceReductionRules_Ids
+d4f940ab-401b-4efc-aadc-ad5f3c50688a
+5beb7efe-fd9a-4556-801d-275e5ffc04cc
+9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2
+PS C:\Windows\system32> $p.AttackSurfaceReductionRules_Actions
+2
+2
+1
+```
+
+The GUIDs are the rules' fixed identifiers: `d4f940ab-...` is "Block all Office applications from creating child processes", `5beb7efe-...` the obfuscated scripts rule, `9e6c4e1f-...` the LSASS rule.
+
+@try
+@task t1 | Protection | 15 | portal
+Start attack surface reduction the careful way. Create an ASR policy **ASR pilot** with **Block all Office applications from creating child processes** and **Block execution of potentially obfuscated scripts** in **Audit** mode, and **Block credential stealing from the Windows local security authority subsystem** in **Block** mode. Assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | the rules have the right modes on RB-LT-001
+device["RB-LT-001"].asr["officeChild"] == Audit
+device["RB-LT-001"].asr["obfuscated"] == Audit
+device["RB-LT-001"].asr["lsass"] == Block
+@check RB-LT-001 | Defender has the LSASS rule in block mode
+$p = Get-MpPreference; $i = [array]::IndexOf($p.AttackSurfaceReductionRules_Ids, '9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2'); $i -ge 0 -and $p.AttackSurfaceReductionRules_Actions[$i] -eq 1
+@hint Endpoint security > Attack surface reduction > Create policy > Attack Surface Reduction Rules: set each rule's mode.
+@solution portal
+create asr name="ASR pilot" asr:officeChild=Audit asr:obfuscated=Audit asr:lsass=Block
+assign asr "ASR pilot" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? You are about to switch on ASR rules for 2,000 PCs. Which mode do you start with?
+- Block
++ Audit
+- Warn
+! Audit writes an event whenever a rule would have blocked, so you find legitimate programs to exclude before blocking.
+? In Get-MpPreference, an ASR rule's action is 2. What does that mean?
+- Block
++ Audit
+- Warn
+! 0 is off, 1 block, 2 audit, 6 warn.
+? An ASR rule in Block mode stops an accounting add-in that is safe. What do you do?
++ Add an exclusion for the add-in's files, for that rule or for ASR
+- Turn off real-time protection
+- Turn off tamper protection
+! ASR exclusions let a known, trusted file through while the rule keeps protecting everything else.
+@end
+
+## Lesson: l1204 | Microsoft Defender for Endpoint and security baselines
+
+### Defender for Endpoint and Intune
+
+**Microsoft Defender for Endpoint** (MDE) adds detection and response on top of the antivirus: it watches behaviour on the PC, raises alerts, and gives every device a **machine risk score** (Clear, Low, Medium, High). Connecting it to Intune takes three steps:
+
+1. In the Microsoft Defender portal, turn on the **Microsoft Intune connection** (Settings > Endpoints > Advanced features), and in Intune turn on **Endpoint security > Microsoft Defender for Endpoint > Connect Windows devices** (Cert Lab: Tenant administration > Settings > Connectors). This is the **service-to-service connection**.
+2. Onboard the devices with an **Endpoint detection and response** policy whose package type is **Auto from connector**: Intune gets the onboarding package from MDE automatically. The **Sense** service (Windows Defender Advanced Threat Protection) starts on the PC.
+3. Use the risk score: a **compliance policy** with **Require the device to be at or under the machine risk score** (for example Low or Medium), and a Conditional Access policy that requires a compliant device. A device under attack becomes noncompliant and loses access until it is cleaned.
+
+### Security baselines
+
+A **security baseline** (**Endpoint security > Security baselines**) is a ready group of settings recommended by Microsoft's security teams: the **Security Baseline for Windows 10 and later**, the **Microsoft Defender for Endpoint** baseline, **Microsoft Edge**, **Windows 365**, **Microsoft 365 Apps**. You create a profile from a baseline, change what doesn't suit you, and assign it. Baselines have **versions**: when a new one comes out you can compare it with yours and update the profile. A baseline is many settings at once, so it can conflict with your other profiles: test it on a pilot group and look for conflicts on the device pages.
+
+```terminal
+#setup portal:tenant mdeConnector=On
+#setup portal:create edr name="Onboard to MDE" package="Auto from connector"
+#setup portal:assign edr "Onboard to MDE" "Windows devices"
+#setup portal:remote sync RB-LT-001
+PS C:\Windows\system32> Get-Service Sense | Select-Object Name, Status, StartType
+
+Name  Status  StartType
+----  ------  ---------
+Sense Running Automatic
+```
+
+@try
+@task t1 | Protection | 15 | portal
+Onboard the Windows PCs to Microsoft Defender for Endpoint. Turn on the tenant's connection to Defender for Endpoint, create an EDR policy **Onboard to MDE** that takes its package from the connector, assign it to **Windows devices** and sync **RB-LT-001**.
+@check portal | RB-LT-001 is onboarded
+tenant.mdeConnector == On
+device["RB-LT-001"].policy["Onboard to MDE"] == Succeeded
+device["RB-LT-001"].mde == Yes
+@check RB-LT-001 | the Defender for Endpoint sensor runs
+"$((Get-Service Sense).Status)" -eq 'Running'
+@hint Tenant administration > Settings > Connectors: Connect Windows devices to Microsoft Defender for Endpoint = On. Then Endpoint security > Endpoint detection and response > Create: package type Auto from connector.
+@solution portal
+tenant mdeConnector=On
+create edr name="Onboard to MDE" package="Auto from connector"
+assign edr "Onboard to MDE" "Windows devices"
+remote sync RB-LT-001
+@endtask
+@end
+
+@quiz
+? An EDR policy with "Auto from connector" fails on every device. What is missing most likely?
+- An antivirus policy
++ The connection between Intune and Microsoft Defender for Endpoint
+- A security baseline
+! Auto from connector takes the onboarding package over the service-to-service connection; without it there is no package.
+? How does a device's machine risk score affect access to Microsoft 365?
+- Directly: Conditional Access reads the score
++ Through a compliance policy that requires the device to be at or under a risk level, and Conditional Access requiring compliance
+- It doesn't; the score is only shown in reports
+! The compliance policy turns the score into compliant or not; Conditional Access then uses compliance.
+? Why test a security baseline on a pilot group first?
++ It sets many settings at once and can conflict with other profiles or break apps
+- Baselines can only be assigned to one group
+- Baselines need a restart of every PC
+! A baseline changes hundreds of settings; a pilot shows conflicts and side effects before everyone gets it.
+@end
+

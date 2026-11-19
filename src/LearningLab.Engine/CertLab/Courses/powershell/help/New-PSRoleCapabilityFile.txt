@@ -1,0 +1,26 @@
+SYNOPSIS: Creates a role capability file (.psrc) that lists the commands a JEA role may run.
+DESCRIPTION:
+A role capability file describes one JEA role: which cmdlets, functions and programs its users can run, and if needed which parameters and values they may use. A session configuration file (.pssc) then gives roles to users and groups.
+
+The role's name is the file name without .psrc. PowerShell finds it only in a folder named RoleCapabilities inside a module folder, for example C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities\Maintenance.psrc.
+PARAMETER Path:
+The file to create. It must end in .psrc.
+PARAMETER VisibleCmdlets:
+Allowed cmdlets: names, wildcards such as Get-*, or a hashtable that limits parameters, for example @{ Name = 'Restart-Service'; Parameters = @{ Name = 'Name'; ValidateSet = 'Spooler' } }.
+PARAMETER VisibleFunctions:
+Allowed functions.
+PARAMETER VisibleExternalCommands:
+Allowed programs, with their full path, for example C:\Windows\System32\ipconfig.exe.
+PARAMETER FunctionDefinitions:
+Functions to create for the role: @{ Name = 'Get-DiskReport'; ScriptBlock = { ... } }.
+PARAMETER ModulesToImport:
+Modules loaded when the role is used.
+PARAMETER Description:
+What the role is for.
+EXAMPLE: New-Item 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities' -ItemType Directory
+Makes the folder where JEA looks for roles.
+EXAMPLE: New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities\Maintenance.psrc' -VisibleCmdlets 'Get-Service', @{ Name = 'Restart-Service'; Parameters = @{ Name = 'Name'; ValidateSet = 'Spooler' } }
+Creates the Maintenance role: its users can list services and restart only the Spooler service.
+NOTES:
+Keep roles small. Allowing a command that can run any code (such as Invoke-Expression, or Start-Process with any program) lets users do anything the endpoint's account can do.
+RELATED: New-PSSessionConfigurationFile, Register-PSSessionConfiguration, Get-PSSessionCapability

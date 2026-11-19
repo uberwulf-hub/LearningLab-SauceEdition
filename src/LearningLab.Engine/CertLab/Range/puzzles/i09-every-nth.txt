@@ -1,0 +1,46 @@
+title: Every other word
+level: Intermediate
+kind: Steganography
+points: 50
+order: 18
+answer: {{SECRET}}
+var: SECRET = pick:harbor|meadow|copper|violet|cobalt|cactus
+
+@intro
+~/note.txt is a chatty message. Hidden in it is a word, spelled by the first letter
+of every second word (words 2, 4, 6, ...). Read them in order. What word do they
+spell?
+
+@setup
+word='{{SECRET}}'
+fillers="the a my our your this that some each every any one"
+i=1
+out=""
+while [ $i -le ${#word} ]; do
+  ch=$(printf '%s' "$word" | cut -c$i)
+  filler=$(printf '%s' "$fillers" | cut -d' ' -f$(( (i-1) % 12 + 1 )))
+  real=$(awk -v c="$ch" 'BEGIN{ w="a:acorn b:basket c:cedar d:dune e:ember f:fern g:grove h:harbor i:ivy j:jade k:kiln l:lily m:maple n:nest o:oak p:pine q:quill r:reed s:spruce t:thorn u:usher v:vine w:willow x:xenon y:yarrow z:zephyr"; n=split(w,a," "); for(k=1;k<=n;k++){ split(a[k],p,":"); if(p[1]==c){ print p[2]; exit } } }')
+  out="$out $filler $real"
+  i=$((i+1))
+done
+printf '%s.\n' "${out# }" > /home/player/note.txt
+chown player: /home/player/note.txt
+
+@solution
+cat note.txt
+awk '{ for (i=2;i<=NF;i+=2) printf "%s", substr($i,1,1) } END { print "" }' note.txt
+
+@walkthrough
+The hidden word is the first letter of every second word. awk walks the words of the
+line (NF is how many there are) two at a time and prints the first letter of each:
+
+    awk '{ for (i=2;i<=NF;i+=2) printf "%s", substr($i,1,1) } END { print "" }' note.txt
+
+@hint 5
+A hidden message in ordinary text follows a rule. The rule here is in the intro: every second word, first letter. You can do it by eye on paper, or let a tool count for you.
+
+@hint 10
+Look at words 2, 4, 6, ... and take the first letter of each. awk splits each line into words ($1, $2, ...; NF is how many there are).
+
+@hint 16
+awk '{ for (i=2;i<=NF;i+=2) printf "%s", substr($i,1,1) } END { print "" }' note.txt

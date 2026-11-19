@@ -1,0 +1,77 @@
+# Lab: lab-07 | Handling errors | u07 | 30
+Five small error-handling jobs on WIN-SRV1: choosing -ErrorAction, collecting errors, catching by type, cleaning up with finally and writing your own errors. Define the functions in WIN-SRV1's console.
+
+@vars
+missing = NoSuchConfig | MissingSetting | GhostValue
+@endvars
+
+@task t01 | Errors | 10 | WIN-SRV1
+Run `Get-Variable -Name HOME, {missing}, PID` so that the two existing variables are shown, **no error text** appears for `{missing}`, and the error is still recorded in `$Error`.
+@check WIN-SRV1 | the error is in $Error
+@($Error | Where-Object { $_.TargetObject -eq '{missing}' }).Count -ge 1
+@check WIN-SRV1 | no error text was shown
+-not ($CertLabTranscript -match "Cannot find a variable with the name '{missing}'")
+@hint SilentlyContinue hides the error but keeps it in $Error; Ignore would not keep it.
+@solution WIN-SRV1
+Get-Variable -Name HOME, {missing}, PID -ErrorAction SilentlyContinue
+@explain
+-ErrorAction SilentlyContinue suppresses the display but still adds the error to $Error. -ErrorAction Ignore would leave no trace, which is rarely what you want in a script you may need to debug later.
+@endtask
+
+@task t02 | Errors | 10 | WIN-SRV1
+Write a function `Get-Settings` with a parameter `[string[]]$Name`. It must output the values of the variables that exist and then one line `Missing: NAME1, NAME2` listing the names that do not exist (in the order given), or nothing extra when all exist. No red error text may appear.
+@check WIN-SRV1 | existing values and the Missing line
+$x1 = 'one'; $x2 = 'two'; (@(Get-Settings -Name x1, nope1, x2, nope2) -join '|') -eq 'one|two|Missing: nope1, nope2'
+@check WIN-SRV1 | nothing extra when all exist
+$x1 = 'one'; (@(Get-Settings -Name x1) -join '|') -eq 'one'
+@hint Get-Variable -Name $Name -ValueOnly -ErrorAction SilentlyContinue -ErrorVariable errs; then $errs.TargetObject holds the missing names.
+@solution WIN-SRV1
+function Get-Settings([string[]]$Name) { Get-Variable -Name $Name -ValueOnly -ErrorAction SilentlyContinue -ErrorVariable errs; if ($errs) { 'Missing: ' + ($errs.TargetObject -join ', ') } }
+Get-Settings -Name HOME, nope
+@explain
+-ErrorVariable collects the errors of one command into a variable of your own, so you can report them your way. Each ErrorRecord's TargetObject is the name that was not found. Member enumeration ($errs.TargetObject) collects them from all records.
+@endtask
+
+@task t03 | Errors | 10 | WIN-SRV1
+Write a function `Divide` with parameters `[int]$A` and `[int]$B` that returns `$A / $B`, but returns the text `cannot divide by zero` when `$B` is 0. Use `try` and a `catch` for `[System.DivideByZeroException]`.
+@check WIN-SRV1 | Divide 10 4 is 2.5
+(Divide 10 4) -eq 2.5
+@check WIN-SRV1 | Divide 1 0 gives the message
+(Divide 1 0) -eq 'cannot divide by zero'
+@check WIN-SRV1 | it catches the exception type
+${function:Divide}.ToString() -match 'DivideByZeroException'
+@hint try { $A / $B } catch [System.DivideByZeroException] { 'cannot divide by zero' }
+@solution WIN-SRV1
+function Divide([int]$A, [int]$B) { try { $A / $B } catch [System.DivideByZeroException] { 'cannot divide by zero' } }
+Divide 1 0
+@explain
+Division by zero is a terminating error, so catch sees it. Naming the exception type keeps other problems (a wrong type, say) from being mistaken for a zero. Use whole numbers here: with [double] parameters, PowerShell returns Infinity for 1 / 0 instead of raising an error, and catch would never run.
+@endtask
+
+@task t04 | Errors | 10 | WIN-SRV1
+Write a function `Invoke-Step` with a script block parameter `$Action` that runs `& $Action`, and **always** sets the global variable `$global:StepDone` to `$true` afterwards, even when the action throws (the error must still reach the caller).
+@check WIN-SRV1 | after a failing action StepDone is set and the error still comes out
+$global:StepDone = $false; $failed = $false; try { Invoke-Step { throw 'boom' } } catch { $failed = $true }; $failed -and $global:StepDone
+@check WIN-SRV1 | a normal action returns its output
+$global:StepDone = $false; (Invoke-Step { 'ok' }) -eq 'ok' -and $global:StepDone
+@hint try { & $Action } finally { $global:StepDone = $true } (no catch, so the error goes on to the caller)
+@solution WIN-SRV1
+function Invoke-Step([scriptblock]$Action) { try { & $Action } finally { $global:StepDone = $true } }
+Invoke-Step { 'ok' }
+@explain
+finally runs whether the try block ends normally or with an error, and without a catch the error continues to the caller after finally has run. That is the pattern for clean-up: close a session, delete a temporary file, set a flag.
+@endtask
+
+@task t05 | Errors | 10 | WIN-SRV1
+Write a function `Test-Name` with a parameter `[string]$Name` that returns `$Name` when it is 3 to 15 letters long, writes a **non-terminating** error `Bad name: NAME` with `Write-Error` otherwise (and returns nothing for it).
+@check WIN-SRV1 | a good name comes back
+(Test-Name 'Ada') -eq 'Ada'
+@check WIN-SRV1 | a bad name writes a non-terminating error and returns nothing
+$e = $null; $r = Test-Name 'X' -ErrorAction SilentlyContinue -ErrorVariable e; $null -eq $r -and $e.Count -eq 1 -and "$($e[0])" -eq 'Bad name: X'
+@hint function Test-Name { [CmdletBinding()] param([string]$Name) if ($Name -match '^[a-z]{3,15}$') { $Name } else { Write-Error "Bad name: $Name" } } ([CmdletBinding()] gives the function -ErrorAction and -ErrorVariable.)
+@solution WIN-SRV1
+function Test-Name { [CmdletBinding()] param([string]$Name) if ($Name -match '^[a-z]{3,15}$') { $Name } else { Write-Error "Bad name: $Name" } }
+Test-Name 'Ada'
+@explain
+Write-Error reports the problem without stopping the caller, like a cmdlet does for one bad item. Because the function has [CmdletBinding()], callers can use -ErrorAction and -ErrorVariable on it like on any cmdlet.
+@endtask

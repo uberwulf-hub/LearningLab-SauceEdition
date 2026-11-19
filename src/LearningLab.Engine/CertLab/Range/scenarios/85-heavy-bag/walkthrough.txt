@@ -1,0 +1,18 @@
+The proxy sees everything that leaves the office, and size is a strong clue.
+
+1. The odd one out. /var/log/proxy/access.log has one line per request. Ordinary browsing sends a few
+   hundred bytes or kilobytes (bytes_out). One POST at {{TIME}} on 5 April sent {{BYTES}} bytes - hundreds
+   of megabytes - from 10.10.25.40 to {{DEST}}, a file-sharing site nobody in the office uses.
+
+2. Contain first. Add {{DEST}} to /etc/proxy/blocked-sites.txt: the proxy now refuses that site, so the
+   next batch can't leave even before you find the cause. If you don't, the next night's batch goes out.
+
+3. Find the cause. ssh itadmin@10.10.25.40, sudo -i. /etc/cron.d/{{SCRIPT}} runs /usr/local/bin/{{SCRIPT}}
+   at 02:30 every night; it tars the client folder into /var/tmp/{{STAGE}} for sending. The flag is in
+   manifest.txt there.
+
+4. Clean up. rm -f /etc/cron.d/{{SCRIPT}} /usr/local/bin/{{SCRIPT}}.
+
+For real: watch for uploads that are much larger than usual, especially at night and to file-sharing
+sites; block categories of sites the business doesn't need; and find out how the job got onto the PC
+(here, whoever could become root on ws40).

@@ -1,0 +1,296 @@
+# Unit: u03 | 3. Cryptography and PKI | General security concepts
+
+Cryptography protects data you can't physically guard: files on a stolen laptop, traffic crossing the internet, passwords in a database. This unit explains the building blocks (symmetric and asymmetric encryption, key exchange, hashing, signatures), where encryption is applied, the hardware that protects keys, ways to hide data that aren't encryption, and the **public key infrastructure** (PKI) of certificates that lets strangers trust each other online.
+
+You don't need to do any maths for Security+. You do need to know which tool solves which problem, which algorithms are current and which are weak, and how certificates are requested, trusted and revoked.
+
+## Lesson: l0301 | Symmetric and asymmetric encryption
+
+**Encryption** turns readable **plaintext** into unreadable **ciphertext** with an **algorithm** (the cipher) and a **key**. Only someone with the right key can turn it back. The algorithm can be public; the key must be protected.
+
+### Symmetric encryption
+
+One shared secret key both encrypts and decrypts.
+
+- Fast, good for large amounts of data (disks, files, the bulk of network traffic).
+- The problem is **key distribution**: how do two parties agree on the key without someone else seeing it? And with many people, you need a separate key for every pair.
+- **Block ciphers** work on fixed-size blocks; **stream ciphers** encrypt a stream bit by bit or byte by byte.
+
+Common symmetric algorithms:
+
+- **AES** (Advanced Encryption Standard): the standard block cipher. 128-bit blocks; keys of 128, 192 or 256 bits. Use it with a modern mode such as GCM, which also checks integrity.
+- **ChaCha20**: a fast stream cipher with a 256-bit key, usually paired with Poly1305 for integrity; popular on phones and devices without AES hardware support. TLS 1.3 offers it.
+- **3DES** (Triple DES): legacy. It runs DES three times and has a small 64-bit block; it is deprecated and should be replaced. **DES** (56-bit key) is long broken. RC4 (a stream cipher) is also broken.
+
+### Asymmetric encryption
+
+Each party has a **key pair**: a **public key** that can be shared with anyone, and a **private key** that never leaves its owner. What one key encrypts, only the other can decrypt.
+
+- To send someone a secret: encrypt with **their public key**; only their private key can open it.
+- To sign something: use **your private key**; anyone can check it with your public key (lesson l0302).
+- Slow compared to symmetric encryption, so it is used for small things: exchanging keys, signatures, certificates.
+
+Common asymmetric algorithms:
+
+- **RSA**: based on factoring large numbers. 2048 bits is today's common minimum; 3072 or 4096 bits for longer protection.
+- **ECC** (elliptic curve cryptography): much shorter keys for the same strength (a 256-bit ECC key is roughly as strong as 3072-bit RSA), so it suits phones, smart cards and IoT. ECDSA is the elliptic curve signature algorithm.
+- **Diffie-Hellman (DH)**: not for encrypting data but for **key exchange** (below).
+
+### Key exchange and hybrid encryption
+
+Real protocols combine both kinds. TLS, for example, uses asymmetric cryptography to authenticate the server and agree on a fresh **session key**, then switches to fast symmetric encryption (AES or ChaCha20) for the actual data.
+
+- **Diffie-Hellman** lets two parties agree on a shared secret over a public channel without ever sending the secret itself. **ECDH** is the elliptic curve version.
+- **Ephemeral** versions (**DHE**, **ECDHE**) make a new key pair for every session and throw it away afterwards. This gives **perfect forward secrecy** (PFS): if the server's long-term private key is stolen later, old recorded sessions still can't be decrypted. TLS 1.3 always uses ephemeral key exchange.
+- Out-of-band key exchange means sharing a key by some other path (in person, by phone); in-band means over the same channel as the data.
+
+### Key length
+
+A longer key means more possible keys, so brute force takes longer. But you can only compare key lengths within the same family: a 256-bit AES key is very strong, while a 256-bit RSA key would be useless. Symmetric keys of 128 bits or more, RSA of 2048 bits or more and ECC of 256 bits or more are the usual modern minimums.
+
+> Symmetric = one shared key, fast, bulk data. Asymmetric = key pair, slow, key exchange and signatures.
+
+### Where encryption is applied
+
+- **Full disk encryption (FDE)**: the whole drive, including the operating system (for example BitLocker or FileVault). Protects a lost or stolen device; data is readable once the system is unlocked and running.
+- **Partition** and **volume** encryption: one partition or volume (for example a data drive) rather than the whole disk.
+- **File** encryption: individual files or folders (for example EFS on Windows); stays with the file on that system and can protect files from other users of the same machine.
+- **Database** encryption: the whole database's files (transparent data encryption) so stolen database files are unreadable.
+- **Record** (or column/field) encryption: only sensitive fields, such as card numbers, are encrypted, so even database administrators can't read them in queries.
+- **Transport/communication** encryption: data moving across a network: TLS for web and email, IPsec and other VPNs, SSH for remote administration, WPA3 on Wi-Fi.
+
+@quiz
+? Two branch offices need to agree on a session key over the internet without sending the key itself. Which algorithm is designed for this?
+- AES
+- SHA-256
++ Diffie-Hellman
+- 3DES
+! Diffie-Hellman is a key agreement method; AES encrypts data, SHA-256 hashes, and 3DES is a legacy cipher.
+? An attacker records a company's TLS traffic for a year and then steals the web server's private key. The sessions used ECDHE. What can the attacker decrypt?
+- All recorded sessions
+- Only sessions from the last day
++ None of the recorded sessions, thanks to perfect forward secrecy
+- Only sessions that used AES-128
+! With ephemeral key exchange each session key was thrown away, so the server's long-term key doesn't unlock old traffic.
+? A developer needs strong encryption on a small IoT sensor with little processing power. Which choice gives strong asymmetric security with the shortest keys?
+- RSA 4096
++ ECC
+- DES
+- 3DES
+! ECC gives the same strength as RSA with much shorter keys, which saves CPU and memory.
+? A company wants a stolen laptop's operating system and all its data to be unreadable without the startup PIN. What should it use?
++ Full disk encryption
+- Record-level encryption
+- TLS
+- Hashing
+! Full disk encryption protects everything on the drive while the device is off or locked; TLS protects data in transit.
+@end
+
+## Lesson: l0302 | Hashing, signatures and obfuscation
+
+### Hashing
+
+A **hash function** turns any input into a fixed-length **digest**. It is **one-way** (you can't get the input back), and any tiny change to the input gives a completely different digest. Hashes check **integrity**: if the digest of the file you downloaded matches the published one, the file wasn't changed.
+
+- **SHA-2** family (SHA-256, SHA-384, SHA-512) and **SHA-3**: current and safe.
+- **MD5** (128-bit) and **SHA-1** (160-bit): weak. Researchers can create **collisions** (two different inputs with the same hash), so they must not be used for signatures or certificates. MD5 is still seen as a quick checksum for accidental damage, but not for security.
+- **HMAC** (hash-based message authentication code): a hash mixed with a secret key. It proves the message wasn't changed and came from someone who knows the key. Because both sides share the key, it gives integrity and authenticity but not non-repudiation.
+
+```file
+SHA256 checksums published on the download page
+3f9a0c1e5b7d2a64c8e1f09b3d4a6e2c7b5f8a9d0e1c2b3a4f5e6d7c8b9a0f1e  backup-tool-2.4.zip
+```
+
+### Salting and key stretching for passwords
+
+Systems store a hash of each password, not the password. Two weaknesses remain: identical passwords give identical hashes, and attackers can hash billions of guesses per second or use **rainbow tables** (precomputed hash lists).
+
+- A **salt** is a random value, unique to each account, added to the password before hashing and stored next to the hash. Same passwords now give different hashes, and precomputed tables become useless.
+- **Key stretching** runs the hashing many times, or in a deliberately slow, memory-hungry way, so each guess costs the attacker much more. Algorithms: **PBKDF2** (many iterations of HMAC), **bcrypt** (slow by design, has a cost factor), **scrypt** and **Argon2** (memory-hard, the winner of the Password Hashing Competition). Key stretching also turns a weak password into a stronger encryption key.
+
+> Salt defeats rainbow tables and identical-hash spotting. Key stretching slows brute force.
+
+### Digital signatures
+
+A **digital signature** proves who sent something (**authentication**), that it wasn't changed (**integrity**) and that the sender can't deny it (**non-repudiation**).
+
+- Signing: hash the message, then encrypt the hash with the sender's **private key**. That result is the signature.
+- Checking: the receiver hashes the message too, decrypts the signature with the sender's **public key** and compares the two hashes. A match means the signature is good.
+
+Signatures don't hide the message: add encryption (with the recipient's public key) if it must stay confidential. Code signing, signed email (S/MIME), signed documents and certificates all use digital signatures. (RSA and ECDSA are common signature algorithms.)
+
+### Obfuscation: hiding without encrypting
+
+- **Steganography**: hiding data inside other data, such as a message inside the pixels of an image or inside an audio file. Nobody suspects there is a secret at all. Attackers use it to sneak data out or to hide malware.
+- **Tokenization**: replacing a sensitive value with a random **token** that has no meaning by itself. The real value is kept in a secure token vault. Card payments use it: the shop stores a token, not the card number. A stolen token is useless outside that system.
+- **Data masking**: hiding part of a value when showing it, for example `****-****-****-4821`, or using realistic fake values in test databases. Masked data usually can't be turned back.
+
+### Blockchain and the open public ledger
+
+A **blockchain** is a list of records (blocks) where each block contains the hash of the one before it. Changing an old block would change its hash and break every later link, so tampering is obvious. The ledger is shared across many computers (decentralized), so no single party controls it. An **open public ledger** is one that anyone can read and check, which is how cryptocurrencies record every transaction.
+
+@quiz
+? A database stores password hashes. An attacker notices that dozens of accounts have exactly the same hash. Which measure would have hidden this?
++ A unique salt for each password
+- A longer RSA key
+- Steganography
+- Using MD5 instead of SHA-256
+! A per-account salt makes identical passwords produce different hashes, and also defeats rainbow tables.
+? Which of these is the best choice for storing user passwords?
+- SHA-1
+- MD5
+- AES-256
++ Argon2
+! Argon2 is a slow, memory-hard key stretching algorithm made for passwords. MD5 and SHA-1 are fast and weak, and AES is encryption, which can be reversed.
+? Bob receives a contract with a digital signature from Alice. Which key does Bob use to check the signature?
+- Bob's private key
+- Bob's public key
+- Alice's private key
++ Alice's public key
+! Alice signs with her private key; anyone, Bob included, checks it with her public key.
+? An online shop wants to keep using customer card details for repeat purchases without storing the real card numbers on its servers. What fits best?
+- Data masking
++ Tokenization
+- Steganography
+- Hashing with MD5
+! Tokenization swaps the card number for a meaningless token; the real number stays in the payment provider's vault.
+? Why does changing a transaction in an old block of a blockchain get detected?
+- The block is encrypted with AES
++ Each block contains the hash of the previous one, so the chain of hashes no longer matches
+- The ledger is stored on one central server
+- Blocks are masked
+! The chained hashes make any change to earlier data visible to everyone holding the ledger.
+@end
+
+## Lesson: l0303 | Protecting keys: TPM, HSM, KMS and secure enclaves
+
+Encryption is only as good as the protection of its keys. A key in a plain text file is as easy to steal as the data. Several tools exist to keep keys safe:
+
+- **TPM** (Trusted Platform Module): a chip on a computer's motherboard (or built into the processor's firmware). It stores keys tied to that one device, can measure the boot process (so tampering is noticed), and releases a disk key only to an untampered system. BitLocker uses it. Windows 11 requires TPM 2.0.
+- **HSM** (hardware security module): a dedicated, tamper-resistant device (an appliance, a plug-in card, or a cloud service) that creates, stores and uses keys for many systems. Keys are used inside the HSM and never leave it in plain form. Certificate authorities, banks and payment systems use HSMs. They are built for high performance and often certified (for example to FIPS 140-2 or 140-3).
+- **Key management system (KMS)**: software or a cloud service that manages keys over their whole life: creating, storing, rotating, giving access to, revoking and destroying them, with logs of every use. Cloud key services often keep the keys in HSMs underneath.
+- **Secure enclave**: a protected, isolated area inside a processor where sensitive code and keys run separately from the main operating system, so even malware with full control of the OS can't read them. Phones use one for fingerprint and face data and payment keys.
+
+> TPM = one device's chip. HSM = a dedicated box for many systems' keys. KMS = the management of keys over their life.
+
+### Key escrow
+
+**Key escrow** means a copy of an encryption key is kept by a trusted party (a separate team, a service or an outside agent) so that data can still be recovered if the original key is lost, or if the organization needs lawful access to an employee's encrypted data. It must be tightly controlled, because the escrowed keys are a valuable target. Saving BitLocker recovery keys in the directory is a simple form of escrow.
+
+### Key lifecycle basics
+
+- Generate keys with a good random source, in protected hardware where possible.
+- Rotate keys regularly and after any suspected exposure.
+- Limit who and what can use each key (least privilege) and log every use.
+- Destroy old keys securely when the data they protect is no longer needed.
+
+@quiz
+? A bank needs to sign millions of transactions a day with keys that must never exist outside tamper-resistant hardware. What should it use?
+- A TPM in each server
++ A hardware security module
+- Steganography
+- A self-signed certificate
+! An HSM is a dedicated, tamper-resistant device that creates and uses keys for many systems at high speed without exposing them.
+? A laptop's disk encryption key is released only if the boot files have not been tampered with. Which component makes that check and holds the key?
++ TPM
+- HSM
+- Key escrow agent
+- Certificate authority
+! The TPM measures the boot process and releases the key only to an untampered system.
+? An employee who encrypted project files leaves the company, and nobody knows her key. Which practice would have let the company recover the files?
+- Perfect forward secrecy
+- Tokenization
++ Key escrow
+- OCSP stapling
+! Key escrow keeps a protected copy of keys with a trusted party so data can be recovered.
+@end
+
+## Lesson: l0304 | Certificates and PKI
+
+How do you know a public key really belongs to `www.example.com` and not to an impostor? A **digital certificate** binds a public key to an identity (a person, a server, a device), and a trusted **certificate authority** (CA) signs it to vouch for that binding. The **public key infrastructure** (PKI) is everything around this: CAs, policies, certificate requests, revocation and the trust stores in browsers and operating systems.
+
+A certificate (format X.509) contains, among other things: the subject's name, the subject's public key, the issuer (the CA), a serial number, valid-from and valid-to dates, allowed uses, and the CA's signature.
+
+### Chain of trust
+
+- The **root CA** sits at the top. Its certificate is **self-signed** and comes preinstalled in operating systems and browsers: that trust store is the **root of trust**. Roots are usually kept offline for safety.
+- **Intermediate CAs** are signed by the root and do the day-to-day issuing.
+- The **leaf** (end-entity) certificate, for example a web server's, is signed by an intermediate.
+
+A browser checks each signature up the chain until it reaches a root it already trusts. A server should send its leaf and the intermediate certificates; a missing intermediate is a common cause of trust errors.
+
+```file
+Certificate chain
+ 0 s:CN = shop.example.com
+   i:CN = Example Issuing CA 2
+ 1 s:CN = Example Issuing CA 2
+   i:CN = Example Root CA
+Subject Alternative Name: DNS:shop.example.com, DNS:www.shop.example.com
+Validity: Not Before 2026-02-01  Not After 2027-02-28
+```
+
+### Getting a certificate: the CSR
+
+- The requester creates a key pair. The **private key stays with the requester**.
+- They create a **certificate signing request** (CSR) holding the public key and the requested names, signed with the private key.
+- The CA checks that the requester controls the name (and, for some certificate types, who the organization is), then issues the signed certificate.
+
+### Kinds of certificates
+
+- **Third-party** (public CA) certificates: trusted by everyone's devices automatically; use them for public websites.
+- **Self-signed** certificates: signed by their own key. Fine for testing or internal labs, but browsers warn because nobody vouches for them.
+- **Internal CA** certificates: an organization runs its own CA for internal servers, devices and users, and pushes its root to company devices.
+- **Wildcard** certificate: `*.example.com` covers any name one level below, such as `mail.example.com` and `shop.example.com`, but not `example.com` itself or `a.b.example.com`. Convenient, but if its private key leaks, every one of those sites is exposed.
+- **SAN** (Subject Alternative Name) certificate: lists several specific names (even different domains) in one certificate. Browsers check the SAN field for the name.
+
+### Revocation: CRL and OCSP
+
+A certificate may need to be cancelled before it expires, for example when its private key is stolen.
+
+- **CRL** (certificate revocation list): a signed list of revoked serial numbers that the CA publishes. Clients download it from time to time, so it can be out of date and grow large.
+- **OCSP** (Online Certificate Status Protocol): the client asks the CA's responder about one certificate and gets "good", "revoked" or "unknown" in real time.
+- **OCSP stapling**: the web server fetches a signed, recent OCSP answer itself and "staples" it to the TLS handshake. Clients get fresh status without contacting the CA, which is faster and keeps their browsing private.
+- **Certificate pinning**: an application only accepts a specific certificate or public key for a server, rather than any certificate from any trusted CA. It stops on-path attacks using a fraudulently issued certificate, but pins must be updated when certificates change.
+
+> Stolen private key: revoke the certificate (it goes on the CRL and OCSP answers "revoked"), then issue a new one with a new key pair.
+
+### File formats
+
+- **PEM**: Base64 text between `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines; can hold certificates, chains or keys. Common on Linux and web servers (`.pem`, `.crt`, `.key`).
+- **DER**: the same data in binary form.
+- **CER** / **CRT**: file extensions for a certificate, in either DER or PEM encoding (common on Windows).
+- **PFX / P12** (PKCS #12): a password-protected file holding a certificate **with its private key** (and often the chain). Used to move a certificate and key to another server. Guard it carefully.
+- **P7B** (PKCS #7): certificates and chains only, no private key.
+
+@quiz
+? A company needs one certificate for `mail.example.com`, `shop.example.com` and `example.net`. Which certificate type fits?
+- Wildcard for *.example.com
++ A SAN certificate listing all three names
+- Self-signed root certificate
+- A CRL
+! A SAN certificate can list several names, even in different domains. A wildcard covers only names one level under one domain.
+? When a web server requests a certificate, which item must never be sent to the certificate authority?
+- The public key
+- The requested domain names
++ The private key
+- The CSR
+! The CSR carries the public key and names; the private key stays with the requester.
+? A web server's private key was copied by an attacker. What should be done first about its certificate?
+- Wait for it to expire
++ Revoke it so it appears on the CRL and in OCSP answers, then get a new one with a new key pair
+- Convert it from PEM to DER
+- Turn on OCSP stapling
+! A compromised certificate must be revoked; its replacement needs a newly generated key pair.
+? An administrator must move a web certificate and its private key from one server to another in a single password-protected file. Which format should she use?
+- DER
+- P7B
++ PFX (PKCS #12)
+- CRL
+! PFX/P12 files carry the certificate together with its private key, protected by a password. DER and P7B carry no private key.
+? Which feature lets a web server include a recent, CA-signed revocation status in its own TLS handshake?
+- Certificate pinning
++ OCSP stapling
+- Key escrow
+- Wildcard certificate
+! With OCSP stapling the server attaches the signed OCSP response, so the client needn't contact the CA itself.
+@end

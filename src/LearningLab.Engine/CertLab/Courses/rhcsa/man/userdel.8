@@ -1,0 +1,46 @@
+NAME
+       userdel - delete a user account
+
+SYNOPSIS
+       userdel [-r] [-f] LOGIN
+
+DESCRIPTION
+       userdel removes LOGIN from /etc/passwd, /etc/shadow and the group
+       files. The user's private group is removed too when no other account
+       uses it as its primary group.
+
+       Without -r, the home directory and the mail spool stay behind, still
+       owned by the old UID number. Such files show a number instead of a
+       name in ls -l, and a new account that later gets the same UID would
+       own them. Files elsewhere on the system are never removed by userdel;
+       find them with find / -nouser (or find / -uid UID) and decide what to
+       do with them.
+
+       userdel refuses to delete a user who is logged in or runs processes,
+       unless -f is given.
+
+OPTIONS
+       -r, --remove
+              Also remove the home directory and the mail spool
+              (/var/spool/mail/LOGIN).
+
+       -f, --force
+              Delete even while the user is logged in, and remove the home
+              directory even if another user owns it. Use with care.
+
+EXAMPLES
+       Delete the user harry with his home directory:
+
+           userdel -r harry
+
+       Delete an account but keep its files, then look for what is left:
+
+           userdel olduser
+           find / -nouser 2>/dev/null
+
+NOTES
+       To keep a person from logging in without deleting anything, lock the
+       account instead (usermod -L, or chage -E 0).
+
+SEE ALSO
+       useradd(8), usermod(8), groupdel(8), find(1)

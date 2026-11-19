@@ -1,0 +1,59 @@
+# Sheet: deploy-maintain | Deploy and maintain | Deploy and maintain
+## cron
+crontab -e :: edit your own crontab in the editor
+crontab -l -u USER :: list a user's crontab (root)
+echo 'LINE' | crontab -u USER - :: replace a user's crontab with LINE (root)
+crontab -r -u USER :: delete a user's crontab
+MIN HOUR DOM MON DOW COMMAND :: the fields of a crontab line (* = every, 1-5 range, 1,15 list, */10 step)
+/etc/cron.d/NAME :: system cron file: the five fields, then the USER, then the command
+/etc/cron.allow, /etc/cron.deny :: who may use crontab (allow wins if it exists)
+
+## at
+echo 'CMD' | at 22:00 :: run CMD once at 22:00 (also: now + 5 minutes, 16:30 tomorrow, noon + 2 days)
+atq :: list waiting jobs (same as at -l)
+at -c N :: print job N with its saved environment
+atrm N :: delete job N
+
+## systemd timers
+OnCalendar=*-*-* 06:30:00 :: in [Timer]: every day at 06:30 (also hourly, daily, Mon..Fri 08:00, *:0/15)
+Persistent=true :: in [Timer]: catch up a run missed while the machine was off
+WantedBy=timers.target :: in [Install]: what enable hooks the timer into
+systemctl daemon-reload :: read new or changed unit files
+systemctl enable --now NAME.timer :: start the timer now and at every boot
+systemctl list-timers :: next and last run of every active timer
+
+## Services and targets
+systemctl enable --now NAME :: start now and at every boot
+systemctl disable --now NAME :: stop now and not at boot
+systemctl is-active NAME :: running now?
+systemctl is-enabled NAME :: starts at boot?
+systemctl mask NAME :: make a unit impossible to start (unmask undoes it)
+systemctl get-default :: the target the machine boots into
+systemctl set-default multi-user.target :: boot to the text console from now on
+systemctl isolate graphical.target :: switch target now, without a reboot
+
+## Time and chrony
+timedatectl :: local time, UTC, time zone, sync status
+timedatectl set-timezone Europe/Berlin :: change the time zone
+/etc/chrony.conf: server NAME iburst :: one NTP server (comment out the pool line)
+systemctl restart chronyd :: read chrony.conf again
+chronyc sources :: the NTP sources (^* = the one followed now)
+chronyc tracking :: details of the sync
+
+## Repositories and packages
+dnf config-manager --add-repo URL :: write a .repo file for URL (add gpgcheck)
+baseurl=file:///mnt/BaseOS :: repo file line for a local folder, such as the mounted DVD
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release :: repo file line: the key that checks signatures
+dnf repolist :: the enabled repositories
+dnf install -y PKG :: install a package and its dependencies
+dnf provides */CMD :: which package has a file or command
+dnf history :: past transactions (dnf history undo N reverses one)
+rpm -qf FILE :: which installed package owns FILE
+rpm -ql PKG :: the files of an installed package
+
+## Boot loader
+grubby --info=ALL :: every boot entry with its kernel and arguments
+grubby --update-kernel=ALL --args="ARG" :: add a kernel argument to every entry
+grubby --update-kernel=ALL --remove-args="ARG" :: remove a kernel argument
+grubby --set-default=/boot/vmlinuz-VERSION :: boot another installed kernel by default
+grub2-mkconfig -o /boot/grub2/grub.cfg :: rebuild grub.cfg after editing /etc/default/grub

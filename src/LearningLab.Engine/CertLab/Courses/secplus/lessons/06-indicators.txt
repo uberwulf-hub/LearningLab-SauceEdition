@@ -1,0 +1,251 @@
+# Unit: u06 | 6. Indicators of malicious activity | Threats, vulnerabilities and mitigations
+
+Security+ often gives you a symptom (a log excerpt, a user's complaint, a strange alert) and asks what attack is happening. This unit teaches the families of attack and how each one shows itself: **malware**, **physical** attacks, **network** attacks, **application** attacks, **cryptographic** attacks and **password** attacks, and then the general **indicators** that something is wrong.
+
+Learn each attack's tell-tale sign. Many answers turn on one detail: a script in a URL, `../` in a path, a reflection of traffic from many servers, failed logins spread across many accounts.
+
+## Lesson: l0601 | Malware
+
+**Malware** is any software written to do harm. The types differ in how they spread and what they do.
+
+- **Virus**: attaches itself to a file or program and spreads when that host is run or shared. It needs a person (or a program) to run the infected file.
+- **Worm**: spreads **by itself** across networks, using vulnerabilities, with no user action. Signs: sudden network traffic between many machines, many systems infected within minutes.
+- **Trojan**: pretends to be useful software (a free game, a "codec", a cracked program) but carries a hidden payload. It doesn't copy itself. A **remote access Trojan** (RAT) gives the attacker remote control.
+- **Ransomware**: encrypts files (and often steals them first) and demands payment for the key. Signs: files renamed with new extensions, ransom notes in folders, high disk activity, shadow copies deleted. Defence: offline or immutable backups, patching, EDR, least privilege.
+- **Spyware**: secretly collects information about the user (browsing, keystrokes, screenshots) and sends it out.
+- **Keylogger**: records keystrokes to capture passwords and messages; may be software or a small hardware device between keyboard and computer.
+- **Bloatware**: unwanted software pre-installed on new devices by the maker. Not always malicious, but it uses resources and adds attack surface (and may have its own flaws). Remove what isn't needed.
+- **Logic bomb**: code that waits for a condition (a date, or a person's account being deleted) and then does damage. Often planted by insiders, for example "delete the payroll database if my account is disabled".
+- **Rootkit**: hides deep in the system (the kernel, drivers, the boot process or firmware) to keep high-level control and to hide itself and other malware from the operating system and antivirus. Often the safest fix is to wipe and rebuild, sometimes including the firmware.
+
+```file
+C:\Shares\Finance\Q3-budget.xlsx.lockd
+C:\Shares\Finance\Invoices-2026.pdf.lockd
+C:\Shares\Finance\READ_ME_TO_RESTORE.txt
+  "Your files are encrypted. Pay 2 BTC to the address below within 72 hours..."
+```
+
+> Worm = spreads on its own. Virus = needs a host file to be run. Trojan = disguised as something wanted.
+
+@quiz
+? Within twenty minutes, hundreds of unpatched servers are infected, though no user opened anything. Network traffic between servers jumps sharply. What malware type is most likely?
+- Trojan
+- Logic bomb
++ Worm
+- Bloatware
+! Worms spread by themselves through vulnerabilities, without user action.
+? A fired administrator's script deletes backups the day after his account is disabled. What is this?
++ A logic bomb
+- A keylogger
+- Spyware
+- A virus
+! Code that triggers on a condition, such as an account being disabled, is a logic bomb.
+? Antivirus finds nothing, yet a server hides certain processes and files from the operating system's own tools. Which malware is most likely?
+- Ransomware
++ A rootkit
+- Bloatware
+- A worm
+! Rootkits hide themselves and other malware deep in the system; rebuilding is usually the safest fix.
+? A new laptop comes with several trial programs and toolbars from the maker that slow it down. What are these called?
+- Spyware
+- Trojans
++ Bloatware
+- Rootkits
+! Unwanted pre-installed software is bloatware; it isn't necessarily malicious but adds risk and should be removed.
+@end
+
+## Lesson: l0602 | Physical and network attacks
+
+### Physical attacks
+
+- **Brute force** (physical): forcing a way in: breaking a door, a lock or a window, or smashing a device.
+- **RFID cloning**: copying the data from a proximity badge or card with a reader held nearby, then making a duplicate that opens the same doors. Defences: cards with encryption and mutual authentication, shielded badge holders, PIN plus card.
+- **Environmental** attacks: targeting the conditions systems need: cutting power, disabling air conditioning so servers overheat, causing floods or fire, or tampering with environmental controls (HVAC systems are often networked).
+
+### Denial of service
+
+A **denial-of-service** (DoS) attack makes a service unavailable; a **distributed** DoS (DDoS) uses many machines at once, often a **botnet** of infected devices.
+
+- **Reflected** attack: the attacker sends requests to many third-party servers with the **victim's address forged** as the source. The servers all reply to the victim.
+- **Amplified** attack: a reflected attack using services where a small request produces a much bigger reply (DNS, NTP, memcached, CLDAP), so the attacker's small bandwidth becomes a flood. DNS amplification is the classic example.
+- Signs: sudden traffic spikes, many replies the victim never asked for, slow or unreachable services.
+
+### DNS attacks
+
+- **DNS poisoning** (cache poisoning): false records are planted in a DNS resolver's cache, so users asking for a real name are sent to the attacker's address.
+- **DNS hijacking**: changing where a domain's DNS points, for example by taking over the domain registrar account.
+- Changing the **hosts file** on a computer or a device's DNS settings to point names elsewhere.
+- **Domain hijacking**, and DNS tunnelling (hiding data in DNS queries to sneak it out).
+- Defences: DNSSEC (signed DNS records), protected registrar accounts with MFA, DNS filtering and monitoring.
+
+### Wireless attacks
+
+- **Evil twin**: a fake access point with the same network name (SSID) as a real one, to capture users' traffic or credentials.
+- **Rogue access point**: an unauthorized access point plugged into the network (sometimes by an employee), bypassing security.
+- **Deauthentication**: forged frames kick clients off the Wi-Fi, often so they reconnect to an evil twin or to capture the handshake. WPA3 and protected management frames (802.11w) help.
+- **Jamming**: radio interference that stops Wi-Fi working.
+
+### On-path attacks
+
+An **on-path** attack (once called man-in-the-middle) puts the attacker between two parties so they can read or change traffic. Methods: ARP poisoning on a local network, evil twins, DNS poisoning, a compromised router. A **browser-based** variant (man-in-the-browser) uses malware inside the browser. Defences: encryption with certificate checks (TLS, HSTS), VPNs, switch protections such as dynamic ARP inspection.
+
+### Credential replay and malicious code
+
+- **Credential replay**: the attacker captures an authentication message or credential (a password hash, a session token, a Kerberos ticket) and sends it again to sign in as the victim. **Pass the hash** is one form. Defences: encrypted protocols, timestamps and nonces, MFA, short-lived tokens.
+- **Malicious code** on the network: scripts, macros and exploit code delivered across the network, for example a malicious script pushed through a compromised web page or a file share.
+
+@quiz
+? A company's web server is flooded with large DNS responses from thousands of open resolvers, although it never sent any DNS queries. What attack is this?
+- DNS poisoning
++ A reflected and amplified DDoS attack
+- An evil twin
+- Credential replay
+! Forged requests made the resolvers send large replies to the victim: reflection plus amplification.
+? Visitors to a coffee shop connect to "CoffeeShop-WiFi", but it is a laptop run by an attacker, copying the real network's name. What is it?
+- A rogue access point on the corporate network
++ An evil twin
+- Jamming
+- RFID cloning
+! A fake access point imitating a legitimate SSID is an evil twin.
+? Users typing `intranet.corp.example` reach a fake page because the local DNS server's cache holds a false record. What attack is this?
++ DNS cache poisoning
+- Typosquatting
+- Reflected XSS
+- Deauthentication
+! False records planted in a resolver's cache send users to the wrong address: DNS poisoning.
+? An attacker standing near an employee in a lift copies her proximity badge and later opens the office door with a duplicate. What is this?
+- Brute force
+- Tailgating
++ RFID cloning
+- An environmental attack
+! Reading and duplicating a badge's RFID data is RFID cloning.
+@end
+
+## Lesson: l0603 | Application, cryptographic and password attacks
+
+### Application attacks
+
+- **Injection**: untrusted input changes a command or query: SQL injection, command injection (input passed to an operating system shell), LDAP injection, XML injection.
+- **Buffer overflow**: input longer than the buffer overwrites memory (unit 5). Signs: crashes, odd long strings in logs.
+- **Replay**: a valid request or session token is captured and sent again (for example to repeat a payment). Defences: one-time tokens, timestamps, TLS.
+- **Privilege escalation**: gaining more rights than you were given. **Vertical**: a normal user becomes admin. **Horizontal**: a user reaches another user's data at the same level.
+- **Cross-site request forgery (CSRF)**: a malicious page makes the victim's browser send a request to a site where the victim is already signed in (for example "transfer money"), using the victim's own session. The site trusts the browser. Defences: anti-CSRF tokens, SameSite cookies, asking for re-authentication on sensitive actions.
+- **Server-side request forgery (SSRF)**: the attacker makes the **server** send requests on their behalf, often to internal systems the attacker can't reach directly (for example a cloud metadata address such as `169.254.169.254`). Defences: validate and allow-list destinations, block internal addresses.
+- **Directory traversal** (path traversal): input with `../` sequences climbs out of the intended folder to read files elsewhere, such as `/etc/passwd`. Defences: input validation, canonicalising paths, least privilege for the web service account.
+
+```file
+GET /download?file=../../../../etc/passwd HTTP/1.1
+GET /fetch?url=http://169.254.169.254/latest/meta-data/ HTTP/1.1
+```
+
+The first line is directory traversal; the second is an SSRF attempt to make the server read the cloud metadata service.
+
+> CSRF abuses the user's browser and session. SSRF abuses the server.
+
+### Cryptographic attacks
+
+- **Downgrade attack**: the attacker forces two parties to agree on an older, weaker protocol or cipher (for example TLS falling back to SSL 3.0), which can then be broken. Defence: turn off old versions entirely.
+- **Collision**: finding two different inputs that give the same hash. With a weak hash (MD5, SHA-1) an attacker could make a malicious file or certificate with the same hash as a good one.
+- **Birthday attack**: uses the "birthday paradox" (in a room of only 23 people there is about a 50 percent chance two share a birthday) to find collisions much faster than trying every value. Longer hash outputs defend against it.
+
+### Password attacks
+
+- **Brute force**: trying every possible combination. Online, it is stopped by account lockout and rate limits; offline, against stolen hashes, only by long passwords and slow hashing.
+- **Dictionary**: trying words and common passwords from a list, often with variations (`Summer2026!`).
+- **Password spraying**: trying a few very common passwords against **many accounts**, slowly, so no single account hits the lockout limit. Sign: failed logins spread across many usernames from one source, each with only one or two attempts.
+- **Rainbow tables**: precomputed tables of hashes for fast lookup of unsalted hashes. **Salting** makes them useless.
+- **Credential stuffing**: using username and password pairs stolen from another site, betting that people reuse passwords.
+
+```file
+09:01:02 FAIL user=amorris    src=198.51.100.23
+09:01:04 FAIL user=bchen      src=198.51.100.23
+09:01:06 FAIL user=cdiaz      src=198.51.100.23
+09:01:08 FAIL user=dokafor    src=198.51.100.23
+09:01:10 OK   user=ewright    src=198.51.100.23
+```
+
+One source address, one attempt per account, many accounts: this is password spraying, and it found one account with a weak password.
+
+@quiz
+? A log shows one failed sign-in each for 400 different accounts from the same address, all within an hour, all with the password `Spring2026!`. What attack is this?
+- Brute force against one account
++ Password spraying
+- Rainbow table attack
+- Credential replay
+! A few common passwords tried against many accounts, staying under the lockout limit, is password spraying.
+? A web server log contains `GET /images?name=../../../etc/shadow`. What is being attempted?
+- SQL injection
+- CSRF
++ Directory traversal
+- Buffer overflow
+! The `../` sequences try to climb out of the web folder to read other files.
+? While signed in to her bank, a user opens a forum post that silently makes her browser send a money-transfer request to the bank. Which attack is this?
++ Cross-site request forgery
+- Server-side request forgery
+- Stored SQL injection
+- A downgrade attack
+! CSRF makes the victim's browser send a request using her existing session; SSRF would make a server send the request.
+? An attacker on a hotel network interferes with a TLS handshake so the client and server agree on an old, weak cipher. What is this?
+- A collision attack
++ A downgrade attack
+- Password spraying
+- A rainbow table attack
+! Forcing parties onto weaker protocol versions or ciphers is a downgrade attack.
+? Why do salted password hashes defeat rainbow tables?
+- Salts encrypt the hash with AES
++ Each hash includes a random value, so precomputed tables no longer match
+- Salts make the password shorter
+- Salts stop all brute force attacks
+! Rainbow tables are built for unsalted hashes; a unique salt per password would need a separate table for every salt.
+@end
+
+## Lesson: l0604 | Indicators of compromise
+
+An **indicator** is evidence that an attack may be underway or has happened. On its own an indicator may have an innocent explanation, so analysts look at it in context and together with others.
+
+- **Account lockout**: accounts locked by too many failed passwords can mean brute force or spraying. A user who is locked out but says they haven't tried to sign in is a strong sign.
+- **Concurrent session usage**: the same account signed in at the same time in places that don't make sense (two different countries, two desktops at once for a person who uses one). Someone else is probably using the credentials.
+- **Blocked content**: security tools reporting more blocked downloads, sites or emails than usual, or blocked attempts to reach known malicious addresses, may show infected machines trying to "phone home".
+- **Impossible travel**: an account signs in from two places too far apart for the time between them (London at 10:00 and Sydney at 10:30). Check for VPNs first, but it often means stolen credentials.
+- **Resource consumption**: unexplained high CPU, memory, disk or network use: crypto-mining malware, a worm spreading, data being copied out, or a DoS.
+- **Resource inaccessibility**: files that can't be opened (ransomware encrypting them), services that stop responding, accounts that no longer work.
+- **Out-of-cycle logging**: log entries at unusual times or in unusual amounts, such as heavy activity on an account at 03:00, or a backup job that runs at the wrong time.
+- **Published/documented**: the attack is already known publicly: a vendor advisory, a threat feed, a news report, or your own data appearing for sale on a leak site.
+- **Missing logs**: gaps in logs or cleared event logs. Attackers delete logs to hide what they did, so missing logs are themselves a serious sign.
+
+```file
+2026-06-03 08:14:52  SIGNIN OK  user=lnguyen  country=US  ip=192.0.2.44
+2026-06-03 08:41:10  SIGNIN OK  user=lnguyen  country=RO  ip=203.0.113.71
+2026-06-03 08:41:12  MAILBOX RULE CREATED  user=lnguyen  forward-to=external
+```
+
+Two countries in 26 minutes (impossible travel), followed by a new forwarding rule: the account is very likely compromised.
+
+> Missing logs and cleared logs aren't a gap in your tools: treat them as an indicator that someone covered their tracks.
+
+@quiz
+? A user's account signs in from Chicago and, eight minutes later, from Singapore. The user doesn't use a VPN. What indicator is this?
+- Out-of-cycle logging
++ Impossible travel
+- Blocked content
+- Resource inaccessibility
+! Nobody can travel that far in eight minutes, so someone else is probably using the account.
+? While investigating a server, an analyst finds that the security event log was cleared at 02:13 and has no entries before that time. What should she conclude?
++ Missing logs are an indicator that an attacker may have hidden their activity
+- The log rotation is working normally
+- The server has a hardware fault
+- It is a sign of bloatware
+! Cleared or missing logs are a classic sign of an attacker covering their tracks.
+? Several workstations show 100 percent CPU use all night with an unknown process, and the power bill rises. Which indicator is this?
+- Concurrent session usage
+- Account lockout
++ Resource consumption
+- Published/documented
+! Unexplained high resource use often points to malware such as crypto-miners.
+? A user calls the help desk to say his account is locked, though he hasn't signed in since yesterday. What is the most likely explanation?
+- Out-of-cycle logging
++ Someone else is trying passwords on his account
+- Impossible travel
+- He has bloatware installed
+! An unexplained account lockout suggests a brute force or spraying attempt against the account.
+@end

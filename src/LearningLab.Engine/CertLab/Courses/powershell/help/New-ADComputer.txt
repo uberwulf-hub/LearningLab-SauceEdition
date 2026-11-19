@@ -1,0 +1,21 @@
+SYNOPSIS: Creates a computer account in Active Directory before the computer joins (pre-staging).
+DESCRIPTION:
+Normally a computer account is created when the PC joins the domain. Creating it beforehand lets you put it straight into the right OU (so the right Group Policy applies from the first start) and lets someone without domain-wide rights join that one computer.
+Without -Path the account goes to the default Computers container (CN=Computers).
+PARAMETER Name:
+The computer name, such as CL2. Position 0.
+PARAMETER Path:
+The OU, such as "OU=Workstations,DC=corp,DC=example".
+PARAMETER SamAccountName:
+The account name; defaults to the name followed by $.
+PARAMETER DNSHostName:
+The full DNS name, such as cl2.corp.example.
+PARAMETER Enabled:
+$true (the default) or $false.
+PARAMETER Description:
+A note, such as who it belongs to.
+EXAMPLE: New-ADComputer CL2 -Path "OU=Workstations,DC=corp,DC=example" -DNSHostName cl2.corp.example
+Pre-stages the workstation CL2 in the Workstations OU.
+EXAMPLE: New-ADComputer SRV2 -Path "OU=Servers,DC=corp,DC=example" -Description "Print server"
+A server account in the Servers OU.
+RELATED: Get-ADComputer, Set-ADComputer, Remove-ADComputer

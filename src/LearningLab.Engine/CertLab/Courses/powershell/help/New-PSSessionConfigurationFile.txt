@@ -1,0 +1,24 @@
+SYNOPSIS: Creates a session configuration file (.pssc), the settings of a remoting endpoint such as a JEA endpoint.
+DESCRIPTION:
+JEA (Just Enough Administration) lets people do a few admin tasks over remoting without being administrators. A JEA endpoint needs two kinds of files: role capability files (.psrc) that list allowed commands, and one session configuration file (.pssc) that says who gets which role.
+
+New-PSSessionConfigurationFile writes the .pssc file, with a short comment above each key. Register it with Register-PSSessionConfiguration to make the endpoint.
+PARAMETER Path:
+The file to create. It must end in .pssc.
+PARAMETER SessionType:
+RestrictedRemoteServer for JEA: users get only a few basic commands (such as Get-Command, Get-Help, Exit-PSSession) plus what their roles allow. Default is a normal full session; Empty has no commands.
+PARAMETER RoleDefinitions:
+Who gets which role, for example @{ 'LAB\HelpDesk' = @{ RoleCapabilities = 'Maintenance' } }.
+PARAMETER RunAsVirtualAccount:
+Runs the users' commands as a temporary local administrator account, so the users themselves need no admin rights.
+PARAMETER TranscriptDirectory:
+A folder that receives a transcript of every session, for auditing.
+PARAMETER LanguageMode:
+FullLanguage, ConstrainedLanguage, RestrictedLanguage or NoLanguage.
+EXAMPLE: New-PSSessionConfigurationFile -Path C:\LabFiles\HelpDesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -TranscriptDirectory C:\Transcripts -RoleDefinitions @{ 'LAB\HelpDesk' = @{ RoleCapabilities = 'Maintenance' } }
+Creates a JEA endpoint file: members of LAB\HelpDesk get the Maintenance role.
+EXAMPLE: Test-PSSessionConfigurationFile C:\LabFiles\HelpDesk.pssc
+Checks the file before registering it.
+NOTES:
+Other keys you can set: Author, Description, Guid, RequiredGroups, ModulesToImport, VisibleCmdlets, VisibleFunctions, VisibleExternalCommands, VisibleProviders, ExecutionPolicy, RunAsVirtualAccountGroups, GroupManagedServiceAccount and MountUserDrive.
+RELATED: New-PSRoleCapabilityFile, Test-PSSessionConfigurationFile, Register-PSSessionConfiguration, Get-PSSessionCapability

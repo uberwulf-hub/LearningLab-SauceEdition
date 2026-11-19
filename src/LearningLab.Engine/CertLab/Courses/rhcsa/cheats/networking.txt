@@ -1,0 +1,55 @@
+# Sheet: networking | Networking | Networking
+## Looking
+ip -br addr :: every interface and its addresses, one line each
+ip addr show enp1s0 :: one interface in full (inet = IPv4, inet6 = IPv6)
+ip route :: routes; the default route is the gateway
+nmcli device :: devices and the profile active on each
+nmcli connection show :: all profiles (DEVICE -- = not active)
+nmcli connection show NAME :: every setting of a profile
+nmcli -g ipv4.addresses con show NAME :: one setting's value only
+ss -tuln :: listening TCP and UDP ports (-p adds the program)
+
+## Profiles
+nmcli con mod NAME ipv4.addresses 192.168.50.20/24 :: set the address list (replaces it)
+nmcli con mod NAME +ipv4.addresses 192.168.50.21/24 :: add an address (- removes one)
+nmcli con mod NAME ipv4.gateway 192.168.50.254 :: set the default gateway
+nmcli con mod NAME ipv4.method manual :: fixed addresses (auto = DHCP)
+nmcli con up NAME :: activate the profile: apply the changes now
+nmcli con down NAME :: deactivate the profile
+nmcli con add con-name NAME type ethernet ifname enp1s0 ipv4.method manual ipv4.addresses ADDR/24 :: a new profile
+nmcli con mod NAME connection.autoconnect no :: do not activate it at boot
+nmcli con delete NAME :: remove a profile
+nmcli con reload :: read keyfiles edited by hand
+/etc/NetworkManager/system-connections/NAME.nmconnection :: the keyfile of a profile (root, mode 600)
+
+## IPv6
+nmcli con mod NAME ipv6.method manual ipv6.addresses fd00:50::11/64 :: a fixed IPv6 address
+nmcli con mod NAME ipv6.gateway fd00:50::fe :: the IPv6 gateway
+ip -6 -br addr :: the IPv6 addresses only
+fe80::/10 :: link-local, made by every interface
+fd00::/8 :: unique local (private) addresses
+
+## Names
+hostnamectl set-hostname NAME :: set the host name now and in /etc/hostname
+hostnamectl :: host name, OS, kernel and hardware
+/etc/hosts :: address, full name, short names (read before DNS)
+/etc/nsswitch.conf :: the hosts: line sets the order (files dns myhostname)
+nmcli con mod NAME ipv4.dns 192.168.50.254 :: DNS servers of the profile
+nmcli con mod NAME ipv4.dns-search lab.example.com :: search domains of the profile
+nmcli con mod NAME ipv4.ignore-auto-dns yes :: ignore DNS servers from DHCP
+/etc/resolv.conf :: written by NetworkManager from the profiles: do not edit
+getent hosts NAME :: look a name up like programs do
+host NAME :: ask DNS only (bind-utils; dig NAME, dig +short NAME too)
+
+## firewalld
+firewall-cmd --list-all :: everything the default zone allows now
+firewall-cmd --get-active-zones :: zones in use, with interfaces and sources
+firewall-cmd --permanent --add-service=http :: allow a service in the saved configuration
+firewall-cmd --permanent --add-port=8080/tcp :: allow a port in the saved configuration
+firewall-cmd --reload :: load the saved configuration into the running firewall
+firewall-cmd --runtime-to-permanent :: save the running configuration
+firewall-cmd --permanent --list-all :: what the machine will have after a reboot
+firewall-cmd --info-service=NAME :: the ports behind a service name
+firewall-cmd --permanent --zone=trusted --add-source=192.168.50.12 :: everything from one address
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="ADDR" service name="ssh" reject' :: one service refused for one source
+firewall-cmd --list-rich-rules :: the rich rules of the zone

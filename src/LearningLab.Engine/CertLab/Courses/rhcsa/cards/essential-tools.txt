@@ -1,0 +1,31 @@
+# Deck: essential-tools | Essential tools | Essential tools
+Search the one-line descriptions of all manual pages for the word partition :: `man -k partition`
+Show the manual page about the format of /etc/fstab (section 5) :: `man 5 fstab`
+Where do packages keep extra documentation and example files? :: /usr/share/doc/PACKAGE/
+Create /data/backup/daily, including the missing parent folders :: `mkdir -p /data/backup/daily`
+Copy the folder /etc/ssh to /root/ssh-copy, keeping owners, modes and times :: `cp -a /etc/ssh /root/ssh-copy`
+Remove the folder /tmp/old with everything in it :: `rm -rf /tmp/old`
+Create a hard link /root/b.txt to the file /root/a.txt :: `ln /root/a.txt /root/b.txt`
+Create a symbolic link /root/hosts-link that points to /etc/hosts :: `ln -s /etc/hosts /root/hosts-link`
+Two things a hard link cannot do :: point to a folder, or point to a file on another file system
+How can you tell that two names are hard links to the same file? :: ls -i (or stat -c %i) shows the same inode number for both
+Run ls /etc /nowhere, sending its output to out.txt and its errors to err.txt :: `ls /etc /nowhere > out.txt 2> err.txt`
+Run ls /etc /nowhere, sending both its output and its errors into all.txt :: `ls /etc /nowhere > all.txt 2>&1`
+Add the line hello to the end of notes.txt :: `echo hello >> notes.txt`
+Show the output of id and save it in /root/id.txt at the same time :: `id | tee /root/id.txt`
+Show the lines of /etc/passwd that start with student, with line numbers :: `grep -n '^student' /etc/passwd`
+Show /etc/ssh/sshd_config without comment lines and empty lines :: `grep -vE '^(#|$)' /etc/ssh/sshd_config`
+Search every file under /etc for the word server2, ignoring case :: `grep -ri server2 /etc`
+In a regular expression, what do ^ and $ mean? :: the start and the end of the line
+Create a gzip-compressed archive /root/etc.tar.gz of /etc :: `tar -czf /root/etc.tar.gz /etc`
+Create a bzip2-compressed archive /root/home.tar.bz2 of /home :: `tar -cjf /root/home.tar.bz2 /home`
+List the files inside /root/etc.tar.gz without unpacking it :: `tar -tzf /root/etc.tar.gz`
+Unpack /root/site.tar.bz2 into the folder /srv :: `tar -xjf /root/site.tar.bz2 -C /srv`
+Which tar letters choose gzip, bzip2 and xz? :: z (gzip), j (bzip2), J (xz)
+Give the owner rw, the group r and others nothing on report.txt (with numbers) :: `chmod 640 report.txt`
+Remove write permission for the group and others from file.txt, changing nothing else :: `chmod go-w file.txt`
+Make the user student and the group wheel own /srv/data and everything in it :: `chown -R student:wheel /srv/data`
+What does x mean on a folder? :: you may enter it and reach the files inside (r only lets you list the names)
+Start a login shell as the user student :: `su - student`
+Run the command hostname on server2 over ssh and come back :: `ssh server2 hostname`
+In vi, save the file and quit :: Esc, then :wq (or ZZ); :q! quits without saving

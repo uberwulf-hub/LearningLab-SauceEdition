@@ -1,0 +1,43 @@
+NAME
+       gdisk - an interactive partition editor for GPT disks
+
+SYNOPSIS
+       gdisk DEVICE
+       gdisk -l DEVICE
+
+DESCRIPTION
+       gdisk edits GPT partition tables with a one-letter menu much like
+       fdisk. Nothing is written until w (which asks for confirmation); q
+       leaves without saving. When gdisk opens a disk with an MBR table it
+       offers to convert it to GPT in memory; that only happens if you then
+       write.
+
+       Partition types are four-digit hex codes: 8300 Linux filesystem (the
+       default), 8200 Linux swap, 8e00 Linux LVM, 0700 Microsoft basic data,
+       ef00 EFI system partition.
+
+   Menu commands
+       p      print the partition table
+       n      new partition (number, first sector, last sector such as
+              +1G, type code)
+       d      delete a partition
+       t      change a partition's type code
+       l      list the type codes
+       o      create a new, empty GPT table
+       v      verify the disk
+       ?      show the menu
+       w      write the table and exit
+       q      quit without saving
+
+OPTIONS
+       -l     Print the partition table and exit.
+
+EXAMPLES
+       A 2 GiB swap partition on /dev/vdc:
+
+           gdisk /dev/vdc
+           n, (Enter), (Enter), +2G, 8200
+           w, y
+
+SEE ALSO
+       fdisk(8), parted(8), lsblk(8)

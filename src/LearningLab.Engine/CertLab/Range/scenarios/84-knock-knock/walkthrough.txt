@@ -1,0 +1,19 @@
+Password spraying: a few guesses at many doors, instead of many guesses at one.
+
+1. The failures. Get-WinEvent -FilterHashtable @{ LogName='Security'; Id=4625 } shows two or three failed
+   sign-ins for each of {{S1}}, {{S2}}, {{S3}}, {{S4}} and Administrator, all from {{ATKIP}}, a few
+   seconds apart. That pattern (few tries per account, many accounts) slips under lockout rules that
+   only count failures per account.
+
+2. The one that worked. The only 4624 from {{ATKIP}} is for {{VIC}}: that person used a password on the
+   attacker's short list.
+
+3. What it did next. Event 4698 a couple of minutes later: a scheduled task, \{{TASK}}, created by
+   {{VIC}}. Get-ScheduledTask lists it ("{{TASK_DESC}}"); its action runs
+   C:\ProgramData\{{TASK}}\{{SCRIPT}}, which copies the accounts share into its own folder. The flag is in
+   readme.txt beside it.
+
+4. Clean up. Disable-LocalUser -Name {{VIC}} and Unregister-ScheduledTask -TaskName {{TASK}}.
+
+For real: alert on 4625 bursts from one address across many accounts, ban common passwords, use
+multi-factor sign-in for remote access, and review scheduled tasks you didn't create.

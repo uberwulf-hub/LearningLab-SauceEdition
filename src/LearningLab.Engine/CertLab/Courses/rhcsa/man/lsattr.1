@@ -1,0 +1,22 @@
+NAME
+       lsattr - list the special attributes of files
+
+SYNOPSIS
+       lsattr [-R] [-d] [FILE...]
+
+DESCRIPTION
+       lsattr shows the attributes set with chattr, one letter per attribute
+       before each name; a - means that attribute is not set. i (immutable)
+       and a (append only) are the ones to look for. On ext4 almost every
+       file shows e (it uses extents), which is normal.
+
+OPTIONS
+       -R     List directories and their contents.
+
+       -d     Show directories themselves, not their contents.
+
+EXAMPLES
+           lsattr /etc/resolv.conf
+
+SEE ALSO
+       chattr(1), ls(1)

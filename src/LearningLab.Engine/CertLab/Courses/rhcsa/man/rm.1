@@ -1,0 +1,49 @@
+NAME
+       rm - remove files and directories
+
+SYNOPSIS
+       rm [-i | -I | -f] [-r] [-d] [-v] FILE...
+
+DESCRIPTION
+       rm deletes files. There is no wastebin: removed files are gone. It
+       removes the directory entry; the data is freed when no other hard
+       link and no open program uses the file.
+
+       Directories are removed only with -r (everything inside them too) or
+       -d (empty ones). For root, RHEL defines an alias rm='rm -i', so root
+       is asked before each removal; -f overrides it.
+
+       rm refuses to remove / unless told --no-preserve-root.
+
+OPTIONS
+       -r, -R, --recursive
+              Remove directories and their contents.
+
+       -f, --force
+              Never ask, and do not complain about files that do not exist.
+
+       -i     Ask before every removal.
+
+       -I     Ask once before removing more than three files or recursing.
+
+       -d, --dir
+              Remove empty directories.
+
+       -v, --verbose
+              Print each removal.
+
+EXAMPLES
+       Remove a file:
+
+           rm /tmp/notes.txt
+
+       Remove a directory tree without questions:
+
+           rm -rf /tmp/build
+
+       Remove a file whose name begins with a dash:
+
+           rm -- -oops.txt
+
+SEE ALSO
+       rmdir(1), unlink(1), shred(1), find(1)

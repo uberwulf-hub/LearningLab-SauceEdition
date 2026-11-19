@@ -1,0 +1,21 @@
+{
+    "base": "04-key-left-out",
+    "id": "watched-key",
+    "title": "A Key, Watched",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Intermediate",
+    "order": 2,
+    "summary": "The leaked-key web server from A Key Left Out, now with someone watching. The quiet path - read the folder, use the key, edit the timed script - barely makes a sound. Guessing and hammering do not.",
+    "story": "Marigold Media (made up) is watching web01 on 10.10.4.0/24 this time. Find the exposed key and climb to root without setting off the watcher: pointed requests are fine, but big scans, failed sign-ins and password guessing are not. You start on scout.",
+    "goal": "Capture both flags the quiet way and keep the full quiet bonus.",
+    "skills": "quiet recon, web folder listings, SSH keys, a writable timed script, staying quiet",
+    "quietPoints": 100,
+    "watch": [ "web01" ],
+    "noisySolution": "noisy.txt",
+    "hints": [
+        { "text": "The quiet path doesn't guess anything. Scan just web01 (nmap -sV 10.10.4.30), look at its folders (webscan is a few requests - fine here), grab the exposed key, and use it. A key sign-in looks like a normal login.", "cost": 12 },
+        { "text": "Once in as webadmin, root comes from the writable script root runs on a timer (ls -l /opt/maint, cat /etc/cron.d/maint) - append a line and wait. No guessing, no hammering.", "cost": 18 },
+        { "text": "Avoid pwguess and full -p- sweeps against the watched server: that is exactly what trips the watcher and gets your address blocked.", "cost": 24 }
+    ]
+}

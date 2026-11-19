@@ -1,0 +1,34 @@
+SYNOPSIS: Gets management information (CIM / WMI classes) from a computer.
+DESCRIPTION:
+Windows describes itself in classes: Win32_OperatingSystem (version, boot time, memory), Win32_ComputerSystem (model, domain), Win32_BIOS, Win32_Processor, Win32_LogicalDisk (drives and free space), Win32_Service, Win32_Process, Win32_NetworkAdapterConfiguration, Win32_QuickFixEngineering (updates), Win32_UserAccount, Win32_Group, Win32_Share, Win32_PhysicalMemory, Win32_StartupCommand. Get-CimInstance returns their instances.
+
+-Filter takes a WQL condition, not PowerShell: = and <> instead of -eq and -ne, LIKE with % as the wildcard, AND, OR, NOT, and strings in single quotes. Filtering here is faster than Where-Object because only the matching instances come back.
+
+With -ComputerName or -CimSession the query goes over WinRM (WS-Management), so the other computer's WinRM service must run.
+PARAMETER ClassName:
+The class, for example Win32_OperatingSystem. Position 0.
+PARAMETER Filter:
+A WQL condition, for example "Name='Spooler'" or "DriveType=3".
+PARAMETER Query:
+A whole WQL query: SELECT properties FROM class WHERE condition.
+PARAMETER Property:
+Only these properties are filled in (the others are empty).
+PARAMETER Namespace:
+The namespace; root/cimv2 by default.
+PARAMETER ComputerName:
+Other computers to ask.
+PARAMETER CimSession:
+Sessions from New-CimSession.
+PARAMETER InputObject:
+An instance to read again.
+EXAMPLE: Get-CimInstance -ClassName Win32_OperatingSystem | Select-Object Caption, Version, LastBootUpTime
+What Windows runs and when it started.
+EXAMPLE: Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object DeviceID, @{n='FreeGB'; e={[math]::Round($_.FreeSpace/1GB,1)}}
+Free space on the local disks.
+EXAMPLE: Get-CimInstance -Query "SELECT Name, State FROM Win32_Service WHERE StartMode='Auto' AND State<>'Running'"
+Automatic services that are not running.
+EXAMPLE: Get-CimInstance Win32_BIOS -ComputerName WIN-SRV1
+The BIOS of another computer, over WinRM.
+NOTES:
+Get-CimInstance replaces Get-WmiObject, which is not in PowerShell 7. CIM dates (LastBootUpTime) are real DateTime values; WMI gives them as strings.
+RELATED: Invoke-CimMethod, Get-CimClass, New-CimSession, Get-WmiObject

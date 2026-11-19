@@ -1,0 +1,13 @@
+SYNOPSIS: Deletes a computer account from Active Directory.
+DESCRIPTION:
+Remove-ADComputer deletes a computer object, for example for a PC that was thrown away. If the computer still exists, it can no longer authenticate to the domain and has to be joined again.
+It asks for confirmation unless you add -Confirm:$false. A domain controller's account can't be removed this way; demote it first (Uninstall-ADDSDomainController).
+PARAMETER Identity:
+The computer. Position 0, and takes pipeline input.
+PARAMETER Server:
+The domain controller to make the change on.
+EXAMPLE: Remove-ADComputer CL2
+Deletes the CL2 account after asking.
+EXAMPLE: Search-ADAccount -AccountDisabled -ComputersOnly | Remove-ADComputer -Confirm:$false
+Deletes every disabled computer account.
+RELATED: Get-ADComputer, New-ADComputer, Restore-ADObject

@@ -1,0 +1,60 @@
+TOPIC
+    about_Remote_Variables
+
+SHORT DESCRIPTION
+    Using your own variables in commands that run on another computer.
+
+LONG DESCRIPTION
+    A script block sent with Invoke-Command runs on the remote computer, in
+    a session that knows nothing about your variables. This does not work
+    the way you might expect:
+
+        $svc = 'Spooler'
+        Invoke-Command -ComputerName WIN-SRV1 -ScriptBlock {
+            Get-Service -Name $svc      # $svc is empty over there
+        }
+
+  The $using: scope modifier
+    Put using: in front of a local variable and its value is copied into
+    the remote command when it is sent:
+
+        $svc = 'Spooler'
+        Invoke-Command -ComputerName WIN-SRV1 -ScriptBlock {
+            Get-Service -Name $using:svc
+        }
+
+    The remote side gets a copy of the value. Changing it there does not
+    change your variable, and you cannot assign to $using:svc.
+
+  Passing arguments instead
+    -ArgumentList passes values in order to a param() block (or to $args):
+
+        Invoke-Command -ComputerName WIN-SRV1, WIN-CL1 -ScriptBlock {
+            param($Folder)
+            Get-ChildItem -Path $Folder
+        } -ArgumentList 'C:\LabFiles'
+
+  Variables in a persistent session
+    In a PSSession, variables you create remotely stay there for the next
+    command in the same session:
+
+        $s = New-PSSession -ComputerName WIN-CL1
+        Invoke-Command -Session $s -ScriptBlock { $start = Get-Date }
+        Invoke-Command -Session $s -ScriptBlock { (Get-Date) - $start }
+
+  Values that travel
+    Values sent with $using: or -ArgumentList, and results that come back,
+    are serialized. Simple values (strings, numbers, dates) arrive as
+    they were; other objects arrive as deserialized copies with properties
+    but no methods. Each returned object carries PSComputerName.
+
+  Jobs too
+    $using: also works in Start-Job script blocks, which run in a separate
+    process and have the same problem.
+
+SEE ALSO
+    about_Remote
+    about_Scopes
+    Invoke-Command
+    New-PSSession
+    about_Jobs

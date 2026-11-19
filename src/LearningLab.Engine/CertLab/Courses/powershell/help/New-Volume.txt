@@ -1,0 +1,24 @@
+SYNOPSIS: Creates a ready-to-use volume from a storage pool in one step.
+DESCRIPTION:
+New-Volume does in one command what otherwise takes four: it creates a virtual disk in the pool, initializes it, makes a partition and formats it. You choose the resiliency (Simple, Mirror, Parity), the provisioning (Thin, Fixed), the file system (NTFS or ReFS) and the drive letter.
+PARAMETER StoragePoolFriendlyName:
+The pool to use.
+PARAMETER FriendlyName:
+The name of the volume and its virtual disk.
+PARAMETER FileSystem:
+NTFS or ReFS.
+PARAMETER Size:
+The size, for example 150GB.
+PARAMETER UseMaximumSize:
+Uses all the free space.
+PARAMETER ResiliencySettingName:
+Simple, Mirror or Parity.
+PARAMETER ProvisioningType:
+Thin or Fixed.
+PARAMETER DriveLetter:
+The drive letter to give it.
+EXAMPLE: New-Volume -StoragePoolFriendlyName Data -FriendlyName Projects -FileSystem NTFS -Size 150GB -ResiliencySettingName Mirror -DriveLetter P
+A mirrored 150 GB P: drive, ready to use.
+EXAMPLE: New-Volume -StoragePoolFriendlyName Data -FriendlyName Scratch -FileSystem ReFS -UseMaximumSize -ResiliencySettingName Simple -DriveLetter S
+Uses the rest of the pool for a fast, unprotected scratch drive.
+RELATED: New-VirtualDisk, New-StoragePool, Get-Volume, Format-Volume

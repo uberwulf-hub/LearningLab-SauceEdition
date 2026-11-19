@@ -1,0 +1,34 @@
+NAME
+       free - show how much memory and swap is used and free
+
+SYNOPSIS
+       free [-h] [-m] [-g]
+
+DESCRIPTION
+       free prints two lines: Mem (the RAM) and Swap. The columns:
+
+       total        all of it
+       used         in use by programs
+       free         not used for anything at all
+       buff/cache   used by the kernel to cache files; given back when
+                    programs need memory
+       available    roughly how much programs could still get without
+                    swapping: the number to look at
+
+       A low free value is normal on Linux: memory that would otherwise be
+       idle is used as cache. Check the Swap line after adding swap space
+       (or use swapon --show).
+
+OPTIONS
+       -h, --human
+              Sizes such as 1.9Gi and 512Mi.
+
+       -m     Sizes in mebibytes.
+
+       -g     Sizes in gibibytes.
+
+EXAMPLES
+           free -h
+
+SEE ALSO
+       swapon(8), top(1), vmstat(8)

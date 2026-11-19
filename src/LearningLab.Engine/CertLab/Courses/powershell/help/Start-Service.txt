@@ -1,0 +1,26 @@
+SYNOPSIS: Starts one or more stopped services.
+DESCRIPTION:
+Start-Service starts a service and, first, any service it needs (its RequiredServices). A service whose start type is Disabled cannot start: change the start type with Set-Service first. Starting a service that already runs does nothing.
+
+Each start is recorded in the System event log as event 7036 from the Service Control Manager.
+PARAMETER Name:
+The services to start, by name or display name. Takes pipeline input.
+PARAMETER DisplayName:
+The services to start, by display name.
+PARAMETER InputObject:
+Service objects from Get-Service, usually through the pipeline.
+PARAMETER PassThru:
+Also outputs the service, so you can see its new status.
+PARAMETER Include:
+Only the services whose names match these patterns.
+PARAMETER Exclude:
+Leaves out the services whose names match these patterns.
+EXAMPLE: Start-Service -Name Spooler
+Starts the print spooler.
+EXAMPLE: Get-Service W32Time | Start-Service -PassThru
+Starts the time service and shows it.
+EXAMPLE: Set-Service BITS -StartupType Manual; Start-Service BITS
+A disabled service must be enabled before it can start.
+NOTES:
+Starting services needs an administrator. Use -WhatIf to see what would start.
+RELATED: Stop-Service, Restart-Service, Get-Service, Set-Service

@@ -1,0 +1,27 @@
+NAME
+       cmp - compare two files byte by byte
+
+SYNOPSIS
+       cmp [-s] [-l] FILE1 FILE2
+
+DESCRIPTION
+       cmp reads two files side by side and reports the first byte and line
+       where they differ:
+
+           a.txt b.txt differ: byte 12, line 2
+
+       It says nothing when the files are the same. The exit status is 0 for
+       identical files, 1 when they differ and 2 on trouble, so it works well
+       in if statements. Use diff to see what changed in text files.
+
+OPTIONS
+       -s, --quiet, --silent
+              Print nothing; only set the exit status.
+
+       -l     List every differing byte, not just the first.
+
+EXAMPLES
+           if cmp -s /etc/hosts /root/hosts.bak; then echo same; fi
+
+SEE ALSO
+       diff(1), comm(1), cksum(1)

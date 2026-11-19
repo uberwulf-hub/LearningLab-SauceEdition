@@ -1,0 +1,56 @@
+TOPIC
+    about_Execution_Policies
+
+SHORT DESCRIPTION
+    The setting that decides whether PowerShell runs script files.
+
+LONG DESCRIPTION
+    The execution policy is a safety guard that stops you from running a
+    script by accident. It is not a security boundary: anyone can paste
+    the script's text into the console, or start PowerShell with a
+    different policy. Real protection comes from user rights, AppLocker or
+    Windows Defender Application Control.
+
+  The policies
+    Restricted     No script files run; typed commands still work.
+    AllSigned      Only scripts signed by a trusted publisher run.
+    RemoteSigned   Local scripts run; scripts downloaded from the internet
+                   must be signed (or unblocked first).
+    Unrestricted   Everything runs; downloaded scripts ask first.
+    Bypass         Nothing is checked and nothing asks.
+    Undefined      No policy is set in this scope.
+
+    The default on Windows Server is RemoteSigned. On Windows 10 and 11
+    the default is Restricted.
+
+  Scopes
+    A policy can be set in several scopes. The first one that is not
+    Undefined wins, in this order:
+
+    1. MachinePolicy   Group Policy for the computer
+    2. UserPolicy      Group Policy for the user
+    3. Process         This PowerShell session only
+    4. CurrentUser     You
+    5. LocalMachine    Everyone on the computer (needs an administrator)
+
+        Get-ExecutionPolicy -List
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+        powershell.exe -ExecutionPolicy Bypass -File C:\LabFiles\a.ps1
+
+  Downloaded files
+    Windows marks downloaded files with a hidden Zone.Identifier stream.
+    That mark is what makes a script "remote". After checking a script you
+    trust, remove the mark with Unblock-File:
+
+        Get-Item C:\LabFiles\Tools.ps1 -Stream Zone.Identifier
+        Unblock-File -Path C:\LabFiles\Tools.ps1
+
+  PowerShell 7
+    Execution policy only applies on Windows. On Linux and macOS it is
+    always Unrestricted and cannot be changed.
+
+SEE ALSO
+    Get-ExecutionPolicy
+    Set-ExecutionPolicy
+    Unblock-File
+    about_Signing

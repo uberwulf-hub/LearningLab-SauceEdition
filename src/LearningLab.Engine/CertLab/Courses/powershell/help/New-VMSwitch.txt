@@ -1,0 +1,22 @@
+SYNOPSIS: Creates a virtual switch: External, Internal or Private.
+DESCRIPTION:
+With -NetAdapterName the switch is External: it takes over that physical adapter, and VMs use it to reach the network. -AllowManagementOS $true (the default) lets the host keep using the adapter through a virtual adapter; with $false the host loses its address on that adapter, so never do that to the adapter you are connected through.
+
+Without -NetAdapterName, give -SwitchType Internal (host and VMs) or Private (VMs only).
+
+-EnableEmbeddedTeaming $true with several adapters creates a Switch Embedded Team (SET), which teams the adapters inside the switch.
+PARAMETER Name:
+The switch's name.
+PARAMETER NetAdapterName:
+The physical adapter or adapters for an External switch.
+PARAMETER SwitchType:
+Internal or Private (External comes from -NetAdapterName).
+PARAMETER AllowManagementOS:
+$true to let the host share the adapter.
+PARAMETER EnableEmbeddedTeaming:
+$true for a Switch Embedded Team.
+EXAMPLE: New-VMSwitch -Name Isolated -SwitchType Private -ComputerName HV1
+A switch for VMs that must talk only to each other.
+EXAMPLE: New-VMSwitch -Name HostLab -SwitchType Internal
+The host and the VMs can talk; nothing reaches the real network.
+RELATED: Get-VMSwitch, Remove-VMSwitch, Connect-VMNetworkAdapter

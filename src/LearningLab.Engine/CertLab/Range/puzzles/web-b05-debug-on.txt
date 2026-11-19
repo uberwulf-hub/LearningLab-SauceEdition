@@ -1,0 +1,63 @@
+title: Debug mode, still on
+category: web
+level: Beginner
+kind: Web
+topic: Server mistakes
+teaser: the developers' troubleshooting page went live with the shop
+points: 45
+order: 5
+packages: httpd
+answer: flag
+var: STAFF = pick:ops|manager|owner|backoffice
+var: STAFFPW = word
+
+@intro
+While the developers built Copperleaf Market (http://copperleaf.example/), they used
+a troubleshooting page that prints the shop's settings. It should have been switched
+off before the shop opened. Was it?
+
+Find the page, use what it gives away to sign in as staff, and open the staff
+dashboard (/admin) for the flag.
+
+@setup
+systemctl enable --now httpd
+echo '127.0.0.1 copperleaf.example' >> /etc/hosts
+
+@web
+[ { "path": "/", "kind": "shop",
+    "settings": { "flag": "{{FLAG}}", "weak": "debug", "accounts": "{{STAFF}}|{{STAFFPW}}|admin|{{STAFF}}@copperleaf.example" } } ]
+
+@solution
+webscan http://copperleaf.example/
+curl -s http://copperleaf.example/debug
+C=$(curl -s -d "user={{STAFF}}&pass={{STAFFPW}}" http://copperleaf.example/login | grep -o 'session=[a-z0-9]*')
+echo $C
+curl -s -b "$C" http://copperleaf.example/admin
+
+@walkthrough
+webscan finds a page called /debug:
+
+    webscan http://copperleaf.example/
+    curl -s http://copperleaf.example/debug
+
+"Debug mode is ON" and the settings are printed for anyone, including the staff
+account's name and password. Sign in with them and keep the cookie:
+
+    C=$(curl -s -d "user={{STAFF}}&pass={{STAFFPW}}" http://copperleaf.example/login | grep -o 'session=[a-z0-9]*')
+    curl -s -b "$C" http://copperleaf.example/admin
+
+The dashboard shows the staff code. Debug pages, error pages that show settings,
+and test tools are meant for the developers' own computers, never for the live
+site: switching them off is part of every launch checklist.
+
+@hint 2
+What to think about first: while building a website, developers add helper pages that print the site's settings so they can fix problems. If one is left switched on, it tells everybody the same things it told the developers. Your first job is to find such a page.
+
+@hint 3
+webscan tries a list of common page names and shows which exist: run webscan http://copperleaf.example/. Look for a name that sounds like a developer's tool, then read it with curl -s http://copperleaf.example/NAME.
+
+@hint 4
+The settings page shows a staff user name and password. To sign in, send them like the sign-in form does: curl -s -d "user=NAME&pass=PASSWORD" http://copperleaf.example/login. The answer shows a cookie (session=...) that proves you signed in.
+
+@hint 6
+Near step by step: curl -s http://copperleaf.example/debug and note SHOP_ADMIN_USER and SHOP_ADMIN_PASSWORD. Sign in with them as above, copy the session=... text, then run curl -s -b "session=PASTE-IT" http://copperleaf.example/admin. The staff code on that page is the flag.

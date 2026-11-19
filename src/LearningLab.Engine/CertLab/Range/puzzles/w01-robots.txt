@@ -1,0 +1,56 @@
+title: Please do not look here
+level: Beginner
+kind: Web
+topic: Web
+teaser: a web server that politely points at its own secret
+points: 45
+order: 40
+packages: httpd
+answer: flag
+var: HIDDEN = hex:6
+
+@intro
+A small web site is running on this box (http://localhost/). Web sites often have a
+file called robots.txt that asks search engines not to look in certain folders - which
+is exactly where people hide things they shouldn't. Find the flag the site is trying
+to keep out of search results.
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/", "kind": "page", "title": "Bluebird Bakery", "body": "<h1>Bluebird Bakery</h1><p>Fresh every morning. <a href=\"/menu.html\">Menu</a></p>" },
+  { "path": "/robots.txt", "kind": "page", "server": "Apache/2.4.62", "body": "User-agent: *\nDisallow: /staff-{{HIDDEN}}/\n" },
+  { "path": "/staff-{{HIDDEN}}/notes.txt", "kind": "page", "body": "Internal note - do not publish.\nFlag: {{FLAG}}\n" }
+]
+
+@solution
+curl -s http://localhost/robots.txt
+curl -s http://localhost/staff-{{HIDDEN}}/notes.txt
+
+@walkthrough
+robots.txt lists folders the site asks search engines to skip:
+
+    curl -s http://localhost/robots.txt
+    -> Disallow: /staff-{{HIDDEN}}/
+
+That folder is "hidden" only by being left out of search results - anyone can ask for
+it directly:
+
+    curl -s http://localhost/staff-{{HIDDEN}}/notes.txt
+
+and the note inside has the flag. The lesson: robots.txt is a request to search
+engines, never a security control. Real secrets need real access control.
+
+@hint 2
+What to think about first: a web site is just files a server hands out when asked by name. If nobody links to a page, you won't stumble on it - unless the site itself tells you its name. Some sites do exactly that, by accident.
+
+@hint 3
+curl is a command-line web browser: it fetches a page and prints its text. Try curl -s http://localhost/ (-s hides the progress meter). You'll see the home page's HTML, the code a browser turns into a page.
+
+@hint 5
+robots.txt is a public file at the top of many sites. It tells search engines which folders not to index, with lines like "Disallow: /somewhere/". It is a polite request, not a lock - and it points straight at what the owner didn't want found. Read it: curl -s http://localhost/robots.txt
+
+@hint 8
+robots.txt names a staff folder. Inside it is a notes file: curl -s http://localhost/staff-{{HIDDEN}}/notes.txt prints the flag.

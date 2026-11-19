@@ -1,0 +1,24 @@
+1. The tool. app01 serves a ping page: /tools/ping?host=127.0.0.1. It says it runs
+   ping -c1 with the host you give, and it does not check that host first.
+
+2. Command injection. Because the input goes straight into a command line, shell
+   characters you add run too, as the web account (apache):
+
+       /tools/ping?host=127.0.0.1;id
+
+   id shows uid=48(apache). Now ; ls and ; cat let you look around.
+
+3. The config. The web account can read /var/www/conf/app.ini:
+
+       /tools/ping?host=x;cat /var/www/conf/app.ini
+
+   which holds the appsvc password. (A real web tool should never be able to read its
+   own secrets like this, and should never run your input as a command.)
+
+4. Account and root. ssh appsvc@10.10.5.30 with that password; the user flag is in
+   appsvc's home. sudo -l shows appsvc may run /usr/bin/sed as root, and sed prints
+   files: sudo sed -n p /root/flag.txt.
+
+How to fix it: build the command safely (pass the host as a single argument, or
+only allow an IP address); don't keep the service password where the web account can
+read it; and don't give sudo on a file tool like sed.

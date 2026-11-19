@@ -1,0 +1,39 @@
+NAME
+       uniq - remove or count repeated lines that follow each other
+
+SYNOPSIS
+       uniq [OPTION]... [INPUT [OUTPUT]]
+
+DESCRIPTION
+       uniq reads lines and prints them, folding a run of identical
+       neighbouring lines into one. Equal lines that are not next to each
+       other are not noticed, so sort the input first.
+
+OPTIONS
+       -c, --count
+              Put the number of times each line occurred in front of it.
+
+       -d, --repeated
+              Print only lines that occurred more than once.
+
+       -u, --unique
+              Print only lines that occurred exactly once.
+
+       -i, --ignore-case
+              Ignore upper and lower case when comparing.
+
+       -f, --skip-fields=N
+              Skip the first N fields of each line when comparing.
+
+EXAMPLES
+       Count failed ssh logins per address, most first:
+
+           grep 'Failed password' /var/log/secure | awk '{print $(NF-3)}' |
+               sort | uniq -c | sort -nr
+
+       Print lines that appear twice in a list:
+
+           sort names.txt | uniq -d
+
+SEE ALSO
+       sort(1), wc(1), comm(1)

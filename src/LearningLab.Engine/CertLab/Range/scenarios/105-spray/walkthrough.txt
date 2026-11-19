@@ -1,0 +1,14 @@
+1. siem alerts shows "One account failing again and again" ({{SVC}}, early this morning) and "Failed sign-ins for
+   many accounts from one address" ({{SPRAYIP}}, at {{T0}}).
+2. siem search source=winsec event=4625 --count-by src_ip: most failures come from {{NET}}.{{AN}}, an address inside
+   the company, and a short burst from {{SPRAYIP}}, outside it.
+3. The inside one is {{APP}}, failing as {{SVC}} every five minutes since early morning, like clockwork. That is a
+   program, not a person: its saved password wasn't updated when the account's password was changed. Annoying (and
+   worth fixing: it may lock the account), but a false alarm.
+4. --count-by user for {{SPRAYIP}} shows {{NTRIED}} different accounts, each tried once - one password sprayed across
+   everyone, slowly enough not to lock anyone out. One of them worked: {{PV}} signed in (event 4624) at about two
+   minutes in, then read the inbox and changed the forwarding settings - a common next step, so copies of the
+   person's mail go to the attacker.
+
+Next steps for a real team: reset {{PV}}'s password and remove the forwarding rule, block {{SPRAYIP}}, turn on a
+second sign-in step (an app code) for webmail, and fix {{APP}}'s saved password.

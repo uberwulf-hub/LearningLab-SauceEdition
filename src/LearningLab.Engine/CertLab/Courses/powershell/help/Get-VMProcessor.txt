@@ -1,0 +1,12 @@
+SYNOPSIS: Shows a virtual machine's processor settings.
+DESCRIPTION:
+Get-VMProcessor shows the number of virtual processors (Count), whether processor compatibility for migration is on, and whether the virtualization extensions are passed into the VM (ExposeVirtualizationExtensions, needed for nested virtualization).
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER VM:
+VM objects piped from Get-VM.
+EXAMPLE: Get-VMProcessor -VMName LAB-HOST -ComputerName HV1
+Can LAB-HOST run its own Hyper-V?
+EXAMPLE: Get-VM | Get-VMProcessor
+The processors of every VM.
+RELATED: Set-VMProcessor, Set-VM, Get-VMMemory

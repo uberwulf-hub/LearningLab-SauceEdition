@@ -1,0 +1,14 @@
+SYNOPSIS: Deletes scheduled tasks.
+DESCRIPTION:
+Unregister-ScheduledTask removes a task from Task Scheduler. It asks for confirmation; add -Confirm:$false in scripts.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER InputObject:
+Task objects from the pipeline.
+EXAMPLE: Unregister-ScheduledTask -TaskName Nightly -Confirm:$false
+Deletes without asking.
+EXAMPLE: Get-ScheduledTask -TaskPath \Lab\ | Unregister-ScheduledTask -Confirm:$false
+Deletes every task in a folder.
+RELATED: Register-ScheduledTask, Disable-ScheduledTask

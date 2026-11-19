@@ -1,0 +1,38 @@
+# Sheet: security | Security | Security
+## Execution policy
+Get-ExecutionPolicy :: the policy in force
+Get-ExecutionPolicy -List :: every scope; the first that is not Undefined wins
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force :: for your account only, no administrator
+Set-ExecutionPolicy -ExecutionPolicy AllSigned -Force :: for the whole computer (LocalMachine, administrator)
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force :: this window only
+powershell.exe -ExecutionPolicy Bypass -File C:\Scripts\nightly.ps1 :: one run with another policy (Process scope)
+## Downloaded files
+Get-Item C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream * :: the file's streams (Zone.Identifier = downloaded)
+Get-Content C:\Users\Administrator\Downloads\Get-Inventory.ps1 -Stream Zone.Identifier :: the zone (3 = Internet)
+Unblock-File -Path C:\Users\Administrator\Downloads\Get-Inventory.ps1 :: remove the mark (after reading the script)
+Get-ChildItem C:\Tools -Recurse | Unblock-File :: unblock a whole folder
+## Signing
+New-SelfSignedCertificate -Subject 'CN=Lab Code Signing' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My :: a practice code signing certificate
+Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert :: your code signing certificates
+Set-AuthenticodeSignature -FilePath C:\Scripts\hello.ps1 -Certificate $cert :: sign a script
+Get-AuthenticodeSignature C:\Scripts\hello.ps1 :: Valid, NotSigned, HashMismatch (changed) or UnknownError (untrusted root)
+Export-Certificate -Cert $cert -FilePath C:\Scripts\codesign.cer :: the public part only
+Import-Certificate -FilePath C:\Scripts\codesign.cer -CertStoreLocation Cert:\LocalMachine\Root :: trust its chain
+Import-Certificate -FilePath C:\Scripts\codesign.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher :: run its scripts under AllSigned without asking
+## Passwords and credentials
+Read-Host -Prompt 'Password' -AsSecureString :: ask without showing it
+Get-Credential -UserName 'LAB\svc_backup' :: ask for a credential
+ConvertTo-SecureString 'Lab-Pass1!' -AsPlainText -Force :: plain text to SecureString (tests only)
+New-Object System.Management.Automation.PSCredential('LAB\svc_backup', $pw) :: a credential from a name and a SecureString
+ConvertFrom-SecureString $pw | Set-Content C:\Secure\pw.txt :: save encrypted for this user on this computer (DPAPI)
+Get-Content C:\Secure\pw.txt | ConvertTo-SecureString :: read it back (same user, same computer)
+ConvertFrom-SecureString $pw -Key (1..32) :: AES with a key: works anywhere, but the key must be protected
+$cred.GetNetworkCredential().Password :: the plain text again (be careful)
+## JEA
+New-PSRoleCapabilityFile -Path "$mod\RoleCapabilities\SpoolerAdmin.psrc" -VisibleCmdlets 'Get-Service' :: a role (in a module's RoleCapabilities folder)
+New-PSSessionConfigurationFile -Path C:\JEA\PrintDesk.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\HelpDesk' = @{ RoleCapabilities = 'SpoolerAdmin' } } :: the endpoint file
+Test-PSSessionConfigurationFile C:\JEA\PrintDesk.pssc :: check it
+Register-PSSessionConfiguration -Name PrintDesk -Path C:\JEA\PrintDesk.pssc -Force :: register (WinRM, administrator)
+Get-PSSessionCapability -ConfigurationName PrintDesk -Username LAB\alice :: what a user could run
+Enter-PSSession -ComputerName WIN-SRV1 -ConfigurationName PrintDesk :: connect to it
+Unregister-PSSessionConfiguration -Name PrintDesk :: remove it

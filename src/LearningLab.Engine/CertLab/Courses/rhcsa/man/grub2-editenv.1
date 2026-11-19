@@ -1,0 +1,33 @@
+NAME
+       grub2-editenv - show or change the GRUB environment block
+
+SYNOPSIS
+       grub2-editenv [FILE] list
+
+DESCRIPTION
+       GRUB keeps a few variables in a small file, the environment block, that
+       it reads at every boot: /boot/grub2/grubenv on RHEL 9. The most
+       important one is saved_entry, the id of the boot menu entry GRUB starts
+       by default. FILE is the block to work on; use "-" (or leave it out) for
+       the default file.
+
+       The real tool can also change variables ("set NAME=VALUE", "unset
+       NAME"), but there is rarely a reason to: grubby --set-default and
+       grub2-set-default change saved_entry for you. On the RHCSA you
+       normally only need "list" to look at it.
+
+COMMANDS
+       list   Print every variable as NAME=VALUE.
+
+EXAMPLES
+       See which entry boots by default:
+              # grub2-editenv list
+              saved_entry=da8d...-5.14.0-503.14.1.el9_5.x86_64
+              menu_auto_hide=1
+              boot_success=1
+
+FILES
+       /boot/grub2/grubenv
+
+SEE ALSO
+       grubby(8), grub2-set-default(8), grub2-mkconfig(8)

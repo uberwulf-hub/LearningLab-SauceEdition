@@ -1,0 +1,19 @@
+SYNOPSIS: Installs the newest version of a module that was installed with Install-Module.
+DESCRIPTION:
+Update-Module checks the repository a module came from and installs a newer version if there is one. The old version stays in its own version folder next to the new one; Import-Module loads the newest by default.
+
+Update-Module only works for modules that were installed with Install-Module. A module copied into a modules folder by hand, or one that comes with Windows, cannot be updated this way.
+PARAMETER Name:
+The module to update. Without it, every module installed with Install-Module is checked.
+PARAMETER RequiredVersion:
+Updates to exactly this version.
+PARAMETER Force:
+Installs again even if the newest version is already there.
+EXAMPLE: Update-Module -Name PSScriptAnalyzer
+On a real PC, installs the newest PSScriptAnalyzer from the Gallery.
+EXAMPLE: Get-InstalledModule | Update-Module
+On a real PC, updates every module that Install-Module installed.
+NOTES:
+The practice network has no internet. In Cert Lab, Update-Module reports an error for a module it cannot find in the modules folders, and otherwise warns that the PowerShell Gallery cannot be reached.
+In PowerShell 7.4 and later, PSResourceGet's Update-PSResource does the same.
+RELATED: Install-Module, Get-InstalledModule, Find-Module

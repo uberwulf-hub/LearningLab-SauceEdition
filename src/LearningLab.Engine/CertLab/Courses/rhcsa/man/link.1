@@ -1,0 +1,18 @@
+NAME
+       link - make a hard link (the plain system call, no options)
+
+SYNOPSIS
+       link FILE NEWNAME
+
+DESCRIPTION
+       link creates NEWNAME as a hard link to FILE: a second name for the
+       same data, on the same file system. It does exactly one thing and has
+       no options; ln does the same and much more (symbolic links, several
+       files, -f).
+
+EXAMPLES
+           link /root/report.txt /root/report-copy.txt
+           ls -li /root/report*.txt
+
+SEE ALSO
+       ln(1), unlink(1)

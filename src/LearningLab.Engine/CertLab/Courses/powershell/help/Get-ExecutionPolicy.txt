@@ -1,0 +1,25 @@
+SYNOPSIS: Shows the execution policy, the setting that decides which scripts PowerShell may run.
+DESCRIPTION:
+The execution policy is a safety setting, not a security boundary: it stops scripts from running by accident, but a user can still type the same commands by hand. The policies are:
+
+Restricted: no scripts at all, only commands typed at the prompt. The default on Windows client PCs such as WIN-CL1.
+AllSigned: every script must be signed by a trusted publisher.
+RemoteSigned: scripts downloaded from the internet must be signed; your own local scripts run. The default on Windows Server, such as WIN-SRV1.
+Unrestricted and Bypass: scripts run without a signature check.
+Undefined: nothing set at that scope.
+
+A policy can be set at several scopes. The most specific one that is not Undefined wins, in this order: MachinePolicy, UserPolicy (both from Group Policy), Process, CurrentUser, LocalMachine.
+PARAMETER Scope:
+Shows the policy of one scope only: MachinePolicy, UserPolicy, Process, CurrentUser or LocalMachine.
+PARAMETER List:
+Shows every scope and its policy, in order of priority.
+EXAMPLE: Get-ExecutionPolicy
+Shows the effective policy: RemoteSigned on WIN-SRV1, Restricted on WIN-CL1.
+EXAMPLE: Get-ExecutionPolicy -List
+Shows all five scopes, so you can see which one decides.
+EXAMPLE: Get-ExecutionPolicy -Scope CurrentUser
+Shows only the policy set for your own account.
+NOTES:
+The Process scope lasts only as long as this PowerShell window.
+In PowerShell 7 the execution policy exists only on Windows; on Linux and macOS it is always Unrestricted. PowerShell 7 and Windows PowerShell keep their LocalMachine and CurrentUser settings separately.
+RELATED: Set-ExecutionPolicy, Unblock-File, Get-AuthenticodeSignature, about_Execution_Policies

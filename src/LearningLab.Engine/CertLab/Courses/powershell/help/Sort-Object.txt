@@ -1,0 +1,26 @@
+SYNOPSIS: Puts objects in order by one or more of their properties.
+DESCRIPTION:
+Sort-Object collects everything that comes down the pipeline and then sends it on in order. Name the properties to sort by; without a property it sorts the objects themselves (strings alphabetically, numbers by size).
+
+Each property can also be a hashtable with Expression and Descending (or Ascending), so that one property sorts up and another down.
+
+Sorting ignores case unless you add -CaseSensitive. Enum values such as a service's Status sort by their number, not their name (Stopped comes before Running).
+PARAMETER Property:
+The properties (or script blocks, or hashtables with Expression and Descending) to sort by, most important first.
+PARAMETER Descending:
+Largest, newest or last-in-the-alphabet first.
+PARAMETER Unique:
+Leaves out objects whose sort keys are the same as an earlier one.
+PARAMETER CaseSensitive:
+Treats upper and lower case as different.
+PARAMETER InputObject:
+The objects to sort. Pipe them in: an array given to -InputObject is sorted as one object.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Sort-Object Salary -Descending | Select-Object -First 3 Name, Salary
+The three best-paid employees.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Sort-Object Department, @{Expression = 'Name'; Descending = $true}
+By department A to Z, and inside each department by name Z to A.
+EXAMPLE: 'b', 'a', 'B' | Sort-Object -Unique
+Prints a and b: case is ignored, so 'B' is a duplicate of 'b'.
+NOTES:
+Sort-Object waits for all input before it outputs anything, so it cannot be used to stream an endless pipeline. Values read from a CSV file are strings: sort them as numbers with a script block, for example Sort-Object { [int]$_.Salary }.
+RELATED: Select-Object, Group-Object, Measure-Object

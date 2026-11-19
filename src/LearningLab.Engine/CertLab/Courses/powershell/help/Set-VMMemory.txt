@@ -1,0 +1,26 @@
+SYNOPSIS: Changes a virtual machine's memory, static or dynamic.
+DESCRIPTION:
+With static memory a VM always has its startup amount. With dynamic memory Hyper-V gives it more when it needs it and takes some back when it doesn't, between -MinimumBytes and -MaximumBytes.
+
+Turning dynamic memory on or off needs the VM turned off. The maximum can be raised and the minimum lowered while it runs. -Buffer (default 20 percent) is the spare memory Hyper-V tries to keep free inside the VM; -Priority (0 to 100, default 50) decides who gets memory first when the host runs short.
+
+Nested virtualization requires dynamic memory off.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER DynamicMemoryEnabled:
+$true for dynamic memory, $false for static.
+PARAMETER StartupBytes:
+Memory at start, for example 4GB.
+PARAMETER MinimumBytes:
+The least it may shrink to.
+PARAMETER MaximumBytes:
+The most it may grow to.
+PARAMETER Buffer:
+Spare memory to keep, in percent.
+PARAMETER Priority:
+Memory weight, 0 to 100.
+EXAMPLE: Set-VMMemory -VMName WEB-TEST -DynamicMemoryEnabled $true -MinimumBytes 1GB -StartupBytes 2GB -MaximumBytes 8GB -ComputerName HV1
+WEB-TEST (turned off) gets dynamic memory between 1 and 8 GB.
+EXAMPLE: Set-VMMemory -VMName LAB-HOST -DynamicMemoryEnabled $false -StartupBytes 8GB
+Static memory, as nested virtualization needs.
+RELATED: Get-VMMemory, Set-VM, Set-VMProcessor

@@ -1,0 +1,16 @@
+SYNOPSIS: Deletes a zone from a DNS server.
+DESCRIPTION:
+Remove-DnsServerZone deletes the zone and every record in it. For an AD-integrated zone the deletion replicates, so the zone disappears from every DC in its replication scope, not just this one.
+
+It asks for confirmation; -Force skips the question. There is no undo apart from restoring from backup (or the AD Recycle Bin for AD-integrated zones), so check the name twice.
+
+It also removes stub zones, secondary zones and conditional forwarders.
+PARAMETER Name:
+The zone to delete.
+PARAMETER Force:
+Deletes without asking.
+EXAMPLE: Remove-DnsServerZone -Name lab.example -ComputerName DC1
+Deletes the zone after asking you to confirm.
+EXAMPLE: Remove-DnsServerZone tidewater.example -Force
+Removes the conditional forwarder (or stub, or secondary) for the partner domain without asking.
+RELATED: Get-DnsServerZone, Add-DnsServerPrimaryZone

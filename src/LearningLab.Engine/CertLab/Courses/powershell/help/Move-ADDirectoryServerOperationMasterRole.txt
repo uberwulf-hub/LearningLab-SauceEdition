@@ -1,0 +1,19 @@
+SYNOPSIS: Transfers or seizes operations master (FSMO) roles to another domain controller.
+DESCRIPTION:
+There are five operations master roles. Per forest: SchemaMaster and DomainNamingMaster. Per domain: PDCEmulator, RIDMaster and InfrastructureMaster.
+Move-ADDirectoryServerOperationMasterRole moves roles to the domain controller in -Identity. Normally it's a transfer: the old holder is online and hands the role over cleanly.
+With -Force it's a seizure: use it only when the old holder is gone for good, and never bring that server back on the network afterwards.
+Roles can be given by name or by number (0 PDCEmulator, 1 RIDMaster, 2 InfrastructureMaster, 3 SchemaMaster, 4 DomainNamingMaster).
+PARAMETER Identity:
+The domain controller that will hold the roles, such as DC2. Position 0.
+PARAMETER OperationMasterRole:
+One or more roles. Position 1.
+PARAMETER Force:
+Seizes the roles when the current holder can't be reached.
+PARAMETER PassThru:
+Returns the domain controller after the move.
+EXAMPLE: Move-ADDirectoryServerOperationMasterRole -Identity DC2 -OperationMasterRole PDCEmulator, RIDMaster
+Transfers two domain roles to DC2.
+EXAMPLE: Move-ADDirectoryServerOperationMasterRole DC2 0,1,2,3,4 -Force
+Seizes all five roles on DC2 after DC1 has failed for good.
+RELATED: Get-ADDomain, Get-ADForest, Get-ADDomainController

@@ -1,0 +1,27 @@
+NAME
+       vipw, vigr - safely edit the password and group files
+
+SYNOPSIS
+       vipw [-s]
+       vigr [-s]
+
+DESCRIPTION
+       vipw opens /etc/passwd in an editor ($VISUAL, $EDITOR, or vi), and
+       vigr opens /etc/group. They lock the file while you edit, so that
+       useradd, passwd and other tools cannot change it at the same moment,
+       and they put your copy in place only when you save. With -s they edit
+       /etc/shadow or /etc/gshadow instead. After editing one, they offer to
+       edit the matching shadow file too.
+
+       Prefer useradd, usermod, groupmod and gpasswd; use vipw and vigr only
+       for changes those cannot make. Only root can run them.
+
+OPTIONS
+       -s     Edit the shadow file.
+
+EXAMPLES
+           vipw
+           vigr
+
+SEE ALSO
+       passwd(5), group(5), shadow(5), usermod(8), pwck(8), grpck(8)

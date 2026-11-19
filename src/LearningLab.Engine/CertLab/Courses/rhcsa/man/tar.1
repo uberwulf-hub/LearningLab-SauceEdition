@@ -1,0 +1,114 @@
+NAME
+       tar - create, list and unpack archives (with gzip, bzip2 or xz)
+
+SYNOPSIS
+       tar -c [-z|-j|-J|-a] [-v] -f ARCHIVE FILE...
+       tar -t [-v] -f ARCHIVE
+       tar -x [-v] -f ARCHIVE [-C DIRECTORY] [FILE...]
+
+DESCRIPTION
+       tar puts many files and directories into one archive file, keeping
+       their names, owners, permissions and times, and unpacks them again.
+       By itself tar does not compress; with -z, -j or -J it passes the
+       archive through gzip, bzip2 or xz. The usual file name endings are
+       .tar, .tar.gz (or .tgz), .tar.bz2 and .tar.xz.
+
+       Every tar command needs exactly one main mode: -c create, -t list,
+       -x extract (or -r append). -f names the archive file; put the file
+       name right after f, which is why it comes last in a group of letters:
+       tar -czf backup.tar.gz /etc, not tar -cfz.
+
+       The dash may be left out of the first group: tar czf ... is the same as
+       tar -czf ... .
+
+       When creating, tar removes the leading / from absolute paths and says
+       so ("Removing leading `/' from member names"), so that extracting
+       never overwrites files in their original place by surprise: the
+       archive of /etc unpacks into ./etc in the current directory.
+
+       When extracting, tar recognises the compression by itself, so
+       tar -xf works for .tar.gz, .tar.bz2 and .tar.xz files.
+
+OPTIONS
+   Modes
+       -c, --create
+              Create a new archive.
+
+       -t, --list
+              List the archive's contents.
+
+       -x, --extract
+              Unpack the archive (into the current directory, or into -C).
+
+       -r, --append
+              Add files to the end of an uncompressed archive.
+
+   Other options
+       -f, --file=ARCHIVE
+              The archive file to create or read.
+
+       -v, --verbose
+              List the files as they are processed; with -t, in ls -l style.
+
+       -z, --gzip
+              Compress (or uncompress) with gzip.
+
+       -j, --bzip2
+              Compress with bzip2.
+
+       -J, --xz
+              Compress with xz.
+
+       -a, --auto-compress
+              Pick the compression from the archive's name.
+
+       -C, --directory=DIR
+              Change to DIR first: extract into DIR, or, when creating, take
+              the following names relative to DIR.
+
+       -p, --preserve-permissions
+              Extract the exact permissions stored in the archive (the default
+              for root).
+
+       -P, --absolute-names
+              Keep the leading / of file names.
+
+       -k, --keep-old-files
+              Do not overwrite existing files when extracting.
+
+       --exclude=PATTERN
+              Leave out files whose names match PATTERN.
+
+       --selinux, --acls, --xattrs
+              Also store and restore SELinux contexts, ACLs and extended
+              attributes. Without them, extracted files get default contexts
+              and lose their ACLs.
+
+EXAMPLES
+       Make a gzip-compressed backup of /etc:
+
+           tar -czf /root/etc-backup.tar.gz /etc
+
+       Make a bzip2-compressed archive of /var/log, keeping SELinux contexts:
+
+           tar --selinux -cjf /root/logs.tar.bz2 /var/log
+
+       List what is in an archive without unpacking it:
+
+           tar -tvf /root/etc-backup.tar.gz
+
+       Unpack an archive into /tmp/restore:
+
+           mkdir -p /tmp/restore
+           tar -xzf /root/etc-backup.tar.gz -C /tmp/restore
+
+       Restore a single file from it:
+
+           tar -xzf /root/etc-backup.tar.gz -C /tmp/restore etc/hosts
+
+NOTES
+       Check an archive's compression with the file command:
+       file /root/etc-backup.tar.gz says "gzip compressed data".
+
+SEE ALSO
+       gzip(1), bzip2(1), xz(1), zip(1), file(1)

@@ -1,0 +1,80 @@
+# Lab: lab-10 | Deploying Win32 apps | u10 | 40
+The packaging team left a folder of `.intunewin` files: Notepad++, the Riverbend Runtime, Riverbend Expenses 2.4 and 3.0, the Riverbend VPN client and the warehouse label printer tool. Add each as a Win32 app with the right commands, requirements and detection rule, and deploy them so they really install. All installers need a silent switch; the MSI product codes are in the task text.
+
+@task t01 | Apps | 20 | portal
+Add **Notepad++** from `npp.8.6.Installer.x64.intunewin` (publisher Notepad++ Team). Its setup is `npp.8.6.Installer.x64.exe`, the silent switch is `/S`, and it installs `notepad++.exe` into `C:\Program Files\Notepad++` (uninstall: `"C:\Program Files\Notepad++\uninstall.exe" /S`). Install as System, x64, Windows 10 1607 or later, with a **file** detection rule. Make it **Required** for **Pilot devices** and sync **RB-LT-002**.
+@check portal | Notepad++ is installed on the pilot laptop
+device["RB-LT-002"].app["Notepad++"] == Installed
+app["Notepad++"].detect == File
+@check RB-LT-002 | the program is on the PC
+Test-Path 'C:\Program Files\Notepad++\notepad++.exe'
+@hint Install command: npp.8.6.Installer.x64.exe /S. Detection: File, path C:\Program Files\Notepad++, file notepad++.exe.
+@solution portal
+create app name=Notepad++ type="Windows app (Win32)" publisher="Notepad++ Team" package=npp.8.6.Installer.x64.intunewin installCmd="npp.8.6.Installer.x64.exe /S" uninstallCmd="\"C:\Program Files\Notepad++\uninstall.exe\" /S" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Notepad++" detectName=notepad++.exe
+assign app Notepad++ "Pilot devices" intent=required
+remote sync RB-LT-002
+@explain
+The install command must name the setup file inside the package and its silent switch. The detection rule must point at what the installer really leaves behind: a misspelt file name gives "not detected after installation" (0x87D1041C) although the install worked.
+@endtask
+
+@task t02 | Apps | 25 | portal
+Finance needs **Riverbend Expenses 2.4**. Add **Riverbend Runtime** (`RiverbendRuntime-1.0.intunewin`, setup `rbruntime.exe /quiet`, uninstall `rbruntime.exe /uninstall /quiet`, detected by the file `rbrt.dll` in `C:\Program Files\Riverbend\Runtime`) and **Expenses 2.4** (`RiverbendExpenses-2.4.intunewin`, an MSI: `RiverbendExpenses-2.4.msi`, product code `{6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41}`, detected by that product code). Both from publisher Riverbend IT, System, x64, Windows 10 1607 or later. Expenses doesn't work without the runtime. Make **Expenses 2.4** Required for **Finance** and sync **RB-DT-010**.
+@check portal | Expenses 2.4 installed on Sam's desktop, after the runtime
+device["RB-DT-010"].log contains "Win32 app 'Expenses 2.4' installed (required)"
+app["Expenses 2.4"].dependsOn == "Riverbend Runtime"
+device["RB-DT-010"].app["Riverbend Runtime"] == Installed
+app["Expenses 2.4"].detect == MSI
+@hint Install command for an MSI: msiexec /i RiverbendExpenses-2.4.msi /qn. Add Riverbend Runtime as a dependency of Expenses 2.4; the runtime needs no assignment of its own.
+@solution portal
+create app name="Riverbend Runtime" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendRuntime-1.0.intunewin installCmd="rbruntime.exe /quiet" uninstallCmd="rbruntime.exe /uninstall /quiet" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Riverbend\Runtime" detectName=rbrt.dll
+create app name="Expenses 2.4" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendExpenses-2.4.intunewin installCmd="msiexec /i RiverbendExpenses-2.4.msi /qn" uninstallCmd="msiexec /x {6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41} /qn" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=MSI msiCode={6B1A3C55-2F0E-4C7A-9D11-0A7E5B3C2D41} dependsOn="Riverbend Runtime"
+assign app "Expenses 2.4" Finance intent=required
+remote sync RB-DT-010
+@explain
+Without the dependency, the MSI fails with 1603. A dependency makes the IME install the runtime first; the user group assignment reaches Sam's desktop because Sam is its primary user. MSI apps are best detected by their product code.
+@endtask
+
+@task t03 | Apps | 20 | portal
+Expenses **3.0** is out (`RiverbendExpenses-3.0.intunewin`, `RiverbendExpenses-3.0.msi`, product code `{9C2E7D10-5B44-4F3A-8E6D-1F2A3B4C5D60}`, also needs the runtime). It can't install over 2.4. Add it as **Expenses 3.0** so it **replaces** Expenses 2.4 (the old version is removed first), make it Required for **Finance**, stop deploying 2.4 to Finance, and sync **RB-DT-010**.
+@check portal | 3.0 replaced 2.4 on Sam's desktop
+device["RB-DT-010"].app["Expenses 3.0"] == Installed
+device["RB-DT-010"].app["Expenses 2.4"] == "Not installed"
+app["Expenses 3.0"].supersedes == "Expenses 2.4"
+@hint Supersedence: Expenses 2.4, Uninstall previous version = Yes. Keep the dependency on the runtime, and remove the Required assignment of Expenses 2.4.
+@solution portal
+create app name="Expenses 3.0" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendExpenses-3.0.intunewin installCmd="msiexec /i RiverbendExpenses-3.0.msi /qn" uninstallCmd="msiexec /x {9C2E7D10-5B44-4F3A-8E6D-1F2A3B4C5D60} /qn" installBehavior=System arch=x64 minOs="Windows 10 1607" detect=MSI msiCode={9C2E7D10-5B44-4F3A-8E6D-1F2A3B4C5D60} dependsOn="Riverbend Runtime" supersedes="Expenses 2.4" uninstallPrevious=Yes
+assign app "Expenses 3.0" Finance intent=required
+unassign app "Expenses 2.4" Finance
+remote sync RB-DT-010
+@explain
+Supersedence with "Uninstall previous version" runs the old app's uninstall command before the new install. The old app's Required assignment is removed too, so nothing asks for 2.4 any more; the app itself can stay in the portal for reference.
+@endtask
+
+@task t04 | Apps | 15 | portal
+Every Windows PC needs the **Riverbend VPN** client: `RiverbendVPN-5.2.intunewin`, setup `RbVpnSetup.exe /quiet` (uninstall `RbVpnSetup.exe /uninstall /quiet`), installs `rbvpn.exe` into `C:\Program Files\Riverbend\VPN`. Its installer asks for a restart by returning **3010**: let the return codes decide the restart. System, x64, Windows 10 1607 or later. Required for **Windows devices**; sync **RB-LT-001**.
+@check portal | the VPN client is installed on RB-LT-001
+device["RB-LT-001"].app["Riverbend VPN"] == Installed
+app["Riverbend VPN"].restart == "Determine behavior based on return codes"
+@hint Device restart behavior: Determine behavior based on return codes. 3010 is a default return code (soft reboot).
+@solution portal
+create app name="Riverbend VPN" type="Windows app (Win32)" publisher="Riverbend IT" package=RiverbendVPN-5.2.intunewin installCmd="RbVpnSetup.exe /quiet" uninstallCmd="RbVpnSetup.exe /uninstall /quiet" installBehavior=System restart="Determine behavior based on return codes" arch=x64 minOs="Windows 10 1607" detect=File detectPath="C:\Program Files\Riverbend\VPN" detectName=rbvpn.exe
+assign app "Riverbend VPN" "Windows devices" intent=required
+remote sync RB-LT-001
+@explain
+3010 means success with a restart pending. With "Determine behavior based on return codes", Intune treats it as a soft reboot: the app counts as installed and the user is asked to restart.
+@endtask
+
+@task t05 | Apps | 20 | portal
+The **Label Printer Tool** (`LabelPrinter-1.2.intunewin`, setup `LabelPrinterSetup.exe /silent`, uninstall `LabelPrinterSetup.exe /uninstall /silent`, installs `labels.exe` into `C:\Program Files\LabelPrinter`) works only on **Windows 11 23H2** or later; on older Windows its installer fails with 1603. Add it so older PCs don't even try (System, x64), Required for **Windows devices**, and sync **RB-LT-001** and **RB-DT-010**.
+@check portal | it installs where it can and is skipped elsewhere
+device["RB-LT-001"].app["Label Printer Tool"] == Installed
+device["RB-DT-010"].app["Label Printer Tool"] == "Not applicable"
+@hint Requirements: minimum operating system Windows 11 23H2.
+@solution portal
+create app name="Label Printer Tool" type="Windows app (Win32)" publisher="Riverbend IT" package=LabelPrinter-1.2.intunewin installCmd="LabelPrinterSetup.exe /silent" uninstallCmd="LabelPrinterSetup.exe /uninstall /silent" installBehavior=System arch=x64 minOs="Windows 11 23H2" detect=File detectPath="C:\Program Files\LabelPrinter" detectName=labels.exe
+assign app "Label Printer Tool" "Windows devices" intent=required
+remote sync RB-LT-001
+remote sync RB-DT-010
+@explain
+A requirement rule turns an install that would fail into "Not applicable", which keeps the reports clean and saves the download. RB-DT-010 still runs Windows 10 22H2.
+@endtask

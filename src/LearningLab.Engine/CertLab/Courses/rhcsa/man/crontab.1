@@ -1,0 +1,105 @@
+NAME
+       crontab - edit, list or remove a user's table of repeating jobs
+
+SYNOPSIS
+       crontab [-u USER] -e
+       crontab [-u USER] -l
+       crontab [-u USER] -r [-i]
+       crontab [-u USER] FILE
+
+DESCRIPTION
+       Every user may have a crontab: a list of commands that the crond
+       service runs again and again at set times. crontab -e opens it in
+       your editor (vi unless EDITOR or VISUAL say otherwise); when you save
+       and quit, it is checked and installed. crontab FILE replaces the whole
+       table with FILE (crontab - reads it from standard input).
+
+       Only root may use -u to work on another user's table. Tables are kept
+       in /var/spool/cron/USER; do not edit those files directly.
+
+   Lines of a crontab
+       Each job is one line of five time fields and a command:
+
+           minute  hour  day-of-month  month  day-of-week  command
+           0-59    0-23  1-31          1-12   0-7 (0 and 7 are Sunday)
+
+       In each field:
+
+       *          every value
+       5          exactly 5
+       1,15       either 1 or 15
+       9-17       9 through 17
+       */10       every 10th value (0, 10, 20...)
+       1-5        Monday to Friday (in day-of-week)
+
+       Month and day names (jan, mon) may be used too. When both day fields
+       are restricted, the job runs when either one matches.
+
+       Lines starting with # are comments. A line NAME=value sets a variable
+       for the jobs below it (MAILTO=, PATH=, SHELL=). A % in the command
+       means a new line, so write \% inside date formats.
+
+       The command runs with /bin/sh, in the user's home directory and with a
+       small PATH; give full paths. Anything it prints is mailed to the user,
+       so redirect output to a file (or to /dev/null) if you do not want it.
+
+   Shortcuts
+       @reboot    once when crond starts (at boot)
+       @hourly    0 * * * *
+       @daily     0 0 * * *
+       @weekly    0 0 * * 0
+       @monthly   0 0 1 * *
+
+OPTIONS
+       -e     Edit the table (create it when there is none).
+
+       -l     Print the table.
+
+       -r     Remove the table.
+
+       -i     With -r, ask before removing.
+
+       -u USER
+              Work on USER's table (root only).
+
+EXAMPLES
+       As root, make student's job run every weekday at 14:30:
+
+           crontab -u student -e
+           30 14 * * 1-5 /usr/bin/echo "hello" >> /home/student/hello.log
+
+       Install a table from a file without an editor (handy in scripts):
+
+           echo '*/5 * * * * logger "cert lab check"' | crontab -u student -
+
+       Check what is installed:
+
+           crontab -l -u student
+
+       Run a job every Sunday at 03:00 for the system (in /etc/cron.d/backup,
+       note the extra user field):
+
+           0 3 * * 0 root /usr/local/bin/backup.sh
+
+FILES
+       /var/spool/cron/USER
+              The users' tables.
+
+       /etc/crontab, /etc/cron.d/*
+              System tables. They have a sixth field, the user to run as,
+              before the command.
+
+       /etc/cron.hourly, cron.daily, cron.weekly, cron.monthly
+              Scripts run by run-parts (and anacron) at those intervals.
+
+       /etc/cron.allow, /etc/cron.deny
+              Who may use crontab. If cron.allow exists, only the users in it
+              may; otherwise everyone except those in cron.deny.
+
+NOTES
+       crond must be running (it is by default). Check the times in
+       /var/log/cron or with journalctl -u crond. For a single run at a later
+       time use at; systemd timers are the other way to repeat a job.
+
+SEE ALSO
+       crontab(5), cron(8), at(1), systemd.timer(5)

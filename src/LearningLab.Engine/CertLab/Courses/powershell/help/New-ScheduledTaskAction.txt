@@ -1,0 +1,14 @@
+SYNOPSIS: Describes what a scheduled task runs.
+DESCRIPTION:
+New-ScheduledTaskAction makes an action object for Register-ScheduledTask: a program (-Execute), its arguments (-Argument) and the folder it starts in. To run a PowerShell script, run powershell.exe with -File, and usually -NoProfile and -ExecutionPolicy Bypass so the script runs whatever the policy.
+PARAMETER Execute:
+The program, for example powershell.exe. Position 0, required.
+PARAMETER Argument:
+Its arguments, as one string. Position 1.
+PARAMETER WorkingDirectory:
+The folder the program starts in. Position 2.
+EXAMPLE: New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\Scripts\backup.ps1'
+Runs a script.
+EXAMPLE: New-ScheduledTaskAction -Execute 'C:\Tools\clean.exe' -WorkingDirectory C:\Tools
+Runs a program in its own folder.
+RELATED: New-ScheduledTaskTrigger, Register-ScheduledTask

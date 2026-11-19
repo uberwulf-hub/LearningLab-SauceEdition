@@ -1,0 +1,16 @@
+SYNOPSIS: Lists CIM classes and their properties and methods.
+DESCRIPTION:
+Get-CimClass shows which classes exist in a namespace and what they offer: CimClassProperties (what you can read) and CimClassMethods (what Invoke-CimMethod can run). It is the way to explore before writing a query.
+PARAMETER ClassName:
+Class names; wildcards are allowed. Position 0.
+PARAMETER Namespace:
+The namespace; root/cimv2 by default. Position 1.
+PARAMETER MethodName:
+Only classes with a method of this name.
+PARAMETER PropertyName:
+Only classes with a property of this name.
+EXAMPLE: Get-CimClass -ClassName Win32_*disk*
+Classes about disks.
+EXAMPLE: (Get-CimClass Win32_Service).CimClassMethods
+What you can do to a service through CIM.
+RELATED: Get-CimInstance, Invoke-CimMethod

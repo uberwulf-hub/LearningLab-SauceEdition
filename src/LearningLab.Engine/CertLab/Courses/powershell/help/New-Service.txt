@@ -1,0 +1,26 @@
+SYNOPSIS: Registers a new Windows service.
+DESCRIPTION:
+New-Service adds a service to the Service Control Manager: its name, the program that runs it (-BinaryPathName), how it starts and which account it runs as. The new service is stopped; start it with Start-Service. Windows records the installation as event 7045 in the System log.
+
+The program must exist for the service to start. On the practice machine any existing .exe file acts as a service program.
+PARAMETER Name:
+The short service name. Position 0, required.
+PARAMETER BinaryPathName:
+The program (with its arguments) that runs the service. Position 1, required.
+PARAMETER DisplayName:
+The long name shown in lists.
+PARAMETER Description:
+What the service does.
+PARAMETER StartupType:
+Automatic (the default for New-Service), Manual or Disabled.
+PARAMETER Credential:
+The account the service runs as; without it, LocalSystem.
+PARAMETER DependsOn:
+Services that must run before this one.
+EXAMPLE: New-Service -Name LabSvc -BinaryPathName 'C:\Tools\labsvc.exe' -StartupType Manual
+Registers a manual service.
+EXAMPLE: New-Service LabSvc 'C:\Tools\labsvc.exe' -DependsOn Spooler -DisplayName 'Lab Service'
+A service that needs the spooler.
+NOTES:
+To remove a service in Windows PowerShell 5.1 use sc.exe delete LabSvc (Remove-Service exists only in PowerShell 6 and later).
+RELATED: Set-Service, Get-Service, Start-Service

@@ -1,0 +1,44 @@
+# Sheet: server-management | Server management: Server Core, remoting, WAC and Azure Arc | Server management
+## Server Core
+sconfig :: menu: domain, name, local admins, remote management, updates, RDP, network, restart
+Rename-Computer / Add-Computer / Set-NetIPAddress :: the PowerShell behind sconfig's items
+Server Core App Compatibility FOD :: adds MMC, Event Viewer and a few tools; never a desktop
+## PowerShell remoting
+Enable-PSRemoting -Force :: WinRM service (Automatic), listener, firewall rule
+Disable-PSRemoting -Force :: stop accepting remote sessions
+Test-WSMan -ComputerName CORE1 :: is WinRM answering?
+Enter-PSSession -ComputerName CORE1 :: interactive session; Exit-PSSession leaves
+Invoke-Command -ComputerName FS1, SRV1 -ScriptBlock { ... } :: run on many servers in parallel (PSComputerName in the results)
+New-PSSession / Get-PSSession / Remove-PSSession :: persistent sessions
+WSMan:\localhost\Client\TrustedHosts :: workgroup servers without HTTPS
+## Just Enough Administration
+New-PSRoleCapabilityFile -Path ...\Modules\X\RoleCapabilities\Role.psrc -VisibleCmdlets ... :: what a role may run
+New-PSSessionConfigurationFile -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{...} :: the endpoint
+Test-PSSessionConfigurationFile C:\Helpdesk.pssc :: check the file
+Register-PSSessionConfiguration -Name Helpdesk -Path C:\Helpdesk.pssc :: create the endpoint
+Get-PSSessionConfiguration -Name Helpdesk :: see it
+Enter-PSSession -ComputerName FS1 -ConfigurationName Helpdesk :: connect as a help desk user
+-GroupManagedServiceAccount :: run as a gMSA when commands reach the network
+## Windows Admin Center
+Gateway :: installed once on a server, HTTPS 443; browsers Edge or Chrome
+Connections :: servers, clusters, PCs, Azure VMs; reached over WinRM, no agent
+Settings > Extensions :: add tools from the extension feed
+Settings > Azure :: register the gateway for Arc, Backup, Update Manager, Azure Network Adapter, File Sync
+## Azure Arc
+Azure Connected Machine agent :: services himds, GCArcService, ExtensionService; outbound 443
+azcmagent show :: status, resource group, subscription, agent services
+azcmagent connect --resource-group RG --location LOC :: what every onboarding script runs
+azcmagent disconnect :: remove the Arc resource
+Connected / Disconnected / Expired :: heartbeat OK / none for 15 minutes / offline 45 days
+Extensions :: AzureMonitorWindowsAgent, MDE.Windows, Custom Script, Dependency agent
+## Updates and automation
+Azure Update Manager :: assess, one-time update, periodic assessment, maintenance configurations; Azure VMs and Arc servers
+Azure Automation :: runbooks, Hybrid Runbook Worker, Change Tracking and Inventory (Update Management retired 2024)
+Get-HotFix :: what is installed on the server
+## Azure VMs
+Stop (deallocate) :: stops compute charges; resize may need it
+Host caching None / ReadOnly / ReadWrite :: AD DS and logs / read-heavy data / OS disk
+Azure Bastion / just-in-time access :: RDP without public IPs / open RDP for a short time
+Boot diagnostics, Serial console, Run command :: when Windows doesn't answer
+Azure Hybrid Benefit :: use your Windows Server licenses
+Datacenter: Azure Edition :: hotpatch and SMB over QUIC

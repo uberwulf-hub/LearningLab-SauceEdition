@@ -1,0 +1,92 @@
+NAME
+       crontab - the format of cron's table of scheduled commands
+
+SYNOPSIS
+       crontab -e (each user's table)
+       /etc/crontab, /etc/cron.d/* (system tables)
+
+DESCRIPTION
+       The cron service (crond) checks its tables every minute and runs each
+       command whose time has come. Every user has a table, edited with
+       crontab -e and listed with crontab -l; root can work on another
+       user's with crontab -u USER. Those tables live in /var/spool/cron.
+
+       Each line in a user's table is a schedule (five fields) and a command:
+
+           MINUTE  HOUR  DAY-OF-MONTH  MONTH  DAY-OF-WEEK  COMMAND
+
+       MINUTE         0-59
+       HOUR           0-23
+       DAY-OF-MONTH   1-31
+       MONTH          1-12 (or jan-dec)
+       DAY-OF-WEEK    0-7 (0 and 7 are Sunday; or sun-sat)
+
+       In each field:
+       *              every value
+       5              exactly 5
+       1-5            5 values, 1 to 5
+       1,15,30        a list
+       */10           every 10th value (0, 10, 20 ... for minutes)
+       9-17/2         every 2nd value from 9 to 17
+
+       When both DAY-OF-MONTH and DAY-OF-WEEK are restricted (not *), the
+       command runs when EITHER matches.
+
+       The command runs with /bin/sh in the user's home directory, with a
+       small environment (PATH is only /usr/bin:/bin): write full paths
+       for programs elsewhere. Lines like NAME=value set variables for the
+       commands below them (SHELL, PATH, MAILTO). A % in the command means a
+       newline; write \% for a real percent sign (date +\%F).
+
+       Output a command prints is mailed to the user (if mail is set up);
+       redirect it when you want to keep it.
+
+       System tables (/etc/crontab and files in /etc/cron.d) have an extra
+       sixth field before the command: the user to run it as.
+
+   Shortcuts
+       @reboot    once, when crond starts after boot
+       @hourly    0 * * * *
+       @daily     0 0 * * *
+       @weekly    0 0 * * 0
+       @monthly   0 0 1 * *
+       @yearly    0 0 1 1 *
+
+EXAMPLES
+       Every day at 14:23:
+
+           23 14 * * * /usr/local/bin/backup.sh
+
+       Every 2 minutes, write a line to a log:
+
+           */2 * * * * echo "cron is alive" >> /tmp/cron.log
+
+       At 09:00 on weekdays (Monday to Friday):
+
+           0 9 * * 1-5 /usr/bin/logger "Good morning"
+
+       At 03:30 on the 1st of every month, in /etc/cron.d/cleanup (with a
+       user field):
+
+           30 3 1 * * root /usr/bin/find /tmp -mtime +30 -delete
+
+       Give the user natasha a job, as root, without an editor:
+
+           echo '30 12 * * * /bin/echo hello' | crontab -u natasha -
+           crontab -l -u natasha
+
+FILES
+       /var/spool/cron/USER
+              Each user's table (edit only with crontab -e).
+
+       /etc/crontab, /etc/cron.d/
+              System tables, with a user field.
+
+       /etc/cron.hourly, cron.daily, cron.weekly, cron.monthly
+              Scripts run at those intervals (by anacron for daily and up).
+
+       /etc/cron.allow, /etc/cron.deny
+              Who may use crontab.
+
+SEE ALSO
+       crontab(1), crond(8), at(1), systemd.timer(5)

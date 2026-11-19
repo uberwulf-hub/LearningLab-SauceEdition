@@ -1,0 +1,638 @@
+# Unit: u07 | 7. Deploy, configure and maintain | Deploy, configure, and maintain systems
+
+A server has to keep running without you sitting next to it. This unit covers the jobs that make that happen: running commands on a schedule (cron, at and systemd timers), choosing which services and which target start at boot, keeping the clock right with chrony, installing and updating software from repositories, and changing how the boot loader starts the kernel.
+
+## Lesson: l0701 | Repeating jobs with cron
+
+The cron daemon (`crond`) wakes up every minute, reads the job tables and runs whatever is due. It is installed, enabled and running on every RHEL 9 machine, so you only have to write the jobs.
+
+### The five time fields
+
+Every cron line starts with five fields, then the command:
+
+- minute (0-59)
+- hour (0-23)
+- day of the month (1-31)
+- month (1-12, or jan, feb...)
+- day of the week (0-7, where 0 and 7 are both Sunday, or sun, mon...)
+
+A `*` means "every". Lists and ranges work in every field: `1,15` is the 1st and the 15th, `1-5` in the day-of-week field is Monday to Friday, `*/10` in the minute field is every 10 minutes. Some examples:
+
+- `30 2 * * * /usr/local/bin/backup` runs every night at 02:30.
+- `0 9 * * 1-5 logger "office open"` runs at 09:00 from Monday to Friday.
+- `*/15 * * * * date >> /tmp/clock.log` runs every 15 minutes.
+- `0 0 1 * * /root/monthly.sh` runs at midnight on the first day of each month.
+
+> Watch out: when you fill in both the day of the month and the day of the week, cron runs the job when EITHER matches, not only when both do.
+
+### Personal tables: crontab
+
+Each user has their own table. `crontab -e` opens it in an editor (vi by default), `crontab -l` lists it and `crontab -r` removes it. Root can work on anyone's table with `-u USER`. You can also replace a whole table in one go from a file or from standard input with `crontab -` (handy in scripts and in the exam, because there is no editor to get wrong).
+
+```terminal
+[root@server1 ~]# crontab -l
+no crontab for root
+[root@server1 ~]# echo '*/5 * * * * date >> /tmp/date.log' | crontab -
+[root@server1 ~]# crontab -l
+*/5 * * * * date >> /tmp/date.log
+[root@server1 ~]# crontab -l -u student
+no crontab for student
+```
+
+The tables are stored in /var/spool/cron/USERNAME. Do not edit those files directly: `crontab` checks the syntax and tells crond about the change.
+
+### System jobs: /etc/cron.d
+
+Jobs that belong to the system, or that a package installs, live in /etc/crontab and in files under /etc/cron.d. Their lines have one extra field after the five time fields: the user that runs the command.
+
+```terminal
+[root@server1 ~]# ls /etc/cron.d
+0hourly
+[root@server1 ~]# echo '0 3 * * 0 root /usr/bin/logger weekly' > /etc/cron.d/weekly-log
+```
+
+The comment at the top of /etc/crontab is a handy reminder of the field order when you forget it. The folders /etc/cron.hourly, cron.daily, cron.weekly and cron.monthly run any script you drop into them. crond runs cron.hourly itself (that is the 0hourly file above); the daily, weekly and monthly folders go through anacron, which also catches up on jobs missed while the machine was off.
+
+Who may use crontab is controlled by /etc/cron.allow and /etc/cron.deny: if cron.allow exists, only the users listed in it may; otherwise everyone except the users in cron.deny may. Root can always.
+
+@try machines=1
+@task t1 | Deploy and maintain | 10 | server1
+The user student must run the command `echo checkin >> /home/student/checkin.log` at 07:45 every Monday to Friday.
+@check server1 | student's crontab has the job at 45 7 on weekdays
+crontab -l -u student | grep -Eq '^45 +0?7 +\* +\* +(1-5|mon-fri|Mon-Fri|1,2,3,4,5) +echo checkin'
+@hint As root, crontab -u student - reads the new table from standard input.
+@solution server1
+echo '45 7 * * 1-5 echo checkin >> /home/student/checkin.log' | crontab -u student -
+crontab -l -u student
+@endtask
+@end
+
+@quiz
+? What does the cron line `0 */2 * * * cmd` do?
+- runs cmd every 2 minutes
++ runs cmd at the start of every second hour
+- runs cmd twice a day
+- runs cmd on every second day at midnight
+! The first field is the minute (0) and the second the hour (*/2 = every second hour), so it runs at 00:00, 02:00, 04:00 and so on.
+? How does root list the cron jobs of the user harry?
+- crontab -l harry
++ crontab -l -u harry
+- cat /etc/cron.d/harry
+- cron -l harry
+! -u picks the user whose table crontab works on. Without it, root sees its own table.
+? A file in /etc/cron.d has one more field than a personal crontab. Which one?
+- the year
+- the host name
++ the user that runs the command
+- the mail address for the output
+! System crontabs (/etc/crontab and /etc/cron.d/*) name the user after the five time fields. Personal tables always run as their owner.
+@end
+
+## Lesson: l0702 | One-time jobs with at, and systemd timers
+
+### at: run something once, later
+
+`at` runs a command a single time. You give it a time and it reads the commands from standard input (typing at the `at>` prompt and ending with Ctrl+D, or through a pipe). The daemon `atd` runs the job when the time comes, even if you have logged out.
+
+Times can be written in many ways: `at 22:00`, `at 16:30 tomorrow`, `at now + 5 minutes`, `at noon + 2 days`, `at 09:00 2026-03-10`.
+
+```terminal
+[root@server1 ~]# echo 'touch /tmp/x' | at 16:30 tomorrow
+warning: commands will be executed using /bin/sh
+job 1 at Tue Mar  3 16:30:00 2026
+[root@server1 ~]# echo 'touch /tmp/y' | at -q b now + 1 hour
+warning: commands will be executed using /bin/sh
+job 2 at Mon Mar  2 05:00:00 2026
+[root@server1 ~]# atq
+2	Mon Mar  2 05:00:00 2026 b root
+1	Tue Mar  3 16:30:00 2026 a root
+[root@server1 ~]# atrm 1
+[root@server1 ~]# atq
+2	Mon Mar  2 05:00:00 2026 b root
+```
+
+- `atq` (or `at -l`) lists the waiting jobs: number, time, queue letter, owner.
+- `at -c NUMBER` prints the whole job, including the environment it saved; your commands are at the end.
+- `atrm NUMBER` deletes a job.
+- `-q` picks a queue (a letter); later letters run with a higher nice value, that is, a lower priority.
+
+The warning about /bin/sh is normal: at always runs the job with sh. The access files are /etc/at.allow and /etc/at.deny, and they work like cron's.
+
+### systemd timers
+
+A timer is a unit that starts another unit (usually a service of the same name) on a schedule. Timers can do things cron cannot: catch up on runs missed while the machine was off (`Persistent=true`), run a set time after boot (`OnBootSec=`), and log every run in the journal with the service's status.
+
+You need two files in /etc/systemd/system: the service that does the work and the timer that starts it.
+
+```terminal
+[root@server1 ~]# printf '[Unit]\nDescription=Write the date\n\n[Service]\nType=oneshot\nExecStart=/bin/sh -c "date >> /var/log/stamp.log"\n' > /etc/systemd/system/stamp.service
+[root@server1 ~]# printf '[Unit]\nDescription=Run stamp every 15 minutes\n\n[Timer]\nOnCalendar=*:0/15\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/stamp.timer
+[root@server1 ~]# systemctl daemon-reload
+[root@server1 ~]# systemctl is-enabled stamp.timer
+disabled
+```
+
+- `OnCalendar=` sets the schedule: `hourly`, `daily`, `weekly`, `*-*-* 06:30:00` (every day at 06:30), `Mon..Fri 08:00` (weekdays at 08:00) or `*:0/15` (every 15 minutes).
+- `Type=oneshot` tells systemd the service runs one command and ends.
+- `WantedBy=timers.target` is what `systemctl enable` hooks the timer into.
+- Run `systemctl daemon-reload` after you write or change unit files.
+
+Then enable and start the TIMER (not the service) with `systemctl enable --now stamp.timer`, and look at the schedule with `systemctl list-timers`:
+
+```terminal
+[root@server1 ~]# systemctl list-timers
+NEXT                        LEFT          LAST                        PASSED       UNIT                         ACTIVATES
+Tue 2026-03-03 00:00:00 EST 20h 0min      -                           -            logrotate.timer              logrotate.service
+Mon 2026-03-02 04:15:00 EST 15min 0s      -                           -            stamp.timer                  stamp.service
+
+2 timers listed.
+Pass --all to see loaded but inactive timers, too.
+```
+
+> Tip: `systemctl start stamp.service` runs the job once by hand, which is a quick way to test it. `journalctl -u stamp.service` shows each run.
+
+@try machines=1
+@task t1 | Deploy and maintain | 10 | server1
+Schedule a one-time job (with at) that runs `logger at-test` at 18:00 today.
+@check server1 | a job waits for 18:00
+atq | grep -q ' 18:00:00 '
+@check server1 | the job runs logger at-test
+for j in $(atq | awk '{print $1}'); do at -c $j | grep -q 'logger at-test' && exit 0; done; exit 1
+@solution server1
+echo 'logger at-test' | at 18:00
+atq
+@endtask
+@task t2 | Deploy and maintain | 10 | server1
+Create a systemd timer `hourly-log.timer` that starts the service `hourly-log.service` every hour. The service runs `date >> /root/hourly.log`. The timer must be active now and at every boot.
+@check server1 | hourly-log.timer is enabled and active
+systemctl is-enabled hourly-log.timer && systemctl is-active hourly-log.timer
+@check server1 | the job has run at least once (after the next full hour)
+test -s /root/hourly.log
+@hint Write both unit files in /etc/systemd/system, run systemctl daemon-reload, then enable --now the timer. OnCalendar=hourly runs at the start of each hour.
+@solution server1
+printf '[Unit]\nDescription=Hourly log\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/sh -c "date >> /root/hourly.log"\n' > /etc/systemd/system/hourly-log.service
+printf '[Unit]\nDescription=Hourly log timer\n\n[Timer]\nOnCalendar=hourly\n\n[Install]\nWantedBy=timers.target\n' > /etc/systemd/system/hourly-log.timer
+systemctl daemon-reload
+systemctl enable --now hourly-log.timer
+#wait 3700
+@endtask
+@end
+
+@quiz
+? Which command shows the jobs waiting in the at queue?
+- at -c
++ atq
+- atrm
+- crontab -l
+! atq (or at -l) lists the waiting jobs. at -c NUMBER prints one job, atrm NUMBER deletes one.
+? You wrote backup.service and backup.timer. What do you enable?
+- backup.service
++ backup.timer
+- both, with systemctl enable backup
+- timers.target
+! The timer starts the service when it is due. Enabling the timer hooks it into timers.target so it is active after every boot; the service itself stays static.
+? What does Persistent=true do in a timer?
++ it runs a missed job as soon as the machine is back on
+- it keeps the service running after the job ends
+- it makes the timer survive daemon-reload
+- it stores the job's output in the journal
+! Without it, a run that fell in a time when the machine was off is simply skipped.
+@end
+
+## Lesson: l0703 | Services and the default target
+
+systemd starts everything on a RHEL machine. Each service is a unit, and two separate questions decide what happens to it:
+
+- Is it running NOW? `systemctl start`, `stop`, `restart`, `reload`; check with `systemctl is-active`.
+- Does it start at BOOT? `systemctl enable` or `disable`; check with `systemctl is-enabled`.
+
+They are independent. A service you started is gone after a reboot unless it is enabled, and an enabled service is not running until it is started or the machine reboots. `enable --now` and `disable --now` do both halves at once, which is what you want almost every time.
+
+```terminal
+[root@server1 ~]# systemctl is-enabled crond
+enabled
+[root@server1 ~]# systemctl disable --now atd
+Removed "/etc/systemd/system/multi-user.target.wants/atd.service".
+[root@server1 ~]# systemctl is-enabled atd
+disabled
+[root@server1 ~]# systemctl is-active atd
+inactive
+```
+
+Enabling makes a link in a `.wants` folder of a target, which is how systemd knows to start the unit when it reaches that target. `systemctl mask` goes one step further: it links the unit to /dev/null, so nothing can start it, not even by hand, until you `unmask` it.
+
+> After you change a service's configuration file, restart (or reload) the service. After you change a unit FILE, run `systemctl daemon-reload` first.
+
+### Targets
+
+A target is a group of units that make up a state of the machine. The two you meet most:
+
+- `multi-user.target`: the full system with networking and services, text console only. Normal for servers.
+- `graphical.target`: everything in multi-user.target plus the graphical login.
+
+Others are `rescue.target` (single user, minimal services) and `emergency.target` (even less: the root file system read-only).
+
+`systemctl get-default` shows which target the machine boots into, and `systemctl set-default` changes it. `systemctl isolate TARGET` switches now, without a reboot (only targets meant for it, such as multi-user and graphical).
+
+```terminal
+[root@server1 ~]# systemctl get-default
+multi-user.target
+[root@server1 ~]# ls -l /etc/systemd/system/default.target
+lrwxrwxrwx. 1 root root 41 Mar  2 04:00 /etc/systemd/system/default.target -> /usr/lib/systemd/system/multi-user.target
+```
+
+The default is just the link /etc/systemd/system/default.target; set-default replaces it.
+
+@try machines=1
+@setup server1
+systemctl set-default graphical.target
+systemctl disable --now crond
+@task t1 | Deploy and maintain | 10 | server1
+Someone changed this machine. Make it boot into the text-only multi-user target by default again, and make sure the cron service (crond) runs now and starts at every boot.
+@check server1 | the default target is multi-user.target
+test "$(systemctl get-default)" = multi-user.target
+@check server1 | crond is enabled and active
+systemctl is-enabled crond && systemctl is-active crond
+@solution server1
+systemctl set-default multi-user.target
+systemctl enable --now crond
+@endtask
+@end
+
+@quiz
+? You ran `systemctl start httpd`. What happens after a reboot?
+- httpd starts, because it was running before
++ httpd does not start unless it is enabled
+- httpd starts in rescue mode only
+- the machine asks whether to start httpd
+! start only affects the running system. Use systemctl enable --now to start it and make it start at boot.
+? Which command makes the machine boot to a text console by default?
+- systemctl isolate multi-user.target
++ systemctl set-default multi-user.target
+- systemctl enable multi-user.target
+- systemctl default text
+! set-default changes the default.target link. isolate switches now but changes nothing for the next boot.
+? What does systemctl mask do to a service?
+- it hides it from systemctl list-units
+- it disables it at boot but allows starting it by hand
++ it links the unit to /dev/null so it cannot be started at all
+- it stops the service's log messages
+! A masked unit cannot be started by hand or as a dependency until you unmask it.
+@end
+
+## Lesson: l0704 | Time, time zones and chrony
+
+Logs, certificates, Kerberos and scheduled jobs all depend on a correct clock. RHEL keeps the clock in UTC and shows it in the time zone you pick. `timedatectl` shows both, and whether the clock is synchronised:
+
+```terminal
+[root@server1 ~]# timedatectl
+               Local time: Mon 2026-03-02 04:00:00 EST
+           Universal time: Mon 2026-03-02 09:00:00 UTC
+                 RTC time: Mon 2026-03-02 09:00:00
+                Time zone: America/New_York (EST, -0500)
+System clock synchronized: no
+              NTP service: active
+          RTC in local TZ: no
+[root@server1 ~]# timedatectl list-timezones | grep Berlin
+Europe/Berlin
+[root@server1 ~]# timedatectl set-timezone Europe/Berlin
+[root@server1 ~]# date
+Mon Mar  2 10:00:00 AM CET 2026
+```
+
+- `timedatectl list-timezones` lists the zone names (Region/City). `tzselect` asks questions and suggests one.
+- `timedatectl set-timezone ZONE` changes the zone (it points /etc/localtime at the zone file).
+- `timedatectl set-ntp true` turns on automatic time synchronisation, which on RHEL means the chronyd service.
+
+### chrony as an NTP client
+
+chronyd reads /etc/chrony.conf. The lines that matter for a client are the sources:
+
+- `server NAME iburst`: one NTP server. `iburst` sends a quick burst of requests at the start, so the first sync takes seconds instead of minutes.
+- `pool NAME iburst`: a name that stands for several servers. The default file uses a public pool on the internet (`pool 2.rhel.pool.ntp.org iburst`), which is useless on a network without internet access.
+
+To use your own server, comment out the pool line, add a server line and restart chronyd:
+
+```terminal
+[root@server1 ~]# sed -i 's/^pool /#pool /' /etc/chrony.conf
+[root@server1 ~]# echo 'server ntp.lab.example.com iburst' >> /etc/chrony.conf
+[root@server1 ~]# systemctl restart chronyd
+[root@server1 ~]# systemctl is-enabled chronyd
+enabled
+```
+
+Then check that chrony really uses the server. In `chronyc sources`, `^` means a server, `*` the source the clock follows now and `+` a good source it combines with it. Right after a restart you may see `?` (not reached yet) for a few seconds:
+
+```terminal
+[root@server1 ~]# chronyc sources
+MS Name/IP address         Stratum Poll Reach LastRx Last sample
+===============================================================================
+^+ ntp.lab.example.com         2   6   377     35   +127us[ +254us] +/-   12ms
+```
+
+`chronyc tracking` shows the details of the sync (the reference server, the offset, "Leap status : Normal" once it is synchronised), and `timedatectl` then says "System clock synchronized: yes".
+
+> Remember the three steps: the config file, then restart chronyd, then make sure chronyd is enabled so it starts at boot. NTP uses UDP port 123; a client needs no firewall change.
+
+@try machines=1
+@task t1 | Deploy and maintain | 10 | server1
+Set the time zone of server1 to Europe/London.
+@check server1 | the time zone is Europe/London
+timedatectl | grep -q 'Time zone: Europe/London'
+@solution server1
+timedatectl set-timezone Europe/London
+@endtask
+@task t2 | Deploy and maintain | 10 | server1
+Make server1 get its time only from the NTP server ntp.lab.example.com. chronyd must run now and start at boot.
+@check server1 | chrony.conf has ntp.lab.example.com as its only source
+grep -Eq '^(server|pool) +ntp\.lab\.example\.com' /etc/chrony.conf && test "$(grep -Ec '^(server|pool) ' /etc/chrony.conf)" = 1
+@check server1 | chronyd is enabled and active, and uses the server
+systemctl is-enabled chronyd && systemctl is-active chronyd && chronyc sources | grep -q 'ntp.lab.example.com'
+@solution server1
+sed -i 's/^pool /#pool /' /etc/chrony.conf
+echo 'server ntp.lab.example.com iburst' >> /etc/chrony.conf
+systemctl enable chronyd
+systemctl restart chronyd
+@endtask
+@end
+
+@quiz
+? Which file does chronyd read its NTP servers from?
+- /etc/ntp.conf
++ /etc/chrony.conf
+- /etc/chrony/servers
+- /etc/sysconfig/chronyd
+! /etc/chrony.conf. ntp.conf belonged to the old ntpd, which RHEL 9 does not ship.
+? In the output of chronyc sources, what does ^* in front of a server mean?
+- the server cannot be reached
++ it is the source the clock is synchronised to right now
+- it is a pool name
+- it is too variable to use
+! ^ marks a server and * the current best source. + is a good extra source, ? one not reached yet.
+? What does timedatectl set-timezone change?
+- the hardware clock (RTC)
+- the time in UTC
++ only how the time is shown: /etc/localtime points at the new zone
+- the NTP servers
+! The clock keeps running in UTC; the zone decides how it is displayed and how local times (cron, at) are read.
+@end
+
+## Lesson: l0705 | Software: repositories, dnf and rpm
+
+Software on RHEL comes in RPM packages, and `dnf` installs them from repositories: folders (local or on a web server) with packages and an index (repodata). A fresh machine in the lab has no repositories, so dnf has nothing to install from:
+
+```terminal
+[root@server1 ~]# ls /etc/yum.repos.d
+redhat.repo
+[root@server1 ~]# dnf repolist
+Updating Subscription Management repositories.
+Unable to read consumer identity
+
+This system is not registered with an entitlement server. You can use "rhc" or "subscription-manager" to register.
+
+No repositories available
+```
+
+The subscription messages are normal on a machine that is not registered with Red Hat; you can ignore them in the lab and in the exam.
+
+### Repository files
+
+A repository is a section in a `.repo` file in /etc/yum.repos.d:
+
+```file
+[BaseOS]
+name=RHEL 9 BaseOS
+baseurl=http://repo.lab.example.com/BaseOS
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+```
+
+- the `[id]` in brackets is the repository's short name; `name=` is a description.
+- `baseurl=` is where it lives: `http://`, `https://`, or `file:///path` for a folder on this machine.
+- `gpgcheck=1` makes dnf check each package's signature against the key in `gpgkey=`. With `gpgcheck=0` it trusts any package. Without the key, dnf refuses signed packages.
+
+`dnf config-manager --add-repo URL` writes such a file for you, but without a gpgcheck or gpgkey line. The repository then gets gpgcheck=1 from /etc/dnf/dnf.conf and has no key, so signed packages fail: add a gpgkey= line (or gpgcheck=0 if the task allows it):
+
+```terminal
+[root@server1 ~]# dnf config-manager --add-repo http://repo.lab.example.com/BaseOS
+Adding repo from: http://repo.lab.example.com/BaseOS
+[root@server1 ~]# cat /etc/yum.repos.d/repo.lab.example.com_BaseOS.repo
+[repo.lab.example.com_BaseOS]
+name=created by dnf config-manager from http://repo.lab.example.com/BaseOS
+baseurl=http://repo.lab.example.com/BaseOS
+enabled=1
+[root@server1 ~]# echo gpgcheck=0 >> /etc/yum.repos.d/repo.lab.example.com_BaseOS.repo
+```
+
+RHEL 9 has two main repositories, and you usually need both: BaseOS (the core operating system) and AppStream (applications, languages, databases, web servers).
+
+### The installation DVD as a repository
+
+The DVD (or its ISO image) has BaseOS and AppStream folders, so it works as a repository without any network. Mount it and point baseurl at the folders:
+
+```terminal
+[root@server1 ~]# mount /dev/sr0 /mnt
+mount: /mnt: WARNING: source write-protected, mounted read-only.
+[root@server1 ~]# ls /mnt
+AppStream  EULA              images      RPM-GPG-KEY-redhat-beta
+BaseOS     extra_files.json  isolinux    RPM-GPG-KEY-redhat-release
+EFI        GPL               media.repo
+[root@server1 ~]# printf '[dvd-BaseOS]\nname=DVD BaseOS\nbaseurl=file:///mnt/BaseOS\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n\n[dvd-AppStream]\nname=DVD AppStream\nbaseurl=file:///mnt/AppStream\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n' > /etc/yum.repos.d/dvd.repo
+[root@server1 ~]# dnf repolist
+Updating Subscription Management repositories.
+Unable to read consumer identity
+
+This system is not registered with an entitlement server. You can use "rhc" or "subscription-manager" to register.
+
+repo id        repo name
+dvd-BaseOS     DVD BaseOS
+dvd-AppStream  DVD AppStream
+```
+
+For a repository that survives a reboot, mount the DVD at boot too (an fstab line such as `/dev/sr0 /mnt iso9660 ro 0 0`).
+
+### dnf
+
+- `dnf install PKG` / `dnf remove PKG` (add `-y` to skip the question).
+- `dnf update` (the same as `dnf upgrade`) updates everything; `dnf update PKG` updates one package.
+- `dnf search WORD` searches names and summaries; `dnf info PKG` describes a package.
+- `dnf provides FILE` finds the package that contains a file or command, for example `dnf provides */semanage`.
+- `dnf list installed`, `dnf list available`, `dnf repolist all`.
+- `dnf history` lists past transactions; `dnf history undo N` reverses one.
+- `dnf group list` and `dnf group install "NAME"` work on groups of packages.
+
+```terminal
+[root@server1 ~]# dnf provides */dig
+Updating Subscription Management repositories.
+Unable to read consumer identity
+
+This system is not registered with an entitlement server. You can use "rhc" or "subscription-manager" to register.
+
+Last metadata expiration check: 0:00:00 ago on Mon 02 Mar 2026 04:00:00 AM EST.
+bind-utils-9.16.23-24.el9_5.x86_64 : Utilities for querying DNS name servers
+Repo        : dvd-AppStream
+Matched from:
+Filename    : /usr/bin/dig
+```
+
+### rpm: asking about packages
+
+`rpm` works on single package files and on the database of installed packages. It does not download anything and does not resolve dependencies, so use dnf to install; use rpm to ask questions:
+
+- `rpm -qa` lists every installed package; `rpm -q PKG` checks one.
+- `rpm -qi PKG` shows its information, `rpm -ql PKG` its files, `rpm -qc PKG` only its configuration files, `rpm -qd PKG` its documentation.
+- `rpm -qf FILE` tells you which package a file belongs to.
+- `rpm -qp FILE.rpm ...` asks the same questions about a package file that is not installed.
+- `rpm -ivh FILE.rpm` installs a package file (i install, v verbose, h progress bar); `rpm -e PKG` removes one.
+
+```terminal
+[root@server1 ~]# rpm -qf /etc/chrony.conf
+chrony-4.5-3.el9.x86_64
+[root@server1 ~]# rpm -qc chrony
+/etc/chrony.conf
+/etc/chrony.keys
+[root@server1 ~]# rpm -q zsh
+package zsh is not installed
+```
+
+> Tip: `dnf install ./file.rpm` installs a downloaded package file AND fetches its dependencies from the repositories, which rpm -ivh cannot do.
+
+@try machines=1
+@task t1 | Deploy and maintain | 10 | server1
+Configure server1 to use the repositories http://repo.lab.example.com/BaseOS and http://repo.lab.example.com/AppStream. Keep the signature check on: the key is in /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release.
+@check server1 | a BaseOS package (zsh) is available
+dnf -q repoquery zsh 2>/dev/null | grep -q ^zsh
+@check server1 | an AppStream package (httpd) is available
+dnf -q repoquery httpd 2>/dev/null | grep -q ^httpd-
+@check server1 | gpgcheck is not turned off
+! grep -rq '^gpgcheck *= *0' /etc/yum.repos.d/
+@hint One .repo file can hold both [sections]. Use gpgcheck=1 and gpgkey=file:///...
+@solution server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n' > /etc/yum.repos.d/lab.repo
+dnf repolist
+@endtask
+@task t2 | Deploy and maintain | 10 | server1
+Install the package tmux.
+@check server1 | tmux is installed
+rpm -q tmux
+@solution server1
+dnf install -y tmux
+@endtask
+@end
+
+@quiz
+? Which command shows the package that installed /etc/ssh/sshd_config?
+- rpm -ql /etc/ssh/sshd_config
++ rpm -qf /etc/ssh/sshd_config
+- dnf search sshd_config
+- rpm -qi sshd_config
+! -qf (query file) names the package that owns a file. dnf provides does the same for packages that are not installed yet.
+? A repository's packages are signed but the key is not imported. Which repo file line lets dnf check the signatures?
+- gpgcheck=0
++ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+- sslverify=1
+- enabled=1
+! gpgkey= tells dnf where the public key is; dnf imports it the first time it needs it. gpgcheck=0 turns the check off instead.
+? Why use dnf rather than rpm -ivh to install a package?
+- rpm cannot install packages
++ dnf resolves and installs the dependencies from the repositories
+- rpm ignores signatures
+- dnf packages are newer
+! rpm installs exactly the file you give it and stops when a dependency is missing.
+? What does baseurl=file:///mnt/BaseOS mean?
+- download the repository and save it in /mnt/BaseOS
++ the repository is the local folder /mnt/BaseOS
+- the repository is on an NFS server named mnt
+- use /mnt/BaseOS as dnf's cache
+! file:// followed by an absolute path (so three slashes) points at a folder on this machine, such as a mounted DVD.
+@end
+
+## Lesson: l0706 | The boot loader: GRUB 2 and grubby
+
+GRUB 2 shows the boot menu and starts the kernel with a list of options, the kernel command line. On RHEL 9 every kernel has its own small entry file in /boot/loader/entries (the BLS format), and the tool to change them is `grubby`.
+
+```terminal
+[root@server1 ~]# grubby --default-kernel
+/boot/vmlinuz-5.14.0-503.14.1.el9_5.x86_64
+[root@server1 ~]# grubby --default-index
+0
+```
+
+- `grubby --info=ALL` (or `--info=DEFAULT`, or `--info=/boot/vmlinuz-...`) prints each entry with its kernel, its args and its title.
+- `grubby --update-kernel=ALL --args="ARG"` adds a kernel argument to every entry; `--remove-args="ARG"` removes one. `--update-kernel=DEFAULT` or a kernel path changes only that entry.
+- `grubby --set-default=/boot/vmlinuz-VERSION` makes another installed kernel the default.
+
+```terminal
+[root@server1 ~]# grubby --update-kernel=ALL --remove-args="rhgb"
+[root@server1 ~]# grubby --info=DEFAULT
+index=0
+kernel="/boot/vmlinuz-5.14.0-503.14.1.el9_5.x86_64"
+args="ro crashkernel=1G-4G:192M,4G-64G:256M,64G-:512M resume=/dev/mapper/rhel-swap rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap quiet $tuned_params"
+root="/dev/mapper/rhel-root"
+initrd="/boot/initramfs-5.14.0-503.14.1.el9_5.x86_64.img $tuned_initrd"
+title="Red Hat Enterprise Linux (5.14.0-503.14.1.el9_5.x86_64) 9.5 (Plow)"
+id="da8d791acbd074b2d2ace44110d2d9fa-5.14.0-503.14.1.el9_5.x86_64"
+```
+
+(`rhgb` is the graphical boot splash. Without it and without `quiet` you see every boot message, which helps when a machine does not boot.)
+
+### /etc/default/grub and grub2-mkconfig
+
+GRUB's own settings (the menu timeout, the default arguments for new kernels) are in /etc/default/grub. Changing that file does nothing by itself: you must rebuild GRUB's configuration with `grub2-mkconfig`.
+
+```terminal
+[root@server1 ~]# grep TIMEOUT /etc/default/grub
+GRUB_TIMEOUT=5
+[root@server1 ~]# sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/' /etc/default/grub
+[root@server1 ~]# grub2-mkconfig -o /boot/grub2/grub.cfg
+Generating grub configuration file ...
+done
+```
+
+- `GRUB_TIMEOUT` is how many seconds the menu waits.
+- `GRUB_CMDLINE_LINUX` holds the default kernel arguments. On RHEL 9 (from 9.3 on), grub2-mkconfig copies them into the existing boot entries only when you add `--update-bls-cmdline`; to change the arguments of installed kernels, grubby is the reliable way.
+- On RHEL 9 the output file is /boot/grub2/grub.cfg on both BIOS and UEFI machines (on UEFI, the file in /boot/efi only points at it).
+
+> Which one to use? To change the arguments of the installed kernels, grubby is the quickest and needs no rebuild. To change the timeout or the defaults for future kernels, edit /etc/default/grub and run grub2-mkconfig. The changes take effect at the next boot; /proc/cmdline shows the arguments the running kernel got.
+
+@try machines=1
+@task t1 | Deploy and maintain | 10 | server1
+Add the kernel argument `audit_backlog_limit=8192` to every boot entry.
+@check server1 | every entry has the argument
+grubby --info=ALL | grep -q '^args=' && ! grubby --info=ALL | grep '^args=' | grep -vq 'audit_backlog_limit=8192'
+@solution server1
+grubby --update-kernel=ALL --args="audit_backlog_limit=8192"
+@endtask
+@task t2 | Deploy and maintain | 10 | server1
+Make the boot menu wait 10 seconds before it starts the default entry.
+@check server1 | /etc/default/grub says 10 seconds
+grep -Eq '^GRUB_TIMEOUT="?10"?$' /etc/default/grub
+@check server1 | grub.cfg has been rebuilt with it
+grep -q 'set timeout=10' /boot/grub2/grub.cfg
+@solution server1
+sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/' /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
+@endtask
+@end
+
+@quiz
+? You changed GRUB_TIMEOUT in /etc/default/grub. What else must you do?
+- nothing, GRUB reads the file at boot
++ run grub2-mkconfig -o /boot/grub2/grub.cfg
+- run grubby --update-kernel=ALL
+- run dracut -f
+! GRUB never reads /etc/default/grub; grub2-mkconfig turns it into grub.cfg.
+? Which command removes the argument quiet from every kernel entry?
+- grubby --update-kernel=ALL --args="-quiet"
++ grubby --update-kernel=ALL --remove-args="quiet"
+- grub2-mkconfig --remove quiet
+- sed -i 's/quiet//' /proc/cmdline
+! --remove-args takes the argument out; --args adds one. /proc/cmdline only shows the running kernel's arguments and cannot be changed.
+? Where can you see the arguments the running kernel was started with?
+- /etc/default/grub
+- /boot/grub2/grub.cfg
++ /proc/cmdline
+- grubby --default-kernel
+! /proc/cmdline is what the kernel received at this boot. The other files are what the next boot will use.
+@end

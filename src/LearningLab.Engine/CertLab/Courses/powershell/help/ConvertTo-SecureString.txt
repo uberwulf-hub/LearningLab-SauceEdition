@@ -1,0 +1,25 @@
+SYNOPSIS: Turns plain text or an encrypted string into a SecureString, the type PowerShell uses for passwords.
+DESCRIPTION:
+A SecureString holds text, usually a password, without showing it: displaying one just prints System.Security.SecureString. Commands that need a password, such as New-LocalUser or a PSCredential, take a SecureString.
+
+ConvertTo-SecureString has two uses:
+Reading back an encrypted string made by ConvertFrom-SecureString. Without -Key, only the same user on the same computer can do this. With -Key, anyone who has the same key can.
+Making a SecureString from plain text with -AsPlainText -Force. The password is then visible in your script or history, so use this only for practice or with values that are not secret.
+PARAMETER String:
+The text to convert: an encrypted string, or plain text with -AsPlainText. You can pipe it in.
+PARAMETER AsPlainText:
+Says the input is plain text. It must be used together with -Force.
+PARAMETER Force:
+Confirms that you understand plain text is not protected.
+PARAMETER Key:
+The key the string was encrypted with: 16, 24 or 32 bytes.
+EXAMPLE: $pw = Read-Host 'Password' -AsSecureString
+The safer way to get a SecureString: the person types the password and it is never shown.
+EXAMPLE: $pw = ConvertTo-SecureString 'P@ssw0rd!' -AsPlainText -Force
+Makes a SecureString from plain text, for a lab exercise.
+EXAMPLE: $pw = Get-Content C:\LabFiles\pw.txt | ConvertTo-SecureString
+Reads a password saved earlier with ConvertFrom-SecureString by the same user on the same computer.
+NOTES:
+In Cert Lab the encryption is a stand-in that behaves like the real one but protects nothing.
+In PowerShell 7, -AsPlainText no longer needs -Force.
+RELATED: ConvertFrom-SecureString, Get-Credential, Read-Host

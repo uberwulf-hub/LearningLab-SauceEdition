@@ -1,0 +1,106 @@
+NAME
+       passwd - change a user's password
+
+SYNOPSIS
+       passwd [-k] [-l] [-u [-f]] [-d] [-e] [-n DAYS] [-x DAYS] [-w DAYS]
+              [-i DAYS] [-S] [--stdin] [USERNAME]
+
+DESCRIPTION
+       passwd sets the password of a user account. Run with no USERNAME it
+       changes your own password: it asks for the current one first, then
+       the new one twice. root can give a USERNAME, is not asked for the old
+       password, and may set any password (a weak one gets a "BAD PASSWORD"
+       warning, but root's choice is kept). Ordinary users must pick a
+       password that passes the quality checks of pam_pwquality (by default
+       at least 8 characters, not a dictionary word, not based on the user
+       name).
+
+       The password is stored as a hash in /etc/shadow, which only root can
+       read. passwd also changes the password aging fields there, and can
+       lock and unlock accounts. The same aging settings can be changed with
+       chage, which has more options and a clearer listing (chage -l).
+
+OPTIONS
+       --stdin
+              Read the new password from standard input (root only). Handy in
+              scripts:  echo 'Secret123' | passwd --stdin USER
+
+       -l, --lock
+              Lock the password: a "!!" is put in front of the hash, so no
+              password can match. Other ways in, such as an SSH key, still
+              work. Root only.
+
+       -u, --unlock
+              Remove the lock again. passwd refuses when that would leave an
+              empty password; -f forces it.
+
+       -d, --delete
+              Remove the password, so the account has none. Root only.
+
+       -e, --expire
+              Expire the password now: the user must choose a new one at the
+              next login. Root only.
+
+       -n, --minimum DAYS
+              The minimum number of days between password changes.
+
+       -x, --maximum DAYS
+              The maximum number of days a password stays valid.
+
+       -w, --warning DAYS
+              How many days before expiry the user is warned.
+
+       -i, --inactive DAYS
+              How many days after expiry the account still accepts the old
+              password (to change it) before it is disabled.
+
+       -S, --status
+              Print a short status line: name, state (PS = password set,
+              LK = locked, NP = no password), the date of the last change,
+              then the minimum, maximum, warning and inactive days.
+
+       -k, --keep-tokens
+              Change only expired passwords.
+
+EXAMPLES
+       Change your own password (as student):
+
+              $ passwd
+              Changing password for user student.
+              Current password:
+              New password:
+              Retype new password:
+              passwd: all authentication tokens updated successfully.
+
+       As root, set another user's password, then in a script:
+
+              # passwd harry
+              # echo 'Shine2Day!' | passwd --stdin harry
+
+       Make harry change his password at the next login, and require a new
+       password every 90 days:
+
+              # passwd -e harry
+              # passwd -x 90 harry
+
+       Lock an account, check it, unlock it:
+
+              # passwd -l harry
+              # passwd -S harry
+              harry LK 2026-03-02 0 99999 7 -1 (Password locked.)
+              # passwd -u harry
+
+FILES
+       /etc/shadow
+              The password hashes and aging fields.
+
+       /etc/login.defs
+              Defaults for new accounts (PASS_MAX_DAYS, PASS_MIN_DAYS,
+              PASS_WARN_AGE); these do not change existing users.
+
+       /etc/security/pwquality.conf
+              The password quality rules.
+
+SEE ALSO
+       chage(1), chpasswd(8), useradd(8), usermod(8), shadow(5),
+       login.defs(5)

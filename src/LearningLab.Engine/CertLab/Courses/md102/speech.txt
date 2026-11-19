@@ -1,0 +1,26 @@
+# How read aloud says the tech words of this course (Engine\ReadText.cs, Pronounce). One rule a line:
+#   written => said        whole words, case matters, the longest first
+#   spell: WORD word       said letter by letter
+#   word: WORD             in capitals, but said as a word (not spelt)
+# Anything else: paths are read with "slash", words in capitals of 2 to 6 letters are spelt, PowerShell names are
+# split (Get-ChildItem -> Get Child Item).
+MD-102 => M D one oh two
+Intune => in-tune
+Autopilot => autopilot
+BitLocker => bit locker
+Entra => entra
+MDM => M D M
+MAM => M A M
+OOBE => O O B E
+ESP => E S P
+CSP => C S P
+WIP => W I P
+LAPS => laps
+UWP => U W P
+MSIX => M S I X
+MSI => M S I
+.intunewin => dot in-tune win
+GPO => G P O
+TPM => T P M
+UEFI => U E F I
+word: LAPS

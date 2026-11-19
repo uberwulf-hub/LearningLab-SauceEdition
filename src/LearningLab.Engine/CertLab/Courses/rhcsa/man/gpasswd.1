@@ -1,0 +1,69 @@
+NAME
+       gpasswd - manage the members and administrators of a group
+
+SYNOPSIS
+       gpasswd -a USER GROUP
+       gpasswd -d USER GROUP
+       gpasswd -M USER[,USER...] GROUP
+       gpasswd -A USER[,USER...] GROUP
+       gpasswd [-r | -R] GROUP
+
+DESCRIPTION
+       gpasswd changes /etc/group and /etc/gshadow. Its most common use is
+       adding one user to a group or removing one, without touching the
+       user's other groups:
+
+           gpasswd -a student devops
+           Adding user student to group devops
+
+       root may do anything. A group may also have administrators (set with
+       -A), who may add and remove members of that group themselves.
+
+       Group membership is read at login: a user who is logged in sees a new
+       group only after logging in again (or in a new shell started with
+       newgrp or su - USER).
+
+       With only a GROUP name, gpasswd asks for a group password. Group
+       passwords are rarely used.
+
+OPTIONS
+       -a USER, --add USER
+              Add USER to GROUP.
+
+       -d USER, --delete USER
+              Remove USER from GROUP.
+
+       -M LIST, --members LIST
+              Set the whole member list (replaces the old members).
+
+       -A LIST, --administrators LIST
+              Set the group's administrators.
+
+       -r     Remove the group password.
+
+       -R     Restrict access: only members can use newgrp to join it.
+
+EXAMPLES
+       Add student to devops and check:
+
+           gpasswd -a student devops
+           id student
+
+       Take a user out of wheel (no more sudo through wheel):
+
+           gpasswd -d alice wheel
+
+       Make the group's member list exactly two users:
+
+           gpasswd -M alice,bob devops
+
+NOTES
+       usermod -aG GROUP USER also adds a user to a group. Without -a,
+       usermod -G replaces all of the user's supplementary groups, which is a
+       common mistake; gpasswd -a cannot make it.
+
+FILES
+       /etc/group, /etc/gshadow
+
+SEE ALSO
+       groupadd(8), groupmod(8), usermod(8), newgrp(1), id(1), group(5)

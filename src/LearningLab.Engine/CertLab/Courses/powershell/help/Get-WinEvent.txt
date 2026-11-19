@@ -1,0 +1,36 @@
+SYNOPSIS: Reads events from the event logs, both the classic logs and the newer ones.
+DESCRIPTION:
+Windows writes what happens into event logs: System (services, restarts, drivers), Application (programs), Security (sign-ins, account changes) and many newer logs such as Microsoft-Windows-PowerShell/Operational. Get-WinEvent reads all of them, newest event first.
+
+Each event has a TimeCreated, an Id (7036 for a service changing state, 4624 for a sign-in...), a Level (1 Critical, 2 Error, 3 Warning, 4 Information), a ProviderName (who wrote it) and a Message. The default table groups the events by provider.
+
+To filter, -FilterHashtable is the fast and readable way: the log does the filtering instead of Where-Object reading every event.
+PARAMETER LogName:
+The logs to read, for example System or 'Windows PowerShell'. Wildcards are allowed.
+PARAMETER ListLog:
+Lists the logs (their size, mode and number of records) instead of reading events. -ListLog * lists them all.
+PARAMETER ListProvider:
+Lists the providers (the programs that write events) and the logs they write to.
+PARAMETER ProviderName:
+Reads the events of these providers from whatever logs they write to.
+PARAMETER FilterHashtable:
+A hashtable of conditions: LogName, ProviderName, Id, Level, StartTime, EndTime, UserID, Keywords, Data. Several values for one key mean "any of them"; several keys must all match.
+PARAMETER FilterXPath:
+An XPath query as the Event Viewer writes it. Cert Lab understands EventID=, Level=, Provider[@Name='...'] and timediff(@SystemTime) <= milliseconds.
+PARAMETER MaxEvents:
+At most this many events.
+PARAMETER Oldest:
+Oldest events first.
+PARAMETER ComputerName:
+Reads the logs of another computer.
+EXAMPLE: Get-WinEvent -LogName System -MaxEvents 10
+The ten newest System events.
+EXAMPLE: Get-WinEvent -FilterHashtable @{LogName='System'; Id=7036; StartTime=(Get-Date).AddHours(-1)}
+Service state changes in the last hour.
+EXAMPLE: Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4625} | Select-Object TimeCreated, Message
+Failed sign-ins.
+EXAMPLE: Get-WinEvent -ListLog * | Where-Object RecordCount -gt 0
+The logs that have events.
+NOTES:
+When nothing matches, Get-WinEvent writes the error "No events were found that match the specified selection criteria."; add -ErrorAction SilentlyContinue in scripts. Get-WinEvent also works in PowerShell 7, where Get-EventLog is gone.
+RELATED: Get-EventLog, Write-EventLog, New-EventLog

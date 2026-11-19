@@ -1,0 +1,24 @@
+SYNOPSIS: Asks the person at the console to type something and returns what they typed.
+DESCRIPTION:
+Read-Host shows a prompt, waits for the user to type a line and press Enter, and returns that line as a string. A colon and a space are added after your prompt text.
+
+With -AsSecureString the typed characters are shown as asterisks and the result is a SecureString instead of plain text, which is how scripts should ask for passwords.
+
+The answer is always text. Convert it when you need a number: [int](Read-Host 'How many').
+PARAMETER Prompt:
+The question to show. Position 0.
+PARAMETER AsSecureString:
+Hides what is typed and returns a SecureString.
+EXAMPLE: $name = Read-Host 'Your name'
+Shows "Your name: " and stores the answer in $name.
+EXAMPLE: $count = [int](Read-Host 'How many copies')
+Asks for a number and converts the answer.
+EXAMPLE: $pw = Read-Host 'Password' -AsSecureString
+Asks for a password without showing it.
+NOTES:
+Read-Host stops a script until someone answers, so scripts that run unattended (scheduled tasks, jobs, remote commands) must not use it. A mandatory parameter is usually the better way to get a value: PowerShell asks for it only when it is missing, and a caller can pass it directly.
+
+Get-Credential is the better way to ask for a user name and password together.
+
+PowerShell 7.1 and later add -MaskInput, which hides the typing but returns plain text.
+RELATED: Write-Host, Get-Credential, about_Functions_Advanced_Parameters

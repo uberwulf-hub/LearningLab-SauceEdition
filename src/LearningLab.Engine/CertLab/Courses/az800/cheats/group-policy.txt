@@ -1,0 +1,52 @@
+# Sheet: group-policy | Group Policy | Group Policy
+## GPOs and links
+New-GPO -Name 'Sales lockdown' -Comment '...' :: a new, unlinked GPO
+New-GPLink -Name 'Sales lockdown' -Target 'OU=Sales,OU=Staff,DC=corp,DC=example' :: link it (also -LinkEnabled, -Enforced, -Order)
+Set-GPLink -Name X -Target ... -Enforced Yes -Order 1 :: enforce a link, change its link order
+Remove-GPLink -Name X -Target ... :: remove a link (the GPO stays)
+Set-GPRegistryValue -Name X -Key 'HKCU\Software\...' -ValueName V -Type DWord -Value 1 :: an Administrative Template setting
+Get-GPO -All | Format-Table DisplayName, GpoStatus :: every GPO and its status
+Get-GPInheritance -Target 'OU=...' :: links on an OU, block, and what reaches it in precedence order
+Set-GPInheritance -Target 'OU=...' -IsBlocked Yes :: Block Inheritance
+## Precedence
+LSDOU :: local, site, domain, OUs top-down; last applied wins
+Link order 1 :: highest precedence within a container
+Block Inheritance :: on an OU or domain: stops GPOs from above, except enforced links
+Enforced :: on a link: goes through blocks, wins conflicts (the highest enforced link wins)
+## Management
+Default Domain Policy :: the domain accounts' password, lockout and Kerberos policy
+Default Domain Controllers Policy :: user rights and audit for the DCs
+GPO status :: Enabled, User or Computer configuration settings disabled, All settings disabled
+Backup-GPO -Name X -Path C:\GpoBackups / -All :: back up settings, filtering, WMI filter link (not links)
+Restore-GPO -Name X -Path C:\GpoBackups :: put a GPO back as it was in a backup (a deleted one: GPMC > Manage Backups > Restore, then relink it)
+Import-GPO -BackupGpoName X -TargetName Y -Path ... :: settings into another GPO or domain (migration table)
+Copy-GPO -SourceName X -TargetName Y :: a copy in the same domain
+\\corp.example\SYSVOL\corp.example\Policies\PolicyDefinitions :: the central store for ADMX / ADML files
+Starter GPOs :: templates of Administrative Template settings for new GPOs
+Preferences :: drive maps, printers, registry, files, shortcuts, local groups, tasks; Create / Replace / Update / Delete
+Item-level targeting :: apply one preference item by group, OS, IP range, site, computer name...
+## Filtering and delegation
+Security filtering :: Read + Apply group policy; default Authenticated Users
+MS16-072 :: computers must be able to Read GPOs that hold user settings
+Set-GPPermission -Name X -TargetName 'Sales Managers' -TargetType Group -PermissionLevel GpoApply :: add to the filter
+Set-GPPermission ... -TargetName 'Authenticated Users' -PermissionLevel GpoRead -Replace :: lower Authenticated Users to Read
+Get-GPPermission -Name X -All :: who has what on a GPO
+GpoRead / GpoApply / GpoEdit / GpoEditDeleteModifySecurity :: permission levels
+Group Policy Creator Owners :: may create GPOs; linking is a right on the OU
+WMI filter :: one per GPO, evaluated on the target computer
+SELECT * FROM Win32_OperatingSystem WHERE ProductType = 1 :: client Windows (2 DC, 3 member server)
+SELECT * FROM Win32_OperatingSystem WHERE Version LIKE '10.0.2%' AND ProductType = 1 :: Windows 11
+## Loopback
+Configure user Group Policy loopback processing mode :: Computer Configuration > Administrative Templates > System > Group Policy
+Merge :: user's GPOs, then the computer's GPOs' user settings (computer wins)
+Replace :: only the computer's GPOs' user settings
+## Refresh and troubleshooting
+Background refresh :: members every 90 minutes + up to 30; DCs every 5 minutes
+gpupdate /force :: reapply everything now (/target:computer or /target:user)
+Invoke-GPUpdate -Computer CL1 -RandomDelayInMinutes 0 -Force :: remote refresh now (default delay up to 10 minutes)
+gpresult /r :: applied and filtered-out GPOs with reasons
+gpresult /r /user bcole /scope user :: another user's part
+gpresult /h C:\report.html :: full HTML report
+Get-GPResultantSetOfPolicy -Computer CL1 -User bcole -ReportType Html -Path C:\rsop.html :: RSoP report from PowerShell
+Group Policy Results / Modeling :: what happened on a computer / what would happen (simulated by a DC)
+Event Viewer > Microsoft > Windows > GroupPolicy > Operational :: the client's Group Policy log

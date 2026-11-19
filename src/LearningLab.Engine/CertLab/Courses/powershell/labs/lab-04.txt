@@ -1,0 +1,72 @@
+# Lab: lab-04 | Variables, types and operators | u04 | 35
+Language practice on WIN-SRV1. Every task leaves its result in a variable that the checks read, so work in the same console from start to end.
+
+@vars
+port = 8080 | 8443 | 9090
+@endvars
+
+@task t01 | Language | 10 | WIN-SRV1
+Store the **text** `'{port}'` in `$p`, then store in `$next` the number that comes after it as an integer (the port plus 1), not the text `'{port}1'`.
+@check WIN-SRV1 | $next is the integer {port} + 1
+$next -is [int] -and $next -eq ({port} + 1)
+@hint With text on the left, + joins strings. Convert first: [int]$p + 1.
+@solution WIN-SRV1
+$p = '{port}'
+$next = [int]$p + 1
+@explain
+PowerShell converts the right side to the type of the left side. '{port}' + 1 gives the text '{port}1'; [int]'{port}' + 1 gives the number.
+@endtask
+
+@task t02 | Language | 10 | WIN-SRV1
+Create `$servers` as an array with `WIN-SRV1`, `WIN-CL1`, `DC01` and `WEB01`. Then store in `$win` only the names that start with `WIN` (use an operator on the array, not a loop), and in `$hasDc` whether the array contains `DC01`.
+@check WIN-SRV1 | $win holds the two WIN names
+($win -join ',') -eq 'WIN-SRV1,WIN-CL1'
+@check WIN-SRV1 | $hasDc is True
+$hasDc -eq $true
+@hint $servers -like 'WIN*' filters; -contains answers True or False.
+@solution WIN-SRV1
+$servers = 'WIN-SRV1', 'WIN-CL1', 'DC01', 'WEB01'
+$win = $servers -like 'WIN*'
+$hasDc = $servers -contains 'DC01'
+@explain
+Comparison operators with an array on the left return the matching items. -contains (and -in, with the operands the other way round) answers whether one value is in the collection.
+@endtask
+
+@task t03 | Language | 10 | WIN-SRV1
+Create an **ordered** hashtable `$cfg` with the keys `Name` = `Inventory`, `Port` = `{port}` (a number) and `Debug` = `$false`, in this order. Then turn it into a custom object `$obj` with the same properties in the same order.
+@check WIN-SRV1 | $cfg keeps the order
+($cfg.Keys -join ',') -eq 'Name,Port,Debug' -and $cfg.Port -eq {port}
+@check WIN-SRV1 | $obj is a custom object with the properties in order
+$obj -is [pscustomobject] -and ($obj.psobject.Properties.Name -join ',') -eq 'Name,Port,Debug' -and $obj.Debug -eq $false
+@hint [ordered]@{ ... }; [pscustomobject]$cfg
+@solution WIN-SRV1
+$cfg = [ordered]@{ Name = 'Inventory'; Port = {port}; Debug = $false }
+$obj = [pscustomobject]$cfg
+@explain
+A plain hashtable does not keep its order; [ordered] does. Casting an ordered dictionary (or a hashtable literal) to [pscustomobject] makes an object whose properties are its keys.
+@endtask
+
+@task t04 | Language | 10 | WIN-SRV1
+From the log line `'2026-03-01 09:02:41 ERROR Login failed for user ''svc_backup'''` store in `$user` the user name between the quotes (`svc_backup`), using `-match` and a group.
+@check WIN-SRV1 | $user is svc_backup
+"$user" -eq 'svc_backup'
+@hint -match "user '(.+)'" then $Matches[1]
+@solution WIN-SRV1
+$line = '2026-03-01 09:02:41 ERROR Login failed for user ''svc_backup'''
+$line -match "user '(.+)'"
+$user = $Matches[1]
+@explain
+Parentheses in the pattern make a group; after a successful -match, $Matches[1] holds what the first group matched. Two single quotes inside a single-quoted string stand for one quote.
+@endtask
+
+@task t05 | Language | 10 | WIN-SRV1
+Store in `$label` the text `Port {port} is open (checked 2026-03-02)`, built with the `-f` operator from the variable `$p` (the port) and the date `[datetime]'2026-03-02'` formatted as `yyyy-MM-dd`.
+@check WIN-SRV1 | $label is right
+$label -eq 'Port {port} is open (checked 2026-03-02)'
+@hint 'Port {0} is open (checked {1:yyyy-MM-dd})' -f $p, [datetime]'2026-03-02'
+@solution WIN-SRV1
+$p = '{port}'
+$label = 'Port {0} is open (checked {1:yyyy-MM-dd})' -f $p, [datetime]'2026-03-02'
+@explain
+After the colon in a format item comes the format: date patterns like yyyy-MM-dd, N2 for numbers, P0 for percent. -f is easier to read than joining many pieces with +.
+@endtask

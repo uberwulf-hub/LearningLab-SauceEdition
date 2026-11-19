@@ -1,0 +1,8 @@
+## the alert that started it
+siem alerts
+## every failed sign-in for that account: where from, aimed at which computer, how many, the first one
+siem search source=winsec event=4625 user={{U}}
+siem search source=winsec event=4625 user={{U}} --count-by src_ip
+siem search source=winsec event=4625 user={{U}} --limit 1 --fields time,host,user,src_ip,logon_type
+## what else that account did: a password change just before, or a sign-in from outside?
+siem search source=winsec user={{U}} event!=4625

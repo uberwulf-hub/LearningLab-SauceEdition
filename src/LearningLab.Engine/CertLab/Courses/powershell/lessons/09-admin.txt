@@ -1,0 +1,644 @@
+# Unit: u09 | 9. Administration: services, processes, logs and tasks | Administration
+
+This is where PowerShell earns its keep: looking after the programs that run on a Windows computer. You will start and stop services, find and end processes, search the event logs for errors, schedule jobs to run on their own, and find out when a computer last restarted and what is installed on it. Every command here gives you objects, so everything from units 2 and 3 (sorting, filtering, choosing properties) works on the results.
+
+## Lesson: l0901 | Services
+
+A **service** is a program that Windows runs in the background, usually without anyone signed in: the print spooler, Windows Update, the web server. Each service has a short **Name** (`Spooler`), a longer **DisplayName** (`Print Spooler`), a **Status** (Running, Stopped, Paused) and a **StartType** that says what happens when Windows starts.
+
+```terminal
+PS C:\Windows\system32> Get-Service Spooler
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+
+
+PS C:\Windows\system32> Get-Service -DisplayName '*Update*'
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  UsoSvc             Update Orchestrator Service
+Running  wuauserv           Windows Update
+
+
+PS C:\Windows\system32> Get-Service Spooler | Select-Object Name, Status, StartType
+
+Name    Status  StartType
+----    ------  ---------
+Spooler Running Automatic
+```
+
+`Get-Service` with no name lists them all; a name may use wildcards (`Get-Service Win*`). Filter as usual: `Get-Service | Where-Object Status -eq Stopped`.
+
+### Starting, stopping and restarting
+
+`Stop-Service`, `Start-Service` and `Restart-Service` do what their names say. They print nothing when they work; add `-PassThru` to see the service afterwards.
+
+```terminal
+PS C:\Windows\system32> Stop-Service Spooler
+PS C:\Windows\system32> Get-Service Spooler
+
+Status   Name               DisplayName
+------   ----               -----------
+Stopped  Spooler            Print Spooler
+
+
+PS C:\Windows\system32> Restart-Service Spooler -PassThru
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+```
+
+### Dependencies
+
+Some services need others. `-RequiredServices` lists what a service needs; `-DependentServices` lists the services that need it. A service that others depend on will not stop on its own:
+
+```terminal
+PS C:\Windows\system32> Get-Service LanmanWorkstation -DependentServices
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Netlogon           Netlogon
+Running  SessionEnv         Remote Desktop Configuration
+
+
+PS C:\Windows\system32> Stop-Service LanmanWorkstation
+Stop-Service : Cannot stop service 'Workstation (LanmanWorkstation)' because it has dependent services. It can only be stopped if the Force flag is set.
+At line:1 char:1
++ Stop-Service LanmanWorkstation
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.ServiceProcess.ServiceController:ServiceController) [Stop-Service], ServiceCommandException
+    + FullyQualifiedErrorId : ServiceHasDependentServices,Microsoft.PowerShell.Commands.StopServiceCommand
+```
+
+`Stop-Service -Force` (and `Restart-Service -Force`) also stops the dependent services. Think before you use it: here it would stop Netlogon and SessionEnv too.
+
+### The start type
+
+`Set-Service -StartupType` changes what happens at start-up. In Windows PowerShell 5.1 the useful values are **Automatic** (starts with Windows), **Manual** (starts when something asks for it) and **Disabled** (cannot be started at all). `Set-Service -Status Running` starts the service in the same command.
+
+```terminal
+PS C:\Windows\system32> Set-Service BITS -StartupType Disabled
+PS C:\Windows\system32> Start-Service BITS
+Start-Service : Service 'Background Intelligent Transfer Service (BITS)' cannot be started due to the following error: Cannot start service BITS on computer '.'.
+At line:1 char:1
++ Start-Service BITS
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OpenError: (System.ServiceProcess.ServiceController:ServiceController) [Start-Service], ServiceCommandException
+    + FullyQualifiedErrorId : CouldNotStartService,Microsoft.PowerShell.Commands.StartServiceCommand
+
+PS C:\Windows\system32> Set-Service BITS -StartupType Manual -Status Running
+PS C:\Windows\system32> Get-Service BITS | Select-Object Name, Status, StartType
+
+Name Status  StartType
+---- ------  ---------
+BITS Running Manual
+```
+
+> Note the parameter is `-StartupType` but the property you read back is `StartType`. And a Disabled service refuses to start, as the error above shows: change the start type first.
+
+### sc.exe
+
+The old command-line tool `sc.exe` still works and can do a few things Set-Service in 5.1 cannot, such as delayed automatic start (`sc.exe config BITS start= delayed-auto`, with the space after `start=`). Always type the `.exe`: in Windows PowerShell, `sc` on its own is an alias of `Set-Content`.
+
+```terminal
+PS C:\Windows\system32> sc.exe qc Spooler
+[SC] QueryServiceConfig SUCCESS
+
+SERVICE_NAME: Spooler
+        TYPE               : 110  WIN32_OWN_PROCESS (interactive)
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : C:\Windows\System32\spoolsv.exe
+        LOAD_ORDER_GROUP   :
+        TAG                : 0
+        DISPLAY_NAME       : Print Spooler
+        DEPENDENCIES       : RPCSS
+                           : http
+        SERVICE_START_NAME : LocalSystem
+```
+
+> PowerShell 7: `Set-Service -StartupType AutomaticDelayedStart` works there, `Get-Service` has a `BinaryPathName` and `UserName`, and `Get-Service -ComputerName` is gone (use remoting or CIM instead). In 5.1, the CIM class `Win32_Service` gives the program path and account: `Get-CimInstance Win32_Service -Filter "Name='Spooler'"`.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+The Background Intelligent Transfer Service (BITS) on WIN-SRV1 is stopped and starts manually. Make it start **automatically** with Windows, and start it **now**.
+@check WIN-SRV1 | BITS starts automatically
+"$((Get-Service BITS).StartType)" -eq 'Automatic'
+@check WIN-SRV1 | BITS is running
+"$((Get-Service BITS).Status)" -eq 'Running'
+@hint Set-Service BITS -StartupType Automatic, then Start-Service BITS (or both at once with -Status Running).
+@solution WIN-SRV1
+Set-Service BITS -StartupType Automatic
+Start-Service BITS
+Get-Service BITS | Select-Object Name, Status, StartType
+@endtask
+@end
+
+@quiz
+? `Stop-Service LanmanWorkstation` fails because other services depend on it. What stops it anyway?
+- Stop-Service LanmanWorkstation -PassThru
++ Stop-Service LanmanWorkstation -Force
+- Set-Service LanmanWorkstation -StartupType Disabled
+! -Force also stops the services that depend on it. Disabling only changes what happens at the next start.
+? Which start type means a service cannot be started until someone changes it?
+- Manual
+- Automatic
++ Disabled
+! Manual services start when asked to; Disabled ones refuse until the start type changes.
+? Why should you type `sc.exe` and not `sc` in Windows PowerShell?
++ sc is an alias of Set-Content
+- sc is an alias of Stop-Service
+- sc.exe runs faster
+! Without .exe, PowerShell runs Set-Content and writes to a file named after your first argument.
+@end
+
+## Lesson: l0902 | Processes
+
+A **process** is a running program. `Get-Process` lists them. The columns of its default table: Handles, memory in kilobytes (NPM, PM and WS: WS, the working set, is the memory in use right now), CPU(s) (the processor time used so far, in seconds), the process Id, the session (SI) and the name.
+
+```terminal
+PS C:\Windows\system32> Get-Process | Sort-Object CPU -Descending | Select-Object -First 5
+
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
+-------  ------    -----      -----     ------     --  -- -----------
+    161      16    15805      23708       4.70   4956   2 taskhostw
+    770      25    17973      26960       4.67   5620   2 RuntimeBroker
+    137      23    19978      29968       4.44   1700   0 lsass
+    429      22    20522      30784       4.31   5992   2 TextInputHost
+    328      26    25077      37616       4.28   4280   2 ServerManager
+
+
+PS C:\Windows\system32> Get-Process | Sort-Object WS -Descending | Select-Object -First 3 Name, Id, @{ Name = 'MB'; Expression = { [math]::Round($_.WS / 1MB) } }
+
+Name          Id MB
+----          -- --
+explorer    4476 93
+powershell 15460 80
+Registry      92 55
+```
+
+The property behind the WS(K) column is `WS` (also called `WorkingSet64`), in bytes; the column shows kilobytes. Sort by the property, not by the column title.
+
+> `Get-Process -IncludeUserName` adds the account each process runs as. It needs an elevated console (the practice consoles are).
+
+### Starting programs
+
+`Start-Process` starts a program. Useful parameters: `-ArgumentList` (the program's arguments), `-Wait` (do not return until it ends), `-PassThru` (give back the process object), `-NoNewWindow` (use this console), `-WindowStyle Hidden` and `-Verb RunAs` (as an administrator, with a UAC prompt).
+
+```terminal
+PS C:\Windows\system32> $p = Start-Process notepad -PassThru
+PS C:\Windows\system32> Get-Process -Id $p.Id
+
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
+-------  ------    -----      -----     ------     --  -- -----------
+    245      11     3027      15531       0.08  15695   2 notepad
+
+
+PS C:\Windows\system32> Wait-Process -Id $p.Id -Timeout 5
+Wait-Process : This command stopped operation because process "notepad (15695)" is not stopped in the specified time-out.
+At line:1 char:1
++ Wait-Process -Id $p.Id -Timeout 5
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (System.Diagnostics.Process (notepad):Process) [Wait-Process], TimeoutException
+    + FullyQualifiedErrorId : ProcessNotTerminated,Microsoft.PowerShell.Commands.WaitProcessCommand
+```
+
+`Wait-Process` waits until a process ends; with `-Timeout` (seconds) it gives up with an error, as here, because nobody closed Notepad.
+
+### Stopping processes
+
+`Stop-Process` takes `-Name` (every process with that name) or `-Id` (exactly one), or process objects from the pipeline. Try `-WhatIf` first when a name could match more than you think.
+
+```terminal
+#setup Start-Process notepad
+PS C:\Windows\system32> Get-Process notepad | Stop-Process -WhatIf
+What if: Performing the operation "Stop-Process" on target "notepad (15695)".
+PS C:\Windows\system32> Stop-Process -Name notepad
+PS C:\Windows\system32> Get-Process notepad -ErrorAction SilentlyContinue
+PS C:\Windows\system32> Stop-Process -Name lsass
+Stop-Process : Cannot stop process "lsass (1700)" because of the following error: Access is denied
+At line:1 char:1
++ Stop-Process -Name lsass
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (System.Diagnostics.Process (lsass):Process) [Stop-Process], ProcessCommandException
+    + FullyQualifiedErrorId : CouldNotStopProcess,Microsoft.PowerShell.Commands.StopProcessCommand
+```
+
+Windows protects some system processes; even an administrator gets "Access is denied". Stopping a process loses its unsaved work, so prefer stopping the service when the process belongs to one.
+
+> PowerShell 7 shows PM and WS in megabytes in the default table, and Get-Process there has `-IncludeUserName` too. The commands are the same.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Store in `$top3` the **names** (plain strings) of the 3 processes on WIN-SRV1 that use the most memory (the working set, `WS`), biggest first.
+@check WIN-SRV1 | $top3 holds the three names in order
+$want = Get-Process | Sort-Object WS -Descending | Select-Object -First 3 -ExpandProperty Name; ($top3 -join ',') -eq ($want -join ',')
+@check WIN-SRV1 | they are strings, not process objects
+@($top3 | Where-Object { $_ -is [string] }).Count -eq 3
+@hint Sort-Object WS -Descending, then Select-Object -First 3 -ExpandProperty Name.
+@solution WIN-SRV1
+$top3 = Get-Process | Sort-Object WS -Descending | Select-Object -First 3 -ExpandProperty Name
+$top3
+@endtask
+@end
+
+@quiz
+? What does the CPU(s) column of Get-Process show?
+- The percentage of the processor in use right now
++ The processor time the process has used so far, in seconds
+- The number of processors the process may use
+! It is total time, not a live percentage: a process that worked hard an hour ago still shows a large number.
+? Which command stops exactly one process?
+- Stop-Process -Name notepad
++ Stop-Process -Id 4120
+- Get-Process notepad | Stop-Process
+! A name (or a pipeline of all processes with that name) can match several processes; an Id is unique.
+? Which Start-Process parameter makes PowerShell wait until the program ends?
+- -PassThru
+- -NoNewWindow
++ -Wait
+! -PassThru returns the process object; Wait-Process waits for a process that is already running.
+@end
+
+## Lesson: l0903 | Event logs
+
+Windows records what happens in **event logs**: System (Windows itself, drivers, services), Application (programs), Security (sign-ins and audits; reading it needs an administrator) and many more under Applications and Services Logs. Each event has a time, a source (the **provider**), an event **Id**, a **level** and a message.
+
+### Get-WinEvent
+
+`Get-WinEvent -ListLog` lists the logs; `-LogName` reads one, newest event first. Always limit the amount with `-MaxEvents`: the System log of a busy server holds many thousands of events.
+
+```terminal
+PS C:\Windows\system32> Get-WinEvent -ListLog Application, System, Security | Select-Object LogName, RecordCount
+
+LogName     RecordCount
+-------     -----------
+Application          44
+System              219
+Security            206
+
+
+PS C:\Windows\system32> Get-WinEvent -LogName System -MaxEvents 3
+
+
+   ProviderName: Microsoft-Windows-GroupPolicy
+
+TimeCreated                      Id LevelDisplayName Message
+-----------                      -- ---------------- -------
+3/2/2026 7:56:25 AM            1500 Information      The Group Policy settings for the computer were processed succe...
+
+
+
+   ProviderName: Microsoft-Windows-Time-Service
+
+TimeCreated                      Id LevelDisplayName Message
+-----------                      -- ---------------- -------
+3/2/2026 7:56:20 AM              37 Information      The time provider NtpClient is currently receiving valid time d...
+
+
+
+   ProviderName: Service Control Manager
+
+TimeCreated                      Id LevelDisplayName Message
+-----------                      -- ---------------- -------
+3/2/2026 7:56:12 AM            7036 Information      The Distributed Transaction Coordinator service entered the run...
+```
+
+The default display groups events by provider, so you see a heading for each one.
+
+### Filtering with a hash table
+
+Piping thousands of events to Where-Object is slow. `-FilterHashtable` lets the event log service do the filtering instead (filter left). The keys you will use most: `LogName`, `ProviderName`, `Id`, `Level`, `StartTime` and `EndTime`. The levels are numbers:
+
+| Level | Meaning |
+|---|---|
+| 1 | Critical |
+| 2 | Error |
+| 3 | Warning |
+| 4 | Information |
+
+```terminal
+PS C:\Windows\system32> Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2 } | Select-Object TimeCreated, Id, ProviderName
+
+TimeCreated             Id ProviderName
+-----------             -- ------------
+2/27/2026 10:58:01 AM 1026 .NET Runtime
+2/27/2026 10:58:00 AM 1000 Application Error
+2/24/2026 10:01:01 AM 1026 .NET Runtime
+2/24/2026 10:01:00 AM 1000 Application Error
+
+
+PS C:\Windows\system32> Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 3; StartTime = (Get-Date).AddDays(-1) } | Select-Object TimeCreated, Id, ProviderName
+
+TimeCreated            Id ProviderName
+-----------            -- ------------
+3/2/2026 2:04:00 AM 10016 Microsoft-Windows-DistributedCOM
+3/1/2026 9:20:00 AM  1014 Microsoft-Windows-DNS-Client
+
+
+PS C:\Windows\system32> Get-WinEvent -FilterHashtable @{ LogName = 'System'; Id = 7036 } -MaxEvents 2 | Format-List TimeCreated, Id, Message
+
+TimeCreated : 3/2/2026 7:56:12 AM
+Id          : 7036
+Message     : The Distributed Transaction Coordinator service entered the running state.
+
+TimeCreated : 3/2/2026 7:56:12 AM
+Id          : 7036
+Message     : The Group Policy Client service entered the running state.
+```
+
+A key with several values (`Level = 2, 3`) matches any of them; different keys must all match. `StartTime = (Get-Date).AddDays(-1)` means "in the last 24 hours".
+
+When nothing matches, Get-WinEvent reports an error rather than printing nothing:
+
+```terminal
+PS C:\Windows\system32> Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 1 }
+Get-WinEvent : No events were found that match the specified selection criteria.
+At line:1 char:1
++ Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 1 }
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (:) [Get-WinEvent], Exception
+    + FullyQualifiedErrorId : NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand
+
+PS C:\Windows\system32> Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 1 } -ErrorAction SilentlyContinue
+```
+
+> In a script that counts errors, add `-ErrorAction SilentlyContinue` and wrap the call in `@( )`, so that "no events" gives a count of 0 instead of a red message.
+
+### Get-EventLog, the older cmdlet
+
+`Get-EventLog` reads only the classic logs (Application, System, Security and a few others) and has its own parameters: `-Newest`, `-EntryType Error` (or Warning, Information), `-After`, `-Before` and `-Source`.
+
+```terminal
+PS C:\Windows\system32> Get-EventLog -LogName System -EntryType Warning -After (Get-Date).AddDays(-1) | Select-Object TimeGenerated, EventID, Source
+
+TimeGenerated       EventID Source
+-------------       ------- ------
+3/2/2026 2:04:00 AM   10016 DCOM
+3/1/2026 9:20:00 AM    1014 Microsoft-Windows-DNS-Client
+```
+
+Its properties have other names too: `TimeGenerated` and `EventID` instead of `TimeCreated` and `Id`. You will meet it in older scripts.
+
+> PowerShell 7 has no Get-EventLog (nor Write-EventLog, New-EventLog or Clear-EventLog). Get-WinEvent works in both, so use it for anything new.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Store in `$appErrors` every **Error** event of the **Application** log on WIN-SRV1. Use `Get-WinEvent -FilterHashtable`.
+@check WIN-SRV1 | $appErrors holds the Application log's errors
+$want = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2 }); @($appErrors).Count -gt 0 -and @($appErrors).Count -eq $want.Count -and @($appErrors | Where-Object { $_.Level -ne 2 -or $_.LogName -ne 'Application' }).Count -eq 0
+@check WIN-SRV1 | it used -FilterHashtable
+($CertLabHistory -join ' ') -match 'FilterHashtable'
+@hint Error is level 2: Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2 }
+@solution WIN-SRV1
+$appErrors = Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2 }
+$appErrors | Select-Object TimeCreated, Id, ProviderName
+@endtask
+@end
+
+@quiz
+? Which level number means Warning in a Get-WinEvent filter?
+- 1
+- 2
++ 3
+- 4
+! 1 Critical, 2 Error, 3 Warning, 4 Information.
+? Why is `-FilterHashtable` better than piping all events to Where-Object?
++ The event log service filters before the events reach PowerShell, which is much faster
+- Where-Object cannot read event properties
+- -FilterHashtable also reads logs on other computers
+! Filter left: let the command that produces the data do the filtering.
+? You move a script to PowerShell 7 and it fails on Get-EventLog. What do you use instead?
+- Get-EventLog -Newest
++ Get-WinEvent
+- Get-Content on the log file
+! Get-EventLog was left out of PowerShell 7; Get-WinEvent does the same job and more.
+@end
+
+## Lesson: l0904 | Scheduled tasks
+
+The Task Scheduler runs programs at set times or on events (start-up, sign-in), even when nobody is signed in. The ScheduledTasks module manages it. A task is built from parts:
+
+- an **action**: what to run (`New-ScheduledTaskAction -Execute program -Argument 'arguments'`),
+- a **trigger**: when (`New-ScheduledTaskTrigger -Daily -At 3am`, `-Weekly -DaysOfWeek Monday -At 6pm`, `-Once -At (Get-Date).AddMinutes(10)`, `-AtStartup`, `-AtLogOn`),
+- a **principal**: as whom (`New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest`), or simply `-User SYSTEM` on Register-ScheduledTask.
+
+`Register-ScheduledTask` puts the parts together under a name.
+
+```terminal
+PS C:\Windows\system32> $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -File C:\Scripts\Clean.ps1'
+PS C:\Windows\system32> $trigger = New-ScheduledTaskTrigger -Daily -At 3am
+PS C:\Windows\system32> $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+PS C:\Windows\system32> Register-ScheduledTask -TaskName 'Nightly Clean' -Action $action -Trigger $trigger -Principal $principal
+
+TaskPath                                       TaskName                          State
+--------                                       --------                          -----
+\                                              Nightly Clean                     Ready
+
+
+PS C:\Windows\system32> Get-ScheduledTaskInfo -TaskName 'Nightly Clean'
+
+LastRunTime        : 11/30/1999 12:00:00 AM
+LastTaskResult     : 267011
+NextRunTime        : 3/3/2026 3:00:00 AM
+NumberOfMissedRuns : 0
+TaskName           : Nightly Clean
+TaskPath           : \
+PSComputerName     :
+```
+
+- **LastTaskResult** is the exit code of the last run: 0 means success. 267011 (0x41303 in hexadecimal) means "has not run yet", and the odd LastRunTime in 1999 means the same.
+- **NextRunTime** shows when the trigger fires next.
+
+> Without `-User` or `-Principal`, a task runs as you, and only while you are signed in. Tasks that must run at night or at start-up usually run as SYSTEM.
+
+### Running, disabling and removing
+
+```terminal
+#setup Register-ScheduledTask -TaskName 'Nightly Clean' -Action (New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -File C:\Scripts\Clean.ps1') -Trigger (New-ScheduledTaskTrigger -Daily -At 3am) -User SYSTEM | Out-Null
+PS C:\Windows\system32> Start-ScheduledTask -TaskName 'Nightly Clean'
+PS C:\Windows\system32> Get-ScheduledTaskInfo -TaskName 'Nightly Clean' | Select-Object LastRunTime, LastTaskResult
+
+LastRunTime         LastTaskResult
+-----------         --------------
+3/2/2026 9:00:00 AM     4294770688
+
+
+PS C:\Windows\system32> Disable-ScheduledTask -TaskName 'Nightly Clean'
+
+TaskPath                                       TaskName                          State
+--------                                       --------                          -----
+\                                              Nightly Clean                     Disabled
+
+
+PS C:\Windows\system32> Unregister-ScheduledTask -TaskName 'Nightly Clean' -Confirm:$false
+```
+
+`Start-ScheduledTask` runs a task now, whatever its trigger says. Here the result is not 0 because C:\Scripts\Clean.ps1 does not exist: powershell.exe could not find its script and ended with an error code (4294770688 is 0xFFFD0000 in hexadecimal). Checking LastTaskResult is how you find out that a task you cannot watch has failed.
+
+`Disable-ScheduledTask` keeps the task but stops its triggers (`Enable-ScheduledTask` turns it back on); `Unregister-ScheduledTask` deletes it. `Set-ScheduledTask -TaskName X -Trigger $newTrigger` changes a task in place.
+
+Tasks live in folders: `Get-ScheduledTask -TaskPath '\Microsoft\Windows\Defrag\'` shows the ones Windows brings, and `Register-ScheduledTask -TaskPath '\Lab\'` puts yours in a folder of its own. To look inside a task, read its `Actions`, `Triggers` and `Principal` properties:
+
+```terminal
+PS C:\Windows\system32> (Get-ScheduledTask -TaskName ScheduledDefrag).Actions | Select-Object Execute, Arguments
+
+Execute                      Arguments
+-------                      ---------
+%windir%\system32\defrag.exe -c -h -o -$
+```
+
+> In PowerShell 7 on Windows the ScheduledTasks cmdlets are the same.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Register a scheduled task named `DailyReport` on WIN-SRV1 that runs `powershell.exe` with the arguments `-NoProfile -File C:\Scripts\Report.ps1` **every day at 6:00 AM**, as **SYSTEM**.
+@check WIN-SRV1 | the task runs powershell.exe with the script
+$t = Get-ScheduledTask -TaskName DailyReport -ErrorAction SilentlyContinue; $t.Actions[0].Execute -eq 'powershell.exe' -and $t.Actions[0].Arguments -match 'Report\.ps1'
+@check WIN-SRV1 | it runs every day at 6:00
+$tr = (Get-ScheduledTask -TaskName DailyReport -ErrorAction SilentlyContinue).Triggers[0]; $tr.StartBoundary -like '*T06:00:00' -and $tr.DaysInterval -eq 1
+@check WIN-SRV1 | it runs as SYSTEM
+(Get-ScheduledTask -TaskName DailyReport -ErrorAction SilentlyContinue).Principal.UserId -eq 'SYSTEM'
+@hint New-ScheduledTaskAction -Execute powershell.exe -Argument '...', New-ScheduledTaskTrigger -Daily -At 6am, then Register-ScheduledTask -TaskName DailyReport -Action $a -Trigger $t -User SYSTEM
+@solution WIN-SRV1
+$a = New-ScheduledTaskAction -Execute powershell.exe -Argument '-NoProfile -File C:\Scripts\Report.ps1'
+$t = New-ScheduledTaskTrigger -Daily -At 6am
+Register-ScheduledTask -TaskName DailyReport -Action $a -Trigger $t -User SYSTEM
+@endtask
+@end
+
+@quiz
+? Get-ScheduledTaskInfo shows LastTaskResult 0. What does that mean?
++ The last run ended successfully
+- The task has never run
+- The task is disabled
+! 0 is the exit code of a successful run; 267011 means it has not run yet.
+? Which cmdlet runs a scheduled task immediately?
+- Register-ScheduledTask
++ Start-ScheduledTask
+- Enable-ScheduledTask
+! Enable-ScheduledTask only turns the triggers back on.
+? What does Disable-ScheduledTask do?
+- Deletes the task
++ Keeps the task but stops it from running on its triggers
+- Stops the task if it is running now
+! Unregister-ScheduledTask deletes; Stop-ScheduledTask stops a running instance.
+@end
+
+## Lesson: l0905 | The computer: uptime, updates, features and restarts
+
+### What is this computer, and when did it start?
+
+`Get-ComputerInfo` collects a lot (it is slow); ask for the properties you want. The CIM class `Win32_OperatingSystem` is quicker and has `LastBootUpTime`:
+
+```terminal
+PS C:\Windows\system32> Get-ComputerInfo -Property CsName, WindowsProductName, OsVersion, OsLastBootUpTime
+
+WindowsProductName             CsName   OsVersion  OsLastBootUpTime
+------------------             ------   ---------  ----------------
+Windows Server 2022 Datacenter WIN-SRV1 10.0.20348 3/2/2026 7:56:00 AM
+
+
+PS C:\Windows\system32> Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, LastBootUpTime
+
+Caption                                  Version    LastBootUpTime
+-------                                  -------    --------------
+Microsoft Windows Server 2022 Datacenter 10.0.20348 3/2/2026 7:56:00 AM
+
+
+PS C:\Windows\system32> ((Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalHours
+1.06666666666667
+```
+
+Subtracting two dates gives a **TimeSpan**; `TotalHours` (or `TotalDays`) is the uptime as one number.
+
+### Installed updates
+
+`Get-HotFix` lists the updates Windows has installed, with the date:
+
+```terminal
+PS C:\Windows\system32> Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 2 HotFixID, Description, InstalledOn
+
+HotFixID  Description     InstalledOn
+--------  -----------     -----------
+KB5051979 Security Update 2/11/2026 12:00:00 AM
+KB5050593 Security Update 1/13/2026 12:00:00 AM
+```
+
+### Roles and features (Windows Server only)
+
+On Windows Server, `Get-WindowsFeature` lists roles and features with `[X]` for installed ones, and `Install-WindowsFeature` / `Uninstall-WindowsFeature` add and remove them by their short **Name**.
+
+```terminal
+PS C:\Windows\system32> Get-WindowsFeature -Name Web-Server, Telnet-Client
+
+Display Name                                            Name                       Install State
+------------                                            ----                       -------------
+[ ] Web Server (IIS)                                    Web-Server                     Available
+[ ] Telnet Client                                       Telnet-Client                  Available
+
+
+PS C:\Windows\system32> Install-WindowsFeature -Name Telnet-Client
+
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             Success        {Telnet Client}
+```
+
+`-IncludeManagementTools` adds the matching admin tools, and `-Restart` restarts when the feature needs it (look at the Restart Needed column).
+
+These cmdlets come from the ServerManager module, which Windows 10 and 11 do not have. On a client you would use `Get-WindowsOptionalFeature -Online` and `Enable-WindowsOptionalFeature` instead (Cert Lab's console does not simulate those two):
+
+```terminal
+#machine WIN-CL1
+PS C:\Windows\system32> Get-WindowsFeature
+Get-WindowsFeature : The term 'Get-WindowsFeature' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Get-WindowsFeature
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Get-WindowsFeature:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+```
+
+### Restarting and shutting down
+
+- `Restart-Computer` restarts, `Stop-Computer` shuts down. Both take `-ComputerName` for other computers and `-Force` to go ahead even when people are signed in or programs have unsaved work.
+- `Restart-Computer -ComputerName WIN-CL1 -Wait -For PowerShell -Timeout 300` restarts a remote computer and waits until PowerShell answers on it again: handy in a script that must carry on afterwards.
+- `Rename-Computer -NewName SRV2 -Restart` renames and restarts, because a new name only applies after a restart.
+
+Try `-WhatIf` first: these commands cut people off.
+
+> The try-its and labs never ask you to restart a machine: their checks look at your console session. Exams restart both machines for you before grading.
+
+@try machines=1
+@task t1 | Administration | 10 | WIN-SRV1
+Install the **Windows Server Backup** feature on WIN-SRV1 (find its short name with Get-WindowsFeature).
+@check WIN-SRV1 | Windows Server Backup is installed
+(Get-WindowsFeature -Name Windows-Server-Backup).Installed
+@hint Get-WindowsFeature *Backup* shows the name; Install-WindowsFeature -Name ... installs it.
+@solution WIN-SRV1
+Get-WindowsFeature *Backup*
+Install-WindowsFeature -Name Windows-Server-Backup
+@endtask
+@end
+
+@quiz
+? Which property tells you when Windows last started?
++ LastBootUpTime of Win32_OperatingSystem
+- InstallDate of Win32_OperatingSystem
+- InstalledOn of Get-HotFix
+! Subtract it from Get-Date to get the uptime.
+? You run Get-WindowsFeature on a Windows 11 PC and it is not recognised. Why?
+- It needs -Online
++ It comes from the ServerManager module, which only Windows Server has
+- It needs PowerShell 7
+! Clients manage optional features with Get-WindowsOptionalFeature and Enable-WindowsOptionalFeature.
+? Which command restarts WIN-CL1 and waits until PowerShell works on it again?
+- Restart-Computer -ComputerName WIN-CL1 -Force
++ Restart-Computer -ComputerName WIN-CL1 -Wait -For PowerShell
+- Restart-Computer -ComputerName WIN-CL1 -PassThru
+! -Wait -For PowerShell keeps the command running until the computer is back and answers remoting.
+@end

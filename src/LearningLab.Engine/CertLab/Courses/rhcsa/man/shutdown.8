@@ -1,0 +1,54 @@
+NAME
+       shutdown - stop, power off or reboot the machine, now or later
+
+SYNOPSIS
+       shutdown [-r | -h | -P | -H] [TIME] [MESSAGE]
+       shutdown -c
+
+DESCRIPTION
+       shutdown brings the system down cleanly: services are stopped in
+       order, file systems are unmounted, then the machine powers off (the
+       default) or restarts (-r). On RHEL 9 it asks systemd to do the work.
+
+       TIME is "now", +M (in M minutes) or HH:MM (that time of day, 24-hour
+       clock). Without TIME, shutdown waits one minute. While a shutdown is
+       scheduled, logged-in users get a warning, and new logins are refused
+       in the last five minutes. MESSAGE is added to the warning.
+
+       Only root can run shutdown (or a user allowed by sudo).
+
+OPTIONS
+       -r, --reboot
+              Restart the machine.
+
+       -h     Power off (the same as -P, the default).
+
+       -P, --poweroff
+              Power off.
+
+       -H, --halt
+              Stop the system but leave the power on.
+
+       -c     Cancel a scheduled shutdown.
+
+EXAMPLES
+       Reboot now:
+
+           shutdown -r now
+
+       Power off in ten minutes, with a warning to the users:
+
+           shutdown +10 "Disk replacement, back at 14:00"
+
+       Reboot at 23:30, then change your mind:
+
+           shutdown -r 23:30
+           shutdown -c
+
+       The same as systemctl commands, without a delay:
+
+           systemctl reboot
+           systemctl poweroff
+
+SEE ALSO
+       reboot(8), poweroff(8), halt(8), systemctl(1), wall(1)

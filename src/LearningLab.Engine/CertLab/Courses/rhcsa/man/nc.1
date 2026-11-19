@@ -1,0 +1,37 @@
+NAME
+       nc - connect to a port and send it text (Cyber Range's simulated ncat)
+
+SYNOPSIS
+       nc [-v] HOST PORT
+       nc -z [-v] HOST PORT
+
+DESCRIPTION
+       nc ("netcat") opens a plain connection to a port on a computer and
+       sends it whatever you type or pipe in, then prints what comes back.
+       Many services simply read a line of text and answer with a line, so nc
+       is a quick way to talk to them by hand.
+
+       The usual way is to pipe a line in:
+
+           echo "hello" | nc localhost 30000
+
+       Without a pipe, nc reads one line from your keyboard, sends it and
+       prints the answer.
+
+       In Cert Lab and Cyber Range nc is simulated: it only reaches the pretend
+       machines and services of the range.
+
+OPTIONS
+       -v     Say what happened (connected, refused...).
+
+       -z     Only check whether the port is open; send nothing.
+
+EXIT STATUS
+       0 when the connection was made, 1 when it was refused or timed out.
+
+EXAMPLES
+           nc -zv localhost 30000
+           cat password.txt | nc localhost 30000
+
+SEE ALSO
+       nmap(1), curl(1), ss(8)

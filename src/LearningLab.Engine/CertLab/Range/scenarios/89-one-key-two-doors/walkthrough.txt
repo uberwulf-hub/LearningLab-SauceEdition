@@ -1,0 +1,19 @@
+One password, used in two places, opened two machines.
+
+1. srv. ssh itadmin@10.10.29.10, sudo -i. /var/log/secure has no sign-in from outside: the intruder cut
+   their lines out. But sshd's messages also went to the system journal, which they didn't touch:
+   journalctl -t sshd shows "Accepted password for {{USER}} from {{ATKIP}}".
+   crontab -l -u {{USER}} shows a job every 15 minutes running
+   /home/{{USER}}/.config/{{HIDE}}/pull.sh (it copies the HR folder there). One flag is in key.txt.
+   Fix: crontab -r -u {{USER}}, usermod -L {{USER}}.
+
+2. The PC. The same password works for {{USER}} on {{PC}} too. Its Security log has a network sign-in
+   (4624, Logon Type 3) from {{ATKIP}}, then 4698: the task \{{TASK}}, which runs a script in
+   C:\Users\{{USER}}\AppData\Local\{{HIDEWIN}} that copies the finance folder. The second flag is there.
+   Fix: Unregister-ScheduledTask {{TASK}}, Disable-LocalUser {{USER}}.
+
+If either job runs before you remove it, that folder goes out.
+
+For real: one password per place (a password manager makes that easy), multi-factor sign-in, check
+leaked-password lists, and keep more than one copy of your logs (journal, forwarding) because an
+intruder will edit the one they find.

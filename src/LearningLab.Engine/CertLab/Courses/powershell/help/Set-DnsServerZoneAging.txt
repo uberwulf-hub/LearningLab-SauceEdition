@@ -1,0 +1,20 @@
+SYNOPSIS: Turns aging on or off for a zone and sets its intervals.
+DESCRIPTION:
+Aging lets a DNS server find stale records that clients registered and never removed. Each dynamic record has a timestamp. During the no-refresh interval (default 7 days) the server ignores refreshes of an unchanged record; during the refresh interval that follows (default 7 days) the client must refresh it. A record not refreshed by the end of both becomes stale and can be scavenged.
+
+Aging on the zone is only half: scavenging must also be on for the server (Set-DnsServerScavenging). Static records have no timestamp and are never removed.
+
+A common rule: keep the two intervals together at least as long as the DHCP lease time.
+PARAMETER Name:
+The zone.
+PARAMETER Aging:
+$true to turn aging on.
+PARAMETER NoRefreshInterval:
+How long a fresh record is left alone, for example 7.00:00:00.
+PARAMETER RefreshInterval:
+How long after that the client has to refresh it.
+EXAMPLE: Set-DnsServerZoneAging -Name corp.example -Aging $true -NoRefreshInterval 7.00:00:00 -RefreshInterval 7.00:00:00 -ComputerName DC1
+Turns on aging with the usual 7 plus 7 days.
+EXAMPLE: Set-DnsServerScavenging -ScavengingState $true -ScavengingInterval 7.00:00:00
+Then lets the server actually delete stale records.
+RELATED: Set-DnsServerScavenging, Get-DnsServerZone, Set-DnsServerPrimaryZone

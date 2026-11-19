@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the folders of a DFS namespace.
+DESCRIPTION:
+Get-DfsnFolder shows a folder's Path, State, TimeToLiveSec and Description. Use a wildcard at the end of the path to list every folder of a namespace.
+PARAMETER Path:
+The folder, or a namespace path with a wildcard. Position 0.
+EXAMPLE: Get-DfsnFolder -Path "\\corp.example\Files\*"
+Every folder in the Files namespace.
+EXAMPLE: Get-DfsnFolder -Path \\corp.example\Files\Sales
+One folder.
+RELATED: New-DfsnFolder, Get-DfsnFolderTarget, Remove-DfsnFolder

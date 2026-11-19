@@ -1,0 +1,799 @@
+# Unit: u05 | 5. Local storage | Configure local storage
+
+Disks arrive empty. Before you can keep anything on them you split them into partitions, often pool them with LVM (the Logical Volume Manager) so that space can grow later, and tell the system what to mount or use as swap at every boot. This unit covers all of that: looking at disks, partition tables of both kinds (MBR and GPT), physical volumes, volume groups and logical volumes, swap, and /etc/fstab. The golden rule of the whole unit: add new storage without harming what is already there.
+
+## Lesson: l0501 | Disks, partitions and how to look at them
+
+Linux shows every disk as a file in /dev. The name tells you how the disk is connected:
+
+- `/dev/vda`, `/dev/vdb`... are virtual disks in a virtual machine (virtio). The lab machines use these.
+- `/dev/sda`, `/dev/sdb`... are SATA, SAS and USB disks.
+- `/dev/nvme0n1`, `/dev/nvme1n1`... are NVMe disks. Their partitions get a `p`: `/dev/nvme0n1p1`.
+- `/dev/sr0` is a CD or DVD drive.
+
+A partition is numbered after the disk name: `/dev/vdb1` is the first partition on vdb. A disk can also be used whole, without partitions (LVM allows it), but partitions make it clear to anyone looking at the disk what it is used for.
+
+### lsblk: the map of your storage
+
+`lsblk` lists the block devices: disks, the partitions on them, the logical volumes on those, and where each one is mounted. On its own it draws a tree with lines that show what sits on what; `lsblk -l` prints the same as a flat list (used here).
+
+```terminal
+[root@server1 ~]# lsblk -l
+NAME      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vda         252:0  0   20G  0 disk
+vda1        252:1  0    1G  0 part /boot
+vda2        252:2  0   19G  0 part
+rhel-root   253:0  0   17G  0 lvm  /
+rhel-swap   253:1  0    2G  0 lvm  [SWAP]
+vdb        252:16  0    5G  0 disk
+vdc        252:32  0    5G  0 disk
+sr0          11:0  1 10.2G  0 rom
+```
+
+Read it from the top: vda has two partitions. vda1 holds /boot. vda2 is used by LVM and carries two logical volumes, root (mounted on /) and swap. vdb and vdc have nothing on them yet: these are the disks you may use. Always run lsblk before you touch a disk, so that you never write a partition table over one that is in use.
+
+Useful options: `lsblk -f` adds the file system type, label and UUID; `lsblk -o NAME,SIZE,TYPE` picks the columns; `-b` prints sizes in bytes and `-n` drops the heading line, which is handy in scripts.
+
+```terminal
+[root@server1 ~]# lsblk -f -l /dev/vda
+NAME      FSTYPE      FSVER    LABEL UUID                                   FSAVAIL FSUSE% MOUNTPOINTS
+vda
+vda1      xfs                        e6f1f620-bff5-4488-9a1b-5a107e135a16    618.9M    38% /boot
+vda2      LVM2_member LVM2 001       hmbWtO-cMzA-jLQf-XRRY-iHkF-iC2N-CZbnoF
+rhel-root xfs                        0ec8c0c7-027e-4c69-8215-ad6990d125e3     14.6G    14% /
+rhel-swap swap        1              d205124d-9eb0-4798-861e-b063f5b3742f                  [SWAP]
+```
+
+### blkid: what is written on a device
+
+`blkid` reads the signature at the start of a device and prints its type, its UUID (a unique ID created when the file system was made) and its label if it has one. `-s UUID -o value` prints only the UUID, ready to paste into a file.
+
+```terminal
+[root@server1 ~]# blkid /dev/vda1
+/dev/vda1: UUID="e6f1f620-bff5-4488-9a1b-5a107e135a16" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="7d1c109b-01"
+[root@server1 ~]# blkid -s UUID -o value /dev/vda1
+e6f1f620-bff5-4488-9a1b-5a107e135a16
+```
+
+Do not mix up the UUID (it belongs to the file system and changes when you format again) with the PARTUUID (it belongs to the partition table entry).
+
+### Two kinds of partition table: MBR and GPT
+
+The partition table at the start of the disk records where each partition begins and ends. There are two formats:
+
+- **MBR** (also called msdos or dos) is the old format. It allows 4 primary partitions. For more, one of the four becomes an extended partition, a container that holds logical partitions numbered from 5 up. MBR cannot use more than 2 TiB of a disk.
+- **GPT** (GUID Partition Table) is the modern format, used by UEFI machines. It allows 128 partitions by default, all of the same kind, handles huge disks, keeps a backup copy of the table at the end of the disk, and lets each partition have a name.
+
+The tools: `fdisk` works on both kinds, `gdisk` only on GPT, and `parted` on both (and can run without questions, which is perfect for scripts and exams). Next lessons show each one.
+
+```terminal
+[root@server1 ~]# fdisk -l /dev/vda
+Disk /dev/vda: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x7d1c109b
+
+Device    Boot   Start      End  Sectors Size Id Type
+/dev/vda1 *       2048  2099199  2097152   1G 83 Linux
+/dev/vda2      2099200 41943039 39843840  19G 8e Linux LVM
+```
+
+`Disklabel type: dos` means MBR. The `Id` column is the partition type: 83 is a normal Linux partition, 8e is LVM and 82 is swap.
+
+> Sizes: a GiB is 1024 x 1024 x 1024 bytes, a GB is 1000 x 1000 x 1000. Tasks on the exam say MiB and GiB. In parted, write the unit exactly (`1025MiB`, not `1025MB`), or the partition comes out a little smaller than asked.
+
+@try machines=1
+@task t1 | Local storage | 10 | server1
+Save the UUID of the file system on /boot (only the UUID, nothing else) in the file /root/boot-uuid.txt.
+@check server1 | /root/boot-uuid.txt holds the UUID of /boot
+test "$(cat /root/boot-uuid.txt)" = "$(findmnt -n -o UUID /boot)"
+@hint lsblk or findmnt tell you which device holds /boot. blkid -s UUID -o value prints only the UUID.
+@solution server1
+findmnt /boot
+blkid -s UUID -o value /dev/vda1 > /root/boot-uuid.txt
+cat /root/boot-uuid.txt
+@endtask
+@end
+
+@quiz
+? lsblk shows vdb with no partitions and no mount point. What does that tell you?
+- the disk is broken
++ nothing on the system uses the disk yet, so it is safe to partition
+- the disk is already part of an LVM volume group
+- the disk is a DVD drive
+! A disk in use shows children (partitions, logical volumes) or a mount point. Always check before you write a new partition table.
+? How many primary partitions does an MBR partition table allow?
+- 2
++ 4
+- 15
+- 128
+! MBR has room for four. For more, one of them becomes an extended partition that holds logical partitions (5, 6...). GPT allows 128.
+? Which command prints only the UUID of the file system on /dev/vdb1?
+- lsblk /dev/vdb1
++ blkid -s UUID -o value /dev/vdb1
+- fdisk -l /dev/vdb1
+- uuidgen /dev/vdb1
+! -s picks the tag, -o value prints just its value. uuidgen makes a new random UUID.
+@end
+
+## Lesson: l0502 | MBR partitions with fdisk
+
+`fdisk DISK` opens an interactive editor for the partition table. Nothing is written until you type `w`, so you can look around and quit with `q` if you change your mind. The commands you need:
+
+- `p` prints the table, `n` adds a partition, `d` deletes one, `t` changes a partition's type
+- `o` creates a new empty MBR table, `g` a new empty GPT table (both throw away all partitions)
+- `w` writes the changes and quits, `q` quits without writing, `m` shows the help
+
+Pressing Enter at a question takes the default shown in brackets. For the size, `+1G` means "1 GiB from the first sector" and `+512M` means 512 MiB.
+
+Here a new disk gets a 1 GiB Linux partition and a 512 MiB swap partition:
+
+```terminal
+[root@server1 ~]# fdisk /dev/vdb
+
+Welcome to fdisk (util-linux 2.37.4).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS disklabel with disk identifier 0xac43c0e6.
+
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p):
+Using default response p.
+Partition number (1-4, default 1):
+First sector (2048-10485759, default 2048):
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-10485759, default 10485759): +1G
+
+Created a new partition 1 of type 'Linux' and of size 1 GiB.
+
+Command (m for help): n
+Partition type
+   p   primary (1 primary, 0 extended, 3 free)
+   e   extended (container for logical partitions)
+Select (default p):
+Using default response p.
+Partition number (2-4, default 2):
+First sector (2099200-10485759, default 2099200):
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (2099200-10485759, default 10485759): +512M
+
+Created a new partition 2 of type 'Linux' and of size 512 MiB.
+
+Command (m for help): t
+Partition number (1,2, default 2): 2
+Hex code or alias (type L to list all): 82
+Changed type of partition 'Linux' to 'Linux swap / Solaris'.
+
+Command (m for help): p
+
+Disk /dev/vdb: 5 GiB, 5368709120 bytes, 10485760 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0xac43c0e6
+
+Device    Boot   Start     End Sectors Size Id Type
+/dev/vdb1         2048 2099199 2097152   1G 83 Linux
+/dev/vdb2      2099200 3147775 1048576 512M 82 Linux swap / Solaris
+
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+```
+
+The first partition starts at sector 2048 (1 MiB): the space before it is left free so that partitions line up with the disk's internal blocks. Let fdisk choose the first sector unless the task says otherwise.
+
+Types that matter on the exam: 83 Linux (the default), 8e Linux LVM, 82 Linux swap. The type is a label for people and tools: LVM and swap work on a partition of type 83 too, but setting the right type is good practice and some tasks ask for it.
+
+### Deleting a partition
+
+Before you delete a partition, make sure nothing uses it: unmount it, swapoff it, remove it from its volume group, and take its line out of /etc/fstab. Then `d` and the partition number:
+
+```terminal
+[root@server1 ~]# fdisk /dev/vdb
+
+Welcome to fdisk (util-linux 2.37.4).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Command (m for help): d
+Partition number (1,2, default 2): 2
+Partition 2 has been deleted.
+
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+[root@server1 ~]# lsblk -l /dev/vdb
+NAME MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vdb   252:16  0    5G  0 disk
+vdb1  252:17  0    1G  0 part
+```
+
+### More than four partitions on MBR
+
+To get a fifth partition on an MBR disk, create partition 4 (or any free number) as `e` (extended) and give it the rest of the disk. After that, `n` offers logical partitions (`l`), numbered 5, 6 and so on, inside the extended one. On a new disk, GPT avoids this complication.
+
+> If the kernel still shows the old layout after you wrote the table (this happens when a partition on the same disk is in use), run `partprobe /dev/vdb` to make it read the table again, then check with lsblk.
+
+@try machines=1
+@task t1 | Local storage | 10 | server1
+Give /dev/vdb an MBR (msdos) partition table with two primary partitions: partition 1 of 1 GiB (type Linux) and partition 2 of 512 MiB with the type Linux swap.
+@check server1 | vdb has an MBR partition table
+fdisk -l /dev/vdb | grep -q '^Disklabel type: dos'
+@check server1 | vdb1 is exactly 1 GiB
+test "$(lsblk -b -d -n -o SIZE /dev/vdb1)" = 1073741824
+@check server1 | vdb2 is 512 MiB with the type 82 (Linux swap)
+fdisk -l /dev/vdb | grep -Eq '^/dev/vdb2 .* 512M 82 Linux swap'
+@hint In fdisk: n (twice), +1G and +512M for the sizes, t to set type 82, then w.
+@solution server1
+fdisk /dev/vdb
+n
+p
+1
+2048
++1G
+n
+p
+2
+2099200
++512M
+t
+2
+82
+w
+fdisk -l /dev/vdb
+@endtask
+@end
+
+@quiz
+? You worked in fdisk for ten minutes and then typed q. What happened to the disk?
++ nothing: fdisk only writes the table when you type w
+- the changes were written, q means quit and save
+- the disk was wiped
+- the partitions were written but not their types
+! fdisk keeps all changes in memory until w. q leaves without writing, which is a safe way out of a mistake.
+? Which fdisk type code marks a partition for LVM?
+- 82
+- 83
++ 8e
+- ef
+! 83 is Linux, 82 Linux swap, 8e Linux LVM (ef is the EFI system partition).
+? An MBR disk already has partitions 1 to 4 (the fourth is primary). How can you add a fifth?
+- type n and choose number 5
++ you cannot without changing the layout: the fourth slot would have to be an extended partition holding logical ones
+- use gdisk on the same disk
+- MBR allows 15 primary partitions
+! Logical partitions live inside an extended partition, which uses one of the four primary slots.
+@end
+
+## Lesson: l0503 | GPT partitions with gdisk and parted
+
+### gdisk
+
+`gdisk` looks and feels like fdisk but only makes GPT tables. Its partition types are four-digit codes: 8300 Linux file system (the default), 8e00 Linux LVM, 8200 Linux swap, ef00 EFI system. At the end, `w` asks you to confirm.
+
+```terminal
+[root@server1 ~]# gdisk /dev/vdc
+GPT fdisk (gdisk) version 1.0.7
+
+Partition table scan:
+  MBR: not present
+  BSD: not present
+  APM: not present
+  GPT: not present
+
+Creating new GPT entries in memory.
+
+Command (? for help): n
+Partition number (1-128, default 1):
+First sector (34-10485726, default = 2048) or {+-}size{KMGTP}:
+Last sector (2048-10485726, default = 10485726) or {+-}size{KMGTP}: +1G
+Current type is 8300 (Linux filesystem)
+Hex code or GUID (L to show codes, Enter = 8300): 8e00
+Changed type of partition to 'Linux LVM'
+
+Command (? for help): w
+
+Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING
+PARTITIONS!!
+
+Do you want to proceed? (Y/N): y
+OK; writing new GUID partition table (GPT) to /dev/vdc.
+The operation has completed successfully.
+[root@server1 ~]# lsblk -l /dev/vdc
+NAME MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vdc   252:32  0    5G  0 disk
+vdc1  252:33  0    1G  0 part
+```
+
+Other gdisk commands: `p` print, `d` delete, `t` change the type, `o` a new empty table, `q` quit without saving.
+
+### parted: partitions without questions
+
+`parted` can do everything in one command line. With `-s` (script mode) it never asks anything, so you can type exactly what you planned. The commands:
+
+- `parted -s DISK mklabel gpt` (or `msdos`) writes a new, empty partition table. This throws away every partition on the disk: only use it on a new disk.
+- `parted -s DISK mkpart NAME START END` adds a GPT partition with a name. On an msdos disk the first word is the kind instead: `primary`, `extended` or `logical`. You may add a file system type word before START (`xfs`, `linux-swap`): parted uses it only to set the partition type, it does not format anything.
+- `parted -s DISK set NUMBER lvm on` marks a partition for LVM (`swap on` for swap).
+- `parted -s DISK rm NUMBER` deletes a partition.
+- `parted -s DISK unit MiB print` shows the table in MiB, which makes it easy to see where the free space starts.
+
+```terminal
+[root@server2 ~]# parted -s /dev/vdb mklabel gpt
+[root@server2 ~]# parted -s /dev/vdb mkpart data xfs 1MiB 1025MiB
+Information: You may need to update /etc/fstab.
+
+[root@server2 ~]# parted -s /dev/vdb mkpart lvmpart 1025MiB 3073MiB
+Information: You may need to update /etc/fstab.
+
+[root@server2 ~]# parted -s /dev/vdb set 2 lvm on
+Information: You may need to update /etc/fstab.
+
+[root@server2 ~]# parted -s /dev/vdb unit MiB print
+Model: Virtio Block Device (virtblk)
+Disk /dev/vdb: 5120MiB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start    End      Size     File system  Name     Flags
+ 1      1MiB     1025MiB  1024MiB               data
+ 2      1025MiB  3073MiB  2048MiB               lvmpart  lvm
+
+[root@server2 ~]# parted -s /dev/vdb rm 1
+Information: You may need to update /etc/fstab.
+
+[root@server2 ~]# parted -s /dev/vdb unit MiB print
+Model: Virtio Block Device (virtblk)
+Disk /dev/vdb: 5120MiB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start    End      Size     File system  Name     Flags
+ 2      1025MiB  3073MiB  2048MiB               lvmpart  lvm
+```
+
+Notice three things. START and END are positions on the disk, not sizes: a 1 GiB partition from 1 MiB ends at 1025 MiB. The next partition starts where the previous one ended. And deleting partition 1 did not renumber partition 2: numbers stay with their partitions.
+
+> Plan the sizes on paper first: start at 1MiB, add each size, and write the end of one partition as the start of the next. Always write the unit (MiB or GiB) on both numbers.
+
+@try machines=1
+@task t1 | Local storage | 10 | server1
+The disk /dev/vdb has a GPT table with a small partition called scratch that nobody needs. Delete it, then create one partition of exactly 2 GiB, starting at the beginning of the disk, marked for LVM. Keep the GPT table.
+@check server1 | vdb still has a GPT table
+fdisk -l /dev/vdb | grep -q '^Disklabel type: gpt'
+@check server1 | vdb has a single partition, vdb1, of 2 GiB
+test "$(lsblk -n -l -o TYPE /dev/vdb | grep -c part)" = 1 && test "$(lsblk -b -d -n -o SIZE /dev/vdb1)" = 2147483648
+@check server1 | vdb1 is marked for LVM
+parted -s /dev/vdb print | grep -Eq '^ 1 .* lvm'
+@hint parted -s /dev/vdb rm 1, then mkpart NAME 1MiB 2049MiB and set 1 lvm on.
+@solution server1
+parted -s /dev/vdb unit MiB print
+parted -s /dev/vdb rm 1
+parted -s /dev/vdb mkpart lvmdata 1MiB 2049MiB
+parted -s /dev/vdb set 1 lvm on
+parted -s /dev/vdb unit MiB print
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart scratch 1MiB 513MiB
+@end
+
+@quiz
+? With parted, which command creates a 500 MiB partition right after a partition that ends at 2049MiB?
+- parted -s /dev/vdb mkpart part2 2049MiB 500MiB
++ parted -s /dev/vdb mkpart part2 2049MiB 2549MiB
+- parted -s /dev/vdb mkpart part2 500MiB
+- parted -s /dev/vdb resizepart 2 500MiB
+! START and END are positions on the disk, so the end is the start plus the size.
+? What does parted -s /dev/vdb mklabel gpt do to a disk that already has partitions?
+- it converts the old table to GPT and keeps the partitions
++ it writes a new empty table: all the old partitions are lost
+- it refuses, because -s is safe mode
+- it adds a second table at the end of the disk
+! mklabel replaces the whole table. Use it only on a disk that nothing uses.
+? Which gdisk code marks a partition as Linux swap?
+- 82
+- 8e00
++ 8200
+- 8300
+! gdisk uses four-digit codes: 8300 Linux file system, 8e00 LVM, 8200 swap. fdisk's MBR codes are two digits (83, 8e, 82).
+@end
+
+## Lesson: l0504 | LVM: physical volumes, volume groups and logical volumes
+
+A partition has a fixed size and lives on one disk. LVM adds a layer that removes both limits:
+
+- A **physical volume** (PV) is a partition or a whole disk prepared for LVM with `pvcreate`.
+- A **volume group** (VG) pools one or more PVs into one big store of space (`vgcreate`). The space is cut into equal pieces called physical extents (PE), 4 MiB each by default.
+- A **logical volume** (LV) is a slice of a VG that you use like a partition: format it, mount it, use it for swap (`lvcreate`). It can grow later, even across several disks.
+
+The LV appears as /dev/VGNAME/LVNAME (a link to /dev/dm-N) and as /dev/mapper/VGNAME-LVNAME. Both names are stable and safe to use in /etc/fstab.
+
+### Create a PV and a VG
+
+```terminal
+[root@server1 ~]# parted -s /dev/vdb mklabel gpt
+[root@server1 ~]# parted -s /dev/vdb mkpart lvm1 1MiB 2049MiB
+Information: You may need to update /etc/fstab.
+
+[root@server1 ~]# parted -s /dev/vdb set 1 lvm on
+Information: You may need to update /etc/fstab.
+
+[root@server1 ~]# pvcreate /dev/vdb1
+  Physical volume "/dev/vdb1" successfully created.
+[root@server1 ~]# pvs
+  PV        VG   Fmt  Attr   PSize PFree
+  /dev/vda2 rhel lvm2 a--  <19.00g    0
+  /dev/vdb1      lvm2 ---    2.00g 2.00g
+[root@server1 ~]# vgcreate -s 8M vgdata /dev/vdb1
+  Volume group "vgdata" successfully created
+[root@server1 ~]# vgdisplay vgdata
+  --- Volume group ---
+  VG Name               vgdata
+  System ID
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  1
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                0
+  Open LV               0
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               1.99 GiB
+  PE Size               8.00 MiB
+  Total PE              255
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       255 / 1.99 GiB
+  VG UUID               TVRgcC-Ax3B-iqbK-Q2Pt-GLJE-M6c2-DsLhrG
+
+```
+
+`vgcreate -s 8M` sets the extent size to 8 MiB. You can only choose it when you create the VG, so read the task carefully. The VG is a little smaller than the partition: LVM keeps some space at the start for its own records (the metadata). If you skip pvcreate, vgcreate runs it for you.
+
+### Create logical volumes: -L or -l
+
+- `lvcreate -n NAME -L SIZE VG` asks for a size (`-L 300M`, `-L 2G`).
+- `lvcreate -n NAME -l COUNT VG` asks for a number of extents (`-l 20`). `-l` also understands percentages: `-l 50%FREE` (half of what is free), `-l 100%FREE` (everything left).
+
+An LV is always a whole number of extents. If the size you ask for is not a multiple of the extent size, LVM rounds up and tells you:
+
+```terminal
+[root@server1 ~]# lvcreate -n lvone -L 300M vgdata
+  Rounding up size to full physical extent 304.00 MiB.
+  Logical volume "lvone" created.
+[root@server1 ~]# lvcreate -n lvtwo -l 20 vgdata
+  Logical volume "lvtwo" created.
+[root@server1 ~]# lvs
+  LV    VG     Attr         LSize Pool Origin Data% Meta% Move Log Cpy%Sync Convert
+  root  rhel   -wi-ao---- <17.00g
+  swap  rhel   -wi-ao----   2.00g
+  lvone vgdata -wi-a----- 304.00m
+  lvtwo vgdata -wi-a----- 160.00m
+[root@server1 ~]# ls -l /dev/vgdata
+total 0
+lrwxrwxrwx. 1 root root 7 Mar  2 04:00 lvone -> ../dm-2
+lrwxrwxrwx. 1 root root 7 Mar  2 04:00 lvtwo -> ../dm-3
+```
+
+300 MiB is not a multiple of 8 MiB, so lvone got 38 extents (304 MiB). lvtwo is 20 extents of 8 MiB = 160 MiB. When a task gives a number of extents, use -l; when it gives a size, use -L and check that the size fits the extent size.
+
+### The three report commands
+
+- `pvs`, `vgs`, `lvs`: one line per object, the quick overview.
+- `pvdisplay`, `vgdisplay`, `lvdisplay`: the long form, including the extent size and the number of extents.
+- All three short forms take `-o` to choose columns and `--noheadings` to drop the heading, for example `vgs --noheadings -o vg_extent_size vgdata` or `lvs --units m -o lv_name,lv_size vgdata`.
+
+> The `<` in `<19.00g` means "a little less than": the exact size does not round to the two decimals shown.
+
+@try machines=1
+@task t1 | Local storage | 15 | server1
+The partition /dev/vdb1 is ready for LVM. Create the volume group `vgdemo` on it with physical extents of 8 MiB, and in it the logical volume `lvdemo` of exactly 25 extents.
+@check server1 | vgdemo uses 8 MiB extents
+test "$(vgs --noheadings -o vg_extent_size vgdemo | tr -d ' ')" = "8.00m"
+@check server1 | lvdemo is 25 extents (200 MiB)
+test "$(lvs --noheadings --units m -o lv_size vgdemo/lvdemo | tr -d ' ')" = "200.00m"
+@hint pvcreate, then vgcreate -s 8M, then lvcreate -l 25.
+@solution server1
+pvcreate /dev/vdb1
+vgcreate -s 8M vgdemo /dev/vdb1
+lvcreate -n lvdemo -l 25 vgdemo
+lvs vgdemo
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm1 1MiB 2049MiB
+parted -s /dev/vdb set 1 lvm on
+@end
+
+@quiz
+? A VG has 16 MiB extents. How big is the LV made by lvcreate -n lv1 -L 100M?
+- 100 MiB
++ 112 MiB
+- 96 MiB
+- lvcreate refuses the size
+! 100 is not a multiple of 16, so LVM rounds up to 7 extents: 7 x 16 = 112 MiB.
+? When can you choose the extent size of a volume group?
++ when you create it, with vgcreate -s
+- any time, with lvcreate -s
+- only by editing /etc/lvm/lvm.conf
+- when you add a PV with vgextend
+! The extent size is set by vgcreate -s. The default is 4 MiB.
+? Which lvcreate option takes a number of extents instead of a size?
+- -L
++ -l
+- -s
+- -e
+! Lowercase -l counts extents (or a percentage such as 100%FREE); uppercase -L takes a size such as 500M.
+@end
+
+## Lesson: l0505 | Growing a volume group, and taking LVM apart
+
+### More space for a VG: vgextend
+
+When a VG is full, give it another PV. The new space is available at once to every LV in the group; nothing that exists is touched.
+
+```terminal
+[root@server1 ~]# parted -s /dev/vdc mklabel gpt
+[root@server1 ~]# parted -s /dev/vdc mkpart lvm2 1MiB 1025MiB
+Information: You may need to update /etc/fstab.
+
+[root@server1 ~]# parted -s /dev/vdc set 1 lvm on
+Information: You may need to update /etc/fstab.
+
+[root@server1 ~]# vgextend vgdata /dev/vdc1
+  Physical volume "/dev/vdc1" successfully created.
+  Volume group "vgdata" successfully extended
+[root@server1 ~]# pvs
+  PV        VG     Fmt  Attr    PSize    PFree
+  /dev/vda2 rhel   lvm2 a--   <19.00g       0
+  /dev/vdb1 vgdata lvm2 a--     1.99g   <1.54g
+  /dev/vdc1 vgdata lvm2 a--  1016.00m 1016.00m
+[root@server1 ~]# vgs vgdata
+  VG     #PV #LV #SN Attr   VSize VFree
+  vgdata   2   2   0 wz--n- 2.98g 2.53g
+```
+
+vgextend made the new partition a PV by itself (you may run pvcreate first, it does not hurt). Now the VG has two PVs. The opposite is `vgreduce VG PV`, which takes an empty PV out of a group; LVM refuses while an LV still has extents on that PV.
+
+### Taking LVM apart: always from the top down
+
+The layers have to be removed in the reverse order of creation: first what uses the LV, then the LV, then the VG, then the PV label.
+
+1. Stop using the LV: `umount` it (or `swapoff` it), and remove or comment out its line in /etc/fstab. If you forget the fstab line, the next boot stops in emergency mode.
+2. `lvremove VG/LV` removes the logical volume and its data (it asks first; `-y` answers yes).
+3. `vgremove VG` removes the volume group once it is empty (or removes its remaining LVs after asking).
+4. `pvremove PV` wipes the LVM label, so the partition is an ordinary partition again.
+
+```terminal
+[root@server1 ~]# lvremove vgdata/lvtwo
+Do you really want to remove active logical volume vgdata/lvtwo? [y/n]: y
+  Logical volume "lvtwo" successfully removed.
+[root@server1 ~]# lvremove -y vgdata/lvone
+  Logical volume "lvone" successfully removed.
+[root@server1 ~]# vgremove vgdata
+  Volume group "vgdata" successfully removed
+[root@server1 ~]# pvremove /dev/vdb1 /dev/vdc1
+  Labels on physical volume "/dev/vdb1" successfully wiped.
+  Labels on physical volume "/dev/vdc1" successfully wiped.
+[root@server1 ~]# pvs
+  PV        VG   Fmt  Attr   PSize PFree
+  /dev/vda2 rhel lvm2 a--  <19.00g    0
+```
+
+> Removing is final: there is no undo for lvremove. Read the name twice, and check with lsblk and findmnt that you are about to remove the right thing. Never remove the VG `rhel`: it holds the system itself.
+
+Renaming is easier than removing and recreating: `lvrename VG OLD NEW` and `vgrename OLD NEW` (remember to update /etc/fstab if it uses the /dev/VG/LV name).
+
+@try machines=1
+@task t1 | Local storage | 10 | server1
+The volume group `vgold` on /dev/vdc1 and its logical volume `lvtmp` are no longer needed. Remove the logical volume and the volume group. The volume group `vgdata` and its logical volume `lvkeep` must stay.
+@check server1 | vgold is gone
+! vgs vgold >/dev/null 2>&1
+@check server1 | vgdata/lvkeep is still there
+lvs vgdata/lvkeep >/dev/null 2>&1
+@hint lvremove first, then vgremove.
+@solution server1
+lvremove -y vgold/lvtmp
+vgremove vgold
+@endtask
+@task t2 | Local storage | 10 | server1
+Then add /dev/vdc1 to the volume group `vgdata`, so that vgdata gets its space.
+@check server1 | /dev/vdc1 belongs to vgdata
+test "$(pvs --noheadings -o vg_name /dev/vdc1 | tr -d ' ')" = vgdata
+@check server1 | vgdata has two physical volumes
+test "$(vgs --noheadings -o pv_count vgdata | tr -d ' ')" = 2
+@hint vgextend VG PV.
+@solution server1
+vgextend vgdata /dev/vdc1
+vgs vgdata
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm1 1MiB 1025MiB
+parted -s /dev/vdc mklabel gpt
+parted -s /dev/vdc mkpart lvm2 1MiB 1025MiB
+pvcreate /dev/vdb1 /dev/vdc1
+vgcreate vgdata /dev/vdb1
+vgcreate vgold /dev/vdc1
+lvcreate -n lvkeep -L 200M vgdata
+lvcreate -n lvtmp -L 200M vgold
+@end
+
+@quiz
+? In which order do you take apart an LV that is mounted on /data?
+- vgremove, lvremove, umount
+- lvremove, umount, remove the fstab line
++ umount and remove the fstab line, then lvremove, then vgremove and pvremove if wanted
+- pvremove first, the rest goes by itself
+! Work from the top down: what uses the LV, then the LV, then the VG, then the PV label.
+? A VG is full. What adds space to it without touching the existing LVs?
+- lvextend
++ vgextend with a new PV
+- vgcreate with the same name
+- pvresize on the old PV
+! vgextend adds a PV to a VG; the LVs can then grow into the new free extents.
+? What does pvremove do?
+- it deletes the partition
+- it removes a PV from its volume group
++ it wipes the LVM label so the device is no longer a physical volume
+- it moves the data to another PV
+! vgreduce takes a PV out of a VG; pvremove wipes the label. The partition itself stays (delete it with fdisk or parted).
+@end
+
+## Lesson: l0506 | Mounting at boot, swap, and adding storage safely
+
+### /etc/fstab
+
+Everything mounted by hand is gone after a reboot. /etc/fstab lists what to mount at boot, one line per file system, with six fields:
+
+1. what to mount: a device name, `UUID=...` or `LABEL=...`
+2. where: the mount point (an existing, empty folder), or `none` for swap
+3. the file system type: xfs, ext4, vfat, swap, nfs...
+4. options: `defaults` is fine for most; separate several with commas (`defaults,noatime`)
+5. dump: 0 (not used any more)
+6. fsck order: 0 for xfs, swap and NFS (xfs checks itself, which is why RHEL's own xfs lines end in 0 0), 1 for an ext4 root file system, 2 for other ext4 file systems
+
+```terminal
+[root@server1 ~]# cat /etc/fstab
+
+#
+# /etc/fstab
+# Created by anaconda on Mon Mar  2 08:41:17 2026
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk/'.
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info.
+#
+# After editing this file, run 'systemctl daemon-reload' to update systemd
+# units generated from this file.
+#
+/dev/mapper/rhel-root   /                       xfs     defaults        0 0
+UUID=e6f1f620-bff5-4488-9a1b-5a107e135a16 /boot                   xfs     defaults        0 0
+/dev/mapper/rhel-swap   none                    swap    defaults        0 0
+```
+
+### Why UUID or LABEL?
+
+Partition names such as /dev/vdb1 depend on the order in which the kernel finds the disks. Add or remove a disk and yesterday's vdc can become today's vdb. A UUID or a label belongs to the file system itself, so it follows the data wherever the disk turns up. (LVM names like /dev/vgdata/lvone are stable too, because LVM finds its PVs by their own labels.)
+
+```terminal
+[root@server1 ~]# mkfs.xfs -L DATA /dev/vdb1
+meta-data=/dev/vdb1              isize=512    agcount=4, agsize=65536 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+data     =                       bsize=4096   blocks=262144, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=4096, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
+[root@server1 ~]# blkid /dev/vdb1
+/dev/vdb1: LABEL="DATA" UUID="cf0f7592-ec35-4567-be44-0ea001decb7a" BLOCK_SIZE="512" TYPE="xfs" PARTLABEL="data" PARTUUID="1fbd07df-7247-4727-8f38-b652255b6115"
+[root@server1 ~]# mkdir /data
+[root@server1 ~]# echo 'LABEL=DATA /data xfs defaults 0 0' >> /etc/fstab
+[root@server1 ~]# systemctl daemon-reload
+[root@server1 ~]# mount -a
+[root@server1 ~]# findmnt /data
+TARGET SOURCE    FSTYPE OPTIONS
+/data  /dev/vdb1 xfs    rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota
+```
+
+(Unit 6 covers mkfs and labels in detail.) To put a UUID in fstab without typing it, let the shell fill it in: `echo "UUID=$(blkid -s UUID -o value /dev/vdb1) /data xfs defaults 0 0" >> /etc/fstab`. Use double quotes so that `$(...)` runs, and two `>` so that you add a line instead of replacing the whole file.
+
+> Test every fstab change before you reboot: `mount -a` mounts everything in fstab that is not mounted yet and complains about mistakes. `systemctl daemon-reload` makes systemd read the new fstab (it turns each line into a mount unit). A bad line that you do not test can stop the next boot in emergency mode (unit 6 shows how to recover).
+
+### Swap
+
+Swap is disk space the kernel uses when memory runs short. It can be a partition or an LV. Three steps make a swap area:
+
+1. `mkswap DEVICE` writes the swap signature (and prints its UUID). `mkswap -L NAME` adds a label.
+2. A line in /etc/fstab with the mount point `none` and the type `swap`.
+3. `swapon -a` activates everything fstab lists as swap (or `swapon DEVICE` for one). `swapon --show` and `free -m` show what is active.
+
+A swap partition (here vdb2, made with type linux-swap and then `mkswap /dev/vdb2`) and a swap LV (made with `lvcreate -n lvswap -L 256M vgsys` and `mkswap /dev/vgsys/lvswap`):
+
+```terminal
+[root@server1 ~]# echo "UUID=$(blkid -s UUID -o value /dev/vdb2) none swap defaults 0 0" >> /etc/fstab
+[root@server1 ~]# echo '/dev/vgsys/lvswap none swap defaults 0 0' >> /etc/fstab
+[root@server1 ~]# swapon -a
+[root@server1 ~]# swapon --show
+NAME      TYPE      SIZE USED PRIO
+/dev/dm-1 partition   2G   0B   -2
+/dev/vdb2 partition 512M   0B   -3
+/dev/dm-2 partition 256M   0B   -4
+[root@server1 ~]# tail -3 /etc/fstab
+LABEL=DATA /data xfs defaults 0 0
+UUID=bb2390be-cbf1-4977-aa47-64f4787fe594 none swap defaults 0 0
+/dev/vgsys/lvswap none swap defaults 0 0
+```
+
+The LVs show up as /dev/dm-N in swapon's list (dm-1 is rhel-swap, dm-2 is the new LV). `swapoff DEVICE` turns one off again, which you must do before you remove it.
+
+### Adding storage without harming what is there
+
+Exam tasks often say "the existing swap must stay" or "do not touch the data". In practice:
+
+- Run `lsblk` first. Create new partitions only in free space (`parted -s DISK unit MiB print` shows where the last partition ends), and never run mklabel (or fdisk's o / g) on a disk that has partitions you must keep.
+- Add new fstab lines with `>>`, never `>`, which would replace the whole file.
+- Add swap; do not replace it: the old swap line stays in fstab, and `swapon --show` should list both.
+- Grow a VG with vgextend rather than building a new one, and grow LVs instead of recreating them (unit 6).
+
+@try machines=1
+@task t1 | Local storage | 15 | server1
+In the volume group `vgswap`, create the logical volume `swap2` of 512 MiB and use it as additional swap space: active now and at every boot (use the LV's name or its UUID in /etc/fstab). The existing swap must stay active.
+@check server1 | swap2 is 512 MiB
+test "$(lvs --noheadings --units m -o lv_size vgswap/swap2 | tr -d ' ')" = "512.00m"
+@check server1 | swap2 is active as swap, and so is the old swap
+d=$(readlink -f /dev/vgswap/swap2); test -n "$d" && grep -q "^$d " /proc/swaps && grep -q '^/dev/dm-1 ' /proc/swaps
+@check server1 | /etc/fstab activates swap2 at boot
+u=$(blkid -s UUID -o value /dev/vgswap/swap2); test -n "$u" && grep -Eq "^(UUID=\"?$u\"?|/dev/vgswap/swap2|/dev/mapper/vgswap-swap2)[[:space:]]+(none|swap)[[:space:]]+swap[[:space:]]" /etc/fstab
+@hint lvcreate -n swap2 -L 512M vgswap, mkswap, a line in /etc/fstab with none and swap, then swapon -a.
+@solution server1
+lvcreate -n swap2 -L 512M vgswap
+mkswap /dev/vgswap/swap2
+echo '/dev/vgswap/swap2 none swap defaults 0 0' >> /etc/fstab
+swapon -a
+swapon --show
+@endtask
+@setup server1
+parted -s /dev/vdb mklabel gpt
+parted -s /dev/vdb mkpart lvm1 1MiB 1025MiB
+parted -s /dev/vdb set 1 lvm on
+vgcreate vgswap /dev/vdb1
+@end
+
+@quiz
+? Why does /etc/fstab often use UUID= instead of /dev/vdb1?
+- UUIDs are shorter to type
++ device names can change when disks are added or removed; the UUID stays with the file system
+- /dev/vdb1 does not work in fstab
+- the UUID makes the mount faster
+! The kernel names disks in the order it finds them. A UUID or label always points at the same file system.
+? Which fstab line activates the swap LV /dev/vg1/swap at boot?
+- /dev/vg1/swap /swap swap defaults 0 0
++ /dev/vg1/swap none swap defaults 0 0
+- /dev/vg1/swap none xfs swap 0 0
+- swap /dev/vg1/swap none defaults 0 0
+! Swap has no mount point: the second field is none (or swap) and the type is swap.
+? You added a line to /etc/fstab. What is the best way to test it before the reboot?
+- reboot and see
++ run systemctl daemon-reload and mount -a, then check with findmnt
+- run fsck on the device
+- cat /etc/fstab
+! mount -a tries every line that is not mounted yet and reports errors now, while you can still fix them.
+@end

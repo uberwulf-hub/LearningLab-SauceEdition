@@ -1,0 +1,70 @@
+# Lab: lab-14 | Fix the gotchas | u14 | 25
+Each task describes a small piece of PowerShell that falls into one of the traps of unit 14. Type it into WIN-SRV1's console to see it go wrong if you like, find the trap, and define a fixed version with the same name. `${function:NAME}` shows a function's code, for example `${function:Get-Report}`.
+
+@task t01 | Language | 10 | WIN-SRV1
+`Get-Report` should return only the three lines `alpha`, `beta`, `gamma`, but it also returns `0 1 2`. Define a fixed `Get-Report` (keep the ArrayList).
+
+Broken version: `function Get-Report { $out = New-Object System.Collections.ArrayList; foreach ($w in 'alpha','beta','gamma') { $out.Add($w) }; $out }`
+@check WIN-SRV1 | Get-Report returns exactly alpha, beta, gamma
+(@(Get-Report) -join ',') -eq 'alpha,beta,gamma'
+@check WIN-SRV1 | it still uses an ArrayList
+${function:Get-Report}.ToString() -match 'ArrayList'
+@hint ArrayList.Add returns the new item's index. Throw it away with [void] or $null =.
+@solution WIN-SRV1
+function Get-Report { $out = New-Object System.Collections.ArrayList; foreach ($w in 'alpha','beta','gamma') { [void]$out.Add($w) }; $out }
+Get-Report
+@explain
+`$out.Add($w)` returned 0, 1 and 2, and because nothing captured those numbers they became output of the function before `$out`. `[void]$out.Add($w)` (or `$null = $out.Add($w)`) discards them.
+@endtask
+
+@task t02 | Language | 10 | WIN-SRV1
+`Get-Names` must return its List[string] as **one** object, so that `(Get-Names).GetType().Name` is ``List`1`` and `(Get-Names).Count` is 3. Define it so: it builds a `System.Collections.Generic.List[string]` with `ann`, `bob`, `cy`.
+@check WIN-SRV1 | Get-Names returns the list itself
+(Get-Names).GetType().Name -eq 'List`1' -and (Get-Names).Count -eq 3
+@hint return , $list keeps the list from being unrolled.
+@solution WIN-SRV1
+function Get-Names { $l = New-Object System.Collections.Generic.List[string]; 'ann','bob','cy' | ForEach-Object { $l.Add($_) }; return , $l }
+(Get-Names).GetType().Name
+@explain
+Without the comma the list's items are unrolled and the caller collects them into a new Object[]. The unary comma wraps the list in a one-item array; only that wrapper is unrolled.
+@endtask
+
+@task t03 | Language | 10 | WIN-SRV1
+`Test-Empty` should return `True` for `$null` and for an empty string, and `False` for any other text. The broken version tests `$null -eq $Text` on a `[string]` parameter and returns `False` for `$null`. Define a fixed `Test-Empty` with a `[string]$Text` parameter.
+@check WIN-SRV1 | $null and '' give True
+(Test-Empty $null) -eq $true -and (Test-Empty '') -eq $true
+@check WIN-SRV1 | other text gives False
+(Test-Empty 'x') -eq $false
+@hint A [string] parameter never holds $null. [string]::IsNullOrEmpty() checks both cases.
+@solution WIN-SRV1
+function Test-Empty([string]$Text) { [string]::IsNullOrEmpty($Text) }
+Test-Empty $null
+@explain
+PowerShell converts $null to an empty string when it binds a [string] parameter, so `$null -eq $Text` is never true. Test for an empty string, or use [string]::IsNullOrEmpty.
+@endtask
+
+@task t04 | Language | 10 | WIN-SRV1
+Store in `$copy` a `System.Collections.ArrayList` that contains the four lines of `C:\LabFiles\servers.txt` (read them with `[System.IO.File]::ReadAllLines`). `New-Object System.Collections.ArrayList($lines)` does not work here; find a way that does.
+@check WIN-SRV1 | $copy is an ArrayList with the four server names
+$copy -is [System.Collections.ArrayList] -and $copy.Count -eq 4 -and $copy[3] -eq 'WEB01'
+@hint [System.Collections.ArrayList]::new($lines), or New-Object ... -ArgumentList (, $lines)
+@solution WIN-SRV1
+$lines = [System.IO.File]::ReadAllLines('C:\LabFiles\servers.txt')
+$copy = [System.Collections.ArrayList]::new($lines)
+@explain
+New-Object passes the array as its -ArgumentList, one constructor argument per line, and ArrayList has no constructor with four arguments. [Type]::new($lines) is a real method call with one argument, the array.
+@endtask
+
+@task t05 | Language | 10 | WIN-SRV1
+`Get-Total` takes the sum of what is piped to it, but its parameter is called `$Input`, so `Get-Total -Input 5` returns nothing useful. Define a fixed `Get-Total` with a parameter named `$Number` (an `[int[]]`), so that `Get-Total -Number 1,2,3` returns `6`.
+@check WIN-SRV1 | Get-Total -Number 1,2,3 is 6
+(Get-Total -Number 1,2,3) -eq 6
+@check WIN-SRV1 | no parameter named Input
+-not (${function:Get-Total}.ToString() -match '\$Input\b')
+@hint ($Number | Measure-Object -Sum).Sum
+@solution WIN-SRV1
+function Get-Total([int[]]$Number) { ($Number | Measure-Object -Sum).Sum }
+Get-Total -Number 1,2,3
+@explain
+$input is the automatic variable for pipeline input in a function, and it overwrites a parameter with the same name. Any other name works.
+@endtask

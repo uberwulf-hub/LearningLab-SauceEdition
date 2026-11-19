@@ -1,0 +1,16 @@
+SYNOPSIS: Reads the values of a registry key (or properties of a file) as one object.
+DESCRIPTION:
+In the registry, a key's values are its properties. Get-ItemProperty returns them as one object with a property per value, followed by PSPath, PSParentPath, PSChildName, PSDrive and PSProvider. ExpandString values come back with their %variables% filled in, DWord values as numbers, MultiString values as arrays. A key without values returns nothing.
+PARAMETER Path:
+The registry key (or file) to work on. Wildcards are allowed.
+PARAMETER LiteralPath:
+The key or file, taken exactly as typed.
+PARAMETER Name:
+Only these values (wildcards allowed). The default value is called (default).
+EXAMPLE: Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Programs that start at sign-in for every user.
+EXAMPLE: (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').ProductName
+One value, read through the object.
+NOTES:
+A missing value gives "Property X does not exist at path ...". For just the value, Get-ItemPropertyValue is shorter.
+RELATED: Get-ItemPropertyValue, Set-ItemProperty, New-ItemProperty, Get-Item

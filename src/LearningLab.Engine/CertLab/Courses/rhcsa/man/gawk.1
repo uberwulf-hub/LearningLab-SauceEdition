@@ -1,0 +1,83 @@
+NAME
+       gawk - pattern scanning and text processing language (GNU awk, also awk)
+
+SYNOPSIS
+       awk [-F SEP] [-v NAME=VALUE] 'PROGRAM' [FILE...]
+       awk [-F SEP] [-v NAME=VALUE] -f PROGRAM-FILE [FILE...]
+
+DESCRIPTION
+       awk reads its input one line (record) at a time, splits each line into
+       fields, and runs the PROGRAM on it. On RHEL, awk is GNU awk (gawk).
+
+       A program is a list of pattern { action } pairs. For every line, each
+       pattern is tested and, when it matches, its action runs. A missing
+       pattern matches every line; a missing action prints the line.
+
+           awk -F: '$3 >= 1000 { print $1 }' /etc/passwd
+
+       prints the name (field 1) of every user whose UID (field 3) is 1000 or
+       more.
+
+   Fields and variables
+       $0         the whole line
+       $1, $2...  the fields; $NF is the last one
+       NF         the number of fields in this line
+       NR         the number of the line (counting all files)
+       FNR        the number of the line in the current file
+       FS         the input field separator (white space by default: runs
+                  of spaces and tabs count as one)
+       OFS        the separator print puts between items (a space)
+       FILENAME   the current file
+
+   Patterns
+       /REGEX/              the line matches the regular expression
+       $1 ~ /REGEX/         a field matches (!~ for does not match)
+       $3 > 100, $1 == "x"  comparisons
+       BEGIN, END           run before the first line, after the last
+       PAT1 && PAT2, !PAT   and, not
+
+   Actions
+       print a, b           print the items with OFS between them
+       printf "fmt", a, b   formatted print (%s, %d, %5.2f, \n)
+       x = x + $2           variables need no declaration (start at 0 / "")
+       count[$1]++          arrays indexed by text
+       if (...) ... else ..., for (i=1; i<=NF; i++), for (k in arr), while
+       next                 go on to the next line
+
+   Functions
+       length(s), substr(s, start, len), index(s, t), split(s, arr, sep),
+       sub(/re/, "new"), gsub(/re/, "new"), match(s, /re/), tolower(s),
+       toupper(s), sprintf(fmt, ...), int(x), system("command")
+
+OPTIONS
+       -F SEP Use SEP as the field separator, for example -F: or -F,.
+
+       -v NAME=VALUE
+              Set a variable before the program starts.
+
+       -f FILE
+              Read the program from FILE.
+
+EXAMPLES
+       Print the second column of the output of a command:
+
+           df -h | awk '{ print $1, $5 }'
+
+       Users with /bin/bash as their shell:
+
+           awk -F: '$7 == "/bin/bash" { print $1 }' /etc/passwd
+
+       Add up the sizes in the fifth column of ls -l:
+
+           ls -l /etc | awk '{ sum += $5 } END { print sum }'
+
+       Count lines per value of the first field of a CSV:
+
+           awk -F, '{ n[$1]++ } END { for (k in n) print k, n[k] }' report.csv
+
+       Use a shell variable in a program:
+
+           awk -v min=1000 -F: '$3 >= min' /etc/passwd
+
+SEE ALSO
+       grep(1), sed(1), cut(1), sort(1)

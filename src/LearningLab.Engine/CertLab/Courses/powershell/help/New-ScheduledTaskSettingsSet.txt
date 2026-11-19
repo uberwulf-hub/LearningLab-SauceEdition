@@ -1,0 +1,24 @@
+SYNOPSIS: Describes the settings of a scheduled task.
+DESCRIPTION:
+The settings decide the details: whether the task may start on battery power, whether a missed run starts as soon as possible (-StartWhenAvailable), how long it may run (-ExecutionTimeLimit, 72 hours by default), what happens when it is still running at the next start (-MultipleInstances), and whether it starts disabled or hidden.
+PARAMETER StartWhenAvailable:
+Runs a missed start as soon as the computer can.
+PARAMETER AllowStartIfOnBatteries:
+May start on battery power.
+PARAMETER DontStopIfGoingOnBatteries:
+Keeps running when the power is unplugged.
+PARAMETER ExecutionTimeLimit:
+The longest it may run (a TimeSpan).
+PARAMETER MultipleInstances:
+Parallel, Queue, IgnoreNew (the default) or StopExisting.
+PARAMETER RestartCount:
+How many times to retry after a failure.
+PARAMETER Hidden:
+Hides the task in the Task Scheduler window.
+PARAMETER Disable:
+Registers the task disabled.
+PARAMETER Priority:
+0 (highest) to 10; 7 by default.
+EXAMPLE: New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+A task that catches up and runs at most one hour.
+RELATED: Register-ScheduledTask, Set-ScheduledTask

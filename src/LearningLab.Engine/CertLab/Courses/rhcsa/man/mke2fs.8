@@ -1,0 +1,72 @@
+NAME
+       mke2fs - create an ext2, ext3 or ext4 file system
+
+SYNOPSIS
+       mke2fs [-t TYPE] [-L LABEL] [-b BLOCK-SIZE] [-m PERCENT] [-F] [-q] [-n]
+              DEVICE [SIZE]
+       mkfs.ext4 [OPTIONS] DEVICE
+
+DESCRIPTION
+       mke2fs writes a new ext2, ext3 or ext4 file system on a device. The
+       name it is called by picks the type: mkfs.ext4 makes ext4, mkfs.ext3
+       ext3, mkfs.ext2 ext2. Called as plain mke2fs without -t, it makes
+       ext2 (the default in /etc/mke2fs.conf), which has no journal, so give
+       -t ext4 or use mkfs.ext4. Everything that was on the device is lost.
+
+       ext4 can grow while mounted and can also shrink while unmounted
+       (resize2fs). Labels are at most 16 characters.
+
+       When the device already holds a file system, mke2fs shows what it
+       found and asks "Proceed anyway? (y,N)". Answer y only when you are
+       sure.
+
+       Part of the space (5% by default) is reserved for root, so that the
+       system keeps working when users fill the disk; df counts it as used.
+
+OPTIONS
+       -t TYPE
+              The file system type: ext2, ext3 or ext4.
+
+       -L LABEL
+              Set the volume label (up to 16 characters).
+
+       -b BLOCK-SIZE
+              Block size in bytes: 1024, 2048 or 4096.
+
+       -m PERCENT
+              Reserve this percentage of the blocks for root (default 5).
+
+       -F     Force: do not ask, even when the device holds a file system.
+
+       -q     Quiet: print less.
+
+       -n     Dry run: show what would be done without writing anything.
+
+       -U UUID
+              Use this UUID instead of a random one.
+
+EXAMPLES
+       Make an ext4 file system on /dev/vdb2 and mount it at /archive at
+       every boot:
+
+           mkfs.ext4 /dev/vdb2
+           mkdir /archive
+           blkid /dev/vdb2
+           echo 'UUID=<the UUID shown> /archive ext4 defaults 0 0' >> /etc/fstab
+           mount -a
+
+       The same with mke2fs and a label:
+
+           mke2fs -t ext4 -L archive /dev/vdb2
+
+       Rename the label of an existing ext4 file system:
+
+           e2label /dev/vdb2 backups
+
+FILES
+       /etc/mke2fs.conf
+              Default settings for each file system type.
+
+SEE ALSO
+       mkfs(8), mkfs.xfs(8), resize2fs(8), e2label(8), tune2fs(8), e2fsck(8),
+       blkid(8), mount(8)

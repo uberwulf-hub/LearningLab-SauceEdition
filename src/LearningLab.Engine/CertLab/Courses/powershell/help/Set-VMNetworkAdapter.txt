@@ -1,0 +1,24 @@
+SYNOPSIS: Changes the security and address settings of a VM's network adapter.
+DESCRIPTION:
+Set-VMNetworkAdapter changes how the switch treats a VM's adapter:
+MacAddressSpoofing On lets the VM send traffic from other MAC addresses; needed for nested virtualization and some clusters and load balancers.
+DhcpGuard On drops DHCP server answers from the VM, so a VM can't act as a rogue DHCP server.
+RouterGuard On drops router advertisements and redirects from the VM.
+StaticMacAddress sets a fixed MAC address instead of a dynamic one (the VM must be off).
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Name:
+Only this adapter.
+PARAMETER MacAddressSpoofing:
+On or Off.
+PARAMETER DhcpGuard:
+On or Off.
+PARAMETER RouterGuard:
+On or Off.
+PARAMETER StaticMacAddress:
+A fixed MAC address, for example 00155D0A0A50.
+EXAMPLE: Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On -ComputerName HV1
+LAB-HOST's inner VMs can reach the network.
+EXAMPLE: Get-VM | Set-VMNetworkAdapter -DhcpGuard On -RouterGuard On
+No VM can hand out addresses or pose as a router.
+RELATED: Get-VMNetworkAdapter, Set-VMProcessor, Connect-VMNetworkAdapter

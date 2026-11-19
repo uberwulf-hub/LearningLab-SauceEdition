@@ -1,0 +1,26 @@
+NAME
+       fsfreeze - pause or resume writes to a mounted file system
+
+SYNOPSIS
+       fsfreeze -f MOUNTPOINT
+       fsfreeze -u MOUNTPOINT
+
+DESCRIPTION
+       fsfreeze -f writes everything waiting in memory to the file system and
+       then holds all new writes, so that a storage snapshot taken now is
+       consistent. fsfreeze -u lets writes continue. Programs that write
+       while it is frozen simply wait. Run it as root, and never on /.
+
+OPTIONS
+       -f, --freeze
+              Freeze the file system.
+
+       -u, --unfreeze
+              Thaw it again.
+
+EXAMPLES
+           fsfreeze -f /data
+           fsfreeze -u /data
+
+SEE ALSO
+       lvcreate(8), mount(8)

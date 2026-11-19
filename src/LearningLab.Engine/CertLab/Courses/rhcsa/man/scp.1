@@ -1,0 +1,57 @@
+NAME
+       scp - copy files between machines over SSH
+
+SYNOPSIS
+       scp [-r] [-p] [-q] [-P PORT] [-i KEYFILE] [-o OPTION] SOURCE... TARGET
+
+DESCRIPTION
+       scp copies files from this machine to another, from another to this
+       one, or between two others, encrypted through SSH. It logs in the same
+       way ssh does: with a key when one is set up, otherwise it asks for the
+       password.
+
+       A remote file is written [USER@]HOST:PATH. A PATH that does not start
+       with / is relative to that user's home directory; an empty PATH
+       (HOST:) means the home directory itself. Without USER@, scp uses your
+       own user name on the other machine.
+
+       As with cp, the last argument is the target. When it is a directory
+       the files are copied into it; several sources need a directory target.
+
+       On RHEL 9, scp transfers files with the SFTP protocol underneath.
+
+OPTIONS
+       -r     Copy directories and everything in them.
+
+       -p     Keep the modification times and modes of the files.
+
+       -q     Quiet: no progress meter.
+
+       -P PORT
+              Connect to this port (capital P, unlike ssh -p).
+
+       -i KEYFILE
+              Log in with this private key.
+
+       -o OPTION
+              Pass an ssh option, such as -o StrictHostKeyChecking=no.
+
+EXAMPLES
+       Copy a file to server2, into /tmp:
+
+           scp /etc/hosts root@server2:/tmp/
+
+       Fetch a file from server2 into the current directory:
+
+           scp student@server2.lab.example.com:report.txt .
+
+       Copy a whole directory, keeping times and modes:
+
+           scp -rp /srv/web root@server2:/srv/
+
+       Copy to an SSH server that listens on port 2222:
+
+           scp -P 2222 notes.txt student@server2:
+
+SEE ALSO
+       ssh(1), sftp(1), rsync(1), ssh-keygen(1), ssh-copy-id(1)

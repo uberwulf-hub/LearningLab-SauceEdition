@@ -1,0 +1,12 @@
+SYNOPSIS: Lists the volumes with their file system and free space.
+DESCRIPTION:
+Get-Volume shows each volume's DriveLetter, FriendlyName (the label), FileSystemType, DriveType, HealthStatus, OperationalStatus, SizeRemaining and Size. It is the quick way to see how full drives are.
+PARAMETER DriveLetter:
+Only this volume. Position 0.
+PARAMETER FileSystemLabel:
+Only volumes with this label.
+EXAMPLE: Get-Volume
+On FS1: C:, D: (Shares) and E: (Archive).
+EXAMPLE: Get-Volume -DriveLetter E | Select-Object DriveLetter, FileSystemType, SizeRemaining, Size
+How much room the archive has left.
+RELATED: Format-Volume, Get-Partition, New-Volume, Get-DedupVolume

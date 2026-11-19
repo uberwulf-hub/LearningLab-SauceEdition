@@ -1,0 +1,32 @@
+SYNOPSIS: Makes a new alias: a short name for a command.
+DESCRIPTION:
+New-Alias creates an alias, a second name for a command, for example np for notepad.exe. After that, typing np runs Notepad.
+
+New-Alias refuses to replace an alias that already exists (Set-Alias would replace it). That protects you from overwriting a built-in alias by accident.
+
+An alias lasts until you close PowerShell. To have it every time, put the New-Alias line in your profile script ($PROFILE).
+PARAMETER Name:
+The new short name. Position 0, required.
+PARAMETER Value:
+The command it stands for: a cmdlet, function, script or program. Position 1, required.
+PARAMETER Description:
+A note about the alias, shown by Get-Alias name | Format-List *.
+PARAMETER PassThru:
+Outputs the new alias, so you can see it.
+PARAMETER Force:
+Replaces an existing alias with the same name.
+EXAMPLE: New-Alias -Name np -Value notepad.exe -Description 'Opens Notepad'
+Makes np an alias for Notepad.
+EXAMPLE: New-Alias np calc.exe
+Fails: np already exists. Use Set-Alias, or -Force, to change it.
+EXAMPLE: New-Alias -Name now -Value Get-Date -PassThru
+Makes now an alias for Get-Date and shows it.
+NOTES:
+The alias is nal.
+
+An alias holds only a command name, never parameters. New-Alias -Name big -Value 'Get-ChildItem -Recurse' makes an alias that fails when used. Write a small function instead: function big { Get-ChildItem -Recurse }.
+
+Aliases make scripts harder to read; keep them for typing at the prompt.
+
+Real 5.1 also has -Option (ReadOnly, Constant, AllScope, Private) and -Scope.
+RELATED: Set-Alias, Get-Alias, about_Functions, about_Command_Syntax

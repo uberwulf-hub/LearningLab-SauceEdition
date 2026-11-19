@@ -1,0 +1,8 @@
+SYNOPSIS: Shows Microsoft Defender Antivirus settings, including attack surface reduction rules.
+DESCRIPTION:
+Get-MpPreference returns the antivirus preferences in effect: DisableRealtimeMonitoring, ExclusionPath, PUAProtection (0 off, 1 on, 2 audit), EnableControlledFolderAccess (0 off, 1 on, 2 audit), MAPSReporting (cloud protection), and the attack surface reduction rules as two lists that go together: AttackSurfaceReductionRules_Ids (each rule's GUID) and AttackSurfaceReductionRules_Actions (0 off, 1 block, 2 audit, 6 warn).
+EXAMPLE: Get-MpPreference | Select-Object -ExpandProperty AttackSurfaceReductionRules_Ids
+The GUIDs of the attack surface reduction rules that are configured.
+EXAMPLE: (Get-MpPreference).ExclusionPath
+Folders that real-time protection skips.
+RELATED: Get-MpComputerStatus

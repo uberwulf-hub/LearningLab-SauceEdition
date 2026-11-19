@@ -1,0 +1,287 @@
+# Unit: u12 | 12. DHCP and IPAM | Networking
+
+DHCP hands out IP addresses and the settings that go with them (router, DNS servers, domain name) to every PC, phone and printer that doesn't have a fixed address. Harborline's DHCP server is SRV1, with one scope for the head office subnet. This unit covers authorizing a server, scopes, exclusions, reservations and options, making DHCP survive a server failure with **DHCP failover**, and IP Address Management (IPAM), the tool that watches DHCP, DNS and address space together.
+
+## Lesson: l1201 | Scopes, exclusions, reservations and options
+
+### Authorizing a DHCP server
+
+In a domain, a Windows DHCP server only hands out addresses once it is **authorized** in Active Directory (`Add-DhcpServerInDC`, or right-click the server > Authorize in the DHCP console). The list lives in the configuration partition, so authorizing needs an Enterprise Admin (or delegated rights there). This stops a server that someone sets up by mistake ("rogue" DHCP) from giving out wrong addresses.
+
+```terminal
+#machine SRV1
+PS C:\Windows\system32> Get-DhcpServerInDC
+
+IPAddress  DnsName
+---------  -------
+10.10.0.50 srv1.corp.example
+
+
+PS C:\Windows\system32> Get-DhcpServerv4Scope
+
+ScopeId         SubnetMask      Name               State    StartRange      EndRange        LeaseDuration
+-------         ----------      ----               -----    ----------      --------        -------------
+10.10.0.0       255.255.255.0   HQ clients         Active   10.10.0.100     10.10.0.199     8.00:00:00
+```
+
+### Scopes and what's in them
+
+A **scope** is a range of addresses for one subnet, with:
+
+- **Start and end** of the range and the **subnet mask**. The scope ID is the subnet (`10.10.0.0`).
+- **Exclusions**: addresses inside the range the server must never hand out (servers or printers with fixed addresses).
+- **Reservations**: one address always given to one client, found by its MAC address (the client ID). The client still uses DHCP, so it still gets the options.
+- **Lease duration**: 8 days by default. Clients renew at half the lease. Use short leases (hours) for busy guest Wi-Fi, long ones for desktops that never move.
+- **Options**: 003 Router (default gateway), 006 DNS Servers, 015 DNS Domain Name, and many more.
+
+Options can be set at the **server** level (every scope), the **scope** level, and for one **reservation**. The most specific one wins: a reservation option beats a scope option, which beats a server option.
+
+```terminal
+#machine SRV1
+PS C:\Windows\system32> Get-DhcpServerv4OptionValue -ScopeId 10.10.0.0
+
+Name        : Router
+OptionId    : 3
+Type        : IPv4Address
+Value       : {10.10.0.1}
+VendorClass :
+UserClass   :
+PolicyName  :
+
+Name        : DNS Servers
+OptionId    : 6
+Type        : IPv4Address
+Value       : {10.10.0.10, 10.20.0.11}
+VendorClass :
+UserClass   :
+PolicyName  :
+
+Name        : DNS Domain Name
+OptionId    : 15
+Type        : String
+Value       : {corp.example}
+VendorClass :
+UserClass   :
+PolicyName  :
+```
+
+### Other subnets: relay and superscopes
+
+DHCP requests are broadcasts, and routers don't pass broadcasts. A client on another subnet reaches the server through a **DHCP relay agent**: the router's "IP helper" setting, or the DHCP Relay Agent of Routing and Remote Access on a Windows server in that subnet. The relay puts the subnet it came from into the request, so the server picks the matching scope. A **superscope** groups several scopes that serve the same physical network (for example when a segment ran out of addresses and a second subnet was added to it).
+
+@try
+@task t1 | Networking | 10 | SRV1
+The branch office (10.20.0.0/24) will get its addresses from SRV1 through a relay on the branch router. On SRV1, create the scope **Branch clients** from 10.20.0.100 to 10.20.0.200 with a lease of **4 days**, exclude 10.20.0.100-10.20.0.109 for the branch's printers, and set the scope's router to 10.20.0.1 and its DNS servers to 10.20.0.11 and 10.10.0.10.
+@check admin | the scope exists with its lease and exclusion
+dhcp(SRV1).scope["10.20.0.0"].state == Active
+dhcp(SRV1).scope["10.20.0.0"].leasedays == 4
+dhcp(SRV1).scope["10.20.0.0"].exclusions has 10.20.0.100-10.20.0.109
+@check admin | the scope's options
+dhcp(SRV1).scope["10.20.0.0"].option["3"] == 10.20.0.1
+dhcp(SRV1).scope["10.20.0.0"].option["6"] == "10.20.0.11,10.10.0.10"
+@hint Add-DhcpServerv4Scope (-LeaseDuration 4.00:00:00), Add-DhcpServerv4ExclusionRange, Set-DhcpServerv4OptionValue -ScopeId with -Router and -DnsServer.
+@solution SRV1
+Add-DhcpServerv4Scope -Name "Branch clients" -StartRange 10.20.0.100 -EndRange 10.20.0.200 -SubnetMask 255.255.255.0 -LeaseDuration 4.00:00:00
+Add-DhcpServerv4ExclusionRange -ScopeId 10.20.0.0 -StartRange 10.20.0.100 -EndRange 10.20.0.109
+Set-DhcpServerv4OptionValue -ScopeId 10.20.0.0 -Router 10.20.0.1 -DnsServer 10.20.0.11,10.10.0.10
+@explain
+The scope ID comes from the range and the mask. Options set with -ScopeId belong to that scope only; without it they are server options for every scope. Set-DhcpServerv4OptionValue checks that the DNS servers answer (-Force skips that).
+@endtask
+@task t2 | Networking | 10 | SRV1
+CL1 must always get **10.10.0.120**, because a licence server only accepts that address. Reserve it for CL1 (look up CL1's MAC address in the leases), then renew CL1's lease and check its new address.
+@check admin | the reservation exists and CL1 uses it
+dhcp(SRV1).scope["10.10.0.0"].reservation["10.10.0.120"].mac == 00-15-5D-0A-0A-65
+lease(CL1).ip == 10.10.0.120
+@hint Get-DhcpServerv4Lease -ScopeId 10.10.0.0 shows the client IDs. Add-DhcpServerv4Reservation -ScopeId -IPAddress -ClientId; then ipconfig /renew on CL1.
+@solution SRV1
+Get-DhcpServerv4Lease -ScopeId 10.10.0.0
+Add-DhcpServerv4Reservation -ScopeId 10.10.0.0 -IPAddress 10.10.0.120 -ClientId 00-15-5D-0A-0A-65 -Name CL1
+@solution CL1
+#renew
+@explain
+A reservation matches the client by its MAC address. The client keeps its old address until it renews: at half the lease, at restart, or with ipconfig /renew.
+@endtask
+@task t3 | Networking | 10 | SRV1
+Give every scope on SRV1 the DNS servers **10.10.0.10** and **10.20.0.11** by default, at the **server** level.
+@check admin | the server option 006 has both DNS servers
+dhcp(SRV1).option["6"] contains 10.20.0.11
+@hint Set-DhcpServerv4OptionValue without -ScopeId sets server options.
+@solution SRV1
+Set-DhcpServerv4OptionValue -DnsServer 10.10.0.10,10.20.0.11
+@explain
+Server options apply to every scope that doesn't set the same option itself; a scope option (like the branch scope's DNS servers) still wins.
+@endtask
+@end
+
+@quiz
+? A new Windows DHCP server in the domain has a scope but no client gets an address from it. The service runs. What is the likely cause?
++ The server isn't authorized in Active Directory
+- The scope has no reservations
+- The lease duration is too long
+! Domain-joined Windows DHCP servers don't hand out leases until they are authorized in AD.
+? Option 006 is set to 10.10.0.10 at the server level and to 10.20.0.11 in a scope. What does a client of that scope get?
+- 10.10.0.10
++ 10.20.0.11
+- Both, server first
+! The more specific level wins: reservation, then scope, then server.
+? Clients in a branch subnet behind a router need addresses from the head office DHCP server. What do they need besides a scope?
+- A superscope
++ A DHCP relay agent (IP helper) in the branch subnet
+- A reservation for each client
+! DHCP discovers are broadcasts; a relay forwards them to the server, which picks the scope for the relay's subnet.
+@end
+
+
+
+## Lesson: l1202 | DHCP failover
+
+With one DHCP server, clients that need a new lease while it is down end up with an **APIPA** address (169.254.x.x) and can't reach anything. **DHCP failover** (Windows Server 2012 and later) lets two servers share the leases of the same IPv4 scopes. Each relationship has exactly two partners; one server can have relationships with several partners.
+
+Two modes:
+
+- **Load balance** (the default): both servers answer clients, split by a percentage (50:50 by default, for example 70:30 if one server is at the remote site). If one fails, the other serves everyone.
+- **Hot standby**: one server is **active**, the other **standby**. The standby keeps a **reserve** of the addresses (5% by default) for new clients while the active one is down, and takes over the whole scope once the failure is confirmed. Typical for a branch that uses a head office server as its standby.
+
+Settings to know:
+
+- **Maximum Client Lead Time (MCLT)**, 1 hour by default: how far a server may extend a lease beyond what its partner knows, and how long a server waits in "partner down" before it takes over the partner's whole range.
+- **State switchover interval**: optional; moves a server to "partner down" automatically after that long without contact (otherwise an administrator does it).
+- **Shared secret**: authenticates the failover messages between the partners.
+
+Leases replicate between the partners all the time. **Scope settings don't**: after you change a reservation, an option or an exclusion on one partner, run **Replicate Scope** / **Replicate Relationship** in the DHCP console, or `Invoke-DhcpServerv4FailoverReplication`. Failover replaces the old **80/20 split scope** design, where each server owned part of the range and neither knew the other's leases.
+
+```terminal
+#setup CORE1:Install-WindowsFeature DHCP -IncludeManagementTools
+#setup CORE1:Add-DhcpServerInDC -DnsName core1.corp.example -IPAddress 10.10.0.40
+#machine SRV1
+PS C:\Windows\system32> Add-DhcpServerv4Failover -Name HQ-Failover -ScopeId 10.10.0.0 -PartnerServer CORE1 -ServerRole Active -ReservePercent 5 -SharedSecret 'Fail0ver#26'
+PS C:\Windows\system32> Get-DhcpServerv4Failover
+
+Name                : HQ-Failover
+PartnerServer       : CORE1
+Mode                : HotStandby
+ScopeId             : {10.10.0.0}
+State               : Normal
+ServerRole          : Active
+LoadBalancePercent  : 0
+ReservePercent      : 5
+MaxClientLeadTime   : 01:00:00
+StateSwitchInterval :
+EnableAuth          : True
+AutoStateTransition : False
+```
+
+> Exam pattern: "the branch must keep getting addresses when the WAN link is down, from its own server, with head office as the backup" = hot standby, the branch server active. "Both sites serve the scope evenly" = load balance 50:50.
+
+@try
+@setup CORE1
+Install-WindowsFeature DHCP -IncludeManagementTools
+Add-DhcpServerInDC -DnsName core1.corp.example -IPAddress 10.10.0.40
+@task t1 | Networking | 10 | SRV1
+CORE1 is now a second authorized DHCP server. Protect the scope **10.10.0.0** on SRV1 with a **load balance** failover relationship with CORE1 called **HQ-Failover**: 50:50, an MCLT of 1 hour and the shared secret `Fail0ver#26`.
+@check admin | the relationship exists on SRV1 in load balance mode
+dhcp(SRV1).failover["HQ-Failover"].mode == LoadBalance
+dhcp(SRV1).failover["HQ-Failover"].partner == CORE1
+dhcp(SRV1).failover["HQ-Failover"].secret == Yes
+@check admin | CORE1 has its copy of the scope
+dhcp(CORE1).scope["10.10.0.0"].state == Active
+@hint Add-DhcpServerv4Failover -Name -ScopeId -PartnerServer -LoadBalancePercent 50 -MaxClientLeadTime 01:00:00 -SharedSecret, on SRV1.
+@solution SRV1
+Add-DhcpServerv4Failover -Name HQ-Failover -ScopeId 10.10.0.0 -PartnerServer CORE1 -LoadBalancePercent 50 -MaxClientLeadTime 01:00:00 -SharedSecret 'Fail0ver#26'
+@explain
+Creating the relationship copies the scope (range, exclusions, reservations, options) to the partner. Without -ServerRole or -ReservePercent the mode is load balance.
+@endtask
+@task t2 | Networking | 10 | SRV1
+Test it: switch **SRV1** off, then renew CL1's lease. CL1 must get an address from CORE1.
+@check admin | CL1's lease now comes from CORE1
+lease(CL1).server == CORE1
+lease(CL1).apipa == No
+@hint Power SRV1 off, then renew the lease on CL1.
+@solution SRV1
+#power off
+@solution CL1
+#renew
+@explain
+Both partners know every lease, so CORE1 renews CL1's address while SRV1 is away. In Windows the surviving partner first serves only renewals and its own share of new clients; after the MCLT in "partner down" state it takes over the whole range.
+@endtask
+@end
+
+@quiz
+? The branch DHCP server must serve its clients, with the head office server taking over only if it fails. Which mode?
+- Load balance 50:50
++ Hot standby with the branch server active
+- Split scope 80/20
+! Hot standby has one active server; the standby keeps a reserve of addresses and takes over on failure.
+? You added a reservation to a failover scope on one partner. What do you do so that the other partner has it too?
+- Nothing: scope settings replicate automatically
++ Replicate the scope or the relationship (Invoke-DhcpServerv4FailoverReplication)
+- Restart the DHCP Server service on the partner
+! Failover replicates leases automatically, but configuration changes need Replicate Scope / Replicate Relationship.
+? What does the shared secret of a failover relationship do?
++ It authenticates the failover messages between the two partners
+- It encrypts the leases sent to clients
+- It authorizes the partner in Active Directory
+! The shared secret is used to sign the partners' messages to each other.
+@end
+
+## Lesson: l1203 | IPAM and troubleshooting DHCP
+
+### IP Address Management (IPAM)
+
+**IPAM** is a Windows Server feature that discovers and manages the domain controllers, DHCP servers, DNS servers and NPS servers of a forest from one console: address blocks, ranges and individual addresses, the use of each scope, DNS zones, and an audit trail of who got which address when.
+
+- Install it on a **domain member server**: IPAM can't run on a domain controller. Its database is the Windows Internal Database or SQL Server.
+- **Provisioning** gives IPAM the access it needs on the managed servers: **Group Policy based** (the usual way: `Invoke-IpamGpoProvisioning` creates three GPOs named with a prefix you choose, `<prefix>_DHCP`, `<prefix>_DNS` and `<prefix>_DC_NPS`, and IPAM adds each server to their security filtering once you set the server to **Managed**), or **manual** (you configure firewall rules, shares, groups and event log access on each server by hand).
+- After discovery, each server is **Unmanaged** until you set its manageability status to **Managed**.
+- Role-based access: IPAM Administrators, IPAM Users, IPAM ASM Administrators (address space), IPAM MSM Administrators (multi-server management), IPAM IP Audit Administrators.
+
+### When a client gets no address
+
+The checklist, in order:
+
+1. Does the client have an APIPA address (169.254.x.x)? Then no DHCP server answered.
+2. Is the DHCP Server service running, and is the server **authorized** (`Get-DhcpServerInDC`)?
+3. Is the scope **active**, and does it have free addresses (`Get-DhcpServerv4ScopeStatistics`)? Exclusions and reservations shrink the pool.
+4. For a client on another subnet: is the **relay** configured, and does a scope exist for that subnet?
+5. Then `ipconfig /renew` on the client.
+
+@try
+@setup SRV1
+Remove-DhcpServerInDC -DnsName srv1.corp.example -IPAddress 10.10.0.50
+@setup CL1
+#wait 691300
+@task t1 | Networking | 10 | SRV1
+After a clean-up of Active Directory last week, CL1 now has a 169.254.x.x address and can't reach anything. Find the cause on SRV1, fix it, and renew CL1's lease.
+@check admin | SRV1 is authorized again and CL1 has a real lease from it
+dhcp(SRV1).authorized == Yes
+lease(CL1).apipa == No
+lease(CL1).server == SRV1
+@hint Get-DhcpServerInDC lists the authorized servers. Add-DhcpServerInDC puts SRV1 back.
+@solution SRV1
+Get-DhcpServerInDC
+Add-DhcpServerInDC -DnsName srv1.corp.example -IPAddress 10.10.0.50
+@solution CL1
+#renew
+@explain
+SRV1's authorization had been deleted from Active Directory, so it stopped handing out leases. CL1's renewals (at half and seven-eighths of the lease) got no answer; once its lease ran out it had to drop the address and gave itself an APIPA address.
+@endtask
+@end
+
+@quiz
+? Where can you install IPAM?
++ On a domain member server
+- On a domain controller
+- On any workgroup server
+! IPAM must be installed on a domain member server; it isn't supported on a domain controller.
+? You use Group Policy based provisioning. What else must you do for each discovered DHCP server before IPAM manages it?
+- Install the IPAM client on it
++ Set its manageability status to Managed
+- Make it a domain controller
+! Discovered servers start as Unmanaged; marking them Managed adds them to the IPAM GPOs' security filtering.
+? A client has the address 169.254.12.40. What does it tell you?
+- The DHCP server gave it a reservation
++ No DHCP server answered its request
+- Its DNS registration failed
+! APIPA addresses (169.254.0.0/16) are what Windows gives itself when DHCP doesn't answer.
+@end
+

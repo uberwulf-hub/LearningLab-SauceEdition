@@ -1,0 +1,11 @@
+{
+    "EditorFile":  "C:\\Users\\Sam\\count.s",
+    "EditorText":  "    li a0, 5\n    ecall\n",
+    "Inside":  true,
+    "InsideTab":  2,
+    "ProgName":  "count",
+    "Screen":  1,
+    "Speed":  3,
+    "StopOnCrash":  true,
+    "Theme":  "green"
+}

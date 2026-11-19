@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "language": "es",
+  "lessons": [
+    {
+      "id": "test-hello-1",
+      "unit": "hello",
+      "title": "Meeting someone",
+      "goal": "Say hello, ask how someone is, and answer.",
+      "minutes": 10,
+      "new": ["Hola.", "Buenos días.", "Buenas tardes.", "Buenas noches.", "¿Qué tal?", "¿Cómo estás?", "¿Cómo está usted?", "Bien, gracias.", "Muy bien.", "Más o menos.", "¿Y tú?", "Adiós."],
+      "dialogue": [
+        { "who": "Ana", "es": "¡Hola, Diego! ¿Cómo estás?", "en": "Hi, Diego! How are you?" },
+        { "who": "Diego", "es": "Bien, gracias. ¿Y tú?", "en": "Fine, thanks. And you?" },
+        { "who": "Ana", "es": "Muy bien. ¡Adiós!", "en": "Very well. Bye!" }
+      ],
+      "tip": { "title": "Tú and usted", "text": "Use tú with family and friends. Use usted with grown-ups you don't know well." },
+      "exercises": [
+        { "kind": "choose", "prompt": "How do you say \"Good morning\"?", "answer": "Buenos días.", "wrong": ["Buenas noches.", "Hola."] },
+        { "kind": "listen", "es": "¿Cómo estás?", "answer": "How are you?", "wrong": ["What's your name?", "Where are you?"] },
+        { "kind": "gap", "es": "Bien, ___. ¿Y tú?", "answer": "gracias", "wrong": ["hola", "adiós"], "en": "Fine, thanks. And you?" },
+        { "kind": "build", "en": "How are you?", "es": "¿Cómo estás?", "extra": ["está", "qué"] },
+        { "kind": "type", "en": "Hello.", "es": "Hola.", "accept": ["Hola"] },
+        { "kind": "match", "pairs": [["Hola.", "Hello."], ["Adiós.", "Goodbye."], ["Muy bien.", "Very well."]] },
+        { "kind": "say", "en": "Say: How are you?", "es": "¿Cómo estás?" },
+        { "kind": "reply", "es": "¿Qué tal?", "answer": "Muy bien.", "wrong": ["Adiós.", "Buenas noches."] },
+        { "kind": "type", "en": "How are you? (polite)", "es": "¿Cómo está usted?" },
+        { "kind": "choose", "prompt": "How do you say \"So-so\"?", "answer": "Más o menos.", "wrong": ["Muy bien.", "¿Y tú?"] }
+      ]
+    },
+    {
+      "id": "test-hello-2",
+      "unit": "hello",
+      "title": "Please and thank you",
+      "goal": "Be polite and say goodbye.",
+      "minutes": 8,
+      "new": ["Hasta luego.", "Hasta mañana.", "Nos vemos.", "Por favor.", "Gracias.", "Muchas gracias.", "De nada.", "Perdón.", "Lo siento.", "Con permiso.", "Bienvenidos."],
+      "dialogue": [
+        { "who": "Lucas", "es": "Agua, por favor.", "en": "Water, please." },
+        { "who": "Mamá", "es": "Aquí tienes.", "en": "Here you go." },
+        { "who": "Lucas", "es": "Muchas gracias.", "en": "Thank you very much." },
+        { "who": "Mamá", "es": "De nada. ¡Hasta mañana!", "en": "You're welcome. See you tomorrow!" }
+      ],
+      "tip": { "title": "Saying sorry", "text": "Perdón is for small things like bumping into someone. Lo siento is a real \"I'm sorry\"." },
+      "exercises": [
+        { "kind": "choose", "prompt": "How do you say \"Please\"?", "answer": "Por favor.", "wrong": ["De nada.", "Perdón."] },
+        { "kind": "listen", "es": "De nada.", "answer": "You're welcome.", "wrong": ["Thank you.", "I'm sorry."] },
+        { "kind": "gap", "es": "Muchas ___.", "answer": "gracias", "wrong": ["nada", "luego"], "en": "Thank you very much." },
+        { "kind": "build", "en": "See you tomorrow.", "es": "Hasta mañana.", "extra": ["luego"] },
+        { "kind": "type", "en": "I'm sorry.", "es": "Lo siento." },
+        { "kind": "match", "pairs": [["Gracias.", "Thank you."], ["Nos vemos.", "See you."], ["Bienvenidos.", "Welcome."]] },
+        { "kind": "say", "en": "Say: Excuse me (may I get by?)", "es": "Con permiso." },
+        { "kind": "reply", "es": "Muchas gracias.", "answer": "De nada.", "wrong": ["Hasta luego.", "Perdón."] }
+      ]
+    }
+  ]
+}

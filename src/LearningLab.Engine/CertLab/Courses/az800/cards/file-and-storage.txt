@@ -1,0 +1,36 @@
+# Deck: file-and-storage | File servers, storage, DFS and Azure File Sync | File and storage
+Share permission given by New-SmbShare with no access parameters :: Everyone: Read
+Share Change, NTFS Read: what does a user get over the network? :: Read (the more restrictive of the two)
+Which permissions apply at the server's console? :: NTFS only
+Share with access-based enumeration and SMB encryption :: `New-SmbShare -Name Projects -Path D:\Shares\Projects -FolderEnumerationMode AccessBased -EncryptData $true`
+Switch SMB 1.0 off on a server :: `Set-SmbServerConfiguration -EnableSMB1Protocol $false`
+Replace Everyone's share permission with Read :: `Grant-SmbShareAccess -Name Public -AccountName Everyone -AccessRight Read`
+icacls flags (OI) and (CI) :: Object inherit (files get the entry) and container inherit (subfolders get it)
+Disable inheritance keeping the inherited entries :: `icacls D:\Shares\Sales\Contracts /inheritance:d`
+Disable inheritance removing the inherited entries :: `icacls D:\Shares\Sales\Contracts /inheritance:r`
+Explicit allow vs inherited deny: which wins? :: The explicit allow (explicit entries are checked first)
+Explicit deny vs explicit allow on the same folder :: The deny
+Fewest disks for a two-way mirror in a stand-alone pool :: 2
+Fewest disks for a three-way mirror in a stand-alone pool :: 5
+Fewest disks for parity :: 3 (dual parity: 7)
+Disks that can go into a pool :: `Get-PhysicalDisk -CanPool $true`
+Thin or fixed: which can be larger than the pool's free space? :: Thin
+File system recommended for Storage Spaces Direct and Hyper-V :: ReFS
+Edition needed for Storage Spaces Direct :: Windows Server Datacenter
+Storage Replica mode with no data loss :: Synchronous (needs low latency between the sites)
+Storage Replica in Windows Server Standard :: One partnership, one volume of up to 2 TB
+Where can't Data Deduplication be enabled? :: On the system or boot volume
+Default minimum file age for deduplication :: 3 days
+Enable deduplication on E: for a general file server :: `Enable-DedupVolume -Volume E: -UsageType Default`
+Run deduplication now :: `Start-DedupJob -Volume E: -Type Optimization`
+Deduplication job that frees unused chunks :: Garbage collection
+Domain-based namespace mode with ABE and more than 5,000 folders :: Windows Server 2008 mode (DomainV2)
+Which folder target does a DFS client get first? :: One in its own AD site, then the others by site cost
+Add a second folder target :: `New-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\DC2\Sales`
+Which DFS Replication member wins the initial sync? :: The primary member
+Make DFS Replication members read their configuration now :: `Update-DfsrConfigurationFromAD -ComputerName FS1,DC2`
+Show the files still waiting to replicate :: Get-DfsrBacklog
+How many cloud endpoints in an Azure File Sync sync group? :: One (an Azure file share)
+To how many Storage Sync Services can a server be registered? :: One
+Cloud tiering: free space policy or date policy, which wins? :: The volume free space policy
+File system Azure File Sync server endpoints need :: NTFS

@@ -1,0 +1,502 @@
+# Unit: u09 | 9. Users and groups | Manage users and groups
+
+Every process and every file on Linux belongs to a user and a group. This unit shows where accounts are stored, how to create, change and remove users and groups, how passwords and password aging work, and how to give people administrator rights without sharing the root password.
+
+## Lesson: l0901 | Accounts and the files behind them
+
+A user account is a name plus a number, the UID (user ID). The kernel only cares about the number; the name is for people. Root is always UID 0. On RHEL 9, accounts for services (sshd, chrony, apache...) get UIDs below 1000, and people get UIDs from 1000 up.
+
+Local accounts live in four plain text files:
+
+- `/etc/passwd`: one line per user, readable by everybody. Seven fields separated by colons: name, x (the password is elsewhere), UID, GID of the primary group, a comment (often the full name), the home folder and the login shell.
+- `/etc/shadow`: the password hashes and the password aging numbers. Only root can read it.
+- `/etc/group`: one line per group: name, x, GID and the list of extra members.
+- `/etc/gshadow`: group passwords and group administrators (rarely used).
+
+```terminal
+[root@server1 ~]# grep student /etc/passwd /etc/group
+/etc/passwd:student:x:1000:1000:Student:/home/student:/bin/bash
+/etc/group:wheel:x:10:student
+/etc/group:student:x:1000:
+```
+
+The student line reads: user student, UID 1000, primary group 1000, comment Student, home /home/student, shell /bin/bash. The group file shows two things: the group student (GID 1000) with no extra members, and the group wheel, which lists student as a member.
+
+### Primary and secondary groups
+
+Each user has exactly one primary group (the GID in /etc/passwd). New files the user creates belong to it. A user can also be a member of any number of secondary (supplementary) groups; those are the member lists in /etc/group. On RHEL each new user gets a private primary group with the same name.
+
+```terminal
+[root@server1 ~]# id student
+uid=1000(student) gid=1000(student) groups=1000(student),10(wheel)
+[root@server1 ~]# getent passwd student
+student:x:1000:1000:Student:/home/student:/bin/bash
+```
+
+- `id USER` shows the UID, the primary group and all groups. `id -nG USER` lists only the group names.
+- `getent passwd NAME` and `getent group NAME` ask the system's account database, so they also find accounts that come from a directory server, not just the local files. They print nothing (and fail) when the name does not exist, which makes them good for checks.
+
+> Do not edit /etc/passwd or /etc/shadow by hand on the exam. Use the commands in the next lessons: they lock the files, keep both files in step and check what you type. If you really must edit, use `vipw` and `vipw -s`.
+
+@try machines=1
+@task t1 | Users and groups | 10 | server1
+Save the line for the user student from the account database into the file /root/student-entry.txt, and the list of student's group names (one line, as `id -nG` prints it) into /root/student-groups.txt.
+@check server1 | /root/student-entry.txt has student's passwd line
+grep -qx 'student:x:1000:1000:Student:/home/student:/bin/bash' /root/student-entry.txt
+@check server1 | /root/student-groups.txt lists student and wheel
+grep -qw wheel /root/student-groups.txt && grep -qw student /root/student-groups.txt
+@hint getent passwd prints the line; id -nG prints the group names. Redirect each into its file with >.
+@solution server1
+getent passwd student > /root/student-entry.txt
+id -nG student > /root/student-groups.txt
+@endtask
+@end
+
+@quiz
+? Which field of /etc/passwd holds the login shell?
+- the second
+- the fifth
++ the seventh (the last)
+- the sixth
+! The fields are name, x, UID, GID, comment, home folder and shell: the shell is the last one.
+? Where is a local user's password hash kept?
+- /etc/passwd
++ /etc/shadow
+- /etc/group
+- /etc/login.defs
+! /etc/passwd only has an x in the password field. The hash is in /etc/shadow, which only root can read.
+? A user's primary group is...
+- the first group listed for the user in /etc/group
++ the group whose GID is in the user's line of /etc/passwd
+- always the group wheel
+- the group with the lowest GID the user is in
+! The fourth field of /etc/passwd is the primary group's GID. Secondary groups come from the member lists in /etc/group.
+@end
+
+## Lesson: l0902 | Creating, changing and removing users
+
+`useradd NAME` creates a user with the defaults: the next free UID from 1000 up, a private group of the same name, the home folder /home/NAME (a copy of /etc/skel), and the shell /bin/bash. The defaults come from /etc/login.defs and /etc/default/useradd (`useradd -D` shows them).
+
+The options you need most:
+
+- `-u UID`: a specific UID.
+- `-g GROUP`: the primary group (the group must exist).
+- `-G G1,G2`: secondary groups.
+- `-c "TEXT"`: the comment field, usually the full name.
+- `-d DIR`: a different home folder. `-m` creates it (the default on RHEL), `-M` creates no home folder.
+- `-s SHELL`: the login shell, for example /sbin/nologin for an account that must not log in.
+- `-e YYYY-MM-DD`: the day the account expires.
+
+```terminal
+[root@server1 ~]# useradd -u 2001 -c "Ana Lima" -s /bin/bash -m ana
+[root@server1 ~]# id ana
+uid=2001(ana) gid=2001(ana) groups=2001(ana)
+[root@server1 ~]# getent passwd ana
+ana:x:2001:2001:Ana Lima:/home/ana:/bin/bash
+[root@server1 ~]# useradd -d /srv/bob -m bob
+[root@server1 ~]# ls -ld /srv/bob
+drwx------. 2 bob bob 60 Mar  2 04:00 /srv/bob
+```
+
+### Changing a user: usermod
+
+`usermod` takes mostly the same options as useradd and changes an existing account:
+
+- `usermod -s /sbin/nologin ana` changes the shell.
+- `usermod -c "Ana M. Lima" ana` changes the comment.
+- `usermod -aG devs ana` adds ana to the group devs and keeps her other groups.
+- `usermod -d /home/ana2 -m ana` moves the home folder (without -m only the entry changes).
+- `usermod -u 3001 ana` changes the UID (files in the home folder are updated, files elsewhere are not).
+- `usermod -l newname oldname` renames the account.
+- `usermod -e 2026-12-31 ana` sets the expiry date.
+
+> The classic trap: `usermod -G devs ana` without -a REPLACES all of ana's secondary groups with devs. Always write `-aG` when the task says "add".
+
+### Removing a user: userdel
+
+`userdel NAME` removes the account but leaves the home folder and the mail spool behind. `userdel -r NAME` removes them too. Files left behind still carry the old UID, so `ls -l` shows a number instead of a name:
+
+```terminal
+[root@server1 ~]# userdel bob
+[root@server1 ~]# ls -ld /srv/bob
+drwx------. 2 2002 2002 60 Mar  2 04:00 /srv/bob
+[root@server1 ~]# userdel -r ana
+[root@server1 ~]# ls /home
+student
+```
+
+If a new user later gets the same UID, that user owns the old files. `find / -nouser` lists files whose owner no longer exists.
+
+@try machines=1
+@task t1 | Users and groups | 10 | server1
+Create the user `paula` with the UID 2500, the comment `Paula Reyes` and the home folder /home/paula.
+@check server1 | paula has UID 2500 and the comment Paula Reyes
+test "$(getent passwd paula | cut -d: -f3,5,6)" = "2500:Paula Reyes:/home/paula"
+@check server1 | the home folder exists and belongs to paula
+test "$(stat -c %U /home/paula)" = paula
+@hint useradd -u sets the UID and -c the comment.
+@solution server1
+useradd -u 2500 -c "Paula Reyes" paula
+@endtask
+@task t2 | Users and groups | 10 | server1
+The user `oldtemp` exists already. Remove it together with its home folder.
+@check server1 | the account is gone
+! getent passwd oldtemp
+@check server1 | /home/oldtemp is gone
+test ! -e /home/oldtemp
+@hint userdel only removes the account; one option removes the home folder too.
+@solution server1
+userdel -r oldtemp
+@endtask
+@setup server1
+useradd oldtemp
+@end
+
+@quiz
+? You must add the existing user ana to the group audit without removing her other groups. Which command does it?
+- usermod -G audit ana
++ usermod -aG audit ana
+- useradd -G audit ana
+- groupmod -a ana audit
+! -a (append) together with -G adds to the secondary groups. Without -a the list is replaced.
+? Which useradd option creates an account with no home folder?
+- -m
++ -M
+- -d none
+- -N
+! -M means "do not create the home folder". -m (create it) is already the default on RHEL.
+? What does userdel do without options?
+- removes the user and the home folder
++ removes the account but keeps the home folder and the mail spool
+- only locks the account
+- asks which files to keep
+! Only userdel -r removes the home folder and the mail spool. Files left behind show the old UID.
+? Where does useradd copy the files of a new home folder from?
+- /etc/default/useradd
+- /home/template
++ /etc/skel
+- /usr/share/skel
+! /etc/skel holds the starting .bashrc, .bash_profile and .bash_logout. Put a file there and every new user gets a copy.
+@end
+
+## Lesson: l0903 | Groups and memberships
+
+Groups let several users share files and rights. The group commands mirror the user commands:
+
+- `groupadd NAME` creates a group with the next free GID from 1000 up; `groupadd -g 3000 NAME` picks the GID; `groupadd -r NAME` makes a system group (GID below 1000).
+- `groupmod -n NEW OLD` renames a group; `groupmod -g GID NAME` changes its number.
+- `groupdel NAME` removes a group. It refuses to remove a group that is some user's primary group.
+
+```terminal
+[root@server1 ~]# groupadd -g 3000 devs
+[root@server1 ~]# usermod -aG devs ana
+[root@server1 ~]# id ana
+uid=2001(ana) gid=2001(ana) groups=2001(ana),3000(devs)
+[root@server1 ~]# groups ana
+ana : ana devs
+[root@server1 ~]# groupmod -n developers devs
+[root@server1 ~]# groupmod -g 3100 developers
+[root@server1 ~]# getent group developers
+developers:x:3100:ana
+```
+
+### Managing members with gpasswd
+
+`gpasswd` edits a group's member list directly:
+
+- `gpasswd -a USER GROUP` adds one user.
+- `gpasswd -d USER GROUP` removes one user.
+- `gpasswd -M u1,u2 GROUP` sets the whole member list at once.
+
+```terminal
+[root@server1 ~]# gpasswd -a bob developers
+Adding user bob to group developers
+[root@server1 ~]# gpasswd -d bob developers
+Removing user bob from group developers
+```
+
+> A user who is logged in does not see a new group until the next login: group membership is read when the session starts. `id USER` reads the files and shows the new group at once; `id` with no name shows your current session.
+
+@try machines=1
+@task t1 | Users and groups | 10 | server1
+Create the group `finance` with GID 4000. Make the existing users `rita` and `sam` members of it (as a secondary group), keeping their other groups.
+@check server1 | finance has GID 4000
+test "$(getent group finance | cut -d: -f3)" = 4000
+@check server1 | rita and sam are members
+id -nG rita | grep -qw finance && id -nG sam | grep -qw finance
+@check server1 | rita is still in the group audit
+id -nG rita | grep -qw audit
+@hint groupadd -g sets the GID. usermod -aG (or gpasswd -a) adds a member without removing other groups.
+@solution server1
+groupadd -g 4000 finance
+usermod -aG finance rita
+gpasswd -a sam finance
+@endtask
+@setup server1
+groupadd audit
+useradd -G audit rita
+useradd sam
+@end
+
+@quiz
+? Which command sets the complete member list of the group ops to anna and ben?
+- gpasswd -a anna,ben ops
++ gpasswd -M anna,ben ops
+- groupmod -M anna,ben ops
+- usermod -G ops anna,ben
+! gpasswd -M replaces the member list; -a and -d add or remove one user.
+? groupdel refuses to remove a group. What is the most likely reason?
+- the group has secondary members
++ it is the primary group of an existing user
+- its GID is above 1000
+- it has no group password
+! A group that is some user's primary group cannot be removed; change that user's primary group (usermod -g) or remove the user first.
+? Which command renames the group web to webteam?
+- groupmod -l webteam web
++ groupmod -n webteam web
+- groupadd -n webteam web
+- usermod -n webteam web
+! groupmod -n NEW OLD renames a group; its GID and members stay.
+@end
+
+## Lesson: l0904 | Passwords, password aging and locked accounts
+
+Root sets anyone's password with `passwd USER` (it asks twice). A user changes their own password with `passwd` alone and must type the old one first. For scripts and for many users at once, two commands read the password from standard input:
+
+```terminal
+[root@server1 ~]# echo 'S3cret!pw' | passwd --stdin ana
+Changing password for user ana.
+passwd: all authentication tokens updated successfully.
+[root@server1 ~]# echo 'maria:N3wer!pw' | chpasswd
+```
+
+`passwd --stdin` is a RHEL extension; `chpasswd` reads `user:password` lines and works everywhere. Put the password in single quotes so the shell does not touch characters like ! or $.
+
+### Password aging
+
+/etc/shadow keeps, for every user, the day of the last password change and four limits. `chage -l USER` shows them in plain words, and chage changes them:
+
+- `chage -M 90 USER`: the password must be changed every 90 days (maximum age).
+- `chage -m 7 USER`: the password can be changed at most once every 7 days (minimum age).
+- `chage -W 10 USER`: warn 10 days before the password expires.
+- `chage -I 5 USER`: after the password expired, the account still accepts a change for 5 days, then it is disabled (inactive).
+- `chage -d 0 USER`: the password counts as expired, so the user must choose a new one at the next login.
+- `chage -E 2026-12-31 USER`: the whole account expires on that day (`-E -1` removes the date).
+
+```terminal
+[root@server1 ~]# chage -M 90 -m 7 -W 10 ana
+[root@server1 ~]# chage -l ana
+Last password change					: Mar 02, 2026
+Password expires					: May 31, 2026
+Password inactive					: never
+Account expires						: never
+Minimum number of days between password change		: 7
+Maximum number of days between password change		: 90
+Number of days of warning before password expires	: 10
+```
+
+`passwd -x`, `-n`, `-w`, `-i` and `-e` do the same as chage -M, -m, -W, -I and -d 0, if you prefer passwd.
+
+### Defaults for new users: /etc/login.defs
+
+chage changes existing users. The values new users get come from /etc/login.defs:
+
+```terminal
+[root@server1 ~]# grep -E '^PASS_' /etc/login.defs
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_WARN_AGE	7
+```
+
+Change PASS_MAX_DAYS to 60 and every user created afterwards must change the password every 60 days. Users that exist already keep their values: a task such as "all new users" means login.defs, "the user X" means chage.
+
+### Locking accounts and nologin
+
+- `passwd -l USER` (or `usermod -L USER`) locks the password: `!!` (passwd) or `!` (usermod) goes in front of the hash, so no password can match. `passwd -u` / `usermod -U` unlock it. Key-based ssh logins may still work while the password is locked.
+- `usermod -e 1 USER` or `chage -E 0 USER` expires the whole account, which stops every kind of login.
+- The shell /sbin/nologin refuses interactive logins. It suits accounts that only own files or run a service, or users who may only use a service such as file shares.
+
+```terminal
+[root@server1 ~]# passwd -l ana
+Locking password for user ana.
+passwd: Success
+[root@server1 ~]# passwd -u ana
+Unlocking password for user ana.
+passwd: Success
+[root@server1 ~]# useradd -s /sbin/nologin svc2
+[root@server1 ~]# su - svc2
+This account is currently not available.
+```
+
+@try machines=1
+@task t1 | Users and groups | 10 | server1
+The user `kevin` exists. Give him the password `Bl1zzard!` and make him change it at his next login. His password must also be changed every 45 days.
+@check server1 | the password works
+certlab-check password kevin 'Bl1zzard!'
+@check server1 | the password must be changed at the next login
+test "$(getent shadow kevin | cut -d: -f3)" = 0
+@check server1 | the maximum password age is 45 days
+test "$(getent shadow kevin | cut -d: -f5)" = 45
+@hint Set the password first (passwd --stdin), then chage -d 0 and chage -M 45. Setting a password resets the last-change day, so the order matters.
+@solution server1
+echo 'Bl1zzard!' | passwd --stdin kevin
+chage -d 0 -M 45 kevin
+@endtask
+@task t2 | Users and groups | 10 | server1
+Make sure that every user created from now on has to change the password every 60 days.
+@check server1 | PASS_MAX_DAYS is 60 in /etc/login.defs
+grep -Eq '^PASS_MAX_DAYS[[:space:]]+60$' /etc/login.defs
+@check server1 | a new user gets a maximum age of 60 days
+userdel -r checkuser60 2>/dev/null; useradd checkuser60 && test "$(getent shadow checkuser60 | cut -d: -f5)" = 60
+@hint Edit PASS_MAX_DAYS in /etc/login.defs (sed -i or vi).
+@solution server1
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS\t60/' /etc/login.defs
+grep ^PASS_MAX_DAYS /etc/login.defs
+@endtask
+@setup server1
+useradd kevin
+@end
+
+@quiz
+? Which command makes the user lee choose a new password at the next login?
+- passwd -l lee
++ chage -d 0 lee
+- chage -E 0 lee
+- chage -M 0 lee
+! -d 0 sets the last change to day 0, so the password counts as expired. -E 0 would expire the whole account instead.
+? You change PASS_MAX_DAYS in /etc/login.defs to 30. What happens to the users that already exist?
+- they all get 30 days at once
+- they must change their password at the next login
++ nothing: login.defs only sets the values for users created afterwards
+- their accounts are locked until root runs chage
+! login.defs holds the defaults for useradd. Existing users keep the values stored in /etc/shadow; change those with chage.
+? What does passwd -l do?
+- removes the password
++ puts !! in front of the password hash, so password logins fail
+- sets the shell to /sbin/nologin
+- deletes the account after the warning period
+! A locked hash can never match. passwd -u removes the !!. The account itself still exists and key logins may still work.
+? Which shell should an account get that must never log in interactively?
+- /bin/false or /bin/bash
+- /dev/null
++ /sbin/nologin
+- /etc/nologin
+! /sbin/nologin prints "This account is currently not available." and exits. It is the RHEL convention for service accounts.
+@end
+
+## Lesson: l0905 | Superuser access: su and sudo
+
+Two ways lead to root rights. Both are on the exam.
+
+### su: become another user
+
+`su USER` starts a shell as that user after asking for THAT user's password (root is never asked). The difference between the two forms:
+
+- `su - USER` (or `su -l`) starts a login shell: the user's environment, PATH and home folder, as if they had logged in.
+- `su USER` keeps most of your environment and your current folder. Commands may be missing from the PATH and files may land in the wrong place.
+- `su -` alone means `su - root`. `su - USER -c 'command'` runs one command and returns.
+
+```terminal
+[root@server1 ~]# su student
+[student@server1 root]$ pwd
+/root
+[student@server1 root]$ exit
+exit
+[root@server1 ~]# su - student
+[student@server1 ~]$ pwd
+/home/student
+[student@server1 ~]$ exit
+logout
+```
+
+### sudo: run one command as root
+
+`sudo COMMAND` runs a command as root after asking for the user's OWN password. Nobody else needs the root password, every command is logged, and the rights can be limited to some commands. `sudo -i` opens a root login shell, `sudo -l` lists what you may do and `sudo -u USER COMMAND` runs a command as another user.
+
+The rules are in /etc/sudoers. On RHEL it already contains this line, so members of the group wheel may run everything (with their own password):
+
+```terminal
+[root@server1 ~]# grep '^%wheel' /etc/sudoers
+%wheel  ALL=(ALL)       ALL
+```
+
+So "give the user X administrator rights" is often just `usermod -aG wheel X`.
+
+### Your own rules in /etc/sudoers.d
+
+Never edit /etc/sudoers directly: a typing mistake can lock everybody out of sudo. Put each rule in its own file under /etc/sudoers.d (sudoers reads all files there), make the file mode 0440, and check the syntax with `visudo -c`. `visudo` alone opens /etc/sudoers in an editor and checks it before saving.
+
+A rule reads `WHO WHERE=(AS_WHOM) WHAT`:
+
+- `tom ALL=(ALL) ALL`: tom may run everything on all hosts as any user.
+- `%ops ALL=(ALL) NOPASSWD: ALL`: members of the group ops (the % means group) may run everything without typing a password.
+- `tom ALL=(ALL) /usr/bin/systemctl, /usr/bin/dnf`: tom may only run these two programs (full paths).
+
+```terminal
+[root@server1 ~]# echo '%ops ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ops
+[root@server1 ~]# chmod 440 /etc/sudoers.d/ops
+[root@server1 ~]# visudo -c
+/etc/sudoers: parsed OK
+/etc/sudoers.d/ops: parsed OK
+```
+
+When a rule does not allow a command, sudo says so and the attempt goes into the log:
+
+```terminal
+[tom@server1 ~]$ sudo cat /etc/shadow
+Sorry, user tom is not allowed to execute '/bin/cat /etc/shadow' as root on server1.lab.example.com.
+```
+
+@try machines=1
+@task t1 | Users and groups | 10 | server1
+Members of the group `helpdesk` (it exists, and the user `hana` is a member) must be able to run any command as root with sudo without typing a password. Do not edit /etc/sudoers itself.
+@check server1 | hana may run every command without a password
+su - hana -c 'sudo -n -l' | grep -q 'NOPASSWD: ALL'
+@check server1 | /etc/sudoers.d has the rule and the sudoers files are valid
+grep -rqs '^%helpdesk' /etc/sudoers.d/ && visudo -c >/dev/null
+@hint A file in /etc/sudoers.d with %helpdesk ALL=(ALL) NOPASSWD: ALL, mode 440, then visudo -c.
+@solution server1
+echo '%helpdesk ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/helpdesk
+chmod 440 /etc/sudoers.d/helpdesk
+visudo -c
+@endtask
+@task t2 | Users and groups | 10 | server1
+Give the user `omar` full administrator rights through sudo (with his own password), using the group that RHEL already allows in /etc/sudoers.
+@check server1 | omar is in wheel
+id -nG omar | grep -qw wheel
+@hint The %wheel line is already in /etc/sudoers.
+@solution server1
+usermod -aG wheel omar
+@endtask
+@setup server1
+groupadd helpdesk
+useradd -G helpdesk hana
+useradd omar
+@end
+
+@quiz
+? What is the difference between su - student and su student?
+- su - asks for root's password
++ su - starts a login shell with student's own environment and home folder
+- su student only works for root
+- there is no difference
+! The dash makes a login shell: PATH, home folder and startup files are student's, as after a real login.
+? Whose password does sudo ask for?
+- root's
++ the user's own
+- the password of the group wheel
+- none, unless NOPASSWD is set for root
+! sudo asks for the password of the person running it (unless the rule says NOPASSWD), so nobody needs the root password.
+? Which line lets the members of the group dba run any command as root without a password?
+- dba ALL=(ALL) NOPASSWD: ALL
++ %dba ALL=(ALL) NOPASSWD: ALL
+- @dba ALL=(ALL) ALL
+- %dba ALL=NOPASSWD
+! The % in front of a name makes it a group. Without it, the rule is for a user called dba.
+? You wrote a file in /etc/sudoers.d. What should you do before you log out?
+- restart the sudo service
++ check the syntax with visudo -c
+- run sudo --reload
+- reboot
+! sudo reads its files every time; there is no service to restart. A syntax error can break sudo for everyone, so visudo -c checks all files.
+@end

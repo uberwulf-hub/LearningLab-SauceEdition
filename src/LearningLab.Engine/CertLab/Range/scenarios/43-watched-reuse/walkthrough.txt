@@ -1,0 +1,12 @@
+Same reused-password chain as Reuse and Reuse, but app02 is watched.
+
+1. Do the noisy-looking work off the watched box. Read the hash dump from web01 (the first server, not
+   watched) and crack it offline with hashcrack - cracking makes no network noise at all.
+
+2. One clean touch of the target. nmap -sV 10.10.8.30 once, then ssh renter@10.10.8.30 with the cracked
+   password. A single login looks normal; never run pwguess against it - you already have the password.
+
+3. Root. A set-user-ID program on app02 reads files as root; find / -perm -4000 and use it on root's flag.
+
+Why the noisy way fails: a full scan plus pwguess against app02 crosses the watcher's threshold; it blocks
+your address and your connections time out. The crack gave you the password - there is no reason to guess.

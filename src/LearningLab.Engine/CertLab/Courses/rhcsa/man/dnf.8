@@ -1,0 +1,163 @@
+NAME
+       dnf - install, update and remove software packages
+
+SYNOPSIS
+       dnf [OPTION...] COMMAND [ARGUMENT...]
+
+DESCRIPTION
+       dnf manages RPM packages on RHEL. It downloads packages from the
+       repositories it knows, works out what else they need (dependencies),
+       checks their signatures and installs everything together. yum is
+       another name for dnf on RHEL 9.
+
+       Commands that change the system need root. dnf shows what it is going
+       to do and asks "Is this ok [y/N]:" before it does it; -y answers yes.
+
+   Repositories
+       Each repository is a section in a .repo file in /etc/yum.repos.d/:
+
+           [BaseOS]
+           name=RHEL 9 BaseOS
+           baseurl=http://repo.lab.example.com/BaseOS
+           enabled=1
+           gpgcheck=1
+           gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+       baseurl may also be file:///mnt/BaseOS for a mounted DVD. gpgcheck=1
+       makes dnf check each package's signature against gpgkey (or a key
+       imported with rpm --import); gpgcheck=0 skips the check. dnf
+       config-manager --add-repo URL writes such a file for you, but without
+       gpgkey.
+
+COMMANDS
+       install PACKAGE...
+              Install packages, by name, by a file they provide (dnf install
+              /usr/bin/dig) or from a local .rpm file.
+
+       remove PACKAGE...
+              Remove packages (and packages that need them).
+
+       reinstall PACKAGE...
+              Install the same version again.
+
+       upgrade [PACKAGE...], update
+              Upgrade the named packages, or all of them.
+
+       check-update
+              List the packages that have an update. Exit status 100 means
+              updates are available.
+
+       list [installed|available|updates] [PATTERN]
+              List packages.
+
+       info PACKAGE
+              Show a package's version, size, repository and description.
+
+       search WORD
+              Look for WORD in package names and summaries.
+
+       provides FILE, whatprovides FILE
+              Which package contains this file (wildcards such as */semanage
+              work).
+
+       repolist [--all|--disabled]
+              List the enabled repositories (or all, or the disabled ones).
+
+       repoquery [OPTION] PACKAGE
+              Ask about packages without installing them, for example
+              --requires or -l (the files in the package).
+
+       group list, group info GROUP, group install GROUP
+              Work with package groups, such as "Server with GUI" or
+              "Development Tools".
+
+       module list, module enable, module install
+              Work with module streams (different versions of software such
+              as php:8.1) from AppStream.
+
+       history [list|info N|undo N]
+              Show past transactions, or undo one.
+
+       clean all
+              Remove cached repository data.
+
+       makecache
+              Download repository data now.
+
+       autoremove
+              Remove packages that were installed only as dependencies and
+              are no longer needed.
+
+       config-manager --add-repo URL
+              Write a .repo file for URL. --enable REPO and --disable REPO
+              switch repositories on or off.
+
+OPTIONS
+       -y, --assumeyes
+              Answer yes to every question.
+
+       --assumeno
+              Answer no: shows what would be done.
+
+       -q, --quiet
+              Print less.
+
+       --nogpgcheck
+              Do not check signatures for this command.
+
+       --enablerepo=REPO, --disablerepo=REPO
+              Use (or leave out) a repository for this command only.
+
+       --repo=REPO
+              Use only this repository.
+
+       --refresh
+              Treat the cached repository data as out of date.
+
+       -C, --cacheonly
+              Use only the cached data.
+
+       --allowerasing
+              Allow removing installed packages to solve conflicts.
+
+EXAMPLES
+       Use the lab repositories:
+
+           dnf config-manager --add-repo http://repo.lab.example.com/BaseOS
+           dnf config-manager --add-repo http://repo.lab.example.com/AppStream
+           dnf repolist
+
+       Install the web server without being asked:
+
+           dnf install -y httpd
+
+       Which package has the semanage command?
+
+           dnf provides '*/semanage'
+
+       Install a package from a downloaded file:
+
+           dnf install /root/mypkg-1.0-1.el9.x86_64.rpm
+
+       Use the DVD as a repository:
+
+           mount /dev/sr0 /mnt
+           dnf config-manager --add-repo file:///mnt/BaseOS
+
+FILES
+       /etc/dnf/dnf.conf
+              Main settings (gpgcheck default, installonly_limit...).
+
+       /etc/yum.repos.d/*.repo
+              Repository definitions.
+
+       /var/log/dnf.log
+              What dnf did.
+
+NOTES
+       "Error: GPG check FAILED" or a question about importing a key means
+       the repository's key is not trusted yet: add the gpgkey= line, import
+       the key with rpm --import, or set gpgcheck=0 when the task says so.
+
+SEE ALSO
+       rpm(8), yum.conf(5), dnf.conf(5)

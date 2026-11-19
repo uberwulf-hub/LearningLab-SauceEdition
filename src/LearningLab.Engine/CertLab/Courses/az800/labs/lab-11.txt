@@ -1,0 +1,64 @@
+# Lab: lab-11 | Harborline's DNS | u11 | 40
+Harborline is launching a new internal application, its partner Tidewater is renumbering its DNS servers, and the security team has found malware that phones home to a domain on the Internet. Everything happens on the domain controllers DC1 and DC2, which are the DNS servers for every machine.
+
+@vars
+app = erp | crm | wms
+n = 61-69
+@endvars
+
+@task t01 | Networking | 25 | DC1
+Create the zone `harborline.internal` on DC1, stored in Active Directory and replicated to every DNS server in the domain, with secure dynamic updates only. Add the host **{app}** at **10.10.0.{n}** together with its PTR record in the existing reverse zone.
+@check admin | the zone accepts only secure updates
+dns(DC1).zone["harborline.internal"].scope == Domain
+dns(DC1).zone["harborline.internal"].dynamic == Secure
+@check admin | CL1 resolves the name and the address
+resolve(client=CL1, name={app}.harborline.internal) == 10.10.0.{n}
+resolve(client=CL1, name=10.10.0.{n}, type=PTR) == {app}.harborline.internal
+@hint Add-DnsServerPrimaryZone -ReplicationScope Domain -DynamicUpdate Secure; Add-DnsServerResourceRecordA -CreatePtr adds the PTR record in 0.10.10.in-addr.arpa.
+@solution DC1
+Add-DnsServerPrimaryZone -Name harborline.internal -ReplicationScope Domain -DynamicUpdate Secure
+Add-DnsServerResourceRecordA -ZoneName harborline.internal -Name {app} -IPv4Address 10.10.0.{n} -CreatePtr
+@explain
+-CreatePtr writes the PTR record into the reverse zone that covers the address, if it exists. Secure only means just the computer that registered a name (or an administrator) can change it.
+@endtask
+
+@task t02 | Networking | 25 | DC1
+Tidewater keeps replacing its DNS servers, so a conditional forwarder with fixed addresses keeps breaking. Make every DNS server on a DC in the forest resolve `tidewater.example` through a **stub zone** loaded from Tidewater's DNS server 192.168.50.10.
+@check admin | the stub zone is on both DCs
+dns(DC1).zone["tidewater.example"].type == Stub
+dns(DC2).zone["tidewater.example"].type == Stub
+@check admin | CL1 reaches Tidewater's file server by name
+resolve(client=CL1, name=files.tidewater.example) == 192.168.50.20
+@hint Add-DnsServerStubZone with -MasterServers and -ReplicationScope Forest. Give AD replication a minute.
+@solution DC1
+Add-DnsServerStubZone -Name tidewater.example -MasterServers 192.168.50.10 -ReplicationScope Forest
+#wait 60
+@explain
+A stub zone keeps the partner zone's SOA, NS and glue A records and refreshes them itself, so it follows new name servers. Stored in AD with forest scope, it reaches every DC that runs DNS.
+@endtask
+
+@task t03 | Networking | 25 | DC1
+Malware on a few laptops contacts servers in the domain `example.net`. Until the laptops are cleaned, make **both** DNS servers silently drop every query for names in `example.net` (no answer at all). Name the policy **BlockExampleNet** on each server.
+@check admin | the policy is on both DCs
+dns(DC1).policy["BlockExampleNet"].action == IGNORE
+dns(DC2).policy["BlockExampleNet"].action == IGNORE
+@check admin | CL1 can't resolve names in example.net any more
+resolve(client=CL1, name=updates.example.net) == FAILED
+@hint Add-DnsServerQueryResolutionPolicy -Action IGNORE -Fqdn "EQ,*.example.net", once on DC1 and once with -ComputerName DC2: policies don't replicate.
+@solution DC1
+Add-DnsServerQueryResolutionPolicy -Name BlockExampleNet -Action IGNORE -Fqdn "EQ,*.example.net"
+Add-DnsServerQueryResolutionPolicy -Name BlockExampleNet -Action IGNORE -Fqdn "EQ,*.example.net" -ComputerName DC2
+@explain
+A client that gets no answer from its first DNS server asks the next one, so a block on DC1 alone would be bypassed through DC2. DENY would answer with a refusal; IGNORE gives no answer at all.
+@endtask
+
+@task t04 | Networking | 25 | DC1
+Protect the answers for `harborline.internal` with DNSSEC: sign the zone with the default settings.
+@check admin | the zone is signed
+dns(DC1).zone["harborline.internal"].signed == Yes
+@hint Invoke-DnsServerZoneSign -SignWithDefault.
+@solution DC1
+Invoke-DnsServerZoneSign -ZoneName harborline.internal -SignWithDefault -Force
+@explain
+Signing adds the DNSKEY records and an RRSIG for each record set. Clients only insist on validated answers when a Name Resolution Policy Table rule (Group Policy) tells them to.
+@endtask

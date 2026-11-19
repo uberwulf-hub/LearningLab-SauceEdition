@@ -1,0 +1,18 @@
+SYNOPSIS: Stops other computers from opening PowerShell sessions on this computer.
+DESCRIPTION:
+Disable-PSRemoting turns off remote access to this computer's PowerShell session configurations (the endpoints that Invoke-Command, New-PSSession and Enter-PSSession connect to). After it, connections from other computers are refused.
+
+It is not a full undo of Enable-PSRemoting. On a real PC, the WinRM service keeps running, the listener stays and the firewall rules stay open; it prints a warning to remind you. To close everything, you would also stop and disable the WinRM service and turn off the firewall rules yourself.
+
+Run it in a PowerShell window opened as an administrator.
+PARAMETER Force:
+Skips the "Are you sure?" questions.
+EXAMPLE: Disable-PSRemoting -Force
+Turns off remote PowerShell access and shows the warning about the parts it leaves in place.
+EXAMPLE: Disable-PSRemoting -Force; Enable-PSRemoting -Force
+Turns remoting off and back on, for example after experimenting.
+NOTES:
+Sessions on the same computer (New-PSSession -ComputerName localhost) also count as remote, so they stop working too.
+
+Other programs may use WinRM for their own work (for example Windows Admin Center, or server management tools). Think before switching the service off completely.
+RELATED: Enable-PSRemoting, Test-WSMan, Get-PSSession, about_Remote

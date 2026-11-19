@@ -1,0 +1,67 @@
+NAME
+       mv - move or rename files and directories
+
+SYNOPSIS
+       mv [-i | -f | -n] [-v] [-u] SOURCE TARGET
+       mv [OPTIONS] SOURCE... DIRECTORY
+       mv [OPTIONS] -t DIRECTORY SOURCE...
+
+DESCRIPTION
+       mv renames SOURCE to TARGET, or moves one or more files and
+       directories into DIRECTORY. Within one file system, a move only
+       changes the directory entry: it is instant, and the file keeps its
+       inode, owner, permissions and SELinux context. Between file systems,
+       mv copies the data and then deletes the original.
+
+       An existing TARGET file is replaced without a question, unless you
+       use -i or -n. A directory is moved with everything in it; no -r is
+       needed.
+
+       Because a moved file keeps its SELinux context, a file moved into
+       /var/www/html from your home directory still has the type
+       user_home_t, and Apache cannot read it. Run restorecon on it, or use
+       cp instead of mv, or mv -Z.
+
+OPTIONS
+       -i, --interactive
+              Ask before replacing an existing file.
+
+       -f, --force
+              Never ask (cancels an earlier -i).
+
+       -n, --no-clobber
+              Never replace an existing file.
+
+       -u, --update
+              Move only when SOURCE is newer than TARGET, or TARGET is
+              missing.
+
+       -v, --verbose
+              Print each move.
+
+       -t, --target-directory DIRECTORY
+              Move all sources into DIRECTORY.
+
+       -T, --no-target-directory
+              Treat TARGET as a normal file name even if it is a directory.
+
+       -Z, --context
+              Give the moved files the default SELinux context of their new
+              place.
+
+EXAMPLES
+       Rename a file:
+
+           mv report.txt report-2026.txt
+
+       Move several files into a directory, showing each:
+
+           mv -v *.log /var/tmp/oldlogs/
+
+       Move a web page into place and fix its SELinux label:
+
+           mv ~/index.html /var/www/html/
+           restorecon -v /var/www/html/index.html
+
+SEE ALSO
+       cp(1), rm(1), rename(1), restorecon(8), ls(1)

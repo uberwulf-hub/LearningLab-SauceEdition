@@ -1,0 +1,21 @@
+SYNOPSIS: Installs roles and features on Windows Server.
+DESCRIPTION:
+Install-WindowsFeature installs a role or feature together with the parts it needs and its default role services. -IncludeManagementTools adds the matching consoles and tools; -IncludeAllSubFeature adds every role service under it. The result shows Success, whether a restart is needed and which features were installed. Installing Web-Server, for example, creates the W3SVC service and the C:\inetpub\wwwroot folder.
+
+Some features (Hyper-V, BitLocker...) finish only after a restart: they stay InstallPending until then.
+PARAMETER Name:
+The features to install. Position 0, takes pipeline input.
+PARAMETER IncludeManagementTools:
+Also installs the management tools.
+PARAMETER IncludeAllSubFeature:
+Also installs every sub-feature.
+PARAMETER Restart:
+Restarts at once when needed.
+PARAMETER ComputerName:
+Another server.
+EXAMPLE: Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+Installs IIS with its management console.
+EXAMPLE: Get-WindowsFeature Telnet-Client | Install-WindowsFeature
+NOTES:
+Add-WindowsFeature is an older name for the same command.
+RELATED: Get-WindowsFeature, Uninstall-WindowsFeature

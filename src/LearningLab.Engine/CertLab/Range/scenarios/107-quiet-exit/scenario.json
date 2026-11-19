@@ -1,0 +1,68 @@
+{
+    "id": "quiet-exit",
+    "title": "Quiet Exit",
+    "category": "soc",
+    "level": "Advanced",
+    "order": 1,
+    "summary": "Two 'data leaving' alerts: a big upload in the night and a computer asking for strange names over and over. One is the backup. The other is smuggling data out inside name lookups.",
+    "story": "You are the analyst on shift at {{CO}} (a made-up company). Two different rules fired about data leaving the network. Big uploads are often backups; but data can also be hidden in places nobody looks, such as DNS, the system that turns names into addresses. Work out which alert is real and follow it back to the program and what started it.",
+    "goal": "Decide which alert is real, then find the computer, the domain carrying the data, the program making the lookups, its parent, how many lookups there were, and what to block.",
+    "skills": "DNS tunnelling, reading DNS events, process parents, telling a backup from a leak",
+    "defender": "none",
+    "start": "soc",
+    "minutes": 30,
+    "vars": {
+        "CO": "company",
+        "UA": "person:flast", "UB": "person:flast", "O1": "person:flast", "O2": "person:flast",
+        "HA": "num:10-29", "HB": "num:30-49", "H3": "num:50-69", "H4": "num:70-99",
+        "NET": "subnet:10",
+        "T0": "time:10-15",
+        "TUN": "pick:cdn-telemetry-sync.example|metrics-lookup.example|dnsq-relay.example|stat-counter-net.example",
+        "TUNIP": "ip", "VAULTIP": "ip",
+        "NQ": "num:30-55",
+        "HX": "hex:6",
+        "TOOL": "pick:svch0st.exe|dnsupd.exe|wincache.exe|msupdater.exe",
+        "VBS": "pick:readme.vbs|update.vbs|sync.vbs|helper.vbs",
+        "REAL": "pick:a|b",
+        "QV": "pick:dns|upload"
+    },
+    "variants": {
+        "REAL": {
+            "a": { "BADH": "WS-{{HA}}", "BADU": "{{UA}}", "BADIP": "{{NET}}.{{HA}}" },
+            "b": { "BADH": "WS-{{HB}}", "BADU": "{{UB}}", "BADIP": "{{NET}}.{{HB}}" }
+        },
+        "QV": {
+            "dns": { "QRULE": "Many lookups of one unusual domain", "VQ": "real" },
+            "upload": { "QRULE": "Large upload outside working hours", "VQ": "false alarm" }
+        }
+    },
+    "siem": {
+        "start": "{{T0}}",
+        "noise": {
+            "count": 200, "from": "-10h", "to": "+40m",
+            "hosts": [ "WS-{{HA}}", "WS-{{HB}}", "WS-{{H3}}", "WS-{{H4}}" ],
+            "users": [ "{{UA}}", "{{UB}}", "{{O1}}", "{{O2}}" ],
+            "ips": [ "{{NET}}.{{HA}}", "{{NET}}.{{HB}}", "{{NET}}.{{H3}}", "{{NET}}.{{H4}}" ],
+            "net": "{{NET}}", "servers": [ "FILE01" ], "dc": "DC01", "domain": "{{CO_DOMAIN}}",
+            "kinds": [ "logon", "process", "process", "dns", "dns", "dns", "firewall" ]
+        }
+    },
+    "machines": [
+        { "name": "soc", "hostname": "soc.{{CO_DOMAIN}}", "role": "your box: the analyst's workstation", "nics": [ "{{NET}}.250/24" ] }
+    ],
+    "questions": [
+        { "id": "verdict", "ask": "The alert \"{{QRULE}}\": real attack or false alarm? (one try)", "answer": "{{VQ}}", "tries": 1, "points": 60,
+          "explain": "The night upload is BACKUP01 sending its nightly copy to the company's offsite backup service, as it does every night. The lookups are one desktop asking for long made-up names under one domain every few seconds: data hidden in the names." },
+        { "id": "host", "ask": "Which computer was smuggling data out?", "answer": "{{BADH}}", "accept": [ "{{BADIP}}" ], "points": 30, "explain": "host= of the many lookups." },
+        { "id": "domain", "ask": "Which domain carried the data?", "answer": "{{TUN}}", "points": 30, "explain": "Every query ends in it." },
+        { "id": "tool", "ask": "Which program made the lookups (just the file name)?", "answer": "{{TOOL}}", "accept": [ "C:\\Users\\{{BADU}}\\AppData\\Local\\{{TOOL}}" ], "points": 30, "explain": "image= on those DNS events, and its own process event." },
+        { "id": "parent", "ask": "Which program started it (its parent, just the file name)?", "answer": "wscript.exe", "accept": [ "wscript", "C:\\Windows\\System32\\wscript.exe" ], "points": 40, "explain": "parent= of {{TOOL}}'s process event: Windows' script host, running {{VBS}} from the Startup folder." },
+        { "id": "count", "ask": "How many of those lookups were there?", "answer": "{{NQ}}", "points": 30, "explain": "siem search source=dns query~{{TUN}} counts them." },
+        { "id": "block", "ask": "What should be blocked to stop it (the domain or its address)?", "answer": "{{TUN}}", "accept": [ "*.{{TUN}}", "{{TUNIP}}" ], "points": 30, "explain": "Blocking the domain at the company's DNS server stops the lookups wherever they go." }
+    ],
+    "hints": [
+        { "text": "Every DNS lookup carries a name, and a name can carry about 60 characters of anything. A computer asking for a different long, random-looking name under the same domain every few seconds is sending something out. siem search source=dns --count-by host, then --count-by query on the busy one.", "cost": 10 },
+        { "text": "The lookups have an image= field: the program that asked. Find that program's own start: siem search source=proclog image=*NAME* shows its parent= and the script it came from.", "cost": 18 },
+        { "text": "For the upload: siem search host=BACKUP01 shows the backup job that ran just before it and where it sent its copy. A backup server sending to the company's backup provider in the night is what backups do.", "cost": 24 }
+    ]
+}

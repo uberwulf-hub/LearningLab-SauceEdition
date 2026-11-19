@@ -1,0 +1,34 @@
+{
+    "id": "share-and-tell",
+    "title": "Share and Tell",
+    "level": "Intermediate",
+    "order": 3,
+    "summary": "A Windows file server shares a folder with everyone, and the folder tells you more than it should. From a staff account to the local administrator is one reused password away.",
+    "story": "Pinecone Logistics (made up) runs a Windows server, WIN-FS01, on 10.10.3.0/24. You start on scout, a Linux box on the same network. Nobody has given you an account.",
+    "goal": "Capture the user flag on a staff member's desktop and the administrator flag on the Administrator desktop.",
+    "skills": "SMB shares, null sessions, winrm-shell, finding credentials in files, local administrator",
+    "defender": "none",
+    "start": "scout",
+    "minutes": 35,
+    "vars": { "KIMPW": "word", "ADMPW": "word" },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "10.10.3.5/24" ] },
+        { "name": "WIN-FS01", "os": "windows", "hostname": "win-fs01.pinecone.example", "role": "Windows file server", "nics": [ "10.10.3.40/24" ],
+          "ports": [ 135, 139, 445, 5985 ],
+          "accounts": [
+            { "user": "Administrator", "password": "{{ADMPW}}", "admin": true },
+            { "user": "kim", "password": "{{KIMPW}}", "remote": true }
+          ],
+          "shares": [ { "name": "Public", "path": "C:\\Shares\\Public", "anonymous": true, "comment": "Shared with everyone" } ],
+          "setup": "fs01.ps1" }
+    ],
+    "flags": [
+        { "id": "user", "name": "Kim's flag", "points": 120, "machine": "WIN-FS01", "path": "C:\\Users\\kim\\Desktop\\flag.txt", "level": "user" },
+        { "id": "admin", "name": "Administrator's flag", "points": 180, "machine": "WIN-FS01", "path": "C:\\Users\\Administrator\\Desktop\\flag.txt", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "Scan 10.10.3.0/24, then 10.10.3.40. Port 445 is Windows file sharing. List its shares with no account: smbclient -L //10.10.3.40 -N", "cost": 10 },
+        { "text": "The Public share allows anonymous access (smbclient //10.10.3.40/Public -N). Read every file: one is a note to new staff with a password.", "cost": 20 },
+        { "text": "winrm-shell -i 10.10.3.40 -u kim -p PASSWORD gives a PowerShell session. Look in kim's Documents for an IT script: it has the local administrator password. Sign in again as Administrator.", "cost": 35 }
+    ]
+}

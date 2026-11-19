@@ -1,0 +1,496 @@
+{
+  "id": "spanish",
+  "name": "Spanish",
+  "levels": {
+    "prek": [
+      { "name": "Colors", "questions": [
+        {"q":"What color is rojo?","say":"What color is rojo?","lang":"es","choices":["Red","Blue","Green"],"answer":0,"explain":"Rojo means red. A red apple is una manzana roja.","tip":"Rojo rhymes with 'oh no' - oh no, my red balloon popped!"},
+        {"q":"What color is azul?","say":"What color is azul?","lang":"es","choices":["Yellow","Blue","Pink"],"answer":1,"explain":"Azul means blue, like the sky.","tip":"Azul sounds like 'a pool' - a big blue pool!"},
+        {"q":"What color is verde?","say":"What color is verde?","lang":"es","choices":["Green","Red","Black"],"answer":0,"explain":"Verde means green, like grass.","tip":"Verde sounds a bit like 'very' - the grass is very green!"},
+        {"q":"What color is amarillo?","say":"What color is amarillo?","lang":"es","choices":["Purple","White","Yellow"],"answer":2,"explain":"Amarillo means yellow, like the sun.","tip":"Amarillo sounds like 'armadillo' - picture a yellow armadillo!"},
+        {"q":"How do you say orange (the color) in Spanish?","say":"How do you say the color orange in Spanish?","lang":"es","choices":["anaranjado","morado","negro"],"answer":0,"explain":"Anaranjado means orange. Many people also say naranja.","tip":"Anaranjado has 'naranja' inside, and a naranja is an orange you can eat!"},
+        {"q":"What color is blanco?","say":"What color is blanco?","lang":"es","choices":["Black","White","Brown"],"answer":1,"explain":"Blanco means white, like snow.","tip":"Blanco sounds like 'blank' - a blank page is white!"},
+        {"q":"What color is negro?","say":"What color is negro?","lang":"es","choices":["Black","Green","Orange"],"answer":0,"explain":"Negro means black, like the night sky.","tip":"Negro, negro, dark as night - turn off the lamp, no more light!"},
+        {"q":"What color is morado?","say":"What color is morado?","lang":"es","choices":["Red","Yellow","Purple"],"answer":2,"explain":"Morado means purple, like grapes.","tip":"Morado - more purple grapes, please!"}
+      ]},
+      { "name": "Numbers 1 to 10", "questions": [
+        {"q":"What number is tres?","say":"What number is tres?","lang":"es","choices":["3","5","8"],"answer":0,"explain":"Tres means three: uno, dos, tres.","tip":"Tres sounds like 'trace' - trace a triangle with 3 sides!"},
+        {"q":"How do you say two in Spanish?","say":"How do you say two in Spanish?","lang":"es","choices":["diez","dos","seis"],"answer":1,"explain":"Dos means two.","tip":"Dos rhymes with 'close' - hold two hands close!"},
+        {"q":"What number is cinco?","say":"What number is cinco?","lang":"es","choices":["5","4","1"],"answer":0,"explain":"Cinco means five. You have cinco fingers on one hand.","tip":"Cinco sounds like 'sink-o' - wash your five fingers in the sink!"},
+        {"q":"What number is diez?","say":"What number is diez?","lang":"es","choices":["2","6","10"],"answer":2,"explain":"Diez means ten. You have diez fingers in all.","tip":"Diez sounds like 'dee-ess' - say yes to all ten fingers!"},
+        {"q":"What number is uno?","say":"What number is uno?","lang":"es","choices":["1","7","9"],"answer":0,"explain":"Uno means one.","tip":"Uno is the card game where you want just one card left!"},
+        {"q":"How do you say four in Spanish?","say":"How do you say four in Spanish?","lang":"es","choices":["nueve","ocho","cuatro"],"answer":2,"explain":"Cuatro means four.","tip":"Cuatro sounds like 'quad' - a quad bike has four wheels!"},
+        {"q":"What number is siete?","say":"What number is siete?","lang":"es","choices":["7","3","6"],"answer":0,"explain":"Siete means seven.","tip":"Siete sounds like 'see-eh-tay' - see seven stars!"},
+        {"q":"What number is ocho?","say":"What number is ocho?","lang":"es","choices":["2","8","10"],"answer":1,"explain":"Ocho means eight. A spider has ocho legs.","tip":"Ocho starts with O, and an 8 is two O's stacked up!"}
+      ]},
+      { "name": "Animals", "questions": [
+        {"q":"What animal is a perro?","say":"What animal is a perro?","lang":"es","choices":["Dog","Cat","Fish"],"answer":0,"explain":"Perro means dog. Woof!","tip":"Perro has a rolling r like a dog growling: grrr, perro!"},
+        {"q":"What animal is a gato?","say":"What animal is a gato?","lang":"es","choices":["Horse","Cat","Bird"],"answer":1,"explain":"Gato means cat. Meow!","tip":"Gato sounds like 'got-o' - the cat got your toes!"},
+        {"q":"What animal is a pájaro?","say":"What animal is a pájaro?","lang":"es","choices":["Cow","Dog","Bird"],"answer":2,"explain":"Pájaro means bird. Birds can fly.","tip":"Pájaro sounds like 'pa-ha-ro' - ha ha, the bird is laughing!"},
+        {"q":"What animal is a pez?","say":"What animal is a pez?","lang":"es","choices":["Fish","Duck","Bear"],"answer":0,"explain":"Pez means fish. A fish swims in water.","tip":"Pez is short and quick, just like a little fish!"},
+        {"q":"What animal is a vaca?","say":"What animal is a vaca?","lang":"es","choices":["Cow","Cat","Horse"],"answer":0,"explain":"Vaca means cow. Moo!","tip":"Vaca sounds like 'vacation' - the cow is on vacation in the field!"},
+        {"q":"What animal is a caballo?","say":"What animal is a caballo?","lang":"es","choices":["Fish","Horse","Dog"],"answer":1,"explain":"Caballo means horse. You can ride a caballo.","tip":"Caballo sounds like 'cab-eye-yo' - a horse is a cab you can ride!"},
+        {"q":"What animal is a pato?","say":"What animal is a pato?","lang":"es","choices":["Bear","Cow","Duck"],"answer":2,"explain":"Pato means duck. Quack!","tip":"Pato sounds like 'pat-o' - pat the duck's soft feathers!"},
+        {"q":"What animal is an oso?","say":"What animal is an oso?","lang":"es","choices":["Bear","Bird","Cat"],"answer":0,"explain":"Oso means bear. A teddy bear is un osito.","tip":"Oso sounds like 'oh so' - oh so big is the bear!"}
+      ]},
+      { "name": "Greetings and Family", "questions": [
+        {"q":"What does hola mean?","say":"What does hola mean?","lang":"es","choices":["Hello","Goodbye","Thank you"],"answer":0,"explain":"Hola means hello. You say it when you meet someone.","tip":"In hola the h is silent - just wave and say OH-la!"},
+        {"q":"What does adiós mean?","say":"What does adiós mean?","lang":"es","choices":["Hello","Goodbye","Please"],"answer":1,"explain":"Adiós means goodbye. You say it when you leave.","tip":"Adiós: wave your hand and sing ah-dee-OHS!"},
+        {"q":"What does gracias mean?","say":"What does gracias mean?","lang":"es","choices":["Sorry","Hello","Thank you"],"answer":2,"explain":"Gracias means thank you.","tip":"Gracias sounds like 'grah-see-ahs' - say it with a big smile!"},
+        {"q":"What does por favor mean?","say":"What does por favor mean?","lang":"es","choices":["Please","Goodbye","Yes"],"answer":0,"explain":"Por favor means please. It is a polite word.","tip":"Por favor has 'favor' inside - asking a favor needs a please!"},
+        {"q":"Who is mamá?","say":"Who is mamá?","lang":"es","choices":["Dad","Mom","Baby"],"answer":1,"explain":"Mamá means mom.","tip":"Mamá sounds just like mama!"},
+        {"q":"Who is papá?","say":"Who is papá?","lang":"es","choices":["Dad","Grandma","Sister"],"answer":0,"explain":"Papá means dad.","tip":"Papá sounds just like papa!"},
+        {"q":"Who is your abuela?","say":"Who is your abuela?","lang":"es","choices":["Brother","Grandma","Mom"],"answer":1,"explain":"Abuela means grandma. Grandpa is abuelo.","tip":"Abuela ends in a for grandma, abuelo ends in o for grandpa!"},
+        {"q":"Who is your hermano?","say":"Who is your hermano?","lang":"es","choices":["Dad","Grandpa","Brother"],"answer":2,"explain":"Hermano means brother. Sister is hermana.","tip":"Hermano ends in o for a brother, hermana ends in a for a sister!"}
+      ]}
+    ],
+    "k2": [
+      { "name": "Numbers to 20", "questions": [
+        {"q":"What number is once?","say":"What number is once?","lang":"es","choices":["11","1","12"],"answer":0,"explain":"In Spanish, once means eleven. It is not the English word once.","tip":"Once looks like an English word, but it means 11 - two ones standing side by side!"},
+        {"q":"What number is doce?","say":"What number is doce?","lang":"es","choices":["2","12","20"],"answer":1,"explain":"Doce means twelve. A dozen eggs is una docena.","tip":"Doce sounds like 'dozen' - a dozen is 12!"},
+        {"q":"What number is quince?","say":"What number is quince?","lang":"es","choices":["15","5","50"],"answer":0,"explain":"Quince means fifteen.","tip":"A quinceañera is a big party when a girl turns quince - 15!"},
+        {"q":"What number is veinte?","say":"What number is veinte?","lang":"es","choices":["12","2","20"],"answer":2,"explain":"Veinte means twenty.","tip":"Count 10 fingers and 10 toes and you get veinte!"},
+        {"q":"How do you say 16 in Spanish?","say":"How do you say sixteen in Spanish?","lang":"es","choices":["dieciséis","diecisiete","seis"],"answer":0,"explain":"Dieciséis is sixteen. It means ten and six.","tip":"Dieciséis is diez y seis squished together: ten and six!"},
+        {"q":"What is diez plus diez?","say":"What is diez plus diez?","lang":"es","choices":["doce","veinte","diez"],"answer":1,"explain":"Ten plus ten is twenty, which is veinte.","tip":"Ten and ten: diez and diez make veinte!"},
+        {"q":"What number is catorce?","say":"What number is catorce?","lang":"es","choices":["14","4","40"],"answer":0,"explain":"Catorce means fourteen.","tip":"Catorce starts with 'cat' - picture 14 cats!"},
+        {"q":"How do you say 18 in Spanish?","say":"How do you say eighteen in Spanish?","lang":"es","choices":["diecinueve","ocho","dieciocho"],"answer":2,"explain":"Dieciocho is eighteen: ten and eight.","tip":"Dieciocho is diez y ocho squished together: ten and eight!"},
+        {"q":"What number is trece?","say":"What number is trece?","lang":"es","choices":["3","13","30"],"answer":1,"explain":"Trece means thirteen.","tip":"Trece starts like tres - 3 plus 10!"}
+      ]},
+      { "name": "Days of the Week", "questions": [
+        {"q":"What day is lunes?","say":"What day is lunes?","lang":"es","choices":["Monday","Tuesday","Sunday"],"answer":0,"explain":"Lunes means Monday.","tip":"Lunes comes from luna (moon) - Monday is Moon-day!"},
+        {"q":"What day is martes?","say":"What day is martes?","lang":"es","choices":["Friday","Tuesday","Thursday"],"answer":1,"explain":"Martes means Tuesday.","tip":"Martes is named after Mars, the red planet!"},
+        {"q":"What day is miércoles?","say":"What day is miércoles?","lang":"es","choices":["Saturday","Monday","Wednesday"],"answer":2,"explain":"Miércoles means Wednesday.","tip":"Miércoles is named after Mercury, the speedy planet in the middle of the week!"},
+        {"q":"What day is jueves?","say":"What day is jueves?","lang":"es","choices":["Thursday","Sunday","Tuesday"],"answer":0,"explain":"Jueves means Thursday.","tip":"Jueves is named after Jupiter, the biggest planet!"},
+        {"q":"What day is viernes?","say":"What day is viernes?","lang":"es","choices":["Wednesday","Friday","Monday"],"answer":1,"explain":"Viernes means Friday.","tip":"Viernes is named after Venus - Friday is a shiny, happy day!"},
+        {"q":"What day is sábado?","say":"What day is sábado?","lang":"es","choices":["Saturday","Sunday","Friday"],"answer":0,"explain":"Sábado means Saturday.","tip":"Sábado and Saturday both start with S-a!"},
+        {"q":"What day is domingo?","say":"What day is domingo?","lang":"es","choices":["Monday","Thursday","Sunday"],"answer":2,"explain":"Domingo means Sunday.","tip":"Domingo is the last day of the Spanish week - Sunday fun day!"},
+        {"q":"What day comes after lunes?","say":"What day comes after lunes?","lang":"es","choices":["martes","domingo","viernes"],"answer":0,"explain":"After lunes (Monday) comes martes (Tuesday).","tip":"Lunes then martes: the Moon, then Mars - the week zooms through the stars!"},
+        {"q":"In Spanish, the days of the week start with a capital letter.","choices":["True","False"],"answer":1,"explain":"False. In Spanish, days are written in small letters, like lunes, unless they start a sentence.","tip":"Spanish days are humble - no capital letters!"}
+      ]},
+      { "name": "Food", "questions": [
+        {"q":"What is una manzana?","say":"What is una manzana?","lang":"es","choices":["An apple","A banana","A grape"],"answer":0,"explain":"Manzana means apple.","tip":"Manzana sounds like 'man-sana' - a man eating a healthy apple!"},
+        {"q":"What is leche?","say":"What is leche?","lang":"es","choices":["Water","Milk","Juice"],"answer":1,"explain":"Leche means milk.","tip":"Leche: a latte is coffee with lots of leche!"},
+        {"q":"What is pan?","say":"What is pan?","lang":"es","choices":["A pot","Cheese","Bread"],"answer":2,"explain":"Pan means bread. It is not a cooking pan.","tip":"Pan is bread you could toast in a pan!"},
+        {"q":"What is agua?","say":"What is agua?","lang":"es","choices":["Water","Milk","Soup"],"answer":0,"explain":"Agua means water.","tip":"Agua sounds like 'aqua' - the blue-green color of water!"},
+        {"q":"What is queso?","say":"What is queso?","lang":"es","choices":["Egg","Cheese","Rice"],"answer":1,"explain":"Queso means cheese.","tip":"Queso is the cheese in a quesadilla!"},
+        {"q":"What is un huevo?","say":"What is un huevo?","lang":"es","choices":["An egg","A cake","An apple"],"answer":0,"explain":"Huevo means egg.","tip":"Huevo sounds like 'way-vo' - which way did the egg roll?"},
+        {"q":"What is pollo?","say":"What is pollo?","lang":"es","choices":["Fish","Bread","Chicken"],"answer":2,"explain":"Pollo means chicken, the food.","tip":"Pollo sounds like 'POY-yo' - yo, chicken for dinner!"},
+        {"q":"What is arroz?","say":"What is arroz?","lang":"es","choices":["Rice","Beans","Corn"],"answer":0,"explain":"Arroz means rice.","tip":"Arroz con pollo: the arroz is the rice!"}
+      ]},
+      { "name": "Body Parts", "questions": [
+        {"q":"What is la cabeza?","say":"What is la cabeza?","lang":"es","choices":["Head","Hand","Foot"],"answer":0,"explain":"Cabeza means head.","tip":"Put a cap on your cabeza!"},
+        {"q":"What is la mano?","say":"What is la mano?","lang":"es","choices":["Nose","Hand","Ear"],"answer":1,"explain":"Mano means hand.","tip":"Mano is like 'manual' - something done by hand!"},
+        {"q":"What is el pie?","say":"What is el pie?","lang":"es","choices":["Pie","Arm","Foot"],"answer":2,"explain":"Pie means foot. It is not a pie you eat.","tip":"Pie is like 'pedal' - you push pedals with your feet!"},
+        {"q":"What is el ojo?","say":"What is el ojo?","lang":"es","choices":["Eye","Mouth","Hair"],"answer":0,"explain":"Ojo means eye. You see with your ojos.","tip":"Ojo looks like a face: two O's for eyes and a j for a nose!"},
+        {"q":"What is la nariz?","say":"What is la nariz?","lang":"es","choices":["Ear","Nose","Head"],"answer":1,"explain":"Nariz means nose. You smell with your nariz.","tip":"Nariz and nose both start with N!"},
+        {"q":"What is la boca?","say":"What is la boca?","lang":"es","choices":["Mouth","Eye","Foot"],"answer":0,"explain":"Boca means mouth.","tip":"Open your mouth wide and say BO-ca!"},
+        {"q":"What is la oreja?","say":"What is la oreja?","lang":"es","choices":["Hand","Arm","Ear"],"answer":2,"explain":"Oreja means ear. You hear with your orejas.","tip":"Oreja sounds like 'oh, ray-ha' - oh Ray, can you hear me?"},
+        {"q":"What is el brazo?","say":"What is el brazo?","lang":"es","choices":["Arm","Leg","Nose"],"answer":0,"explain":"Brazo means arm. Leg is pierna.","tip":"Brazo sounds like 'bracelet' - a bracelet goes on your arm!"}
+      ]},
+      { "name": "Classroom Words", "questions": [
+        {"q":"What is un libro?","say":"What is un libro?","lang":"es","choices":["A book","A pencil","A chair"],"answer":0,"explain":"Libro means book.","tip":"Libro sounds like 'library' - a library is full of books!"},
+        {"q":"What is un lápiz?","say":"What is un lápiz?","lang":"es","choices":["A desk","A pencil","A door"],"answer":1,"explain":"Lápiz means pencil.","tip":"Lápiz sounds like 'lap-ease' - a pencil resting on your lap!"},
+        {"q":"Who is la maestra?","say":"Who is la maestra?","lang":"es","choices":["The student","The doctor","The teacher"],"answer":2,"explain":"Maestra means teacher (a woman). A man teacher is el maestro.","tip":"Maestra sounds like 'maestro' - a master who teaches!"},
+        {"q":"What is una silla?","say":"What is una silla?","lang":"es","choices":["A chair","A table","A bag"],"answer":0,"explain":"Silla means chair.","tip":"Silla sounds like 'see-ya' - see ya, I'm sitting in my chair!"},
+        {"q":"What is una mesa?","say":"What is una mesa?","lang":"es","choices":["A mess","A table","A window"],"answer":1,"explain":"Mesa means table.","tip":"Mesa sounds like 'mess' - don't make a mess on the table!"},
+        {"q":"What is la escuela?","say":"What is la escuela?","lang":"es","choices":["School","Home","Park"],"answer":0,"explain":"Escuela means school.","tip":"Escuela sounds like 'es-SCHOOL-a'!"},
+        {"q":"What is una mochila?","say":"What is una mochila?","lang":"es","choices":["A crayon","A book","A backpack"],"answer":2,"explain":"Mochila means backpack.","tip":"Mochila: mo' stuff goes in my backpack!"},
+        {"q":"What is el papel?","say":"What is el papel?","lang":"es","choices":["Paper","Glue","Scissors"],"answer":0,"explain":"Papel means paper.","tip":"Papel and paper both start with P-A-P!"}
+      ]},
+      { "name": "Simple Phrases", "questions": [
+        {"q":"What does ¿Cómo estás? mean?","say":"What does cómo estás mean?","lang":"es","choices":["How are you?","What is your name?","Where are you?"],"answer":0,"explain":"¿Cómo estás? means How are you?","tip":"Estás comes from estar, the feeling verb - how are you feeling?"},
+        {"q":"What does Me llamo Ana mean?","say":"What does me llamo Ana mean?","lang":"es","choices":["I like Ana.","My name is Ana.","I call Ana."],"answer":1,"explain":"Me llamo Ana means My name is Ana.","tip":"Me llamo sounds like 'may YAH-mo' - picture a llama saying its name!"},
+        {"q":"What does ¿Cómo te llamas? mean?","say":"What does cómo te llamas mean?","lang":"es","choices":["How old are you?","Where do you live?","What is your name?"],"answer":2,"explain":"¿Cómo te llamas? means What is your name?","tip":"Te llamas: what do they call you, little llama?"},
+        {"q":"What does Bien, gracias mean?","say":"What does bien, gracias mean?","lang":"es","choices":["Fine, thanks.","Good night.","See you later."],"answer":0,"explain":"Bien, gracias means Fine, thanks. It answers ¿Cómo estás?","tip":"Bien sounds like 'be-en' - be fine, be happy!"},
+        {"q":"What does Buenos días mean?","say":"What does buenos días mean?","lang":"es","choices":["Good night","Good morning","Goodbye"],"answer":1,"explain":"Buenos días means good morning.","tip":"Días sounds like 'day-us' - good day to us!"},
+        {"q":"What does Buenas noches mean?","say":"What does buenas noches mean?","lang":"es","choices":["Good night","Good morning","Thank you"],"answer":0,"explain":"Buenas noches means good evening or good night.","tip":"Noches sounds like 'nachos' - eating nachos at night!"},
+        {"q":"Someone says gracias. What do you say back?","say":"Someone says gracias. What do you say back?","lang":"es","choices":["Hola","Adiós","De nada"],"answer":2,"explain":"De nada means you're welcome.","tip":"Nada means nothing - de nada, it was nothing!"},
+        {"q":"What does Mucho gusto mean?","say":"What does mucho gusto mean?","lang":"es","choices":["Nice to meet you","I am hungry","Very big"],"answer":0,"explain":"Mucho gusto means nice to meet you.","tip":"Gusto means joy - it's a joy to meet you!"},
+        {"q":"What does Hasta luego mean?","say":"What does hasta luego mean?","lang":"es","choices":["Come here","See you later","Let's eat"],"answer":1,"explain":"Hasta luego means see you later.","tip":"Luego sounds like 'Lego' - see you later, after we play Legos!"}
+      ]}
+    ],
+    "g35": [
+      { "name": "Numbers to 100", "questions": [
+        {"q":"What number is treinta?","lang":"es","choices":["30","13","3"],"answer":0,"explain":"Treinta means thirty.","tip":"Treinta starts like tres - 3 tens make treinta!"},
+        {"q":"What number is cincuenta?","lang":"es","choices":["15","50","500"],"answer":1,"explain":"Cincuenta means fifty.","tip":"Cincuenta starts like cinco - 5 tens make cincuenta!"},
+        {"q":"How do you say 100 in Spanish?","lang":"es","choices":["mil","diez","cien"],"answer":2,"explain":"Cien means one hundred. Mil is one thousand.","tip":"Cien sounds like 'cent' - 100 cents make a dollar!"},
+        {"q":"What number is veintiuno?","lang":"es","choices":["21","12","20"],"answer":0,"explain":"Veintiuno is twenty-one. Numbers 21 to 29 are written as one word.","tip":"Veinti plus uno glued together: twenty-one!"},
+        {"q":"What number is cuarenta y dos?","lang":"es","choices":["24","42","402"],"answer":1,"explain":"Cuarenta y dos means forty-two: forty and two.","tip":"Cuarenta starts like cuatro - 4 tens, and then y dos!"},
+        {"q":"What number is setenta?","lang":"es","choices":["70","60","17"],"answer":0,"explain":"Setenta is seventy. Sesenta is sixty, so listen carefully.","tip":"Setenta starts like siete (7); sesenta starts like seis (6)!"},
+        {"q":"What number is sesenta?","lang":"es","choices":["70","16","60"],"answer":2,"explain":"Sesenta is sixty.","tip":"Sesenta starts with S-E like seis: six tens!"},
+        {"q":"How do you say 35 in Spanish?","lang":"es","choices":["treinta y cinco","trece y cinco","cincuenta y tres"],"answer":0,"explain":"Treinta y cinco is 35. Cincuenta y tres would be 53.","tip":"Y means and: treinta and cinco!"},
+        {"q":"What number is noventa?","lang":"es","choices":["9","90","19"],"answer":1,"explain":"Noventa means ninety.","tip":"Noventa starts with N like nueve: nine tens!"},
+        {"q":"What number is ochenta y ocho?","lang":"es","choices":["88","18","80"],"answer":0,"explain":"Ochenta is 80, and ochenta y ocho is 88.","tip":"Ochenta starts like ocho - 8 tens, and then ocho more!"}
+      ]},
+      { "name": "Months", "questions": [
+        {"q":"What month is enero?","lang":"es","choices":["January","June","July"],"answer":0,"explain":"Enero is January, the first month.","tip":"Enero rhymes with hero - the hero month that comes first!"},
+        {"q":"What month is julio?","lang":"es","choices":["June","July","January"],"answer":1,"explain":"Julio is July.","tip":"Julio: hot July!"},
+        {"q":"What month is junio?","lang":"es","choices":["July","January","June"],"answer":2,"explain":"Junio is June.","tip":"Junio: think June-io!"},
+        {"q":"How do you say December in Spanish?","lang":"es","choices":["diciembre","noviembre","octubre"],"answer":0,"explain":"Diciembre is December.","tip":"Septiembre to diciembre end in -bre, just like English months end in -ber!"},
+        {"q":"What month is agosto?","lang":"es","choices":["April","August","October"],"answer":1,"explain":"Agosto is August.","tip":"Agosto: a gust of hot August wind!"},
+        {"q":"Which month comes after marzo?","lang":"es","choices":["abril","febrero","mayo"],"answer":0,"explain":"Marzo (March) is followed by abril (April).","tip":"Marzo, abril, mayo - March, April, May, same order!"},
+        {"q":"What month is mayo?","lang":"es","choices":["March","May","November"],"answer":1,"explain":"Mayo is May.","tip":"Mayo: mayonnaise on a May picnic!"},
+        {"q":"In Spanish, the names of months are usually written with small letters, like enero.","choices":["True","False"],"answer":0,"explain":"True. Spanish months are not capitalized unless they begin a sentence.","tip":"Months are humble like days - no capital letters!"}
+      ]},
+      { "name": "Weather", "questions": [
+        {"q":"What does Hace calor mean?","lang":"es","choices":["It is hot.","It is cold.","It is windy."],"answer":0,"explain":"Hace calor means it is hot.","tip":"Calor sounds like 'calorie' - burning calories makes you hot!"},
+        {"q":"What does Hace frío mean?","lang":"es","choices":["It is sunny.","It is cold.","It is raining."],"answer":1,"explain":"Hace frío means it is cold.","tip":"Frío sounds like 'freeze-o' - brrr!"},
+        {"q":"What does Está lloviendo mean?","lang":"es","choices":["It is snowing.","It is cloudy.","It is raining."],"answer":2,"explain":"Está lloviendo means it is raining. You can also say Llueve.","tip":"The double L in lloviendo drips like raindrops!"},
+        {"q":"What does Nieva mean?","lang":"es","choices":["It is snowing.","It is hot.","It is foggy."],"answer":0,"explain":"Nieva means it is snowing. Snow is la nieve.","tip":"Nieva sounds like Nevada, a name that means snowy!"},
+        {"q":"What does Hace sol mean?","lang":"es","choices":["It is cold.","It is sunny.","It is night."],"answer":1,"explain":"Hace sol means it is sunny. El sol is the sun.","tip":"Sol is like 'solar' - solar power comes from the sun!"},
+        {"q":"What does Hace viento mean?","lang":"es","choices":["It is windy.","It is raining.","It is hot."],"answer":0,"explain":"Hace viento means it is windy.","tip":"Viento sounds like 'vent' - wind blows out of a vent!"},
+        {"q":"What does Está nublado mean?","lang":"es","choices":["It is sunny.","It is snowing.","It is cloudy."],"answer":2,"explain":"Está nublado means it is cloudy. A cloud is una nube.","tip":"Nublado has nube (cloud) inside - a nubby, cloudy sky!"},
+        {"q":"How do you ask What is the weather like? in Spanish?","lang":"es","choices":["¿Qué tiempo hace?","¿Qué hora es?","¿Cómo estás?"],"answer":0,"explain":"¿Qué tiempo hace? asks about the weather. ¿Qué hora es? asks the time.","tip":"Tiempo means both time and weather - the weather changes over time!"}
+      ]},
+      { "name": "Clothing", "questions": [
+        {"q":"What is una camisa?","lang":"es","choices":["A shirt","A shoe","A hat"],"answer":0,"explain":"Camisa means shirt.","tip":"Camisa: come see my new shirt!"},
+        {"q":"What are los pantalones?","lang":"es","choices":["Socks","Pants","Gloves"],"answer":1,"explain":"Pantalones means pants.","tip":"Pantalones has 'pant' right inside it!"},
+        {"q":"What are los zapatos?","lang":"es","choices":["Jackets","Hats","Shoes"],"answer":2,"explain":"Zapatos means shoes.","tip":"Zapatos: zap! You zip into your shoes and run!"},
+        {"q":"What is un sombrero?","lang":"es","choices":["A hat","A skirt","A coat"],"answer":0,"explain":"Sombrero means hat (any hat, not only the wide one).","tip":"Sombrero comes from sombra (shade) - a hat shades your face!"},
+        {"q":"What is un vestido?","lang":"es","choices":["A vest","A dress","A sock"],"answer":1,"explain":"Vestido means dress. A vest is un chaleco.","tip":"Vestido comes from vestir (to dress) - a dress!"},
+        {"q":"What is una falda?","lang":"es","choices":["A skirt","A shirt","A shoe"],"answer":0,"explain":"Falda means skirt.","tip":"Falda sounds like 'fold-a' - fold your skirt neatly!"},
+        {"q":"What are los calcetines?","lang":"es","choices":["Boots","Mittens","Socks"],"answer":2,"explain":"Calcetines means socks. In some countries people also say medias.","tip":"Calcetines: socks for your teeny toes!"},
+        {"q":"What is una chaqueta?","lang":"es","choices":["A jacket","A belt","A scarf"],"answer":0,"explain":"Chaqueta means jacket.","tip":"Chaqueta sounds like 'jacket-a'!"}
+      ]},
+      { "name": "The House", "questions": [
+        {"q":"What is la cocina?","lang":"es","choices":["The kitchen","The bedroom","The garage"],"answer":0,"explain":"La cocina is the kitchen. Cocinar means to cook.","tip":"Cocina sounds like 'cuisine' - cooking happens in the kitchen!"},
+        {"q":"What is el baño?","lang":"es","choices":["The yard","The bathroom","The stairs"],"answer":1,"explain":"El baño is the bathroom.","tip":"Baño: BAH-nyo, time for a bath!"},
+        {"q":"What is el dormitorio?","lang":"es","choices":["The dining room","The kitchen","The bedroom"],"answer":2,"explain":"El dormitorio is the bedroom. People also say el cuarto, and in Mexico la recámara.","tip":"Dormitorio is like 'dormitory' - a place to sleep!"},
+        {"q":"What is la cama?","lang":"es","choices":["The bed","The camera","The lamp"],"answer":0,"explain":"La cama is the bed.","tip":"Cama: come-a to bed!"},
+        {"q":"What is la puerta?","lang":"es","choices":["The window","The door","The roof"],"answer":1,"explain":"La puerta is the door.","tip":"Puerta sounds like 'portal' - a door is a portal!"},
+        {"q":"What is la ventana?","lang":"es","choices":["The window","The floor","The wall"],"answer":0,"explain":"La ventana is the window.","tip":"Ventana sounds like 'vent' - a window lets air in!"},
+        {"q":"What is la sala?","lang":"es","choices":["The bathroom","The garden","The living room"],"answer":2,"explain":"La sala is the living room.","tip":"Sala sounds like 'salon' - a room where people sit together!"},
+        {"q":"How do you say house in Spanish?","lang":"es","choices":["casa","cosa","caja"],"answer":0,"explain":"Casa means house. Cosa means thing and caja means box.","tip":"Mi casa es su casa - my house is your house!"}
+      ]},
+      { "name": "Verbs: ser, tener, ir", "questions": [
+        {"q":"Yo ___ estudiante. (ser)","lang":"es","choices":["soy","es","eres","somos"],"answer":0,"explain":"With yo (I), ser becomes soy: Yo soy estudiante.","tip":"Soy rhymes with boy - I am a boy, I am a girl: soy!"},
+        {"q":"Tú ___ mi amigo. (ser)","lang":"es","choices":["soy","eres","son","es"],"answer":1,"explain":"With tú (you), ser becomes eres.","tip":"Tú eres - you are, both with an r sound!"},
+        {"q":"Ella ___ diez años. (tener)","lang":"es","choices":["es","tengo","tiene","tienes"],"answer":2,"explain":"Ella tiene diez años. In Spanish you have years: tener años means to be a certain age.","tip":"Picture holding a birthday cake with ten candles - you HAVE ten years!"},
+        {"q":"Ellos ___ un perro. (tener)","lang":"es","choices":["tienen","tiene","tengo","tenemos"],"answer":0,"explain":"With ellos (they), tener becomes tienen.","tip":"Add an -n for they: tiene becomes tienen!"},
+        {"q":"Nosotros ___ a la escuela. (ir)","lang":"es","choices":["van","vamos","voy","va"],"answer":1,"explain":"With nosotros (we), ir becomes vamos.","tip":"¡Vamos! is a cheer: Let's go!"},
+        {"q":"Yo ___ al parque. (ir)","lang":"es","choices":["va","vas","voy","vamos"],"answer":2,"explain":"With yo, ir becomes voy: Yo voy al parque.","tip":"Voy rhymes with boy - the boy says I go!"},
+        {"q":"What does the verb ir mean?","lang":"es","choices":["to go","to have","to be"],"answer":0,"explain":"Ir means to go. Tener is to have and ser is to be.","tip":"Ir is short and fast - go, go, go!"},
+        {"q":"What does Tengo hambre mean?","lang":"es","choices":["I am tired.","I am hungry.","I have a ham."],"answer":1,"explain":"Tengo hambre means I am hungry (literally, I have hunger).","tip":"Hambre sounds like 'hamburger' - I'm hungry for a hamburger!"},
+        {"q":"What does Tengo ocho años mean?","lang":"es","choices":["I am 8 years old.","I have 8 friends.","I go in 8 years."],"answer":0,"explain":"Tener + años tells your age: Tengo ocho años means I am 8 years old.","tip":"In Spanish you HAVE your years, like candles on a cake!"}
+      ]},
+      { "name": "Gender of Nouns: el and la", "questions": [
+        {"q":"Which word goes before perro? ___ perro","lang":"es","choices":["el","la"],"answer":0,"explain":"Perro is masculine, so it is el perro.","tip":"Perro ends in -o, so it gets el!"},
+        {"q":"Which word goes before casa? ___ casa","lang":"es","choices":["el","la"],"answer":1,"explain":"Casa is feminine, so it is la casa.","tip":"Casa ends in -a: la-la-la, la casa!"},
+        {"q":"Which word goes before mano? ___ mano","lang":"es","choices":["el","la"],"answer":1,"explain":"Mano ends in -o but is feminine: la mano. It is a special case.","tip":"La mano is a rule-breaker - a hand waving la la la!"},
+        {"q":"Which word goes before día? ___ día","lang":"es","choices":["el","la"],"answer":0,"explain":"Día ends in -a but is masculine: el día.","tip":"Buenos días: buenos is masculine, so it's el día!"},
+        {"q":"Which word goes before mapa? ___ mapa","lang":"es","choices":["el","la"],"answer":0,"explain":"Mapa is masculine even though it ends in -a: el mapa.","tip":"Some words ending in -a are rule-breakers that take el: el mapa, el problema, el planeta!"},
+        {"q":"Which word goes before flor? ___ flor","lang":"es","choices":["el","la"],"answer":1,"explain":"Flor is feminine: la flor.","tip":"La flor: a pretty flower in la-la land!"},
+        {"q":"Which word goes before libro? ___ libro","lang":"es","choices":["el","la"],"answer":0,"explain":"Libro is masculine: el libro.","tip":"El goes with -o: el libro!"},
+        {"q":"Most Spanish nouns that end in -o are...","choices":["masculine","feminine"],"answer":0,"explain":"Most nouns ending in -o are masculine and most ending in -a are feminine, with some exceptions.","tip":"O for el, A for la - most of the time!"},
+        {"q":"Which word goes before mesa? ___ mesa","lang":"es","choices":["el","la"],"answer":1,"explain":"Mesa is feminine: la mesa.","tip":"Mesa ends in -a: la mesa!"}
+      ]},
+      { "name": "Plurals", "questions": [
+        {"q":"What is the plural of libro?","lang":"es","choices":["libros","libroes","libres"],"answer":0,"explain":"Words ending in a vowel add -s: libros.","tip":"Ends in a vowel? Just add -s!"},
+        {"q":"What is the plural of flor?","lang":"es","choices":["flors","flores","floras"],"answer":1,"explain":"Words ending in a consonant add -es: flores.","tip":"Ends in a consonant? Add -es!"},
+        {"q":"What is the plural of lápiz?","lang":"es","choices":["lápizes","lápizs","lápices"],"answer":2,"explain":"A final z changes to c before -es: lápices.","tip":"Z and E don't hold hands - z turns into c: lápices!"},
+        {"q":"What is the plural of el gato?","lang":"es","choices":["los gatos","las gatos","el gatos"],"answer":0,"explain":"El becomes los in the plural: los gatos.","tip":"El grows up into los in the plural!"},
+        {"q":"What is the plural of la casa?","lang":"es","choices":["los casas","las casas","la casas"],"answer":1,"explain":"La becomes las in the plural: las casas.","tip":"La grows up into las in the plural!"},
+        {"q":"What is the plural of árbol?","lang":"es","choices":["árbols","árboles","árbolas"],"answer":1,"explain":"Árbol ends in a consonant, so add -es: árboles.","tip":"Árbol ends in L, a consonant, so add -es!"},
+        {"q":"What is the plural of pez?","lang":"es","choices":["peces","pezes","pezs"],"answer":0,"explain":"The z changes to c: un pez, dos peces.","tip":"Pez to peces: z can't stand next to e!"},
+        {"q":"What is the plural of mujer?","lang":"es","choices":["mujers","mujeras","mujeres"],"answer":2,"explain":"Mujer ends in r, so add -es: mujeres.","tip":"Mujer ends in R: add -es, mujeres!"}
+      ]}
+    ],
+    "g68": [
+      { "name": "Present Tense: Regular Verbs", "questions": [
+        {"q":"hablar, yo: Yo ___ español.","lang":"es","choices":["hablo","habla","hablas","hablamos"],"answer":0,"explain":"For -ar verbs, yo takes -o: hablo.","tip":"Yo always ends in -o: hablo, I talk!"},
+        {"q":"comer, tú: Tú ___ mucho.","lang":"es","choices":["come","comes","comas","comemos"],"answer":1,"explain":"For -er verbs, tú takes -es: comes.","tip":"Tú loves the letter S: comes, hablas, vives!"},
+        {"q":"vivir, nosotros: Nosotros ___ en Texas.","lang":"es","choices":["vivemos","viven","vivimos","vivo"],"answer":2,"explain":"-ir verbs use -imos for nosotros: vivimos. -er verbs use -emos.","tip":"-IR verbs keep their i for nosotros: vivir becomes vivimos!"},
+        {"q":"escribir, ellos: Ellos ___ cartas.","lang":"es","choices":["escriben","escribían","escribimos","escribe"],"answer":0,"explain":"Ellos takes -en for -ir verbs: escriben.","tip":"They need an N: ellos escriben!"},
+        {"q":"estudiar, ella: Ella ___ todos los días.","lang":"es","choices":["estudio","estudia","estudian","estudie"],"answer":1,"explain":"Él, ella and usted take -a for -ar verbs: estudia.","tip":"-AR verbs keep their A: estudiar becomes estudia!"},
+        {"q":"aprender, nosotros: Nosotros ___ mucho.","lang":"es","choices":["aprendimos","aprendamos","aprendemos","aprenden"],"answer":2,"explain":"-er verbs use -emos for nosotros in the present: aprendemos.","tip":"-ER verbs keep their E: aprender becomes aprendemos!"},
+        {"q":"bailar, ustedes: Ustedes ___ muy bien.","lang":"es","choices":["bailan","baila","bailamos","bailen"],"answer":0,"explain":"Ustedes takes -an for -ar verbs: bailan.","tip":"Ustedes and ellos share the -n ending: bailan!"},
+        {"q":"beber, yo: Yo ___ agua.","lang":"es","choices":["bebe","bebo","bebes","bebí"],"answer":1,"explain":"Yo takes -o: bebo.","tip":"Yo always ends in -o: bebo!"},
+        {"q":"abrir, tú: ¿Tú ___ la ventana?","lang":"es","choices":["abras","abre","abres","abrimos"],"answer":2,"explain":"-ir verbs use -es for tú: abres.","tip":"-ER and -IR verbs are twins except for nosotros and vosotros!"},
+        {"q":"What ending do -ar verbs use for nosotros in the present tense?","choices":["-amos","-emos","-imos","-an"],"answer":0,"explain":"Hablar becomes hablamos, cantar becomes cantamos.","tip":"Nosotros keeps the verb's own vowel: -ar gives -amos!"}
+      ]},
+      { "name": "Ser vs Estar", "questions": [
+        {"q":"Mi madre ___ doctora.","lang":"es","choices":["es","está"],"answer":0,"explain":"Use ser for professions: Mi madre es doctora.","tip":"SER is for DOCTOR: Description, Occupation, Characteristic, Time, Origin, Relationship!"},
+        {"q":"Yo ___ cansado hoy.","lang":"es","choices":["soy","estoy"],"answer":1,"explain":"Use estar for temporary states and feelings: estoy cansado.","tip":"For how you feel and where you are, use the verb estar!"},
+        {"q":"La fiesta ___ en mi casa.","lang":"es","choices":["es","está"],"answer":0,"explain":"For where an event takes place, use ser: La fiesta es en mi casa.","tip":"Events take place with SER: where the party is happening!"},
+        {"q":"Madrid ___ en España.","lang":"es","choices":["es","está"],"answer":1,"explain":"Use estar for the location of places and things: Madrid está en España.","tip":"ESTAR is for PLACE: Position, Location, Action, Condition, Emotion!"},
+        {"q":"Hoy ___ lunes.","lang":"es","choices":["es","está"],"answer":0,"explain":"Use ser for days and dates: Hoy es lunes.","tip":"Days are the T (Time) in DOCTOR, so use SER!"},
+        {"q":"Nosotros ___ de México.","lang":"es","choices":["somos","estamos"],"answer":0,"explain":"Use ser for origin: Somos de México.","tip":"Origin is the O in DOCTOR: somos de!"},
+        {"q":"La sopa ___ fría hoy.","lang":"es","choices":["es","está"],"answer":1,"explain":"Use estar for a condition at the moment: La sopa está fría.","tip":"Soup cools down - a changing condition, so ESTAR!"},
+        {"q":"¿Cómo ___ tú?","lang":"es","choices":["eres","estás"],"answer":1,"explain":"¿Cómo estás? asks how you are feeling. ¿Cómo eres? asks what you are like.","tip":"How you feel is how you are: ¿Cómo estás?"},
+        {"q":"Ellos ___ en la biblioteca.","lang":"es","choices":["son","están"],"answer":1,"explain":"Use estar for where people are: Están en la biblioteca.","tip":"Where you are, near or far? Always estar!"},
+        {"q":"Which verb do you use to say where a person or thing is located?","choices":["ser","estar"],"answer":1,"explain":"Estar is used for location: El libro está en la mesa.","tip":"For how you feel and where you are, always use the verb estar!"}
+      ]},
+      { "name": "Adjective Agreement", "questions": [
+        {"q":"la casa ___ (white)","lang":"es","choices":["blanca","blanco","blancos","blancas"],"answer":0,"explain":"Casa is feminine singular, so the adjective is blanca.","tip":"Adjectives copy the noun's outfit: la casa wears -a, so blanca!"},
+        {"q":"los perros ___ (small)","lang":"es","choices":["pequeño","pequeños","pequeñas","pequeña"],"answer":1,"explain":"Perros is masculine plural: pequeños.","tip":"Many boy dogs: -o for masculine, plus -s for more!"},
+        {"q":"las chicas ___ (tall)","lang":"es","choices":["alto","altos","altas","alta"],"answer":2,"explain":"Chicas is feminine plural: altas.","tip":"Many girls: -as, like las chicas altas!"},
+        {"q":"la clase ___ (interesting)","lang":"es","choices":["interesante","interesanta","interesantes","interesanto"],"answer":0,"explain":"Adjectives ending in -e do not change for gender: la clase interesante, el libro interesante.","tip":"-E adjectives are flexible friends - they fit any gender!"},
+        {"q":"In Spanish, where do most descriptive adjectives go?","choices":["After the noun","Before the noun"],"answer":0,"explain":"Most go after the noun: un carro rojo (a red car).","tip":"Noun first, then the description: el carro rojo!"},
+        {"q":"las flores ___ (red)","lang":"es","choices":["rojos","rojas","roja","rojo"],"answer":1,"explain":"Flores is feminine plural: rojas.","tip":"Flores are feminine and many: rojas!"},
+        {"q":"Ella es muy ___ (nice).","lang":"es","choices":["simpático","simpáticos","simpática","simpáticas"],"answer":2,"explain":"Ella is feminine singular: simpática.","tip":"Ella ends in -a, so simpática ends in -a!"},
+        {"q":"los zapatos ___ (blue)","lang":"es","choices":["azules","azuls","azul","azulas"],"answer":0,"explain":"Azul ends in a consonant, so the plural adds -es: azules. It does not change for gender.","tip":"Azul ends in L, so add -es, like árboles!"},
+        {"q":"las camisas ___ (green)","lang":"es","choices":["verdas","verdes","verde","verdos"],"answer":1,"explain":"Verde does not change for gender; just add -s for plural: verdes.","tip":"Verde is a flexible -e friend: just add -s!"}
+      ]},
+      { "name": "Question Words", "questions": [
+        {"q":"What does ¿Dónde? mean?","lang":"es","choices":["Where?","When?","Who?"],"answer":0,"explain":"¿Dónde? means where? ¿Dónde está el baño?","tip":"Dónde sounds like 'don-day' - where did Don go today?"},
+        {"q":"What does ¿Cuándo? mean?","lang":"es","choices":["How?","When?","Which?"],"answer":1,"explain":"¿Cuándo? means when?","tip":"Cuándo sounds like 'KWAN-do' - when is karate class?"},
+        {"q":"What does ¿Quién? mean?","lang":"es","choices":["What?","Why?","Who?"],"answer":2,"explain":"¿Quién? means who? The plural is ¿Quiénes?","tip":"Quién sounds like 'key-en' - who has the key?"},
+        {"q":"What does ¿Por qué? mean?","lang":"es","choices":["Why?","For what?","Where?"],"answer":0,"explain":"¿Por qué? means why? The answer often starts with porque (because).","tip":"Por qué literally asks 'for what?' - that's why!"},
+        {"q":"Which word means because?","lang":"es","choices":["porque","¿por qué?","por que","¿porqué?"],"answer":0,"explain":"Porque (one word, no accent) means because.","tip":"Porque is one word because it answers in one go!"},
+        {"q":"¿___ años tienes? (How many)","lang":"es","choices":["Cuántos","Cuántas","Cuál","Cómo"],"answer":0,"explain":"Años is masculine plural, so use ¿Cuántos? ¿Cuántos años tienes? means How old are you?","tip":"Cuánto sounds like 'quantity' - how many!"},
+        {"q":"What does ¿Qué? mean?","lang":"es","choices":["Who?","What?","How much?"],"answer":1,"explain":"¿Qué? means what? ¿Qué es esto? means What is this?","tip":"Qué sounds like 'kay' - okay, what is it?"},
+        {"q":"What does ¿Cómo? mean?","lang":"es","choices":["When?","Where?","How?"],"answer":2,"explain":"¿Cómo? means how? ¿Cómo estás? means How are you?","tip":"Cómo sounds like 'how come' - how?"},
+        {"q":"What does ¿Cuánto cuesta? mean?","lang":"es","choices":["How much does it cost?","When does it close?","Which one is it?"],"answer":0,"explain":"¿Cuánto? means how much: ¿Cuánto cuesta? asks the price.","tip":"Cuánto = quantity and cuesta = cost: how much does it cost?"},
+        {"q":"Spanish question words like qué and dónde carry a written accent when they ask a question.","choices":["True","False"],"answer":0,"explain":"True. Question words have an accent: ¿qué?, ¿dónde?, ¿cuándo?","tip":"Question words wear a hat (accent) when they ask!"}
+      ]},
+      { "name": "Telling Time", "questions": [
+        {"q":"What time is it? Es la una.","lang":"es","choices":["1:00","11:00","12:00"],"answer":0,"explain":"Es la una means It is one o'clock.","tip":"One o'clock is lonely and singular: es la una!"},
+        {"q":"What time is it? Son las tres.","lang":"es","choices":["2:00","3:00","13:00"],"answer":1,"explain":"Son las tres means It is three o'clock.","tip":"Son las + a number for every hour except one!"},
+        {"q":"What time is it? Son las dos y media.","lang":"es","choices":["2:15","1:30","2:30"],"answer":2,"explain":"Y media means half past: 2:30.","tip":"Media means half, like a medium is in the middle!"},
+        {"q":"What time is it? Son las cuatro y cuarto.","lang":"es","choices":["4:15","4:45","4:04"],"answer":0,"explain":"Y cuarto means a quarter past: 4:15.","tip":"Cuarto means quarter: a quarter of an hour is 15 minutes!"},
+        {"q":"What time is it? Son las ocho menos diez.","lang":"es","choices":["8:10","7:50","10:08"],"answer":1,"explain":"Menos diez means ten minutes before: ten to eight is 7:50.","tip":"Menos means minus: eight minus ten minutes is 7:50!"},
+        {"q":"How do you ask What time is it?","lang":"es","choices":["¿Qué hora es?","¿Qué tiempo hace?","¿Cuántas horas?"],"answer":0,"explain":"¿Qué hora es? asks the time.","tip":"Hora sounds like 'hour' - what hour is it?"},
+        {"q":"Why do we say Es la una but Son las dos?","choices":["Una is singular; other hours are plural","Una is a feminine word","Dos is a verb"],"answer":0,"explain":"One o'clock is one hour (singular, es); other hours are plural (son).","tip":"One hour, one es; more hours, son!"},
+        {"q":"How do you say at three o'clock?","lang":"es","choices":["a las tres","en las tres","son las tres"],"answer":0,"explain":"Use a las to say at what time: La clase es a las tres.","tip":"A las means at the - at the third hour!"},
+        {"q":"What time is it? Son las nueve de la noche.","lang":"es","choices":["9 AM","9 PM","9 minutes"],"answer":1,"explain":"De la noche means at night, so it is 9 PM. De la mañana means AM.","tip":"Noche sounds like nachos - a nighttime, PM snack!"}
+      ]},
+      { "name": "Common Phrases", "questions": [
+        {"q":"What does Lo siento mean?","lang":"es","choices":["I'm sorry.","I feel it.","Sit down."],"answer":0,"explain":"Lo siento means I'm sorry.","tip":"Lo siento literally means I feel it - I feel sorry!"},
+        {"q":"What does No entiendo mean?","lang":"es","choices":["I don't know.","I don't understand.","I don't want to."],"answer":1,"explain":"No entiendo means I don't understand. No sé means I don't know.","tip":"Entiendo sounds like 'intend' - I don't get what you intend!"},
+        {"q":"How do you ask How do you say ... in Spanish?","lang":"es","choices":["¿Qué hora es en español?","¿Dónde está el español?","¿Cómo se dice ... en español?"],"answer":2,"explain":"¿Cómo se dice ... en español? asks how to say something.","tip":"Dice comes from decir, to say: how is it said?"},
+        {"q":"What does ¿Qué significa? mean?","lang":"es","choices":["What does it mean?","What is the sign?","Who is it?"],"answer":0,"explain":"¿Qué significa? means What does it mean?","tip":"Significa sounds like 'signify' - what does it signify?"},
+        {"q":"What does Tengo que estudiar mean?","lang":"es","choices":["I like to study.","I have to study.","I studied."],"answer":1,"explain":"Tener que + infinitive means to have to do something.","tip":"Tener que: have + que = have to!"},
+        {"q":"What does Me gusta el fútbol mean?","lang":"es","choices":["I play soccer.","I watch soccer.","I like soccer."],"answer":2,"explain":"Me gusta means I like (literally, it pleases me).","tip":"Gusto means enjoyment: me gusta, I enjoy it!"},
+        {"q":"What does ¡Buena suerte! mean?","lang":"es","choices":["Good luck!","Good night!","Well done!"],"answer":0,"explain":"¡Buena suerte! means Good luck!","tip":"Suerte rhymes with fuerte (strong) - be strong and lucky!"},
+        {"q":"What does ¿Puedo ir al baño? mean?","lang":"es","choices":["Where is the bathroom?","May I go to the bathroom?","Is the bathroom open?"],"answer":1,"explain":"¿Puedo...? means May I...? or Can I...?","tip":"Puedo is from poder, like 'power' - do I have the power to go?"},
+        {"q":"You need to squeeze past someone. What do you say?","lang":"es","choices":["Con permiso","De nada","Buen provecho"],"answer":0,"explain":"Con permiso means excuse me when you need to pass by. Buen provecho means enjoy your meal.","tip":"Permiso sounds like 'permission' - may I pass?"}
+      ]}
+    ],
+    "g912": [
+      { "name": "Preterite vs Imperfect", "questions": [
+        {"q":"Ayer yo ___ pizza. (comer)","lang":"es","choices":["comí","comía","como","comeré"],"answer":0,"explain":"Ayer marks a completed action at a specific time, so use the preterite: comí.","tip":"Ayer (yesterday) means a done deal: preterite!"},
+        {"q":"Cuando era niño, ___ en el parque todos los días. (jugar, yo)","lang":"es","choices":["jugué","jugaba","juego","jugaré"],"answer":1,"explain":"Habitual past actions (todos los días) use the imperfect: jugaba.","tip":"Used to and every day mean imperfect: -aba, -ía!"},
+        {"q":"Ella ___ con su madre anoche. (hablar)","lang":"es","choices":["hablaba","habla","habló","hablo"],"answer":2,"explain":"A single completed action last night uses the preterite: habló. (Hablo without the accent means I speak.)","tip":"Anoche, last night, one finished action: preterite!"},
+        {"q":"Which tense describes background in the past, like weather, time or age?","choices":["Imperfect","Preterite"],"answer":0,"explain":"The imperfect sets the scene: Hacía frío. Eran las ocho. Tenía diez años.","tip":"The imperfect paints the background; the preterite is the action on stage!"},
+        {"q":"Eran las ocho cuando ___ mi padre. (llegar)","lang":"es","choices":["llegaba","llegó","llega","llegue"],"answer":1,"explain":"The arrival is a completed event that interrupts the background, so use the preterite: llegó.","tip":"Background (eran) + interruption (llegó) = imperfect + preterite!"},
+        {"q":"Mientras yo ___, sonó el teléfono. (leer)","lang":"es","choices":["leía","leí","leo","leyó"],"answer":0,"explain":"An action in progress that gets interrupted uses the imperfect: leía.","tip":"Mientras (while) signals the long action that gets interrupted: imperfect!"},
+        {"q":"What is the preterite of ir for yo?","lang":"es","choices":["iba","fui","voy","fue"],"answer":1,"explain":"Fui. Ir and ser share the same preterite forms; context tells them apart.","tip":"Fui does double duty: I went and I was!"},
+        {"q":"What is the preterite of tener for yo?","lang":"es","choices":["tení","tenía","tuve","tuvo"],"answer":2,"explain":"Tener has an irregular stem in the preterite: tuve, tuviste, tuvo...","tip":"Tener grows a U in the preterite: tuve, tuviste, tuvo!"},
+        {"q":"What is the imperfect of ser for nosotros?","lang":"es","choices":["éramos","fuimos","seríamos","somos"],"answer":0,"explain":"Ser is irregular in the imperfect: era, eras, era, éramos, eran.","tip":"Éramos: we were a team!"},
+        {"q":"What is the preterite of hacer for él?","lang":"es","choices":["hació","hizo","hice","hacía"],"answer":1,"explain":"Hacer: hice, hiciste, hizo. The c changes to z before o.","tip":"Hizo uses a z so it doesn't sound like 'ico'!"}
+      ]},
+      { "name": "Future Tense", "questions": [
+        {"q":"Mañana yo ___ con el profesor. (hablar)","lang":"es","choices":["hablaré","hablaría","hablé","hablaba"],"answer":0,"explain":"The future adds -é to the infinitive for yo: hablaré.","tip":"The future is easy: keep the whole infinitive and add -é, -ás, -á, -emos, -án!"},
+        {"q":"What is the future of tener for yo?","lang":"es","choices":["teneré","tendré","tenré","tuve"],"answer":1,"explain":"Tener has the irregular future stem tendr-: tendré.","tip":"Tener, poner, salir and venir add a D: tendré, pondré, saldré, vendré!"},
+        {"q":"What is the future of hacer for ella?","lang":"es","choices":["hacerá","hizo","hará","haría"],"answer":2,"explain":"Hacer uses the stem har-: hará.","tip":"Hacer and decir shrink in the future: haré, diré!"},
+        {"q":"What is the future of decir for nosotros?","lang":"es","choices":["diremos","deciremos","diríamos","dijimos"],"answer":0,"explain":"Decir uses the stem dir-: diremos.","tip":"Decir shrinks to dir- for the future!"},
+        {"q":"What is the future of poder for tú?","lang":"es","choices":["poderás","podrás","puedes","podrías"],"answer":1,"explain":"Poder drops the e: podr-, so podrás.","tip":"Poder, saber and haber drop the e: podré, sabré, habré!"},
+        {"q":"What is the future of salir for ellos?","lang":"es","choices":["salirán","salgan","saldrán","salieron"],"answer":2,"explain":"Salir uses the stem saldr-: saldrán.","tip":"Salir adds a D, just like tener: saldrán!"},
+        {"q":"What is the future of ir for nosotros?","lang":"es","choices":["iremos","vamos","íbamos","iríamos"],"answer":0,"explain":"Ir is regular in the future: iré, irás, irá, iremos, irán.","tip":"Ir + -emos = iremos - no tricks!"},
+        {"q":"What does Voy a estudiar mean?","lang":"es","choices":["I studied.","I am going to study.","I would study."],"answer":1,"explain":"Ir a + infinitive is a very common way to talk about the near future.","tip":"Ir a + infinitive is like 'gonna' in English!"},
+        {"q":"What does ¿Dónde estará Juan? usually mean?","lang":"es","choices":["Where was Juan?","Where is Juan going?","I wonder where Juan is."],"answer":2,"explain":"The future tense can express a guess about the present: I wonder where Juan is.","tip":"The future can wonder: estará means he's probably!"}
+      ]},
+      { "name": "Reflexive Verbs", "questions": [
+        {"q":"Yo ___ levanto a las siete.","lang":"es","choices":["me","te","se","nos"],"answer":0,"explain":"The reflexive pronoun for yo is me: me levanto (I get up).","tip":"Reflexive pronouns are a mirror: yo looks in the mirror and sees me!"},
+        {"q":"What does Ella se ducha mean?","lang":"es","choices":["She dries off.","She takes a shower.","She gets dressed."],"answer":1,"explain":"Ducharse means to take a shower.","tip":"Ducks love water, and ducharse means taking a shower!"},
+        {"q":"Nosotros ___ acostamos tarde.","lang":"es","choices":["se","os","nos","me"],"answer":2,"explain":"The reflexive pronoun for nosotros is nos: nos acostamos (we go to bed).","tip":"Nosotros looks in the mirror and sees nos!"},
+        {"q":"Ellos ___ lavan las manos.","lang":"es","choices":["se","les","los","nos"],"answer":0,"explain":"Ellos uses se: se lavan las manos (they wash their hands).","tip":"Se is the busy one: him, her, them and usted!"},
+        {"q":"Tú ___ despiertas temprano.","lang":"es","choices":["se","te","me","tu"],"answer":1,"explain":"Tú uses te: te despiertas (you wake up).","tip":"Tú and te are a matching pair!"},
+        {"q":"Which verb means to get dressed?","lang":"es","choices":["vestirse","vestir","ponerse","quitarse"],"answer":0,"explain":"Vestirse is to get dressed. Ponerse is to put on (an item) and quitarse is to take off.","tip":"Vestirse: get dressed, maybe in a vest!"},
+        {"q":"What does Me cepillo los dientes mean?","lang":"es","choices":["I brush my teeth.","I brush my hair.","I wash my face."],"answer":0,"explain":"With reflexive verbs Spanish uses los, not mis, for body parts: Me cepillo los dientes.","tip":"Spanish already knows the teeth are yours - so los, not mis!"},
+        {"q":"Voy a ___ ahora. (bañarse, yo)","lang":"es","choices":["bañarse","me bañar","bañarme","bañarte"],"answer":2,"explain":"The pronoun attaches to the infinitive and matches the subject: Voy a bañarme (or Me voy a bañar).","tip":"The mirror pronoun follows the person: yo goes with me, so bañarme!"},
+        {"q":"Literally, ¿Cómo te llamas? means...","lang":"es","choices":["How do you call yourself?","How do you call me?","Who calls you?"],"answer":0,"explain":"Llamarse is reflexive: literally How do you call yourself? It means What is your name?","tip":"Llamarse: you call yourself by your name!"}
+      ]},
+      { "name": "Object Pronouns", "questions": [
+        {"q":"¿Tienes el libro? Sí, ___ tengo.","lang":"es","choices":["lo","la","le","los"],"answer":0,"explain":"El libro is masculine singular, so the direct object pronoun is lo.","tip":"Lo for a masculine thing, la for a feminine one - just like el and la!"},
+        {"q":"¿Compraste las manzanas? Sí, ___ compré.","lang":"es","choices":["los","las","les","la"],"answer":1,"explain":"Las manzanas is feminine plural: las compré.","tip":"Las manzanas, las compré - the pronoun matches the article!"},
+        {"q":"¿Ves a María? Sí, ___ veo.","lang":"es","choices":["le","lo","la","se"],"answer":2,"explain":"María is the direct object (feminine): la veo.","tip":"María is a she, so la!"},
+        {"q":"___ doy un regalo a mi madre.","lang":"es","choices":["Le","La","Lo","Se"],"answer":0,"explain":"A mi madre is the indirect object (to whom), so use le.","tip":"Le answers to whom: to him, to her!"},
+        {"q":"Le doy el libro a Ana. Replace both objects: ___ doy.","lang":"es","choices":["Le lo","Se lo","Lo le","Se la"],"answer":1,"explain":"Le changes to se before lo or la: Se lo doy.","tip":"Le lo sounds like lelo (silly), so it changes to se lo!"},
+        {"q":"Ella ___ escribe a nosotros.","lang":"es","choices":["nos","les","los","se"],"answer":0,"explain":"The indirect object pronoun for us is nos.","tip":"Nos is us, like nosotros!"},
+        {"q":"Which is another correct way to say Voy a comprarlo?","lang":"es","choices":["Lo voy a comprar.","Voy lo a comprar.","Voy a lo comprar."],"answer":0,"explain":"With an infinitive, the pronoun can attach to it or go before the conjugated verb.","tip":"Pronouns can hop in front of the verb or ride on the infinitive's back!"},
+        {"q":"What does ¿Me ayudas? mean?","lang":"es","choices":["Can I help you?","Will you help me?","Did you help me?"],"answer":1,"explain":"Me is the object (me), and ayudas is you help: Will you help me?","tip":"Me means me: ¿Me ayudas? Help me!"},
+        {"q":"Give it (el libro) to me! (tú command)","lang":"es","choices":["¡Me lo da!","¡Dalome!","¡Dámelo!"],"answer":2,"explain":"In affirmative commands, pronouns attach to the end, indirect before direct: Dámelo. An accent keeps the stress.","tip":"Commands are magnets: pronouns stick to the end - Dámelo!"}
+      ]},
+      { "name": "Por vs Para", "questions": [
+        {"q":"Este regalo es ___ ti.","lang":"es","choices":["para","por"],"answer":0,"explain":"Para marks the recipient: This gift is for you.","tip":"Para is for the person who gets the present!"},
+        {"q":"Caminamos ___ el parque. (through)","lang":"es","choices":["para","por"],"answer":1,"explain":"Por means through or around: We walk through the park.","tip":"Por means passing through, like walking through a door!"},
+        {"q":"Gracias ___ tu ayuda.","lang":"es","choices":["para","por"],"answer":1,"explain":"Gracias por: thanks for (because of) your help.","tip":"Gracias por: thanks because of - por is for the cause!"},
+        {"q":"Estudio ___ ser médico.","lang":"es","choices":["para","por"],"answer":0,"explain":"Para + infinitive expresses purpose: in order to be a doctor.","tip":"Para points to a goal: in order to!"},
+        {"q":"Pagué diez dólares ___ la camisa.","lang":"es","choices":["para","por"],"answer":1,"explain":"Por is used for exchange: I paid ten dollars for the shirt.","tip":"Por is for swaps: money for a shirt!"},
+        {"q":"Salimos ___ Madrid mañana.","lang":"es","choices":["para","por"],"answer":0,"explain":"Para marks a destination: We leave for Madrid tomorrow.","tip":"Para points like an arrow to where you're going!"},
+        {"q":"La tarea es ___ el lunes.","lang":"es","choices":["para","por"],"answer":0,"explain":"Para marks a deadline: The homework is due Monday.","tip":"Para for a deadline: due by Monday!"},
+        {"q":"Hablo con mi abuela ___ teléfono.","lang":"es","choices":["para","por"],"answer":1,"explain":"Por marks the means of communication: by phone.","tip":"Por the phone - by means of!"},
+        {"q":"Trabajo ___ la mañana.","lang":"es","choices":["para","por"],"answer":1,"explain":"Por la mañana means in the morning (during that part of the day).","tip":"Por la mañana: during the morning!"}
+      ]},
+      { "name": "Gustar and Similar Verbs", "questions": [
+        {"q":"Me ___ los perros.","lang":"es","choices":["gustan","gusta","gusto","gustas"],"answer":0,"explain":"The verb agrees with what is liked. Los perros is plural, so gustan.","tip":"With gustar, the thing liked is the boss of the verb: plural things, gustan!"},
+        {"q":"A ella le ___ bailar.","lang":"es","choices":["gustan","gusta","gusto","gustamos"],"answer":1,"explain":"With an infinitive (bailar), use the singular gusta.","tip":"Activities count as one: me gusta bailar!"},
+        {"q":"A nosotros ___ encanta la música.","lang":"es","choices":["les","nos","me","se"],"answer":1,"explain":"A nosotros pairs with nos: Nos encanta la música.","tip":"A nosotros needs nos - they come as a pair!"},
+        {"q":"A ellos ___ gusta el fútbol.","lang":"es","choices":["los","se","les","le"],"answer":2,"explain":"For they, the indirect object pronoun is les.","tip":"Les is for them, with an -s like ellos!"},
+        {"q":"What does Me duele la cabeza mean?","lang":"es","choices":["My head hurts.","I hit my head.","I am sleepy."],"answer":0,"explain":"Doler works like gustar: the head hurts me.","tip":"Doler sounds like 'dolor' - pain!"},
+        {"q":"Me ___ los ojos.","lang":"es","choices":["duele","duelen","dolor","duelo"],"answer":1,"explain":"Los ojos is plural, so duelen: My eyes hurt.","tip":"Two eyes, two hurts: duelen!"},
+        {"q":"What does Me interesa la historia mean?","lang":"es","choices":["I teach history.","History is boring.","I am interested in history."],"answer":2,"explain":"Interesar works like gustar: history interests me.","tip":"Interesar works backwards: history interests me!"},
+        {"q":"What does Me molesta el ruido mean?","lang":"es","choices":["The noise bothers me.","I make noise.","I like the noise."],"answer":0,"explain":"Molestar means to bother, not to molest.","tip":"Molestar is like a mosquito buzzing in your ear - it bothers you!"},
+        {"q":"What does Me falta un lápiz mean?","lang":"es","choices":["I found a pencil.","I am missing a pencil.","I broke a pencil."],"answer":1,"explain":"Faltar works like gustar: a pencil is lacking to me.","tip":"Faltar sounds like 'fault' - it's not my fault I'm missing a pencil!"}
+      ]},
+      { "name": "Travel, School and Health Vocabulary", "questions": [
+        {"q":"What is el aeropuerto?","lang":"es","choices":["The airport","The airplane","The train station"],"answer":0,"explain":"El aeropuerto is the airport. The airplane is el avión.","tip":"Aero + puerto (port): an air port!"},
+        {"q":"What is la maleta?","lang":"es","choices":["The wallet","The suitcase","The map"],"answer":1,"explain":"La maleta is the suitcase.","tip":"Maleta sounds like 'mallet' - don't pack a mallet in your suitcase!"},
+        {"q":"What is el boleto?","lang":"es","choices":["The ticket","The boat","The ballot"],"answer":0,"explain":"El boleto is a ticket in Latin America. In Spain people say el billete.","tip":"Boleto sounds like 'ballot' - but it's a ticket, not a vote!"},
+        {"q":"What is la tarea?","lang":"es","choices":["The test","The homework","The teacher"],"answer":1,"explain":"La tarea is homework.","tip":"Tarea starts like 'task' - your homework task!"},
+        {"q":"What is el horario?","lang":"es","choices":["The schedule","The clock","The horror"],"answer":0,"explain":"El horario is the schedule or timetable.","tip":"Horario has hora (hour) inside - a list of hours!"},
+        {"q":"What does Tengo fiebre mean?","lang":"es","choices":["I have a cough.","I am cold.","I have a fever."],"answer":2,"explain":"La fiebre is fever.","tip":"Fiebre sounds like 'fever'!"},
+        {"q":"What is la farmacia?","lang":"es","choices":["The farm","The pharmacy","The hospital"],"answer":1,"explain":"La farmacia is the pharmacy. A farm is una granja.","tip":"Farmacia sounds like 'pharmacy' - ph and f make the same sound!"},
+        {"q":"What does Me siento mal mean?","lang":"es","choices":["I feel sick.","I sit badly.","I am sorry."],"answer":0,"explain":"Sentirse mal means to feel bad or sick.","tip":"Sentirse is like 'sense': I sense I'm sick!"},
+        {"q":"What is la salida?","lang":"es","choices":["The salad","The entrance","The exit"],"answer":2,"explain":"La salida is the exit. The entrance is la entrada.","tip":"Salir means to leave, so la salida is how you leave!"},
+        {"q":"At the doctor, what is la receta?","lang":"es","choices":["The receipt","The prescription","The waiting room"],"answer":1,"explain":"La receta is a prescription (and also a recipe). A receipt is un recibo.","tip":"A prescription is the doctor's receta (recipe) for getting well!"}
+      ]}
+    ],
+    "college": [
+      { "name": "Present Subjunctive", "questions": [
+        {"q":"Quiero que tú ___. (venir)","lang":"es","choices":["vengas","vienes","vengues","venir"],"answer":0,"explain":"Wanting someone else to do something triggers the subjunctive: vengas.","tip":"WEIRDO triggers the subjunctive: Wishes, Emotions, Impersonal expressions, Recommendations, Doubt, Ojalá!"},
+        {"q":"Espero que ellos ___ bien. (estar)","lang":"es","choices":["están","estén","estan","estarán"],"answer":1,"explain":"Hope (esperar que) takes the subjunctive: estén.","tip":"Hope is an Emotion in WEIRDO - subjunctive!"},
+        {"q":"Es importante que nosotros ___. (estudiar)","lang":"es","choices":["estudiamos","estudiaremos","estudiemos","estudiar"],"answer":2,"explain":"Impersonal expressions of importance take the subjunctive: estudiemos.","tip":"Impersonal expressions are the I in WEIRDO!"},
+        {"q":"Dudo que él ___ la respuesta. (saber)","lang":"es","choices":["sepa","sabe","saba","sabrá"],"answer":0,"explain":"Doubt triggers the subjunctive. Saber is irregular: sepa.","tip":"Doubt is the D in WEIRDO: dudo que + subjunctive!"},
+        {"q":"Creo que ella ___ razón. (tener)","lang":"es","choices":["tenga","tiene","tuviera","tener"],"answer":1,"explain":"Creer que in the affirmative expresses belief, so it takes the indicative: tiene.","tip":"Belief is certainty: creo que takes the indicative, no creo que flips to subjunctive!"},
+        {"q":"No creo que ___ verdad. (ser)","lang":"es","choices":["es","será","sea","fue"],"answer":2,"explain":"No creer que expresses doubt and takes the subjunctive: sea.","tip":"No creo = doubt, and doubt is the D in WEIRDO!"},
+        {"q":"Cuando ___ a casa, te llamo. (llegar, yo)","lang":"es","choices":["llegue","llego","llegué","llegara"],"answer":0,"explain":"Cuando referring to a future event takes the subjunctive: llegue (g becomes gu before e).","tip":"Cuando + a future event = not real yet = subjunctive!"},
+        {"q":"Busco un apartamento que ___ jardín. (tener)","lang":"es","choices":["tiene","tenga","tendrá","tuvo"],"answer":1,"explain":"The apartment is hypothetical (not yet known to exist), so use the subjunctive: tenga.","tip":"If it might not exist, it's subjunctive: a dream apartment!"},
+        {"q":"Ojalá que no ___ mañana. (llover)","lang":"es","choices":["llueve","llovió","llueva","lloverá"],"answer":2,"explain":"Ojalá expresses a wish and takes the subjunctive: llueva.","tip":"Ojalá is the O in WEIRDO - always subjunctive!"},
+        {"q":"What is the present subjunctive of ir for yo?","lang":"es","choices":["vaya","voy","iba","fuera"],"answer":0,"explain":"Ir is irregular in the subjunctive: vaya, vayas, vaya, vayamos, vayan.","tip":"DISHES: dar, ir, saber, haber, estar, ser are the irregular subjunctive verbs!"}
+      ]},
+      { "name": "Past Subjunctive", "questions": [
+        {"q":"Quería que tú ___. (venir)","lang":"es","choices":["vinieras","vengas","venías","vendrías"],"answer":0,"explain":"A past-tense trigger (quería) takes the past subjunctive: vinieras.","tip":"Past trigger, past subjunctive: quería que leads to vinieras!"},
+        {"q":"Si yo ___ dinero, viajaría. (tener)","lang":"es","choices":["tengo","tuviera","tendría","tenía"],"answer":1,"explain":"Contrary-to-fact si clauses use past subjunctive + conditional: Si tuviera..., viajaría.","tip":"Si + -ra, then -ría: si tuviera, viajaría!"},
+        {"q":"Me pidió que ___ más despacio. (hablar, yo)","lang":"es","choices":["hablo","hable","hablara","hablaría"],"answer":2,"explain":"A past request (pidió) takes the past subjunctive: hablara.","tip":"Pidió is past, so hablara follows!"},
+        {"q":"Era necesario que nosotros ___. (salir)","lang":"es","choices":["saliéramos","saliéremos","salimos","salgamos"],"answer":0,"explain":"The nosotros form of the past subjunctive carries an accent: saliéramos.","tip":"Nosotros always gets an accent in the past subjunctive: -áramos, -iéramos!"},
+        {"q":"The past subjunctive is formed from which form?","choices":["Third-person plural preterite","Yo present indicative","Infinitive","Imperfect indicative"],"answer":0,"explain":"Take ellos preterite (hablaron, tuvieron), drop -ron, add -ra endings: hablara, tuviera.","tip":"Ellos preterite, chop off -ron, add -ra: tuvieron becomes tuviera!"},
+        {"q":"Si yo ___ tú, no lo haría. (ser)","lang":"es","choices":["soy","fuera","sería","sea"],"answer":1,"explain":"If I were you: Si yo fuera tú.","tip":"If I were you: Si yo fuera tú - fuera is the famous one!"},
+        {"q":"Habla como si lo ___ todo. (saber)","lang":"es","choices":["sabe","sepa","supiera","sabía"],"answer":2,"explain":"Como si (as if) always takes the past subjunctive: supiera.","tip":"Como si is always as if it were unreal - past subjunctive!"},
+        {"q":"Hablase is a correct alternative form of hablara.","choices":["True","False"],"answer":0,"explain":"True. The -se forms are equivalent; they are more common in Spain and in formal writing.","tip":"-ra or -se, both are okay!"},
+        {"q":"Ojalá ___ ayudarte, pero no puedo. (poder)","lang":"es","choices":["pudiera","puedo","pude","podré"],"answer":0,"explain":"Ojalá + past subjunctive expresses an unlikely or contrary-to-fact wish: I wish I could help you.","tip":"Ojalá + past subjunctive is a wishful sigh: if only!"}
+      ]},
+      { "name": "Conditional", "questions": [
+        {"q":"Yo ___ más, pero estoy lleno. (comer)","lang":"es","choices":["comería","comiera","comeré","comía"],"answer":0,"explain":"The conditional adds -ía to the infinitive: comería (I would eat).","tip":"Would = -ía: comería, I would eat!"},
+        {"q":"What is the conditional of tener for ella?","lang":"es","choices":["tenería","tendría","tuviera","tenía"],"answer":1,"explain":"The conditional uses the same irregular stems as the future: tendr-, so tendría.","tip":"The conditional borrows the future's irregular stems: tendr- + -ía!"},
+        {"q":"¿___ usted ayudarme? (poder, polite)","lang":"es","choices":["Puede","Pudo","Podría","Podía"],"answer":2,"explain":"The conditional softens requests: ¿Podría usted ayudarme? (Could you help me?)","tip":"Could you? = ¿Podría? - the polite power word!"},
+        {"q":"What is the conditional of hacer for nosotros?","lang":"es","choices":["haríamos","haceríamos","hiciéramos","hacíamos"],"answer":0,"explain":"Hacer uses the stem har-: haríamos.","tip":"Har- from the future + -íamos!"},
+        {"q":"What does Me gustaría mean?","lang":"es","choices":["I liked","I would like","I will like"],"answer":1,"explain":"Me gustaría is the conditional of gustar: I would like.","tip":"Gustaría is would like - the polite way to order!"},
+        {"q":"What is the conditional of decir for ellos?","lang":"es","choices":["decirían","dijeran","dirían","decían"],"answer":2,"explain":"Decir uses the stem dir-: dirían.","tip":"Dir- stem from the future, plus -ían!"},
+        {"q":"Si tuviera tiempo, ___ al cine. (ir, yo)","lang":"es","choices":["iría","iré","fuera","voy"],"answer":0,"explain":"The result clause of a contrary-to-fact condition uses the conditional: iría.","tip":"Si tuviera... iría: -ra then -ría!"},
+        {"q":"What does Serían las diez cuando llegó usually mean?","lang":"es","choices":["It will be ten when he arrives.","It was probably about ten when he arrived.","It would be ten if he arrived."],"answer":1,"explain":"The conditional can express a guess about the past: It was probably ten o'clock.","tip":"Future guesses about now; conditional guesses about then!"}
+      ]},
+      { "name": "Perfect Tenses", "questions": [
+        {"q":"Yo ___ comido ya.","lang":"es","choices":["he","ha","has","hemos"],"answer":0,"explain":"The present perfect uses haber: he comido (I have eaten).","tip":"He, has, ha, hemos, han - haber is the helper!"},
+        {"q":"What is the past participle of escribir?","lang":"es","choices":["escribido","escrito","escribito","escrebido"],"answer":1,"explain":"Escribir has an irregular participle: escrito.","tip":"Escrito is like 'script' - something written!"},
+        {"q":"Nosotros ya habíamos ___ la película. (ver)","lang":"es","choices":["veído","vido","visto","vistos"],"answer":2,"explain":"Ver has an irregular participle: visto. The participle does not change after haber.","tip":"Visto sounds like 'vista' - a view you have seen!"},
+        {"q":"What is the past participle of hacer?","lang":"es","choices":["hecho","hacido","hizo","hacho"],"answer":0,"explain":"Hacer becomes hecho: He hecho la tarea.","tip":"Dicho y hecho - said and done!"},
+        {"q":"Para mañana, yo ___ terminado el proyecto.","lang":"es","choices":["había","habré","he","haya"],"answer":1,"explain":"The future perfect (habré terminado) says something will be done by a future time.","tip":"Habré = will have: the future of haber!"},
+        {"q":"Ella ha ___ la puerta. (abrir)","lang":"es","choices":["abrido","abrida","abierto","abierta"],"answer":2,"explain":"Abrir has an irregular participle: abierto. After haber it stays masculine singular.","tip":"Abierto: a bear opened the door!"},
+        {"q":"What does Habría ido mean?","lang":"es","choices":["I would have gone.","I had gone.","I will have gone."],"answer":0,"explain":"The conditional perfect (habría + participle) means would have.","tip":"Habría = would have!"},
+        {"q":"Espero que hayas ___ bien. (dormir)","lang":"es","choices":["durmido","dormido","dormito","duerme"],"answer":1,"explain":"Present perfect subjunctive: hayas dormido (I hope you have slept well).","tip":"Hayas is haber in the subjunctive after espero que!"},
+        {"q":"What is the past participle of volver?","lang":"es","choices":["volvido","vuelvido","vuelto","volto"],"answer":2,"explain":"Volver becomes vuelto: Ha vuelto (He has returned).","tip":"Volver gives vuelto: the boomerang has returned!"},
+        {"q":"What is the past participle of romper?","lang":"es","choices":["roto","rompido","rompto","rupto"],"answer":0,"explain":"Romper becomes roto: Se ha roto el vaso.","tip":"Roto rhymes with 'photo' - a broken photo frame!"}
+      ]},
+      { "name": "Idioms", "questions": [
+        {"q":"What does estar en las nubes mean?","lang":"es","choices":["To be daydreaming","To be very happy","To be on a plane"],"answer":0,"explain":"Literally to be in the clouds: to be distracted or daydreaming.","tip":"Head in the clouds = en las nubes!"},
+        {"q":"What does tomarle el pelo a alguien mean?","lang":"es","choices":["To cut someone's hair","To pull someone's leg","To scare someone"],"answer":1,"explain":"Literally to take someone's hair: to tease or fool someone.","tip":"Spanish pulls your hair instead of your leg!"},
+        {"q":"What does costar un ojo de la cara mean?","lang":"es","choices":["To hurt a lot","To be a bargain","To cost an arm and a leg"],"answer":2,"explain":"Literally to cost an eye from the face: to be very expensive.","tip":"An eye instead of an arm and a leg - both are expensive!"},
+        {"q":"What does ser pan comido mean?","lang":"es","choices":["To be a piece of cake","To be hungry","To be stale"],"answer":0,"explain":"Literally to be eaten bread: something very easy.","tip":"Eaten bread and a piece of cake - easy food, easy task!"},
+        {"q":"What does meter la pata mean?","lang":"es","choices":["To kick a ball","To put your foot in it","To walk slowly"],"answer":1,"explain":"Literally to put in the paw: to make a blunder.","tip":"Foot in your mouth, paw in the mess!"},
+        {"q":"What does echar de menos mean?","lang":"es","choices":["To throw away","To lose weight","To miss someone or something"],"answer":2,"explain":"Echar de menos means to miss. In Latin America extrañar is also very common.","tip":"Echar de menos: you feel less when someone is missing!"},
+        {"q":"What does estar como pez en el agua mean?","lang":"es","choices":["To be in one's element","To be soaking wet","To be silent"],"answer":0,"explain":"Literally like a fish in water: completely comfortable.","tip":"A fish in water is in its element!"},
+        {"q":"What does dar en el clavo mean?","lang":"es","choices":["To get hurt","To hit the nail on the head","To build something"],"answer":1,"explain":"Literally to hit the nail: to get something exactly right.","tip":"Clavo means nail - both languages hit the nail!"},
+        {"q":"What does no tener pelos en la lengua mean?","lang":"es","choices":["To be shy","To be unable to speak","To speak bluntly"],"answer":2,"explain":"Literally to have no hairs on the tongue: to say what you think directly.","tip":"No hairs on the tongue means nothing slows your words down!"},
+        {"q":"What does llover a cántaros mean?","lang":"es","choices":["To rain cats and dogs","To sing in the rain","To drizzle"],"answer":0,"explain":"Literally to rain by the pitcher: to pour.","tip":"Cántaros are pitchers - rain pouring like from a jug!"}
+      ]},
+      { "name": "False Cognates", "questions": [
+        {"q":"What does actual mean in Spanish?","lang":"es","choices":["Current","Real","Active"],"answer":0,"explain":"Actual means current or present-day. Actually is en realidad.","tip":"Actual = actualmente = currently: a current event!"},
+        {"q":"What is una librería?","lang":"es","choices":["A library","A bookstore","A bookshelf"],"answer":1,"explain":"A librería sells books. A library is una biblioteca.","tip":"Libro + -ería makes a shop, like panadería (bakery) - you buy books there!"},
+        {"q":"What does realizar mean?","lang":"es","choices":["To realize (notice)","To relax","To carry out or accomplish"],"answer":2,"explain":"Realizar means to carry out. To realize something is darse cuenta.","tip":"Realizar makes something real - it carries it out!"},
+        {"q":"What does sensible mean in Spanish?","lang":"es","choices":["Sensitive","Sensible","Sensational"],"answer":0,"explain":"Sensible means sensitive. Sensible in English is sensato.","tip":"Spanish sensible feels a lot: it's sensitive!"},
+        {"q":"What does asistir a clase mean?","lang":"es","choices":["To assist the class","To attend class","To teach class"],"answer":1,"explain":"Asistir a means to attend. To help is ayudar.","tip":"Asistir a = attend; to assist = ayudar!"},
+        {"q":"What is una carpeta?","lang":"es","choices":["A carpet","A carpenter","A folder"],"answer":2,"explain":"Carpeta means folder. A carpet is una alfombra.","tip":"A carpeta holds papers; an alfombra covers floors!"},
+        {"q":"What does recordar mean?","lang":"es","choices":["To remember or remind","To record","To repeat"],"answer":0,"explain":"Recordar means to remember or remind. To record is grabar.","tip":"Recordar comes from Latin cor (heart): bring back to the heart!"},
+        {"q":"What does molestar mean?","lang":"es","choices":["To harm badly","To bother","To mold"],"answer":1,"explain":"Molestar simply means to bother or annoy.","tip":"Molestar = annoy, like a mosquito!"},
+        {"q":"What does introducir usually mean?","lang":"es","choices":["To insert or bring in","To introduce a person","To interrupt"],"answer":0,"explain":"Introducir means to insert or bring in. To introduce a person is presentar.","tip":"Introducir una tarjeta: insert a card!"},
+        {"q":"What does una lectura mean?","lang":"es","choices":["A lecture","A reading","A lettuce"],"answer":1,"explain":"Lectura means a reading. A lecture is una conferencia or una clase.","tip":"Lectura comes from leer (to read)!"}
+      ]}
+    ],
+    "adult": [
+      { "name": "Travel Phrases", "questions": [
+        {"q":"What does ¿Dónde está el baño? mean?","lang":"es","choices":["Where is the bathroom?","Is there a bath?","When does the bank open?"],"answer":0,"explain":"¿Dónde está...? asks where something is.","tip":"¿Dónde está? - estar for location, always!"},
+        {"q":"What does ¿Cuánto cuesta? mean?","lang":"es","choices":["How long does it take?","How much does it cost?","How far is it?"],"answer":1,"explain":"¿Cuánto cuesta? asks the price.","tip":"Cuesta sounds like 'cost-a'!"},
+        {"q":"What does Quisiera una habitación para dos noches mean?","lang":"es","choices":["I need two rooms tonight.","I lost my room key.","I would like a room for two nights."],"answer":2,"explain":"Quisiera is a polite I would like; una habitación is a hotel room.","tip":"Habitación sounds like 'habitat' - your room is your habitat!"},
+        {"q":"What does ¿A qué hora sale el tren? mean?","lang":"es","choices":["What time does the train leave?","Where is the train?","Is the train late?"],"answer":0,"explain":"Salir means to leave; llegar means to arrive.","tip":"Salir = to leave, and salida = exit!"},
+        {"q":"How do you ask for a round-trip ticket?","lang":"es","choices":["un boleto de ida","un boleto de ida y vuelta","un boleto de vuelta"],"answer":1,"explain":"De ida y vuelta is round trip; de ida is one way. In Spain, billete instead of boleto.","tip":"Ida (going) y vuelta (return): there and back!"},
+        {"q":"What does Doble a la derecha mean?","lang":"es","choices":["Turn left","Go straight","Turn right"],"answer":2,"explain":"A la derecha is to the right; a la izquierda is to the left.","tip":"Derecha = right; izquierda = left - I zig left!"},
+        {"q":"What does Siga derecho mean?","lang":"es","choices":["Keep going straight","Turn right","Stop here"],"answer":0,"explain":"Derecho here means straight ahead. In Spain people often say todo recto.","tip":"Derecho sounds like 'direct' - straight ahead!"},
+        {"q":"What does ¿Me puede ayudar? mean?","lang":"es","choices":["Can I help you?","Can you help me?","Did you help me?"],"answer":1,"explain":"Me is the object: Can you (usted) help me?","tip":"Me puede: me first, then the verb - can you help me?"},
+        {"q":"How do you say I am lost (said by a man)?","lang":"es","choices":["Estoy perdido.","Soy perdido.","Tengo perdido."],"answer":0,"explain":"Being lost is a state, so use estar: Estoy perdido (a woman says perdida).","tip":"Perdido comes from perder, to lose - you've lost your way!"},
+        {"q":"What is la parada de autobús?","lang":"es","choices":["The bus driver","The parade","The bus stop"],"answer":2,"explain":"La parada is the stop. Bus also varies by country: camión (Mexico), guagua (Caribbean).","tip":"Parada sounds like 'parade' - the bus stops for the parade!"}
+      ]},
+      { "name": "At the Restaurant", "questions": [
+        {"q":"What does La cuenta, por favor mean?","lang":"es","choices":["The check, please.","The menu, please.","A table, please."],"answer":0,"explain":"La cuenta is the bill or check.","tip":"Cuenta comes from contar, to count - they count up your bill!"},
+        {"q":"What does ¿Qué me recomienda? mean?","lang":"es","choices":["What did I order?","What do you recommend?","What is in this?"],"answer":1,"explain":"Recomendar is to recommend; this uses the usted form for the server.","tip":"Recomienda sounds like 'recommend'!"},
+        {"q":"How do you say I'm allergic to shellfish (said by a man)?","lang":"es","choices":["Me gustan los mariscos.","Tengo mariscos.","Soy alérgico a los mariscos."],"answer":2,"explain":"Soy alérgico a... (a woman says alérgica). Los mariscos are shellfish and seafood.","tip":"Mariscos come from the mar (sea)!"},
+        {"q":"What does Para mí, el pollo mean when ordering?","lang":"es","choices":["I'll have the chicken.","The chicken is for him.","I don't want chicken."],"answer":0,"explain":"Para mí... is a common way to order: For me, the chicken.","tip":"Para mí - for me!"},
+        {"q":"What is la propina?","lang":"es","choices":["The appetizer","The tip","The receipt"],"answer":1,"explain":"La propina is the tip.","tip":"Propina: give the waiter a pro tip!"},
+        {"q":"What does Una mesa para cuatro, por favor mean?","lang":"es","choices":["Four menus, please.","Four drinks, please.","A table for four, please."],"answer":2,"explain":"Mesa means table.","tip":"Mesa is a table, like a flat-topped mesa mountain!"},
+        {"q":"In Mexico, what is el mesero?","lang":"es","choices":["The waiter","The chef","The table"],"answer":0,"explain":"Mesero is used in Mexico and Central America; camarero in Spain; mozo in Argentina.","tip":"The mesero serves the mesa!"},
+        {"q":"What does ¿Está incluido el servicio? mean?","lang":"es","choices":["Is the restaurant open?","Is the tip included?","Is the service good?"],"answer":1,"explain":"El servicio here refers to the service charge or tip.","tip":"Servicio = service = the tip!"},
+        {"q":"What does ¿Me trae agua, por favor? mean?","lang":"es","choices":["Is the water free?","Could you bring me water, please?","I brought water."],"answer":1,"explain":"Traer means to bring: Could you bring me water?","tip":"Traer = to bring, like a tray carrying water!"},
+        {"q":"What does Buen provecho mean?","lang":"es","choices":["Enjoy your meal","Good profit","Cheers"],"answer":0,"explain":"Buen provecho is said to people who are eating. Cheers is ¡Salud!","tip":"Provecho sounds like 'profit' - may you profit from your food!"}
+      ]},
+      { "name": "Emergencies", "questions": [
+        {"q":"How do you shout Help! in Spanish?","lang":"es","choices":["¡Socorro!","¡Salud!","¡Oiga!"],"answer":0,"explain":"¡Socorro! or ¡Ayuda! both mean Help!","tip":"Socorro sounds like 'succor', an old English word for help!"},
+        {"q":"What does Llame a una ambulancia mean?","lang":"es","choices":["The ambulance is here.","Call an ambulance.","I need a taxi."],"answer":1,"explain":"Llame is the usted command of llamar (to call).","tip":"Llame comes from llamar, to call!"},
+        {"q":"What does Necesito un médico mean?","lang":"es","choices":["I am a doctor.","I need medicine.","I need a doctor."],"answer":2,"explain":"Médico means doctor; medicine is medicina or medicamento.","tip":"Médico sounds like 'medic'!"},
+        {"q":"What does ¿Dónde está el hospital más cercano? mean?","lang":"es","choices":["Where is the nearest hospital?","Is the hospital closed?","How big is the hospital?"],"answer":0,"explain":"Más cercano means nearest.","tip":"Cercano is near, as in close by!"},
+        {"q":"What does Me robaron la cartera mean?","lang":"es","choices":["I lost my map.","My wallet was stolen.","I bought a wallet."],"answer":1,"explain":"Robar is to steal; la cartera is the wallet (in some countries, a purse).","tip":"Robar sounds like 'rob'!"},
+        {"q":"What does ¡Hay un incendio! mean?","lang":"es","choices":["There's a flood!","There's an accident!","There's a fire!"],"answer":2,"explain":"Un incendio is a fire that is burning out of control, like a house fire.","tip":"Incendio sounds like 'incendiary' - fire!"},
+        {"q":"What does Me duele el pecho mean?","lang":"es","choices":["My chest hurts.","My back hurts.","My stomach hurts."],"answer":0,"explain":"El pecho is the chest. Back is la espalda; stomach is el estómago.","tip":"Pecho rhymes with techo (roof) - your chest is the roof over your heart!"},
+        {"q":"What does Perdí mi pasaporte mean?","lang":"es","choices":["I found my passport.","I lost my passport.","I need a passport."],"answer":1,"explain":"Perdí is the preterite of perder (to lose).","tip":"Perder = to lose: perdí, I lost!"},
+        {"q":"What does ¡Cuidado! mean?","lang":"es","choices":["Watch out!","Take care of it!","Hurry!"],"answer":0,"explain":"¡Cuidado! is a warning: Watch out! or Be careful!","tip":"¡Cuidado! is like 'take care' shouted fast!"},
+        {"q":"How do you say I need help?","lang":"es","choices":["Necesito ayuda.","Tengo ayuda.","Soy ayuda."],"answer":0,"explain":"Necesitar + noun: Necesito ayuda.","tip":"Ayuda sounds like 'aid' - I need aid!"}
+      ]},
+      { "name": "Polite Forms: usted", "questions": [
+        {"q":"Which form of you do you use with an older stranger?","lang":"es","choices":["usted","tú","vos"],"answer":0,"explain":"Usted is the respectful form for strangers, elders and formal situations.","tip":"Usted for elders and strangers - show respect!"},
+        {"q":"¿Cómo ___ usted?","lang":"es","choices":["estás","está","estoy"],"answer":1,"explain":"Usted takes third-person verb forms: ¿Cómo está usted?","tip":"Usted acts like él and ella: está!"},
+        {"q":"¿Usted ___ inglés? (hablar)","lang":"es","choices":["hablas","hablo","habla"],"answer":2,"explain":"Usted uses the same verb form as él and ella: habla.","tip":"Usted borrows the he/she verb form: habla!"},
+        {"q":"In Latin America, what is the plural you for a group, formal or informal?","lang":"es","choices":["ustedes","vosotros","tú"],"answer":0,"explain":"Latin America uses ustedes for all plural you. Vosotros is used mainly in Spain for informal plural.","tip":"Ustedes is the y'all of Latin America!"},
+        {"q":"Formal command: Sit down, please. (usted)","lang":"es","choices":["Siéntate, por favor.","Siéntese, por favor.","Sentarse, por favor."],"answer":1,"explain":"Siéntese is the usted command; siéntate is the tú command.","tip":"Formal commands flip the vowel: sentarse becomes siéntese!"},
+        {"q":"Your house (talking to usted):","lang":"es","choices":["tu casa","vuestra casa","su casa"],"answer":2,"explain":"Su is the possessive for usted (also his, her, their).","tip":"Su is the all-purpose your for usted!"},
+        {"q":"What is the common written abbreviation of usted?","lang":"es","choices":["Ud.","Us.","Ut."],"answer":0,"explain":"Ud. (plural Uds.). Vd. is an older abbreviation.","tip":"Ud. is short and sweet!"},
+        {"q":"How do you politely get a stranger's attention?","lang":"es","choices":["Disculpe","De nada","Buen provecho"],"answer":0,"explain":"Disculpe (or Perdone) means Excuse me to get attention.","tip":"Disculpe: no culpa (blame) on me - excuse me!"},
+        {"q":"¿Podría ayudarme? sounds more polite than ¿Puede ayudarme?","choices":["True","False"],"answer":0,"explain":"True. The conditional (podría) softens a request, like could vs can in English.","tip":"Podría is could - a please built into the verb!"},
+        {"q":"When talking to usted, which object pronoun means you in Me alegra conocer___?","lang":"es","choices":["te","lo/la","os"],"answer":1,"explain":"Usted takes lo or la as a direct object: Me alegra conocerlo / conocerla. Te is for tú.","tip":"Usted borrows lo and la, just like él and ella!"}
+      ]},
+      { "name": "False Cognates", "questions": [
+        {"q":"What does embarazada mean?","lang":"es","choices":["Embarrassed","Pregnant","Busy"],"answer":1,"explain":"Embarazada means pregnant. Embarrassed is avergonzado or tener vergüenza.","tip":"Don't say estoy embarazada when you're embarrassed - unless you're expecting!"},
+        {"q":"What does éxito mean?","lang":"es","choices":["Success","Exit","Excitement"],"answer":0,"explain":"Éxito means success. An exit is una salida.","tip":"Éxito is success - the exit is la salida!"},
+        {"q":"What does la ropa mean?","lang":"es","choices":["Rope","Robe","Clothes"],"answer":2,"explain":"Ropa means clothes. Rope is una cuerda or una soga.","tip":"Ropa: you hang clothes on a rope (clothesline)!"},
+        {"q":"What is un pariente?","lang":"es","choices":["A parent","A relative","A partner"],"answer":1,"explain":"Un pariente is any relative. Parents are los padres.","tip":"Parents are parientes, but so is your cousin!"},
+        {"q":"What does decepción mean?","lang":"es","choices":["Disappointment","Deception","Decision"],"answer":0,"explain":"Decepción means disappointment. Deception is engaño.","tip":"Decepción: disappointment, not deception!"},
+        {"q":"What does casualidad mean?","lang":"es","choices":["Casual clothing","Casualty","Coincidence"],"answer":2,"explain":"Casualidad means chance or coincidence: ¡Qué casualidad! What a coincidence!","tip":"Casualidad: a casual coincidence!"},
+        {"q":"What is una fábrica?","lang":"es","choices":["Fabric","A factory","A fable"],"answer":1,"explain":"Fábrica means factory. Fabric is tela.","tip":"A fábrica might make fabric, but it's the factory!"},
+        {"q":"What does largo mean?","lang":"es","choices":["Long","Large","Lazy"],"answer":0,"explain":"Largo means long. Large is grande.","tip":"In music, largo means slow and broad - it takes a long time!"},
+        {"q":"What does contestar mean?","lang":"es","choices":["To contest","To compete","To answer"],"answer":2,"explain":"Contestar means to answer or reply.","tip":"Contestar: answer the contest question!"},
+        {"q":"What does asistir usually mean?","lang":"es","choices":["To assist","To attend","To insist"],"answer":1,"explain":"Asistir a una reunión means to attend a meeting. To help is ayudar.","tip":"Asistir = attend; ayudar = help!"}
+      ]},
+      { "name": "Grammar Refreshers", "questions": [
+        {"q":"Which word means you (the subject)?","lang":"es","choices":["tú","tu"],"answer":0,"explain":"Tú with an accent is the pronoun you; tu without an accent means your.","tip":"Tú wears a hat because it's a person; tu just owns things!"},
+        {"q":"Which word means he?","lang":"es","choices":["el","él"],"answer":1,"explain":"Él with an accent means he; el without an accent means the.","tip":"Él wears a hat because he's a person!"},
+        {"q":"Which word means yes?","lang":"es","choices":["si","sí"],"answer":1,"explain":"Sí with an accent means yes; si without an accent means if.","tip":"Sí wears a hat because yes is confident!"},
+        {"q":"El agua está ___.","lang":"es","choices":["fría","frío"],"answer":0,"explain":"Agua is feminine. It takes el only because it starts with a stressed a sound, so the adjective is fría.","tip":"El agua is a girl in disguise - el just avoids an a-a clash!"},
+        {"q":"Veo ___ mi hermano.","lang":"es","choices":["a","al","de","nothing (no word needed)"],"answer":0,"explain":"The personal a is used before a person who is the direct object: Veo a mi hermano.","tip":"Personal a: people get an a, things don't!"},
+        {"q":"What is the contraction of a + el?","lang":"es","choices":["al","ael","a'l"],"answer":0,"explain":"A + el becomes al: Voy al mercado. De + el becomes del.","tip":"A + el squeeze together into al!"},
+        {"q":"Yo ___ a María. (to know a person)","lang":"es","choices":["sé","conozco","sabo","conoco"],"answer":1,"explain":"Conocer is for people and places: conozco. Saber is for facts and skills.","tip":"Conocer is for people you've connected with!"},
+        {"q":"Yo ___ nadar. (to know how)","lang":"es","choices":["conozco","puedo saber","sé"],"answer":2,"explain":"Saber + infinitive means to know how to: Sé nadar.","tip":"Saber is for skills and facts: sé, I know!"},
+        {"q":"No veo nada is correct Spanish.","choices":["True","False"],"answer":0,"explain":"True. Spanish uses double negatives: No veo nada means I don't see anything.","tip":"Spanish negatives team up: no + nada!"},
+        {"q":"What does hay mean?","lang":"es","choices":["there is / there are","hello","today"],"answer":0,"explain":"Hay means there is or there are: Hay tres libros.","tip":"Hay sounds like 'eye' - I see there are three!"}
+      ]}
+    ]
+  }
+}

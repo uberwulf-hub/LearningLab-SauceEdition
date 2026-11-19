@@ -1,0 +1,81 @@
+NAME
+       top - show the busiest processes and the system's load, updated live
+
+SYNOPSIS
+       top [-b] [-n COUNT] [-d SECONDS] [-u USER] [-p PID]
+
+DESCRIPTION
+       top fills the terminal with a summary of the system and a table of
+       processes, refreshed every few seconds, the busiest first. Use it to
+       find a process that eats CPU or memory, then deal with it (renice it
+       or kill it).
+
+   The summary lines
+       top -    the time, the uptime, the number of users and the load
+                average over 1, 5 and 15 minutes (the number of processes
+                wanting a CPU; compare it with the number of CPUs).
+       Tasks:   how many processes exist and in which state.
+       %Cpu(s): how the CPU time is spent: us user programs, sy the kernel,
+                ni niced programs, id idle, wa waiting for disks.
+       MiB Mem, MiB Swap:
+                total, free, used and cache memory, and swap use.
+
+   The columns
+       PID      the process ID (for kill and renice).
+       USER     the owner.
+       PR, NI   the scheduling priority and the nice value (-20 to 19;
+                higher is nicer, so it gets less CPU).
+       VIRT, RES, SHR
+                virtual, resident (really in RAM) and shared memory, in KiB.
+       S        the state: R running, S sleeping, D waiting for a disk,
+                T stopped, Z zombie.
+       %CPU, %MEM
+                share of one CPU and of the memory.
+       TIME+    CPU time used so far.
+       COMMAND  the program.
+
+INTERACTIVE KEYS
+       P      sort by CPU use (the default).
+
+       M      sort by memory use.
+
+       k      kill a process: top asks for the PID and the signal.
+
+       r      renice a process: top asks for the PID and the new nice value.
+
+       q      quit.
+
+OPTIONS
+       -b     Batch mode: print plain text instead of a live screen, for
+              saving to a file or piping.
+
+       -n COUNT
+              Stop after COUNT updates (top -b -n 1 prints one snapshot).
+
+       -d SECONDS
+              Time between updates.
+
+       -u USER
+              Show only USER's processes.
+
+       -p PID Show only these processes.
+
+EXAMPLES
+       Look at the system interactively (press q to leave):
+
+           top
+
+       Save one snapshot of the process table:
+
+           top -b -n 1 > /root/top.txt
+
+       After finding a busy process with top, lower its priority or end it:
+
+           renice -n 10 -p 2345
+           kill 2345
+
+NOTES
+       ps aux --sort=-%cpu | head gives a one-off list sorted the same way.
+
+SEE ALSO
+       ps(1), kill(1), renice(1), nice(1), uptime(1), free(1)

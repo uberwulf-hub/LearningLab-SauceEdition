@@ -1,0 +1,32 @@
+NAME
+       od - dump a file in octal, hexadecimal or as characters
+
+SYNOPSIS
+       od [-c] [-x] [-t TYPE] [-A RADIX] [FILE...]
+
+DESCRIPTION
+       od prints the bytes of a file so that invisible characters can be
+       seen. Each line starts with the offset (in octal by default) followed
+       by the data. Without options it shows the data as octal numbers, two
+       bytes at a time. It is handy for finding stray tabs, carriage returns
+       (\r, from files made on Windows) or a missing final newline.
+
+OPTIONS
+       -c     Show printable characters as themselves and the others as
+              escapes such as \n, \t, \r or octal numbers.
+
+       -x     Show the data as hexadecimal numbers, two bytes at a time.
+
+       -t TYPE
+              Choose the format: c characters, x1 hexadecimal bytes, o1
+              octal bytes, d1 decimal bytes.
+
+       -A RADIX
+              How the offsets are written: o octal, d decimal, x hex, n none.
+
+EXAMPLES
+           od -c /etc/hostname
+           printf 'a\tb\r\n' | od -c
+
+SEE ALSO
+       hexdump(1), xxd(1), cat(1)

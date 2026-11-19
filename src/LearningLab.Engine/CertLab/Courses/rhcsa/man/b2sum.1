@@ -1,0 +1,22 @@
+NAME
+       b2sum - print or check BLAKE2b checksums
+
+SYNOPSIS
+       b2sum [FILE...]
+
+DESCRIPTION
+       b2sum prints a 512-bit BLAKE2b checksum (128 hexadecimal digits)
+       followed by the file name for each FILE, or for standard input when no
+       file is given. Two files with the same checksum almost certainly have
+       the same contents, so a checksum is a quick way to see whether a copy
+       or a download is intact.
+
+       It works like sha256sum and md5sum, only with another algorithm.
+
+EXAMPLES
+       Print the checksum of a file:
+
+           b2sum /etc/hosts
+
+SEE ALSO
+       sha256sum(1), md5sum(1), cksum(1)

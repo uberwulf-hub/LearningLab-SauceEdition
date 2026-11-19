@@ -1,0 +1,50 @@
+# Sheet: deployment | Autopilot, provisioning and upgrades | Deployment
+## Portal paths
+Devices > Enrollment > Windows Autopilot > Devices :: registered devices, Import, group tags, profile status
+Devices > Enrollment > Windows Autopilot > Deployment profiles :: Autopilot profiles (assigned to device groups)
+Devices > Enrollment > Enrollment Status Page :: setup progress and blocking until apps install
+Devices > Configuration, type Domain Join :: computer name prefix, domain, OU for hybrid Autopilot
+Tenant administration > Settings, Connectors :: Intune Connector for Active Directory in Cert Lab
+Devices > Windows updates > Feature updates :: move devices to a Windows 11 version
+## Hardware hash
+Install-Script -Name Get-WindowsAutopilotInfo :: get the script from the PowerShell Gallery (real PCs)
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv :: save serial number, product ID and hash
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv -GroupTag Sales :: with a group tag column
+Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv -Append :: add another device to the file
+Shift+F10 :: a command prompt during the OOBE
+## Groups for Autopilot
+(device.devicePhysicalIds -any (_ -startsWith "[ZTDid]")) :: every Autopilot device
+(device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales")) :: devices with group tag Sales
+[PurchaseOrderId]:... :: devices a reseller registered with an order number
+## Profiles
+User-driven :: a person signs in; Entra join or hybrid join
+Self-deploying :: no user; TPM 2.0; Entra join only (kiosks, signs)
+Pre-provisioned deployment :: IT does the device part first (Windows key five times); TPM 2.0
+User account type :: Standard (recommended) or Administrator
+Name template :: 15 characters, letters, digits, hyphens, one %SERIAL% or %RAND:x%, Entra join only
+Profile status :: Not assigned, Assigning, Assigned (wait before setup)
+Two profiles :: the oldest one wins
+Hybrid join :: Intune Connector for Active Directory + Domain Join profile; Skip AD connectivity check for VPN
+Convert all targeted devices to Autopilot :: registers existing Entra joined devices
+## After setup
+Autopilot Reset :: keeps join and enrolment; removes user files and apps
+Wipe :: factory reset; the device goes through setup again
+Get-Tpm :: TpmPresent, TpmReady, ManufacturerVersionFull20 (Not Supported = TPM 1.2)
+## Provisioning packages
+Windows Configuration Designer :: builds .ppkg files (Provision desktop devices)
+Bulk token :: expires (at most 180 days); then build a new package
+Install-ProvisioningPackage -PackagePath C:\Users\Public\Bulk.ppkg -QuietInstall :: apply a package
+MDM user scope :: must include the account that got the bulk token (All covers it; Cert Lab needs All)
+## Upgrades and editions
+In-place upgrade :: feature update; keeps apps, settings and files
+Wipe-and-load :: new image; for BIOS to UEFI, 32 to 64-bit, new disk layout
+Windows 10 end of support :: 14 October 2025; Extended Security Updates for a time
+Windows 11 needs :: supported 64-bit CPU, 4 GB RAM, 64 GB disk, UEFI Secure Boot, TPM 2.0
+Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version :: Windows edition and build
+Subscription activation :: Pro to Enterprise with Windows Enterprise E3/E5 at sign-in (Entra or hybrid joined)
+Edition upgrade and mode switch :: configuration profile with a key or licence file; also leaves S mode
+## Cloud PCs
+Windows 365 :: one Cloud PC per user, fixed price, managed in Intune
+Provisioning policy :: join type, network, image, region; assigned to a user group
+Azure network connection :: needed for hybrid joined Cloud PCs
+Azure Virtual Desktop :: host pools in your Azure subscription; multi-session; RemoteApp

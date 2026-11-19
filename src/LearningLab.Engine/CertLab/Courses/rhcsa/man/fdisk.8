@@ -1,0 +1,93 @@
+NAME
+       fdisk - create, delete and list partitions on MBR (dos) and GPT disks
+
+SYNOPSIS
+       fdisk DEVICE
+       fdisk -l [DEVICE...]
+
+DESCRIPTION
+       fdisk edits the partition table of a disk. fdisk -l lists the disks
+       and their partitions. fdisk DEVICE opens an interactive menu: you type
+       one-letter commands, answer the questions, and nothing is written to
+       the disk until you type w. q leaves without saving, so you can always
+       back out.
+
+       A disk has one of two kinds of partition table:
+
+       MBR (dos)
+              The older kind, for disks up to 2 TiB: at most four primary
+              partitions; for more, make the fourth an extended partition
+              and create logical partitions (5, 6...) inside it.
+
+       GPT    The newer kind: up to 128 partitions, no primary/extended
+              distinction, for disks of any size.
+
+       An empty disk gets a dos table when you create the first partition;
+       use g first for GPT (or o for a new, empty dos table).
+
+   Menu commands
+       p      print the partition table
+       n      add a new partition (asks for the number, first sector and
+              last sector: answer the last one as +500M or +2G)
+       d      delete a partition
+       t      change a partition's type
+       l      list the known partition types
+       a      toggle the bootable flag (dos)
+       i      print details of a partition
+       F      show unpartitioned free space
+       v      verify the table
+       g      create a new empty GPT table
+       o      create a new empty dos (MBR) table
+       u      change the units of the display
+       m      show the help menu
+       w      write the table to the disk and exit
+       q      quit without saving
+
+   Partition types
+       Use t to mark what a partition is for. Common types (dos code / GPT
+       name):
+
+       83 / Linux filesystem      a normal file system (the default)
+       82 / Linux swap            swap space
+       8e / Linux LVM             an LVM physical volume
+       b, c / Microsoft basic data   vfat
+
+       The type is a label for people and tools; it does not format anything.
+
+OPTIONS
+       -l, --list
+              List the partition tables and exit.
+
+EXAMPLES
+       List the disks:
+
+           fdisk -l
+
+       Make a 1 GiB partition on /dev/vdb for LVM, typed at the prompts:
+
+           fdisk /dev/vdb
+           n            (new partition)
+           p            (primary; on GPT this question is not asked)
+           1            (number)
+           (Enter)      (first sector: the default)
+           +1G          (last sector)
+           t            (type)
+           8e           (Linux LVM; on GPT type lvm or its number)
+           w            (write and exit)
+
+       Check that the kernel sees it:
+
+           lsblk /dev/vdb
+
+NOTES
+       After w, fdisk asks the kernel to read the new table. If the disk is in
+       use, the kernel may keep the old one; run partprobe /dev/vdb.
+
+       Never delete or shrink a partition that is in use. For changes that
+       must not break anything, add new partitions in free space only.
+
+       parted and gdisk are other tools for the same job; parted can also be
+       scripted on one command line.
+
+SEE ALSO
+       parted(8), gdisk(8), lsblk(8), partprobe(8), mkfs(8), pvcreate(8)

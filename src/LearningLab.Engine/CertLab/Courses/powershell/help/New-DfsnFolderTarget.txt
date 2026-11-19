@@ -1,0 +1,18 @@
+SYNOPSIS: Adds another target (share) to a DFS namespace folder.
+DESCRIPTION:
+A folder with several targets sends each user to one of them, preferring a target in the user's own Active Directory site. If one server is down, clients fail over to another.
+
+The targets must hold the same files, so they are usually kept in step with DFS Replication. -ReferralPriorityClass can make one target preferred or a last resort.
+PARAMETER Path:
+The namespace folder, for example \\corp.example\Files\Sales.
+PARAMETER TargetPath:
+The extra share, for example \\SRV1\Sales.
+PARAMETER State:
+Online or Offline.
+PARAMETER ReferralPriorityClass:
+The target's priority, for example GlobalLow.
+EXAMPLE: New-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\SRV1\Sales
+Sales now has two targets.
+EXAMPLE: Get-DfsnFolderTarget -Path \\corp.example\Files\Sales
+Lists both with their state.
+RELATED: Get-DfsnFolderTarget, Set-DfsnFolderTarget, New-DfsnFolder, New-DfsReplicationGroup

@@ -1,0 +1,28 @@
+SYNOPSIS: Turns objects into lines of CSV text.
+DESCRIPTION:
+ConvertTo-Csv writes one line of comma-separated values per object, after a header line with the property names. The result is plain strings in the pipeline, so you can look at it, change it or save it however you like. Export-Csv does the same conversion and writes the file for you.
+
+The columns come from the properties of the first object. Later objects with other properties only fill the columns the first one had, so use Select-Object first to choose the columns and their order.
+
+In Windows PowerShell 5.1, the first line is a #TYPE line naming the object type, and every value is put in double quotes.
+PARAMETER InputObject:
+The objects to convert. Usually they come through the pipeline. Required.
+PARAMETER NoTypeInformation:
+Leaves out the #TYPE line. Its alias is -NTI. Most people want this in 5.1.
+PARAMETER Delimiter:
+The character between values when it should not be a comma, for example ';'. Position 1.
+PARAMETER UseCulture:
+Uses the list separator of the computer's region settings.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -First 2 Name, Office | ConvertTo-Csv
+Shows the #TYPE line, the header "Name","Office" and two data lines.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Select-Object -First 2 Name, Office | ConvertTo-Csv -NoTypeInformation
+The same without the #TYPE line.
+EXAMPLE: [pscustomobject]@{ A = 1; B = 'x' } | ConvertTo-Csv -Delimiter ';' -NoTypeInformation
+Separates the values with semicolons, as some spreadsheet programs expect.
+NOTES:
+PowerShell 7 leaves out the #TYPE line by default (-NoTypeInformation does nothing there; -IncludeTypeInformation brings the line back) and can skip the quotes with -UseQuotes.
+
+A property that holds an array or another object does not turn into its contents: the cell shows the type name, such as System.Object[]. Flatten it first, for example with a calculated property and -join.
+
+Format-Table output cannot be converted to CSV: you would get lines of formatting objects. Always convert the objects themselves.
+RELATED: ConvertFrom-Csv, Export-Csv, Import-Csv, Select-Object, ConvertTo-Json

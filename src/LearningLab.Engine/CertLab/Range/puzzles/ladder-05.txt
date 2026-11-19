@@ -1,0 +1,50 @@
+title: Step 5: Which file isn't empty?
+level: Beginner
+category: ladder
+login: step5
+kind: Long listings
+teaser: nine notes, eight of them blank: let ls -la tell you the sizes
+points: 20
+order: 5
+answer: {{PW}}
+var: PW = hex:10
+var: N = num:1-9
+
+@intro
+You are step5. The folder notes in your home folder holds nine files, note1 to note9.
+Someone wiped all of them except one, which still has the password for step 6. You
+could open them one by one - but a long listing shows you the answer at a glance.
+
+@setup
+useradd -m step6
+echo 'step6:{{PW}}' | chpasswd
+mkdir -p /home/step5/notes
+for i in 1 2 3 4 5 6 7 8 9; do : > /home/step5/notes/note$i; done
+printf 'Password for step 6: %s\n' '{{PW}}' > /home/step5/notes/note{{N}}
+chown -R step5: /home/step5/notes
+
+@solution
+ls -la notes
+cat notes/note{{N}}
+
+@walkthrough
+ls -la notes shows one line per file. The number just before the date is the file's
+size in bytes (characters): 0 for the eight blank notes, and more for note{{N}}:
+
+    ls -la notes
+    cat notes/note{{N}}
+
+Reading the long listing is one of the most useful habits on Linux: owner, group,
+permissions, size and date, all in one line.
+
+@hint 2
+What to think about first: an empty file has nothing in it, so its size is zero. If you can see each file's size, the one with something in it stands out straight away - no need to open all nine.
+
+@hint 3
+ls -l shows a "long" listing: one line per file with more details. ls -la also includes hidden files. Each line reads like: permissions, links, owner, group, size, date, name. For example "-rw-r--r--. 1 step5 step5 0 Mar 2 04:00 note1" is a file of 0 bytes.
+
+@hint 4
+The size column is the number just before the month. A byte is about one character, so 0 means empty and a few dozen means a short line of text.
+
+@hint 5
+Run ls -la notes and look for the one file whose size is not 0. Then cat it, for example cat notes/note4 (use the number you saw). The ten letters and digits after "Password for step 6:" are the answer.

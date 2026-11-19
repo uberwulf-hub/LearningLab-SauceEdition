@@ -1,0 +1,16 @@
+SYNOPSIS: Changes a DFS folder target's state or priority.
+DESCRIPTION:
+Set-DfsnFolderTarget changes one target. -State Offline stops sending clients to it, which is the clean way to take a server out for maintenance. -ReferralPriorityClass changes the order: GlobalHigh first for everyone, SiteCostHigh first among targets of the same cost, SiteCostNormal (the default), SiteCostLow, GlobalLow last for everyone.
+PARAMETER Path:
+The namespace folder. Position 0.
+PARAMETER TargetPath:
+The target to change. Position 1.
+PARAMETER State:
+Online or Offline.
+PARAMETER ReferralPriorityClass:
+GlobalHigh, SiteCostHigh, SiteCostNormal, SiteCostLow or GlobalLow.
+EXAMPLE: Set-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\SRV1\Sales -State Offline
+Clients stop being sent to SRV1.
+EXAMPLE: Set-DfsnFolderTarget -Path \\corp.example\Files\Sales -TargetPath \\FS1\Sales -ReferralPriorityClass GlobalHigh
+FS1 is everyone's first choice.
+RELATED: Get-DfsnFolderTarget, New-DfsnFolderTarget

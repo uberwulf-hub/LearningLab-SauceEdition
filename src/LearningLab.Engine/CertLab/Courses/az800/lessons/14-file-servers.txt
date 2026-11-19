@@ -1,0 +1,234 @@
+# Unit: u14 | 14. File servers and permissions | File and storage
+
+Harborline's file server FS1 holds the department shares Sales, Finance, HR, Public and IT under `D:\Shares`. Getting people exactly the access they need means understanding two separate permission systems, share permissions and NTFS permissions, and how they combine. This unit covers SMB shares and their security options, how Windows works out the access a person really gets, and NTFS inheritance.
+
+## Lesson: l1401 | SMB shares
+
+A **share** makes a folder available over the network as `\\server\share`, using the **SMB** protocol. Windows Server 2022 speaks SMB 3.1.1. Create shares with `New-SmbShare`, Server Manager (File and Storage Services > Shares), Windows Admin Center (Files & file sharing) or the folder's Sharing tab.
+
+```terminal
+#machine FS1
+PS C:\Windows\system32> Get-SmbShare
+
+Name       ScopeName Path                         Description
+----       --------- ----                         -----------
+ADMIN$     *         C:\Windows                   Remote Admin
+C$         *         C:\                          Default share
+D$         *         D:\                          Default share
+E$         *         E:\                          Default share
+Finance    *         D:\Shares\Finance
+HR         *         D:\Shares\HR
+IPC$       *                                      Remote IPC
+IT         *         D:\Shares\IT
+Public     *         D:\Shares\Public
+Sales      *         D:\Shares\Sales
+
+
+PS C:\Windows\system32> Get-SmbShareAccess -Name Finance
+
+Name       ScopeName AccountName                AccessControlType AccessRight
+----       --------- -----------                ----------------- -----------
+Finance    *         Everyone                   Allow             Read
+```
+
+Shares ending in `$` are hidden from browsing: `C$`, `D$` and `ADMIN$` are administrative shares, `IPC$` is for remote procedure calls. A domain controller also shares SYSVOL and NETLOGON.
+
+### Share permissions
+
+Each share has its own short list: **Full Control**, **Change** (read, write, delete) and **Read**, allowed or denied per user or group. `New-SmbShare` without access parameters gives **Everyone: Read**. A common design is to give the share a generous permission (Everyone or Authenticated Users: Full Control or Change) and do the real work with NTFS permissions (next lesson).
+
+### Security options of a share
+
+- **Access-based enumeration** (ABE, `-FolderEnumerationMode AccessBased`): people only see the files and folders they have at least Read permission on. Without it they see every folder and get "access denied" when they open one.
+- **SMB encryption** (`-EncryptData $true` on a share, or `Set-SmbServerConfiguration -EncryptData $true` for every share of the server): the data is encrypted between client and server (SMB 3.0 or later). Clients that can't encrypt are refused while `RejectUnencryptedAccess` is on.
+- **SMB 1.0** is old and unsafe (the WannaCry worm spread through it). It is off by default in current Windows: keep it off (`Set-SmbServerConfiguration -EnableSMB1Protocol $false`, and remove the feature `FS-SMB1`).
+- **Offline files** (caching) and **continuous availability** (for clustered file servers) are also share settings.
+
+@try
+@setup FS1
+Set-SmbServerConfiguration -EnableSMB1Protocol $true -Force
+@task t1 | File and storage | 10 | FS1
+Create the folder `D:\Shares\Projects` and share it as **Projects**. Every domain user may change files in it, both in the share and in NTFS (`CORP\Domain Users`: Change on the share, Modify in NTFS). People must only see the folders they can open, and the traffic must be encrypted.
+@check admin | the share's settings
+share["FS1\Projects"].path == D:\Shares\Projects
+share["FS1\Projects"].access["CORP\Domain Users"] == Change
+share["FS1\Projects"].abe == Yes
+share["FS1\Projects"].encrypt == Yes
+@check admin | Brian (Sales) can change files there over the network
+access(user=bcole, path="\\FS1\Projects") == Modify
+@hint New-Item, then New-SmbShare -ChangeAccess -FolderEnumerationMode AccessBased -EncryptData $true; icacls ... /grant 'CORP\Domain Users:(OI)(CI)M' for NTFS.
+@solution FS1
+New-Item -Path D:\Shares\Projects -ItemType Directory
+New-SmbShare -Name Projects -Path D:\Shares\Projects -ChangeAccess 'CORP\Domain Users' -FolderEnumerationMode AccessBased -EncryptData $true
+icacls D:\Shares\Projects /grant 'CORP\Domain Users:(OI)(CI)M'
+@explain
+The new folder inherits only Read and execute for Users from D:. With the share at Change but NTFS at Read and execute, people would only read: both layers must allow a right for it to work over the network.
+@endtask
+@task t2 | File and storage | 10 | FS1
+A vendor's tool switched **SMB 1.0** back on on FS1. Switch it off again.
+@check FS1 | SMB 1.0 is off
+(Get-SmbServerConfiguration).EnableSMB1Protocol -eq $false
+@hint Set-SmbServerConfiguration -EnableSMB1Protocol.
+@solution FS1
+Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
+@explain
+SMB 1.0 has no encryption, weak signing and known worm exploits. Removing the FS-SMB1 feature as well makes sure nothing turns it on again.
+@endtask
+@end
+
+@quiz
+? You create a share with `New-SmbShare -Name Docs -Path D:\Docs` and nothing else. What is its share permission?
+- Everyone: Full Control
++ Everyone: Read
+- Administrators only
+! New-SmbShare without -FullAccess, -ChangeAccess or -ReadAccess grants Everyone Read.
+? People complain that they see folders on a share that they can't open. What switches that off?
++ Access-based enumeration on the share
+- SMB encryption
+- A Read share permission
+! Access-based enumeration hides the items a person has no Read permission on.
+? Which setting protects data on a share from being read on the network?
+- Access-based enumeration
++ SMB encryption (-EncryptData $true)
+- Offline files
+! SMB encryption (SMB 3.0 and later) encrypts the traffic between the client and the server.
+@end
+
+## Lesson: l1402 | Share permissions, NTFS permissions and effective access
+
+Two separate permission lists decide what a person can do with a file on a share:
+
+- **Share permissions** apply only when the file is reached **over the network** through that share.
+- **NTFS permissions** apply always: over the network and when someone signs in at the server.
+
+Within each list, a person gets everything allowed to them and to all their groups, minus anything denied. Over the network, Windows then takes the **more restrictive** of the two results. Share: Change, NTFS: Read = Read. Share: Read, NTFS: Full control = Read.
+
+```terminal
+#machine FS1
+PS C:\Windows\system32> icacls D:\Shares\Finance
+D:\Shares\Finance BUILTIN\Administrators:(OI)(CI)(F)
+                  NT AUTHORITY\SYSTEM:(OI)(CI)(F)
+                  CORP\FS-Finance-Modify:(OI)(CI)(M)
+
+Successfully processed 1 files; Failed processing 0 files
+```
+
+NTFS permissions come as **basic permissions** (Full control, Modify, Read & execute, List folder contents, Read, Write) made of **advanced permissions** (Traverse folder, Create files, Delete, Change permissions, Take ownership...). In icacls they are `F`, `M`, `RX`, `R`, `W`, and the flags `(OI)` object inherit (files get it), `(CI)` container inherit (folders get it), `(IO)` inherit only.
+
+### Deny
+
+A **deny** entry beats an allow at the same level: an explicit deny on the folder wins over an explicit allow on it. Use deny sparingly (for one person inside a group that is allowed) because it also blocks administrators who are in the denied group.
+
+### Effective access
+
+The **Effective Access** tab (Advanced Security Settings of a folder) works out what a user or group really gets, including their groups and, if you pick the share, the share permissions. From PowerShell, `Get-Acl` and `icacls` show the entries; you combine them yourself.
+
+> Exam trap: "the users are in a group with Modify in NTFS but can't save files over the network" = look at the share permissions (often Everyone: Read). "They can save from the console but not over the network" points to the same.
+
+@try
+@task t1 | File and storage | 10 | FS1
+Finance staff (`FS-Finance-Modify` has Modify in NTFS) can open but not save files on `\\FS1\Finance`. Fix the share permissions: replace **Everyone: Read** with **Authenticated Users: Full Control**, so that NTFS alone decides.
+@check admin | Emma (Finance) can now change files, Brian (Sales) still can't get in
+access(user=ewalsh, path="\\FS1\Finance") == Modify
+access(user=bcole, path="\\FS1\Finance") == "No access"
+@check admin | Everyone is gone from the share
+share["FS1\Finance"].access["Everyone"] == None
+@hint Grant-SmbShareAccess -AccountName 'Authenticated Users' -AccessRight Full, then Revoke-SmbShareAccess -AccountName Everyone.
+@solution FS1
+Grant-SmbShareAccess -Name Finance -AccountName 'Authenticated Users' -AccessRight Full -Force
+Revoke-SmbShareAccess -Name Finance -AccountName Everyone -Force
+@explain
+Share Read was the more restrictive layer. With Full Control on the share, the effective access is whatever NTFS gives: Modify for Finance, nothing for Sales, because NTFS has no entry for them.
+@endtask
+@task t2 | File and storage | 10 | FS1
+Farid Haddad (`fhaddad`) is in Finance but is moving to another team at the end of the month. Until then he may still open the Finance files but must not change them. Use a deny entry for him on `D:\Shares\Finance` (folders and files below it).
+@check admin | Farid can only read; Emma still has Modify
+access(user=fhaddad, path="FS1:D:\Shares\Finance") == "Read and execute"
+access(user=ewalsh, path="FS1:D:\Shares\Finance") == Modify
+@hint icacls D:\Shares\Finance /deny 'CORP\fhaddad:(OI)(CI)(W,D)'
+@solution FS1
+icacls D:\Shares\Finance /deny 'CORP\fhaddad:(OI)(CI)(W,D)'
+@explain
+The deny entry removes the write and delete rights from what FS-Finance-Modify gives him; reading still works. A deny is checked before the allows on the same folder. W alone isn't enough: Modify also grants Delete, so without D he could still delete files.
+@endtask
+@end
+
+@quiz
+? Share permission: Change. NTFS permission: Read. What does the user get over the network?
++ Read
+- Change
+- Modify
+! Over the network the more restrictive of the share and NTFS results applies.
+? A user signs in at the file server's console and opens the folder. Which permissions apply?
+- Share and NTFS permissions
++ NTFS permissions only
+- Share permissions only
+! Share permissions only apply to access through the share over the network.
+? Which icacls flag makes an entry reach the files inside a folder?
++ (OI) object inherit
+- (CI) container inherit
+- (IO) inherit only
+! (OI) passes the entry to files, (CI) to subfolders; (IO) means it doesn't apply to the folder itself.
+@end
+
+## Lesson: l1403 | NTFS inheritance
+
+A new file or folder **inherits** the entries of its parent folder that are marked to flow down. That is why you set permissions once at the top of a share. Inherited entries show greyed out in the security dialog and can't be edited where they arrive: change them at the folder they come from, or stop inheritance.
+
+To give a subfolder different permissions, **disable inheritance** on it (Advanced Security Settings > Disable inheritance, or `icacls /inheritance:d`). Windows asks what to do with the entries it had inherited:
+
+- **Convert inherited permissions into explicit permissions** (`/inheritance:d`): keep them as the folder's own entries, then edit them. The usual choice.
+- **Remove all inherited permissions** (`/inheritance:r`): start from an empty list (careful: don't lock out administrators and SYSTEM).
+
+`/inheritance:e` turns inheritance back on.
+
+### The order Windows checks entries in
+
+1. Explicit **deny** entries (set on the object itself).
+2. Explicit **allow** entries.
+3. Inherited entries from the parent folder: its **deny** entries, then its **allow** entries.
+4. Inherited entries from further up (grandparent and so on), nearest first, deny before allow at each level.
+
+So an **explicit allow beats an inherited deny**: if a deny comes down from the top folder, an allow set directly on a subfolder still lets the person in. The **owner** of a file can always change its permissions; an administrator can take ownership.
+
+> Moving a file within the same volume keeps its explicit entries and then inherits from the new parent; copying creates a new file that inherits from where it lands.
+
+@try
+@setup FS1
+New-Item -Path D:\Shares\Sales\Contracts -ItemType Directory
+@task t1 | File and storage | 10 | FS1
+`D:\Shares\Sales\Contracts` must be open only to the **Sales Managers** group (Modify), plus the administrators and SYSTEM as everywhere else. Ordinary Sales staff must not get in. Disable inheritance on the folder keeping the inherited entries as explicit ones, remove `CORP\FS-Sales-Modify` from it, and grant `CORP\Sales Managers` Modify.
+@check admin | only the managers can get in
+access(user=bcole, path="\\FS1\Sales\Contracts") == "No access"
+access(user=imoreau, path="\\FS1\Sales\Contracts") == Modify
+@check admin | inheritance is off and the administrators kept their access
+ntfs(FS1, "D:\Shares\Sales\Contracts").protected == Yes
+ntfs(FS1, "D:\Shares\Sales\Contracts").aces has "BUILTIN\Administrators:F"
+@hint icacls with /inheritance:d, then /remove 'CORP\FS-Sales-Modify', then /grant 'CORP\Sales Managers:(OI)(CI)M'.
+@solution FS1
+icacls D:\Shares\Sales\Contracts /inheritance:d
+icacls D:\Shares\Sales\Contracts /remove 'CORP\FS-Sales-Modify'
+icacls D:\Shares\Sales\Contracts /grant 'CORP\Sales Managers:(OI)(CI)M'
+@explain
+/inheritance:d copies the inherited entries as explicit ones, so Administrators and SYSTEM stay; then the Sales group's entry can be removed. Removing it while it was still inherited would have done nothing.
+@endtask
+@end
+
+@quiz
+? You disable inheritance on a folder and must keep the current access as a starting point. Which choice?
++ Convert inherited permissions into explicit permissions
+- Remove all inherited permissions
+- Replace all child object permissions
+! Converting keeps the entries as the folder's own, ready to edit; removing starts from an empty list.
+? An inherited entry denies a group Write; an explicit entry on the subfolder allows the same group Write. Can its members write in the subfolder?
++ Yes: an explicit allow beats an inherited deny
+- No: deny always wins
+- Only if they own the folder
+! Explicit entries are checked before inherited ones; deny beats allow only at the same level.
+? An inherited permission must change on one subfolder only. What do you do?
+- Edit the greyed-out entry on the subfolder
++ Disable inheritance on the subfolder (or add an explicit entry there)
+- Take ownership of the share
+! Inherited entries can only be changed at their source, or by stopping inheritance where you need the difference.
+@end
+

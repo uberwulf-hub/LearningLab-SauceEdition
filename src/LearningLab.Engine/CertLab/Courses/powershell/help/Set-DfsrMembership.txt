@@ -1,0 +1,26 @@
+SYNOPSIS: Sets a member's local path and role for a replicated folder.
+DESCRIPTION:
+Set-DfsrMembership tells each server where the replicated folder lives on its disk (-ContentPath) and how it takes part.
+
+-PrimaryMember $true matters at the start: during the first replication the primary member's files win any conflict, and the other members' differing files are moved aside. Set it on the server with the good copy. -ReadOnly $true makes a read-only replica that receives changes but never sends any. -StagingPathQuotaInMB sets the staging area (default 4096); too small a quota slows replication of big files.
+PARAMETER GroupName:
+The replication group. Position 0.
+PARAMETER FolderName:
+The replicated folder. Position 1.
+PARAMETER ComputerName:
+The member or members. Position 2.
+PARAMETER ContentPath:
+The local folder, for example D:\Shares\Sales.
+PARAMETER PrimaryMember:
+$true for the server whose files win the first sync.
+PARAMETER ReadOnly:
+$true for a read-only copy.
+PARAMETER StagingPathQuotaInMB:
+The staging quota in MB.
+PARAMETER Force:
+Changes without asking.
+EXAMPLE: Set-DfsrMembership -GroupName Sales-Replication -FolderName Sales -ComputerName FS1 -ContentPath D:\Shares\Sales -PrimaryMember $true -Force
+Step 5 on FS1, which has the real files.
+EXAMPLE: Set-DfsrMembership -GroupName Sales-Replication -FolderName Sales -ComputerName SRV1 -ContentPath D:\Shares\Sales -Force
+And on SRV1, which receives them.
+RELATED: Get-DfsrMembership, Add-DfsrMember, Update-DfsrConfigurationFromAD, Get-DfsrBacklog

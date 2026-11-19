@@ -1,0 +1,16 @@
+SYNOPSIS: Waits until processes end.
+DESCRIPTION:
+Wait-Process pauses your script until the named processes have ended, which is useful after Start-Process. With -Timeout it gives up after that many seconds and writes an error for each process still running.
+PARAMETER Name:
+The process names to wait for. Position 0.
+PARAMETER Id:
+The process ids to wait for.
+PARAMETER InputObject:
+Process objects from the pipeline.
+PARAMETER Timeout:
+The most seconds to wait.
+EXAMPLE: Start-Process notepad; Wait-Process -Name notepad -Timeout 30
+Waits at most 30 seconds for Notepad to close.
+NOTES:
+On the practice machine nothing closes programs by itself, so use -Timeout, or end them with Stop-Process.
+RELATED: Start-Process, Stop-Process, Get-Process

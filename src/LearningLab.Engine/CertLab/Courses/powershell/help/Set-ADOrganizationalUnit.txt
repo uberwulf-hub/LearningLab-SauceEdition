@@ -1,0 +1,23 @@
+SYNOPSIS: Changes the properties of an organizational unit.
+DESCRIPTION:
+Set-ADOrganizationalUnit changes an OU's description, display name, city and other attributes. Its most common use is turning off protection from accidental deletion before removing the OU.
+To rename an OU, use Rename-ADObject; to move it, Move-ADObject (both also need the protection off).
+PARAMETER Identity:
+The OU, as a distinguished name. Position 0, and takes pipeline input.
+PARAMETER ProtectedFromAccidentalDeletion:
+$false lets the OU be deleted or moved; $true protects it.
+PARAMETER Description:
+A new description.
+PARAMETER DisplayName:
+A new display name.
+PARAMETER City:
+The city attribute.
+PARAMETER Replace:
+A hash table of LDAP attributes to set.
+PARAMETER Clear:
+Attributes to empty.
+EXAMPLE: Set-ADOrganizationalUnit "OU=HR,OU=Staff,DC=corp,DC=example" -ProtectedFromAccidentalDeletion $false
+Removes the protection so the HR OU can be deleted or moved.
+EXAMPLE: Set-ADOrganizationalUnit "OU=Sales,OU=Staff,DC=corp,DC=example" -Description "Sales team, Portland"
+Describes the Sales OU.
+RELATED: Get-ADOrganizationalUnit, Remove-ADOrganizationalUnit, Rename-ADObject, Move-ADObject

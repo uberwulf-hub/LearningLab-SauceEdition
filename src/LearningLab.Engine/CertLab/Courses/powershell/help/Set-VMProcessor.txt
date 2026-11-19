@@ -1,0 +1,20 @@
+SYNOPSIS: Changes a virtual machine's processors, including nested virtualization.
+DESCRIPTION:
+Set-VMProcessor sets the number of virtual processors and two switches that matter for the exam. The VM must be turned off for all of them.
+
+-ExposeVirtualizationExtensions $true enables nested virtualization: the VM can run Hyper-V itself. Dynamic memory must be off for that VM, and its network adapter needs MAC address spoofing on (Set-VMNetworkAdapter) so the inner VMs can reach the network.
+
+-CompatibilityForMigrationEnabled $true hides newer processor features so the VM can live migrate between hosts with different CPU generations from the same maker.
+PARAMETER VMName:
+The VM or VMs. Position 0.
+PARAMETER Count:
+Number of virtual processors.
+PARAMETER ExposeVirtualizationExtensions:
+$true for nested virtualization.
+PARAMETER CompatibilityForMigrationEnabled:
+$true for migration between different CPU generations.
+EXAMPLE: Set-VMMemory -VMName LAB-HOST -DynamicMemoryEnabled $false; Set-VMProcessor -VMName LAB-HOST -ExposeVirtualizationExtensions $true -ComputerName HV1
+LAB-HOST (off, with dynamic memory turned off first) can now run Hyper-V inside.
+EXAMPLE: Set-VMNetworkAdapter -VMName LAB-HOST -MacAddressSpoofing On
+Lets its inner VMs use the network.
+RELATED: Get-VMProcessor, Set-VMMemory, Set-VMNetworkAdapter, Set-VM

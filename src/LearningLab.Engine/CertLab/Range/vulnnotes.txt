@@ -1,0 +1,58 @@
+# Cyber Range's made-up vulnerability notes, read by vulnlookup. Every product here is invented for the range;
+# none of them is a real product and none of these notes describes a real program.
+# Format: "@ product | versions | title", then the note's text.
+
+@ AcmeCMS | 2.1.0 - 2.1.3 | Template preview passes the tpl parameter to a shell
+AcmeCMS's page /preview builds a command line with the value of its "tpl" parameter
+and runs it without checking it, so a value like "x; id" also runs "id" as the web
+server's account (command injection).
+Seen in the range: the Server header says "AcmeCMS/2.1.x".
+How to check it on the range: ask for /preview?tpl=x;id and look for the account's name.
+Fix: update to 2.1.4, which only accepts template names from a fixed list.
+
+@ AcmeCMS | 1.0 - 2.0 | Old installer page left reachable
+The /install page of old AcmeCMS versions can be reached after setup. The range's
+copies have it removed.
+Fix: delete the installer after setup.
+
+@ NetCheck Lite | 1.0 | The ping tool joins the host parameter to a command
+NetCheck Lite's /tools/ping page runs "ping -c 1 HOST" with HOST taken straight from
+the request. Characters such as ; or | let a second command run as the web server's
+account (command injection).
+Fix: update to 1.1, which only accepts an IP address.
+
+@ DocuShare Mini | 0.9 | Download page reads files outside its folder
+DocuShare Mini's /download page adds the "file" parameter to its documents folder
+without removing "../", so "../../../etc/passwd" climbs out of the folder (path
+traversal). Any file the web server's account can read can be downloaded.
+Fix: update to 1.0, which refuses names with slashes.
+
+@ PrintPal | 3.0 | Ships with a default administrator password
+PrintPal 3.0's web console signs in as "admin" with the password "printpal" until
+someone changes it. Many installs never do.
+Fix: change the password during setup.
+
+@ HelpDesk Hero | 4.2 | Default administrator account
+HelpDesk Hero 4.2 creates the account admin / admin. The vendor's notes say to
+change it at first sign-in.
+Fix: change or disable the default account.
+
+@ BackupBuddy Agent | 1.4 | Job passwords kept in plain text
+BackupBuddy Agent 1.4 writes the password of every backup job's account into
+jobs.conf in its folder, readable by everyone who can read the folder.
+Fix: update to 1.5, which encrypts the job file and limits who can read it.
+
+@ TinyFTPd | 2.2 | Banner shows the version
+TinyFTPd 2.2 announces its version in the greeting. That is not a flaw on its own,
+but it tells visitors which notes to look up.
+Fix: hide the version in the banner.
+
+@ OpenWiki Lite | 0.7 | Search page shows server errors
+OpenWiki Lite 0.7 prints full error messages, with file paths, when a search fails.
+Nothing more is known; this note is a dead end in the range.
+Fix: update to 0.8.
+
+@ StatusBoard | 1.2 | Status page open to everyone
+StatusBoard 1.2's /status page lists services and the accounts they run as, with no
+sign-in. It gives away names, not passwords.
+Fix: put the page behind a sign-in.

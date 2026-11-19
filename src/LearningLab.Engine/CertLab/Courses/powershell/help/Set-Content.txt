@@ -1,0 +1,26 @@
+SYNOPSIS: Replaces a file's content with new text (creates the file if needed).
+DESCRIPTION:
+Set-Content writes each value as a line. In Windows PowerShell 5.1 it writes with the Default (ANSI) encoding, while > and Out-File write UTF-16 (Unicode); that is why 'hi' > f.txt makes a 10-byte file but Set-Content f.txt 'hi' makes a 4-byte one. Values can come from the pipeline.
+PARAMETER Path:
+The files to write. Wildcards only match existing files.
+PARAMETER LiteralPath:
+The file, taken exactly as typed.
+PARAMETER Value:
+The text to write; each item becomes a line.
+PARAMETER Encoding:
+How to store the text: ASCII, Default (the Windows ANSI code page), OEM, UTF8 (with a byte order mark), UTF7, UTF32, Unicode (UTF-16), BigEndianUnicode, String, Unknown or Byte.
+PARAMETER NoNewline:
+Writes the values with no line breaks at all.
+PARAMETER Force:
+Writes read-only and hidden files too.
+PARAMETER PassThru:
+Also outputs the values written.
+PARAMETER Stream:
+Writes an alternate data stream of the file instead.
+EXAMPLE: Set-Content C:\LabFiles\servers.txt -Value 'WEB01','WEB02'
+A file with two lines.
+EXAMPLE: Get-Process | Select-Object -ExpandProperty Name | Set-Content C:\LabFiles\procs.txt
+Writes text from the pipeline. (Objects are written with ToString(); format them first if you want a table.)
+NOTES:
+A missing folder gives "Could not find a part of the path ...". PowerShell 6 and later write UTF-8 without a byte order mark by default.
+RELATED: Add-Content, Get-Content, Clear-Content, Out-File

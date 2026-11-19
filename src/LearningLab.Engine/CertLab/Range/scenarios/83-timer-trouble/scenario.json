@@ -1,0 +1,55 @@
+{
+    "id": "timer-trouble",
+    "title": "Timer Trouble",
+    "category": "blue",
+    "level": "Intermediate",
+    "order": 5,
+    "summary": "Someone guessed a developer's password, gave the account root powers with a new sudo rule, and set a systemd timer to bundle up the design files every quarter of an hour. Take both away.",
+    "story": "You run srv, the shared Linux server of {{CO}} (made up), on 10.10.23.0/24. The design team says the server feels busy every fifteen minutes. You have a root console on srv. Nothing has been cleaned up.",
+    "goal": "Find the account that was broken into, the sudo rule it added and the timer it set, capture the flag in the timer's hidden folder, then remove the rule and the timer and lock the account - before the next run bundles the designs for pickup.",
+    "skills": "/var/log/secure (ssh and sudo lines), /etc/sudoers.d, systemctl list-timers, disabling and removing a timer",
+    "defender": "none",
+    "start": "srv",
+    "minutes": 30,
+    "attackerIp": "{{ATKIP}}",
+    "goalName": "bundle the design files for pickup",
+    "goalPoints": 70,
+    "vars": {
+        "CO": "company",
+        "DEV": "person",
+        "OTHER": "person",
+        "PW": "word",
+        "ATKIP": "ip",
+        "SUDOF": "pick:90-cloud|zz-helper|50-maint|README",
+        "TIMER": "pick:fstrim-extra|log-tidy|pkg-cache"
+    },
+    "variants": { "TIMER": {
+        "fstrim-extra": { "TIMER_DESC": "Discard unused blocks again" },
+        "log-tidy": { "TIMER_DESC": "Tidy old log files" },
+        "pkg-cache": { "TIMER_DESC": "Refresh the package cache" } } },
+    "machines": [
+        { "name": "srv", "os": "linux", "hostname": "srv.{{CO_DOMAIN}}", "role": "shared server (yours)", "nics": [ "10.10.23.10/24" ],
+          "motd": "{{CO}} srv - staff only.", "setup": "srv.sh" }
+    ],
+    "flags": [
+        { "id": "note", "name": "The flag in the timer's hidden folder", "points": 60, "machine": "srv", "path": "/usr/local/lib/.{{TIMER}}/notes.txt", "owner": "root", "mode": "644", "level": "user" }
+    ],
+    "questions": [
+        { "id": "acct", "ask": "Which account was broken into?", "answer": "{{DEV}}", "points": 40, "explain": "Failed passwords from {{ATKIP}}, then an Accepted password for this account." },
+        { "id": "sudo", "ask": "What file did they add under /etc/sudoers.d?", "answer": "{{SUDOF}}", "accept": [ "/etc/sudoers.d/{{SUDOF}}" ], "points": 40, "explain": "The sudo line in /var/log/secure shows tee writing /etc/sudoers.d/{{SUDOF}}." },
+        { "id": "timer", "ask": "What is the name of the timer they set (without .timer)?", "answer": "{{TIMER}}", "accept": [ "{{TIMER}}.timer" ], "points": 40, "explain": "systemctl list-timers shows it next to the system's own timers; the second sudo line enabled it." }
+    ],
+    "tasks": [
+        { "id": "timer", "name": "Stop and remove the timer", "machine": "srv", "check": "! systemctl is-active {{TIMER}}.timer >/dev/null 2>&1 && test ! -e /etc/systemd/system/{{TIMER}}.timer", "points": 50, "explain": "systemctl disable --now {{TIMER}}.timer, then rm /etc/systemd/system/{{TIMER}}.timer and .service, and systemctl daemon-reload." },
+        { "id": "sudo", "name": "Remove the new sudo rule", "machine": "srv", "check": "test ! -e /etc/sudoers.d/{{SUDOF}}", "points": 40, "explain": "rm -f /etc/sudoers.d/{{SUDOF}}" },
+        { "id": "lock", "name": "Lock the broken-into account", "machine": "srv", "check": "passwd -S {{DEV}} | grep -q LK", "points": 30, "explain": "usermod -L {{DEV}}" }
+    ],
+    "attacker": [
+        { "at": "300s", "machine": "srv", "run": "/usr/local/lib/.{{TIMER}}/run.sh; true", "unless": "! systemctl is-active {{TIMER}}.timer >/dev/null 2>&1", "note": "The timer fired and copied the design files into /var/tmp/.pickup, ready to be taken.", "goal": true }
+    ],
+    "hints": [
+        { "text": "/var/log/secure keeps both ssh sign-ins and sudo commands. grep -E 'Accepted|Failed|sudo' /var/log/secure shows who got in from where, and what they did as root right after.", "cost": 8 },
+        { "text": "A sudo rule can live in any file under /etc/sudoers.d - ls -l /etc/sudoers.d and cat each one. A timer is systemd's version of a cron job: systemctl list-timers --all lists them; systemctl cat NAME.timer and NAME.service show what runs.", "cost": 14 },
+        { "text": "The service runs a script in a hidden folder under /usr/local/lib; the flag is next to it. Clean up: systemctl disable --now {{TIMER}}.timer, rm the .timer and .service files and run systemctl daemon-reload; rm the sudoers file; usermod -L the account.", "cost": 22 }
+    ]
+}

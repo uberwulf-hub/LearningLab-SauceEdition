@@ -1,0 +1,660 @@
+# Unit: u08 | 8. Networking | Manage basic networking
+
+A server is only useful if other machines can reach it. This unit shows how to read a machine's network settings, give it fixed IPv4 and IPv6 addresses with NetworkManager's `nmcli`, set its host name and the way it looks up other names, and decide with firewalld which connections may come in. Everything you change must survive a reboot, so the unit keeps asking the same question: is this change only in the running system, or is it saved?
+
+## Lesson: l0801 | Looking at the network
+
+Before you change anything, find out what the machine has now. Three words come up all the time:
+
+- an interface (or device) is a network card as Linux sees it. Here it is `enp1s0`; `lo` is the loopback interface that every machine has for talking to itself.
+- an address is what the interface answers to, written with its prefix length: `192.168.50.11/24` means the first 24 bits (192.168.50) are the network and the machine is number 11 on it.
+- a route says where packets go. The default route (the gateway) is the router that packets for every other network are sent to.
+
+### ip: what the kernel uses right now
+
+The `ip` command shows the live state. `ip -br addr` (brief) gives one line per interface, which is often all you need:
+
+```terminal
+[root@server1 ~]# ip -br addr
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp1s0           UP             192.168.50.11/24 fe80::5054:ff:fe7b:2ccd/64
+[root@server1 ~]# ip addr show enp1s0
+2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:7b:2c:cd brd ff:ff:ff:ff:ff:ff
+    inet 192.168.50.11/24 brd 192.168.50.255 scope global noprefixroute enp1s0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe7b:2ccd/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+[root@server1 ~]# ip route
+default via 192.168.50.254 dev enp1s0 proto static metric 100
+192.168.50.0/24 dev enp1s0 proto kernel scope link src 192.168.50.11 metric 100
+```
+
+- `inet` lines are IPv4 addresses, `inet6` lines IPv6. The `fe80::` address is a link-local IPv6 address that every interface gives itself; it only works on the local network segment.
+- `link/ether` is the hardware (MAC) address.
+- `ip route` (or `ip r`) shows the default gateway first. `-4` or `-6` limits any of these commands to one address family.
+
+> Warning: `ip addr add` and `ip link set` also exist, but what they change is gone after a reboot (or the next time NetworkManager touches the interface). For lasting changes always use nmcli.
+
+### nmcli: what NetworkManager manages
+
+On RHEL 9, NetworkManager owns the network. It works with connection profiles: a profile is a saved set of settings (addresses, gateway, DNS) that NetworkManager puts onto a device when the profile is activated. A device can have several profiles, but only one is active at a time.
+
+```terminal
+[root@server1 ~]# nmcli general
+STATE      CONNECTIVITY  WIFI-HW  WIFI     WWAN-HW  WWAN
+connected  full          missing  enabled  missing  enabled
+[root@server1 ~]# nmcli device
+DEVICE  TYPE      STATE                   CONNECTION
+enp1s0  ethernet  connected               enp1s0
+lo      loopback  connected (externally)  lo
+[root@server1 ~]# nmcli connection show
+NAME    UUID                                  TYPE      DEVICE
+enp1s0  be1a2d7a-7c6c-4ba8-b121-06b76c548f49  ethernet  enp1s0
+lo      8b4c0b9a-2b6a-44d2-9b1c-5b1b2d1e0f1a  loopback  lo
+```
+
+Here the device enp1s0 and its profile are both called enp1s0, which is common but not required: the NAME column is the profile, the DEVICE column the card it is active on (`--` means not active). Every nmcli word can be shortened: `nmcli con show`, `nmcli dev`, `nmcli g`.
+
+`nmcli connection show NAME` lists every setting of one profile (a long list; the lower-case names are the saved settings, the upper-case `IP4.` lines what is active now). To pick out one value, use `-g` (get values), which is also the easiest way to check your work:
+
+```terminal
+[root@server1 ~]# nmcli -g ipv4.addresses connection show enp1s0
+192.168.50.11/24
+[root@server1 ~]# nmcli -g ipv4.method connection show enp1s0
+manual
+```
+
+`ipv4.method manual` means fixed addresses from the profile; `auto` means DHCP.
+
+@try machines=1
+@setup server1
+nmcli con mod enp1s0 connection.autoconnect no
+nmcli con down enp1s0
+@task t1 | Networking | 10 | server1
+server1 has lost its network: enp1s0 has no IPv4 address. Bring the connection profile enp1s0 back up, and make sure it is activated by itself at every boot.
+@check server1 | enp1s0 has 192.168.50.11/24 again
+ip -4 -br addr show enp1s0 | grep -q '192.168.50.11/24'
+@check server1 | the profile starts by itself at boot
+test "$(nmcli -g connection.autoconnect con show enp1s0)" = yes
+@hint nmcli con show enp1s0 lists connection.autoconnect. nmcli con up NAME activates a profile.
+@solution server1
+nmcli con mod enp1s0 connection.autoconnect yes
+nmcli con up enp1s0
+ip -br addr
+@endtask
+@end
+
+@quiz
+? Which command shows the IPv4 addresses of every interface, one line each?
+- ip route
++ ip -4 -br addr
+- nmcli general
+- ip link
+! -br prints one line per interface and -4 keeps only IPv4. ip route shows routes, ip link only the hardware side.
+? In nmcli connection show, what does `--` in the DEVICE column mean?
+- the profile is broken
++ the profile exists but is not active on any device
+- the device has been removed
+- the profile belongs to the loopback interface
+! A profile is only saved settings until it is activated on a device.
+? You added an address with ip addr add. What happens at the next reboot?
+- it stays, ip writes it to the profile
++ it is gone, because ip only changes the running kernel
+- the machine refuses to boot
+- NetworkManager asks whether to keep it
+! ip changes the live state only. Use nmcli connection modify to save settings in the profile.
+@end
+
+## Lesson: l0802 | Static IPv4 addresses with nmcli
+
+### Changing a profile
+
+`nmcli connection modify` (short: `nmcli con mod`) changes settings in a profile. The change is saved at once, but it does not reach the device until the profile is activated again with `nmcli con up`. Forgetting that second step is the most common mistake.
+
+- `ipv4.addresses 192.168.50.21/24` sets the list of addresses (replacing what was there).
+- `+ipv4.addresses 192.168.50.21/24` adds one to the list; `-ipv4.addresses ...` removes one. The `+` and `-` work for every list setting, such as `ipv4.dns`.
+- `ipv4.gateway 192.168.50.254` sets the default gateway.
+- `ipv4.method manual` uses the fixed addresses; `ipv4.method auto` uses DHCP. If you set addresses on a DHCP profile, set the method to manual too.
+- `connection.autoconnect yes` activates the profile by itself at boot.
+
+```terminal
+[root@server1 ~]# nmcli con mod enp1s0 +ipv4.addresses 192.168.50.21/24
+[root@server1 ~]# nmcli con up enp1s0
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/3)
+[root@server1 ~]# ip -4 -br addr show enp1s0
+enp1s0           UP             192.168.50.11/24 192.168.50.21/24
+```
+
+> Tip: always give the prefix (`/24`). Without one, nmcli takes `/32`, an address with no network around it, and the machine cannot reach its neighbours through it.
+
+### A new profile
+
+`nmcli connection add` creates a profile. You give it a name (`con-name`), a type (`type ethernet`) and the device (`ifname`), then any settings:
+
+```terminal
+[root@server1 ~]# nmcli con add con-name office type ethernet ifname enp1s0 ipv4.method manual ipv4.addresses 192.168.50.31/24 ipv4.gateway 192.168.50.254 ipv4.dns 192.168.50.254 autoconnect no
+Connection 'office' (0bd2230c-5003-4a37-bb3b-0ca69cfc7c2e) successfully added.
+[root@server1 ~]# nmcli con show
+NAME    UUID                                  TYPE      DEVICE
+enp1s0  be1a2d7a-7c6c-4ba8-b121-06b76c548f49  ethernet  enp1s0
+lo      8b4c0b9a-2b6a-44d2-9b1c-5b1b2d1e0f1a  loopback  lo
+office  0bd2230c-5003-4a37-bb3b-0ca69cfc7c2e  ethernet  --
+[root@server1 ~]# nmcli con up office
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/15)
+[root@server1 ~]# ip -4 -br addr show enp1s0
+enp1s0           UP             192.168.50.31/24
+[root@server1 ~]# nmcli con up enp1s0
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/18)
+[root@server1 ~]# nmcli con delete office
+Connection 'office' (0bd2230c-5003-4a37-bb3b-0ca69cfc7c2e) successfully deleted.
+```
+
+Activating office took enp1s0 away from the old profile (one active profile per device), and `nmcli con up enp1s0` switched back. `nmcli con down NAME` deactivates a profile, which leaves the device without addresses. `nmcli con delete NAME` removes a profile for good.
+
+> Warning: on a remote machine, changing the address you are logged in through cuts your own ssh session. In the exam you work at the console, but still check the gateway and the prefix before `nmcli con up`.
+
+At boot, NetworkManager activates on each device a profile that has `connection.autoconnect yes`. If two such profiles fit the same device, it is hard to predict which one wins, so set autoconnect to no on the one you do not want.
+
+### Where profiles are saved: keyfiles
+
+Each profile is a text file (a keyfile) in /etc/NetworkManager/system-connections, named after the profile:
+
+```terminal
+[root@server1 ~]# cat /etc/NetworkManager/system-connections/enp1s0.nmconnection
+[connection]
+id=enp1s0
+uuid=be1a2d7a-7c6c-4ba8-b121-06b76c548f49
+type=ethernet
+autoconnect-priority=-999
+interface-name=enp1s0
+timestamp=1772440800
+
+[ethernet]
+
+[ipv4]
+address1=192.168.50.11/24
+dns=192.168.50.254;
+dns-search=lab.example.com;
+gateway=192.168.50.254
+method=manual
+
+[ipv6]
+addr-gen-mode=eui64
+method=auto
+
+[proxy]
+```
+
+The file must belong to root with mode 600, or NetworkManager ignores it. You can edit a keyfile by hand, but then run `nmcli con reload` (so NetworkManager reads it again) and `nmcli con up NAME`. nmcli is safer: it checks every value before saving. (The old ifcfg files in /etc/sysconfig/network-scripts are no longer used for new profiles in RHEL 9.)
+
+`nmtui` is a menu-driven tool for the same settings. It is fine on a real machine, but the Cert Lab terminal cannot draw it, so this course uses nmcli.
+
+@try machines=1
+@task t1 | Networking | 15 | server1
+Create a new connection profile named `static-lab` for the device enp1s0 with the fixed address 192.168.50.41/24, the gateway 192.168.50.254 and the DNS server 192.168.50.254. Activate it now, and make it the profile used at boot: the old profile enp1s0 must no longer be activated by itself.
+@check server1 | static-lab has the fixed address 192.168.50.41/24
+test "$(nmcli -g ipv4.method con show static-lab)" = manual && nmcli -g ipv4.addresses con show static-lab | grep -q '^192.168.50.41/24$'
+@check server1 | static-lab has the gateway and the DNS server
+test "$(nmcli -g ipv4.gateway con show static-lab)" = 192.168.50.254 && nmcli -g ipv4.dns con show static-lab | grep -q '192.168.50.254'
+@check server1 | static-lab is active on enp1s0 now
+test "$(nmcli -g GENERAL.CONNECTION device show enp1s0)" = static-lab && ip -4 -br addr show enp1s0 | grep -q '192.168.50.41/24'
+@check server1 | only static-lab starts at boot
+test "$(nmcli -g connection.autoconnect con show static-lab)" = yes && test "$(nmcli -g connection.autoconnect con show enp1s0)" = no
+@hint nmcli con add con-name ... type ethernet ifname enp1s0 ipv4.method manual ipv4.addresses ... ipv4.gateway ... ipv4.dns ... Then turn off connection.autoconnect on enp1s0 and run nmcli con up static-lab.
+@solution server1
+nmcli con add con-name static-lab type ethernet ifname enp1s0 ipv4.method manual ipv4.addresses 192.168.50.41/24 ipv4.gateway 192.168.50.254 ipv4.dns 192.168.50.254
+nmcli con mod enp1s0 connection.autoconnect no
+nmcli con up static-lab
+ip -4 -br addr
+@endtask
+@end
+
+@quiz
+? You ran `nmcli con mod enp1s0 ipv4.addresses 10.0.0.5/24`. ip addr still shows the old address. Why?
+- the change failed without a message
++ the profile is saved, but it is only applied when you run nmcli con up enp1s0
+- you must reboot first
+- nmcli only changes the keyfile, never the device
+! modify saves the profile. Activating it again (nmcli con up) puts the new settings on the device.
+? What is the difference between `ipv4.addresses X` and `+ipv4.addresses X`?
++ without + the list is replaced by X; with + X is added to it
+- there is none
+- + makes the address the primary one
+- + adds the address only until the next reboot
+! The + and - prefixes add to and remove from a list setting. Without them the setting is replaced.
+? Where does NetworkManager save the profile named office?
+- /etc/sysconfig/network-scripts/ifcfg-office
++ /etc/NetworkManager/system-connections/office.nmconnection
+- /etc/NetworkManager/NetworkManager.conf
+- /var/lib/NetworkManager/office
+! RHEL 9 keeps profiles as keyfiles in /etc/NetworkManager/system-connections, readable only by root.
+@end
+
+## Lesson: l0803 | IPv6 addresses
+
+IPv6 addresses are 128 bits long, written as eight groups of hexadecimal digits separated by colons. Two rules make them shorter: leading zeros in a group may be dropped, and one run of all-zero groups may be replaced by `::`. So `fd00:0050:0000:0000:0000:0000:0000:0011` is written `fd00:50::11`. The prefix is written the same way as in IPv4; `/64` is by far the most common.
+
+Some kinds you will meet:
+
+- `fe80::/10` link-local: every interface makes one for itself. It works only on the local segment.
+- `fd00::/8` unique local: private addresses, like 192.168.x.x in IPv4. The lab uses `fd00:50::/64`.
+- `2000::/3` global: public internet addresses.
+- `::1` the loopback address, like 127.0.0.1.
+
+### Static IPv6 with nmcli
+
+The settings mirror IPv4 with `ipv6.` in front: `ipv6.method`, `ipv6.addresses`, `ipv6.gateway`, `ipv6.dns`. `ipv6.method auto` takes addresses from router advertisements (SLAAC) or DHCPv6, `manual` uses fixed ones, `disabled` turns IPv6 off on the profile.
+
+```terminal
+[root@server1 ~]# nmcli con mod enp1s0 ipv6.method manual ipv6.addresses fd00:50::11/64 ipv6.gateway fd00:50::fe
+[root@server1 ~]# nmcli con up enp1s0
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/2)
+[root@server1 ~]# ip -6 -br addr show enp1s0
+enp1s0           UP             fd00:50::11/64 fe80::5054:ff:fe7b:2ccd/64
+[root@server1 ~]# nmcli -g ipv6.addresses con show enp1s0
+fd00:50::11/64
+[root@server1 ~]# grep -A4 '^\[ipv6\]' /etc/NetworkManager/system-connections/enp1s0.nmconnection
+[ipv6]
+addr-gen-mode=eui64
+address1=fd00:50::11/64
+gateway=fd00:50::fe
+method=manual
+```
+
+IPv4 and IPv6 are separate in the profile: changing one leaves the other alone, and the device keeps its IPv4 address and its link-local IPv6 address. A device can have both at the same time (dual stack), which is normal.
+
+To test an IPv6 address, `ping` works with IPv6 addresses too (`ping -6 -c 3 fd00:50::12` on a real machine), and `ip -6 route` shows the IPv6 routes.
+
+> Tip: when an exam task gives you an IPv6 address, copy it exactly, prefix included. `fd00:50::11/64` and `fd00:50::11` (which nmcli reads as `/128`) are different settings.
+
+@try machines=1
+@task t1 | Networking | 10 | server1
+Give server1's connection profile enp1s0 the static IPv6 address fd00:50::11/64, in addition to its IPv4 address. The address must be active now and after a reboot.
+@check server1 | the profile has fd00:50::11/64
+nmcli -g ipv6.addresses con show enp1s0 | grep -q 'fd00:50::11/64'
+@check server1 | enp1s0 has the address now, and still its IPv4 address
+ip -6 -br addr show enp1s0 | grep -q 'fd00:50::11/64' && ip -4 -br addr show enp1s0 | grep -q '192.168.50.11/24'
+@hint Set ipv6.method manual and ipv6.addresses with nmcli con mod, then nmcli con up enp1s0.
+@solution server1
+nmcli con mod enp1s0 ipv6.method manual ipv6.addresses fd00:50::11/64
+nmcli con up enp1s0
+ip -br addr
+@endtask
+@end
+
+@quiz
+? Which is a correct short form of fd00:0000:0000:0000:0000:0000:0000:0001?
+- fd::1
++ fd00::1
+- fd00:::1
+- fd00:0:1
+! One run of zero groups becomes ::. fd::1 is a valid address too, but a different one: only leading zeros may be dropped, so fd means 00fd, not fd00.
+? Which nmcli setting makes a profile use only fixed IPv6 addresses?
+- ipv6.method static
++ ipv6.method manual
+- ipv6.method fixed
+- ipv6.addr-gen-mode manual
+! The methods are auto, dhcp, manual, link-local, ignore and disabled, the same idea as ipv4.method.
+? What is an address starting with fe80 on an interface?
+- a public internet address
++ the link-local address the interface gives itself, usable on the local segment only
+- an address from the DHCP server
+- the address of the default gateway
+! Every IPv6 interface makes a link-local address. It cannot be routed to other networks.
+@end
+
+## Lesson: l0804 | Host names and name resolution
+
+### The machine's own name
+
+`hostnamectl` shows and sets the host name. `set-hostname` changes it now and writes it to /etc/hostname, so it is kept after a reboot. Use the full name (with the domain): that is what the exam usually asks for.
+
+```terminal
+[root@server1 ~]# hostnamectl set-hostname web1.lab.example.com
+[root@web1 ~]# hostnamectl hostname
+web1.lab.example.com
+[root@web1 ~]# cat /etc/hostname
+web1.lab.example.com
+```
+
+The shell prompt shows the first part of the name, so it changes at once. Plain `hostnamectl` (or `hostnamectl status`) also shows the operating system, the kernel and the hardware. The `hostname` command shows the name too, but `hostname NAME` changes it only until the next boot.
+
+### How a name becomes an address
+
+When a program looks up a name, the order of the sources is set by the `hosts:` line of /etc/nsswitch.conf:
+
+```terminal
+[root@server1 ~]# grep '^hosts' /etc/nsswitch.conf
+hosts:      files dns myhostname
+```
+
+- `files` is /etc/hosts, a simple list of addresses and names. It is read first, so an entry there wins over DNS.
+- `dns` asks the DNS servers listed in /etc/resolv.conf.
+- `myhostname` makes the machine's own name always resolve.
+
+Adding a line to /etc/hosts is the quick way to give a name to an address on this machine only. Put the full name first and any short names after it:
+
+```terminal
+[root@server1 ~]# echo '192.168.50.12  files1.lab.example.com  files1' >> /etc/hosts
+[root@server1 ~]# ping -c 1 files1.lab.example.com
+PING files1.lab.example.com (192.168.50.12) 56(84) bytes of data.
+64 bytes from files1.lab.example.com (192.168.50.12): icmp_seq=1 ttl=64 time=0.65 ms
+
+--- files1.lab.example.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 2ms
+rtt min/avg/max/mdev = 0.312/0.405/0.512/0.071 ms
+```
+
+### DNS servers and search domains
+
+/etc/resolv.conf lists the DNS servers (`nameserver`) and the search domains (`search`): the domains tried after a short name, so that `server2` is looked up as `server2.lab.example.com`.
+
+```terminal
+[root@server1 ~]# cat /etc/resolv.conf
+# Generated by NetworkManager
+search lab.example.com
+nameserver 192.168.50.254
+```
+
+The first line says it all: NetworkManager writes this file from the active profiles, so a change made by hand is lost the next time a profile is activated. Set DNS in the profile instead:
+
+- `ipv4.dns "192.168.50.254"` the DNS servers (several separated by commas or spaces; `+ipv4.dns` adds one).
+- `ipv4.dns-search "lab.example.com"` the search domains.
+- `ipv4.ignore-auto-dns yes` ignores the DNS servers a DHCP server hands out, so only yours are used.
+
+```terminal
+[root@server1 ~]# nmcli con mod enp1s0 +ipv4.dns-search example.com
+[root@server1 ~]# nmcli con up enp1s0
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/6)
+[root@server1 ~]# nmcli -g ipv4.dns-search con show enp1s0
+lab.example.com,example.com
+```
+
+### Testing name resolution
+
+- `getent hosts NAME` looks the name up exactly as programs do (files, then DNS). It is the best test because it follows nsswitch.conf.
+- `ping -c 1 NAME` resolves the name and checks that the machine answers.
+- `host NAME` and `dig NAME` ask the DNS server directly and skip /etc/hosts. They come with the package bind-utils, which is not installed at first: `dnf install bind-utils` (with the repositories from unit 7).
+
+```terminal
+[root@server1 ~]# getent hosts server2.lab.example.com
+192.168.50.12   server2.lab.example.com
+[root@server1 ~]# host server2.lab.example.com
+server2.lab.example.com has address 192.168.50.12
+[root@server1 ~]# host 192.168.50.12
+12.50.168.192.in-addr.arpa domain name pointer server2.lab.example.com.
+[root@server1 ~]# dig +short utility.lab.example.com
+192.168.50.254
+[root@server1 ~]# host files1.lab.example.com
+Host files1.lab.example.com not found: 3(NXDOMAIN)
+```
+
+The last line is not an error in your setup: files1 exists only in /etc/hosts, and host asks DNS alone. That is exactly why getent is the better test.
+
+@try machines=1
+@task t1 | Networking | 10 | server1
+Set the host name of server1 to `lab1.lab.example.com`. It must stay after a reboot.
+@check server1 | the host name is lab1.lab.example.com, now and in /etc/hostname
+test "$(hostname)" = lab1.lab.example.com && grep -qx 'lab1.lab.example.com' /etc/hostname
+@solution server1
+hostnamectl set-hostname lab1.lab.example.com
+@endtask
+@task t2 | Networking | 10 | server1
+On server1, the names `nas.lab.example.com` and `nas` must resolve to 192.168.50.12 without asking DNS.
+@check server1 | nas.lab.example.com resolves to 192.168.50.12
+getent hosts nas.lab.example.com | grep -q '^192\.168\.50\.12 '
+@check server1 | the short name nas resolves to 192.168.50.12
+getent hosts nas | grep -q '^192\.168\.50\.12 '
+@hint Without DNS means /etc/hosts. One line can hold the full name and the short name.
+@solution server1
+echo '192.168.50.12  nas.lab.example.com  nas' >> /etc/hosts
+getent hosts nas
+@endtask
+@end
+
+@quiz
+? Which command changes the host name so that it is kept after a reboot?
+- hostname web1.lab.example.com
++ hostnamectl set-hostname web1.lab.example.com
+- echo web1 > /proc/sys/kernel/hostname
+- nmcli con mod enp1s0 hostname web1
+! hostnamectl set-hostname changes the running name and writes /etc/hostname. hostname NAME only lasts until the next boot.
+? You added a nameserver line to /etc/resolv.conf by hand. After nmcli con up it is gone. What is the right fix?
+- make /etc/resolv.conf read-only
++ set the DNS server in the profile with nmcli con mod NAME ipv4.dns ...
+- put the server in /etc/hosts
+- restart NetworkManager
+! NetworkManager writes resolv.conf from the active profiles, so the setting belongs in the profile.
+? host files1 says NXDOMAIN, but ping files1 works. Why?
++ files1 is in /etc/hosts, and host asks only the DNS server
+- the DNS server is down
+- ping uses a different DNS server
+- the search domain is missing
+! host and dig go straight to DNS. getent hosts and other programs read /etc/hosts first (the hosts line of nsswitch.conf).
+@end
+
+## Lesson: l0805 | firewalld: zones, services and ports
+
+firewalld decides which incoming connections a machine accepts. It is installed, enabled and running on RHEL 9, and by default it accepts only a few services and refuses everything else coming in. Outgoing connections are not limited.
+
+### Zones
+
+A zone is a set of rules. Each interface belongs to one zone, and traffic coming in on that interface is judged by that zone's rules. Without other settings, everything is in the default zone, `public`:
+
+```terminal
+[root@server1 ~]# firewall-cmd --get-default-zone
+public
+[root@server1 ~]# firewall-cmd --get-active-zones
+public
+  interfaces: enp1s0
+[root@server1 ~]# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp1s0
+  sources:
+  services: cockpit dhcpv6-client ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+`--list-all` is the command to remember: it shows everything a zone allows. Every command works on the default zone unless you add `--zone=NAME`. Other zones that come with firewalld: `trusted` (accepts everything), `drop` (silently drops everything), `block` (refuses everything with a message), `internal`, `home`, `work`, `dmz`, `external`. `firewall-cmd --get-zones` lists them, and `--set-default-zone=NAME` changes the default.
+
+### Services and ports
+
+A firewalld service is a name for one or more ports: `ssh` is 22/tcp, `http` is 80/tcp, `https` 443/tcp. `firewall-cmd --get-services` lists the known names and `--info-service=NAME` shows the ports behind one:
+
+```terminal
+[root@server1 ~]# firewall-cmd --info-service=https
+https
+  ports: 443/tcp
+  protocols:
+  source-ports:
+  modules:
+  destination:
+  includes:
+  helpers:
+```
+
+Open a service with `--add-service=NAME`, or a port that has no service name with `--add-port=PORT/PROTOCOL` (for example `8080/tcp`, or a range `5000-5010/udp`). `--remove-service` and `--remove-port` close them again.
+
+### Runtime and permanent: the trap
+
+firewalld keeps two configurations. The runtime one is what the firewall does now; the permanent one is what is saved and loaded at boot (and by `--reload`). Without `--permanent`, a command changes only the runtime; with it, only the saved configuration:
+
+```terminal
+[root@server1 ~]# firewall-cmd --add-service=http
+success
+[root@server1 ~]# firewall-cmd --list-services
+cockpit dhcpv6-client http ssh
+[root@server1 ~]# firewall-cmd --reload
+success
+[root@server1 ~]# firewall-cmd --list-services
+cockpit dhcpv6-client ssh
+[root@server1 ~]# firewall-cmd --permanent --add-service=http
+success
+[root@server1 ~]# firewall-cmd --permanent --add-port=8080/tcp
+success
+[root@server1 ~]# firewall-cmd --reload
+success
+[root@server1 ~]# firewall-cmd --list-services
+cockpit dhcpv6-client http ssh
+[root@server1 ~]# firewall-cmd --list-ports
+8080/tcp
+```
+
+The runtime http rule vanished at the reload, because it was never saved. The habit that always works: make the change with `--permanent`, then run `firewall-cmd --reload` so the runtime loads it. (The other way round also works: change the runtime, test, then save it all with `firewall-cmd --runtime-to-permanent`.) `firewall-cmd --permanent --list-all` shows the saved configuration, which is what the machine will have after a reboot.
+
+> Tip: the saved zones are XML files in /etc/firewalld/zones. You do not need to edit them; firewall-cmd writes them.
+
+@try machines=1
+@task t1 | Networking | 10 | server1
+Allow the service https and the port 8443/tcp through the firewall of server1 (default zone), now and after every reboot.
+@check server1 | https and 8443/tcp are allowed now
+firewall-cmd --query-service=https && firewall-cmd --query-port=8443/tcp
+@check server1 | both are in the permanent configuration
+firewall-cmd --permanent --query-service=https && firewall-cmd --permanent --query-port=8443/tcp
+@hint Use --permanent for both, then --reload.
+@solution server1
+firewall-cmd --permanent --add-service=https
+firewall-cmd --permanent --add-port=8443/tcp
+firewall-cmd --reload
+firewall-cmd --list-all
+@endtask
+@end
+
+@quiz
+? You ran `firewall-cmd --add-port=8080/tcp`. What happens at the next reboot?
+- the port stays open
++ the port is closed again, because the rule was only in the runtime configuration
+- firewalld asks whether to keep it
+- the machine opens all ports
+! Without --permanent only the running firewall changes. Use --permanent and --reload (or --runtime-to-permanent).
+? Which command shows everything the default zone allows right now?
+- firewall-cmd --get-zones
++ firewall-cmd --list-all
+- firewall-cmd --state
+- firewall-cmd --get-services
+! --list-all shows the interfaces, sources, services, ports and rich rules of a zone. Add --zone=NAME for another zone or --permanent for the saved settings.
+? You added a rule with --permanent. Why is it not working yet?
+- permanent rules start after a reboot only, nothing else helps
++ --permanent saves the rule but does not change the running firewall; run firewall-cmd --reload
+- you must restart the service you opened
+- --permanent rules need SELinux to be permissive
+! The runtime configuration loads the permanent one at boot and at --reload.
+@end
+
+## Lesson: l0806 | Network services, sources and rich rules
+
+### Services that listen, and start at boot
+
+A network service is a program that waits for connections on a port. For it to work after a reboot, three things must be true: the service is enabled (`systemctl enable --now NAME`, unit 7), it listens on the port you expect, and the firewall lets the port in. `ss` shows what listens. Here the web server httpd was installed and started with `systemctl enable --now httpd`:
+
+```terminal
+[root@server1 ~]# systemctl is-enabled httpd
+enabled
+[root@server1 ~]# systemctl is-active httpd
+active
+[root@server1 ~]# ss -tuln
+Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+tcp   LISTEN 0      128           0.0.0.0:22      0.0.0.0:*
+tcp   LISTEN 0      128              [::]:22         [::]:*
+tcp   LISTEN 0      128           0.0.0.0:80      0.0.0.0:*
+tcp   LISTEN 0      128              [::]:80         [::]:*
+udp   UNCONN 0      0            127.0.0.1:323        0.0.0.0:*
+```
+
+The letters: `-t` TCP, `-u` UDP, `-l` only listening sockets, `-n` numbers instead of names, `-p` the program that owns each socket (as root). `0.0.0.0:80` means port 80 on every IPv4 address, `[::]:80` the same for IPv6, and `127.0.0.1:323` a port only the machine itself can reach (chronyd's control port).
+
+When a service works locally (`curl http://localhost/`) but not from another machine, the firewall is the first suspect. When it does not even work locally, look at the service: `systemctl status`, `journalctl -u`, and SELinux (unit 10).
+
+### Sources: rules for some machines only
+
+A zone can also be chosen by the address a connection comes from. Add a source (an address or a network) to a zone, and connections from it use that zone instead of the interface's zone:
+
+```terminal
+[root@server1 ~]# firewall-cmd --permanent --zone=trusted --add-source=192.168.50.12
+success
+[root@server1 ~]# firewall-cmd --reload
+success
+[root@server1 ~]# firewall-cmd --get-active-zones
+trusted
+  sources: 192.168.50.12
+public
+  interfaces: enp1s0
+```
+
+Now server2 (192.168.50.12) may reach every port, while everyone else still gets the public rules. In the same way, `--zone=drop --add-source=10.1.2.0/24` would shut out a whole network. A source can belong to one zone only.
+
+### Rich rules
+
+A rich rule is one line that combines a source, a service or port, and an action (`accept`, `reject` or `drop`). It is the tool for "this service, but only from there" and "everything, except this from there":
+
+```terminal
+[root@server1 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.12" service name="ssh" reject'
+success
+[root@server1 ~]# firewall-cmd --reload
+success
+[root@server1 ~]# firewall-cmd --list-rich-rules
+rule family="ipv4" source address="192.168.50.12" service name="ssh" reject
+```
+
+- the rule always starts with `rule`; `family="ipv4"` is needed whenever the rule has an address.
+- `source address="..."` is one address or a network (`192.168.50.0/24`); `source not address="..."` turns it round.
+- `service name="http"` or `port port="8080" protocol="tcp"` says what the rule is about.
+- `accept` lets it in, `reject` refuses with a message, `drop` throws it away without answering.
+- put the whole rule in single quotes, because it contains double quotes and spaces.
+
+Rich rules that reject or drop are checked before the zone's services and ports, so a reject rule for one machine works even though ssh is open for everyone else. `--remove-rich-rule='...'` removes one (the text must match exactly).
+
+> Tip: to allow a service only from one network, do NOT also add the service to the zone; add only a rich rule with accept. A service in the zone is open for every source.
+
+@try machines=2
+@setup server1
+printf '[BaseOS]\nname=BaseOS\nbaseurl=http://repo.lab.example.com/BaseOS\ngpgcheck=0\n\n[AppStream]\nname=AppStream\nbaseurl=http://repo.lab.example.com/AppStream\ngpgcheck=0\n' > /etc/yum.repos.d/lab.repo
+dnf -y install httpd
+echo 'lesson 8 web page' > /var/www/html/index.html
+systemctl enable --now httpd
+@task t1 | Networking | 15 | server1
+server1 runs a web server (httpd, port 80). Let server2 (192.168.50.12) reach it, but do not open http for every machine: only server2 may get in. The rule must work now and after a reboot.
+@check server2 | server2 gets the page from server1
+curl -s -m 5 http://server1.lab.example.com/ | grep -q 'lesson 8'
+@check server1 | http is not open for everyone in the default zone
+! firewall-cmd --query-service=http >/dev/null && ! firewall-cmd --query-port=80/tcp >/dev/null
+@check server1 | the permanent configuration has a rule for 192.168.50.12
+firewall-cmd --permanent --list-all-zones | grep -q '192\.168\.50\.12'
+@hint A rich rule with source address="192.168.50.12", service name="http" and accept. Use --permanent, then --reload.
+@solution server1
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.12" service name="http" accept'
+firewall-cmd --reload
+firewall-cmd --list-rich-rules
+@endtask
+@end
+
+@quiz
+? Which command shows which programs listen on which TCP ports?
+- ip -br addr
++ ss -tlnp
+- firewall-cmd --list-ports
+- nmcli device show
+! ss lists sockets: -t TCP, -l listening, -n numbers, -p the program. firewall-cmd shows what is allowed in, not what listens.
+? A rich rule rejects ssh from 192.168.50.12, and the zone also allows the ssh service. What happens when 192.168.50.12 connects with ssh?
++ it is refused, because reject and drop rich rules are checked before the zone's services
+- it is allowed, because the service rule wins
+- the rule with the newest timestamp wins
+- firewalld refuses to load conflicting rules
+! A rich rule that matches decides first; other machines still reach ssh through the service.
+? You add the source 192.168.50.0/24 to the trusted zone. What does that do?
+- it blocks that network
++ connections from that network use the trusted zone, which accepts everything
+- it adds that network's DNS server
+- nothing until you add the http service to trusted
+! A source binds an address range to a zone. trusted accepts everything, drop and block shut it out.
+@end

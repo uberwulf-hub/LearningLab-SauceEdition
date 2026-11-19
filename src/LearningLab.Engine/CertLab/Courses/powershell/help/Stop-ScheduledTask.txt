@@ -1,0 +1,11 @@
+SYNOPSIS: Stops a running scheduled task.
+DESCRIPTION:
+Stop-ScheduledTask ends a task that is running. A task that is not running is left alone. On the practice machine tasks finish at once, so there is rarely anything to stop.
+PARAMETER TaskName:
+The task. Position 0.
+PARAMETER TaskPath:
+Its folder. Position 1.
+PARAMETER InputObject:
+Task objects from the pipeline.
+EXAMPLE: Stop-ScheduledTask -TaskName Nightly
+RELATED: Start-ScheduledTask

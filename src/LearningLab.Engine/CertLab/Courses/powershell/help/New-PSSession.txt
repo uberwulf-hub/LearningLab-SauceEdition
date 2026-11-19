@@ -1,0 +1,34 @@
+SYNOPSIS: Opens a lasting remote session (PSSession) to one or more computers.
+DESCRIPTION:
+New-PSSession opens a connection to another computer that stays open until you remove it. Commands you run in it with Invoke-Command -Session, or by entering it with Enter-PSSession, share the same session: variables, functions and loaded modules are kept from one command to the next.
+
+That makes sessions faster than Invoke-Command -ComputerName when you send several commands to the same computers, because the connection is made only once.
+
+Save the sessions in a variable: $s = New-PSSession -ComputerName DC01, WEB01. Each computer gets its own session, with an Id and a Name (WinRM1, WinRM2 and so on, unless you choose names).
+PARAMETER ComputerName:
+The computers to connect to. Position 0, and it can come through the pipeline. Its alias is -Cn. Without it, the session is on this computer (localhost).
+PARAMETER Name:
+Friendly names for the sessions, so you can find them with Get-PSSession -Name.
+PARAMETER Credential:
+Another account to connect as, usually from Get-Credential. Cert Lab connects with your own account.
+PARAMETER ConfigurationName:
+The endpoint to connect to, for example a Just Enough Administration endpoint.
+EXAMPLE: $s = New-PSSession -ComputerName localhost; $s
+Opens a session to this computer and shows it: Id, Name, ComputerName, State Opened, Availability Available.
+EXAMPLE: $s = New-PSSession localhost; Invoke-Command -Session $s { $x = 42 }; Invoke-Command -Session $s { $x }
+The variable set in the first command is still there in the second.
+EXAMPLE: New-PSSession -ComputerName localhost -Name Work; Enter-PSSession -Name Work
+Opens a named session and enters it interactively.
+EXAMPLE: Get-PSSession | Remove-PSSession
+Closes all your sessions when you are done.
+NOTES:
+The alias is nsn.
+
+Sessions use memory on the remote computer and count against its limits. Always close them with Remove-PSSession; on a real PC an idle session is also closed after a time-out (two hours by default).
+
+If the remote computer restarts or the network drops, the session becomes Broken and cannot be used again.
+
+The same requirements as all remoting apply: remoting turned on at the other end, the firewall open for WinRM (TCP 5985), and permission to connect.
+
+Real 5.1 also has -Port, -UseSSL, -Authentication, -SessionOption and more; PowerShell 7 can connect over SSH with -HostName.
+RELATED: Get-PSSession, Remove-PSSession, Enter-PSSession, Invoke-Command, about_Remote

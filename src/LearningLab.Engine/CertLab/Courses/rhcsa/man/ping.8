@@ -1,0 +1,74 @@
+NAME
+       ping - check that another machine answers on the network
+
+SYNOPSIS
+       ping [-c COUNT] [-i INTERVAL] [-W TIMEOUT] [-w DEADLINE] [-q] [-n]
+            [-4 | -6] [-I INTERFACE] [-s SIZE] HOST
+
+DESCRIPTION
+       ping sends ICMP echo requests to HOST (a name or an address) and
+       prints a line for every reply: its size, the sequence number, the TTL
+       and the round-trip time. When it ends it prints a summary: packets
+       sent and received, the loss in percent and the times.
+
+       Without -c, ping goes on until you press Ctrl+C. In scripts and on the
+       exam, always give -c.
+
+       ping is the first test when the network does not work. Go outward step
+       by step: your own address, the gateway, another machine by address,
+       then by name. If addresses work but names do not, the problem is name
+       resolution (/etc/hosts, the DNS servers in the connection profile), not
+       the network.
+
+       "Destination Host Unreachable" means nobody on the local network
+       answered for that address (wrong address, wrong subnet, cable or
+       interface down). "Name or service not known" means the name could not
+       be resolved. A firewall may also drop pings; that does not prove the
+       host is down.
+
+       The exit status is 0 when at least one reply came back, 1 when none
+       did and 2 on other errors, so ping -c 1 works in if-tests.
+
+OPTIONS
+       -c COUNT
+              Stop after COUNT requests.
+
+       -i SECONDS
+              Wait this long between requests (default 1).
+
+       -W SECONDS
+              How long to wait for each reply.
+
+       -w SECONDS
+              Stop after this many seconds in total.
+
+       -q     Quiet: print only the summary.
+
+       -n     Print addresses only; do not look up names.
+
+       -4, -6 Use IPv4 or IPv6 only.
+
+       -I INTERFACE
+              Send from this interface or source address.
+
+       -s SIZE
+              Send SIZE bytes of data (default 56).
+
+EXAMPLES
+       Check the gateway, then server2 by name:
+
+           ping -c 3 192.168.50.254
+           ping -c 3 server2.lab.example.com
+
+       Test IPv6 on this machine (the loopback address):
+
+           ping -6 -c 2 ::1
+
+       In a script:
+
+           if ping -c 1 -W 2 utility.lab.example.com > /dev/null; then
+               echo "utility is up"
+           fi
+
+SEE ALSO
+       ip(8), nmcli(1), tracepath(8), ss(8), host(1)

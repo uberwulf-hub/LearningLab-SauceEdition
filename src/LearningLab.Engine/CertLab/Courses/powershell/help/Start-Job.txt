@@ -1,0 +1,24 @@
+SYNOPSIS: Runs a script block in the background as a job.
+DESCRIPTION:
+Start-Job runs commands in a separate PowerShell session on the same computer and gives you the prompt back at once. You get a job object; use Get-Job to see its state, Wait-Job to wait for it and Receive-Job to collect what it output.
+
+The job has its own session: your variables and functions are not there. Pass values with -ArgumentList (into a param block) or with $using:name inside the script block. What comes back is a copy of the objects (deserialized): properties without methods.
+
+In Cert Lab the job runs on the machines' simulated clock: it counts as Running until the time it needs has passed (Start-Sleep inside it uses the job's own time). Wait-Job moves the clock on.
+PARAMETER ScriptBlock:
+The commands to run, in braces.
+PARAMETER FilePath:
+A script file to run as the job instead of a script block.
+PARAMETER Name:
+A name for the job (otherwise Job1, Job3...).
+PARAMETER ArgumentList:
+Values for the script block's param( ) block.
+EXAMPLE: Start-Job -ScriptBlock { Get-Process | Sort-Object WS -Descending | Select-Object -First 3 }
+Starts a job; the job object is shown with State Running.
+EXAMPLE: $j = Start-Job { param($n) $n * 2 } -ArgumentList 21; Receive-Job $j -Wait
+Waits for the job and shows 42.
+EXAMPLE: $folder = 'C:\LabFiles'; Start-Job { (Get-ChildItem $using:folder).Count } | Receive-Job -Wait -AutoRemoveJob
+Uses a local variable inside the job with $using:, then removes the job.
+NOTES:
+Job Ids go up by two (1, 3, 5...) because every job has a child job that takes the next number. PowerShell 7 also has Start-ThreadJob and the & at the end of a line; Windows PowerShell 5.1 has neither by default.
+RELATED: Get-Job, Receive-Job, Wait-Job, Stop-Job, Remove-Job, Invoke-Command, about_Jobs

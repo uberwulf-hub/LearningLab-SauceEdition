@@ -1,0 +1,29 @@
+# Deck: deployment | Autopilot, provisioning and upgrades | Deployment
+What identifies a device to Windows Autopilot? :: Its hardware hash, with the serial number
+Save a device's hardware hash to a CSV file :: `Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv`
+Save the hardware hash with the group tag Sales :: `Get-WindowsAutopilotInfo -OutputFile C:\HWID\hash.csv -GroupTag Sales`
+Install the hash script on a real PC :: `Install-Script -Name Get-WindowsAutopilotInfo`
+Three ways to register Autopilot devices :: The manufacturer or reseller, importing a CSV, or Convert all targeted devices to Autopilot
+A group of every Autopilot device :: (device.devicePhysicalIds -any (_ -startsWith "[ZTDid]"))
+A group of Autopilot devices tagged Sales :: (device.devicePhysicalIds -any (_ -eq "[OrderID]:Sales"))
+To what are Autopilot profiles assigned? :: Device groups
+Setup starts while the profile status says Assigning :: The device gets the ordinary setup, without Autopilot
+Several Autopilot profiles target one device :: The oldest profile wins
+Device name template rules :: At most 15 characters, letters, digits and hyphens, one %SERIAL% or %RAND:x%, not only digits
+User-driven or self-deploying for a kiosk with no user? :: Self-deploying (needs TPM 2.0, Entra join only)
+Check a device's TPM :: `Get-Tpm`
+What does pre-provisioning do? :: IT installs the device-targeted apps and policies in advance; the user's part is short
+Hybrid join with Autopilot needs :: The Intune Connector for Active Directory and a Domain Join profile for the same devices
+Block the desktop until key apps are installed :: An Enrollment Status Page that blocks device use until those apps are installed
+Autopilot Reset :: Removes the user's files and apps; the device stays joined and enrolled
+Install a provisioning package from PowerShell :: `Install-ProvisioningPackage -PackagePath C:\Users\Public\Bulk.ppkg -QuietInstall`
+A provisioning package stopped joining devices :: Its bulk token expired: build a new package
+Tool that builds provisioning packages :: Windows Configuration Designer
+In-place upgrade or wipe-and-load to keep apps and files? :: In-place upgrade (a feature update)
+Windows 10 end of support :: 14 October 2025 (Extended Security Updates for a limited time)
+Windows 11 hardware needs :: A supported 64-bit CPU, 4 GB RAM, 64 GB storage, UEFI with Secure Boot, TPM 2.0
+Subscription activation :: Pro steps up to Enterprise when a user with Windows Enterprise E3/E5 signs in (Entra or hybrid joined)
+Upgrade the edition with a volume licence key :: An Edition upgrade and mode switch configuration profile
+Windows 365 :: A personal Cloud PC per user at a fixed monthly price, managed in Intune
+What makes new Cloud PCs (join type, network, image)? :: A Windows 365 provisioning policy assigned to a user group
+Several users on one Windows 11 virtual machine :: Azure Virtual Desktop with Windows 11 Enterprise multi-session

@@ -1,0 +1,32 @@
+NAME
+       nl - print a file with line numbers
+
+SYNOPSIS
+       nl [-b a|t|n] [-w WIDTH] [-s SEPARATOR] [-n ln|rn|rz] [-v START] [FILE...]
+
+DESCRIPTION
+       nl copies its input to the output with a number in front of each line.
+       By default only lines that are not empty are numbered (-b t). cat -n
+       numbers every line.
+
+OPTIONS
+       -b, --body-numbering STYLE
+              Which lines to number: a all, t non-empty (default), n none.
+
+       -w, --number-width N
+              Width of the number column (default 6).
+
+       -s, --number-separator TEXT
+              What goes between the number and the line (default a tab).
+
+       -n FORMAT
+              ln left-aligned, rn right-aligned (default), rz with zeros.
+
+       -v N   Start counting at N.
+
+EXAMPLES
+           nl /etc/fstab
+           nl -b a -w 3 -s ': ' script.sh
+
+SEE ALSO
+       cat(1), wc(1)

@@ -1,0 +1,326 @@
+# Unit: u03 | 3. Formatting and output | Output
+
+When objects reach the end of a pipeline, PowerShell turns them into text for the screen. This unit shows how that works and how to take control: tables and lists, saving to files, CSV and JSON, and building text with the format operator and here-strings.
+
+## Lesson: l0301 | How objects become text
+
+Nothing is formatted until the end of the pipeline. Then `Out-Default` decides how each object looks:
+
+- Types with a prepared **view** (services, processes, files) use it: a fixed table with chosen columns.
+- Other objects with **up to 4 properties** become a **table**, with 5 or more a **list**.
+- Strings, numbers and dates are printed as they are, one per line.
+
+```terminal
+PS C:\Windows\system32> [pscustomobject]@{ Name = 'a'; Size = 1 }
+
+Name Size
+---- ----
+a       1
+
+
+PS C:\Windows\system32> [pscustomobject]@{ A = 1; B = 2; C = 3; D = 4; E = 5 }
+
+A : 1
+B : 2
+C : 3
+D : 4
+E : 5
+
+
+PS C:\Windows\system32> Get-Service -Name Spooler
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+```
+
+### Format-Table and Format-List
+
+You choose with `Format-Table` (alias `ft`) and `Format-List` (alias `fl`), and you name the properties to show:
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | Format-Table Name, Status, StartType -AutoSize
+
+Name    Status  StartType
+----    ------  ---------
+Spooler Running Automatic
+WinRM   Running Automatic
+
+
+PS C:\Windows\system32> Get-Service -Name Spooler | Format-List Name, DisplayName, Status, StartType
+
+Name        : Spooler
+DisplayName : Print Spooler
+Status      : Running
+StartType   : Automatic
+
+
+PS C:\Windows\system32> Get-Service -Name Spooler | Format-List *
+
+Name                : Spooler
+RequiredServices    : {RpcSs, http}
+CanPauseAndContinue : False
+CanShutdown         : False
+CanStop             : True
+DisplayName         : Print Spooler
+DependentServices   : {}
+MachineName         : .
+ServiceName         : Spooler
+ServicesDependedOn  : {RpcSs, http}
+ServiceHandle       :
+Status              : Running
+ServiceType         : Win32OwnProcess, InteractiveProcess
+StartType           : Automatic
+Site                :
+Container           :
+```
+
+- `-AutoSize` sizes the columns to the data; `-Wrap` wraps long values instead of cutting them with `...`.
+- `Format-List *` shows every property: the quickest way to explore an object.
+- `Format-Wide` shows one property in columns: `Get-ChildItem C:\ | Format-Wide -Column 3`.
+- Calculated properties work here too: `Format-Table Name, @{ Label = 'MB'; Expression = { $_.WS / 1MB }; FormatString = 'N1' }`.
+
+### Format last, and only for the screen
+
+`Format-*` cmdlets output **formatting instructions**, not your objects. Nothing useful can come after them in a pipeline except an `Out-` cmdlet:
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler | Format-Table Name | Select-Object -First 1 | Get-Member -Name Class*
+
+
+   TypeName: Microsoft.PowerShell.Commands.Internal.Format.FormatStartData
+
+Name                                    MemberType Definition
+----                                    ---------- ----------
+ClassId2e4f51ef21dd47e99d3c952918aff9cd Property   string ClassId2e4f51ef21dd47e99d3c952918aff9cd {get;set;}
+```
+
+So: select, sort and filter first; `Format-Table` at the very end, only when you want to look at the result.
+
+@try machines=1
+@task t1 | Output | 10 | WIN-SRV1
+Show the services `Spooler`, `WinRM` and `W32Time` as a **list** with only the properties `Name` and `StartType`.
+@check WIN-SRV1 | the list was shown
+$CertLabTranscript -match 'Name\s+: W32Time' -and $CertLabTranscript -match 'StartType\s+:'
+@hint Get-Service -Name ... | Format-List Name, StartType
+@solution WIN-SRV1
+Get-Service -Name Spooler, WinRM, W32Time | Format-List Name, StartType
+@endtask
+@end
+
+@quiz
+? An object with 6 properties and no special view is shown as...
+- a table
++ a list
+- one line of text
+! Up to 4 properties: a table; 5 or more: a list.
+? Why does `Get-Process | Format-Table Name | Sort-Object Name` not sort processes?
++ Format-Table outputs formatting instructions, not the process objects
+- Sort-Object cannot sort names
+- Format-Table must come first
+! Format at the end, after selecting and sorting.
+? Which shows every property of an object?
++ Format-List *
+- Format-Table -All
+- Out-Host -Full
+! Select-Object * does the same as objects.
+@end
+
+## Lesson: l0302 | Out- cmdlets and redirection
+
+The `Out-` cmdlets decide where the text goes:
+
+| Command | Does |
+|---|---|
+| `Out-Host` | the console (what happens anyway at the end of a pipeline) |
+| `Out-File PATH` | write the text, as the console would show it, to a file |
+| `Out-String` | turn the output into one string (or lines with `-Stream`) |
+| `Out-Null` | throw the output away |
+| `Out-GridView` | a window with a sortable grid (only on a desktop; not in the practice console) |
+
+The redirection operators are shortcuts: `> file` is like `Out-File file`, `>> file` appends. `2>` redirects errors, `2>&1` merges errors into the output, `*>` sends all streams.
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler > C:\LabFiles\svc.txt
+PS C:\Windows\system32> Get-Content C:\LabFiles\svc.txt
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+
+
+PS C:\Windows\system32> (Get-Item C:\LabFiles\svc.txt).Length
+264
+PS C:\Windows\system32> 'hi' | Out-File C:\LabFiles\hi.txt -Encoding ascii
+PS C:\Windows\system32> (Get-Item C:\LabFiles\hi.txt).Length
+4
+```
+
+> In Windows PowerShell 5.1, `>` and `Out-File` write **UTF-16 (Unicode)** text: two bytes per character plus a marker at the start, so 'hi' with its line end takes 10 bytes. `Set-Content` writes the system's ANSI code page instead. Other programs may expect ASCII or UTF-8: give `-Encoding` when that matters. PowerShell 7 writes UTF-8 without a marker everywhere.
+
+`Out-String` is useful when you need the text itself, for example to search it. Note the blank lines it keeps around tables; `.Trim()` removes them.
+
+@try machines=1
+@task t1 | Output | 10 | WIN-SRV1
+Save the list of running services (all of them, the default table) to `C:\LabFiles\running.txt` with **ASCII** encoding.
+@check WIN-SRV1 | the file holds the running services
+$t = Get-Content C:\LabFiles\running.txt -Raw; $t -match 'Running' -and $t -match 'Spooler'
+@check WIN-SRV1 | it is ASCII (one byte per character)
+(Get-Item C:\LabFiles\running.txt).Length -eq (Get-Content C:\LabFiles\running.txt -Raw).Length
+@hint Get-Service | Where-Object Status -eq Running | Out-File C:\LabFiles\running.txt -Encoding ascii
+@solution WIN-SRV1
+Get-Service | Where-Object Status -eq Running | Out-File C:\LabFiles\running.txt -Encoding ascii
+@endtask
+@end
+
+@quiz
+? Which encoding does `>` use in Windows PowerShell 5.1?
+- ASCII
+- UTF-8 without a marker
++ UTF-16 (Unicode)
+! Use Out-File -Encoding or Set-Content when another program must read the file.
+? How do you keep only the errors of a command out of sight?
++ cmd 2>$null
+- cmd >$null
+- cmd | Out-Null
+! 2> redirects the error stream; > and Out-Null deal with the output.
+@end
+
+## Lesson: l0303 | CSV and JSON
+
+To store objects (not just their text) use **CSV** for tables of simple values and **JSON** for nested data.
+
+```terminal
+PS C:\Windows\system32> Get-Service -Name Spooler, WinRM | Select-Object Name, Status | Export-Csv C:\LabFiles\svc.csv -NoTypeInformation
+PS C:\Windows\system32> Get-Content C:\LabFiles\svc.csv
+"Name","Status"
+"Spooler","Running"
+"WinRM","Running"
+PS C:\Windows\system32> Import-Csv C:\LabFiles\svc.csv
+
+Name    Status
+----    ------
+Spooler Running
+WinRM   Running
+```
+
+- `Export-Csv` writes one row per object and one column per property of the **first** object. In Windows PowerShell 5.1 it also writes a first line `#TYPE ...` unless you add `-NoTypeInformation` (PowerShell 7 leaves it out by default).
+- Every value is written as text in quotes, and `Import-Csv` brings everything back as **strings** in custom objects: convert numbers and dates yourself (`[int]$_.Salary`).
+- `-Delimiter ';'` for semicolon files; `ConvertTo-Csv` / `ConvertFrom-Csv` do the same without a file.
+
+```terminal
+PS C:\Windows\system32> Import-Csv C:\LabFiles\shares.csv -Delimiter ';'
+
+ShareName Path               Owner
+--------- ----               -----
+Public    C:\Shares\Public   IT
+Finance   C:\Shares\Finance  Finance
+Projects  C:\Shares\Projects Engineering
+```
+
+### JSON
+
+```terminal
+PS C:\Windows\system32> $cfg = Get-Content C:\LabFiles\settings.json -Raw | ConvertFrom-Json
+PS C:\Windows\system32> $cfg.Database.Server
+SQL01
+PS C:\Windows\system32> $cfg.Features -join ', '
+Reports, Export, Audit
+PS C:\Windows\system32> [pscustomobject]@{ Name = 'WIN-SRV1'; Disks = @(1, 2) } | ConvertTo-Json
+{
+    "Name":  "WIN-SRV1",
+    "Disks":  [
+                  1,
+                  2
+              ]
+}
+PS C:\Windows\system32> [pscustomobject]@{ Name = 'WIN-SRV1'; Disks = @(1, 2) } | ConvertTo-Json -Compress
+{"Name":"WIN-SRV1","Disks":[1,2]}
+```
+
+- `ConvertFrom-Json` makes custom objects with nested objects and arrays; read the file with `-Raw` so that it gets the whole text at once.
+- `ConvertTo-Json` goes only **2 levels deep** by default; deeper objects become their text. Add `-Depth 5` (or more) for nested data.
+- Windows PowerShell 5.1 writes JSON with 4-space indents and two spaces after each colon; PowerShell 7's layout is more compact.
+
+@try machines=1
+@task t1 | Output | 10 | WIN-SRV1
+Export the employees of `C:\LabFiles\employees.csv` who work in **IT** to `C:\LabFiles\it.csv`, with only the columns `Name` and `Title`, and **without** the #TYPE line.
+@check WIN-SRV1 | it.csv holds the IT employees with Name and Title
+$r = Import-Csv C:\LabFiles\it.csv; $r.Count -eq 3 -and ($r[0].psobject.Properties.Name -join ',') -eq 'Name,Title'
+@check WIN-SRV1 | no #TYPE line
+-not ((Get-Content C:\LabFiles\it.csv)[0] -like '#TYPE*')
+@hint Import-Csv ... | Where-Object Department -eq IT | Select-Object Name, Title | Export-Csv ... -NoTypeInformation
+@solution WIN-SRV1
+Import-Csv C:\LabFiles\employees.csv | Where-Object Department -eq IT | Select-Object Name, Title | Export-Csv C:\LabFiles\it.csv -NoTypeInformation
+Import-Csv C:\LabFiles\it.csv
+@endtask
+@end
+
+@quiz
+? Which type do the values have after Import-Csv?
++ String, every one of them
+- The types they had before Export-Csv
+- Numbers where possible
+! CSV only stores text. Convert with [int], [datetime] and so on.
+? What does `ConvertTo-Json` do with data nested deeper than 2 levels by default?
+- Raises an error
++ Writes the deeper objects as their text
+- Leaves them out silently
+! Use -Depth for deeper data.
+? Which parameter of Export-Csv leaves out the #TYPE line in 5.1?
++ -NoTypeInformation
+- -NoHeader
+- -Raw
+! PowerShell 7 does not write the #TYPE line unless you ask for it with -IncludeTypeInformation.
+@end
+
+## Lesson: l0304 | Building text
+
+Reports often need text, not objects. Three tools:
+
+- **The format operator** `-f`: `'{0,-12} {1,8:N1} MB' -f $name, $size` puts values into slots with widths and formats (see unit 4).
+- **Here-strings** for several lines (`@" ... "@`).
+- **Out-String** when you need the console's text of some objects inside your text.
+
+```terminal
+PS C:\Windows\system32> Get-Process | Sort-Object WS -Descending | Select-Object -First 3 | ForEach-Object { '{0,-12} {1,8:N1} MB' -f $_.Name, ($_.WS / 1MB) }
+explorer         93.5 MB
+powershell       79.8 MB
+Registry         54.9 MB
+PS C:\Windows\system32> $count = @(Get-Service | Where-Object Status -eq Running).Count
+PS C:\Windows\system32> $report = @"
+>> Report for $env:COMPUTERNAME
+>> Running services: $count
+>> "@
+PS C:\Windows\system32> $report
+Report for WIN-SRV1
+Running services: 47
+```
+
+`Write-Host` writes text straight to the screen (optionally in colour) and **not** to the pipeline: you cannot save it in a variable, count it or send it to a file with `>` (since 5.0 it goes to the information stream, which only `6>` or `*>` catch). Use it for messages to the person at the console, and plain output for data.
+
+@try machines=1
+@task t1 | Output | 10 | WIN-SRV1
+Store in `$line` a text of the form `Spooler: Running (Automatic)` for the Spooler service, built with the `-f` operator from the service's Name, Status and StartType.
+@check WIN-SRV1 | $line is right
+$s = Get-Service Spooler; $line -eq ('{0}: {1} ({2})' -f $s.Name, $s.Status, $s.StartType)
+@hint $s = Get-Service Spooler; '{0}: {1} ({2})' -f $s.Name, $s.Status, $s.StartType
+@solution WIN-SRV1
+$s = Get-Service Spooler
+$line = '{0}: {1} ({2})' -f $s.Name, $s.Status, $s.StartType
+$line
+@endtask
+@end
+
+@quiz
+? Why can you not save Write-Host's text with `> file`?
++ Write-Host writes to the console (information stream), not to the output pipeline
+- Write-Host text is too long
+- > only works with Out-File
+! Use Write-Output (or just the value) for data.
+? `'{0,-6}|' -f 'ab'` gives...
++ ab    |
+- ab|
+-     ab|
+! A negative width pads on the right (left-aligned).
+@end

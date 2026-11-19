@@ -1,0 +1,17 @@
+NAME
+       vgscan - search the disks for LVM volume groups
+
+SYNOPSIS
+       vgscan
+
+DESCRIPTION
+       vgscan reads all disks and reports each volume group it finds, with a
+       line like: Found volume group "rhel" using metadata type lvm2. LVM
+       normally notices new disks by itself; vgscan is a quick check after
+       attaching disks that already hold LVM data.
+
+EXAMPLES
+           vgscan
+
+SEE ALSO
+       pvscan(8), lvscan(8), vgs(8)

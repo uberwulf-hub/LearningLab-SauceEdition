@@ -1,0 +1,21 @@
+NAME
+       dirname - print the directory part of a path
+
+SYNOPSIS
+       dirname PATH...
+
+DESCRIPTION
+       dirname removes the last slash and everything after it from each PATH
+       and prints the rest. A name without a slash gives ".". Like basename,
+       it works on the text only.
+
+EXAMPLES
+           dirname /etc/sysconfig/network      prints /etc/sysconfig
+           dirname report.txt                  prints .
+
+       In a script, find the directory the script itself is in:
+
+           here=$(dirname "$0")
+
+SEE ALSO
+       basename(1), realpath(1)

@@ -1,0 +1,12 @@
+SYNOPSIS: Deletes a storage pool.
+DESCRIPTION:
+Remove-StoragePool deletes a pool and gives its disks back to the primordial pool. Delete its virtual disks first (Remove-VirtualDisk); a pool that still has some can't be removed. It asks for confirmation.
+
+Afterwards the disks show CanPool True again and can go into a new pool or be initialized as ordinary disks.
+PARAMETER FriendlyName:
+The pool or pools. Position 0.
+EXAMPLE: Get-VirtualDisk | Remove-VirtualDisk -Confirm:$false; Remove-StoragePool -FriendlyName Data -Confirm:$false
+Deletes the virtual disks, then the pool.
+EXAMPLE: Get-PhysicalDisk -CanPool $true
+The freed disks are available again.
+RELATED: New-StoragePool, Remove-VirtualDisk, Get-StoragePool

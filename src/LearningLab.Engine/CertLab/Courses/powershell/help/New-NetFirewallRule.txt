@@ -1,0 +1,42 @@
+SYNOPSIS: Creates a Windows Firewall rule that allows or blocks traffic.
+DESCRIPTION:
+New-NetFirewallRule adds a rule. You need at least a display name; then say which traffic it is about (direction, protocol, port, addresses, program) and what to do with it (Allow or Block). Anything you leave out means "any": a rule with only a name and -Action Allow lets in every inbound connection, so be specific.
+
+By default a new rule is inbound, allow, enabled and for every profile. Ports only make sense for TCP and UDP, so -LocalPort needs -Protocol TCP or UDP.
+PARAMETER DisplayName:
+The name people see (required), for example "Web app (TCP 8080)".
+PARAMETER Name:
+A fixed id for the rule. Without it Windows makes up a GUID; giving one makes the rule easy to find in scripts.
+PARAMETER Direction:
+Inbound (traffic coming in, the default) or Outbound.
+PARAMETER Action:
+Allow (the default) or Block.
+PARAMETER Protocol:
+TCP, UDP, ICMPv4, ICMPv6 or Any.
+PARAMETER LocalPort:
+The port on this computer, for example 80, several (80,443) or a range (5000-5010).
+PARAMETER RemotePort:
+The port on the other computer.
+PARAMETER RemoteAddress:
+Who the rule applies to: an address, a network (10.0.10.0/24), a range, LocalSubnet or Any.
+PARAMETER LocalAddress:
+Which of this computer's addresses the rule applies to.
+PARAMETER Profile:
+Domain, Private, Public (several allowed) or Any.
+PARAMETER Program:
+The full path of the program the rule is for.
+PARAMETER IcmpType:
+For ICMP: 8 is an echo request (ping).
+PARAMETER Enabled:
+True (the default) or False.
+PARAMETER Group:
+A group name that ties several rules together, so you can enable or disable them at once.
+EXAMPLE: New-NetFirewallRule -DisplayName 'Allow ping in' -Protocol ICMPv4 -IcmpType 8 -Action Allow
+Lets other computers ping this one.
+EXAMPLE: New-NetFirewallRule -Name WebApp-8080 -DisplayName 'Web app (TCP 8080)' -Protocol TCP -LocalPort 8080 -RemoteAddress 10.0.10.0/24 -Profile Domain
+Opens TCP 8080 only for the lab network on the domain profile.
+EXAMPLE: New-NetFirewallRule -DisplayName 'Block RDP from WIN-CL1' -Protocol TCP -LocalPort 3389 -RemoteAddress 10.0.10.21 -Action Block
+A Block rule; it wins over the built-in Remote Desktop Allow rule.
+NOTES:
+Needs an administrator on a real PC. CIM-based command from the NetSecurity module, Windows only.
+RELATED: Get-NetFirewallRule, Set-NetFirewallRule, Remove-NetFirewallRule, Test-NetConnection

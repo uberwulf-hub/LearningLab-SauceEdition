@@ -1,0 +1,26 @@
+1. The domain. nmap -sn 10.10.9.0/24 finds WIN-DC01 (10.10.9.10) and WIN-APP01
+   (10.10.9.20). The DC's ports (88 Kerberos, 389 LDAP, 445, 3268...) mark it as the
+   domain controller.
+
+2. First account. WIN-APP01 shares a folder with everyone. smbclient -L //10.10.9.20
+   -N lists it; read onboarding.txt in it for the jwade domain password.
+   winrm-shell -i 10.10.9.20 -u jwade -p PASSWORD gives a shell and the user flag.
+
+3. Service tickets (Kerberoast-like). In a Windows domain, any account can ask for a
+   ticket to a service, and part of the ticket is protected with the service
+   account's password:
+
+       ticket-request -d castoak.example -u jwade -p PASSWORD 10.10.9.10 > tickets.txt
+
+4. Crack offline. hashcrack tickets.txt tries the word list against each ticket. The
+   backup service has a long random password and holds; svc_sql has a weak one and
+   cracks. svc_sql is a Domain Admin.
+
+5. Own the domain. winrm-shell -i 10.10.9.10 -u svc_sql -p CRACKED reaches the domain
+   controller as an administrator; the domain-admin flag is on the Administrator
+   desktop.
+
+How to fix it: don't share a folder with everyone unless it is truly public; never
+put passwords in shared notes; give service accounts long, random passwords (or use
+managed service accounts that rotate their own); and don't make a service account a
+Domain Admin.

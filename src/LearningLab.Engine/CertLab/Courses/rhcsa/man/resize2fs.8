@@ -1,0 +1,43 @@
+NAME
+       resize2fs - grow or shrink an ext2, ext3 or ext4 file system
+
+SYNOPSIS
+       resize2fs [-f] [-F] [-M] [-P] [-p] DEVICE [SIZE]
+
+DESCRIPTION
+       resize2fs changes the size of an ext file system. Without SIZE it
+       grows the file system to fill its device, which is what you want
+       after lvextend. It can grow a mounted file system (online). Shrinking
+       works only when the file system is unmounted, and resize2fs wants a
+       fresh e2fsck -f first.
+
+       SIZE is a number of blocks, or a number with a unit: K, M, G.
+
+       For XFS, use xfs_growfs instead. lvextend -r and lvresize -r run the
+       right tool for you.
+
+OPTIONS
+       -f     Force: skip some safety checks.
+
+       -F     Flush the device's buffers first.
+
+       -M     Shrink the file system to the smallest size it can have.
+
+       -P     Print the smallest size the file system could shrink to.
+
+       -p     Show progress.
+
+EXAMPLES
+       Grow an ext4 LV and its file system:
+
+           lvextend -L +500M /dev/vgdata/archive
+           resize2fs /dev/vgdata/archive
+
+       Shrink an unmounted ext4 file system to 600 MiB:
+
+           umount /archive
+           e2fsck -f /dev/vgdata/archive
+           resize2fs /dev/vgdata/archive 600M
+
+SEE ALSO
+       lvextend(8), lvresize(8), e2fsck(8), mke2fs(8), xfs_growfs(8)

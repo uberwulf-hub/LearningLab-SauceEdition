@@ -1,0 +1,28 @@
+SYNOPSIS: Lists the remote sessions (PSSessions) you have open.
+DESCRIPTION:
+New-PSSession opens a lasting connection to another computer. Get-PSSession lists those sessions with their Id, Name, ComputerName, State (Opened, Broken or Closed) and Availability.
+
+Use it to find a session again when you did not save it in a variable, to check that a session is still open before using it, or to pass sessions on to Invoke-Command, Enter-PSSession or Remove-PSSession.
+
+Temporary connections made by Invoke-Command -ComputerName or Enter-PSSession -ComputerName close by themselves and are not listed.
+PARAMETER Id:
+The session numbers to show. Position 0.
+PARAMETER Name:
+The session names to show. Wildcards work.
+PARAMETER ComputerName:
+Shows only sessions connected to these computers. Wildcards work. Its alias is -Cn.
+EXAMPLE: Get-PSSession
+Lists all open sessions.
+EXAMPLE: New-PSSession -ComputerName localhost -Name Work; Get-PSSession -Name Work
+Opens a session called Work and finds it again by name.
+EXAMPLE: Invoke-Command -Session (Get-PSSession) -ScriptBlock { $env:COMPUTERNAME }
+Runs a command in every open session.
+EXAMPLE: Get-PSSession | Remove-PSSession
+Closes them all.
+NOTES:
+The alias is gsn.
+
+A session becomes Broken when the network drops or the remote computer restarts. A broken session cannot be used again; remove it and make a new one.
+
+On a real PC, Get-PSSession -ComputerName X (in 5.1) asks that computer for every session there, including disconnected sessions from other windows. Cert Lab lists only this console's sessions.
+RELATED: New-PSSession, Remove-PSSession, Enter-PSSession, Invoke-Command, about_Remote

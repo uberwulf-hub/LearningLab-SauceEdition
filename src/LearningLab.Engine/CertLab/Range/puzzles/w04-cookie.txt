@@ -1,0 +1,55 @@
+title: The client decides
+level: Intermediate
+kind: Web
+topic: Web
+teaser: a page that believes whatever your browser says
+points: 70
+order: 43
+packages: httpd
+answer: flag
+var: ROLE = pick:role|access|level|group
+var: ADMIN = pick:admin|staff|manager|root
+
+@intro
+An internal page at http://localhost/panel decides whether you are an administrator by
+reading a cookie your browser sends - which means your browser gets to decide. Set the
+right cookie and the admin panel (with the flag) opens.
+
+@setup
+systemctl enable --now httpd
+
+@web
+[
+  { "path": "/panel", "kind": "cookie", "title": "Admin panel", "cookie": "{{ROLE}}={{ADMIN}}",
+    "body": "<h1>Members area</h1><p>You are a normal member. Administrators see more here.</p>",
+    "template": "<h1>Admin panel</h1><p>Welcome, administrator.</p><p>flag: {{FLAG}}</p>" }
+]
+
+@solution
+curl -si http://localhost/panel
+curl -s -b "{{ROLE}}={{ADMIN}}" http://localhost/panel
+
+@walkthrough
+First load the page and look at the headers and body:
+
+    curl -si http://localhost/panel
+
+As a normal visitor you only see the members area, but the page trusts a cookie to
+decide if you are an admin. You can send any cookie you like with -b:
+
+    curl -s -b "{{ROLE}}={{ADMIN}}" http://localhost/panel
+
+and the admin panel opens with the flag. The lesson: never trust the client to tell
+you who it is. Roles belong in a signed session the server controls, not in a plain
+cookie the browser can set.
+
+@hint 6
+Anything your browser sends - addresses, form fields, cookies - is under your control. If a page decides who you are from something you send, you can change what it believes.
+
+@hint 12
+Look at what the page reads to decide you are an admin: a cookie (curl -si shows the headers). curl sends a cookie
+with -b "name=value".
+
+@hint 22
+The cookie it trusts is {{ROLE}}={{ADMIN}}. Send it:
+curl -s -b "{{ROLE}}={{ADMIN}}" http://localhost/panel

@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the volumes with Data Deduplication and their savings.
+DESCRIPTION:
+Get-DedupVolume shows each volume with deduplication: Enabled, UsageType, SavedSpace, SavingsRate (percent) and the settings such as MinimumFileAgeDays. Volumes without deduplication are not listed.
+PARAMETER Volume:
+Only these volumes. Position 0.
+EXAMPLE: Get-DedupVolume
+Which volumes save space, and how much.
+EXAMPLE: Get-DedupVolume -Volume E: | Format-List *
+Every setting of the archive volume.
+RELATED: Enable-DedupVolume, Set-DedupVolume, Get-DedupStatus

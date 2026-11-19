@@ -1,0 +1,16 @@
+SYNOPSIS: Gives an account share permissions on a share.
+DESCRIPTION:
+Grant-SmbShareAccess adds an Allow entry: Full, Change or Read. If the account already has an entry, its right is replaced. It asks for confirmation; -Force skips it.
+
+Remember NTFS: the user also needs NTFS permissions on the folder.
+PARAMETER Name:
+The share. Position 0.
+PARAMETER AccountName:
+The user or group, for example CORP\Finance.
+PARAMETER AccessRight:
+Full, Change or Read.
+PARAMETER Force:
+Grants without asking.
+EXAMPLE: Grant-SmbShareAccess -Name Finance -AccountName "CORP\Finance" -AccessRight Change -Force
+The Finance group may change files over the network (if NTFS allows it too).
+RELATED: Revoke-SmbShareAccess, Block-SmbShareAccess, Get-SmbShareAccess

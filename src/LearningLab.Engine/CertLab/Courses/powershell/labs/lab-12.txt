@@ -1,0 +1,113 @@
+# Lab: lab-12 | Security | u12 | 40
+Five security jobs on both machines: run a script once on the Windows 11 client without changing its policy, unblock and run a downloaded script, sign a script and switch the server to AllSigned, keep a service account's password out of plain text, and set up a small JEA endpoint on the client.
+
+@vars
+script = Get-Backup | Get-Health | Get-Patches
+signer = Ops Signing | IT Scripts | Lab Publisher
+acct = svc_backup | svc_report | svc_sql
+pw = Blue-Kite-42! | Red-Fox-17! | Green-Owl-88!
+ep = HelpDesk | Operators | NightShift
+user = carol | dave | erin
+@endvars
+
+@setup WIN-CL1
+New-Item C:\Scripts -ItemType Directory -Force | Out-Null
+Set-Content C:\Scripts\{script}.ps1 -Value "'{script} finished'"
+
+@setup WIN-SRV1
+New-Item C:\Scripts -ItemType Directory -Force | Out-Null
+Set-Content C:\Scripts\Get-Status.ps1 -Value "'all good'"
+Set-Content C:\Users\Administrator\Downloads\{script}.ps1 -Value 'New-Item C:\Reports -ItemType Directory -Force | Out-Null', 'Get-Date | Out-File C:\Reports\{script}.txt'
+Set-Content C:\Users\Administrator\Downloads\{script}.ps1 -Stream Zone.Identifier -Value '[ZoneTransfer]', 'ZoneId=3'
+
+@task t01 | Security | 10 | WIN-CL1
+On WIN-CL1, run `C:\Scripts\{script}.ps1` once, in **this PowerShell window only**: do not change the saved execution policy for your account or for the computer.
+@check WIN-CL1 | the script ran
+$CertLabTranscript -match '{script} finished'
+@check WIN-CL1 | the policy was changed for this process only
+"$(Get-ExecutionPolicy -Scope Process)" -ne 'Undefined' -and "$(Get-ExecutionPolicy -Scope CurrentUser)" -eq 'Undefined' -and "$(Get-ExecutionPolicy -Scope LocalMachine)" -eq 'Undefined'
+@hint Set-ExecutionPolicy with -Scope Process lasts until this window closes.
+@solution WIN-CL1
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+C:\Scripts\{script}.ps1
+@explain
+The Process scope is the first one PowerShell checks after Group Policy, and it is forgotten when the window closes. It is the same scope that `powershell.exe -ExecutionPolicy Bypass -File ...` sets for a single run. RemoteSigned for the Process scope would have worked too.
+@endtask
+
+@task t02 | Security | 10 | WIN-SRV1
+You downloaded `C:\Users\Administrator\Downloads\{script}.ps1` and read it: it writes the date into `C:\Reports\{script}.txt`. WIN-SRV1 uses RemoteSigned, so it refuses to run. Remove the download mark (keep the execution policy as it is) and run the script.
+@check WIN-SRV1 | the download mark is gone
+-not (Get-Item C:\Users\Administrator\Downloads\{script}.ps1 -Stream Zone.Identifier -ErrorAction SilentlyContinue)
+@check WIN-SRV1 | the script ran
+Test-Path C:\Reports\{script}.txt
+@check WIN-SRV1 | the policy was not loosened for this window or this account
+"$(Get-ExecutionPolicy -Scope Process)" -eq 'Undefined' -and "$(Get-ExecutionPolicy -Scope CurrentUser)" -eq 'Undefined'
+@hint Unblock-File removes the Zone.Identifier stream.
+@solution WIN-SRV1
+Get-Item C:\Users\Administrator\Downloads\{script}.ps1 -Stream *
+Unblock-File -Path C:\Users\Administrator\Downloads\{script}.ps1
+C:\Users\Administrator\Downloads\{script}.ps1
+@explain
+Under RemoteSigned, a script with the internet mark (a Zone.Identifier stream with ZoneId 3) must be signed. Unblock-File removes the mark, after which the script counts as a local one. Do it only for scripts you have read and trust.
+@endtask
+
+@task t03 | Security | 10 | WIN-SRV1
+Make WIN-SRV1 run only signed scripts: sign `C:\Scripts\Get-Status.ps1` with a new self-signed code signing certificate with the subject `CN={signer}` (in `Cert:\CurrentUser\My`), make the computer trust that certificate as a root **and** as a trusted publisher, then set the execution policy for the whole computer to **AllSigned**. The script must then run without a question.
+@check WIN-SRV1 | the script's signature is Valid, from CN={signer}
+$s = Get-AuthenticodeSignature C:\Scripts\Get-Status.ps1; "$($s.Status)" -eq 'Valid' -and $s.SignerCertificate.Subject -eq 'CN={signer}'
+@check WIN-SRV1 | the certificate is a trusted publisher
+@(Get-ChildItem Cert:\LocalMachine\TrustedPublisher, Cert:\CurrentUser\TrustedPublisher | Where-Object Subject -eq 'CN={signer}').Count -gt 0
+@check WIN-SRV1 | the LocalMachine policy is AllSigned
+"$(Get-ExecutionPolicy -Scope LocalMachine)" -eq 'AllSigned'
+@hint New-SelfSignedCertificate -Type CodeSigningCert, Set-AuthenticodeSignature, Export-Certificate, then Import-Certificate into Cert:\LocalMachine\Root and Cert:\LocalMachine\TrustedPublisher, then Set-ExecutionPolicy AllSigned -Force.
+@solution WIN-SRV1
+$c = New-SelfSignedCertificate -Subject 'CN={signer}' -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My
+Set-AuthenticodeSignature -FilePath C:\Scripts\Get-Status.ps1 -Certificate $c
+Export-Certificate -Cert $c -FilePath C:\Scripts\signer.cer
+Import-Certificate -FilePath C:\Scripts\signer.cer -CertStoreLocation Cert:\LocalMachine\Root
+Import-Certificate -FilePath C:\Scripts\signer.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+Set-ExecutionPolicy -ExecutionPolicy AllSigned -Force
+C:\Scripts\Get-Status.ps1
+@explain
+The Root store makes the self-signed certificate's chain trusted, so the signature is Valid instead of UnknownError. The TrustedPublisher store tells AllSigned that scripts from this publisher may run without asking. Any later edit to Get-Status.ps1 breaks the signature (HashMismatch) until it is signed again.
+@endtask
+
+@task t04 | Security | 10 | WIN-SRV1
+A nightly script needs the password of `LAB\{acct}` (it is `{pw}`). Store it encrypted for your account in `C:\Secure\{acct}.txt` (not as plain text), typing it at a `Read-Host -AsSecureString` prompt rather than into a command. Then build, in `$cred`, a PSCredential for `LAB\{acct}` whose password is read back **from that file**.
+@check WIN-SRV1 | the file does not hold the plain password and reads back correctly
+$t = Get-Content C:\Secure\{acct}.txt -Raw; -not $t.Contains('{pw}') -and (New-Object System.Management.Automation.PSCredential('x', (Get-Content C:\Secure\{acct}.txt | ConvertTo-SecureString))).GetNetworkCredential().Password -eq '{pw}'
+@check WIN-SRV1 | $cred is a PSCredential for LAB\{acct} with that password
+$cred -is [System.Management.Automation.PSCredential] -and $cred.UserName -eq 'LAB\{acct}' -and $cred.GetNetworkCredential().Password -eq '{pw}'
+@check WIN-SRV1 | the password was never typed into a command
+-not (($CertLabHistory -join ' ').Contains('{pw}'))
+@hint $pw = Read-Host -AsSecureString; ConvertFrom-SecureString $pw | Set-Content the file; then Get-Content the file | ConvertTo-SecureString, and New-Object System.Management.Automation.PSCredential('LAB\{acct}', $secure).
+@solution WIN-SRV1
+New-Item C:\Secure -ItemType Directory -Force | Out-Null
+$pw = Read-Host -Prompt 'Password' -AsSecureString
+{pw}
+ConvertFrom-SecureString $pw | Set-Content C:\Secure\{acct}.txt
+$secure = Get-Content C:\Secure\{acct}.txt | ConvertTo-SecureString
+$cred = New-Object System.Management.Automation.PSCredential('LAB\{acct}', $secure)
+@explain
+Without -Key, ConvertFrom-SecureString encrypts with DPAPI for the current user on this computer, so the file is useless to anyone else, and the nightly task must run as the same account. Read-Host -AsSecureString keeps the password out of the command history and the screen.
+@endtask
+
+@task t05 | Security | 10 | WIN-CL1
+On WIN-CL1, set up a JEA endpoint named **{ep}** that lets the user `LAB\{user}` run `Get-Service` and `Restart-Service` (and nothing beyond the basics). Put the role capability file `ServiceOperator.psrc` in a module folder `C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities` (with a manifest LabJEA.psd1), the session configuration in `C:\JEA\{ep}.pssc` (RestrictedRemoteServer, virtual account), and register it. Remoting is not turned on yet on WIN-CL1.
+@check WIN-CL1 | the endpoint {ep} is registered
+$null -ne (Get-PSSessionConfiguration -Name {ep} -ErrorAction SilentlyContinue)
+@check WIN-CL1 | LAB\{user} can restart services but not stop them
+$n = (Get-PSSessionCapability -ConfigurationName {ep} -Username LAB\{user}).Name; ($n -contains 'Restart-Service') -and ($n -contains 'Get-Service') -and -not ($n -contains 'Stop-Service')
+@hint Enable-PSRemoting -Force first (Register-PSSessionConfiguration needs WinRM). Then New-ModuleManifest, New-PSRoleCapabilityFile -VisibleCmdlets Get-Service, Restart-Service, New-PSSessionConfigurationFile with -RoleDefinitions @{ 'LAB\{user}' = @{ RoleCapabilities = 'ServiceOperator' } }, and Register-PSSessionConfiguration -Name {ep} -Path ... -Force.
+@solution WIN-CL1
+Enable-PSRemoting -Force
+New-Item 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities' -ItemType Directory -Force | Out-Null
+New-ModuleManifest -Path 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\LabJEA.psd1'
+New-PSRoleCapabilityFile -Path 'C:\Program Files\WindowsPowerShell\Modules\LabJEA\RoleCapabilities\ServiceOperator.psrc' -VisibleCmdlets 'Get-Service', 'Restart-Service'
+New-Item C:\JEA -ItemType Directory -Force | Out-Null
+New-PSSessionConfigurationFile -Path C:\JEA\{ep}.pssc -SessionType RestrictedRemoteServer -RunAsVirtualAccount -RoleDefinitions @{ 'LAB\{user}' = @{ RoleCapabilities = 'ServiceOperator' } }
+Register-PSSessionConfiguration -Name {ep} -Path C:\JEA\{ep}.pssc -Force
+Get-PSSessionCapability -ConfigurationName {ep} -Username LAB\{user}
+@explain
+JEA endpoints are WinRM endpoints, so a Windows client needs Enable-PSRemoting before Register-PSSessionConfiguration works. The role capability file is found by its name (ServiceOperator) in the RoleCapabilities folder of any module in PSModulePath; the session configuration maps LAB\{user} to that role and, with RestrictedRemoteServer, hides everything else. {user} would connect with Enter-PSSession -ComputerName WIN-CL1 -ConfigurationName {ep}.
+@endtask

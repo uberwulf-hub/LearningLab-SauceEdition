@@ -1,0 +1,48 @@
+NAME
+       wget - download files from web servers
+
+SYNOPSIS
+       wget [-O FILE] [-P DIRECTORY] [-q] [-c] [-N] URL...
+
+DESCRIPTION
+       wget downloads each URL (http, https or ftp) and saves it in the
+       current directory under the name at the end of the URL, showing
+       progress. It is in the wget package, which is not always installed;
+       curl -O does the same job and is always there.
+
+OPTIONS
+       -O, --output-document=FILE
+              Save to FILE. -O - writes the download to standard output.
+
+       -P, --directory-prefix=DIR
+              Save into DIR.
+
+       -q, --quiet
+              Print nothing.
+
+       -nv, --no-verbose
+              Print only one line per file.
+
+       -c, --continue
+              Resume a download that was interrupted.
+
+       -N, --timestamping
+              Download only when the server's copy is newer.
+
+       --tries=N
+              Try N times.
+
+       --no-check-certificate
+              Do not check the server's TLS certificate (test servers only).
+
+EXAMPLES
+       Download a file into /root:
+
+           wget -P /root http://utility.lab.example.com/files/users.txt
+
+       Save a page under another name:
+
+           wget -O /var/www/html/index.html http://utility.lab.example.com/files/index.html
+
+SEE ALSO
+       curl(1)

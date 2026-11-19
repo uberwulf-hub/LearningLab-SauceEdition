@@ -1,0 +1,35 @@
+NAME
+       grub2-install - install the GRUB boot loader on a disk
+
+SYNOPSIS
+       grub2-install [OPTION]... DEVICE
+
+DESCRIPTION
+       grub2-install writes GRUB's first stage to the start of DEVICE (on BIOS
+       machines) and copies GRUB's modules into /boot/grub2. It is used to
+       repair a machine whose boot loader was damaged or to make a second disk
+       bootable. On UEFI machines RHEL 9 boots from the signed shim and GRUB
+       files that the shim-x64 and grub2-efi-x64 packages put in /boot/efi:
+       do not run grub2-install there, reinstall those packages instead.
+
+       grub2-install does not write the menu. The menu still comes from
+       /boot/grub2/grub.cfg and the entries in /boot/loader/entries.
+
+OPTIONS
+       --target=PLATFORM
+              The platform to install for, such as i386-pc for BIOS machines.
+
+       --boot-directory=DIR
+              Install GRUB's files under DIR/grub2 instead of /boot/grub2.
+
+       --recheck
+              Forget the saved device map and probe the disks again.
+
+EXAMPLES
+       Put GRUB back on the first disk of a BIOS machine:
+              # grub2-install /dev/vda
+              Installing for i386-pc platform.
+              Installation finished. No error reported.
+
+SEE ALSO
+       grub2-mkconfig(8), grub2-probe(8), grubby(8)

@@ -1,0 +1,40 @@
+NAME
+       mysql - the MariaDB / MySQL database client (Cyber Range)
+
+SYNOPSIS
+       mysql -h HOST -u USER -pPASSWORD [DATABASE] [-e "QUERY"]
+       mysql -h HOST -u USER -p [DATABASE]
+
+DESCRIPTION
+       mysql connects to a database server (TCP port 3306) and runs queries,
+       either from -e or at its MariaDB [db]> prompt (end each one with ;).
+
+       Cyber Range's servers are a small pretend database. It understands:
+
+           SHOW DATABASES;
+           USE NAME;
+           SHOW TABLES;
+           DESCRIBE TABLE;
+           SELECT * FROM TABLE;
+           SELECT COL1, COL2 FROM TABLE WHERE COL = 'VALUE' LIMIT N;
+           SELECT DATABASE();   SELECT USER();
+
+       An account sees only the databases it was given.
+
+OPTIONS
+       -h HOST       the server (default localhost)
+       -u USER       the database account
+       -pPASSWORD    the password, written straight after -p (no space)
+       -p            ask for the password
+       -e "QUERY"    run the queries and leave
+
+EXAMPLES
+       mysql -h 10.10.20.40 -u webapp -pS3cret -e 'show databases'
+       mysql -h 10.10.20.40 -u webapp -p shop
+
+NOTES
+       A password on the command line can be read by other users of the same
+       machine (ps); -p alone asks for it instead.
+
+SEE ALSO
+       curl(1), nmap(1)

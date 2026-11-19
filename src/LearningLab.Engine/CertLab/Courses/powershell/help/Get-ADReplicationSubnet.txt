@@ -1,0 +1,17 @@
+SYNOPSIS: Lists the subnets defined in Active Directory and the site each belongs to.
+DESCRIPTION:
+Subnets connect IP addresses to sites. When a computer starts, its address is matched against these subnets to find its site, and with it the nearest domain controller.
+A computer whose address matches no subnet gets a domain controller from anywhere, which can mean slow sign-ins across a WAN link. Event 5807 on domain controllers warns about such clients.
+PARAMETER Identity:
+One subnet, such as 10.10.0.0/24. Position 0, and takes pipeline input.
+PARAMETER Filter:
+A search, such as *.
+PARAMETER Properties:
+Extra properties to return.
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADReplicationSubnet -Filter * | Select-Object Name, Site, Location
+Every subnet with its site and location.
+EXAMPLE: Get-ADReplicationSubnet 10.10.0.0/24
+The head office subnet.
+RELATED: New-ADReplicationSubnet, Get-ADReplicationSite, New-ADReplicationSite

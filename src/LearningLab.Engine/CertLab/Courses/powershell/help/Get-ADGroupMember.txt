@@ -1,0 +1,15 @@
+SYNOPSIS: Lists the members of an Active Directory group.
+DESCRIPTION:
+Get-ADGroupMember returns the direct members of a group: users, computers and nested groups. With -Recursive it opens nested groups and returns only the accounts at the end, which answers "who really gets this group's access?".
+The output has Name, SamAccountName, objectClass and distinguishedName; pipe users to Get-ADUser for more.
+PARAMETER Identity:
+The group. Position 0, and takes pipeline input.
+PARAMETER Recursive:
+Includes the members of nested groups (and leaves the nested groups themselves out).
+PARAMETER Server:
+The domain controller to ask.
+EXAMPLE: Get-ADGroupMember FS-Sales-Modify
+Shows the Sales group, which is nested inside.
+EXAMPLE: Get-ADGroupMember FS-Sales-Modify -Recursive | Select-Object Name
+The people who get the share access through the nesting.
+RELATED: Add-ADGroupMember, Remove-ADGroupMember, Get-ADPrincipalGroupMembership, Get-ADGroup

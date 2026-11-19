@@ -1,0 +1,19 @@
+SYNOPSIS: Gives the computer a new name, from the next restart.
+DESCRIPTION:
+The new name takes effect when the computer restarts: add -Restart to restart at once. A computer name has at most 15 characters, letters, digits and hyphens, and must not be only digits. In a domain the computer account is renamed too, which needs a domain administrator (-DomainCredential).
+PARAMETER NewName:
+The new name. Position 0.
+PARAMETER ComputerName:
+The computer to rename (this one by default).
+PARAMETER DomainCredential:
+A domain account allowed to rename the computer account.
+PARAMETER Restart:
+Restarts at once so the name takes effect.
+PARAMETER Force:
+Does not ask for confirmation.
+PARAMETER PassThru:
+Outputs the result.
+EXAMPLE: Rename-Computer -NewName WEB02
+Prints a warning that the change waits for a restart.
+EXAMPLE: Rename-Computer -NewName WEB02 -Restart
+RELATED: Restart-Computer, Get-ComputerInfo

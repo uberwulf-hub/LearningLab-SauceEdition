@@ -1,0 +1,14 @@
+SYNOPSIS: Empties the list of commands you typed in this session.
+DESCRIPTION:
+PowerShell remembers every command line you run in a session. Get-History shows that list, and Invoke-History (r) can run an entry again. Clear-History empties the list.
+
+It only touches PowerShell's own history for this session. The lines you get with the Up arrow come from the console's line editor (PSReadLine on a real PC), which keeps its own list and even saves it to a file, so Clear-History does not remove those.
+EXAMPLE: Clear-History
+Empties the session history. Get-History afterwards shows nothing (or only the commands typed since).
+EXAMPLE: Get-History | Measure-Object; Clear-History
+Counts how many commands were remembered, then clears them.
+NOTES:
+On a real PC, Clear-History also takes -Id (remove some entries by number), -Count (remove that many of the newest entries) and -CommandLine. In Cert Lab, Clear-History always clears the whole list.
+
+PSReadLine's saved history is a text file in your profile folder ((Get-PSReadLineOption).HistorySavePath). To forget a typed password, you would have to edit that file too.
+RELATED: Get-History, Clear-Host, about_History

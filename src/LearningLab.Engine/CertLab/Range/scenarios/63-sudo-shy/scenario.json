@@ -1,0 +1,56 @@
+{
+    "id": "sudo-shy",
+    "title": "Sudo Shy",
+    "category": "defender",
+    "defender": "watch",
+    "level": "Beginner",
+    "order": 4,
+    "summary": "A small office server whose watcher has one rule: every use of sudo gets looked at. There is a sudo rule waiting for you - and a quieter way to root that leaves no sudo line at all.",
+    "story": "{{CO}} (made up) has one server, {{HOST}}, on {{NET}}.0/24. Its administrator set an alert on sudo: every time anyone runs a command as root through sudo (or switches user with su), it is written down and looked at. You start on scout. Get in, then find a way to read root's files without sudo.",
+    "goal": "Capture both flags without ever using sudo or su on the server, and keep the quiet bonus.",
+    "skills": "anonymous FTP, ssh, set-user-ID programs, find -perm, choosing a quiet path",
+    "defender": "watch",
+    "start": "scout",
+    "minutes": 25,
+    "quietPoints": 100,
+    "watch": [ "{{HOST}}" ],
+    "noisySolution": "noisy.txt",
+    "defenderRules": {
+        "count": { "privilege": 9, "login-failed": 3, "password-guessing": 6 },
+        "budget": 9, "window": 1800, "react": 240, "reset": false, "isolate": false,
+        "watches": "anyone using sudo or su on the server, and wrong passwords"
+    },
+    "vars": {
+        "CO": "company",
+        "NET": "subnet",
+        "HOST": "pick:office1|files2|desk3|nas1",
+        "USER": "person",
+        "PW1": "word",
+        "TOOL": "pick:showlog|viewnote|printcfg|readmemo",
+        "KIND": "pick:cat|head|tac"
+    },
+    "variants": {
+        "KIND": {
+            "cat":  { "SRC": "/usr/bin/cat",  "RUN": "/usr/local/bin/{{TOOL}} /root/flag.txt" },
+            "head": { "SRC": "/usr/bin/head", "RUN": "/usr/local/bin/{{TOOL}} -n 5 /root/flag.txt" },
+            "tac":  { "SRC": "/usr/bin/tac",  "RUN": "/usr/local/bin/{{TOOL}} /root/flag.txt" }
+        }
+    },
+    "machines": [
+        { "name": "scout", "os": "linux", "hostname": "scout.range.example", "role": "your box", "nics": [ "{{NET}}.5/24" ] },
+        { "name": "{{HOST}}", "os": "linux", "hostname": "{{HOST}}.{{CO_DOMAIN}}", "role": "office server", "nics": [ "{{NET}}.20/24" ], "packages": [ "vsftpd" ], "setup": "server.sh",
+          "motd": "{{CO}} {{HOST}} - every use of sudo is logged and reviewed.",
+          "versions": { "21": "vsftpd 3.0.5" } }
+    ],
+    "flags": [
+        { "id": "user", "name": "{{USER_FIRST}}'s flag", "points": 100, "machine": "{{HOST}}", "path": "/home/{{USER}}/flag.txt", "owner": "{{USER}}", "mode": "600", "level": "user" },
+        { "id": "root", "name": "Root's flag", "points": 150, "machine": "{{HOST}}", "path": "/root/flag.txt", "owner": "root", "mode": "600", "level": "admin" }
+    ],
+    "hints": [
+        { "text": "What to think about first: this watcher writes down every sudo (and every su) and reads the list. Getting in is ordinary: find the server, find a note, sign in once. The interesting part is root: you need a way to read root's file that doesn't go through sudo at all.", "cost": 3 },
+        { "text": "Find and look: 'nmap -sn {{NET}}.0/24' shows who is awake, 'nmap -sV {{NET}}.20' shows FTP (21) and ssh (22). FTP often lets anyone in as 'anonymous': 'ftp {{NET}}.20', name anonymous, any password, 'cd pub', 'get new-staff.txt', 'bye', then 'cat new-staff.txt'. It has {{USER}}'s password.", "cost": 5 },
+        { "text": "Sign in: 'ssh {{USER}}@{{NET}}.20' with that password (typed right - wrong ones are counted too), then 'cat flag.txt'. Now resist 'sudo': it would work, but it is exactly what this watcher is waiting for. Even 'sudo -l' leaves a trail on many systems.", "cost": 8 },
+        { "text": "Another way to borrow root's powers is a set-user-ID program: a program file with an s in its permissions (-rwsr-xr-x) always runs as its owner, whoever starts it. If root owns one that reads files, it reads any file. List them: 'find / -perm -4000 -type f 2>/dev/null' (-perm -4000 means 'has the set-user-ID bit'; 2>/dev/null hides the 'Permission denied' lines). Most are normal (passwd, su, mount...); one is not.", "cost": 12 },
+        { "text": "The odd one on this run is /usr/local/bin/{{TOOL}}, a copy of {{KIND}} that someone marked set-user-ID. Running it reads files as root, with no sudo line anywhere: {{RUN}}. The lesson: an administrator's alert on sudo is good, but a careless set-user-ID file walks straight past it.", "cost": 16 }
+    ]
+}

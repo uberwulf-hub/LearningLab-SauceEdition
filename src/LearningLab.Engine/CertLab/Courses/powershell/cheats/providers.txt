@@ -1,0 +1,56 @@
+# Sheet: providers | Providers and drives | Providers
+## Providers, drives and locations
+Get-PSProvider :: the providers (FileSystem, Registry, Environment, Variable, Alias, Function, Certificate, WSMan)
+Get-PSDrive :: the drives: C, HKLM, HKCU, Env, Variable, Alias, Function, Cert, WSMan
+New-PSDrive -Name Lab -PSProvider FileSystem -Root C:\LabFiles :: a drive Lab: for a folder
+New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT :: a drive for a registry hive
+Remove-PSDrive Lab :: remove a drive (not while you are on it)
+Get-Location :: where you are (pwd)
+Set-Location HKLM:\SOFTWARE :: go somewhere, on any drive (cd)
+Push-Location C:\Temp; Pop-Location :: go somewhere for a while, then back
+## Finding items
+Get-ChildItem C:\LabFiles -Filter *.log -Recurse :: files by name, in all subfolders (dir, ls, gci)
+Get-ChildItem C:\LabFiles\* -Include *.csv, *.txt :: several patterns (5.1: the path needs \* or -Recurse)
+Get-ChildItem C:\LabFiles -Exclude *.log :: everything but these
+Get-ChildItem -File; Get-ChildItem -Directory :: only files; only folders
+Get-ChildItem -Force :: hidden and system items too (-Hidden: only those)
+Get-ChildItem -Recurse -Depth 1 -Name :: one level down, names only
+Get-Item C:\LabFiles\app.log :: the item itself (FileInfo, DirectoryInfo, RegistryKey)
+Get-Item -LiteralPath 'summary [old].txt' :: a name with [ ] taken as written
+Test-Path C:\LabFiles\app.log -PathType Leaf :: does it exist (as a file)?
+Resolve-Path *.csv :: the full paths that a relative or wildcard path means
+Split-Path C:\LabFiles\app.log -Leaf :: app.log (no -Leaf: the parent folder)
+Join-Path C:\LabFiles Reports :: C:\LabFiles\Reports (5.1: one child only)
+## Changing items
+New-Item C:\Work -ItemType Directory :: a folder (mkdir); New-Item a.txt makes a file
+New-Item C:\Work\a.txt -Value 'text' :: a file with text in it
+New-Item HKCU:\Software\Lab :: a registry key (-Force: with its parents)
+Copy-Item C:\Data C:\Copy -Recurse :: copy a folder with its contents
+Move-Item a.txt C:\Archive :: move (can rename too)
+Rename-Item a.txt b.txt :: rename in place (the new name is not a path)
+Remove-Item C:\Work -Recurse -Force :: delete a folder, read-only and hidden items too
+Remove-Item C:\Temp\* -WhatIf :: show what would be deleted
+## Content
+Get-Content a.txt :: one string per line (gc, cat, type)
+Get-Content a.txt -TotalCount 5; Get-Content a.txt -Tail 5 :: the first or last lines
+Get-Content a.txt -Raw :: the whole file as one string
+Set-Content a.txt 'one', 'two' :: replace the file (5.1 default: ANSI)
+Add-Content a.txt 'three' :: add lines at the end (keeps the file's encoding)
+Clear-Content a.txt :: empty the file, keep it
+Set-Content a.txt 'x' -Encoding UTF8 :: UTF-8 (in 5.1 with a byte order mark)
+'x' > a.txt; Out-File a.txt :: 5.1 default: UTF-16 (Unicode)
+Select-String -Path *.log -Pattern ERROR :: lines that match a regular expression
+Select-String -Path a.log -Pattern WARN -Quiet :: just True or False
+## The registry
+Get-ChildItem HKLM:\SOFTWARE\Microsoft :: the subkeys of a key
+Get-ItemProperty HKCU:\Software\Lab :: all values of a key as one object
+Get-ItemPropertyValue HKCU:\Software\Lab -Name Port :: the data of one value
+New-ItemProperty HKCU:\Software\Lab -Name Port -PropertyType DWord -Value 8080 :: a new value of a given kind
+Set-ItemProperty HKCU:\Software\Lab -Name Mode -Value Fast :: change a value (new ones become String)
+Remove-ItemProperty HKCU:\Software\Lab -Name Mode :: delete a value
+Remove-Item HKCU:\Software\Lab -Recurse :: delete a key and its subkeys
+## Other drives
+$env:COMPUTERNAME; Get-ChildItem Env: :: environment variables (changes last only for this session)
+Get-Item Variable:count :: the variable $count as an item
+Get-ChildItem Alias:; Get-ChildItem Function: :: aliases and functions
+Get-ChildItem Cert:\LocalMachine\My :: the computer's personal certificates

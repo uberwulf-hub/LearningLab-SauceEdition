@@ -1,0 +1,109 @@
+NAME
+       sudo, sudoedit - run a command as root (or another user) with your own password
+
+SYNOPSIS
+       sudo [-u USER] [-g GROUP] [-E] [-H] [-n] COMMAND
+       sudo -i [-u USER] [COMMAND]
+       sudo -s [-u USER] [COMMAND]
+       sudo -l [-U USER]
+       sudo -v | -k | -K
+       sudo -e FILE...
+       sudoedit FILE...
+
+DESCRIPTION
+       sudo runs a single command with the rights of another user, root by
+       default. It asks for YOUR password (not root's), then checks the
+       sudoers rules (/etc/sudoers and the files in /etc/sudoers.d) to decide
+       whether you may run that command as that user. Every use is logged
+       (in the journal and /var/log/secure), so the administrators know who
+       did what.
+
+       After a correct password, sudo remembers it for a few minutes (5 by
+       default) on that terminal, so a series of commands asks only once.
+
+       On RHEL 9 the members of the group wheel may run any command as any
+       user (the rule "%wheel ALL=(ALL) ALL" in /etc/sudoers). To give a user
+       full sudo rights, add the user to wheel: usermod -aG wheel USER. The
+       user must log in again for the new group to count.
+
+       A user who is not allowed is told so ("USER is not in the sudoers
+       file" or "Sorry, user USER is not allowed to execute ..."), and the
+       attempt is logged.
+
+       sudoedit FILE (the same as sudo -e FILE) edits a file as root safely:
+       sudo copies the file, opens the copy in your own editor as you, and
+       copies it back when you save.
+
+OPTIONS
+       -u, --user=USER
+              Run the command as USER instead of root.
+
+       -g, --group=GROUP
+              Run the command with GROUP as its primary group.
+
+       -i, --login
+              Start a login shell of the target user (root by default), as su -
+              would, or run COMMAND through that login shell. sudo -i is how a
+              wheel member becomes root without knowing root's password.
+
+       -s, --shell
+              Start a shell (from $SHELL) as the target user, keeping the
+              current directory.
+
+       -l, --list
+              List what you (or with -U, another user) may run with sudo.
+
+       -v, --validate
+              Ask for the password now and extend the remembered time,
+              without running a command.
+
+       -k, --reset-timestamp
+              Forget the remembered password, so the next sudo asks again.
+
+       -K, --remove-timestamp
+              Like -k, removing the remembered password completely.
+
+       -n, --non-interactive
+              Never ask for a password; fail if one would be needed. Good for
+              scripts.
+
+       -E, --preserve-env
+              Keep your environment variables.
+
+       -H, --set-home
+              Set HOME to the target user's home directory.
+
+       -e, --edit
+              Edit files as root (sudoedit).
+
+EXAMPLES
+       Restart a service as student, who is in wheel:
+
+           sudo systemctl restart httpd
+
+       Become root with root's login environment:
+
+           sudo -i
+
+       Run a command as another user:
+
+           sudo -u student touch /home/student/notes
+
+       Show what the user student may run:
+
+           sudo -l -U student
+
+       Edit /etc/hosts safely:
+
+           sudoedit /etc/hosts
+
+FILES
+       /etc/sudoers
+              The main rules. Edit it only with visudo.
+
+       /etc/sudoers.d/
+              Extra rule files, read in name order. Create them with
+              visudo -f /etc/sudoers.d/NAME.
+
+SEE ALSO
+       sudoers(5), visudo(8), su(1), usermod(8)

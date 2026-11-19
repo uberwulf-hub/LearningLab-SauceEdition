@@ -1,0 +1,83 @@
+# Lab: lab-13 | Desired State Configuration | u13 | 30
+Describe WIN-SRV1 with DSC instead of changing it by hand: compile configurations, apply them, find drift and repair it.
+
+@vars
+site = Intranet | Helpdesk | Wiki
+owner = IT | Facilities | Finance
+team = Blue | Green | Orange
+@endvars
+
+@task t01 | DSC | 10 | WIN-SRV1
+Write a configuration named `SiteSetup` for node `WIN-SRV1` with two `File` resources: one makes sure the folder `C:\Sites\{site}` exists, the other writes the file `C:\Sites\{site}\index.html` with the contents `{site} home` and depends on the folder. Compile it into `C:\DscConfigs\SiteSetup` and apply it, waiting for it to finish.
+@check WIN-SRV1 | the MOF file exists
+Test-Path C:\DscConfigs\SiteSetup\WIN-SRV1.mof
+@check WIN-SRV1 | the page holds the text
+(Get-Content C:\Sites\{site}\index.html -Raw).Trim() -eq '{site} home'
+@check WIN-SRV1 | the page depends on the folder
+(Get-Content C:\DscConfigs\SiteSetup\WIN-SRV1.mof -Raw) -match 'DependsOn'
+@hint Configuration SiteSetup { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Folder { ... Type = 'Directory' }; File Page { ...; DependsOn = '[File]Folder' } } }, then SiteSetup -OutputPath ..., then Start-DscConfiguration -Path ... -Wait
+@solution WIN-SRV1
+Configuration SiteSetup { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { File Folder { DestinationPath = 'C:\Sites\{site}'; Type = 'Directory'; Ensure = 'Present' }; File Page { DestinationPath = 'C:\Sites\{site}\index.html'; Contents = '{site} home'; DependsOn = '[File]Folder' } } }
+SiteSetup -OutputPath C:\DscConfigs\SiteSetup
+Start-DscConfiguration -Path C:\DscConfigs\SiteSetup -Wait
+@explain
+Running the configuration only writes WIN-SRV1.mof; Start-DscConfiguration hands it to the LCM, which tests each resource and sets the ones that differ, the folder first because of DependsOn.
+@endtask
+
+@setup WIN-SRV1
+Configuration OwnerCfg { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { Registry Owner { Key = 'HKLM:\SOFTWARE\LabCorp'; ValueName = 'Owner'; ValueData = '{owner}' } } }
+OwnerCfg -OutputPath C:\DscConfigs\OwnerCfg | Out-Null
+
+@task t02 | DSC | 10 | WIN-SRV1
+The folder `C:\DscConfigs\OwnerCfg` holds a compiled configuration that sets the registry value `HKLM:\SOFTWARE\LabCorp\Owner` to `{owner}`. Apply it and wait for it. Then change the value by hand with `Set-ItemProperty HKLM:\SOFTWARE\LabCorp -Name Owner -Value Nobody`, show with DSC that the computer has drifted, and repair it from the configuration it already has (do not name the folder again).
+@check WIN-SRV1 | the registry value is {owner} again
+(Get-ItemProperty HKLM:\SOFTWARE\LabCorp -ErrorAction SilentlyContinue).Owner -eq '{owner}'
+@check WIN-SRV1 | the value was changed by hand first
+@($CertLabHistory | Where-Object { $_ -match 'Nobody' }).Count -gt 0
+@check WIN-SRV1 | drift was checked and repaired with the current configuration
+@($CertLabHistory | Where-Object { $_ -match 'Test-DscConfiguration' }).Count -gt 0 -and @($CertLabHistory | Where-Object { $_ -match 'UseExisting' }).Count -gt 0
+@hint Start-DscConfiguration -Path C:\DscConfigs\OwnerCfg -Wait; after the change, Test-DscConfiguration -Detailed shows the drift and Start-DscConfiguration -UseExisting -Wait repairs it.
+@solution WIN-SRV1
+Start-DscConfiguration -Path C:\DscConfigs\OwnerCfg -Wait
+Set-ItemProperty HKLM:\SOFTWARE\LabCorp -Name Owner -Value Nobody
+Test-DscConfiguration -Detailed
+Start-DscConfiguration -UseExisting -Wait
+@explain
+The LCM keeps the last applied configuration as the current one. Test-DscConfiguration compares the computer with it, and -UseExisting applies it again without a MOF folder.
+@endtask
+
+@task t03 | DSC | 10 | WIN-SRV1
+Write a configuration `TeamCfg` with a parameter `$Team` and use it to set the machine environment variable `LAB_TEAM` to `{team}` with the `Environment` resource. Compile it with `-Team {team}` into `C:\DscConfigs\TeamCfg` and apply it.
+@check WIN-SRV1 | LAB_TEAM is {team} for the machine
+[Environment]::GetEnvironmentVariable('LAB_TEAM', 'Machine') -eq '{team}'
+@check WIN-SRV1 | the value came from the parameter
+(Get-Content C:\DscConfigs\TeamCfg\WIN-SRV1.mof -Raw) -match '{team}' -and @($CertLabHistory | Where-Object { $_ -match 'TeamCfg .*-Team' }).Count -gt 0
+@hint Configuration TeamCfg { param([string]$Team) ... Environment T { Name = 'LAB_TEAM'; Value = $Team } ... }
+@solution WIN-SRV1
+Configuration TeamCfg { param([string]$Team) Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { Environment T { Name = 'LAB_TEAM'; Value = $Team; Ensure = 'Present' } } }
+TeamCfg -Team {team} -OutputPath C:\DscConfigs\TeamCfg
+Start-DscConfiguration -Path C:\DscConfigs\TeamCfg -Wait
+@explain
+A configuration takes parameters like a function; the value is written into the MOF when you compile.
+@endtask
+
+@setup WIN-SRV1
+Set-Service Spooler -StartupType Manual
+Stop-Service Spooler
+
+@task t04 | DSC | 10 | WIN-SRV1
+Use DSC to make sure the Print Spooler service (`Spooler`) on WIN-SRV1 is running and starts automatically, and that a local group `{team}Team` exists. Compile into `C:\DscConfigs\Basics` and apply.
+@check WIN-SRV1 | Spooler runs and starts automatically
+$s = Get-Service Spooler; "$($s.Status)" -eq 'Running' -and "$($s.StartType)" -eq 'Automatic'
+@check WIN-SRV1 | the group exists
+[bool](Get-LocalGroup -Name '{team}Team' -ErrorAction SilentlyContinue)
+@check WIN-SRV1 | it was done with DSC
+(Get-Content C:\DscConfigs\Basics\WIN-SRV1.mof -Raw -ErrorAction SilentlyContinue) -match 'MSFT_ServiceResource' -and @($CertLabHistory | Where-Object { $_ -match 'Start-DscConfiguration' }).Count -gt 0
+@hint Service S { Name = 'Spooler'; State = 'Running'; StartupType = 'Automatic' } and Group G { GroupName = '{team}Team' }
+@solution WIN-SRV1
+Configuration Basics { Import-DscResource -ModuleName PSDesiredStateConfiguration; Node 'WIN-SRV1' { Service S { Name = 'Spooler'; State = 'Running'; StartupType = 'Automatic' }; Group G { GroupName = '{team}Team'; Ensure = 'Present' } } }
+Basics -OutputPath C:\DscConfigs\Basics
+Start-DscConfiguration -Path C:\DscConfigs\Basics -Wait
+@explain
+The Service and Group resources come with PSDesiredStateConfiguration. Applying a new configuration replaces the current one, so Test-DscConfiguration now checks these two resources.
+@endtask

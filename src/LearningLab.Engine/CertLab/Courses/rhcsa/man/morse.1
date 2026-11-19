@@ -1,0 +1,29 @@
+NAME
+       morse - write text as Morse code, or read it back (Cyber Range)
+
+SYNOPSIS
+       morse [FILE]
+       morse -d [FILE]
+
+DESCRIPTION
+       Morse code writes each letter and digit as short (.) and long (-)
+       signals. morse writes the letters of a word separated by single spaces
+       and the words separated by " / ". With -d it reads dots and dashes the
+       same way and prints the letters (in capitals); a group it doesn't know
+       shows as ?.
+
+       Besides A-Z and 0-9 it knows { } _ - . , ? ! / = : ' and @ (the curly
+       braces use the bracket signals -.--. and -.--.-).
+
+       morse is a Cyber Range practice tool; it works only inside the range.
+
+OPTIONS
+       -d, --decode
+              Read Morse code and print the text.
+
+EXAMPLES
+           echo 'sos' | morse
+           echo '... --- ...' | morse -d
+
+SEE ALSO
+       base64(1), tr(1)

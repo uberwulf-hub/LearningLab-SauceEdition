@@ -1,0 +1,23 @@
+NAME
+       ssh-keyscan - collect the public host keys of ssh servers
+
+SYNOPSIS
+       ssh-keyscan [-t TYPE] HOST...
+
+DESCRIPTION
+       ssh-keyscan connects to each HOST and prints its public host keys in
+       the format of ~/.ssh/known_hosts. Appending the output to that file
+       lets ssh trust the hosts without asking the first time. Check the keys
+       with the server's administrator if the network may not be safe.
+
+OPTIONS
+       -t TYPE
+              Fetch only keys of this type: rsa, ecdsa or ed25519.
+
+EXAMPLES
+       Trust server2's keys for the current user:
+
+           ssh-keyscan server2 >> ~/.ssh/known_hosts
+
+SEE ALSO
+       ssh(1), ssh-keygen(1)

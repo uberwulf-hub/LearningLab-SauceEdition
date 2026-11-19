@@ -1,0 +1,16 @@
+SYNOPSIS: Lists the drives of the session: C:, the registry hives, Env:, Cert: and the others.
+DESCRIPTION:
+In PowerShell a drive is a name for the top of some store of items. Windows PowerShell 5.1 starts with C (the disk), HKLM and HKCU (registry), Env (environment variables), Variable, Alias, Function, Cert (certificates) and WSMan. The table shows each drive's provider, root and current location; for disks it also shows the space used and free.
+PARAMETER Name:
+Only these drives (wildcards allowed).
+PARAMETER LiteralName:
+Only these drives, names taken exactly.
+PARAMETER PSProvider:
+Only the drives of a provider, for example -PSProvider Registry.
+EXAMPLE: Get-PSDrive
+Lists every drive.
+EXAMPLE: Get-PSDrive -PSProvider FileSystem
+Only the disk drives.
+NOTES:
+Cert Lab simulates the WSMan: drive's name only; its settings are not simulated.
+RELATED: New-PSDrive, Remove-PSDrive, Get-PSProvider

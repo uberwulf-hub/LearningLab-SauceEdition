@@ -1,0 +1,24 @@
+SYNOPSIS: Sends output straight to the screen.
+DESCRIPTION:
+Out-Host formats objects and writes them to the console. It is the last step of Out-Default, so most of the time you do not need it.
+
+It is useful when you want something shown on screen even though the rest of the output is being captured or passed on, for example inside a function whose output goes into a variable. Out-Host's text cannot be captured: it goes to the screen only.
+
+On a real console, -Paging shows long output one screen at a time (press Space for the next page, Enter for the next line, Q to stop).
+PARAMETER InputObject:
+What to show. Usually it comes through the pipeline.
+PARAMETER Paging:
+Shows the output one page at a time on a real console.
+EXAMPLE: 1..3 | Out-Host
+Shows 1, 2 and 3 on screen.
+EXAMPLE: $x = 1..3 | Out-Host; $null -eq $x
+The numbers are shown, but nothing reaches $x: True.
+EXAMPLE: Import-Csv C:\LabFiles\employees.csv | Out-Host -Paging
+On a real console, shows the employees a screenful at a time.
+NOTES:
+The alias oh exists in 5.1.
+
+The more function (and help, which uses it) is the other way to page through long output.
+
+-Paging does not work in the PowerShell ISE or in Visual Studio Code's integrated console.
+RELATED: Out-Default, Out-String, Write-Host, Out-Null

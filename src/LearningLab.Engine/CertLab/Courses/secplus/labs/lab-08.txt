@@ -1,0 +1,68 @@
+# Lab: lab-08 | A host firewall that allows only what is needed | u14 | 35
+server2 is going to be the shop's web server. Its job needs only two things from the network: SSH for the administrators and HTTPS for customers. Over time, people opened much more in its firewall (firewalld) "just to test something". Clean it up so that the firewall follows deny by default: only what is needed is allowed. Work on server2. Every change must be in the running firewall and permanent, so that it survives a reload or a reboot.
+
+@setup server2
+firewall-cmd --permanent --add-service=http --add-service=ftp --add-service=mysql
+firewall-cmd --permanent --add-port=8080/tcp --add-port=3306/tcp --add-port=5900/tcp
+firewall-cmd --permanent --zone=trusted --add-source=192.168.50.0/24
+firewall-cmd --reload
+
+@task t01 | Security operations | 15 | server2
+In server2's default zone (public), allow exactly two services: `ssh` and `https`. Remove every other service.
+@check server2 | the running firewall allows exactly ssh and https
+test "$(firewall-cmd --list-services)" = "https ssh"
+@check server2 | the permanent configuration allows exactly ssh and https
+test "$(firewall-cmd --permanent --list-services)" = "https ssh"
+@hint firewall-cmd --list-all shows the zone. --remove-service and --add-service take a comma-separated list; use --permanent and then --reload.
+@solution server2
+firewall-cmd --list-all
+firewall-cmd --permanent --remove-service=cockpit,dhcpv6-client,http,ftp,mysql
+firewall-cmd --permanent --add-service=https
+firewall-cmd --reload
+firewall-cmd --list-services
+@explain
+Every open service is attack surface: an FTP server sends passwords in clear text, a database port should never face customers, and cockpit is a web admin page that the administrators can reach through SSH instead. Allowing only what the role needs is least privilege for networks. (This server has a fixed address, so the DHCPv6 client is not needed either.)
+@endtask
+
+@task t02 | Security operations | 10 | server2
+Remove every port that was opened by number in the public zone (none is needed: SSH and HTTPS are allowed as services).
+@check server2 | no ports are open by number, now or permanently
+test -z "$(firewall-cmd --list-ports)" && test -z "$(firewall-cmd --permanent --list-ports)"
+@hint firewall-cmd --list-ports shows them; --remove-port=PORT/tcp removes one.
+@solution server2
+firewall-cmd --permanent --list-ports
+firewall-cmd --permanent --remove-port=8080/tcp --remove-port=3306/tcp --remove-port=5900/tcp
+firewall-cmd --reload
+firewall-cmd --list-ports
+@explain
+Ports opened by number are easy to forget, because their names do not say what they were for. 3306 is MySQL, 5900 is VNC (remote desktop, often with weak passwords) and 8080 a test web server. Write down why each rule exists (change management), so the next review can tell a needed rule from a forgotten one.
+@endtask
+
+@task t03 | Security operations | 15 | server2
+Someone put the whole lab network 192.168.50.0/24 into the zone `trusted`, which accepts everything. That means the public zone's rules do not apply to those addresses at all. Remove that source from the trusted zone.
+@check server2 | the trusted zone has no sources, now or permanently
+test -z "$(firewall-cmd --zone=trusted --list-sources)" && test -z "$(firewall-cmd --permanent --zone=trusted --list-sources)"
+@hint firewall-cmd --get-active-zones shows which zones are in use and why. --zone=trusted --remove-source=NETWORK.
+@solution server2
+firewall-cmd --get-active-zones
+firewall-cmd --permanent --zone=trusted --remove-source=192.168.50.0/24
+firewall-cmd --reload
+firewall-cmd --get-active-zones
+@explain
+firewalld picks the zone for a packet by its source address first, and only then by the interface. A source in the trusted zone therefore bypasses everything you configured in public: tasks 1 and 2 would have changed nothing for the machines on the lab network. Trusting a whole network is the opposite of zero trust, where being on the inside does not earn access by itself.
+@endtask
+
+@task t04 | Security operations | 15 | server2
+The reporting database on server2 will listen on port 5432/tcp (PostgreSQL). Only server1 (192.168.50.11) may reach it. Add a rich rule that accepts 5432/tcp from that one address, and do not open the port for anybody else.
+@check server2 | the rich rule allows 5432/tcp from 192.168.50.11, now and permanently
+for o in "" --permanent; do firewall-cmd $o --list-rich-rules | grep 'source address="192.168.50.11"' | grep 'port="5432"' | grep 'protocol="tcp"' | grep -q accept || exit 1; done
+@check server2 | 5432 is not open to everyone
+! firewall-cmd --list-ports | grep -q 5432 && ! firewall-cmd --permanent --list-ports | grep -q 5432 && ! firewall-cmd --list-services | grep -qw postgresql
+@hint firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.11" port port="5432" protocol="tcp" accept', then --reload.
+@solution server2
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.50.11" port port="5432" protocol="tcp" accept'
+firewall-cmd --reload
+firewall-cmd --list-all
+@explain
+A rich rule can combine a source with a port, which plain services and ports cannot: the database is reachable from the one system that needs it and stays closed (rejected by the zone's default) for every other address. This is the host-based part of segmentation; a network firewall between the zones would be the second layer (defence in depth).
+@endtask

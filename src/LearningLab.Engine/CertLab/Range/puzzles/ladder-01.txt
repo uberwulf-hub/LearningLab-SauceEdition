@@ -1,0 +1,58 @@
+title: Step 1: Read the note
+level: Beginner
+category: ladder
+login: step1
+kind: Reading a file
+teaser: list the files in your folder and read the one called readme
+points: 20
+order: 1
+answer: {{PW}}
+var: PW = hex:10
+
+@intro
+Welcome to the Linux Ladder! Each step is a small puzzle on a pretend Linux computer.
+You are signed in as the user step1, in your home folder. Somewhere in this step is
+the password for step 2 - that password is the answer to type in the answer box.
+
+For this first step, there is a file called readme in your home folder. Read it.
+Every answer on the ladder looks like ten letters and digits, such as 3fa94c0d1e.
+
+@setup
+useradd -m step2
+echo 'step2:{{PW}}' | chpasswd
+cat > /home/step1/readme <<'NOTE'
+Well done - you found and read your first file!
+
+The password for step 2 is: {{PW}}
+
+Tip: you can copy text in this console by selecting it with the mouse.
+NOTE
+chown step1: /home/step1/readme
+
+@solution
+pwd
+ls
+cat readme
+
+@walkthrough
+Two commands do all the work here:
+
+    ls           lists the files in the folder you are in
+    cat readme   prints what is inside the file called readme
+
+pwd ("print working directory") tells you which folder you are in: /home/step1, your
+home folder. cat gets its name from "concatenate", joining files together - with a
+single file it simply prints it. The password is on the second line of the note.
+
+@hint 2
+What to think about first: a Linux computer is mostly typing commands. You type a command, press Enter, and the computer answers. Your first job is simply to see what files you have, then look inside one. Nothing you do here can break anything, so try things.
+
+@hint 3
+The command ls (short for "list") shows the files in the folder you are in. Type ls and press Enter. You should see one file called readme. If you wonder which folder you are in, pwd ("print working directory") tells you.
+
+@hint 4
+To read a file, use cat followed by a space and the file's name. cat prints the whole file on the screen. File names on Linux care about capital letters, so readme and README are different files.
+
+@hint 5
+Type exactly: cat readme
+The note says "The password for step 2 is:" followed by ten letters and digits. Select them with the mouse, copy them, and paste them into the answer box.

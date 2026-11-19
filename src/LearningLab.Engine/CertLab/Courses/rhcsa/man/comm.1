@@ -1,0 +1,30 @@
+NAME
+       comm - compare two sorted files line by line
+
+SYNOPSIS
+       comm [-1] [-2] [-3] FILE1 FILE2
+
+DESCRIPTION
+       comm reads two sorted files and prints three columns: lines only in
+       FILE1, lines only in FILE2, and lines in both. The options hide
+       columns. Sort the files first (sort -o FILE FILE), or the result is
+       wrong.
+
+OPTIONS
+       -1     Hide the lines that are only in FILE1.
+
+       -2     Hide the lines that are only in FILE2.
+
+       -3     Hide the lines that are in both.
+
+EXAMPLES
+       Lines the two lists have in common:
+
+           comm -12 list1.txt list2.txt
+
+       Users in the new list that are not yet in the old one:
+
+           comm -13 old-users.txt new-users.txt
+
+SEE ALSO
+       sort(1), uniq(1), diff(1)

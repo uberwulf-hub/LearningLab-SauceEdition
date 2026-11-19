@@ -1,0 +1,72 @@
+NAME
+       chcon - change the SELinux context of files (until the next relabel)
+
+SYNOPSIS
+       chcon [-R] [-v] [-h] [-u USER] [-r ROLE] [-t TYPE] [-l RANGE] FILE...
+       chcon [-R] [-v] CONTEXT FILE...
+       chcon [-R] [-v] --reference=RFILE FILE...
+
+DESCRIPTION
+       Every file has an SELinux context of four parts, user:role:type:level,
+       for example system_u:object_r:httpd_sys_content_t:s0. The type is the
+       part the targeted policy looks at: a web server (httpd_t) may read
+       files of type httpd_sys_content_t, but not files of type
+       admin_home_t or user_home_t.
+
+       chcon writes a new context straight onto the files. The change is
+       real at once, but it is not remembered anywhere: restorecon, a full
+       relabel (touch /.autorelabel and reboot) or fixfiles puts the label
+       back to what the policy's file-context rules say.
+
+       For a change that must last, add a rule with semanage fcontext and
+       apply it with restorecon. Use chcon for a quick test, or not at all.
+
+       Show contexts with ls -Z (files) and ps -Z (processes).
+
+OPTIONS
+       -t TYPE, --type=TYPE
+              Set only the type part. This is the option you will use.
+
+       -u USER, --user=USER
+              Set the SELinux user part.
+
+       -r ROLE, --role=ROLE
+              Set the role part.
+
+       -l RANGE, --range=RANGE
+              Set the level (MLS/MCS range) part.
+
+       --reference=RFILE
+              Copy the context of RFILE.
+
+       -R, --recursive
+              Change directories and everything in them.
+
+       -h, --no-dereference
+              Change a symbolic link itself, not the file it points to.
+
+       -v, --verbose
+              Report every file processed.
+
+EXAMPLES
+       Let the web server read a directory, for a test:
+
+           chcon -R -t httpd_sys_content_t /srv/web
+           ls -Zd /srv/web
+
+       Give a file the same label as the default web page directory:
+
+           chcon --reference=/var/www/html /srv/web/index.html
+
+       The lasting way to do the same thing:
+
+           semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?'
+           restorecon -Rv /srv/web
+
+NOTES
+       On the exam, a context set only with chcon is lost when the graders
+       relabel or restore the files. Always use semanage fcontext plus
+       restorecon when a task asks for a context.
+
+SEE ALSO
+       restorecon(8), semanage(8), ls(1), ps(1), selinux(8)

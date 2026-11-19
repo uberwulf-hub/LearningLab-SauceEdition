@@ -1,0 +1,18 @@
+SYNOPSIS: Applies a security descriptor (permissions) to a file, folder or registry key.
+DESCRIPTION:
+Set-Acl writes a whole access control list onto an item. The usual pattern has three steps: read the current ACL with Get-Acl, change it in memory (for example $acl.AddAccessRule(...) with a FileSystemAccessRule), then write it back with Set-Acl.
+NTFS permissions are cumulative across groups, and an explicit Deny beats an Allow. When a share is involved, the effective access over the network is the more restrictive of the share and NTFS permissions.
+Inheritance flags matter for folders: ContainerInherit, ObjectInherit lets the rule reach the subfolders and files.
+PARAMETER Path:
+The file, folder or key to change. Position 0.
+PARAMETER AclObject:
+The ACL to apply, usually from Get-Acl and then changed. Position 1, and takes pipeline input.
+PARAMETER Passthru:
+Returns the ACL after the change.
+PARAMETER ClearCentralAccessPolicy:
+Removes a central access policy (Dynamic Access Control) from the item.
+EXAMPLE: $acl = Get-Acl D:\Shares\Sales; $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("CORP\FS-Sales-Modify", "Modify", "ContainerInherit, ObjectInherit", "None", "Allow"); $acl.AddAccessRule($rule); Set-Acl D:\Shares\Sales $acl
+Gives the FS-Sales-Modify group Modify on the Sales folder and everything inside it.
+EXAMPLE: Get-Acl D:\Shares\Sales | Set-Acl D:\Shares\Sales-Archive
+Copies the Sales folder's permissions onto another folder.
+RELATED: Get-Acl, Get-ADGroupMember

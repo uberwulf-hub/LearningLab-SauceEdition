@@ -1,0 +1,20 @@
+SYNOPSIS: Signs a zone with DNSSEC so clients can check that answers are genuine.
+DESCRIPTION:
+DNSSEC adds signatures (RRSIG records) to every record set and publishes the public keys (DNSKEY records). A resolver that validates can then detect forged or changed answers.
+
+-SignWithDefault signs with Microsoft's default settings: a key-signing key and a zone-signing key, RSA with SHA-256, NSEC3 for proof that a name doesn't exist. Afterwards Get-DnsServerZone shows IsSigned True. -DoResign signs an already signed zone again, for example after a key change.
+
+Clients only benefit if they validate; on Windows that is set with the Name Resolution Policy Table (a Group Policy setting).
+PARAMETER ZoneName:
+The zone to sign.
+PARAMETER SignWithDefault:
+Uses the default keys and settings.
+PARAMETER DoResign:
+Re-signs a zone that is already signed.
+PARAMETER Force:
+Signs without asking.
+EXAMPLE: Invoke-DnsServerZoneSign -ZoneName corp.example -SignWithDefault -Force -ComputerName DC1
+Signs the company zone with the default settings.
+EXAMPLE: Get-DnsServerResourceRecord corp.example -RRType DNSKEY
+Shows the public keys the signing published.
+RELATED: Get-DnsServerZone, Get-DnsServerResourceRecord

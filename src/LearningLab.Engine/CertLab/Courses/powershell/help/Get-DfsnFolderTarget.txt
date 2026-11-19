@@ -1,0 +1,10 @@
+SYNOPSIS: Lists the targets of a DFS namespace folder.
+DESCRIPTION:
+Get-DfsnFolderTarget shows each target of a folder with its TargetPath, State (Online or Offline) and ReferralPriorityClass. Offline targets are not handed out to clients.
+PARAMETER Path:
+The namespace folder. Position 0.
+PARAMETER TargetPath:
+Only this target.
+EXAMPLE: Get-DfsnFolderTarget -Path \\corp.example\Files\Sales
+Where users of the Sales folder are sent.
+RELATED: New-DfsnFolderTarget, Set-DfsnFolderTarget, Get-DfsnFolder

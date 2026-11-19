@@ -1,0 +1,48 @@
+NAME
+       cat - print files, one after another
+
+SYNOPSIS
+       cat [OPTION...] [FILE...]
+
+DESCRIPTION
+       cat writes each FILE to standard output in turn (the name comes from
+       "concatenate"). With no FILE, or when FILE is -, it reads standard
+       input. It is the quickest way to look at a short file; for long files
+       use less.
+
+OPTIONS
+       -n, --number
+              Number every output line.
+
+       -b, --number-nonblank
+              Number only lines that are not empty.
+
+       -s, --squeeze-blank
+              Print several empty lines in a row as one.
+
+       -A, --show-all
+              Show hidden characters: tabs as ^I, line ends as $.
+
+       -E, --show-ends
+              Show a $ at the end of each line (finds trailing spaces).
+
+       -T, --show-tabs
+              Show tabs as ^I.
+
+EXAMPLES
+       Join two files into a third:
+
+           cat part1.txt part2.txt > whole.txt
+
+       Write a small file from the keyboard (end with Ctrl+D):
+
+           cat > /root/notes.txt
+
+       Write a file in a script with a here document:
+
+           cat > /etc/motd <<'EOF'
+           Welcome to server1
+           EOF
+
+SEE ALSO
+       less(1), head(1), tail(1), tac(1)

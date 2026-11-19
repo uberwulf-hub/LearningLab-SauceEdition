@@ -1,0 +1,18 @@
+SYNOPSIS: Saves the pipeline's objects in a file or variable and passes them on.
+DESCRIPTION:
+Tee-Object is a T-junction in the pipeline: every object goes on to the next command and is also kept. With -FilePath the objects are written to a file as the console would show them; with -Variable they are stored in a variable when the pipeline ends.
+PARAMETER FilePath:
+The file to write (alias Path). The text is formatted like the console output.
+PARAMETER Variable:
+The name of a variable (without $) to store the objects in.
+PARAMETER Append:
+Adds to the file instead of replacing it.
+PARAMETER InputObject:
+The objects (from the pipeline).
+EXAMPLE: Get-Process | Tee-Object -Variable procs | Sort-Object WS -Descending | Select-Object -First 3
+Shows the top three, and keeps all processes in $procs.
+EXAMPLE: Get-Service | Tee-Object -FilePath C:\Reports\services.txt | Where-Object Status -eq Stopped
+Saves the full list to a file and shows only the stopped services.
+NOTES:
+The file is written with Unicode (UTF-16) in Windows PowerShell 5.1, like Out-File.
+RELATED: Out-File, Set-Variable

@@ -1,0 +1,22 @@
+SYNOPSIS: Looks up a name in DNS (or an address, for its name), like nslookup.
+DESCRIPTION:
+Resolve-DnsName asks how a name resolves and outputs one object per record, with Name, Type, TTL (seconds the answer may be cached), Section and the data: IPAddress for A and AAAA records, NameHost for CNAME, PTR and NS records.
+
+It works the way Windows does: first the hosts file, then the computer's own name, then the DNS server set on the adapter (DC01, 10.0.10.10, in the lab). A short name such as web01 gets the suffix lab.example.com added. An alias (CNAME) is followed to the real name, so you see both records.
+
+Give it an IP address and it looks up the name instead (a PTR record, a reverse lookup).
+PARAMETER Name:
+The name or address to look up (required). It also accepts names from the pipeline.
+PARAMETER Type:
+The record type: A, AAAA, A_AAAA (the default for names), CNAME, MX, NS, PTR (the default for addresses), SOA, SRV, TXT or ALL.
+PARAMETER Server:
+Asks this DNS server instead of the one on the adapter, for example 10.0.10.10 or DC01.
+EXAMPLE: Resolve-DnsName www.lab.example.com
+Shows the CNAME www.lab.example.com -> web01.lab.example.com and the A record 10.0.10.50.
+EXAMPLE: Resolve-DnsName 10.0.10.11
+A reverse lookup: the PTR record gives win-srv1.lab.example.com.
+EXAMPLE: Resolve-DnsName lab.example.com -Type NS -Server 10.0.10.10
+Which server holds the lab.example.com zone, asked straight from DC01.
+NOTES:
+"DNS name does not exist" means the server answered that there is no such name. "The timeout period expired" means no DNS server answered: check Get-DnsClientServerAddress and Test-NetConnection 10.0.10.10. The practice network has no internet, so names outside lab.example.com do not exist. Resolve-DnsName is a Windows-only command from the DnsClient module; on PowerShell 7 for Linux or macOS use [System.Net.Dns]::GetHostAddresses() or dig.
+RELATED: Clear-DnsClientCache, Get-DnsClientServerAddress, Set-DnsClientServerAddress, Test-NetConnection

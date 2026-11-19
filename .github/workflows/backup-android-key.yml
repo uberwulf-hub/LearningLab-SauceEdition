@@ -1,0 +1,47 @@
+# One-time move of the Android signing key from the Actions cache into repository secrets.
+# The repository is public, so the key must never be a download or appear in a log: this workflow writes it
+# straight into the ANDROID_KEYSTORE_* secrets with a short-lived token, then the cache can be deleted.
+#   1. github.com > Settings (your profile) > Developer settings > Fine-grained tokens > Generate new token:
+#      only this repository, permission "Secrets: Read and write", expires in 1 day.
+#   2. This repository > Settings > Secrets and variables > Actions > New repository secret:
+#      name SECRETS_TOKEN, value the token.
+#   3. Actions > Move the Android key into secrets > Run workflow.
+#   4. Afterwards: delete the SECRETS_TOKEN secret and the token, and Actions > Caches > delete
+#      learninglab-android-signing-key-v1.
+name: Move the Android key into secrets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the signing key from the cache
+        id: key
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/android-key
+          key: learninglab-android-signing-key-v1
+      - name: Write it into the repository's secrets
+        env:
+          GH_TOKEN: ${{ secrets.SECRETS_TOKEN }}
+        run: |
+          set -e
+          KS=~/android-key/release.keystore
+          if [ "${{ steps.key.outputs.cache-hit }}" != "true" ] || [ ! -f "$KS" ]; then
+            echo "::error::No cached signing key found. If the ANDROID_KEYSTORE_* secrets are already set, the key is already moved."
+            exit 1
+          fi
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Add the SECRETS_TOKEN secret first (see the steps at the top of this file)."
+            exit 1
+          fi
+          base64 -w0 "$KS" | gh secret set ANDROID_KEYSTORE_BASE64 --repo "$GITHUB_REPOSITORY"
+          printf 'learninglab' | gh secret set ANDROID_KEYSTORE_ALIAS --repo "$GITHUB_REPOSITORY"
+          printf 'learninglab' | gh secret set ANDROID_KEYSTORE_PASSWORD --repo "$GITHUB_REPOSITORY"
+          rm -rf ~/android-key
+          echo "The key is in the ANDROID_KEYSTORE_* secrets. Now delete SECRETS_TOKEN, the token, and the cache entry learninglab-android-signing-key-v1." >> "$GITHUB_STEP_SUMMARY"

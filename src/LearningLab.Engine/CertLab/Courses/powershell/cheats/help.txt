@@ -1,0 +1,23 @@
+# Sheet: help | Getting started and help | Help
+## Finding commands
+Get-Command -Noun Service :: commands for one noun
+Get-Command -Verb Export :: commands for one verb
+Get-Command *-Job :: wildcard search by name
+Get-Command -Module Microsoft.PowerShell.Utility :: the commands of a module
+Get-Command Get-Process -Syntax :: just the syntax lines
+Get-Verb :: the approved verbs and their groups
+## Help
+Get-Help Get-ChildItem :: the short help
+Get-Help Get-ChildItem -Examples :: only the examples
+Get-Help Get-ChildItem -Detailed :: with every parameter described
+Get-Help Get-ChildItem -Full :: with Required, Position, pipeline input of each parameter
+Get-Help Get-ChildItem -Parameter Recurse :: one parameter
+Get-Help *event* :: commands and topics whose names contain a word
+Get-Help about_* :: the concept topics
+Update-Help :: download the full help (administrator, internet)
+## Aliases and objects
+Get-Alias dir :: what an alias stands for
+Get-Alias -Definition Get-ChildItem :: the aliases of a cmdlet
+Get-Service | Get-Member :: the type, properties and methods of the output
+Get-Date | Get-Member -MemberType Method :: only the methods
+$PSVersionTable :: the PowerShell version and edition

@@ -1,0 +1,55 @@
+title: Where the service really points
+level: Advanced
+kind: Windows
+topic: Windows
+teaser: a service whose program lives somewhere surprising
+points: 75
+order: 54
+host: windows
+answer: flag
+
+@intro
+You are on a pretend Windows computer. Services each run a program on startup; the
+program is named in the service's "binary path". One service here points at a program
+in a folder it shouldn't, and the person who set it up left the flag in the service's
+description as a reminder. List the services, find the odd one, and read its details.
+
+@winsetup
+New-Item -ItemType Directory -Path 'C:\Temp\upd' -Force | Out-Null
+Set-Content -Path 'C:\Temp\upd\helper.exe' -Value 'stub'
+New-Service -Name 'HelperSvc' -BinaryPathName 'C:\Temp\upd\helper.exe' -DisplayName 'App Helper' -Description 'temp build - flag {{FLAG}}' -StartupType Manual | Out-Null
+
+@solution
+Get-CimInstance Win32_Service | Where-Object { $_.PathName -like 'C:\Temp\*' } | Select-Object Name, PathName
+Get-Service HelperSvc | Select-Object -ExpandProperty Name
+Get-CimInstance Win32_Service -Filter "Name='HelperSvc'" | Select-Object Name, PathName, Description, StartName
+(Get-CimInstance Win32_Service -Filter "Name='HelperSvc'").Description
+
+@walkthrough
+A Windows service runs whatever its binary path names, with the service's account
+(often SYSTEM). A program under C:\Temp is a warning sign: anyone can write there, so
+anyone could swap the program. List services and look at their paths:
+
+    Get-CimInstance Win32_Service | Where-Object { $_.PathName -like 'C:\Temp\*' }
+
+HelperSvc points into C:\Temp. Read its full details:
+
+    Get-CimInstance Win32_Service -Filter "Name='HelperSvc'" | Select Name,PathName,Description
+
+The flag is in the Description. The lesson: a service's program (and the folders
+above it) must be writable only by administrators, or someone can replace it and run
+their own code as the service's account.
+
+@hint 6
+What to think about first: every service names a program to run. Get-CimInstance
+Win32_Service lists them with a PathName. A program in a world-writable place like
+C:\Temp is the suspicious one.
+
+@hint 10
+Find it: Get-CimInstance Win32_Service | Where-Object { $_.PathName -like 'C:\Temp\*' }
+That is HelperSvc.
+
+@hint 15
+Read all of it, including the description:
+(Get-CimInstance Win32_Service -Filter "Name='HelperSvc'").Description
+The flag is there.
