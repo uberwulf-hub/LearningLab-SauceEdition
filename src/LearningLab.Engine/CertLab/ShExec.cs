@@ -816,6 +816,27 @@ namespace CertLab
         }
 
         /// <summary>Finds a program: a path, or the first match in PATH. Returns the global Loc or null.</summary>
+        /// <summary>The programs this user can run from PATH (first match of each name), sorted: Cyber Range's help lists them.</summary>
+        public List<string> ProgramsOnPath()
+        {
+            var seen = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var dir in (GetVar("PATH") ?? "/usr/bin:/usr/sbin").Split(':'))
+            {
+                if (dir.Length == 0) continue;
+                Loc d;
+                try { d = M.V.Resolve(P, dir, true); } catch (VfsEx) { continue; }
+                if (!d.Exists || d.Node.T != 'd' || d.Node.Kids == null || !M.V.Can(P.Cr, d.Node, 1)) continue;
+                foreach (var name in d.Node.Kids.Keys)
+                {
+                    if (seen.Contains(name) || name.StartsWith(".", StringComparison.Ordinal)) continue;
+                    string shown;
+                    var l = FindProgram(name, out shown);
+                    if (l != null && l.Node.Prog != null && M.V.Can(P.Cr, l.Node, 1)) seen.Add(name);
+                }
+            }
+            return new List<string>(seen);
+        }
+
         public Loc FindProgram(string name, out string shown)
         {
             shown = name;

@@ -28,6 +28,7 @@ using Avalonia.Input.TextInput;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using CertLab;
 using LearningLab.Views;
@@ -85,12 +86,19 @@ public sealed class CertTerminal : Grid
         frame = new Border { Child = screen, BorderThickness = new Thickness(2), BorderBrush = Brushes.Transparent };
         Children.Add(frame);
 
-        prompt = new TextBlock { FontFamily = CertUi.Mono, FontSize = 14, Foreground = Ui.Brush(CertUi.TermFg), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0), MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis };
+        prompt = new TextBlock { FontFamily = CertUi.Mono, FontSize = 14, Foreground = Ui.Brush(CertUi.TermFg), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0), TextWrapping = TextWrapping.Wrap };
         input = new TextBox
         {
             FontFamily = CertUi.Mono, FontSize = 14, Foreground = Ui.Brush(CertUi.TermFg), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
             MinHeight = 44, Padding = new Thickness(4, 8), VerticalContentAlignment = VerticalAlignment.Center, CaretBrush = Ui.Brush(CertUi.TermFg), AcceptsTab = false,
         };
+        // the typed line looks like part of the terminal, as in a real terminal window: no box, no focus border
+        input.FocusAdorner = null;
+        foreach (var state in new[] { ":focus", ":pointerover", ":focus-within" })
+            input.Styles.Add(new Style(x => x.OfType<TextBox>().Class(state).Template().OfType<Border>().Name("PART_BorderElement"))
+            {
+                Setters = { new Setter(Border.BorderThicknessProperty, new Thickness(0)), new Setter(Border.BackgroundProperty, Brushes.Transparent), new Setter(Border.BorderBrushProperty, Brushes.Transparent) }
+            });
         TextInputOptions.SetAutoCapitalization(input, false);
         input.AddHandler(KeyDownEvent, OnKey, RoutingStrategies.Tunnel);
         input.AddHandler(TextInputEvent, (s, e) => { if (Blocked) e.Handled = true; tabCount = 0; }, RoutingStrategies.Tunnel);
@@ -114,6 +122,13 @@ public sealed class CertTerminal : Grid
         AttachedToVisualTree += (s, e) => timer.Start();
         DetachedFromVisualTree += (s, e) => timer.Stop();
         PointerPressed += (s, e) => { if (grub != null) grub.Focus(); else if (editor?.KeyTarget is Control c) c.Focus(); };
+        // a click (or tap) anywhere on the terminal puts the cursor on the typed line, unless it selected some output
+        scroll.AddHandler(PointerReleasedEvent, (s, e) =>
+        {
+            if (grub != null || editor != null) return;
+            if (output.SelectionStart != output.SelectionEnd) return;
+            input.Focus(); input.CaretIndex = (input.Text ?? "").Length;
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
         Poll();
     }
 
@@ -166,6 +181,8 @@ public sealed class CertTerminal : Grid
     }
     public void ScrollEnd() => Dispatcher.UIThread.Post(() => scroll.ScrollToEnd(), DispatcherPriority.Background);
 
+    static bool IsShellPrompt(string p) => p != null && (p.EndsWith("$ ", StringComparison.Ordinal) || p.EndsWith("# ", StringComparison.Ordinal) || p.EndsWith("> ", StringComparison.Ordinal) && p.StartsWith("PS ", StringComparison.Ordinal));
+
     /// <summary>Picks up new output, the prompt, the editor and the GRUB screen (the timer, pages and checks).</summary>
     public void Poll()
     {
@@ -173,6 +190,9 @@ public sealed class CertTerminal : Grid
         if (S.ClearRequested) { S.ClearRequested = false; Clear(); }
         string o = S.TakeOutput();
         if (o.Length > 0) { Append(o); Activity?.Invoke(); }
+        // a shell prompt always starts on its own line (output without a line break at the end, like base64 -d of a
+        // flag, would otherwise run into it), as most terminals show it
+        if (!S.Busy && lines[^1].Length > 0 && IsShellPrompt(S.Prompt)) Append("\n");
         string p = lines[^1] + (S.Busy ? "" : S.Prompt);
         if (prompt.Text != p) prompt.Text = p;
         input.PasswordChar = S.Secret ? '•' : default;

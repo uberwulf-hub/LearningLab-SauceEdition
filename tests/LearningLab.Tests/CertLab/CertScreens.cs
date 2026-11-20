@@ -177,6 +177,13 @@ static class CertScreens
         t.TypeLine("echo alpha beta");
         t.TypeLine("printf 'one\\ttwo\\n'");
         Check("typed lines run and print", t.Text.Contains("\nalpha beta\n"), Tail(t.Text));
+        t.TypeLine("printf nonewline");
+        Check("output without a line break at the end doesn't run into the next prompt", t.Text.Contains("\nnonewline\n[root@"), Tail(t.Text));
+        t.TypeLine("read -p 'Name: ' who");
+        Check("a question's own prompt stays on its line", t.Text.EndsWith("Name: ", StringComparison.Ordinal), Tail(t.Text));
+        t.TypeLine("Theo");
+        t.TypeLine("help");
+        Check("a course machine's help is real bash's (built-ins only)", t.Text.Contains("These shell commands are defined internally") && !t.Text.Contains("Programs on this box"), Tail(t.Text));
         // typing through the text box as the keyboard does
         t.SendText("echo keyed"); t.SendKey(Key.Enter);
         Check("keys typed into the line run on Enter", t.Text.Contains("\nkeyed\n"), Tail(t.Text));

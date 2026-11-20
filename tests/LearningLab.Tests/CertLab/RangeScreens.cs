@@ -375,6 +375,11 @@ static class RangeScreens
         learn?.Toggle(); Pump();
         Check("Learning mode makes hints free", run.LearningMode && run.HintCost == 0 && PressStarting("Show hint 2") && run.HintCost == 0 && rp.HintsShown == 2);
         Snap("run-hints");
+        rp.Term.TypeLine("help"); Pump();
+        var said = rp.Term.Text;
+        Check("help also names the everyday commands and the range's tools on the box, with man", said.Contains("Everyday commands on this box") && said.Contains("base64") && said.Contains("The range's tools on this box") && said.Contains("`man base64'") && !said.Contains("xfs_repair"), Tail(said));
+        rp.Term.TypeLine("help all"); Pump();
+        Check("help all lists every program", rp.Term.Text.Contains("Every program on this box") && rp.Term.Text.Contains("xfs_repair"), Tail(rp.Term.Text));
         rp.Tabs.Select("Brief"); Pump();
         TypeSolution(rp, run.Pz.Solution);
         Snap("run-puzzle");

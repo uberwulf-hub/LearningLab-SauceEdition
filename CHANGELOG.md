@@ -4,6 +4,15 @@ What changes in each version, in plain words. Newest first.
 
 ## [Unreleased]
 
+### Added
+
+- In Cyber Range, `help` also names the everyday commands and the range's tools on that box (each with `man <command>`), and `help all` lists every program there.
+
+### Fixed
+
+- Cert Lab and Cyber Range terminals: the prompt always starts on a new line, even when a command's output (like a decoded flag) has no line break at the end, and a long line is no longer cut off with "...".
+- Click or tap anywhere on a terminal to type: the line you type on is part of the terminal now, with no box or green border around it.
+
 ## [0.5.0] - 2026-11-19
 
 ### Changed

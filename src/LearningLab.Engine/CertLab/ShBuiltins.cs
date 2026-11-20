@@ -17,6 +17,49 @@ namespace CertLab
 
         static void B(string name, CmdFn f) { Builtins[name] = f; }
 
+        // Cyber Range only (the courses' machines keep real bash's help): what there is to try on this box. `help` names
+        // the everyday commands and the range's own tools that are installed here; `help all` lists every program.
+        static readonly string[] HelpBasics = { "ls", "cd", "cat", "less", "head", "tail", "grep", "find", "file", "strings",
+            "wc", "sort", "uniq", "cut", "tr", "xxd", "base64", "base32", "echo", "id", "whoami", "sudo", "ssh", "curl", "nc",
+            "ping", "ip", "ss", "openssl", "sha256sum", "md5sum", "tar", "zcat" };
+        static readonly string[] HelpRangeTools = { "nmap", "smbclient", "winrm-shell", "ftp", "mysql", "hashcrack", "pwguess",
+            "webscan", "vulnlookup", "ticket-request", "xorcat", "vigenere", "morse", "catcher", "browse", "siem", "cloudctl",
+            "toyvm" };
+
+        static void HelpPrograms(Sh sh, List<string> a, Io io)
+        {
+            var names = sh.ProgramsOnPath();
+            if (names.Count == 0) return;
+            var sb = new StringBuilder();
+            if (a.Count > 1 && a[1] == "all")
+            {
+                sb.Append("\nEvery program on this box (" + names.Count + "):\n\n");
+                HelpList(sb, names);
+            }
+            else
+            {
+                var have = new HashSet<string>(names, StringComparer.Ordinal);
+                var basics = HelpBasics.Where(have.Contains).ToList();
+                var tools = HelpRangeTools.Where(have.Contains).ToList();
+                if (basics.Count > 0) { sb.Append("\nEveryday commands on this box:\n"); HelpList(sb, basics); sb.Append("\n"); }
+                if (tools.Count > 0) { sb.Append("\nThe range's tools on this box:\n"); HelpList(sb, tools); sb.Append("\n"); }
+                sb.Append("\nType `man <command>' to learn one (e.g. `man " + (have.Contains("base64") ? "base64" : names[0]) + "'), and `help all' for all " + names.Count + " programs.");
+            }
+            io.L(sb.ToString());
+        }
+
+        static void HelpList(StringBuilder sb, List<string> names)
+        {
+            int col = 0;
+            for (int i = 0; i < names.Count; i++)
+            {
+                string w = names[i] + (i < names.Count - 1 ? ", " : "");
+                if (col > 0 && col + w.Length > 78) { sb.Append("\n"); col = 0; }
+                if (col == 0) { sb.Append(" "); col = 1; }
+                sb.Append(w); col += w.Length;
+            }
+        }
+
         static void RegisterBuiltins()
         {
             B("cd", Cd); B("pwd", PwdCmd); B("echo", Echo); B("printf", PrintfCmd);
@@ -40,7 +83,7 @@ namespace CertLab
             // time COMMAND: runs it, then the times (the simulator's commands take next to no time)
             B("time", (sh, a, io) => { int st = a.Count > 1 ? sh.Run(a.Skip(1).ToList(), io) : 0; io.E("\nreal\t0m0.00" + (3 + a.Count % 6) + "s\nuser\t0m0.001s\nsys\t0m0.002s"); return st; });
             B("pushd", Pushd); B("popd", Popd); B("dirs", (sh, a, io) => { io.L(string.Join(" ", new[] { sh.TildePath(sh.P.Cwd) }.Concat(sh.DirStack.Select(sh.TildePath)).ToArray())); return 0; });
-            B("help", (sh, a, io) => { io.L("GNU bash, version 5.1.8(1)-release (x86_64-redhat-linux-gnu)\nThese shell commands are defined internally. Type `help' to see this list.\nType `man bash' for more about the shell in general; `man <command>' for any command.\n\n cd, echo, printf, read, export, unset, set, shift, local, declare, readonly, return, exit,\n break, continue, source (.), eval, exec, true, false, test ([), [[ ]], (( )), type, command,\n alias, unalias, history, jobs, fg, bg, wait, umask, getopts, trap, let, mapfile, pushd, popd"); return 0; });
+            B("help", (sh, a, io) => { io.L("GNU bash, version 5.1.8(1)-release (x86_64-redhat-linux-gnu)\nThese shell commands are defined internally. Type `help' to see this list.\nType `man bash' for more about the shell in general; `man <command>' for any command.\n\n cd, echo, printf, read, export, unset, set, shift, local, declare, readonly, return, exit,\n break, continue, source (.), eval, exec, true, false, test ([), [[ ]], (( )), type, command,\n alias, unalias, history, jobs, fg, bg, wait, umask, getopts, trap, let, mapfile, pushd, popd"); if (sh.M.Net != null && sh.M.Net.Range != null) HelpPrograms(sh, a, io); return 0; });
             B("disown", (sh, a, io) => { sh.Jobs.Clear(); return 0; });
             B("times", (sh, a, io) => { io.L("0m0.012s 0m0.008s\n0m0.104s 0m0.061s"); return 0; });
             B("enable", (sh, a, io) => 0); B("compgen", (sh, a, io) => 0); B("complete", (sh, a, io) => 0);
